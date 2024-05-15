@@ -20,8 +20,9 @@ static FunctionDecl* parseFunctionDeclaration();
 
 static Expr* parsePrimaryExpression() {
     switch (currentToken.type) {
-        case TOKEN_INT_LITERAL:
-        case TOKEN_FLOAT_LITERAL:
+        case TOKEN_INT:
+        case TOKEN_FLOAT:
+        case TOKEN_STRING:
         case TOKEN_STRING_LITERAL:
         case TOKEN_TRUE:
         case TOKEN_FALSE:
