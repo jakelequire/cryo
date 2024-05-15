@@ -60,6 +60,13 @@
     "lexer.h": "c",
     "ctype.h": "c",
     "cstdio": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "string.h": "c",
+    "stdbool.h": "c",
+    "stdio.h": "c",
+    "token.h": "c",
+    "global.h": "c",
+    "parser.h": "c",
+    "ast.h": "c"
   }
 }

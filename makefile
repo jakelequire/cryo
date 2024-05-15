@@ -1,44 +1,64 @@
 CC = gcc
 CFLAGS = -Wall -g
+LDFLAGS =
 
-BIN_PATH = ./src/bin/
-LEXER_PATH = ./src/
-PARSER_PATH = ./src/
-COMPILER_PATH = ./src/
-MAIN_PATH = ./src/
+# Define paths
+BIN_DIR = ./src/bin/
+SRC_DIR = ./src/
+CLI_DIR = $(SRC_DIR)cli/
+LEXER_DIR = $(SRC_DIR)compiler/lexer/
+PARSER_DIR = $(SRC_DIR)compiler/parser/
+TOKENIZER_DIR = $(SRC_DIR)compiler/tokenizer/
+UTILS_DIR = $(SRC_DIR)utils/
 
-TEST_DATA_PATH = ./src/tests/data/
-TEST_RESULT_PATH = ./src/tests/result/
-TEST_SCRIPT = ./src/tests/
+# Include directories
+INCLUDES = -I./src/ -I./src/include/
 
-RUN_TEST = $(BIN_PATH)main $(TEST_DATA_PATH)$(1) $(TEST_RESULT_PATH)$(1)
+# Source files
+LEXER_SRC = $(LEXER_DIR)lexer.c
+PARSER_SRC = $(PARSER_DIR)parser.c
+CLI_SRC = $(CLI_DIR)cli.c
+UTILS_SRC = $(UTILS_DIR)printAST.c
+MAIN_SRC = $(SRC_DIR)main.c
+AST_SRC = $(SRC_DIR)utils/ast.c
 
-BUILD_LEXER = $(CC) $(CFLAGS) -o $(BIN_PATH)lexer $(LEXER_PATH)lexer.c
-BUILD_COMPILER = $(CC) $(CFLAGS) -o $(BIN_PATH)compiler $(COMPILER_PATH)compiler.c
-BUILD_PARSER = $(CC) $(CFLAGS) -o $(BIN_PATH)parser $(PARSER_PATH)parser.c $(LEXER_PATH)lexer.c
-BUILD_MAIN = $(CC) $(CFLAGS) -o $(BIN_PATH)main $(MAIN_PATH)main.c $(LEXER_PATH)lexer.c $(PARSER_PATH)parser.c
+# Binaries
+LEXER_BIN = $(BIN_DIR)lexer
+PARSER_BIN = $(BIN_DIR)parser
+CLI_BIN = $(BIN_DIR)cli
+MAIN_BIN = $(BIN_DIR)main
 
-all: lexer compiler parser
+# Default build
+all: lexer parser cli main
 
-main:
-	$(BUILD_MAIN)
-
+# Individual components
 lexer:
-	$(BUILD_LEXER)
-
-runlexer:
-	$(BIN_PATH)lexer.exe
-
-compiler:
-	$(BUILD_COMPILER)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(LEXER_BIN) $(LEXER_SRC)
 
 parser:
-	$(BUILD_PARSER)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(PARSER_BIN) $(PARSER_SRC) $(LEXER_SRC)
 
-test:
-	$(TEST_SCRIPT)run_tests.bat
+cli:
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(CLI_BIN) $(CLI_SRC) $(UTILS_SRC)
 
+main:
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN_BIN) $(MAIN_SRC) $(LEXER_SRC) $(PARSER_SRC) $(AST_SRC)
+
+# Running executables
+runlexer:
+	$(LEXER_BIN)
+
+runparser:
+	$(PARSER_BIN)
+
+runcli:
+	$(CLI_BIN)
+
+runmain:
+	$(MAIN_BIN) ./src/tests/data/test1.cy
+
+# Clean up
 clean:
-	del /F $(BIN_PATH)lexer.exe $(BIN_PATH)compiler.exe $(BIN_PATH)parser.exe
+	del /F $(BIN_DIR)*.exe
 
-.PHONY: all lexer compiler parser clean runlexer
+.PHONY: all lexer parser cli main clean runlexer runparser runcli runmain

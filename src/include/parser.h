@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "lexer.h"  // Include lexer for token stream
+#include "include/lexer.h"  // Include lexer for token stream
 
 typedef enum {
     NODE_NUMBER,
