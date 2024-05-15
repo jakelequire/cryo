@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "include/lexer.h"
+#include "include/parser.h"
 
 
 // #ifdef DEBUG
