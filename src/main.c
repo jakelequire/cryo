@@ -19,12 +19,17 @@ int main(int argc, char* argv[]) {
 
     Lexer lexer;
     initLexer(&lexer, source);
+
     Token token;
+
     do {
         nextToken(&lexer, &token);
+        parseProgram(&lexer);
     } while (token.type != TOKEN_EOF);
 
     ASTNode* ast = parseExpression(&lexer);
+    
+
     if (ast == NULL) {
         fprintf(stderr, "Failed to parse expression.\n");
         free(source);

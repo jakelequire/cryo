@@ -1,28 +1,17 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "include/lexer.h"  // Include lexer for token stream
-
-typedef enum {
-    NODE_NUMBER,
-    NODE_BINARY_OP,
-} NodeType;
-
-typedef struct ASTNode {
-    NodeType type;
-    int line;  // Line number for error reporting
-    union {
-        struct {
-            struct ASTNode* left;
-            struct ASTNode* right;
-            TokenType operator;
-            char* operatorText;  // Descriptive text for the operator
-        } bin_op;
-        int value;  // For number nodes
-    } data;
-} ASTNode;
+#include "lexer.h"
+#include "ast.h"
+#include "token.h"
 
 ASTNode* parseExpression(Lexer* lexer);
-void freeAST(ASTNode* node);
+ASTNode* parseStatement(Lexer* lexer);
+ASTNode* parseFunctionDeclaration(Lexer* lexer);
+ASTNode* parseWhileStatement(Lexer* lexer);
+ASTNode* parseForStatement(Lexer* lexer);
+ASTNode* parseVarDeclaration(Lexer* lexer);
 
-#endif
+void parseProgram(Lexer* lexer);
+
+#endif // PARSER_H

@@ -1,3 +1,6 @@
+#ifndef TOKEN_H
+#define TOKEN_H
+
 
 
 typedef enum {
@@ -8,6 +11,7 @@ typedef enum {
     TOKEN_SINGLE_COMMENT,
     TOKEN_MULTI_COMMENT,
     TOKEN_WHITESPACE,
+    TOKEN_ASSIGN,
 
     // Data types
     TOKEN_INT,
@@ -16,6 +20,7 @@ typedef enum {
     TOKEN_STRING_LITERAL,
     TOKEN_TRUE,
     TOKEN_FALSE,
+    TOKEN_BOOLEAN,
 
     // Special Tokens
     TOKEN_RESULT_ARROW,
@@ -27,9 +32,11 @@ typedef enum {
     TOKEN_CONTINUE,
     TOKEN_RETURN,
     TOKEN_FN,
+    TOKEN_CONST,
 
 
     // Operators and punctuations
+    TOKEN_BANG,
     TOKEN_PLUS,
     TOKEN_MINUS,
     TOKEN_STAR,
@@ -74,3 +81,4 @@ typedef enum {
     TOKEN_RCURLY_BRACKET,
 } TokenType;
 
+#endif 

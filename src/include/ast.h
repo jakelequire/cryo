@@ -1,171 +1,111 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#ifndef AST_H
+#define AST_H
 
-#include "lexer.h"
-#include "parser.h"
 #include "token.h"
 
-void printAST(ASTNode* node);
-
-void printASTIndented(ASTNode* node, int indent);
-
-// Node types for different AST nodes
 typedef enum {
     NODE_PROGRAM,
     NODE_FUNCTION_DECL,
     NODE_VAR_DECL,
     NODE_STATEMENT,
-    NODE_EXPRESSION
+    NODE_EXPRESSION,
+    NODE_BINARY_EXPR,
+    NODE_UNARY_EXPR,
+    NODE_LITERAL_EXPR,
+    NODE_VARIABLE_EXPR,
+    NODE_FUNCTION_CALL,
+    NODE_IF_STATEMENT,
+    NODE_WHILE_STATEMENT,
+    NODE_FOR_STATEMENT,
+    NODE_RETURN_STATEMENT,
+    // Add other node types as needed
 } NodeType;
 
-// Expression types
-typedef enum {
-    EXPR_ASSIGNMENT,
-    EXPR_BINARY,
-    EXPR_UNARY,
-    EXPR_LITERAL,
-    EXPR_VARIABLE,
-    EXPR_FUNCTION_CALL
-} ExprType;
-
-// Statement types
-typedef enum {
-    STMT_EXPRESSION,
-    STMT_RETURN,
-    STMT_IF,
-    STMT_WHILE,
-    STMT_FOR,
-    STMT_BREAK,
-    STMT_CONTINUE
-} StmtType;
-
-// Data type for literals
-typedef enum {
-    DATA_INT,
-    DATA_FLOAT,
-    DATA_BOOL,
-    DATA_STRING,
-    DATA_NULL
-} DataType;
-
-// Operator types for expressions
-typedef enum {
-    OP_PLUS,
-    OP_MINUS,
-    OP_MUL,
-    OP_DIV,
-    OP_EQ,
-    OP_NEQ,
-    OP_LT,
-    OP_GT,
-    OP_LE,
-    OP_GE,
-    OP_AND,
-    OP_OR,
-    OP_NOT
-} OperatorType;
-
-typedef struct Expr Expr;
-typedef struct Stmt Stmt;
-
-typedef struct {
-    Expr* left;
-    OperatorType op;
-    Expr* right;
-} BinaryExpr;
-
-typedef struct {
-    OperatorType op;
-    Expr* operand;
-} UnaryExpr;
-
-typedef struct {
-    DataType type;
+typedef struct ASTNode {
+    NodeType type;
+    int line;  // Line number for error reporting
     union {
-        int intValue;
-        float floatValue;
-        bool boolValue;
-        char* stringValue;
-    } value;
-} LiteralExpr;
+        struct {
+            struct ASTNode** statements;
+            int stmtCount;
+        } program;
 
-typedef struct {
-    char* name;
-} VariableExpr;
+        struct {
+            char* name;
+            struct ASTNode* body;
+        } functionDecl;
 
-typedef struct {
-    char* functionName;
-    Expr** arguments;
-    int argCount;
-} FunctionCallExpr;
+        struct {
+            char* name;
+        } varDecl;
 
-struct Expr {
-    ExprType type;
-    union {
-        BinaryExpr binary;
-        UnaryExpr unary;
-        LiteralExpr literal;
-        VariableExpr variable;
-        FunctionCallExpr functionCall;
+        struct {
+            struct ASTNode* stmt;
+        } stmt;
+
+        struct {
+            struct ASTNode* expr;
+        } expr;
+
+        struct {
+            struct ASTNode* left;
+            struct ASTNode* right;
+            TokenType operator;
+            char* operatorText;  // Descriptive text for the operator
+        } bin_op;
+
+        struct {
+            TokenType operator;
+            struct ASTNode* operand;
+        } unary_op;
+
+        int value;  // For literal number nodes
+
+        struct {
+            char* varName;
+        } varName;
+
+        struct {
+            char* name;
+        } functionCall;
+        
+        struct {
+            struct ASTNode* condition;
+            struct ASTNode* thenBranch;
+            struct ASTNode* elseBranch;
+        } ifStmt;
+        
+        struct {
+            struct ASTNode* condition;
+            struct ASTNode* body;
+        } whileStmt;
+        
+        struct {
+            struct ASTNode* initializer;
+            struct ASTNode* condition;
+            struct ASTNode* increment;
+            struct ASTNode* body;
+        } forStmt;
+
+        struct {
+            struct ASTNode* returnValue;
+        } returnStmt;
+        
     } data;
-};
+} ASTNode;
 
-typedef struct {
-    Expr* expression;
-} ExpressionStmt;
+void printAST(ASTNode* node);
+void printASTIndented(ASTNode* node, int indent);
+void freeAST(ASTNode* node);
 
-typedef struct {
-    char* variableName;
-    DataType varType;
-    Expr* initialValue;
-    bool isConst;
-} VarDeclStmt;
+ASTNode* createLiteralExpr(int value);
+ASTNode* createVariableExpr(const char* name);
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, TokenType op);
+ASTNode* createUnaryExpr(TokenType operator, ASTNode* operand);
+ASTNode* parseFunctionCall(const char* name);
+ASTNode* parseIfStatement();
+ASTNode* parseReturnStatement();
+ASTNode* parseExpressionStatement();
+ASTNode* createFunctionDecl(const char* name, ASTNode* body);
 
-typedef struct {
-    Expr* condition;
-    Stmt* thenBranch;
-    Stmt* elseBranch;
-} IfStmt;
-
-typedef struct {
-    Expr* condition;
-    Stmt* body;
-} WhileStmt;
-
-typedef struct {
-    Stmt* initialization;
-    Expr* condition;
-    Expr* increment;
-    Stmt* body;
-} ForStmt;
-
-typedef struct {
-    Expr* returnValue;
-} ReturnStmt;
-
-struct Stmt {
-    StmtType type;
-    union {
-        ExpressionStmt exprStmt;
-        VarDeclStmt varDecl;
-        IfStmt ifStmt;
-        WhileStmt whileStmt;
-        ForStmt forStmt;
-        ReturnStmt returnStmt;
-    } data;
-    Stmt* next;  // For linking statements in a block
-};
-
-typedef struct {
-    char* name;
-    VarDeclStmt* parameters;
-    int paramCount;
-    DataType returnType;
-    Stmt* body;
-} FunctionDecl;
-
-typedef struct {
-    FunctionDecl** functions;
-    int functionCount;
-} Program;
+#endif // AST_H

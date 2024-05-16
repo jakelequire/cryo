@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include "token.h"
 
 typedef struct {
     TokenType type;
@@ -40,5 +41,4 @@ int getTokenIntegerValue(Token* token);
 float getTokenFloatValue(Token* token);
 const char* getTokenStringValue(Token* token);
 
-
-#endif
+#endif // LEXER_H

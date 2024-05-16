@@ -6,6 +6,7 @@
 
 #include "include/lexer.h"
 #include "include/parser.h"
+#include "include/token.h"
 
 
 // #ifdef DEBUG
@@ -44,7 +45,7 @@ void nextToken(Lexer* lexer, Token* token) {
             while (isdigit(*lexer->current)) lexer->current++;
             token->type = TOKEN_INT;
             token->length = lexer->current - lexer->start;
-            printf("Detected integer: '%.*s'\n", token->length, lexer->start);
+            // printf("Detected integer: '%.*s'\n", token->length, lexer->start);
             return;
         }
 
@@ -53,10 +54,9 @@ void nextToken(Lexer* lexer, Token* token) {
             while (isalpha(*lexer->current) || isdigit(*lexer->current) || *lexer->current == '_') lexer->current++;
             token->type = TOKEN_IDENTIFIER;
             token->length = lexer->current - lexer->start;
-            printf("Detected identifier: '%.*s'\n", token->length, lexer->start);
+            // printf("Detected identifier: '%.*s'\n", token->length, lexer->start);
             return;
         }
-
 
         if (*lexer->current == '-') {
             if (*(lexer->current + 1) == '>') {
@@ -64,7 +64,7 @@ void nextToken(Lexer* lexer, Token* token) {
                 lexer->current += 2; // Advance past '->'
                 token->type = TOKEN_RESULT_ARROW;
                 token->length = 2;
-                printf("Detected result arrow: '->'\n");
+                // printf("Detected result arrow: '->'\n");
                 return;
             }
         }
@@ -83,7 +83,7 @@ void nextToken(Lexer* lexer, Token* token) {
             if (*lexer->current == '"') lexer->current++;  // Skip the closing double quote
             token->type = TOKEN_STRING;
             token->length = lexer->current - lexer->start;
-            printf("Detected string: '%.*s'\n", token->length, lexer->start);
+            // printf("Detected string: '%.*s'\n", token->length, lexer->start);
             return;
         }
 
@@ -92,7 +92,7 @@ void nextToken(Lexer* lexer, Token* token) {
             token->type = *lexer->current;  // Assign the ASCII value of the character as the token type
             token->length = 1;
             lexer->current++;
-            printf("Detected punctuation: '%c'\n", *lexer->start);
+            // printf("Detected punctuation: '%c'\n", *lexer->start);
             return;
         }
 
@@ -111,6 +111,8 @@ void nextToken(Lexer* lexer, Token* token) {
     token->length = 0;
     lexer->current++;
     printf("Reached EOF\n");
+    // stop the program
+    exit(0);
 }
 
 char* readFile(const char* path) {
@@ -154,9 +156,11 @@ char* readFile(const char* path) {
 Token getToken(Lexer* lexer) {
     if (lexer->hasPeeked) {
         lexer->hasPeeked = false;
+        printf("Returning peeked token\n");
         return lexer->lookahead;
     } else {
         nextToken(lexer, &lexer->currentToken);
+        printf("Returning new token\n");
         return lexer->currentToken;
     }
 }
@@ -190,6 +194,10 @@ const char* getTokenStringValue(Token* token) {
 }
 
 
+void freeLexer(Lexer* lexer) {
+    free(lexer->start);
+}
+
 int lexer(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
@@ -208,6 +216,7 @@ int lexer(int argc, char* argv[]) {
         printf("Token: %.*s (Type: %d)\n", token.length, token.start, token.type);
     } while (token.type != TOKEN_EOF);
 
+    freeLexer(&lexer);
     free(source);
     return 0;
 }
