@@ -41,6 +41,16 @@ void nextToken(Lexer* lexer, Token* token) {
         token->length = 0;
 
 
+        // Handle newlines and other delimiters
+        if (*lexer->current == '\n') {
+            lexer->line++;
+            token->type = TOKEN_NEWLINE;
+            token->length = 1;
+            lexer->current++;
+            printf("Detected newline\n");
+            return;
+        }
+
 
         // Handling identifiers
         if (isalpha(*lexer->current) || *lexer->current == '_') {

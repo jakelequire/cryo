@@ -2,7 +2,6 @@
 #define TOKEN_H
 
 
-
 typedef enum {
     // Special tokens
     TOKEN_EOF,
@@ -12,6 +11,9 @@ typedef enum {
     TOKEN_MULTI_COMMENT,
     TOKEN_WHITESPACE,
     TOKEN_ASSIGN,
+    TOKEN_NEWLINE,
+    TOKEN_INDENT,
+    TOKEN_DEDENT,
 
     // Data types
     TOKEN_INT,
@@ -81,4 +83,4 @@ typedef enum {
     TOKEN_RCURLY_BRACKET,
 } TokenType;
 
-#endif 
+#endif

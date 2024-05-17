@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     Token token;
 
     do {
-        nextToken(&lexer, &token);
+        // nextToken(&lexer, &token);
         parseProgram(&lexer);
     } while (token.type != TOKEN_EOF);
 

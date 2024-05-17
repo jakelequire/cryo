@@ -246,6 +246,13 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer) {
 void parseProgram(Lexer* lexer) {
     getNextToken(lexer);  // Initialize token stream
     while (currentToken.type != TOKEN_EOF) {
+        printf("<parseProgram> Parsing token: %d \n", currentToken.type);
+
+        if(currentToken.type == 6422280) {
+            printf("<parseProgram> Token length: %d\n", currentToken.length);
+            
+        }
+
         ASTNode* func = parseFunctionDeclaration(lexer);
         if (func) {
             // Do something with the parsed function

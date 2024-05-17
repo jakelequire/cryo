@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -g
-LDFLAGS =
+CFLAGS = -Wall -g -Wextra
+LDFLAGS = -lm
 
 # Define paths
 BIN_DIR = ./src/bin/
