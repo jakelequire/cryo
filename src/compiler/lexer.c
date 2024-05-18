@@ -189,7 +189,7 @@ void nextToken(Lexer* lexer, Token* token) {
     token->line = lexer->line;
     token->column = lexer->column;
     token->length = 0;
-    printf("Detected EOF\n");
+    printf("############ <End of File> ############\n");
     exit(0);
 }
 
@@ -208,14 +208,14 @@ char* readFile(const char* path) {
     size_t fileSize = length;
     char* buffer = (char*)malloc(fileSize + 1);
     if (buffer == NULL) {
-        perror("Not enough memory to read file");
+        perror("<lexer.c> Not enough memory to read file");
         fclose(file);
         return NULL;
     }
 
     size_t bytesRead = fread(buffer, 1, fileSize, file);
     if (bytesRead < fileSize) {
-        perror("Failed to read the full file");
+        perror("<lexer.c> Failed to read the full file");
         free(buffer);
         fclose(file);
         return NULL;
@@ -225,7 +225,7 @@ char* readFile(const char* path) {
     fclose(file);
 
     // Print the contents of the file to the console
-    printf("--------- <Reading File> ---------\n");
+    printf("############ <Reading File> ############\n");
     printf("\n----- Begin -----\n%s\n----- End ------\n\n", buffer);
     //printf("Buffer content:\n%s\n", buffer);
 
@@ -235,11 +235,11 @@ char* readFile(const char* path) {
 Token getToken(Lexer* lexer) {
     if (lexer->hasPeeked) {
         lexer->hasPeeked = false;
-        printf("Returning peeked token\n");
+        printf("<lexer.c> Returning peeked token\n");
         return lexer->lookahead;
     } else {
         nextToken(lexer, &lexer->currentToken);
-        printf("Returning new token\n");
+        printf("<lexer.c> Returning new token\n");
         return lexer->currentToken;
     }
 }
@@ -293,7 +293,7 @@ int lexer(int argc, char* argv[]) {
     Token token;
     do {
         nextToken(&lexer, &token);
-        printf("Token: %.*s (Type: %d)\n", token.length, token.start, token.type);
+        printf("<lexer.c> Token: %.*s (Type: %d)\n", token.length, token.start, token.type);
     } while (token.type != TOKEN_EOF);
 
     freeLexer(&lexer);

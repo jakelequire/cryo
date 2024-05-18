@@ -39,7 +39,7 @@ PARSER_BIN = $(BIN_DIR)parser
 MAIN_BIN = $(BIN_DIR)main
 
 # Default buildd
-all: lexer parser cli main
+all: cli main
 
 # Individual components
 lexer:

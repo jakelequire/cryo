@@ -68,12 +68,7 @@ void build_single(const char* file) {
     // DEBUG printf("Building single file: %s\n", file);
     char* _file = (char*)file;
 
-    if(cryo_compile(_file) == 0) {
-        printf("\n<commands.c> Build successful\n");
-    } else {
-        printf("\n<commands.c> Build failed\n");
-    }
-
+    cryo_compile(_file);
 }
 
 
@@ -103,12 +98,36 @@ void scan_dir() {
 }
 
 
-int cryo_compile(char* file) {
+void cryo_compile(const char* file) {
+    FILE *fp = fopen(file, "rb");
+    if (!fp) {
+        printf("Error: Could not open file %s\n", file);
+        return;
+    }
+
+    // Determine file size
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    // Allocate memory for file contents
+    char *buffer = (char *)malloc(file_size + 1);
+    if (!buffer) {
+        printf("Error: Memory allocation failed\n");
+        fclose(fp);
+        return;
+    }
+
+    // Read file contents into buffer
+    fread(buffer, 1, file_size, fp);
+    buffer[file_size] = '\0'; // Null-terminate the string
+
+    fclose(fp); // Close the file pointer
+
     char command[512];  // Increased size for the complete command
     char* cryo_path = getenv("CRYO_PATH");
     if (cryo_path == NULL) {
         printf("Error: CRYO_PATH environment variable not set\n");
-        return 1;
     } else {
         // DEBUG printf("CRYO_PATH: %s\n", cryo_path);
         printf("[DEBUG] Cryo Environment Found, Continuing Compiling...\n");
@@ -121,19 +140,18 @@ int cryo_compile(char* file) {
     snprintf(command, sizeof(command), "%s %s", src_path, file);
 
     // Open the command for reading.
-    FILE* fp = popen(command, "r");
-    if (fp == NULL) {
+    FILE* pipe_fp = popen(command, "r");
+    if (pipe_fp == NULL) {
         printf("Failed to run command\n");
-        return 1;
     }
 
     // Read the output a line at a time and print to the console.
     char output[1024];
-    while (fgets(output, sizeof(output) - 1, fp) != NULL) {
+    while (fgets(output, sizeof(output) - 1, pipe_fp) != NULL) {
         printf("%s", output);
     }
 
     // Close the file pointer.
-    pclose(fp);
-    return 0;
+    pclose(pipe_fp);
+    free(buffer); // Free the allocated memory
 }
