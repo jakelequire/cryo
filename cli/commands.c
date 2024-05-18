@@ -31,7 +31,6 @@ void print_help() {
 
 
 void build_program(char* args) {
-    printf("Building program with args: %s\n", args);
 
     if (args[0] == '-') {
         switch (args[1]) {
@@ -46,8 +45,9 @@ void build_program(char* args) {
                     printf("\nError: Missing argument for single file build\n\n");
                     printf("*required argument: <file>\n");
                     printf("Example: cryo build -s ./example.cryo\n");
+                    printf("\n-------------------------------------------\n\n");
                 } else {
-                    printf("file_arg: %s\n", file_arg);
+                    printf("\nfile: %s\n", file_arg);
                     build_single(file_arg);
                 }
                 break;
@@ -65,14 +65,13 @@ void build_program(char* args) {
 }
 
 void build_single(const char* file) {
-    printf("Building single file: %s\n", file);
-
+    // DEBUG printf("Building single file: %s\n", file);
     char* _file = (char*)file;
 
     if(cryo_compile(_file) == 0) {
-        printf("Build successful\n");
+        printf("\n<commands.c> Build successful\n");
     } else {
-        printf("Build failed\n");
+        printf("\n<commands.c> Build failed\n");
     }
 
 }
@@ -111,7 +110,9 @@ int cryo_compile(char* file) {
         printf("Error: CRYO_PATH environment variable not set\n");
         return 1;
     } else {
-        printf("CRYO_PATH: %s\n", cryo_path);
+        // DEBUG printf("CRYO_PATH: %s\n", cryo_path);
+        printf("[DEBUG] Cryo Environment Found, Continuing Compiling...\n");
+        printf("---------------------------------------------------\n\n");
     }
 
     char src_path[256] = "";
