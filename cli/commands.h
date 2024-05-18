@@ -34,6 +34,7 @@
 
 void print_help();
 void build_program(char* args);
+void cryo_compile(char* file);
 
 
 

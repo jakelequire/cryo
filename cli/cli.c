@@ -13,15 +13,19 @@ int main(int argc, char** argv) {
 
         if (strcmp(argv[1], "-h") == 0) {
             print_help();
-        } else if (strcmp(argv[1], "build") == 0) {
+        }
+        else if (strcmp(argv[1], "build") == 0) {
             if (argc > 2) {
+                // Pass the arguments to the build function
                 build_program(argv[2]);
             } else {
                 printf("Error: Missing argument for 'build' command\n");
             }
-        } else {
+        }
+        else {
             printf("Unknown command: %s\n", argv[1]);
         }
+
     } else {
         printf("No arguments provided. Use '-h' for help.\n");
     }

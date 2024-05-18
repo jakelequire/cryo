@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "commands.h"
 
 void print_help() {
     printf("-------------------------------------------\n");
@@ -35,14 +36,40 @@ void print_help() {
 void build_program(char* args) {
     printf("Building program with args: %s\n", args);
 
-    // use /src/bin/main.exe as the compiler for now
-    
+    // For now, let's grab a file manually, and pass it to the compiler.
+    cryo_compile("./src/tests/data/test1.cryo");
 }
 
 
 void cryo_compile(char* file) {
-    char* command = malloc(100);
-    sprintf(command, "src/bin/main.exe %s", file);
-    system(command);
-    free(command);
+    char command[512];  // Increased size for the complete command
+    char* cryo_path = getenv("CRYO_PATH");
+    if (cryo_path == NULL) {
+        printf("Error: CRYO_PATH environment variable not set\n");
+        return;
+    } else {
+        printf("CRYO_PATH: %s\n", cryo_path);
+    }
+
+    char src_path[256] = "";
+    snprintf(src_path, sizeof(src_path), "%s/src/bin/main.exe", cryo_path);
+    
+    snprintf(command, sizeof(command), "%s %s", src_path, file);
+
+    // Open the command for reading.
+    FILE* fp = popen(command, "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        return;
+    }
+
+    // Read the output a line at a time and print to the console.
+    char output[1024];
+    while (fgets(output, sizeof(output) - 1, fp) != NULL) {
+        printf("%s", output);
+    }
+
+    // Close the file pointer.
+    pclose(fp);
 }
+
