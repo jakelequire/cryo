@@ -11,13 +11,35 @@ int main(int argc, char** argv) {
         // <DEBUG>    printf("  %s\n", argv[i]);
         // <DEBUG> }
 
-        if (strcmp(argv[1], "-h") == 0) {
+        if ((strcmp(argv[1], "help")) == 0 || (strcmp(argv[1], "-h") == 0))
+        {
             print_help();
         }
-        else if (strcmp(argv[1], "build") == 0) {
+        else if ((strcmp(argv[1], "build") == 0) || (strcmp(argv[1], "-b") == 0))
+        {
             if (argc > 2) {
-                // Pass the arguments to the build function
-                build_program(argv[2]);
+                int length = 0;
+                for (int i = 2; i < argc; i++) {
+                    length += strlen(argv[i]) + 1; // +1 for space or null terminator
+                }
+
+                char* args = (char*)malloc(length);
+                if (!args) {
+                    printf("Memory allocation error\n");
+                    return 1;
+                }
+
+                args[0] = '\0'; // Initialize the string
+                for (int i = 2; i < argc; i++) {
+                    strcat(args, argv[i]);
+                    if (i < argc - 1) {
+                        strcat(args, " "); // Add space between arguments
+                    }
+                }
+
+                // Pass the concatenated string to the build function
+                build_program(args);
+                free(args);
             } else {
                 printf("Error: Missing argument for 'build' command\n");
             }

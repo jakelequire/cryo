@@ -34,8 +34,17 @@
 
 void print_help();
 void build_program(char* args);
-void cryo_compile(char* file);
+int cryo_compile(char* file);
+void build_single(const char* file);
+void scan_dir();
 
+
+// Build Command
+typedef struct {
+    bool mode;
+    char* output;
+    // More options to come...    
+} BuildArgs;
 
 
 typedef struct {
@@ -49,6 +58,5 @@ typedef struct {
     Command* commands;
     char* args;
 } Args;
-
 
 #endif
