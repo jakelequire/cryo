@@ -1,0 +1,10 @@
+#declare namespace cryolib;
+
+
+public fn printf(string: str, other?: T) {
+    if(!other) {
+        #TODO()!
+    }
+} 
+
+

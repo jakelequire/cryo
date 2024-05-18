@@ -1,0 +1,30 @@
+
+
+
+
+// Test One
+// Simple "Hello, world!" to stdout
+public fn main () -> void {
+    printf("Hello, world!");
+    return;
+}
+
+
+// Test Two
+// Variable handling
+public fn main () -> int {
+    const a: int = 34;
+    const b: int = 35;
+    return a + b;
+}
+
+
+
+// Test There
+// Function Parameters
+public fn main (a: int, b: int) -> int {
+    return a + b;
+}
+main(34, 35);
+
+

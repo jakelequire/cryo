@@ -5,30 +5,40 @@ LDFLAGS = -lm
 # Define paths
 BIN_DIR = ./src/bin/
 SRC_DIR = ./src/
-CLI_DIR = $(SRC_DIR)cli/
-LEXER_DIR = $(SRC_DIR)compiler/lexer/
-PARSER_DIR = $(SRC_DIR)compiler/parser/
-TOKENIZER_DIR = $(SRC_DIR)compiler/tokenizer/
+COMPILER_DIR = $(SRC_DIR)compiler/
 UTILS_DIR = $(SRC_DIR)utils/
+
+LEXER_DIR = $(SRC_DIR)compiler/
+PARSER_DIR = $(SRC_DIR)compiler/
+TOKENIZER_DIR = $(SRC_DIR)compiler/
+AST_DIR = $(SRC_DIR)compiler/
+
+CLI_DIR = cli/
+CLI_BIN = cli/bin/
 
 # Include directories
 INCLUDES = -I./src/ -I./src/include/
+CLI_INCLUDES = -I./cli/
 
 # Source files
 LEXER_SRC = $(LEXER_DIR)lexer.c
 PARSER_SRC = $(PARSER_DIR)parser.c
 CLI_SRC = $(CLI_DIR)cli.c
 UTILS_SRC = $(UTILS_DIR)printAST.c
+AST_SRC = $(AST_DIR)ast.c
+CODEGEN_SRC = $(COMPILER_DIR)codegen.c
+IR_SRC = $(COMPILER_DIR)ir.c
 MAIN_SRC = $(SRC_DIR)main.c
-AST_SRC = $(SRC_DIR)utils/ast.c
+SEMANTIC_SRC = $(COMPILER_DIR)semanticS.c
+COMMANDS_SRC = $(CLI_DIR)commands.c
+
 
 # Binaries
 LEXER_BIN = $(BIN_DIR)lexer
 PARSER_BIN = $(BIN_DIR)parser
-CLI_BIN = $(BIN_DIR)cli
 MAIN_BIN = $(BIN_DIR)main
 
-# Default build
+# Default buildd
 all: lexer parser cli main
 
 # Individual components
@@ -38,11 +48,17 @@ lexer:
 parser:
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(PARSER_BIN) $(PARSER_SRC) $(LEXER_SRC)
 
-cli:
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(CLI_BIN) $(CLI_SRC) $(UTILS_SRC)
-
 main:
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN_BIN) $(MAIN_SRC) $(LEXER_SRC) $(PARSER_SRC) $(AST_SRC)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN_BIN) $(MAIN_SRC) $(LEXER_SRC) $(PARSER_SRC) $(AST_SRC) $(CODEGEN_SRC) $(IR_SRC) $(SEMANTIC_SRC) 
+
+# ---------------------------------------------------------------
+# CLI
+cli:
+	$(CC) $(CFLAGS) $(CLI_INCLUDES) -o $(CLI_BIN)cryo.exe $(CLI_SRC) $(COMMANDS_SRC)
+
+runcli:
+	$(CLI_BIN)
+# ---------------------------------------------------------------
 
 # Running executables
 runlexer:
@@ -51,8 +67,6 @@ runlexer:
 runparser:
 	$(PARSER_BIN)
 
-runcli:
-	$(CLI_BIN)
 
 runmain:
 	$(MAIN_BIN) ./src/tests/data/test1.cy

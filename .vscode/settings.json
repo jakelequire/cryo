@@ -67,6 +67,8 @@
     "token.h": "c",
     "global.h": "c",
     "parser.h": "c",
-    "ast.h": "c"
+    "ast.h": "c",
+    "semantics.h": "c",
+    "commands.h": "c"
   }
 }

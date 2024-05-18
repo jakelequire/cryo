@@ -92,11 +92,13 @@ typedef struct ASTNode {
         } returnStmt;
         
     } data;
+    struct ASTNode* next;  // Next node in the linked list
 } ASTNode;
 
 void printAST(ASTNode* node);
 void printASTIndented(ASTNode* node, int indent);
 void freeAST(ASTNode* node);
+
 
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);

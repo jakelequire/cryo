@@ -4,6 +4,9 @@
 #include "include/lexer.h"
 #include "include/parser.h"
 #include "include/ast.h"
+#include "include/semantics.h"
+#include "include/ir.h"
+#include "include/codegen.h"
 
 char* readFile(const char* path); 
 
@@ -23,21 +26,42 @@ int main(int argc, char* argv[]) {
     Token token;
 
     do {
-        // nextToken(&lexer, &token);
+        nextToken(&lexer, &token);
         parseProgram(&lexer);
     } while (token.type != TOKEN_EOF);
 
+
+    // Parse the source code
     ASTNode* ast = parseExpression(&lexer);
+    free(source);   // Free the source buffer
     
 
-    if (ast == NULL) {
+    if (!ast) {
         fprintf(stderr, "Failed to parse expression.\n");
         free(source);
         return 1;
     }
 
+    // Perform semantic analysis
+    if (!analyze(ast)) {
+        fprintf(stderr, "Semantic analysis failed\n");
+        return 1;
+    }
+
+    // Generate IR
+    IRInstruction* ir = generate_ir(ast);
+    if (!ir) {
+        fprintf(stderr, "IR generation failed\n");
+        return 1;
+    }
+
+    // Generate code from IR
+    if (!generate_code(ir)) {
+        fprintf(stderr, "Code generation failed\n");
+        return 1;
+    }
+
     printAST(ast);  // Print the AST
     freeAST(ast);   // Free the AST
-    free(source);   // Free the source buffer
     return 0;
 }
