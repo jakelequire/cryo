@@ -176,7 +176,7 @@ ASTNode* parseExpressionStatement() {
     return NULL; // Placeholder
 }
 
-ASTNode* createFunctionDecl(const char* name, ASTNode* body) {
+ASTNode* createFunctionNode(const char* name, ASTNode* body) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = NODE_FUNCTION_DECL;
     node->data.functionDecl.name = strdup(name);

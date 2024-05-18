@@ -12,6 +12,8 @@ typedef struct {
     const char* start;  // Pointer to the beginning of the token in the source code
     int length;         // Length of the token
     int line;           // Line number where the token is found
+    int column;         // Column number where the token is found
+    const char* style; // Style of the token
     union {             // Union to handle different types of token values
         int intValue;       // Use if the token is an integer
         float floatValue;   // Use if the token is a float
@@ -23,6 +25,7 @@ typedef struct {
     char* start;
     char* current;
     int line;
+    int column;         // Column number where the token is found
     Token currentToken;  // Store the current token
     Token lookahead;     // Store the next token for peeking
     bool hasPeeked;      // Flag to check if lookahead is filled

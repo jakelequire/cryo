@@ -106,6 +106,6 @@ ASTNode* parseFunctionCall(const char* name);
 ASTNode* parseIfStatement();
 ASTNode* parseReturnStatement();
 ASTNode* parseExpressionStatement();
-ASTNode* createFunctionDecl(const char* name, ASTNode* body);
+ASTNode* createFunctionNode(const char* name, ASTNode* body);
 
 #endif // AST_H
