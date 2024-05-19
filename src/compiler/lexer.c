@@ -223,23 +223,18 @@ char* readFile(const char* path) {
 
     buffer[bytesRead] = '\0';  // Null-terminate the string
     fclose(file);
-
-    // Print the contents of the file to the console
-    printf("############ <Reading File> ############\n");
-    printf("\n----- Begin -----\n%s\n----- End ------\n\n", buffer);
-    //printf("Buffer content:\n%s\n", buffer);
-
+    
     return buffer;
 }
 
 Token getToken(Lexer* lexer) {
     if (lexer->hasPeeked) {
         lexer->hasPeeked = false;
-        printf("<lexer.c> Returning peeked token\n");
+        // printf("<lexer.c> Returning peeked token\n");
         return lexer->lookahead;
     } else {
         nextToken(lexer, &lexer->currentToken);
-        printf("<lexer.c> Returning new token\n");
+        // printf("<lexer.c> Returning new token\n");
         return lexer->currentToken;
     }
 }
@@ -293,7 +288,7 @@ int lexer(int argc, char* argv[]) {
     Token token;
     do {
         nextToken(&lexer, &token);
-        printf("<lexer.c> Token: %.*s (Type: %d)\n", token.length, token.start, token.type);
+        // printf("<lexer.c> Token: %.*s (Type: %d)\n", token.length, token.start, token.type);
     } while (token.type != TOKEN_EOF);
 
     freeLexer(&lexer);

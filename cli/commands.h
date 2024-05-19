@@ -10,6 +10,7 @@ void print_help();
 void build_program(char* args);
 void cryo_compile(const char* file);
 void build_single(const char* file);
+char* read_file(const char* file_path);
 void scan_dir();
 
 

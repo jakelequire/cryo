@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "include/lexer.h"
 #include "include/parser.h"
@@ -15,7 +16,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
         return 1;
     }
-
+    
     const char* filePath = argv[1];
     char* source = readFile(filePath);
     if (source == NULL) return 1;

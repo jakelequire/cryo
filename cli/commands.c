@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include "commands.h"
 
@@ -47,7 +48,7 @@ void build_program(char* args) {
                     printf("Example: cryo build -s ./example.cryo\n");
                     printf("\n-------------------------------------------\n\n");
                 } else {
-                    printf("\nfile: %s\n", file_arg);
+                    // printf("\nfile: %s\n", file_arg);
                     build_single(file_arg);
                 }
                 break;
@@ -97,61 +98,96 @@ void scan_dir() {
     }
 }
 
+char* read_file(const char* file_path) {
+    FILE* file = fopen(file_path, "rb");  // Use "rb" to read in binary mode
+    if (file == NULL) {
+        fprintf(stderr, "Error: Could not open file %s\n", file_path);
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* buffer = (char*)malloc(file_size + 1);
+    if (buffer == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        fclose(file);
+        return NULL;
+    }
+
+    size_t read_size = fread(buffer, 1, file_size, file);
+    buffer[read_size] = '\0';
+
+    fclose(file);
+
+    // Check and strip BOMs if present
+    if (read_size >= 3 && (unsigned char)buffer[0] == 0xEF && (unsigned char)buffer[1] == 0xBB && (unsigned char)buffer[2] == 0xBF) {
+        // UTF-8 BOM
+        memmove(buffer, buffer + 3, read_size - 2);
+    } else if (read_size >= 2 && (unsigned char)buffer[0] == 0xFF && (unsigned char)buffer[1] == 0xFE) {
+        // UTF-16 LE BOM
+        memmove(buffer, buffer + 2, read_size - 1);
+    } else if (read_size >= 2 && (unsigned char)buffer[0] == 0xFE && (unsigned char)buffer[1] == 0xFF) {
+        // UTF-16 BE BOM
+        memmove(buffer, buffer + 2, read_size - 1);
+    }
+
+    return buffer;
+}
 
 void cryo_compile(const char* file) {
-    FILE *fp = fopen(file, "rb");
-    if (!fp) {
-        printf("Error: Could not open file %s\n", file);
+    char* buffer = read_file(file);
+    if (buffer == NULL) {
+        // Error message already printed in read_file
         return;
     }
 
-    // Determine file size
-    fseek(fp, 0, SEEK_END);
-    long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    // Allocate memory for file contents
-    char *buffer = (char *)malloc(file_size + 1);
-    if (!buffer) {
-        printf("Error: Memory allocation failed\n");
-        fclose(fp);
-        return;
-    }
-
-    // Read file contents into buffer
-    fread(buffer, 1, file_size, fp);
-    buffer[file_size] = '\0'; // Null-terminate the string
-
-    fclose(fp); // Close the file pointer
-
-    char command[512];  // Increased size for the complete command
     char* cryo_path = getenv("CRYO_PATH");
     if (cryo_path == NULL) {
-        printf("Error: CRYO_PATH environment variable not set\n");
-    } else {
-        // DEBUG printf("CRYO_PATH: %s\n", cryo_path);
-        printf("[DEBUG] Cryo Environment Found, Continuing Compiling...\n");
-        printf("---------------------------------------------------\n\n");
+        fprintf(stderr, "Error: CRYO_PATH environment variable not set\n");
+        free(buffer);
+        return;
     }
 
-    char src_path[256] = "";
-    snprintf(src_path, sizeof(src_path), "%s/src/bin/main.exe", cryo_path);
-    
-    snprintf(command, sizeof(command), "%s %s", src_path, file);
+    printf("[DEBUG] Cryo Environment Found, Continuing Compiling...\n");
+    printf("---------------------------------------------------\n\n");
 
-    // Open the command for reading.
+    size_t src_path_len = snprintf(NULL, 0, "%s/src/bin/main.exe", cryo_path) + 1;
+    char* src_path = (char*)malloc(src_path_len);
+    if (src_path == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        free(buffer);
+        return;
+    }
+    snprintf(src_path, src_path_len, "%s/src/bin/main.exe", cryo_path);
+
+    size_t command_len = snprintf(NULL, 0, "%s %s", src_path, file) + 1;
+    char* command = (char*)malloc(command_len);
+    if (command == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed\n");
+        free(buffer);
+        free(src_path);
+        return;
+    }
+    snprintf(command, command_len, "%s %s", src_path, file);
+
     FILE* pipe_fp = popen(command, "r");
     if (pipe_fp == NULL) {
-        printf("Failed to run command\n");
+        fprintf(stderr, "Error: Failed to run command\n");
+        free(buffer);
+        free(src_path);
+        free(command);
+        return;
     }
 
-    // Read the output a line at a time and print to the console.
     char output[1024];
     while (fgets(output, sizeof(output) - 1, pipe_fp) != NULL) {
         printf("%s", output);
     }
 
-    // Close the file pointer.
     pclose(pipe_fp);
-    free(buffer); // Free the allocated memory
+    free(buffer);
+    free(src_path);
+    free(command);
 }
