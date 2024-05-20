@@ -8,7 +8,7 @@ void analyze_function(ASTNode* node);
 void analyze_return(ASTNode* node);
 
 
-int analyze(ASTNode* node);
+bool analyze(Node *root);
 
 #endif // SEMANTICS_H
 

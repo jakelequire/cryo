@@ -5,21 +5,32 @@
 
 typedef enum {
     NODE_PROGRAM,
-    NODE_FUNCTION_DECL,
-    NODE_VAR_DECL,
     NODE_STATEMENT,
     NODE_EXPRESSION,
-    NODE_BINARY_EXPR,
-    NODE_UNARY_EXPR,
-    NODE_LITERAL_EXPR,
-    NODE_VARIABLE_EXPR,
+    NODE_VAR_DECLARATION,
+    NODE_FUNCTION_DECLARATION,
     NODE_FUNCTION_CALL,
     NODE_IF_STATEMENT,
     NODE_WHILE_STATEMENT,
     NODE_FOR_STATEMENT,
+    NODE_BREAK_STATEMENT,
+    NODE_CONTINUE_STATEMENT,
     NODE_RETURN_STATEMENT,
-    // Add other node types as needed
+    NODE_BINARY_EXPR,
+    NODE_UNARY_EXPR,
+    NODE_LITERAL,
+    NODE_IDENTIFIER
 } NodeType;
+
+typedef struct Node {
+    NodeType type;
+    struct Node *left;
+    struct Node *right;
+    char *value;
+} Node;
+
+Node *create_node(NodeType type);
+void free_node(Node *node);
 
 typedef struct ASTNode {
     NodeType type;

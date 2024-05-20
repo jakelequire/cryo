@@ -3,7 +3,7 @@
 
 
 IRInstruction* generate_ir_function(ASTNode* node) {
-    if (node == NULL || node->type != NODE_FUNCTION_DECL) return NULL;
+    if (node == NULL || node->type != NODE_FUNCTION_DECLARATION) return NULL;
 
     IRInstruction* instr = (IRInstruction*)malloc(sizeof(IRInstruction));
     instr->type = IR_FUNC_DEF;
@@ -40,7 +40,7 @@ IRInstruction* generate_ir(ASTNode* node) {
     if (node == NULL) return NULL;
 
     switch (node->type) {
-        case NODE_FUNCTION_DECL:
+        case NODE_FUNCTION_DECLARATION:
             return generate_ir_function(node);
         case NODE_RETURN_STATEMENT:
             return generate_ir_return(node);

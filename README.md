@@ -2,6 +2,10 @@
 # Cryo
 A simple programming language. A fun project to learn about programming languages and interpreters.
 
+
+## Goals / To-Do
+- Turing Complete: [Wikipedia](https://enwikipedia.org/wiki/Rule_110)
+
 ## Compontents of Cryo
 
 ### Lexer

@@ -1,5 +1,7 @@
 
 #include "include/ast.h"
+#include "include/semantics.h"
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -14,10 +16,29 @@ void analyze_return(ASTNode* node) {
 }
 
 
-int analyze(ASTNode* node) {
-    // Perform semantic analysis here
-    printf("Performing semantic analysis...\n");
-    printf("Analyzing node: %d\n", node->data.value);
-    free(node);
-    return 1; // Return 1 on success, 0 on failure
+bool analyze(Node *root) {
+    if (!root) return true;
+    
+    switch (root->type) {
+        case NODE_VAR_DECLARATION:
+            // Check variable type and initialization
+            break;
+        case NODE_FUNCTION_DECLARATION:
+            // Check function parameters and body
+            break;
+        case NODE_IF_STATEMENT:
+        case NODE_WHILE_STATEMENT:
+        case NODE_FOR_STATEMENT:
+            // Check conditional expressions
+            break;
+        case NODE_BINARY_EXPR:
+        case NODE_UNARY_EXPR:
+            // Check operand types
+            break;
+        default:
+            break;
+    }
+    
+    // Recursively analyze left and right children
+    return analyze(root->left) && analyze(root->right);
 }

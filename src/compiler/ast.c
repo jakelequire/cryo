@@ -6,6 +6,24 @@
 #include "include/parser.h"
 #include "include/ast.h"
 
+Node *create_node(NodeType type) {
+    Node *node = (Node *)malloc(sizeof(Node));
+    node->type = type;
+    node->left = NULL;
+    node->right = NULL;
+    node->value = NULL;
+    return node;
+}
+
+void free_node(Node *node) {
+    if (node) {
+        free(node->value);
+        free_node(node->left);
+        free_node(node->right);
+        free(node);
+    }
+}
+
 void freeAST(ASTNode* node) {
     if (node == NULL) return;
 
@@ -18,15 +36,15 @@ void freeAST(ASTNode* node) {
         case NODE_UNARY_EXPR:
             freeAST(node->data.unary_op.operand);
             break;
-        case NODE_LITERAL_EXPR:
+        case NODE_LITERAL:
             break;
-        case NODE_VARIABLE_EXPR:
+        case NODE_VAR_DECLARATION:
             free(node->data.varName.varName);
             break;
         case NODE_FUNCTION_CALL:
             free(node->data.functionCall.name);
             break;
-        case NODE_FUNCTION_DECL:
+        case NODE_FUNCTION_DECLARATION:
             free(node->data.functionDecl.name);
             freeAST(node->data.functionDecl.body);
             break;
@@ -71,16 +89,16 @@ void printASTIndented(ASTNode* node, int indent) {
             printf("%sUnary Expression: %d\n", indentStr, node->data.unary_op.operator);
             printASTIndented(node->data.unary_op.operand, indent + 2);
             break;
-        case NODE_LITERAL_EXPR:
+        case NODE_LITERAL:
             printf("%sLiteral: %d\n", indentStr, node->data.value);
             break;
-        case NODE_VARIABLE_EXPR:
+        case NODE_VAR_DECLARATION:
             printf("%sVariable: %s\n", indentStr, node->data.varName.varName);
             break;
         case NODE_FUNCTION_CALL:
             printf("%sFunction Call: %s\n", indentStr, node->data.functionCall.name);
             break;
-        case NODE_FUNCTION_DECL:
+        case NODE_FUNCTION_DECLARATION:
             printf("%sFunction Declaration: %s\n", indentStr, node->data.functionDecl.name);
             printASTIndented(node->data.functionDecl.body, indent + 2);
             break;
@@ -122,14 +140,14 @@ void printAST(ASTNode* node) {
 
 ASTNode* createLiteralExpr(int value) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_LITERAL_EXPR;
+    node->type = NODE_LITERAL;
     node->data.value = value;
     return node;
 }
 
 ASTNode* createVariableExpr(const char* name) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_VARIABLE_EXPR;
+    node->type = NODE_VAR_DECLARATION;
     node->data.varName.varName = strdup(name);
     return node;
 }
@@ -178,7 +196,7 @@ ASTNode* parseExpressionStatement() {
 
 ASTNode* createFunctionNode(const char* name, ASTNode* body) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_FUNCTION_DECL;
+    node->type = NODE_FUNCTION_DECLARATION;
     node->data.functionDecl.name = strdup(name);
     node->data.functionDecl.body = body;
     return node;

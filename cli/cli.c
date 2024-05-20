@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
         }
 
     } else {
-        printf("No arguments provided. Use '-h' for help.\n");
+        print_help();
     }
 
     return 0;

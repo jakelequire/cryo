@@ -69,6 +69,13 @@
     "parser.h": "c",
     "ast.h": "c",
     "semantics.h": "c",
-    "commands.h": "c"
+    "commands.h": "c",
+    "executionengine.h": "c",
+    "targetmachine.h": "c",
+    "target.h": "c",
+    "externc.h": "c",
+    "codegen.h": "c",
+    "core.h": "c",
+    "types.h": "c"
   }
 }
