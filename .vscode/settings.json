@@ -76,6 +76,9 @@
     "externc.h": "c",
     "codegen.h": "c",
     "core.h": "c",
-    "types.h": "c"
+    "types.h": "c",
+    "llvm-config.h": "c",
+    "ir.h": "c",
+    "dirent.h": "c"
   }
 }

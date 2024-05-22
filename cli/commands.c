@@ -1,8 +1,17 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <dirent.h>
+#define _CRT_SECURE_NO_WARNINGS
+
+#ifdef _WIN32
+#include <windows.h>
+#define popen _popen
+#define pclose _pclose
+#else
 #include <unistd.h>
+#include <dirent.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "commands.h"
 
@@ -30,9 +39,7 @@ void print_help() {
     printf("-------------------------------------------\n");
 }
 
-
 void build_program(char* args) {
-
     if (args[0] == '-') {
         switch (args[1]) {
             case 's': {
@@ -72,18 +79,32 @@ void build_single(const char* file) {
     cryo_compile(_file);
 }
 
-
 void scan_dir() {
     printf("Scanning directory for cryo files\n");
 
-    char* local_path = getenv("PWD");
+    char* local_path;
+    size_t len;
+    _dupenv_s(&local_path, &len, "PWD");
+
     if (local_path == NULL) {
         printf("Error: PWD environment variable not set\n");
         return;
     } else {
         printf("PWD: %s\n", local_path);
 
-        // Open the directory
+#ifdef _WIN32
+        WIN32_FIND_DATA findFileData;
+        HANDLE hFind = FindFirstFile("*", &findFileData);
+
+        if (hFind == INVALID_HANDLE_VALUE) {
+            printf("Error: Could not open directory\n");
+        } else {
+            do {
+                printf("  %s\n", findFileData.cFileName);
+            } while (FindNextFile(hFind, &findFileData) != 0);
+            FindClose(hFind);
+        }
+#else
         DIR* dir;
         struct dirent* ent;
 
@@ -95,11 +116,14 @@ void scan_dir() {
         } else {
             printf("Error: Could not open directory\n");
         }
+#endif
     }
+    free(local_path);
 }
 
 char* read_file(const char* file_path) {
-    FILE* file = fopen(file_path, "rb");  // Use "rb" to read in binary mode
+    FILE* file;
+    fopen_s(&file, file_path, "rb");  // Use "rb" to read in binary mode
     if (file == NULL) {
         fprintf(stderr, "Error: Could not open file %s\n", file_path);
         return NULL;
@@ -143,7 +167,10 @@ void cryo_compile(const char* file) {
         return;
     }
 
-    char* cryo_path = getenv("CRYO_PATH");
+    char* cryo_path;
+    size_t len;
+    _dupenv_s(&cryo_path, &len, "CRYO_PATH");
+
     if (cryo_path == NULL) {
         fprintf(stderr, "Error: CRYO_PATH environment variable not set\n");
         free(buffer);

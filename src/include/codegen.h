@@ -8,8 +8,8 @@
 #include <llvm-c/TargetMachine.h>
 #include "ir.h"
 
-LLVMModuleRef generate_code(Node *root);
-
-int generate_code(IRInstruction* ir);
+// LLVMModuleRef generate_code();
+// 
+// int generate_code(IRInstruction* ir);
 
 #endif // CODEGEN_H
