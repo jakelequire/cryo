@@ -17,7 +17,6 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
         return 1;
     }
-    printf("test\n");
     
     const char* filePath = argv[1];
     char* source = readFile(filePath);
@@ -31,7 +30,7 @@ int main(int argc, char* argv[]) {
     do {
         nextToken(&lexer, &token);
         parseProgram(&lexer);
-        printf("Token type: %d at line %d\n", token.type, lexer.line);
+        // printf("Token type: %d at line %d\n", token.type, lexer.line);
     } while (token.type != TOKEN_EOF);
 
 

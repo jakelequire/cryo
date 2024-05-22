@@ -31,7 +31,7 @@ void nextToken(Lexer* lexer, Token* token) {
                 }
                 lexer->current++;
             } while (isspace(*lexer->current));
-            printf("Skipped whitespace, next character: '%c' (%d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
+            // printf("Skipped whitespace, next character: '%c' (%d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
             continue;
         }
 
@@ -47,7 +47,7 @@ void nextToken(Lexer* lexer, Token* token) {
             token->type = TOKEN_NEWLINE;
             token->length = 1;
             lexer->current++;
-            printf("Detected newline at line %d, column %d\n", lexer->line, lexer->column);
+            // printf("Detected newline at line %d, column %d\n", lexer->line, lexer->column);
             return;
         }
 
@@ -59,7 +59,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_IDENTIFIER;
             token->length = lexer->current - lexer->start;
-            printf("Detected identifier: '%.*s'\n", token->length, lexer->start);
+            // printf("Detected identifier: '%.*s'\n", token->length, lexer->start);
 
             // Check for keywords
             if (strncmp(lexer->start, "public", token->length) == 0) token->type = TOKEN_KW_PUBLIC;
@@ -151,7 +151,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_STRING;
             token->length = lexer->current - lexer->start;
-            printf("Detected string: '%.*s'\n", token->length, lexer->start);
+            // printf("Detected string: '%.*s'\n", token->length, lexer->start);
             return;
         }
 
@@ -163,7 +163,7 @@ void nextToken(Lexer* lexer, Token* token) {
             token->column = lexer->column;
             lexer->current++;
             lexer->column++;
-            printf("Detected punctuation: '%c' at line %d, column %d\n", *lexer->start, lexer->line, token->column);
+            // printf("Detected punctuation: '%c' at line %d, column %d\n", *lexer->start, lexer->line, token->column);
             return;
         }
 
@@ -174,7 +174,7 @@ void nextToken(Lexer* lexer, Token* token) {
                 lexer->column += 2;
                 token->type = TOKEN_RESULT_ARROW;
                 token->length = 2;
-                printf("Detected result arrow: '->' at line %d, column %d\n", lexer->line, token->column);
+                // printf("Detected result arrow: '->' at line %d, column %d\n", lexer->line, token->column);
                 return;
             }
         }
@@ -189,8 +189,11 @@ void nextToken(Lexer* lexer, Token* token) {
     token->line = lexer->line;
     token->column = lexer->column;
     token->length = 0;
+
+    
     printf("############ <End of File> ############\n");
-    printf("Detected EOF at line %d, column %d\n", lexer->line, lexer->column);
+    printf(" Detected EOF at line %d, column %d\n", lexer->line, lexer->column - 1);
+    printf("#######################################\n\n");
     exit(0);
 }
 char* readFile(const char* path) {
@@ -220,10 +223,15 @@ char* readFile(const char* path) {
         free(buffer);
         return NULL;
     }
-    
+
     buffer[length] = '\0';
     fclose(file);
+    printf("\n############ <File Contents> ############\n");
+    printf("%s\n\n", buffer);
     return buffer;
+}
+
+void print_file(char* buffer) {
 }
 
 Token getToken(Lexer* lexer) {
