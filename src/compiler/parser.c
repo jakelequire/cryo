@@ -7,7 +7,7 @@ Token currentToken;
 
 void getNextToken(Lexer* lexer) {
     currentToken = getToken(lexer);
-    // printf("getNextToken: Token type: %d at line %d\n", currentToken.type, lexer->line);
+    printf("getNextToken: Token type: %d at line %d\n", currentToken.type, lexer->line);
 }
 
 void error(const char* message) {
@@ -244,7 +244,7 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer) {
 void parseProgram(Lexer* lexer) {
     getNextToken(lexer);  // Initialize token stream
     while (currentToken.type != TOKEN_EOF) {
-        // printf("Parsing token: %d (Type: %d) at line %d\n", currentToken.type, currentToken.type, lexer->line);
+        printf("Parsing token: %d (Type: %d) at line %d\n", currentToken.type, currentToken.type, lexer->line);
         if (currentToken.type == TOKEN_KW_PUBLIC) {
             getNextToken(lexer);  // Consume 'public'
             printf("After public: Token: %d (Type: %d) at line %d\n", currentToken.type, currentToken.type, lexer->line);

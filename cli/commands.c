@@ -72,6 +72,16 @@ void build_program(char* args) {
     }
 }
 
+void build_help_message() {
+    printf("\nError: Missing argument for 'build' command\n\n");
+    printf("\n    Arguments:\n\n");
+    printf("        -s Single File: Only compile one individual file\n");
+    printf("            cryo build -s <file>\n\n");
+    printf("      * -d Directory *UNIMPLEMENTED*: Compile all files in the current directory\n");
+    printf("            cryo build -d ./\n\n");
+    printf("\n");
+}
+
 void build_single(const char* file) {
     // DEBUG printf("Building single file: %s\n", file);
     char* _file = (char*)file;

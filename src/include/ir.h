@@ -2,6 +2,7 @@
 #define IR_H
 
 #include "ast.h"
+#include <stdbool.h>
 
 typedef enum {
     IR_FUNC_DEF,
@@ -36,6 +37,5 @@ IRInstruction* generate_ir_return(ASTNode* node);
 IRInstruction* generate_ir_binary_op(ASTNode* node);
 
 IRInstruction* generate_ir(ASTNode* node);
-
 
 #endif // IR_H

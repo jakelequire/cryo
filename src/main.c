@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
         return 1;
     }
+    printf("test\n");
     
     const char* filePath = argv[1];
     char* source = readFile(filePath);
@@ -30,6 +31,7 @@ int main(int argc, char* argv[]) {
     do {
         nextToken(&lexer, &token);
         parseProgram(&lexer);
+        printf("Token type: %d at line %d\n", token.type, lexer.line);
     } while (token.type != TOKEN_EOF);
 
 
@@ -45,23 +47,21 @@ int main(int argc, char* argv[]) {
     }
 
     // Perform semantic analysis
-    if (!analyze(ast)) {
-        fprintf(stderr, "Semantic analysis failed\n");
-        return 1;
-    }
-
+    // if (!analyze(ast)) {
+    //     fprintf(stderr, "Semantic analysis failed\n");
+    //     return 1;
+    // }
     // Generate IR
-    IRInstruction* ir = generate_ir(ast);
-    if (!ir) {
-        fprintf(stderr, "IR generation failed\n");
-        return 1;
-    }
-
+    // IRInstruction* ir = generate_ir(ast);
+    // if (!ir) {
+    //     fprintf(stderr, "IR generation failed\n");
+    //     return 1;
+    // }
     // Generate code from IR
-    if (!generate_code(ir)) {
-        fprintf(stderr, "Code generation failed\n");
-        return 1;
-    }
+    // if (!generate_code(ir)) {
+    //     fprintf(stderr, "Code generation failed\n");
+    //     return 1;
+    // }
 
     printAST(ast);  // Print the AST
     freeAST(ast);   // Free the AST

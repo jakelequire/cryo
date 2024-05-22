@@ -31,7 +31,7 @@ void nextToken(Lexer* lexer, Token* token) {
                 }
                 lexer->current++;
             } while (isspace(*lexer->current));
-            // printf("Skipped whitespace, next character: '%c' (%d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
+            printf("Skipped whitespace, next character: '%c' (%d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
             continue;
         }
 
@@ -47,7 +47,7 @@ void nextToken(Lexer* lexer, Token* token) {
             token->type = TOKEN_NEWLINE;
             token->length = 1;
             lexer->current++;
-            // printf("Detected newline at line %d, column %d\n", lexer->line, lexer->column);
+            printf("Detected newline at line %d, column %d\n", lexer->line, lexer->column);
             return;
         }
 
@@ -59,7 +59,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_IDENTIFIER;
             token->length = lexer->current - lexer->start;
-            // printf("Detected identifier: '%.*s'\n", token->length, lexer->start);
+            printf("Detected identifier: '%.*s'\n", token->length, lexer->start);
 
             // Check for keywords
             if (strncmp(lexer->start, "public", token->length) == 0) token->type = TOKEN_KW_PUBLIC;
@@ -151,7 +151,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_STRING;
             token->length = lexer->current - lexer->start;
-            // printf("Detected string: '%.*s'\n", token->length, lexer->start);
+            printf("Detected string: '%.*s'\n", token->length, lexer->start);
             return;
         }
 
@@ -163,7 +163,7 @@ void nextToken(Lexer* lexer, Token* token) {
             token->column = lexer->column;
             lexer->current++;
             lexer->column++;
-            // printf("Detected punctuation: '%c' at line %d, column %d\n", *lexer->start, lexer->line, token->column);
+            printf("Detected punctuation: '%c' at line %d, column %d\n", *lexer->start, lexer->line, token->column);
             return;
         }
 
@@ -174,7 +174,7 @@ void nextToken(Lexer* lexer, Token* token) {
                 lexer->column += 2;
                 token->type = TOKEN_RESULT_ARROW;
                 token->length = 2;
-                // printf("Detected result arrow: '->' at line %d, column %d\n", lexer->line, token->column);
+                printf("Detected result arrow: '->' at line %d, column %d\n", lexer->line, token->column);
                 return;
             }
         }
@@ -190,51 +190,48 @@ void nextToken(Lexer* lexer, Token* token) {
     token->column = lexer->column;
     token->length = 0;
     printf("############ <End of File> ############\n");
+    printf("Detected EOF at line %d, column %d\n", lexer->line, lexer->column);
     exit(0);
 }
-
-
 char* readFile(const char* path) {
-    FILE* file = fopen(path, "rb");  // Open the file in binary mode to avoid transformations
-    if (file == NULL) {
-        perror("Could not open file");
+    FILE* file;
+    errno_t err = fopen_s(&file, path, "r+");
+    if (err != 0) {
+        perror("<lexer.c> Could not open file");
         return NULL;
     }
 
     fseek(file, 0, SEEK_END);
-    size_t length = ftell(file);
+    long length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    size_t fileSize = length;
-    char* buffer = (char*)malloc(fileSize + 1);
+    char* buffer = (char*)malloc(length + 1);
     if (buffer == NULL) {
-        perror("<lexer.c> Not enough memory to read file");
+        perror("<lexer.c> Memory allocation failed");
         fclose(file);
         return NULL;
     }
 
-    size_t bytesRead = fread(buffer, 1, fileSize, file);
-    if (bytesRead < fileSize) {
-        perror("<lexer.c> Failed to read the full file");
+    size_t read = fread(buffer, 1, length, file);
+
+    if (read == 0) {
+        perror("<lexer.c> Could not read file");
+        fclose(file);
         free(buffer);
-        fclose(file);
         return NULL;
     }
-
-    buffer[bytesRead] = '\0';  // Null-terminate the string
-    fclose(file);
     
+    buffer[length] = '\0';
+    fclose(file);
     return buffer;
 }
 
 Token getToken(Lexer* lexer) {
     if (lexer->hasPeeked) {
         lexer->hasPeeked = false;
-        // printf("<lexer.c> Returning peeked token\n");
         return lexer->lookahead;
     } else {
         nextToken(lexer, &lexer->currentToken);
-        // printf("<lexer.c> Returning new token\n");
         return lexer->currentToken;
     }
 }
@@ -252,7 +249,6 @@ void unreadToken(Lexer* lexer, Token token) {
     lexer->hasPeeked = true;
 }
 
-
 int getTokenIntegerValue(Token* token) {
     return strtol(token->start, NULL, 10);
 }
@@ -263,11 +259,10 @@ float getTokenFloatValue(Token* token) {
 
 const char* getTokenStringValue(Token* token) {
     char* buffer = malloc(token->length + 1);
-    strncpy(buffer, token->start, token->length);
+    strncpy_s(buffer, token->length + 1, token->start, token->length);
     buffer[token->length] = '\0';
     return buffer;
 }
-
 
 void freeLexer(Lexer* lexer) {
     free(lexer->start);
@@ -288,7 +283,6 @@ int lexer(int argc, char* argv[]) {
     Token token;
     do {
         nextToken(&lexer, &token);
-        // printf("<lexer.c> Token: %.*s (Type: %d)\n", token.length, token.start, token.type);
     } while (token.type != TOKEN_EOF);
 
     freeLexer(&lexer);

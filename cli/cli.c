@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
                 build_program(args);
                 free(args);
             } else {
-                printf("Error: Missing argument for 'build' command\n");
+                build_help_message();
             }
         }
         else {

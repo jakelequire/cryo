@@ -16,7 +16,7 @@ void analyze_return(ASTNode* node) {
 }
 
 
-bool analyze(Node *root) {
+bool analyze(ASTNode *root) {
     if (!root) return true;
     
     switch (root->type) {
@@ -40,5 +40,7 @@ bool analyze(Node *root) {
     }
     
     // Recursively analyze left and right children
-    return analyze(root->left) && analyze(root->right);
+    if (root->next) {
+        if (!analyze(root->next)) return false;
+    }
 }
