@@ -10,6 +10,8 @@ COMPILER_DIR = $(SRC_DIR)compiler/
 UTILS_DIR = $(SRC_DIR)utils/
 CLI_DIR = ./cli/
 CLI_BIN_DIR = $(CLI_DIR)bin/
+OBJS = $(SRCS:.c=.o)
+TARGET = src/bin/main.exe
 
 # Include directories
 INCLUDES = -I./src/ -I./src/include/
@@ -81,8 +83,10 @@ runmain: $(MAIN_BIN)
 runcli: $(CLI_BIN_EXE)
 	$(CLI_BIN_EXE)
 
-# Clean up
+# Clean up (Windows only) - remove object files and executables
 clean:
-	rm -f $(BIN_DIR)*.exe $(CLI_BIN_DIR)*.exe $(COMPILER_DIR)*.o $(UTILS_DIR)*.o $(CLI_DIR)*.o $(SRC_DIR)*.o
+	del $(COMPILER_OBJ) $(UTILS_OBJ) $(CLI_OBJ) $(MAIN_OBJ) $(MAIN_BIN)
+
+
 
 .PHONY: all clean runlexer runparser runmain runcli

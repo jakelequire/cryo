@@ -7,10 +7,13 @@
 
 ASTNode* parseExpression(Lexer* lexer);
 ASTNode* parseStatement(Lexer* lexer);
-ASTNode* parseFunctionDeclaration(Lexer* lexer);
+ASTNode* parseIfStatement(Lexer* lexer);
+ASTNode* parseReturnStatement(Lexer* lexer);
+ASTNode* parseExpressionStatement(Lexer* lexer);
 ASTNode* parseWhileStatement(Lexer* lexer);
 ASTNode* parseForStatement(Lexer* lexer);
 ASTNode* parseVarDeclaration(Lexer* lexer);
+ASTNode* parseFunctionDeclaration(Lexer* lexer);
 
 void parseProgram(Lexer* lexer);
 

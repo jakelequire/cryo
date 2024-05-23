@@ -17,7 +17,8 @@
             "name": "clang",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Program Files/LLVM/include/**"
+                "C:/Program Files/LLVM/include/**",
+                "${workspaceFolder}/src/include"
             ],
             "defines": [
                 "_DEBUG",

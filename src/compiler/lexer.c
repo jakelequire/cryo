@@ -1,19 +1,17 @@
+#include "lexer.h"
+#include "token.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h> 
 #include <string.h>
-#include <stdbool.h>
-
-#include "include/lexer.h"
-#include "include/parser.h"
-#include "include/token.h"
 
 
-
+// Initialize the lexer with the input source code
 void initLexer(Lexer* lexer, const char* source) {
     lexer->start = lexer->current = (char*)source;
     lexer->line = 1;
     lexer->column = 1;
+    printf("Lexer initialized.\n");
 }
 
 void nextToken(Lexer* lexer, Token* token) {
@@ -31,7 +29,6 @@ void nextToken(Lexer* lexer, Token* token) {
                 }
                 lexer->current++;
             } while (isspace(*lexer->current));
-            // printf("Skipped whitespace, next character: '%c' (%d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
             continue;
         }
 
@@ -47,7 +44,7 @@ void nextToken(Lexer* lexer, Token* token) {
             token->type = TOKEN_NEWLINE;
             token->length = 1;
             lexer->current++;
-            // printf("Detected newline at line %d, column %d\n", lexer->line, lexer->column);
+            printf("Token: NEWLINE at line %d, column %d\n", token->line, token->column);
             return;
         }
 
@@ -59,63 +56,9 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_IDENTIFIER;
             token->length = lexer->current - lexer->start;
-            // printf("Detected identifier: '%.*s'\n", token->length, lexer->start);
-
+            printf("Token: IDENTIFIER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
             // Check for keywords
-            if (strncmp(lexer->start, "public", token->length) == 0) token->type = TOKEN_KW_PUBLIC;
-            else if (strncmp(lexer->start, "fn", token->length) == 0) token->type = TOKEN_KW_FN;
-            else if (strncmp(lexer->start, "return", token->length) == 0) token->type = TOKEN_KW_RETURN;
-            else if (strncmp(lexer->start, "Result", token->length) == 0) token->type = TOKEN_KW_RESULT;
-            else if (strncmp(lexer->start, "break", token->length) == 0) token->type =  TOKEN_KW_BREAK;
-            else if (strncmp(lexer->start, "case", token->length) == 0) token->type = TOKEN_KW_CASE;
-            else if (strncmp(lexer->start, "class", token->length) == 0) token->type = TOKEN_KW_CLASS;
-            else if (strncmp(lexer->start, "const", token->length) == 0) token->type = TOKEN_KW_CONST;
-            else if (strncmp(lexer->start, "continue", token->length) == 0) token->type = TOKEN_KW_CONTINUE;
-            else if (strncmp(lexer->start, "default", token->length) == 0) token->type = TOKEN_KW_DEFAULT;
-            else if (strncmp(lexer->start, "else", token->length) == 0) token->type = TOKEN_KW_ELSE;
-            else if (strncmp(lexer->start, "extends", token->length) == 0) token->type = TOKEN_KW_EXTENDS;
-            else if (strncmp(lexer->start, "false", token->length) == 0) token->type = TOKEN_KW_FALSE;
-            else if (strncmp(lexer->start, "for", token->length) == 0) token->type = TOKEN_KW_FOR;
-            else if (strncmp(lexer->start, "if", token->length) == 0) token->type = TOKEN_KW_IF;
-            else if (strncmp(lexer->start, "import", token->length) == 0) token->type = TOKEN_KW_IMPORT;
-            else if (strncmp(lexer->start, "in", token->length) == 0) token->type = TOKEN_KW_IN;
-            else if (strncmp(lexer->start, "instanceof", token->length) == 0) token->type = TOKEN_KW_INSTANCEOF;
-            else if (strncmp(lexer->start, "new", token->length) == 0) token->type = TOKEN_KW_NEW;
-            else if (strncmp(lexer->start, "null", token->length) == 0) token->type = TOKEN_KW_NULL;
-            else if (strncmp(lexer->start, "protected", token->length) == 0) token->type = TOKEN_KW_PROTECTED;
-            else if (strncmp(lexer->start, "static", token->length) == 0) token->type = TOKEN_KW_STATIC;
-            else if (strncmp(lexer->start, "true", token->length) == 0) token->type = TOKEN_KW_TRUE;
-            else if (strncmp(lexer->start, "while", token->length) == 0) token->type = TOKEN_KW_WHILE;
-            else if (strncmp(lexer->start, "mut", token->length) == 0) token->type = TOKEN_KW_MUT;
-            else if (strncmp(lexer->start, "protected", token->length) == 0) token->type = TOKEN_KW_PROTECTED;
-            else if (strncmp(lexer->start, "private", token->length) == 0) token->type = TOKEN_KW_PRIVATE;
-            else if (strncmp(lexer->start, "struct", token->length) == 0) token->type = TOKEN_KW_STRUCT;
-            else if (strncmp(lexer->start, "enum", token->length) == 0) token->type = TOKEN_KW_ENUM;
-            else if (strncmp(lexer->start, "trait", token->length) == 0) token->type = TOKEN_KW_TRAIT;
-            else if (strncmp(lexer->start, "impl", token->length) == 0) token->type = TOKEN_KW_IMPL;
-            else if (strncmp(lexer->start, "use", token->length) == 0) token->type = TOKEN_KW_USE;
-            else if (strncmp(lexer->start, "as", token->length) == 0) token->type = TOKEN_KW_AS;
-            else if (strncmp(lexer->start, "module", token->length) == 0) token->type = TOKEN_KW_MODULE;
-            else if (strncmp(lexer->start, "namespace", token->length) == 0) token->type = TOKEN_KW_NAMESPACE;
-            else if (strncmp(lexer->start, "type", token->length) == 0) token->type = TOKEN_KW_TYPE;
-            else if (strncmp(lexer->start, "cast", token->length) == 0) token->type = TOKEN_KW_CAST;
-            else if (strncmp(lexer->start, "size", token->length) == 0) token->type = TOKEN_KW_SIZE;
-            else if (strncmp(lexer->start, "byte", token->length) == 0) token->type = TOKEN_KW_BYTE;
-            else if (strncmp(lexer->start, "char", token->length) == 0) token->type = TOKEN_KW_CHAR;
-            else if (strncmp(lexer->start, "double", token->length) == 0) token->type = TOKEN_KW_DOUBLE;
-            else if (strncmp(lexer->start, "float", token->length) == 0) token->type = TOKEN_KW_FLOAT;
-            else if (strncmp(lexer->start, "int", token->length) == 0) token->type = TOKEN_KW_INT;
-            else if (strncmp(lexer->start, "long", token->length) == 0) token->type = TOKEN_KW_LONG;
-            else if (strncmp(lexer->start, "native", token->length) == 0) token->type = TOKEN_KW_NATIVE;
-            else if (strncmp(lexer->start, "short", token->length) == 0) token->type = TOKEN_KW_SHORT;
-            else if (strncmp(lexer->start, "synchronized", token->length) == 0) token->type = TOKEN_KW_SYNCHRONIZED;
-            else if (strncmp(lexer->start, "volatile", token->length) == 0) token->type = TOKEN_KW_VOLATILE;
-            else if (strncmp(lexer->start, "void", token->length) == 0) token->type = TOKEN_KW_VOID;
-            else if (strncmp(lexer->start, "interface", token->length) == 0) token->type = TOKEN_KW_INTERFACE;
-            else if (strncmp(lexer->start, "boolean", token->length) == 0) token->type = TOKEN_KW_BOOLEAN;
-            else if (strncmp(lexer->start, "typeof", token->length) == 0) token->type = TOKEN_KW_TYPEOF;
-            else if (strncmp(lexer->start, "await", token->length) == 0) token->type = TOKEN_KW_AWAIT;
-            else if (strncmp(lexer->start, "enum", token->length) == 0) token->type = TOKEN_KW_ENUM;
+            // (Add your keyword checks here)
 
             return;
         }
@@ -128,6 +71,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_INT;
             token->length = lexer->current - lexer->start;
+            printf("Token: INTEGER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
             return;
         }
 
@@ -151,7 +95,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_STRING;
             token->length = lexer->current - lexer->start;
-            // printf("Detected string: '%.*s'\n", token->length, lexer->start);
+            printf("Token: STRING '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
             return;
         }
 
@@ -163,7 +107,7 @@ void nextToken(Lexer* lexer, Token* token) {
             token->column = lexer->column;
             lexer->current++;
             lexer->column++;
-            // printf("Detected punctuation: '%c' at line %d, column %d\n", *lexer->start, lexer->line, token->column);
+            printf("Token: PUNCTUATION '%c' at line %d, column %d\n", token->type, token->line, token->column);
             return;
         }
 
@@ -174,13 +118,13 @@ void nextToken(Lexer* lexer, Token* token) {
                 lexer->column += 2;
                 token->type = TOKEN_RESULT_ARROW;
                 token->length = 2;
-                // printf("Detected result arrow: '->' at line %d, column %d\n", lexer->line, token->column);
+                printf("Token: RESULT_ARROW '->' at line %d, column %d\n", token->line, token->column);
                 return;
             }
         }
 
         // Handle unexpected characters
-        fprintf(stderr, "Error: Unexpected character '%c' at line %d\n", *lexer->current, lexer->line);
+        fprintf(stderr, "Error: Unexpected character '%c' (ASCII %d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
         lexer->current++;
         lexer->column++;
     }
@@ -189,49 +133,7 @@ void nextToken(Lexer* lexer, Token* token) {
     token->line = lexer->line;
     token->column = lexer->column;
     token->length = 0;
-
-    
     printf("############ <End of File> ############\n");
-    printf(" Detected EOF at line %d, column %d\n", lexer->line, lexer->column - 1);
-    printf("#######################################\n\n");
-    exit(0);
-}
-char* readFile(const char* path) {
-    FILE* file;
-    errno_t err = fopen_s(&file, path, "r+");
-    if (err != 0) {
-        perror("<lexer.c> Could not open file");
-        return NULL;
-    }
-
-    fseek(file, 0, SEEK_END);
-    long length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer == NULL) {
-        perror("<lexer.c> Memory allocation failed");
-        fclose(file);
-        return NULL;
-    }
-
-    size_t read = fread(buffer, 1, length, file);
-
-    if (read == 0) {
-        perror("<lexer.c> Could not read file");
-        fclose(file);
-        free(buffer);
-        return NULL;
-    }
-
-    buffer[length] = '\0';
-    fclose(file);
-    printf("\n############ <File Contents> ############\n");
-    printf("%s\n\n", buffer);
-    return buffer;
-}
-
-void print_file(char* buffer) {
 }
 
 Token getToken(Lexer* lexer) {
@@ -242,6 +144,10 @@ Token getToken(Lexer* lexer) {
         nextToken(lexer, &lexer->currentToken);
         return lexer->currentToken;
     }
+}
+
+Token get_next_token(Lexer *lexer) {
+    return getToken(lexer);
 }
 
 Token peekToken(Lexer* lexer) {
@@ -265,15 +171,48 @@ float getTokenFloatValue(Token* token) {
     return strtof(token->start, NULL);
 }
 
-const char* getTokenStringValue(Token* token) {
+char* getTokenStringValue(Token* token) {
     char* buffer = malloc(token->length + 1);
     strncpy_s(buffer, token->length + 1, token->start, token->length);
     buffer[token->length] = '\0';
     return buffer;
 }
 
+char* readFile(const char* path) {
+    FILE* file;
+    errno_t err = fopen_s(&file, path, "rb");  // Open the file in binary mode to avoid transformations
+    if (err != 0) {
+        perror("Could not open file");
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    size_t length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    size_t fileSize = length;
+    char* buffer = (char*)malloc(fileSize + 1);
+    if (buffer == NULL) {
+        perror("Not enough memory to read file");
+        fclose(file);
+        return NULL;
+    }
+
+    size_t bytesRead = fread(buffer, 1, fileSize, file);
+    if (bytesRead < fileSize) {
+        perror("Failed to read the full file");
+        free(buffer);
+        fclose(file);
+        return NULL;
+    }
+
+    buffer[bytesRead] = '\0';
+    fclose(file);
+    return buffer;
+}
+
 void freeLexer(Lexer* lexer) {
-    free(lexer->start);
+    free(lexer);
 }
 
 int lexer(int argc, char* argv[]) {

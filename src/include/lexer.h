@@ -22,26 +22,26 @@ typedef struct {
 } Token;
 
 typedef struct {
-    char* start;
-    char* current;
+    const char *start;
+    const char *current;
     int line;
-    int column;          // Column number where the token is found
-    Token currentToken;  // Store the current token
-    Token lookahead;     // Store the next token for peeking
-    bool hasPeeked;      // Flag to check if lookahead is filled
+    int column;          
+    Token currentToken;  
+    Token lookahead;     
+    bool hasPeeked;
 } Lexer;
 
-void initLexer(Lexer* lexer, const char* source);
-void nextToken(Lexer* lexer, Token* token);
-
-// New utility functions
-Token getToken(Lexer* lexer);
-Token peekToken(Lexer* lexer);
-void unreadToken(Lexer* lexer, Token token);
-
-// Value extraction utilities (optional)
-int getTokenIntegerValue(Token* token);
-float getTokenFloatValue(Token* token);
-const char* getTokenStringValue(Token* token);
+// Lexer functions
+void init_lexer(Lexer* lexer, const char* source);
+Token get_next_token(Lexer *lexer);
+Token getToken(Lexer *lexer);
+char* getTokenStringValue(Token *token);
+Token lex_identifier_or_keyword(Lexer *lexer);
+Token lex_number(Lexer *lexer);
+Token create_token(TokenType type, const char *value);
+char peek(Lexer *lexer);
+char advance(Lexer *lexer);
+void skip_whitespace(Lexer *lexer);
+void skip_comment(Lexer *lexer);
 
 #endif // LEXER_H

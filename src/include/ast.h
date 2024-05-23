@@ -106,19 +106,18 @@ typedef struct ASTNode {
     struct ASTNode* next;  // Next node in the linked list
 } ASTNode;
 
-void printAST(ASTNode* node);
-void printASTIndented(ASTNode* node, int indent);
-void freeAST(ASTNode* node);
-
-
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, TokenType op);
 ASTNode* createUnaryExpr(TokenType operator, ASTNode* operand);
-ASTNode* parseFunctionCall(const char* name);
-ASTNode* parseIfStatement();
-ASTNode* parseReturnStatement();
-ASTNode* parseExpressionStatement();
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, TokenType operator);
+ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body);
+ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
+ASTNode* createVarDeclarationNode(const char* name, ASTNode* initializer);
 ASTNode* createFunctionNode(const char* name, ASTNode* body);
+ASTNode* parseFunctionCall(const char* name);
+ASTNode* createIfStatement(ASTNode* condition, ASTNode* thenBranch, ASTNode* elseBranch);
+ASTNode* createReturnStatement(ASTNode* expr);
+ASTNode* createExpressionStatement(ASTNode* expr);
+
 
 #endif // AST_H

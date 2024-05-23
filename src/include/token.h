@@ -16,22 +16,49 @@ typedef enum {
     TOKEN_DEDENT,
 
     // Data types
-    TOKEN_INT,
-    TOKEN_FLOAT,
-    TOKEN_STRING,
-    TOKEN_STRING_LITERAL,
-    TOKEN_BOOLEAN,
+    TOKEN_INT,                  // `1`, `2`, `3`, etc. integers
+    TOKEN_FLOAT,                // `1.0`, `2.0`, `3.0`, etc. floats
+    TOKEN_STRING,               // `"Hello, World!"`, `"Hello, " + "World!"`, etc.
+    TOKEN_STRING_LITERAL,       // `'Hello, World!'`, `'Hello, ' + 'World!'`, etc
+    TOKEN_BOOLEAN,              // `true`, `false`
 
     // Special Tokens
-    TOKEN_RESULT_ARROW,
+    TOKEN_RESULT_ARROW,         // `->` token
 
+    // Operators
+    TOKEN_OP_PLUS,                 // `+` token
+    TOKEN_OP_MINUS,                // `-` token
+    TOKEN_OP_STAR,                 // `*` token
+    TOKEN_OP_SLASH,                // `/` token
+    TOKEN_OP_MOD,                  // `%` token
+    TOKEN_OP_AND,                  // `&` token
+    TOKEN_OP_OR,                   // `|` token
+    TOKEN_OP_XOR,                  // `^` token
+    TOKEN_OP_NOT,                  // `!` token
+    TOKEN_OP_LSHIFT,               // `<<` token
+    TOKEN_OP_RSHIFT,               // `>>` token
+    TOKEN_OP_LT,                   // `<` token
+    TOKEN_OP_GT,                   // `>` token
+    TOKEN_OP_LTE,                  // `<=` token
+    TOKEN_OP_GTE,                  // `>=` token
+    TOKEN_OP_EQ,                   // `==` token
+    TOKEN_OP_NEQ,                  // `!=` token
+    TOKEN_OP_ASSIGN,               // `=` token
+    TOKEN_OP_ADD_ASSIGN,           // `+=` token
+    TOKEN_OP_SUB_ASSIGN,           // `-=` token
+    TOKEN_OP_MUL_ASSIGN,           // `*=` token
+    TOKEN_OP_DIV_ASSIGN,           // `/=` token
+    TOKEN_OP_MOD_ASSIGN,           // `%=` token
+    TOKEN_OP_AND_ASSIGN,           // `&=` token
+    TOKEN_OP_OR_ASSIGN,            // `|=` token
+    TOKEN_OP_XOR_ASSIGN,           // `^=` token
 
     // Keywords
-    TOKEN_KW_IF,
-    TOKEN_KW_ELSE,
-    TOKEN_KW_FOR,
-    TOKEN_KW_WHILE,
-    TOKEN_KW_BREAK,
+    TOKEN_KW_IF,                // `if` keyword
+    TOKEN_KW_ELSE,              // `else` keyword
+    TOKEN_KW_FOR,               // `for` keyword
+    TOKEN_KW_WHILE,             // `while` keyword
+    TOKEN_KW_BREAK,             // `break` keyword
     TOKEN_KW_CONTINUE,
     TOKEN_KW_RETURN,
     TOKEN_KW_FN,
