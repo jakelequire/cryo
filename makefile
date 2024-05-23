@@ -50,6 +50,7 @@ LLVM_LIBS = -lLLVM-C
 # Default target
 all: $(MAIN_BIN) $(CLI_BIN_EXE)
 
+
 # Pattern rules for object files
 $(COMPILER_DIR)%.o: $(COMPILER_DIR)%.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
@@ -85,7 +86,7 @@ runcli: $(CLI_BIN_EXE)
 
 # Clean up (Windows only) - remove object files and executables
 clean:
-	python clean.py
+	python ./scripts/clean.py
 
 
 

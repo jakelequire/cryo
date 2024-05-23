@@ -18,6 +18,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    printf("\n!! Generating code...\n");
+    int result = generate_code();
+    printf("\n!! Result from generate_code: %d\n", result);
+
     const char* filePath = argv[1];
     char* source = readFile(filePath);
     if (source == NULL) return 1;
@@ -32,6 +36,8 @@ int main(int argc, char* argv[]) {
         //printf("Token type: %d, value: %.*s at line %d, column %d\n", token.type, token.length, lexer.start, lexer.line, lexer.column);
         //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer.current, lexer.start, lexer.line, lexer.column);
     } while (token.type != TOKEN_EOF);
+
+
 
     // Parse the source code
     ASTNode* ast = parseExpression(&lexer);
@@ -56,10 +62,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Generate code from IR
-    if (!generate_code(ir)) {
-        fprintf(stderr, "Code generation failed\n");
-        return 1;
-    }
+
 
     free(source);
     return 0;

@@ -9,7 +9,8 @@
 #include "ir.h"
 
 // LLVMModuleRef generate_code();
-LLVMModuleRef generate_llvm_module(Node *root);
-bool generate_code(IRInstruction* ir);
+//LLVMModuleRef generate_llvm_module(Node *root);
+int generate_code();
+void generate_simple_function();
 
 #endif // CODEGEN_H
