@@ -11,59 +11,60 @@ void initLexer(Lexer* lexer, const char* source) {
     lexer->start = lexer->current = (char*)source;
     lexer->line = 1;
     lexer->column = 1;
-    printf("Lexer initialized.\n");
+    lexer->hasPeeked = false;
+    printf("-------------- <Input Source Code> --------------\n\n");
+    printf("\nLexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
+    printf("\n-------------------- <END> ----------------------\n\n");
 }
+
 
 void nextToken(Lexer* lexer, Token* token) {
     while (*lexer->current != '\0') {
         lexer->start = lexer->current;
+        //printf("Processing: %c <lexer.c> (ASCII %d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
 
-        // Handle spaces
-        if (isspace(*lexer->current)) {
+        if (isspace(*lexer->current) || *lexer->current == '\r') {
             do {
                 if (*lexer->current == '\n') {
+                    printf("Newline found at line %d, column %d\n", lexer->line, lexer->column);
+                    token->type = TOKEN_NEWLINE;
                     lexer->line++;
-                    lexer->column = 1; // Reset column number at the start of a new line
+                    lexer->column = 1;
+                    lexer->current++;
+                } else if (*lexer->current == '\r') {
+                    printf("Carriage return found at line %d, column %d\n", lexer->line, lexer->column);
+                    lexer->current++;
+                    if (*lexer->current == '\n') {
+                        lexer->current++;
+                    }
+                    lexer->line++;
+                    lexer->column = 1;
                 } else {
+                    printf("Whitespace found at line %d, column %d\n", lexer->line, lexer->column);
                     lexer->column++;
+                    lexer->current++;
                 }
-                lexer->current++;
-            } while (isspace(*lexer->current));
+            } while (isspace(*lexer->current) || *lexer->current == '\r');
             continue;
         }
 
-        // Reset token length at the start of token detection
         token->length = 0;
         token->line = lexer->line;
         token->column = lexer->column;
 
-        // Handle newlines
-        if (*lexer->current == '\n') {
-            lexer->line++;
-            lexer->column = 1; // Reset column number at the start of a new line
-            token->type = TOKEN_NEWLINE;
-            token->length = 1;
-            lexer->current++;
-            printf("Token: NEWLINE at line %d, column %d\n", token->line, token->column);
-            return;
-        }
-
-        // Handling identifiers
         if (isalpha(*lexer->current) || *lexer->current == '_') {
             while (isalpha(*lexer->current) || isdigit(*lexer->current) || *lexer->current == '_') {
                 lexer->current++;
                 lexer->column++;
             }
+
             token->type = TOKEN_IDENTIFIER;
             token->length = lexer->current - lexer->start;
             printf("Token: IDENTIFIER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
-            // Check for keywords
-            // (Add your keyword checks here)
-
+            //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
             return;
         }
 
-        // Handling numeric literals
         if (isdigit(*lexer->current)) {
             while (isdigit(*lexer->current)) {
                 lexer->current++;
@@ -72,69 +73,85 @@ void nextToken(Lexer* lexer, Token* token) {
             token->type = TOKEN_INT;
             token->length = lexer->current - lexer->start;
             printf("Token: INTEGER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
+            //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
             return;
         }
 
-        // Handling strings
         if (*lexer->current == '"') {
-            lexer->current++;  // Skip the initial double quote
+            lexer->current++;
             lexer->column++;
             while (*lexer->current != '"' && *lexer->current != '\0') {
                 if (*lexer->current == '\\' && *(lexer->current + 1) == '"') {
-                    lexer->current += 2;  // Skip the escape character and the escaped quote
+                    lexer->current += 2;
                     lexer->column += 2;
                 } else {
                     lexer->current++;
                     lexer->column++;
                 }
             }
-
             if (*lexer->current == '"') {
-                lexer->current++;  // Skip the closing double quote
+                lexer->current++;
                 lexer->column++;
             }
             token->type = TOKEN_STRING;
             token->length = lexer->current - lexer->start;
             printf("Token: STRING '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
+            //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
             return;
         }
 
-        // Handling single character tokens
-        if (ispunct(*lexer->current)) {
-            token->type = *lexer->current;  // Assign the ASCII value of the character as the token type
+        switch (*lexer->current) {
+            case '(': token->type = TOKEN_LPAREN; printf("Left Paren Found\n"); break;
+            case ')': token->type = TOKEN_RPAREN; printf("Right Paren Found\n"); break;
+            case '{': token->type = TOKEN_LBRACE; printf("Left Brace Found\n"); break;
+            case '}': token->type = TOKEN_RBRACE; printf("Right Brace Found\n"); break;
+            case '-':
+                lexer->current++;
+                lexer->column++;
+                if (*lexer->current == '>') {
+                    token->type = TOKEN_RESULT_ARROW;
+                    token->length = 2;
+                    lexer->current++;
+                    lexer->column++;
+                    printf("Found '->'\n");
+                } else {
+                    token->type = TOKEN_ERROR;
+                    printf("Found '-'\n");
+                }
+                break;
+            default:
+                token->type = TOKEN_ERROR;
+                printf("Unknown character found: '%c'\n", *lexer->current);
+                break;
+        }
+
+        if (token->type == TOKEN_ERROR) {
             token->length = 1;
-            token->line = lexer->line;
-            token->column = lexer->column;
             lexer->current++;
             lexer->column++;
-            printf("Token: PUNCTUATION '%c' at line %d, column %d\n", token->type, token->line, token->column);
+            printf("Token: ERROR '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
             return;
         }
 
-        if (*lexer->current == '-') {
-            if (*(lexer->current + 1) == '>') {
-                // It's a '->', handle as a single token
-                lexer->current += 2; // Advance past '->'
-                lexer->column += 2;
-                token->type = TOKEN_RESULT_ARROW;
-                token->length = 2;
-                printf("Token: RESULT_ARROW '->' at line %d, column %d\n", token->line, token->column);
-                return;
-            }
-        }
-
-        // Handle unexpected characters
-        fprintf(stderr, "Error: Unexpected character '%c' (ASCII %d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
+        token->length = 1;
+        token->line = lexer->line;
+        token->column = lexer->column;
         lexer->current++;
         lexer->column++;
+        printf("Token: PUNCTUATION '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
+        //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
+        return;
     }
 
     token->type = TOKEN_EOF;
-    token->line = lexer->line;
-    token->column = lexer->column;
     token->length = 0;
+    lexer->current++;
     printf("############ <End of File> ############\n");
+    //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
+    exit(0);
 }
+
+
 
 Token getToken(Lexer* lexer) {
     if (lexer->hasPeeked) {
@@ -188,28 +205,35 @@ char* readFile(const char* path) {
 
     fseek(file, 0, SEEK_END);
     size_t length = ftell(file);
+    // handle fseek error
     fseek(file, 0, SEEK_SET);
 
-    size_t fileSize = length;
-    char* buffer = (char*)malloc(fileSize + 1);
+    if (length == 0) {
+        perror("File is empty");
+        fclose(file);
+        return NULL;
+    }
+
+    char* buffer = (char*)malloc(length + 1);
     if (buffer == NULL) {
         perror("Not enough memory to read file");
         fclose(file);
         return NULL;
     }
 
-    size_t bytesRead = fread(buffer, 1, fileSize, file);
-    if (bytesRead < fileSize) {
+    size_t bytesRead = fread(buffer, 1, length, file);
+    if (bytesRead < length) {
         perror("Failed to read the full file");
         free(buffer);
         fclose(file);
         return NULL;
     }
 
-    buffer[bytesRead] = '\0';
+    buffer[length] = '\0';  // Null-terminate the buffer
     fclose(file);
     return buffer;
 }
+
 
 void freeLexer(Lexer* lexer) {
     free(lexer);

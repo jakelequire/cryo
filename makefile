@@ -85,7 +85,7 @@ runcli: $(CLI_BIN_EXE)
 
 # Clean up (Windows only) - remove object files and executables
 clean:
-	del $(COMPILER_OBJ) $(UTILS_OBJ) $(CLI_OBJ) $(MAIN_OBJ) $(MAIN_BIN)
+	python clean.py
 
 
 

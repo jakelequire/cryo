@@ -23,13 +23,14 @@ int main(int argc, char* argv[]) {
     if (source == NULL) return 1;
 
     Lexer lexer;
-    init_lexer(&lexer, source);
+    initLexer(&lexer, source);
 
     Token token;
 
     do {
-        token = get_next_token(&lexer); // Correct function call
-        printf("Token type: %d, value: %s at line %d, column %d\n", token.type, token.value.stringValue, lexer.line, lexer.column);
+        token = get_next_token(&lexer);
+        //printf("Token type: %d, value: %.*s at line %d, column %d\n", token.type, token.length, lexer.start, lexer.line, lexer.column);
+        //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer.current, lexer.start, lexer.line, lexer.column);
     } while (token.type != TOKEN_EOF);
 
     // Parse the source code
@@ -60,39 +61,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    free(source);
     return 0;
-}
-
-
-char* readFile(const char* path) {
-    FILE* file;
-    errno_t err = fopen_s(&file, path, "rb");  // Open the file in binary mode to avoid transformations
-    if (err != 0) {
-        perror("Could not open file");
-        return NULL;
-    }
-
-    fseek(file, 0, SEEK_END);
-    size_t length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    size_t fileSize = length;
-    char* buffer = (char*)malloc(fileSize + 1);
-    if (buffer == NULL) {
-        perror("Not enough memory to read file");
-        fclose(file);
-        return NULL;
-    }
-
-    size_t bytesRead = fread(buffer, 1, fileSize, file);
-    if (bytesRead < fileSize) {
-        perror("Failed to read the full file");
-        free(buffer);
-        fclose(file);
-        return NULL;
-    }
-
-    buffer[bytesRead] = '\0';
-    fclose(file);
-    return buffer;
 }

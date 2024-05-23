@@ -79,6 +79,25 @@
     "types.h": "c",
     "llvm-config.h": "c",
     "ir.h": "c",
-    "dirent.h": "c"
+    "dirent.h": "c",
+    "*.inc": "c",
+    "array": "c",
+    "atomic": "c",
+    "bit": "c",
+    "compare": "c",
+    "cstddef": "c",
+    "functional": "c",
+    "iterator": "c",
+    "limits": "c",
+    "memory": "c",
+    "system_error": "c",
+    "type_traits": "c",
+    "vector": "c",
+    "xhash": "c",
+    "xiosbase": "c",
+    "xlocale": "c",
+    "xmemory": "c",
+    "xstring": "c",
+    "xutility": "c"
   }
 }

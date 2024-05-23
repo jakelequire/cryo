@@ -133,40 +133,34 @@ void scan_dir() {
 
 char* read_file(const char* file_path) {
     FILE* file;
-    fopen_s(&file, file_path, "rb");  // Use "rb" to read in binary mode
-    if (file == NULL) {
-        fprintf(stderr, "Error: Could not open file %s\n", file_path);
+    errno_t err = fopen_s(&file, file_path, "rb");  // Open the file in binary mode to avoid transformations
+    if (err != 0) {
+        perror("Could not open file");
         return NULL;
     }
 
     fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
+    size_t length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char* buffer = (char*)malloc(file_size + 1);
+    size_t fileSize = length;
+    char* buffer = (char*)malloc(fileSize + 1);
     if (buffer == NULL) {
-        fprintf(stderr, "Error: Memory allocation failed\n");
+        perror("Not enough memory to read file");
         fclose(file);
         return NULL;
     }
 
-    size_t read_size = fread(buffer, 1, file_size, file);
-    buffer[read_size] = '\0';
-
-    fclose(file);
-
-    // Check and strip BOMs if present
-    if (read_size >= 3 && (unsigned char)buffer[0] == 0xEF && (unsigned char)buffer[1] == 0xBB && (unsigned char)buffer[2] == 0xBF) {
-        // UTF-8 BOM
-        memmove(buffer, buffer + 3, read_size - 2);
-    } else if (read_size >= 2 && (unsigned char)buffer[0] == 0xFF && (unsigned char)buffer[1] == 0xFE) {
-        // UTF-16 LE BOM
-        memmove(buffer, buffer + 2, read_size - 1);
-    } else if (read_size >= 2 && (unsigned char)buffer[0] == 0xFE && (unsigned char)buffer[1] == 0xFF) {
-        // UTF-16 BE BOM
-        memmove(buffer, buffer + 2, read_size - 1);
+    size_t bytesRead = fread(buffer, 1, fileSize, file);
+    if (bytesRead < fileSize) {
+        perror("Failed to read the full file");
+        free(buffer);
+        fclose(file);
+        return NULL;
     }
 
+    buffer[bytesRead] = '\0';
+    fclose(file);
     return buffer;
 }
 

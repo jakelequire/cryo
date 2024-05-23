@@ -32,16 +32,22 @@ typedef struct {
 } Lexer;
 
 // Lexer functions
-void init_lexer(Lexer* lexer, const char* source);
 Token get_next_token(Lexer *lexer);
 Token getToken(Lexer *lexer);
-char* getTokenStringValue(Token *token);
 Token lex_identifier_or_keyword(Lexer *lexer);
 Token lex_number(Lexer *lexer);
 Token create_token(TokenType type, const char *value);
-char peek(Lexer *lexer);
+Token peekToken(Lexer* lexer);
+
+void initLexer(Lexer* lexer, const char* source);
+char* getTokenStringValue(Token *token);
+int getTokenIntegerValue(Token* token);
+float getTokenFloatValue(Token* token);
+void unreadToken(Lexer* lexer, Token token);
+int lexer(int argc, char* argv[]);
 char advance(Lexer *lexer);
 void skip_whitespace(Lexer *lexer);
 void skip_comment(Lexer *lexer);
+char* readFile(const char* path);
 
 #endif // LEXER_H
