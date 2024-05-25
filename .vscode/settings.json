@@ -98,6 +98,9 @@
     "xlocale": "c",
     "xmemory": "c",
     "xstring": "c",
-    "xutility": "c"
+    "xutility": "c",
+    "init.h": "c",
+    "stat.h": "c",
+    "direct.h": "c"
   }
 }

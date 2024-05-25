@@ -3,39 +3,45 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
+#include <commands.h>
 
+// Command Types
+typedef enum {
+    CMD_HELP,       // help     (subcommands)
+    CMD_BUILD,      // build    (subcommands)
+    CMD_INIT,       // init     (subcommands)
+    CMD_VERSION,    // version  (no subcommands)
+    CMD_RUN,        // run      (subcommands)
+    CMD_UNKNOWN     // unknown  (no subcommands)
+} CommandType;
 
-void print_help();
-
-void build_help_message();
-void build_program(char* args);
-void build_single(const char* file);
-
-
-void cryo_compile(const char* file);
-char* read_file(const char* file_path);
-void scan_dir();
-
-
-// Build Command
-typedef struct {
-    bool mode;
-    char* output;
-    // More options to come...    
+// Build Args
+typedef enum {
+    BUILD_SINGLE,   // -s
+    BUILD_DIR       // -d
 } BuildArgs;
 
+// Help Args
+typedef enum {
+    HELP_HELP,      // help
+    HELP_VERSION,   // version
+    HELP_BUILD,     // build
+    HELP_INIT,      // init
+    HELP_RUN,       // run
+    HELP_UNKNOWN    // unknown
+} HelpArgs;
 
-typedef struct {
-    char* name;
-    void (*func)();
-    char* args;
-    char* description;
-} Command;
 
-typedef struct {
-    Command* commands;
-    char* args;
-} Args;
+// Function prototypes
+CommandType get_command_type(const char* command);
 
-#endif
+void execute_command(int argc, char* argv[]);
+void build_program_(int argc, char* argv[]);
+void help_command(void);
+void help_version(void);
+
+void help_with_command(char* help_args);
+
+
+#endif // COMMANDS_H

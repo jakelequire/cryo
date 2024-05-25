@@ -15,7 +15,7 @@ TARGET = src/bin/main.exe
 
 # Include directories
 INCLUDES = -I./src/ -I./src/include/
-CLI_INCLUDES = -I./cli/
+CLI_INCLUDES = -I./cli/ -I./cli/commands
 
 # Source files
 COMPILER_SRC =  $(COMPILER_DIR)lexer.c \
@@ -29,7 +29,7 @@ UTILS_SRC = $(UTILS_DIR)logger.c
 
 CLI_SRC = $(CLI_DIR)cli.c \
           $(CLI_DIR)commands.c \
-		  $(CLI_DIR)helpmessages.c
+		  $(CLI_DIR)\commands\init.c
 
 MAIN_SRC = $(SRC_DIR)main.c
 
