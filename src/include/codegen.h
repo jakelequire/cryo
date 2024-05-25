@@ -7,10 +7,12 @@
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
 #include "ir.h"
+#include "token.h"
 
-// LLVMModuleRef generate_code();
-//LLVMModuleRef generate_llvm_module(Node *root);
-int generate_code();
-void generate_simple_function();
+
+void init_codegen();
+LLVMValueRef codegen_expr(ASTNode* node);
+void finalize_codegen();
+void codegen_function(ASTNode* node);
 
 #endif // CODEGEN_H

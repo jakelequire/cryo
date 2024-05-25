@@ -10,7 +10,7 @@
 #include "include/ir.h"
 #include "include/codegen.h"
 
-char* readFile(const char* path); 
+char* readFile(const char* path);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -18,9 +18,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    printf("\n!! Generating code...\n");
-    int result = generate_code();
-    printf("\n!! Result from generate_code: %d\n", result);
+    init_codegen();
 
     const char* filePath = argv[1];
     char* source = readFile(filePath);
@@ -29,41 +27,24 @@ int main(int argc, char* argv[]) {
     Lexer lexer;
     initLexer(&lexer, source);
 
-    Token token;
-
-    do {
-        token = get_next_token(&lexer);
-        //printf("Token type: %d, value: %.*s at line %d, column %d\n", token.type, token.length, lexer.start, lexer.line, lexer.column);
-        //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer.current, lexer.start, lexer.line, lexer.column);
-    } while (token.type != TOKEN_EOF);
-
-
-
     // Parse the source code
-    ASTNode* ast = parseExpression(&lexer);
-    free(source);   // Free the source buffer
+    ASTNode* program = parseProgram(&lexer); // Change to parseProgram
 
-    if (!ast) {
-        fprintf(stderr, "Failed to parse expression.\n");
+    if (!program) {
+        fprintf(stderr, "Failed to parse program.\n");
         return 1;
     }
 
-    // Perform semantic analysis
-    if (!analyze(ast)) {
-        fprintf(stderr, "Semantic analysis failed\n");
-        return 1;
+    // Code generation
+    for (int i = 0; i < program->data.program.stmtCount; ++i) {
+        ASTNode* function = program->data.program.statements[i];
+        codegen_function(function); // Generate code for each function
     }
 
-    // Generate IR
-    IRInstruction* ir = generate_ir(ast);
-    if (!ir) {
-        fprintf(stderr, "IR generation failed\n");
-        return 1;
-    }
+    // Finalize LLVM codegen
+    finalize_codegen();
 
-    // Generate code from IR
-
-
+    // Clean up
     free(source);
     return 0;
 }

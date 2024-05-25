@@ -15,28 +15,46 @@
 
 #include "commands.h"
 
-void print_help() {
-    printf("\n#################################################\n");
-    printf("##                                             ##\n");
-    printf("##  Cryo Programming Language  | CLI Tools     ##\n");
-    printf("##  Version 0.1.0                              ##\n");
-    printf("##                                             ##\n");
-    printf("#################################################\n\n");
-    printf("Commands:\n");
-    printf("-------------------------------------------\n\n");
-    
-    printf(" Print this help message\n\n");
-    printf("  - help  | cryo <help | -h>\n");
-    printf("\n");
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
-    printf("\n Build a cryo project\n\n");
-    printf("  - build  | cryo <build | -b> {args?} \n\n");
-    printf("    {args}:\n");
-    printf("      - -s Single File: Only compile one individual file\n");
-    printf("        cryo build -s <file>\n\n");
-    printf("\n");
-    printf("-------------------------------------------\n");
+char* cryo_logo = 
+"############################################################\n"
+"#####                                                  #####\n"
+"###                                                      ###\n"
+"##     .,-:::::   :::::::..   .-:.     ::-.    ...        ##\n"
+"##   ,;;;'````'   ;;;;``;;;;   ';;.   ;;;;' .;;;;;;;.     ##\n"
+"##   [[[          [[[,/[[['     '[[,[[['  ,[[     \\[[,    ##\n"
+"##   $$$          $$$$$$$c        c$$\"   $$$,     $$$     ##\n"
+"##   `88bo,__,o,  888b \"88bo,   ,8P\"`   \"888,_ _,88P      ##\n"
+"##    \"YUMMMMMP\"  MMMM   \"WMY ,mM\"        \"YMMMMMP\"       ##\n"
+"##                                                        ##\n"
+"##               Programming Language v0.1.0              ##\n"
+"###                                                      ###\n"
+"#####                                                  #####\n"
+"############################################################\n";
+
+
+char* cryo_help_menu =
+"---------------------------------------------------------------------------------------------------\n"
+"| Command            | Alisis         | Description                       | Example               |\n"
+"---------------------------------------------------------------------------------------------------\n"
+"| help               | -h --help      | Show help information             | cryo help             |\n"
+"---------------------------------------------------------------------------------------------------\n"
+"| *version           | -v --version   | Show version information          | cryo version          |\n"
+"---------------------------------------------------------------------------------------------------\n"
+"| build              | -b --build     | Build the project                 | cryo build            |\n"
+"---------------------------------------------------------------------------------------------------\n"
+"| *init              | -i --init      | Initialize a new project          | cryo init             |\n"
+"---------------------------------------------------------------------------------------------------\n"
+"| *run               | -r --run       | Run the project                   | cryo run              |\n"
+"---------------------------------------------------------------------------------------------------\n"
+"\n"
+" * - Unimplemented\n";
+
+
+
+void print_help() {
+    printf("\n%s\n", cryo_logo);
+    printf("\n%s\n", cryo_help_menu);
 }
 
 void build_program(char* args) {

@@ -6,8 +6,18 @@
 #include <string.h>
 
 
+char* my_strndup(const char* src, size_t len) {
+    char* dest = malloc(len + 1);
+    if (dest) {
+        strncpy_s(dest, len + 1, src, len);
+        dest[len] = '\0';
+    }
+    return dest;
+}
+
 // Initialize the lexer with the input source code
 void initLexer(Lexer* lexer, const char* source) {
+    lexer->source = source;
     lexer->start = lexer->current = (char*)source;
     lexer->line = 1;
     lexer->column = 1;
@@ -17,11 +27,26 @@ void initLexer(Lexer* lexer, const char* source) {
     printf("\n-------------------- <END> ----------------------\n\n");
 }
 
+TokenType checkKeyword(const char* identifier) {
+    if (strcmp(identifier, "public") == 0) return TOKEN_KW_PUBLIC;
+    if (strcmp(identifier, "fn") == 0) return TOKEN_KW_FN;
+    if (strcmp(identifier, "int") == 0) return TOKEN_KW_INT;
+    if (strcmp(identifier, "float") == 0) return TOKEN_KW_FLOAT;
+    if (strcmp(identifier, "string") == 0) return TOKEN_KW_STRING;
+    if (strcmp(identifier, "return") == 0) return TOKEN_KW_RETURN;
+    if (strcmp(identifier, "if") == 0) return TOKEN_KW_IF;
+    if (strcmp(identifier, "else") == 0) return TOKEN_KW_ELSE;
+    if (strcmp(identifier, "for") == 0) return TOKEN_KW_FOR;
+    if (strcmp(identifier, "while") == 0) return TOKEN_KW_WHILE;
+    if (strcmp(identifier, "break") == 0) return TOKEN_KW_BREAK;
+    if (strcmp(identifier, "continue") == 0) return TOKEN_KW_CONTINUE;
+    // Add other keywords as needed
+    return TOKEN_IDENTIFIER;
+}
 
 void nextToken(Lexer* lexer, Token* token) {
     while (*lexer->current != '\0') {
         lexer->start = lexer->current;
-        //printf("Processing: %c <lexer.c> (ASCII %d) at line %d, column %d\n", *lexer->current, (int)*lexer->current, lexer->line, lexer->column);
 
         if (isspace(*lexer->current) || *lexer->current == '\r') {
             do {
@@ -52,16 +77,22 @@ void nextToken(Lexer* lexer, Token* token) {
         token->line = lexer->line;
         token->column = lexer->column;
 
-        if (isalpha(*lexer->current) || *lexer->current == '_') {
-            while (isalpha(*lexer->current) || isdigit(*lexer->current) || *lexer->current == '_') {
+        char c = *lexer->current;
+        if (isalpha(c)) {  // Start of an identifier or keyword
+            int start = lexer->current - lexer->source;
+            while (isalnum(*lexer->current)) {
                 lexer->current++;
-                lexer->column++;
             }
+            int length = lexer->current - (lexer->source + start);
+            char* identifier = my_strndup(lexer->source + start, length);
 
-            token->type = TOKEN_IDENTIFIER;
-            token->length = lexer->current - lexer->start;
-            printf("Token: IDENTIFIER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
-            //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
+            token->type = checkKeyword(identifier);  // Check if it's a keyword
+            token->value.stringValue = identifier;
+            token->line = lexer->line;
+            token->column = lexer->column;
+
+            printf("Generated Token: %s, Type: %d\n", identifier, token->type); // Debug print
+
             return;
         }
 
@@ -72,8 +103,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_INT;
             token->length = lexer->current - lexer->start;
-            printf("Token: INTEGER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
-            //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
+            printf("Generated Token: INTEGER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
             return;
         }
 
@@ -95,16 +125,15 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_STRING;
             token->length = lexer->current - lexer->start;
-            printf("Token: STRING '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
-            //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
+            printf("Generated Token: STRING '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
             return;
         }
 
         switch (*lexer->current) {
-            case '(': token->type = TOKEN_LPAREN; printf("Left Paren Found\n"); break;
-            case ')': token->type = TOKEN_RPAREN; printf("Right Paren Found\n"); break;
-            case '{': token->type = TOKEN_LBRACE; printf("Left Brace Found\n"); break;
-            case '}': token->type = TOKEN_RBRACE; printf("Right Brace Found\n"); break;
+            case '(': token->type = TOKEN_LPAREN; printf("Generated Token: '('\n"); break;
+            case ')': token->type = TOKEN_RPAREN; printf("Generated Token: ')'\n"); break;
+            case '{': token->type = TOKEN_LBRACE; printf("Generated Token: '{'\n"); break;
+            case '}': token->type = TOKEN_RBRACE; printf("Generated Token: '}'\n"); break;
             case '-':
                 lexer->current++;
                 lexer->column++;
@@ -113,24 +142,16 @@ void nextToken(Lexer* lexer, Token* token) {
                     token->length = 2;
                     lexer->current++;
                     lexer->column++;
-                    printf("Found '->'\n");
+                    printf("Generated Token: '->'\n");
                 } else {
                     token->type = TOKEN_ERROR;
-                    printf("Found '-'\n");
+                    printf("Generated Token: '-'\n");
                 }
-                break;
+                return;
             default:
                 token->type = TOKEN_ERROR;
                 printf("Unknown character found: '%c'\n", *lexer->current);
-                break;
-        }
-
-        if (token->type == TOKEN_ERROR) {
-            token->length = 1;
-            lexer->current++;
-            lexer->column++;
-            printf("Token: ERROR '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
-            return;
+                return;
         }
 
         token->length = 1;
@@ -138,20 +159,15 @@ void nextToken(Lexer* lexer, Token* token) {
         token->column = lexer->column;
         lexer->current++;
         lexer->column++;
-        printf("Token: PUNCTUATION '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
-        //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
+        printf("Generated Token: PUNCTUATION '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
         return;
     }
 
     token->type = TOKEN_EOF;
     token->length = 0;
     lexer->current++;
-    printf("############ <End of File> ############\n");
-    //printf("Lexer State -> Current: %p, Start: %p, Line: %d, Column: %d\n", lexer->current, lexer->start, lexer->line, lexer->column);
-    exit(0);
+    printf("Generated Token: <EOF>\n");
 }
-
-
 
 Token getToken(Lexer* lexer) {
     if (lexer->hasPeeked) {
@@ -190,7 +206,7 @@ float getTokenFloatValue(Token* token) {
 
 char* getTokenStringValue(Token* token) {
     char* buffer = malloc(token->length + 1);
-    strncpy_s(buffer, token->length + 1, token->start, token->length);
+    strncpy(buffer, token->start, token->length);
     buffer[token->length] = '\0';
     return buffer;
 }
@@ -233,7 +249,6 @@ char* readFile(const char* path) {
     fclose(file);
     return buffer;
 }
-
 
 void freeLexer(Lexer* lexer) {
     free(lexer);

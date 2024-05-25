@@ -7,6 +7,12 @@
 #include <stdlib.h>
 #include "token.h"
 
+typedef union {
+    int intValue;
+    float floatValue;
+    char* stringValue;
+} TokenValue;
+
 typedef struct {
     TokenType type;         // Type of the token
     const char* start;      // Pointer to the beginning of the token in the source code
@@ -22,6 +28,7 @@ typedef struct {
 } Token;
 
 typedef struct {
+    const char* source;
     const char *start;
     const char *current;
     int line;
@@ -31,6 +38,9 @@ typedef struct {
     bool hasPeeked;
 } Lexer;
 
+
+char* my_strndup(const char* src, size_t n);
+
 // Lexer functions
 Token get_next_token(Lexer *lexer);
 Token getToken(Lexer *lexer);
@@ -38,7 +48,7 @@ Token lex_identifier_or_keyword(Lexer *lexer);
 Token lex_number(Lexer *lexer);
 Token create_token(TokenType type, const char *value);
 Token peekToken(Lexer* lexer);
-
+void nextToken(Lexer* lexer, Token* token);
 void initLexer(Lexer* lexer, const char* source);
 char* getTokenStringValue(Token *token);
 int getTokenIntegerValue(Token* token);

@@ -27,7 +27,7 @@ typedef struct IRInstruction {
         } binary_op;
     };
     struct IRInstruction* next;
-} IRInstruction;
+} IRInstruction;        
 
 
 void freeIR(IRInstruction* instr);

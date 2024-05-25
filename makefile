@@ -28,7 +28,8 @@ COMPILER_SRC =  $(COMPILER_DIR)lexer.c \
 UTILS_SRC = $(UTILS_DIR)logger.c
 
 CLI_SRC = $(CLI_DIR)cli.c \
-          $(CLI_DIR)commands.c
+          $(CLI_DIR)commands.c \
+		  $(CLI_DIR)helpmessages.c
 
 MAIN_SRC = $(SRC_DIR)main.c
 

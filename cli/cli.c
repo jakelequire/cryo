@@ -54,3 +54,21 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+
+
+/*
+    interface Command {
+
+    }
+
+
+    interface SubCommand {
+
+    }
+
+*/
+
+void command(char* command) {
+
+}

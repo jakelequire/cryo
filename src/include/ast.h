@@ -1,36 +1,24 @@
 #ifndef AST_H
 #define AST_H
 
-#include "token.h"
+#include "lexer.h"
 
 typedef enum {
     NODE_PROGRAM,
+    NODE_FUNCTION_DECLARATION,
+    NODE_VAR_DECLARATION,
     NODE_STATEMENT,
     NODE_EXPRESSION,
-    NODE_VAR_DECLARATION,
-    NODE_FUNCTION_DECLARATION,
+    NODE_BINARY_EXPR,
+    NODE_UNARY_EXPR,
+    NODE_LITERAL,
+    NODE_VAR_NAME,
     NODE_FUNCTION_CALL,
     NODE_IF_STATEMENT,
     NODE_WHILE_STATEMENT,
     NODE_FOR_STATEMENT,
-    NODE_BREAK_STATEMENT,
-    NODE_CONTINUE_STATEMENT,
-    NODE_RETURN_STATEMENT,
-    NODE_BINARY_EXPR,
-    NODE_UNARY_EXPR,
-    NODE_LITERAL,
-    NODE_IDENTIFIER
+    NODE_RETURN_STATEMENT
 } NodeType;
-
-typedef struct Node {
-    NodeType type;
-    struct Node *left;
-    struct Node *right;
-    char *value;
-} Node;
-
-Node *create_node(NodeType type);
-void free_node(Node *node);
 
 typedef struct ASTNode {
     NodeType type;
@@ -48,6 +36,7 @@ typedef struct ASTNode {
 
         struct {
             char* name;
+            struct ASTNode* initializer;
         } varDecl;
 
         struct {
@@ -106,18 +95,23 @@ typedef struct ASTNode {
     struct ASTNode* next;  // Next node in the linked list
 } ASTNode;
 
+// Function prototypes for creating AST nodes
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
-ASTNode* createUnaryExpr(TokenType operator, ASTNode* operand);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, TokenType operator);
+ASTNode* createUnaryExpr(TokenType operator, ASTNode* operand);
+ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body);
+ASTNode* createReturnStatement(ASTNode* return_val);
+ASTNode* createBlock();
+ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
 ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body);
 ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
-ASTNode* createVarDeclarationNode(const char* name, ASTNode* initializer);
-ASTNode* createFunctionNode(const char* name, ASTNode* body);
+ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer);
+ASTNode* createExpressionStatement(ASTNode* expression);
 ASTNode* parseFunctionCall(const char* name);
-ASTNode* createIfStatement(ASTNode* condition, ASTNode* thenBranch, ASTNode* elseBranch);
-ASTNode* createReturnStatement(ASTNode* expr);
-ASTNode* createExpressionStatement(ASTNode* expr);
 
+// Function prototypes for managing the AST
+void addStatementToBlock(ASTNode* block, ASTNode* statement);
+void addFunctionToProgram(ASTNode* function);
 
 #endif // AST_H
