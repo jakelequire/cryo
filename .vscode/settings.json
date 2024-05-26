@@ -101,6 +101,9 @@
     "xutility": "c",
     "init.h": "c",
     "stat.h": "c",
-    "direct.h": "c"
+    "direct.h": "c",
+    "build.h": "c",
+    "*.exe": "c",
+    "main.h": "c"
   }
 }

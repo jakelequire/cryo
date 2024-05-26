@@ -50,12 +50,12 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* left;
             struct ASTNode* right;
-            TokenType operator;
+            CryoTokenType operator;
             char* operatorText;  // Descriptive text for the operator
         } bin_op;
 
         struct {
-            TokenType operator;
+            CryoTokenType operator;
             struct ASTNode* operand;
         } unary_op;
 
@@ -98,8 +98,8 @@ typedef struct ASTNode {
 // Function prototypes for creating AST nodes
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, TokenType operator);
-ASTNode* createUnaryExpr(TokenType operator, ASTNode* operand);
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator);
+ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand);
 ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body);
 ASTNode* createReturnStatement(ASTNode* return_val);
 ASTNode* createBlock();

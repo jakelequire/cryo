@@ -14,7 +14,7 @@ typedef union {
 } TokenValue;
 
 typedef struct {
-    TokenType type;         // Type of the token
+    CryoTokenType type;         // Type of the token
     const char* start;      // Pointer to the beginning of the token in the source code
     int length;             // Length of the token
     int line;               // Line number where the token is found
@@ -46,7 +46,7 @@ Token get_next_token(Lexer *lexer);
 Token getToken(Lexer *lexer);
 Token lex_identifier_or_keyword(Lexer *lexer);
 Token lex_number(Lexer *lexer);
-Token create_token(TokenType type, const char *value);
+Token create_token(CryoTokenType type, const char *value);
 Token peekToken(Lexer* lexer);
 void nextToken(Lexer* lexer, Token* token);
 void initLexer(Lexer* lexer, const char* source);

@@ -13,19 +13,42 @@
 
 #define CRYO_VERSION "0.1.0"
 /*
-    "cryo_version": "0.1.0",
-    "entry": "./src/main.cryo",
-    "debugging": "verbose",
-    "outdir": "./build",
-    "dependencies": {
+# This is the cryo.init file that is created when a new project is initialized.
+# This file is used to store the project's name, version, and other information.
+# Most of the information in this file is used by the Cryo compiler to build the project.
+# The Cryo compiler will look for this file in the root directory of the project.
 
-    }
+# User defined variables
+PROJECT_NAME: "my_project";
+VERSION: "0.1.0";
+AUTHOR: "John Doe";
+DESCRIPTION: "This is a new Cryo project.";
+
+# Compiler defined variables
+CRYO_VERSION: "0.1.0";
+ENTRY: "./src/main.cryo";
+CONFIG: "./cryo.config.json";
+
 */
 
 
 char* cryo_init_data =
+"# This is the cryo.init file that is created when a new project is initialized.\n"
+"# This file is used to store the project's name, version, and other information.\n"
+"# Most of the information in this file is used by the Cryo compiler to build the project.\n"
+"# The Cryo compiler will look for this file in the root directory of the project.\n"
 "\n"
-;
+"# User defined variables\n"
+"PROJECT_NAME: \"my_project\";\n"
+"VERSION: \"0.1.0\";\n"
+"AUTHOR: \"John Doe\";\n"
+"DESCRIPTION: \"This is a new Cryo project.\";\n"
+"\n"
+"# Compiler defined variables\n"
+"CRYO_VERSION: \"0.1.0\";\n"
+"ENTRY: \"./src/main.cryo\";\n"
+"CONFIG: \"./cryo.config.json\";\n"
+"\n";
 
 char* cryo_config_data =
     "{\n"
@@ -81,10 +104,11 @@ void open_root_dir(void) {
             create_cryo_config();
             create_directory("src");
             create_cryo_main();
+            create_cryo_init();
         }
         closedir(dir);
     } else {
-        perror("Error opening directory");
+        perror("Error opening dir   ectory");
         exit(1);
     }
 }

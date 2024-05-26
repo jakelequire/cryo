@@ -54,6 +54,7 @@ void finalize_codegen() {
     printf("Finalizing Compilation...\n");
     LLVMVerifyModule(module, LLVMAbortProcessAction, NULL);
     LLVMDumpModule(module);
+    //                    The output is here.
     LLVMPrintModuleToFile(module, "output.ll", NULL);
     LLVMDisposeBuilder(builder);
     LLVMDisposeModule(module);

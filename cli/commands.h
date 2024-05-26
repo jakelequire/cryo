@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <commands.h>
+#include "../src/main.h"
 
 // Command Types
 typedef enum {
@@ -39,7 +40,7 @@ CommandType get_command_type(const char* command);
 void execute_command(int argc, char* argv[]);
 void build_program_(int argc, char* argv[]);
 void help_command(void);
-void help_version(void);
+void version_command(void);
 
 void help_with_command(char* help_args);
 

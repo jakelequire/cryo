@@ -16,7 +16,6 @@
 #endif
 
 
-struct stat st = {0};
 
 
 // Main functions

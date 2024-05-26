@@ -20,7 +20,7 @@ ASTNode* createVariableExpr(const char* name) {
     return node;
 }
 
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, TokenType operator) {
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = TOKEN_OP_PLUS; // Or other operators as appropriate
     node->data.bin_op.left = left;
@@ -30,7 +30,7 @@ ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, TokenType operator) {
     return node;
 }
 
-ASTNode* createUnaryExpr(TokenType operator, ASTNode* operand) {
+ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = operator;
     node->data.unary_op.operator = operator;

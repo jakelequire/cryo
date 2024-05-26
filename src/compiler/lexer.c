@@ -27,7 +27,7 @@ void initLexer(Lexer* lexer, const char* source) {
     printf("\n-------------------- <END> ----------------------\n\n");
 }
 
-TokenType checkKeyword(const char* identifier) {
+CryoTokenType checkKeyword(const char* identifier) {
     if (strcmp(identifier, "public") == 0) return TOKEN_KW_PUBLIC;
     if (strcmp(identifier, "fn") == 0) return TOKEN_KW_FN;
     if (strcmp(identifier, "int") == 0) return TOKEN_KW_INT;

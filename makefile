@@ -1,6 +1,6 @@
 # Compiler and Flags
 CC = clang
-CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -Wall -g
+CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -I./cli/ -Wall -g
 LDFLAGS = -L"C:/Program Files/LLVM/lib"
 
 # Define paths
@@ -15,7 +15,7 @@ TARGET = src/bin/main.exe
 
 # Include directories
 INCLUDES = -I./src/ -I./src/include/
-CLI_INCLUDES = -I./cli/ -I./cli/commands
+CLI_INCLUDES = -I./cli/
 
 # Source files
 COMPILER_SRC =  $(COMPILER_DIR)lexer.c \
@@ -29,7 +29,9 @@ UTILS_SRC = $(UTILS_DIR)logger.c
 
 CLI_SRC = $(CLI_DIR)cli.c \
           $(CLI_DIR)commands.c \
-		  $(CLI_DIR)\commands\init.c
+		  $(CLI_DIR)\compiler.c \
+		  $(CLI_DIR)commands\build.c \
+		  $(CLI_DIR)\commands\init.c \
 
 MAIN_SRC = $(SRC_DIR)main.c
 
@@ -51,6 +53,8 @@ LLVM_LIBS = -lLLVM-C
 # Default target
 all: $(MAIN_BIN) $(CLI_BIN_EXE)
 
+cli/cli.o: cli/cli.c cli/commands.h
+	clang $(CFLAGS) -c cli/cli.c -o cli/cli.o
 
 # Pattern rules for object files
 $(COMPILER_DIR)%.o: $(COMPILER_DIR)%.c

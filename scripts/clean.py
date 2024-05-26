@@ -6,6 +6,8 @@ files_to_delete = [
     "./src/compiler/*.o",
     "./src/utils/*.o",
     "./cli/*.o",
+    "./cli/commands/*.o",
+    "./cli/bin/*.exe",
     "./src/main.o",
     "./src/bin/main.exe",
 ]

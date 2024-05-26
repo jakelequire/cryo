@@ -5,12 +5,12 @@
 #include "ast.h"
 #include "token.h"
 
-void consume(Lexer *lexer, TokenType type, const char *message);
+void consume(Lexer *lexer, CryoTokenType type, const char *message);
 ASTNode* createBlock();
 ASTNode* parsePrimaryExpression(Lexer* lexer);
 ASTNode* parseUnaryExpression(Lexer* lexer);
 ASTNode* parseBinaryExpression(Lexer* lexer, int precedence);
-int getOperatorPrecedence(TokenType type);
+int getOperatorPrecedence(CryoTokenType type);
 // New function declarations for function and return statement parsing
 ASTNode* parseProgram(Lexer* lexer);
 ASTNode* parseBlock(Lexer* lexer);

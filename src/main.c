@@ -3,14 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "include/lexer.h"
-#include "include/parser.h"
-#include "include/ast.h"
-#include "include/semantics.h"
-#include "include/ir.h"
-#include "include/codegen.h"
+#include "main.h"
 
-char* readFile(const char* path);
+
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -41,7 +36,7 @@ int main(int argc, char* argv[]) {
         codegen_function(function); // Generate code for each function
     }
 
-    // Finalize LLVM codegen
+    // Finalize LLVM codegen (output file produced here)
     finalize_codegen();
 
     // Clean up

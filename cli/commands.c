@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <include/init.h>
+#include <include/build.h>
 #include <commands.h>
 
 #define CRYO_VERSION "0.1.0"
@@ -19,24 +20,34 @@ char* cryo_logo =
 "##    \"YUMMMMMP\"  MMMM   \"WMY ,mM\"        \"YMMMMMP\"       ##\n"
 "##                                                        ##\n"
 "##               Programming Language v0.1.0              ##\n"
+"##                     CLI Tools v0.1.0                   ##\n"
 "###                                                      ###\n"
 "#####                                                  #####\n"
 "############################################################\n";
 
 char* cryo_help_menu =
-"---------------------------------------------------------------------------------------------------\n"
-"| Command            | Alisis         | Description                       | Example               |\n"
-"|-------------------------------------------------------------------------------------------------|\n"
-"| help               | -h --help      | Show help information             | cryo help             |\n"
-"|                                                                                                 |\n"
-"| version            | -v --version   | Show version information          | cryo version          |\n"
-"|                                                                                                 |\n"
-"| build              | -b --build     | Build the project                 | cryo -b               |\n"
-"|                                                                                                 |\n"
-"| *init              | --init         | Initialize a new project          | cryo --init           |\n"
-"|                                                                                                 |\n"
-"| *run               | -r --run       | Run the project                   | cryo run              |\n"
-"---------------------------------------------------------------------------------------------------\n"
+"+------------------------------------------------------------------------------------------------------+\n"
+"| Command            | Alisis        | Arguments                                                       |\n"
+"+------------------------------------------------------------------------------------------------------+\n"
+"| help <args?>       | -h  -help     | [none] Displays this help menu.                                 |\n"
+"|                    |               | <command> Displays additional help for the specified command    |\n"
+"|____________________|_______________|_________________________________________________________________|\n"
+"| version            | -v  -version  | [none] Displays the version of cryo.                            |\n"
+"|                    |               |                                                                 |\n"
+"|____________________|_______________|_________________________________________________________________|\n"
+"| build <args?>      | -b  -build    | [none] Builds full current directory if cryo.init is present.   |\n"
+"|                    |               | -s <file> Single Build                                          |\n"
+"|                    |               | -d <dir>  Build Specific Directory                              |\n"
+"|____________________|_______________|_________________________________________________________________|\n"
+"| *env               | -env          | [none] Starts a virtual enviornment to write / debug cryo code. |\n"
+"|                    |               |                                                                 |\n"
+"|____________________|_______________|_________________________________________________________________|\n"
+"| init               | -init  --init |                                                                 |\n"
+"|                    |               |                                                                 |\n"
+"|____________________|_______________|_________________________________________________________________|\n"
+"| *run               | -r --run      |                                                                 |\n"
+"|                    |               |                                                                 |\n"
+"+------------------------------------------------------------------------------------------------------+\n"
 "\n"
 " * - Unimplemented\n";
 
@@ -52,18 +63,21 @@ char* cryo_help_menu =
 CommandType get_command_type(const char* command) {
     if (
         strcmp(command, "help") == 0 || 
-        strcmp(command, "-h") == 0 || 
+        strcmp(command, "-h") == 0 ||
+        strcmp(command, "-help") == 0 ||
         strcmp(command, "--help") == 0 
     ) {
         return CMD_HELP;
     } else if (
         strcmp(command, "build") == 0 || 
-        strcmp(command, "-b") == 0 || 
+        strcmp(command, "-b") == 0 ||
+        strcmp(command, "-build") == 0 ||
         strcmp(command, "--build") == 0
     ) {
         return CMD_BUILD;
     } else if (
-        strcmp(command, "init") == 0 || 
+        strcmp(command, "init") == 0 ||
+        strcmp(command, "-init") == 0 ||
         strcmp(command, "--init") == 0
     ) {
         return CMD_INIT;
@@ -118,13 +132,12 @@ BuildArgs get_build_arg(const char* build_args) {
 
 /*
 **************************************************
-************* Command Implementations *************
+************* Command Implementations ************
 **************************************************
 */
 
 //
 // Help Command
-//
 void help_command(void) {
     printf("\n%s\n", cryo_logo);
     printf("\n%s\n", cryo_help_menu);
@@ -133,7 +146,7 @@ void help_command(void) {
 
 //
 // Version Command
-void help_version(void) {
+void version_command(void) {
     printf("Cryo Programming Language v%s\n", CRYO_VERSION);
 }
 
@@ -150,7 +163,7 @@ void help_with_command(char* help_args) {
                 help_command();
                 break;
             case HELP_VERSION:
-                help_version();
+                version_command();
                 break;
             case HELP_BUILD:
                 printf("Help for build command.\n");
@@ -180,10 +193,8 @@ void help_with_command(char* help_args) {
 void build_program_(int argc, char* argv[]) {
     // Implementation of build_program
     printf("Build command executed.\n");
-    // Handle arguments if any
-    if (argc > 1) {
-        printf("Building: %s\n", argv[1]);
-    }
+    // Pass all proceeding arguments to the `build_command` function
+    build_command(argc, argv);
 }
 
 
@@ -208,6 +219,12 @@ void execute_command(int argc, char* argv[]) {
             break;
         case CMD_INIT:
             init_command();
+            break;
+        case CMD_VERSION:
+            version_command();
+            break;
+        case CMD_RUN:
+            printf("Run command executed.\n");
             break;
         case CMD_UNKNOWN:
             printf("Unknown command: %s\n", argv[0]);

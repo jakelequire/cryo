@@ -15,18 +15,9 @@ void error(const char* message) {
     fprintf(stderr, "Error: %s at line %d column %d \n", message, currentToken.line, currentToken.column);
 }
 
-// Declare missing functions
-void consume(Lexer *lexer, TokenType type, const char *message);
-ASTNode* createBlock();
-void addStatementToBlock(ASTNode* block, ASTNode* statement);
-void addFunctionToProgram(ASTNode* function);
 
-ASTNode* parsePrimaryExpression(Lexer* lexer);
-ASTNode* parseUnaryExpression(Lexer* lexer);
-ASTNode* parseBinaryExpression(Lexer* lexer, int precedence);
-int getOperatorPrecedence(TokenType type);
 
-void consume(Lexer *lexer, TokenType type, const char *message) {
+void consume(Lexer *lexer, CryoTokenType type, const char *message) {
     if (currentToken.type == type) {
         getNextToken(lexer);
     } else {
@@ -84,7 +75,7 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
 
 ASTNode* parseUnaryExpression(Lexer* lexer) {
     if (currentToken.type == TOKEN_MINUS || currentToken.type == TOKEN_BANG) {
-        TokenType operator = currentToken.type;
+        CryoTokenType operator = currentToken.type;
         getNextToken(lexer);  // Consume the operator
         ASTNode* operand = parseUnaryExpression(lexer);
         return createUnaryExpr(operator, operand);
@@ -101,7 +92,7 @@ ASTNode* parseBinaryExpression(Lexer* lexer, int precedence) {
             return left;
         }
 
-        TokenType operator = currentToken.type;
+        CryoTokenType operator = currentToken.type;
         getNextToken(lexer);  // Consume the operator
         ASTNode* right = parseBinaryExpression(lexer, currentPrecedence + 1);
 
@@ -109,7 +100,7 @@ ASTNode* parseBinaryExpression(Lexer* lexer, int precedence) {
     }
 }
 
-int getOperatorPrecedence(TokenType type) {
+int getOperatorPrecedence(CryoTokenType type) {
     switch (type) {
         case TOKEN_PLUS:
         case TOKEN_MINUS:
