@@ -17,7 +17,11 @@ typedef enum {
     NODE_IF_STATEMENT,
     NODE_WHILE_STATEMENT,
     NODE_FOR_STATEMENT,
-    NODE_RETURN_STATEMENT
+    NODE_RETURN_STATEMENT,
+    NODE_BLOCK,
+    NODE_EXPRESSION_STATEMENT,
+    NODE_ASSIGN,
+    NODE_UNKNOWN,
 } NodeType;
 
 typedef struct ASTNode {
@@ -38,6 +42,11 @@ typedef struct ASTNode {
             char* name;
             struct ASTNode* initializer;
         } varDecl;
+
+        struct {
+            struct ASTNode** statements;
+            int stmtCount;
+        } block;
 
         struct {
             struct ASTNode* stmt;
@@ -94,6 +103,7 @@ typedef struct ASTNode {
     } data;
     struct ASTNode* next;  // Next node in the linked list
 } ASTNode;
+
 
 // Function prototypes for creating AST nodes
 void freeAST(ASTNode* node);

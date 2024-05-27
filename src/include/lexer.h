@@ -40,24 +40,30 @@ typedef struct {
 
 
 char* my_strndup(const char* src, size_t n);
+void initLexer(Lexer* lexer, const char* source);
+CryoTokenType checkKeyword(const char* identifier);
+static bool isAtEnd(Lexer* lexer);
+static char advance(Lexer* lexer);
+static char peek(Lexer* lexer);
+static char peekNext(Lexer* lexer);
+static void skipWhitespace(Lexer* lexer);
+static Token makeToken(Lexer* lexer, CryoTokenType type);
+static Token errorToken(Lexer* lexer, const char* message);
+static Token identifier(Lexer* lexer);
+static Token number(Lexer* lexer);
+Token nextToken(Lexer* lexer, Token* token);
+
 
 // Lexer functions
 Token get_next_token(Lexer *lexer);
 Token getToken(Lexer *lexer);
-Token lex_identifier_or_keyword(Lexer *lexer);
-Token lex_number(Lexer *lexer);
-Token create_token(CryoTokenType type, const char *value);
 Token peekToken(Lexer* lexer);
-void nextToken(Lexer* lexer, Token* token);
 void initLexer(Lexer* lexer, const char* source);
 char* getTokenStringValue(Token *token);
 int getTokenIntegerValue(Token* token);
 float getTokenFloatValue(Token* token);
 void unreadToken(Lexer* lexer, Token token);
 int lexer(int argc, char* argv[]);
-char advance(Lexer *lexer);
-void skip_whitespace(Lexer *lexer);
-void skip_comment(Lexer *lexer);
 char* readFile(const char* path);
 
 #endif // LEXER_H

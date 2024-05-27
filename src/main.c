@@ -35,7 +35,8 @@ int main(int argc, char* argv[]) {
     printf("[DEBUG] Program parsed\n");
 
     // Code generation
-    for (int i = 0; i < program->data.program.stmtCount; ++i) {
+    for (int i = 0; i < program->data.program.stmtCount; ++i) 
+    {
         ASTNode* function = program->data.program.statements[i];
         if (function) {
             codegen_function(function); // Generate code for each function
@@ -48,7 +49,7 @@ int main(int argc, char* argv[]) {
     // Finalize LLVM codegen (output file produced here)
     finalize_codegen();
     printf("[DEBUG] Codegen finalized\n");
-    
+
     // Clean up
     free(source);
     return 0;

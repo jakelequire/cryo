@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <errno.h>
+#include <stdbool.h>
 
 
 
@@ -26,6 +27,7 @@ void initLexer(Lexer* lexer, const char* source) {
     lexer->line = 1;
     lexer->column = 1;
     lexer->hasPeeked = false;
+
     printf("{lexer} -------------- <Input Source Code> --------------\n\n");
     printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
     printf("\n{lexer} -------------------- <END> ----------------------\n\n");
@@ -48,135 +50,120 @@ CryoTokenType checkKeyword(const char* identifier) {
     return TOKEN_IDENTIFIER;
 }
 
+static bool isAtEnd(Lexer* lexer) {
+    return *lexer->current == '\0';
+}
+
+static char advance(Lexer* lexer) {
+    lexer->current++;
+    lexer->column++;
+    return lexer->current[-1];
+}
+
+static char peek(Lexer* lexer) {
+    return *lexer->current;
+}
+
+static char peekNext(Lexer* lexer) {
+    if (isAtEnd(lexer)) return '\0';
+    return lexer->current[1];
+}
+
+static void skipWhitespace(Lexer* lexer) {
+    for (;;) {
+        char c = peek(lexer);
+        switch (c) {
+            case ' ':
+            case '\r':
+            case '\t':
+                advance(lexer);
+                break;
+            case '\n':
+                lexer->line++;
+                lexer->column = 1;
+                advance(lexer);
+                break;
+            case '/':
+                if (peekNext(lexer) == '/') {
+                    while (peek(lexer) != '\n' && !isAtEnd(lexer)) advance(lexer);
+                } else {
+                    return;
+                }
+                break;
+            default:
+                return;
+        }
+    }
+}
+
+static Token makeToken(Lexer* lexer, CryoTokenType type) {
+    Token token;
+    token.type = type;
+    token.start = lexer->start;
+    token.length = (int)(lexer->current - lexer->start);
+    token.line = lexer->line;
+    token.column = lexer->column - token.length;
+    return token;
+}
+
+static Token errorToken(Lexer* lexer, const char* message) {
+    Token token;
+    token.type = TOKEN_ERROR;
+    token.start = message;
+    token.length = (int)strlen(message);
+    token.line = lexer->line;
+    token.column = lexer->column;
+    return token;
+}
+
+static Token identifier(Lexer* lexer) {
+    while (isalnum(peek(lexer)) || peek(lexer) == '_') advance(lexer);
+    return makeToken(lexer, TOKEN_IDENTIFIER);
+}
+
+static Token number(Lexer* lexer) {
+    while (isdigit(peek(lexer))) advance(lexer);
+    return makeToken(lexer, TOKEN_INT);
+}
 
 // <nextToken>
-void nextToken(Lexer* lexer, Token* token) {
-    while (*lexer->current != '\0') {
-        lexer->start = lexer->current;
-        printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
+Token nextToken(Lexer* lexer, Token* token) {
+    skipWhitespace(lexer);
 
-        if (isspace(*lexer->current)) {
-            if (*lexer->current == '\n') {
-                lexer->line++;
-                lexer->column = 1;
-            } else if (*lexer->current == '\r') {
-                if (*(lexer->current + 1) == '\n') {
-                    lexer->current++;
-                }
-                lexer->line++;
-                lexer->column = 1;
-            } else {
-                lexer->column++;
-            }
-            lexer->current++;
-            continue;
-        }
+    lexer->start = lexer->current;
 
-        token->length = 0;
-        token->line = lexer->line;
-        token->column = lexer->column;
-
-        char c = *lexer->current;
-        if (isalpha(c)) {
-            int start = lexer->current - lexer->source;
-            while (isalnum(*lexer->current)) {
-                lexer->current++;
-                lexer->column++;
-            }
-            int length = lexer->current - (lexer->source + start);
-            char* identifier = my_strndup(lexer->source + start, length);
-
-            token->type = checkKeyword(identifier);
-            token->value.stringValue = identifier;
-            token->line = lexer->line;
-            token->column = lexer->column - length;
-
-            printf("{lexer} Generated Token: %s, Type: %d\n", identifier, token->type);
-            return;
-        }
-
-        if (isdigit(*lexer->current)) {
-            while (isdigit(*lexer->current)) {
-                lexer->current++;
-                lexer->column++;
-            }
-            token->type = TOKEN_INT;
-            token->length = lexer->current - lexer->start;
-            printf("{lexer} Generated Token: INTEGER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column - token->length);
-            return;
-        }
-
-        if (*lexer->current == '"') {
-            lexer->current++;
-            lexer->column++;
-            while (*lexer->current != '"' && *lexer->current != '\0') {
-                if (*lexer->current == '\\' && *(lexer->current + 1) == '"') {
-                    lexer->current += 2;
-                    lexer->column += 2;
-                } else {
-                    lexer->current++;
-                    lexer->column++;
-                }
-            }
-            if (*lexer->current == '"') {
-                lexer->current++;
-                lexer->column++;
-            }
-            token->type = TOKEN_STRING;
-            token->length = lexer->current - lexer->start;
-            printf("{lexer} Generated Token: STRING '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column - token->length);
-            return;
-        }
-
-        switch (*lexer->current) {
-            case '(': token->type = TOKEN_LPAREN; break;
-            case ')': token->type = TOKEN_RPAREN; break;
-            case '{': token->type = TOKEN_LBRACE; break;
-            case '}': token->type = TOKEN_RBRACE; break;
-            case ':': token->type = TOKEN_COLON; break;
-            case ';': token->type = TOKEN_SEMICOLON; break;
-            case ',': token->type = TOKEN_COMMA; break;
-            case '.': token->type = TOKEN_DOT; break;
-            case '-':
-                lexer->current++;
-                lexer->column++;
-                if (*lexer->current == '>') {
-                    token->type = TOKEN_RESULT_ARROW;
-                    token->length = 2;
-                    lexer->current++;
-                    lexer->column++;
-                    printf("{lexer} Generated Token: '->'\n");
-                } else {
-                    token->type = TOKEN_OP_MINUS;
-                    token->length = 1;
-                    printf("{lexer} Generated Token: '-' at line %d, column %d\n", token->line, token->column);
-                }
-                return;
-            default:
-                token->type = TOKEN_ERROR;
-                printf("{lexer} Unknown character found: '%c'\n", *lexer->current);
-                lexer->current++;
-                lexer->column++;
-                return;
-        }
-        
-        if(token->type == TOKEN_ERROR) {
-            printf("{lexer} Error: Unknown character found: '%c'\n", *lexer->current);
-            break;
-        }
-
-        token->length = 1;
-        token->line = lexer->line;
-        token->column = lexer->column;
-        lexer->current++;
-        lexer->column++;
-        printf("{lexer} Generated Token: PUNCTUATION '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
-        return;
+    if (isAtEnd(lexer)) {
+        return makeToken(lexer, TOKEN_EOF);
     }
-
-    token->type = TOKEN_EOF;
+    printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
+    
     token->length = 0;
-    printf("{lexer} Generated Token: <EOF>\n");
+    token->line = lexer->line;
+    token->column = lexer->column;
+    
+    char c = advance(lexer);
+
+    if (isalpha(c)) return identifier(lexer);
+    if (isdigit(c)) return number(lexer);
+
+    switch (c) {
+        case '(': return makeToken(lexer, TOKEN_LPAREN);
+        case ')': return makeToken(lexer, TOKEN_RPAREN);
+        case '{': return makeToken(lexer, TOKEN_LBRACE);
+        case '}': return makeToken(lexer, TOKEN_RBRACE);
+        case ';': return makeToken(lexer, TOKEN_SEMICOLON);
+        case '+': return makeToken(lexer, TOKEN_OP_PLUS);
+        case '-': return makeToken(lexer, TOKEN_OP_MINUS);
+        case '*': return makeToken(lexer, TOKEN_OP_STAR);
+        case '/': return makeToken(lexer, TOKEN_OP_SLASH);
+        case '=': return makeToken(lexer, TOKEN_ASSIGN);
+        default:
+            return errorToken(lexer, "Unexpected character.");
+    }
+    
+    if(token->type == TOKEN_ERROR) {
+        printf("{lexer} Error: Unknown character found: '%c'\n", *lexer->current);
+    }
 }
 // </nextToken>
 

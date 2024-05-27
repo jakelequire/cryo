@@ -1,6 +1,4 @@
 #include "include/parser.h"
-#include "include/lexer.h"
-#include "include/ast.h"
 #include "token.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,8 +27,8 @@ void getNextToken(Lexer *lexer) {
         printf("{parser} currentToken.start is NULL in getNextToken, getting\n");
         return;
     }
-
     currentToken = get_next_token(lexer);
+
     printf("{lexer} [DEBUG] Next token: %.*s, Type: %d, Line: %d, Column: %d\n",
            currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
 }
@@ -277,7 +275,7 @@ ASTNode* parseBlock(Lexer* lexer) {
     printf("{parser} [DEBUG] Parsing block...\n");
     ASTNode* block = createBlock();
 
-    getNextToken(lexer); // Consume '{'
+    getNextToken(lexer);  // Consume '{'
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
         ASTNode* statement = parseStatement(lexer);
         if (statement == NULL) {
@@ -294,7 +292,7 @@ ASTNode* parseBlock(Lexer* lexer) {
         return NULL;
     }
 
-    getNextToken(lexer); // Consume '}'
+    getNextToken(lexer);  // Consume '}'
     printf("{parser} [DEBUG] Block parsed successfully\n");
     return block;
 }
