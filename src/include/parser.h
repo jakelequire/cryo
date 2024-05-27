@@ -3,7 +3,10 @@
 
 #include "lexer.h"
 #include "ast.h"
-#include "token.h"
+
+#ifndef HAVE_STRNDUP
+char* strndup(const char* s, size_t n);
+#endif
 
 void consume(Lexer *lexer, CryoTokenType type, const char *message);
 ASTNode* createBlock();

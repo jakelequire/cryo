@@ -6,11 +6,15 @@
 #include <string.h>
 
 
+
+
 char* my_strndup(const char* src, size_t len) {
-    char* dest = malloc(len + 1);
+    char* dest = (char*)malloc(len + 1);
     if (dest) {
-        strncpy_s(dest, len + 1, src, len);
+        strncpy(dest, src, len);
         dest[len] = '\0';
+    } else {
+        fprintf(stderr, "{lexer} Error: Memory allocation failed in my_strndup\n");
     }
     return dest;
 }
@@ -22,9 +26,9 @@ void initLexer(Lexer* lexer, const char* source) {
     lexer->line = 1;
     lexer->column = 1;
     lexer->hasPeeked = false;
-    printf("-------------- <Input Source Code> --------------\n\n");
-    printf("\nLexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
-    printf("\n-------------------- <END> ----------------------\n\n");
+    printf("{lexer} -------------- <Input Source Code> --------------\n\n");
+    printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
+    printf("\n{lexer} -------------------- <END> ----------------------\n\n");
 }
 
 CryoTokenType checkKeyword(const char* identifier) {
@@ -44,32 +48,27 @@ CryoTokenType checkKeyword(const char* identifier) {
     return TOKEN_IDENTIFIER;
 }
 
+
+// <nextToken>
 void nextToken(Lexer* lexer, Token* token) {
     while (*lexer->current != '\0') {
         lexer->start = lexer->current;
+        printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
 
-        if (isspace(*lexer->current) || *lexer->current == '\r') {
-            do {
-                if (*lexer->current == '\n') {
-                    printf("Newline found at line %d, column %d\n", lexer->line, lexer->column);
-                    token->type = TOKEN_NEWLINE;
-                    lexer->line++;
-                    lexer->column = 1;
-                    lexer->current++;
-                } else if (*lexer->current == '\r') {
-                    printf("Carriage return found at line %d, column %d\n", lexer->line, lexer->column);
-                    lexer->current++;
-                    if (*lexer->current == '\n') {
-                        lexer->current++;
-                    }
-                    lexer->line++;
-                    lexer->column = 1;
-                } else {
-                    printf("Whitespace found at line %d, column %d\n", lexer->line, lexer->column);
-                    lexer->column++;
+        if (isspace(*lexer->current)) {
+            if (*lexer->current == '\n') {
+                lexer->line++;
+                lexer->column = 1;
+            } else if (*lexer->current == '\r') {
+                if (*(lexer->current + 1) == '\n') {
                     lexer->current++;
                 }
-            } while (isspace(*lexer->current) || *lexer->current == '\r');
+                lexer->line++;
+                lexer->column = 1;
+            } else {
+                lexer->column++;
+            }
+            lexer->current++;
             continue;
         }
 
@@ -78,21 +77,21 @@ void nextToken(Lexer* lexer, Token* token) {
         token->column = lexer->column;
 
         char c = *lexer->current;
-        if (isalpha(c)) {  // Start of an identifier or keyword
+        if (isalpha(c)) {
             int start = lexer->current - lexer->source;
             while (isalnum(*lexer->current)) {
                 lexer->current++;
+                lexer->column++;
             }
             int length = lexer->current - (lexer->source + start);
             char* identifier = my_strndup(lexer->source + start, length);
 
-            token->type = checkKeyword(identifier);  // Check if it's a keyword
+            token->type = checkKeyword(identifier);
             token->value.stringValue = identifier;
             token->line = lexer->line;
-            token->column = lexer->column;
+            token->column = lexer->column - length;
 
-            printf("Generated Token: %s, Type: %d\n", identifier, token->type); // Debug print
-
+            printf("{lexer} Generated Token: %s, Type: %d\n", identifier, token->type);
             return;
         }
 
@@ -103,7 +102,7 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_INT;
             token->length = lexer->current - lexer->start;
-            printf("Generated Token: INTEGER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
+            printf("{lexer} Generated Token: INTEGER '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column - token->length);
             return;
         }
 
@@ -125,15 +124,19 @@ void nextToken(Lexer* lexer, Token* token) {
             }
             token->type = TOKEN_STRING;
             token->length = lexer->current - lexer->start;
-            printf("Generated Token: STRING '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column);
+            printf("{lexer} Generated Token: STRING '%.*s' at line %d, column %d\n", token->length, lexer->start, token->line, token->column - token->length);
             return;
         }
 
         switch (*lexer->current) {
-            case '(': token->type = TOKEN_LPAREN; printf("Generated Token: '('\n"); break;
-            case ')': token->type = TOKEN_RPAREN; printf("Generated Token: ')'\n"); break;
-            case '{': token->type = TOKEN_LBRACE; printf("Generated Token: '{'\n"); break;
-            case '}': token->type = TOKEN_RBRACE; printf("Generated Token: '}'\n"); break;
+            case '(': token->type = TOKEN_LPAREN; break;
+            case ')': token->type = TOKEN_RPAREN; break;
+            case '{': token->type = TOKEN_LBRACE; break;
+            case '}': token->type = TOKEN_RBRACE; break;
+            case ':': token->type = TOKEN_COLON; break;
+            case ';': token->type = TOKEN_SEMICOLON; break;
+            case ',': token->type = TOKEN_COMMA; break;
+            case '.': token->type = TOKEN_DOT; break;
             case '-':
                 lexer->current++;
                 lexer->column++;
@@ -142,16 +145,24 @@ void nextToken(Lexer* lexer, Token* token) {
                     token->length = 2;
                     lexer->current++;
                     lexer->column++;
-                    printf("Generated Token: '->'\n");
+                    printf("{lexer} Generated Token: '->'\n");
                 } else {
-                    token->type = TOKEN_ERROR;
-                    printf("Generated Token: '-'\n");
+                    token->type = TOKEN_OP_MINUS;
+                    token->length = 1;
+                    printf("{lexer} Generated Token: '-' at line %d, column %d\n", token->line, token->column);
                 }
                 return;
             default:
                 token->type = TOKEN_ERROR;
-                printf("Unknown character found: '%c'\n", *lexer->current);
+                printf("{lexer} Unknown character found: '%c'\n", *lexer->current);
+                lexer->current++;
+                lexer->column++;
                 return;
+        }
+        
+        if(token->type == TOKEN_ERROR) {
+            printf("{lexer} Error: Unknown character found: '%c'\n", *lexer->current);
+            break;
         }
 
         token->length = 1;
@@ -159,15 +170,15 @@ void nextToken(Lexer* lexer, Token* token) {
         token->column = lexer->column;
         lexer->current++;
         lexer->column++;
-        printf("Generated Token: PUNCTUATION '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
+        printf("{lexer} Generated Token: PUNCTUATION '%c' at line %d, column %d\n", *lexer->start, token->line, token->column);
         return;
     }
 
     token->type = TOKEN_EOF;
     token->length = 0;
-    lexer->current++;
-    printf("Generated Token: <EOF>\n");
+    printf("{lexer} Generated Token: <EOF>\n");
 }
+// </nextToken>
 
 Token getToken(Lexer* lexer) {
     if (lexer->hasPeeked) {
@@ -215,7 +226,7 @@ char* readFile(const char* path) {
     FILE* file;
     errno_t err = fopen_s(&file, path, "rb");  // Open the file in binary mode to avoid transformations
     if (err != 0) {
-        perror("Could not open file");
+        perror("{lexer} Could not open file");
         return NULL;
     }
 
@@ -225,21 +236,21 @@ char* readFile(const char* path) {
     fseek(file, 0, SEEK_SET);
 
     if (length == 0) {
-        perror("File is empty");
+        perror("{lexer} File is empty");
         fclose(file);
         return NULL;
     }
 
     char* buffer = (char*)malloc(length + 1);
     if (buffer == NULL) {
-        perror("Not enough memory to read file");
+        perror("{lexer} Not enough memory to read file");
         fclose(file);
         return NULL;
     }
 
     size_t bytesRead = fread(buffer, 1, length, file);
     if (bytesRead < length) {
-        perror("Failed to read the full file");
+        perror("{lexer} Failed to read the full file");
         free(buffer);
         fclose(file);
         return NULL;
@@ -256,7 +267,7 @@ void freeLexer(Lexer* lexer) {
 
 int lexer(int argc, char* argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
+        fprintf(stderr, "{lexer} Usage: %s <path_to_file>\n", argv[0]);
         return 1;
     }
 
@@ -269,6 +280,7 @@ int lexer(int argc, char* argv[]) {
     Token token;
     do {
         nextToken(&lexer, &token);
+        printf("{lexer} [!DEBUG!] Parsing token: %.*s, Type: %d\n", token.length, token.start, token.type);
     } while (token.type != TOKEN_EOF);
 
     freeLexer(&lexer);

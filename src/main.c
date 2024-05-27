@@ -6,7 +6,6 @@
 #include "main.h"
 
 
-
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
@@ -17,28 +16,39 @@ int main(int argc, char* argv[]) {
 
     const char* filePath = argv[1];
     char* source = readFile(filePath);
-    if (source == NULL) return 1;
+    if (source == NULL) {
+        fprintf(stderr, "Failed to read source file.\n");
+        return 1;
+    }
 
     Lexer lexer;
     initLexer(&lexer, source);
+    printf("[DEBUG] Lexer initialized\n");
 
     // Parse the source code
-    ASTNode* program = parseProgram(&lexer); // Change to parseProgram
-
+    ASTNode* program = parseProgram(&lexer);
     if (!program) {
         fprintf(stderr, "Failed to parse program.\n");
+        free(source);
         return 1;
     }
+    printf("[DEBUG] Program parsed\n");
 
     // Code generation
     for (int i = 0; i < program->data.program.stmtCount; ++i) {
         ASTNode* function = program->data.program.statements[i];
-        codegen_function(function); // Generate code for each function
+        if (function) {
+            codegen_function(function); // Generate code for each function
+            printf("[DEBUG] Function code generated\n");
+        } else {
+            printf("[DEBUG] Null function encountered at index %d\n", i);
+        }
     }
 
     // Finalize LLVM codegen (output file produced here)
     finalize_codegen();
-
+    printf("[DEBUG] Codegen finalized\n");
+    
     // Clean up
     free(source);
     return 0;

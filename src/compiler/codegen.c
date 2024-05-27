@@ -53,7 +53,9 @@ void codegen_function(ASTNode* node) {
 void finalize_codegen() {
     printf("Finalizing Compilation...\n");
     LLVMVerifyModule(module, LLVMAbortProcessAction, NULL);
+    printf("------------- <Module Dump> -------------\n");
     LLVMDumpModule(module);
+    printf("------------- <Module Dump End> -------------\n");
     //                    The output is here.
     LLVMPrintModuleToFile(module, "output.ll", NULL);
     LLVMDisposeBuilder(builder);

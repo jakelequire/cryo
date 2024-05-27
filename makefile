@@ -1,5 +1,5 @@
 # Compiler and Flags
-CC = clang
+CC = clang -g
 CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -I./cli/ -Wall -g
 LDFLAGS = -L"C:/Program Files/LLVM/lib"
 

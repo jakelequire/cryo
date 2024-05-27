@@ -46,7 +46,7 @@ BuildArgs get_build_args(const char* build_args) {
 
 
 void single_build(char* filename) {
-    printf("<single_build> Building single file: %s\n", filename);
+    printf("<single_build> Building single file, path: %s\n", filename);
 
     // Grab the file being passed
     char* file = readFile(filename);
@@ -58,7 +58,7 @@ void single_build(char* filename) {
     printf("<single_build> File contents: %s\n", file);
 
     // pass to compiler `main.exe`
-
+    compile_main(filename);
 
     free(file);
 }

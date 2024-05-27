@@ -1,10 +1,60 @@
-
 #include <compiler.h>
+#include <stdlib.h>
+
+#ifdef _WIN32
+#include <direct.h>
+#define popen _popen
+#define pclose _pclose
+#else
+#include <unistd.h>
+#endif
+
+#include <stdio.h>
+#include <string.h>
+
+//   snprintf(command, sizeof(command), "C:/Programming/apps/cryo/src/bin/main.exe %s", input_file);
+
+// Function to get absolute path
+char* get_abs_path(const char* local_path) {
+    char temp_path[256];
+    #ifdef _WIN32
+    if (!_getcwd(temp_path, sizeof(temp_path))) {
+    #else
+    if (!getcwd(temp_path, sizeof(temp_path))) {
+    #endif
+        fprintf(stderr, "Error: Failed to get current directory.\n");
+        return NULL;
+    }
+
+    char* abs_path = (char*)malloc(256);
+    if (abs_path == NULL) {
+        fprintf(stderr, "Error: Failed to allocate memory.\n");
+        return NULL;
+    }
+
+    snprintf(abs_path, 256, "%s/%s", temp_path, local_path);
+
+    // Normalize path separators on Windows
+    #ifdef _WIN32
+    for (char *p = abs_path; *p; ++p) {
+        if (*p == '/') *p = '\\';
+    }
+    #endif
+
+    printf("[debug] <get_abs_path> Absolute path: %s\n", abs_path);
+    return abs_path;
+}
 
 // Function to run the compiler
 void run_compiler(const char *input_file) {
+    char* input_path = get_abs_path(input_file);
+    if (input_path == NULL) {
+        fprintf(stderr, "Failed to get absolute path for input file.\n");
+        exit(EXIT_FAILURE);
+    }
+
     char command[256];
-    snprintf(command, sizeof(command), "../src/bin/main.exe %s", input_file);
+    snprintf(command, sizeof(command), "C:/Programming/apps/cryo/src/bin/main.exe %s", input_path);
 
     FILE *fp;
     char path[1035];
@@ -13,6 +63,7 @@ void run_compiler(const char *input_file) {
     fp = popen(command, "r");
     if (fp == NULL) {
         fprintf(stderr, "Failed to run compiler command\n");
+        free(input_path);
         exit(EXIT_FAILURE);
     }
 
@@ -25,15 +76,16 @@ void run_compiler(const char *input_file) {
     int status = pclose(fp);
     if (status == -1) {
         fprintf(stderr, "Error: Failed to close command stream.\n");
+        free(input_path);
         exit(EXIT_FAILURE);
-    } else if (WIFEXITED(status)) {
-        if (WEXITSTATUS(status) != 0) {
-            fprintf(stderr, "Error: Compiler returned a non-zero exit code: %d\n", WEXITSTATUS(status));
-            exit(EXIT_FAILURE);
-        }
+    } else if (status != 0) {
+        fprintf(stderr, "Error: Compiler returned a non-zero exit code: %d\n", status);
+        free(input_path);
+        exit(EXIT_FAILURE);
     }
-}
 
+    free(input_path);
+}
 
 
 

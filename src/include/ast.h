@@ -96,6 +96,7 @@ typedef struct ASTNode {
 } ASTNode;
 
 // Function prototypes for creating AST nodes
+void freeAST(ASTNode* node);
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator);

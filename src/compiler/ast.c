@@ -6,6 +6,60 @@
 // Define the global program node
 ASTNode* programNode = NULL;
 
+void freeAST(ASTNode* node) {
+    if (!node) return;
+    switch (node->type) {
+        case TOKEN_INT:
+        case TOKEN_FLOAT:
+        case TOKEN_STRING:
+        case TOKEN_IDENTIFIER:
+            free(node->data.varName.varName);
+            break;
+        case TOKEN_OP_PLUS:
+        case TOKEN_OP_MINUS:
+        case TOKEN_OP_MUL_ASSIGN:
+        case TOKEN_OP_DIV_ASSIGN:
+            freeAST(node->data.bin_op.left);
+            freeAST(node->data.bin_op.right);
+            break;
+        case TOKEN_KW_FN:
+            free(node->data.functionDecl.name);
+            freeAST(node->data.functionDecl.body);
+            break;
+        case TOKEN_KW_RETURN:
+            freeAST(node->data.returnStmt.returnValue);
+            break;
+        case TOKEN_LBRACE:
+            freeAST(node->data.stmt.stmt);
+            break;
+        case TOKEN_KW_IF:
+            freeAST(node->data.ifStmt.condition);
+            freeAST(node->data.ifStmt.thenBranch);
+            freeAST(node->data.ifStmt.elseBranch);
+            break;
+        case TOKEN_KW_WHILE:
+            freeAST(node->data.whileStmt.condition);
+            freeAST(node->data.whileStmt.body);
+            break;
+        case TOKEN_KW_FOR:
+            freeAST(node->data.forStmt.initializer);
+            freeAST(node->data.forStmt.condition);
+            freeAST(node->data.forStmt.increment);
+            freeAST(node->data.forStmt.body);
+            break;
+        case TOKEN_KW_CONST:
+            free(node->data.varDecl.name);
+            freeAST(node->data.varDecl.initializer);
+            break;
+        case TOKEN_SEMICOLON:
+            freeAST(node->data.expr.expr);
+            break;
+        default:
+            break;
+    }
+    free(node);
+}
+
 ASTNode* createLiteralExpr(int value) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = TOKEN_INT;

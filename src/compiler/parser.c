@@ -1,29 +1,59 @@
 #include "include/parser.h"
 #include "include/lexer.h"
 #include "include/ast.h"
+#include "token.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+
+#ifndef HAVE_STRNDUP
+char* strndup(const char* s, size_t n) {
+    size_t len = strnlen(s, n);
+    char* new_str = (char*)malloc(len + 1);
+    if (new_str == NULL) {
+        return NULL;
+    }
+    memcpy(new_str, s, len);
+    new_str[len] = '\0';
+    return new_str;
+}
+#endif
 
 Token currentToken;
 
 void getNextToken(Lexer *lexer) {
+    // Ensure currentToken.start is valid before using it
+    if (currentToken.start == NULL) {
+        printf("{parser} currentToken.start is NULL in getNextToken, getting\n");
+        return;
+    }
+
     currentToken = get_next_token(lexer);
-    printf("Consumed Token: %s, Type: %d at line %d, column %d\n", currentToken.start, currentToken.type, currentToken.line, currentToken.column); // Debug print
+    printf("{lexer} [DEBUG] Next token: %.*s, Type: %d, Line: %d, Column: %d\n",
+           currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
 }
+
+
 
 void error(const char* message) {
-    fprintf(stderr, "Error: %s at line %d column %d \n", message, currentToken.line, currentToken.column);
+    fprintf(stderr, "{parser} Error: %s at line %d, column %d\n", message, currentToken.line, currentToken.column);
+    exit(1); // Exit on error to prevent further processing
 }
-
 
 
 void consume(Lexer *lexer, CryoTokenType type, const char *message) {
+    printf("{parser} [DEBUG] Consuming token: expected: %d, actual: %d\n", type, currentToken.type);
     if (currentToken.type == type) {
         getNextToken(lexer);
     } else {
+        fprintf(stderr, "{parser} Critical error: Panic\n");
         error(message);
+        exit(1);
     }
 }
+
 
 ASTNode* parsePrimaryExpression(Lexer* lexer) {
     switch (currentToken.type) {
@@ -61,14 +91,14 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             getNextToken(lexer);  // Consume '('
             ASTNode* expr = parseExpression(lexer);
             if (currentToken.type != TOKEN_RPAREN) {
-                error("Expected ')'");
+                error("{parser} Expected ')'");
                 return NULL;
             }
             getNextToken(lexer);  // Consume ')'
             return expr;
         }
         default:
-            error("Expected an expression");
+            error("{parser} Expected an expression");
             return NULL;
     }
 }
@@ -138,13 +168,13 @@ ASTNode* parseIfStatement(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'if'
     ASTNode* condition = parseExpression(lexer);
     if (currentToken.type != TOKEN_LBRACE) {
-        error("Expected '{' after if condition");
+        error("{parser} Expected '{' after if condition");
         return NULL;
     }
     getNextToken(lexer);  // Consume '{'
     ASTNode* thenBranch = parseStatement(lexer);
     if (currentToken.type != TOKEN_RBRACE) {
-        error("Expected '}' after if body");
+        error("{parser} Expected '}' after if body");
         return NULL;
     }
     getNextToken(lexer);  // Consume '}'
@@ -155,7 +185,7 @@ ASTNode* parseIfStatement(Lexer* lexer) {
             getNextToken(lexer);  // Consume '{'
             elseBranch = parseStatement(lexer);
             if (currentToken.type != TOKEN_RBRACE) {
-                error("Expected '}' after else body");
+                error("{parser} Expected '}' after else body");
                 return NULL;
             }
             getNextToken(lexer);  // Consume '}'
@@ -173,7 +203,7 @@ ASTNode* parseReturnStatement(Lexer* lexer) {
         expr = parseExpression(lexer);
     }
     if (currentToken.type != TOKEN_SEMICOLON) {
-        error("Expected ';' after return value");
+        error("{parser} Expected ';' after return value");
         return NULL;
     }
     getNextToken(lexer);  // Consume ';'
@@ -183,7 +213,7 @@ ASTNode* parseReturnStatement(Lexer* lexer) {
 ASTNode* parseExpressionStatement(Lexer* lexer) {
     ASTNode* expr = parseExpression(lexer);
     if (currentToken.type != TOKEN_SEMICOLON) {
-        error("Expected ';' after expression");
+        error("{parser} Expected ';' after expression");
         return NULL;
     }
     getNextToken(lexer);  // Consume ';'
@@ -194,13 +224,13 @@ ASTNode* parseWhileStatement(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'while'
     ASTNode* condition = parseExpression(lexer);
     if (currentToken.type != TOKEN_LBRACE) {
-        error("Expected '{' after while condition");
+        error("{parser} Expected '{' after while condition");
         return NULL;
     }
     getNextToken(lexer);  // Consume '{'
     ASTNode* body = parseStatement(lexer);
     if (currentToken.type != TOKEN_RBRACE) {
-        error("Expected '}' after while body");
+        error("{parser} Expected '}' after while body");
         return NULL;
     }
     getNextToken(lexer);  // Consume '}'
@@ -213,13 +243,13 @@ ASTNode* parseForStatement(Lexer* lexer) {
     ASTNode* condition = parseExpression(lexer);
     ASTNode* increment = parseStatement(lexer);
     if (currentToken.type != TOKEN_LBRACE) {
-        error("Expected '{' after for condition");
+        error("{parser} Expected '{' after for condition");
         return NULL;
     }
     getNextToken(lexer);  // Consume '{'
     ASTNode* body = parseStatement(lexer);
     if (currentToken.type != TOKEN_RBRACE) {
-        error("Expected '}' after for body");
+        error("{parser} Expected '}' after for body");
         return NULL;
     }
     getNextToken(lexer);  // Consume '}'
@@ -229,13 +259,13 @@ ASTNode* parseForStatement(Lexer* lexer) {
 ASTNode* parseVarDeclaration(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'const' or 'var'
     if (currentToken.type != TOKEN_IDENTIFIER) {
-        error("Expected variable name");
+        error("{parser} Expected variable name");
         return NULL;
     }
     char* varName = _strdup(currentToken.value.stringValue);
     getNextToken(lexer);  // Consume variable name
     if (currentToken.type != TOKEN_ASSIGN) {
-        error("Expected '=' after variable name");
+        error("{parser} Expected '=' after variable name");
         return NULL;
     }
     getNextToken(lexer);  // Consume '='
@@ -244,97 +274,253 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
 }
 
 ASTNode* parseBlock(Lexer* lexer) {
-    consume(lexer, TOKEN_LBRACE, "Expect '{' to start block.");
-    ASTNode *block = createBlock();
+    printf("{parser} [DEBUG] Parsing block...\n");
+    ASTNode* block = createBlock();
+
+    getNextToken(lexer); // Consume '{'
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
-        ASTNode *stmt = parseStatement(lexer);
-        addStatementToBlock(block, stmt);
+        ASTNode* statement = parseStatement(lexer);
+        if (statement == NULL) {
+            fprintf(stderr, "{parser} Error: Failed to parse statement\n");
+            free(block);
+            return NULL;
+        }
+        addStatementToBlock(block, statement);
     }
-    consume(lexer, TOKEN_RBRACE, "Expect '}' to end block.");
+
+    if (currentToken.type != TOKEN_RBRACE) {
+        fprintf(stderr, "{parser} Error: Expected '}', but got %.*s\n", currentToken.length, currentToken.start);
+        free(block);
+        return NULL;
+    }
+
+    getNextToken(lexer); // Consume '}'
+    printf("{parser} [DEBUG] Block parsed successfully\n");
     return block;
 }
 
+
+
+// <parseFunctionDeclaration>
 ASTNode* parseFunctionDeclaration(Lexer* lexer) {
-    printf("Parsing function declaration...\n"); // Debug print
-    getNextToken(lexer);  // Consume 'fn'
+    printf("{parser} [DEBUG] Parsing function declaration...\n");
+
+    // Consume 'fn'
+    getNextToken(lexer);
+
+    if (currentToken.start == NULL) {
+        fprintf(stderr, "Error: currentToken.start is NULL after 'fn'\n");
+        return NULL;
+    }
+
+    // Check for function name
     if (currentToken.type != TOKEN_IDENTIFIER) {
-        error("Expected function name");
+        fprintf(stderr, "Error: Expected function name, but got %.*s\n", currentToken.length, currentToken.start);
         return NULL;
     }
-    const char* functionName = getTokenStringValue(&currentToken);
-    printf("Function name: %s\n", functionName); // Debug print
-    getNextToken(lexer);  // Consume the function name
 
+    // Parse function name
+    char* functionName = strndup(currentToken.start, currentToken.length);
+    if (functionName == NULL) {
+        fprintf(stderr, "Error: Failed to allocate memory for function name\n");
+        return NULL;
+    }
+    printf("{parser} [DEBUG] Function name: %s\n", functionName);
+
+    // Consume the function name token
+    getNextToken(lexer);
+    printf("{parser} [DEBUG] After function name, current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+           currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
+
+    // Check for '(' token
     if (currentToken.type != TOKEN_LPAREN) {
-        error("Expected '(' after function name");
+        fprintf(stderr, "Error: Expected '(', but got %.*s\n", currentToken.length, currentToken.start);
+        free(functionName);
         return NULL;
     }
-    getNextToken(lexer);  // Consume '('
 
-    // Parse parameters (for simplicity, assuming no parameters)
+    // Consume '(' token
+    getNextToken(lexer);
+    printf("{parser} [DEBUG] After '(', current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+           currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
+
+    // Parse parameters (if any)
     while (currentToken.type != TOKEN_RPAREN) {
         if (currentToken.type != TOKEN_IDENTIFIER) {
-            error("Expected parameter name");
+            fprintf(stderr, "Error: Expected parameter name, but got %.*s\n", currentToken.length, currentToken.start);
+            free(functionName);
             return NULL;
         }
-        getNextToken(lexer);  // Consume parameter name
+        char* paramName = strndup(currentToken.start, currentToken.length);
+        if (paramName == NULL) {
+            fprintf(stderr, "Error: Failed to allocate memory for parameter name\n");
+            free(functionName);
+            return NULL;
+        }
+        getNextToken(lexer); // Consume parameter name
+        printf("{parser} [DEBUG] After parameter name, current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+               currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
+
+        // Check for ':' token
+        if (currentToken.type != TOKEN_COLON) {
+            fprintf(stderr, "Error: Expected ':', but got %.*s\n", currentToken.length, currentToken.start);
+            free(paramName);
+            free(functionName);
+            return NULL;
+        }
+        getNextToken(lexer); // Consume ':'
+        printf("{parser} [DEBUG] After ':', current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+               currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
+
+        // Parse parameter type
+        if (currentToken.type != TOKEN_IDENTIFIER) {
+            fprintf(stderr, "Error: Expected parameter type, but got %.*s\n", currentToken.length, currentToken.start);
+            free(paramName);
+            free(functionName);
+            return NULL;
+        }
+        char* paramType = strndup(currentToken.start, currentToken.length);
+        if (paramType == NULL) {
+            fprintf(stderr, "Error: Failed to allocate memory for parameter type\n");
+            free(paramName);
+            free(functionName);
+            return NULL;
+        }
+        printf("{parser} [DEBUG] Parameter: %s of type %s\n", paramName, paramType);
+        free(paramName);
+        free(paramType);
+
+        getNextToken(lexer); // Consume parameter type
+        printf("{parser} [DEBUG] After parameter type, current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+               currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
 
         if (currentToken.type != TOKEN_COMMA && currentToken.type != TOKEN_RPAREN) {
-            error("Expected ',' or ')' after parameter name");
+            fprintf(stderr, "Error: Expected ',' or ')' after parameter, but got %.*s\n", currentToken.length, currentToken.start);
+            free(functionName);
             return NULL;
         }
         if (currentToken.type == TOKEN_COMMA) {
-            getNextToken(lexer);  // Consume ','
+            getNextToken(lexer); // Consume ','
+            printf("{parser} [DEBUG] After ',', current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+                   currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
         }
     }
-    getNextToken(lexer);  // Consume ')'
 
-    // Parse return type (for simplicity, assuming int return type)
-    if (currentToken.type == TOKEN_RESULT_ARROW) {  // Use TOKEN_RESULT_ARROW
-        getNextToken(lexer);  // Consume '->'
+    getNextToken(lexer); // Consume ')'
+    printf("{parser} [DEBUG] After ')', current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+           currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
+
+    // Check for '->' return type indicator
+    if (currentToken.type == TOKEN_RESULT_ARROW) {
+        getNextToken(lexer); // Consume '->'
+        printf("{parser} [DEBUG] After '->', current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+               currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
+
+        // Parse return type
         if (currentToken.type != TOKEN_IDENTIFIER) {
-            error("Expected return type");
+            fprintf(stderr, "Error: Expected return type, but got %.*s\n", currentToken.length, currentToken.start);
+            free(functionName);
             return NULL;
         }
-        const char* returnType = getTokenStringValue(&currentToken);
-        printf("Return type: %s\n", returnType); // Debug print
-        getNextToken(lexer);  // Consume return type
+        char* returnType = strndup(currentToken.start, currentToken.length);
+        if (returnType == NULL) {
+            fprintf(stderr, "Error: Failed to allocate memory for return type\n");
+            free(functionName);
+            return NULL;
+        }
+        printf("{parser} [DEBUG] Return type: %s\n", returnType);
+        free(returnType);
+
+        getNextToken(lexer); // Consume return type
+        printf("{parser} [DEBUG] After return type, current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+               currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
     }
 
+    // Check for '{' token to start function body
     if (currentToken.type != TOKEN_LBRACE) {
-        error("Expected '{' to start function body");
+        fprintf(stderr, "Error: Expected '{', but got %.*s\n", currentToken.length, currentToken.start);
+        free(functionName);
+        return NULL;
+    }
+    getNextToken(lexer); // Consume '{'
+    printf("{parser} [DEBUG] After '{', current token: %.*s, Type: %d, Line: %d, Column: %d\n",
+           currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
+
+    // Parse function body
+    ASTNode* body = parseBlock(lexer);
+    if (body == NULL) {
+        fprintf(stderr, "Error: Failed to parse function body\n");
+        free(functionName);
         return NULL;
     }
 
-    ASTNode* body = parseBlock(lexer);  // Parse function body
+    // Create function AST node
+    ASTNode* functionNode = createFunctionNode(functionName, body);
+    free(functionName);
 
-    return createFunctionNode(functionName, body);
+    return functionNode;
 }
+// </parseFunctionDeclaration>
 
 ASTNode* parseProgram(Lexer* lexer) {
-    ASTNode* program = createBlock();  // Create a block to hold the program
+    printf("{parser} [DEBUG] Parsing program...\n");
+
+    ASTNode* program = createBlock();
+    if (program == NULL) {
+        fprintf(stderr, "Error: Failed to create program block\n");
+        return NULL;
+    }
+    printf("{parser} [DEBUG] Program block initialized...\n");
 
     getNextToken(lexer);  // Initialize token stream
     while (currentToken.type != TOKEN_EOF) {
-        printf("Parsing token: %s, Type: %d\n", currentToken.start, currentToken.type); // Debug print
-        if (currentToken.type == TOKEN_KW_PUBLIC) {
-            printf("Found 'public' keyword\n"); // Debug print
-            getNextToken(lexer);  // Consume 'public'
-            printf("After consuming 'public', token: %s, Type: %d\n", currentToken.start, currentToken.type); // Debug print
-            if (currentToken.type == TOKEN_KW_FN) {
-                printf("Found 'fn' after 'public'\n"); // Debug print
+        printf("{parser} [DEBUG] Parsing token: %.*s, Type: %d\n", currentToken.length, currentToken.start, currentToken.type);
+
+        switch (currentToken.type) {
+            case TOKEN_KW_PUBLIC:
+                printf("{parser} [DEBUG] Found 'public' keyword\n");
+                getNextToken(lexer);  // Consume 'public'
+                printf("{parser} [DEBUG] After consuming 'public', token: %.*s, Type: %d\n", currentToken.length, currentToken.start, currentToken.type);
+
+                if (currentToken.type == TOKEN_KW_FN) {
+                    printf("{parser} [DEBUG] Found 'fn' after 'public'\n");
+                    ASTNode* function = parseFunctionDeclaration(lexer);
+                    if (function == NULL) {
+                        fprintf(stderr, "Error: Failed to parse function declaration\n");
+                        freeAST(program);
+                        return NULL;
+                    }
+                    addStatementToBlock(program, function);  // Add function to the program's AST
+                } else {
+                    fprintf(stderr, "Error: Expected 'fn' after 'public', but got %.*s\n", currentToken.length, currentToken.start);
+                    freeAST(program);
+                    return NULL;
+                }
+                break;
+
+            case TOKEN_KW_FN:
+                printf("{parser} [DEBUG] Found 'fn' keyword\n");
                 ASTNode* function = parseFunctionDeclaration(lexer);
-                if (function == NULL) return NULL;  // Handle error
+                if (function == NULL) {
+                    fprintf(stderr, "Error: Failed to parse function declaration\n");
+                    freeAST(program);
+                    return NULL;
+                }
                 addStatementToBlock(program, function);  // Add function to the program's AST
-            } else {
-                error("Expected 'fn' after 'public'");
+                break;
+
+            default:
+                fprintf(stderr, "Error: Unexpected token at top level: %.*s, Type: %d\n", currentToken.length, currentToken.start, currentToken.type);
+                freeAST(program);
                 return NULL;
-            }
-        } else {
-            error("Unexpected token at top level");
-            return NULL;
         }
+
         getNextToken(lexer);
     }
+    printf("{parser} [DEBUG] Finished parsing program\n");
     return program;
 }
+
+
+
+
