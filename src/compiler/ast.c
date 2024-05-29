@@ -9,94 +9,90 @@
 ASTNode* programNode = NULL;
 
 void printAST(ASTNode* node, int indent) {
-    if (!node) {
-        printf("%*s[AST_PRINT] Node is NULL\n", indent, "");
-        return;
-    }
+    if (!node) return;
 
-    printf("%*s[AST_PRINT] Node type: %d\n", indent, "", node->type);
+    for (int i = 0; i < indent; ++i) printf("  ");
 
     switch (node->type) {
         case NODE_PROGRAM:
-            for (int i = 0; i < node->data.program.stmtCount; i++) {
-                printAST(node->data.program.statements[i], indent + 2);
+            printf("Program\n");
+            for (int i = 0; i < node->data.program.stmtCount; ++i) {
+                printAST(node->data.program.statements[i], indent + 1);
             }
             break;
         case NODE_FUNCTION_DECLARATION:
-            printf("%*s[AST_PRINT] Function name: %s\n", indent + 2, "", node->data.functionDecl.name);
-            printAST(node->data.functionDecl.body, indent + 2);
-            break;
-        case NODE_VAR_DECLARATION:
-            printf("%*s[AST_PRINT] Variable name: %s\n", indent + 2, "", node->data.varDecl.name);
-            printAST(node->data.varDecl.initializer, indent + 2);
-            break;
-        case NODE_RETURN_STATEMENT:
-            printf("%*s[AST_PRINT] Return statement\n", indent + 2, "");
-            printAST(node->data.returnStmt.returnValue, indent + 2);
+            printf("Function: %s\n", node->data.functionDecl.name);
+            printAST(node->data.functionDecl.body, indent + 1);
             break;
         case NODE_BLOCK:
-            printf("%*s[AST_PRINT] Block statement with %d statements\n", indent + 2, "", node->data.block.stmtCount);
-            for (int i = 0; i < node->data.block.stmtCount; i++) {
-                printAST(node->data.block.statements[i], indent + 2);
+            printf("Block\n");
+            for (int i = 0; i < node->data.block.stmtCount; ++i) {
+                printAST(node->data.block.statements[i], indent + 1);
             }
+            break;
+        case NODE_LITERAL:
+            printf("Literal: %d\n", node->data.value);
+            break;
+        case NODE_VAR_NAME:
+            printf("Variable: %s\n", node->data.varName.varName);
+            break;
+        case NODE_BINARY_EXPR:
+            printf("Binary Expression: %s\n", node->data.bin_op.operatorText);
+            printAST(node->data.bin_op.left, indent + 1);
+            printAST(node->data.bin_op.right, indent + 1);
+            break;
+        case NODE_UNARY_EXPR:
+            printf("Unary Expression: %d\n", node->data.unary_op.operator);
+            printAST(node->data.unary_op.operand, indent + 1);
+            break;
+        case NODE_RETURN_STATEMENT:
+            printf("Return Statement\n");
+            printAST(node->data.returnStmt.returnValue, indent + 1);
+            break;
+        case NODE_EXPRESSION_STATEMENT:
+            printf("Expression Statement\n");
+            printAST(node->data.expr.expr, indent + 1);
+            break;
+        case NODE_FUNCTION_CALL:
+            printf("Function Call: %s\n", node->data.functionCall.name);
             break;
         // Handle other node types...
         default:
-            printf("%*s[AST_PRINT] Unknown node type: %d\n", indent + 2, "", node->type);
+            printf("Unknown Node\n");
             break;
     }
+
+    printAST(node->next, indent);
 }
 
 
-
 void freeAST(ASTNode* node) {
-    if (!node) return;
+    if (!node) {
+        return;
+    }
+
     switch (node->type) {
-        case TOKEN_INT:
-        case TOKEN_FLOAT:
-        case TOKEN_STRING:
-        case TOKEN_IDENTIFIER:
-            free(node->data.varName.varName);
+        case NODE_PROGRAM:
+            if (node->data.program.statements) {
+                for (int i = 0; i < node->data.program.stmtCount; ++i) {
+                    freeAST(node->data.program.statements[i]);
+                }
+                free(node->data.program.statements);
+            }
             break;
-        case TOKEN_OP_PLUS:
-        case TOKEN_OP_MINUS:
-        case TOKEN_OP_MUL_ASSIGN:
-        case TOKEN_OP_DIV_ASSIGN:
-            freeAST(node->data.bin_op.left);
-            freeAST(node->data.bin_op.right);
-            break;
-        case TOKEN_KW_FN:
+        case NODE_FUNCTION_DECLARATION:
             free(node->data.functionDecl.name);
             freeAST(node->data.functionDecl.body);
             break;
-        case TOKEN_KW_RETURN:
-            freeAST(node->data.returnStmt.returnValue);
+        case NODE_BLOCK:
+            if (node->data.block.statements) {
+                for (int i = 0; i < node->data.block.stmtCount; ++i) {
+                    freeAST(node->data.block.statements[i]);
+                }
+                free(node->data.block.statements);
+            }
             break;
-        case TOKEN_LBRACE:
-            freeAST(node->data.stmt.stmt);
-            break;
-        case TOKEN_KW_IF:
-            freeAST(node->data.ifStmt.condition);
-            freeAST(node->data.ifStmt.thenBranch);
-            freeAST(node->data.ifStmt.elseBranch);
-            break;
-        case TOKEN_KW_WHILE:
-            freeAST(node->data.whileStmt.condition);
-            freeAST(node->data.whileStmt.body);
-            break;
-        case TOKEN_KW_FOR:
-            freeAST(node->data.forStmt.initializer);
-            freeAST(node->data.forStmt.condition);
-            freeAST(node->data.forStmt.increment);
-            freeAST(node->data.forStmt.body);
-            break;
-        case TOKEN_KW_CONST:
-            free(node->data.varDecl.name);
-            freeAST(node->data.varDecl.initializer);
-            break;
-        case TOKEN_SEMICOLON:
-            freeAST(node->data.expr.expr);
-            break;
+        // Free other node types...
         default:
             break;
     }
@@ -105,43 +101,61 @@ void freeAST(ASTNode* node) {
 
 ASTNode* createASTNode(NodeType type) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (!node) {
+        return NULL;
+    }
     node->type = type;
+    node->line = 0; // Initialize line number
     node->next = NULL;
+
+    switch (type) {
+        case NODE_PROGRAM:
+            node->data.program.statements = NULL;
+            node->data.program.stmtCount = 0;
+            node->data.program.stmtCapacity = 0;
+            break;
+        case NODE_FUNCTION_DECLARATION:
+            node->data.functionDecl.name = NULL;
+            node->data.functionDecl.body = NULL;
+            break;
+        case NODE_BLOCK:
+            node->data.block.statements = NULL;
+            node->data.block.stmtCount = 0;
+            node->data.block.stmtCapacity = 0;
+            break;
+        // Initialize other node types...
+        default:
+            break;
+    }
     return node;
 }
 
 ASTNode* createLiteralExpr(int value) {
     printf("[DEBUG] Creating literal expression with value: %d\n", value);
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_LITERAL;
+    ASTNode* node = createASTNode(NODE_LITERAL);
     node->data.value = value;
-    node->next = NULL;
     return node;
 }
 
 ASTNode* createVariableExpr(const char* name) {
     printf("[DEBUG] Creating variable expression with name: %s\n", name);
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_IDENTIFIER;
+    ASTNode* node = createASTNode(NODE_VAR_NAME);
     node->data.varName.varName = strdup(name);
     return node;
 }
 
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator) {
     printf("[DEBUG] Creating binary expression with operator: %d\n", operator);
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_OP_PLUS; // Or other operators as appropriate
+    ASTNode* node = createASTNode(NODE_BINARY_EXPR);
     node->data.bin_op.left = left;
     node->data.bin_op.right = right;
     node->data.bin_op.operator = operator;
-    node->data.bin_op.operatorText = NULL;  // Set operator text if needed
     return node;
 }
 
 ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand) {
     printf("[DEBUG] Creating unary expression with operator: %d\n", operator);
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = operator;
+    ASTNode* node = createASTNode(NODE_UNARY_EXPR);
     node->data.unary_op.operator = operator;
     node->data.unary_op.operand = operand;
     return node;
@@ -149,36 +163,31 @@ ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand) {
 
 ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body) {
     printf("[DEBUG] Creating function node with name: %s\n", function_name);
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_FUNCTION_DECLARATION;
-    node->data.functionDecl.name = function_name;
+    ASTNode* node = createASTNode(NODE_FUNCTION_DECLARATION);
+    node->data.functionDecl.name = strdup(function_name);
     node->data.functionDecl.body = function_body;
-    node->next = NULL;
     return node;
 }
 
 ASTNode* createReturnStatement(ASTNode* return_val) {
     printf("[DEBUG] Creating return statement\n");
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_KW_RETURN;
+    ASTNode* node = createASTNode(NODE_RETURN_STATEMENT);
     node->data.returnStmt.returnValue = return_val;
     return node;
 }
 
 ASTNode* createBlock() {
     printf("[DEBUG] Creating block node\n");
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_BLOCK;
+    ASTNode* node = createASTNode(NODE_BLOCK);
     node->data.block.statements = NULL;
     node->data.block.stmtCount = 0;
-    node->next = NULL;
+    node->data.block.stmtCapacity = 0;
     return node;
 }
 
 ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch) {
     printf("[DEBUG] Creating if statement\n");
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_KW_IF;
+    ASTNode* node = createASTNode(NODE_IF_STATEMENT);
     node->data.ifStmt.condition = condition;
     node->data.ifStmt.thenBranch = then_branch;
     node->data.ifStmt.elseBranch = else_branch;
@@ -187,8 +196,7 @@ ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* el
 
 ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body) {
     printf("[DEBUG] Creating while statement\n");
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_KW_WHILE;
+    ASTNode* node = createASTNode(NODE_WHILE_STATEMENT);
     node->data.whileStmt.condition = condition;
     node->data.whileStmt.body = body;
     return node;
@@ -196,8 +204,7 @@ ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body) {
 
 ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body) {
     printf("[DEBUG] Creating for statement\n");
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_KW_FOR;
+    ASTNode* node = createASTNode(NODE_FOR_STATEMENT);
     node->data.forStmt.initializer = initializer;
     node->data.forStmt.condition = condition;
     node->data.forStmt.increment = increment;
@@ -207,8 +214,7 @@ ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* i
 
 ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer) {
     printf("[DEBUG] Creating variable declaration node\n");
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_KW_CONST; // Or TOKEN_IDENTIFIER based on your implementation
+    ASTNode* node = createASTNode(NODE_VAR_DECLARATION);
     node->data.varDecl.name = strdup(var_name);
     node->data.varDecl.initializer = initializer;
     return node;
@@ -216,44 +222,30 @@ ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer) {
 
 ASTNode* createExpressionStatement(ASTNode* expression) {
     printf("[DEBUG] Creating expression statement\n");
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_SEMICOLON; // Assuming expression statements end with a semicolon
+    ASTNode* node = createASTNode(NODE_EXPRESSION_STATEMENT);
     node->data.expr.expr = expression;
     return node;
 }
 
 void addStatementToBlock(ASTNode* block, ASTNode* statement) {
-    if (!block || block->type != NODE_BLOCK) {
-        printf("[ERROR] Invalid block node\n");
-        return;
-    } else {
-        printf("[DEBUG] Adding statement to block\n");
+    if (block->data.block.stmtCount >= block->data.block.stmtCapacity) {
+        block->data.block.stmtCapacity = block->data.block.stmtCapacity == 0 ? INITIAL_STATEMENT_CAPACITY : block->data.block.stmtCapacity * 2;
+        block->data.block.statements = realloc(block->data.block.statements, sizeof(ASTNode*) * block->data.block.stmtCapacity);
     }
-
-    printf("[DEBUG] Adding statement to block\n");
-    block->data.block.statements = realloc(block->data.block.statements, sizeof(ASTNode*) * (block->data.block.stmtCount + 1));
     block->data.block.statements[block->data.block.stmtCount++] = statement;
 }
 
-void addFunctionToProgram(ASTNode* function) {
-    // Assuming a global program node exists
-    printf("[DEBUG] Adding function to program\n");
-    extern ASTNode* programNode; // Define this in your main file or somewhere appropriate
-    if (!programNode) {
-        printf("[DEBUG] Creating program node\n");
-        programNode = createBlock();
-    } else {
-        printf("[DEBUG] Program node already exists\n");
+void addFunctionToProgram(ASTNode* program, ASTNode* function) {
+    if (program->data.program.stmtCount >= program->data.program.stmtCapacity) {
+        program->data.program.stmtCapacity = program->data.program.stmtCapacity == 0 ? INITIAL_STATEMENT_CAPACITY : program->data.program.stmtCapacity * 2;
+        program->data.program.statements = realloc(program->data.program.statements, sizeof(ASTNode*) * program->data.program.stmtCapacity);
     }
-    printf("[DEBUG] Adding function to program\n");
-    addStatementToBlock(programNode, function);
+    program->data.program.statements[program->data.program.stmtCount++] = function;
 }
 
 ASTNode* parseFunctionCall(const char* name) {
     printf("[DEBUG] Parsing function call: %s\n", name);
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = TOKEN_IDENTIFIER; // Assuming function calls are identified by their name
+    ASTNode* node = createASTNode(NODE_FUNCTION_CALL);
     node->data.functionCall.name = strdup(name);
-    // node->data.functionCall.arguments = NULL; // Implement argument parsing if needed
     return node;
 }

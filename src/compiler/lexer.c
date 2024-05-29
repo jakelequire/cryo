@@ -28,6 +28,14 @@ KeywordToken keywords[] = {
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
+bool isAlpha(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+bool isDigit(char c) {
+    return c >= '0' && c <= '9';
+}
+
 CryoTokenType checkKeyword(const char* start, int length) {
     for (int i = 0; keywords[i].keyword != NULL; ++i) {
         if (strncmp(start, keywords[i].keyword, length) == 0 && keywords[i].keyword[length] == '\0') {
@@ -53,10 +61,11 @@ char* my_strndup(const char* src, size_t len) {
 
 // Initialize the lexer with the input source code
 void initLexer(Lexer* lexer, const char* source) {
-    lexer->source = source;
-    lexer->start = lexer->current = (char*)source;
+    lexer->start = source;
+    lexer->current = source;
+    lexer->end = source + strlen(source);
     lexer->line = 1;
-    lexer->column = 1;
+    lexer->column = 0;
     lexer->hasPeeked = false;
 
     printf("{lexer} -------------- <Input Source Code> --------------\n\n");
@@ -64,13 +73,12 @@ void initLexer(Lexer* lexer, const char* source) {
     printf("\n{lexer} -------------------- <END> ----------------------\n\n");
 }
 
-static bool isAtEnd(Lexer* lexer);
 
-static bool isAtEnd(Lexer* lexer) {
+bool isAtEnd(Lexer* lexer) {
     return *lexer->current == '\0';
 }
 
-static char advance(Lexer* lexer) {
+char advance(Lexer* lexer) {
     lexer->current++;
     lexer->column++;
     return lexer->current[-1];
@@ -112,15 +120,18 @@ static void skipWhitespace(Lexer* lexer) {
     }
 }
 
-static Token makeToken(Lexer* lexer, CryoTokenType type) {
+Token makeToken(Lexer* lexer, CryoTokenType type) {
     Token token;
     token.type = type;
     token.start = lexer->start;
     token.length = (int)(lexer->current - lexer->start);
     token.line = lexer->line;
-    token.column = lexer->column - token.length;
+    token.column = lexer->column;
+    printf("{lexer} [DEBUG] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
+           token.length, token.start, token.type, token.line, token.column);
     return token;
 }
+
 
 static Token errorToken(Lexer* lexer, const char* message) {
     Token token;
@@ -132,13 +143,18 @@ static Token errorToken(Lexer* lexer, const char* message) {
     return token;
 }
 
-static Token identifier(Lexer* lexer) {
-    while (isalnum(peek(lexer)) || peek(lexer) == '_') advance(lexer);
-    return makeToken(lexer, checkKeyword(lexer->start, lexer->current - lexer->start));
+Token identifier(Lexer* lexer) {
+    while (isAlpha(*lexer->current) || isDigit(*lexer->current)) {
+        advance(lexer);
+    }
+    return makeToken(lexer, TOKEN_IDENTIFIER);
 }
 
-static Token number(Lexer* lexer) {
-    while (isdigit(peek(lexer))) advance(lexer);
+
+Token number(Lexer* lexer) {
+    while (isDigit(*lexer->current)) {
+        advance(lexer);
+    }
     return makeToken(lexer, TOKEN_INT);
 }
 
@@ -158,35 +174,42 @@ Token nextToken(Lexer* lexer, Token* token) {
     lexer->start = lexer->current;
 
     if (isAtEnd(lexer)) {
-        return makeToken(lexer, TOKEN_EOF);
+        *token = makeToken(lexer, TOKEN_EOF);
+        return *token;
     }
     printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
     
-    token->length = 0;
-    token->line = lexer->line;
-    token->column = lexer->column;
-    
     char c = advance(lexer);
 
-    if (isalpha(c)) return identifier(lexer);
-    if (isdigit(c)) return number(lexer);
+    if (isAlpha(c)) {
+        *token = identifier(lexer);
+        return *token;
+    }
+    
+    if (isDigit(c)) {
+        *token = number(lexer);
+        return *token;
+    }
 
     switch (c) {
-        case '(': return makeToken(lexer, TOKEN_LPAREN);
-        case ')': return makeToken(lexer, TOKEN_RPAREN);
-        case '+': return makeToken(lexer, TOKEN_PLUS);
-        case '-': return makeToken(lexer, TOKEN_MINUS);
-        case '*': return makeToken(lexer, TOKEN_STAR);
-        case '/': return makeToken(lexer, TOKEN_SLASH);
-        case '=': return makeToken(lexer, TOKEN_ASSIGN);
-        case ';': return makeToken(lexer, TOKEN_SEMICOLON);
-        case ',': return makeToken(lexer, TOKEN_COMMA);
-        case ':': return makeToken(lexer, TOKEN_COLON);
-        case '{': return makeToken(lexer, TOKEN_LBRACE);
-        case '}': return makeToken(lexer, TOKEN_RBRACE);
+        case '(': *token = makeToken(lexer, TOKEN_LPAREN); break;
+        case ')': *token = makeToken(lexer, TOKEN_RPAREN); break;
+        case '+': *token = makeToken(lexer, TOKEN_OP_PLUS); break;
+        case '-': *token = makeToken(lexer, TOKEN_OP_MINUS); break;
+        case '*': *token = makeToken(lexer, TOKEN_OP_STAR); break;
+        case '/': *token = makeToken(lexer, TOKEN_OP_SLASH); break;
+        case '=': *token = makeToken(lexer, TOKEN_ASSIGN); break;
+        case ';': *token = makeToken(lexer, TOKEN_SEMICOLON); break;
+        case ',': *token = makeToken(lexer, TOKEN_COMMA); break;
+        case ':': *token = makeToken(lexer, TOKEN_COLON); break;
+        case '{': *token = makeToken(lexer, TOKEN_LBRACE); break;
+        case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         default:
-            return errorToken(lexer, "Unexpected character.");
+            *token = makeToken(lexer, TOKEN_ERROR);
+            return *token;
     }
+
+    return *token;
 }
 // </nextToken>
 
@@ -201,6 +224,7 @@ Token getToken(Lexer* lexer) {
 }
 
 Token get_next_token(Lexer *lexer) {
+    nextToken(lexer, &lexer->currentToken);
     printf("{lexer} [DEBUG] Next token: %.*s, Type: %d, Line: %d, Column: %d\n",
             lexer->currentToken.length,
             lexer->currentToken.start,
@@ -208,8 +232,7 @@ Token get_next_token(Lexer *lexer) {
             lexer->currentToken.line,
             lexer->currentToken.column
         );
-    
-    return getToken(lexer);
+    return lexer->currentToken;
 }
 
 Token peekToken(Lexer* lexer) {

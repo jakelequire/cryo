@@ -2,8 +2,7 @@
 #define AST_H
 
 #include "lexer.h"
-
-
+#define INITIAL_STATEMENT_CAPACITY 256
 
 typedef enum {
     NODE_PROGRAM,
@@ -33,7 +32,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode** statements;
             int stmtCount;
-            int stmtCapacity;  // Add this field
+            int stmtCapacity;
         } program;
 
         struct {
@@ -127,7 +126,7 @@ ASTNode* parseFunctionCall(const char* name);
 
 // Function prototypes for managing the AST
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
-void addFunctionToProgram(ASTNode* function);
+void addFunctionToProgram(ASTNode* program, ASTNode* function);
 
 ASTNode* createASTNode(NodeType type); // Add this line to declare createASTNode
 

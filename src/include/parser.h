@@ -23,4 +23,6 @@ ASTNode* parseForStatement(Lexer* lexer);
 ASTNode* parseVarDeclaration(Lexer* lexer);
 ASTNode* parseExpressionStatement(Lexer* lexer);
 
+ASTNode* parseFunction(Lexer* lexer);
+
 #endif // PARSER_H

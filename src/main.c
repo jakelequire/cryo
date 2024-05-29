@@ -32,28 +32,9 @@ int main(int argc, char* argv[]) {
     }
     printf("[DEBUG] Program parsed\n");
 
-    // Perform semantic analysis
-    if (!analyzeNode(program)) {
-        fprintf(stderr, "Semantic analysis failed.\n");
-        free(source);
-        return 1;
-    }
-    printf("[DEBUG] Semantic analysis completed\n");
-
     // Print AST structure
     printAST(program, 0);
     
-    // Initialize LLVM
-    initializeLLVM();
-
-    // Code generation
-    generateCodeFromAST(program);
-    printf("[DEBUG] Code generation completed\n");
-
-    // Finalize LLVM codegen (output file produced here)
-    finalizeLLVM();
-    printf("[DEBUG] Codegen finalized\n");
-
     // Clean up
     free(source);
     freeAST(program);

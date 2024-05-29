@@ -35,6 +35,7 @@ typedef struct {
 typedef struct {
     const char* source;
     const char *start;
+    const char* end;
     const char *current;
     int line;
     int column;          
@@ -48,17 +49,18 @@ void initLexer(Lexer* lexer, const char* source);
 int lexer(int argc, char* argv[]);
 char* readFile(const char* path);
 char* my_strndup(const char* src, size_t n);
-static bool isAtEnd(Lexer* lexer);
+bool isAtEnd(Lexer* lexer);
 static char advance(Lexer* lexer);
 static char peek(Lexer* lexer);
 static char peekNext(Lexer* lexer);
 static void skipWhitespace(Lexer* lexer);
 static Token makeToken(Lexer* lexer, CryoTokenType type);
 static Token errorToken(Lexer* lexer, const char* message);
-static Token identifier(Lexer* lexer);
-static Token number(Lexer* lexer);
+Token identifier(Lexer* lexer);
+Token number(Lexer* lexer);
 
-
+bool isAlpha(char c);
+bool isDigit(char c);
 CryoTokenType checkKeyword(const char* start, int length);
 // Lexer functions
 Token get_next_token(Lexer *lexer);
