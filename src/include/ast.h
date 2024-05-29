@@ -64,7 +64,7 @@ typedef struct ASTNode {
             struct ASTNode* right;
             CryoTokenType operator;
             char* operatorText;  // Descriptive text for the operator
-        } bin_op; // For binary operators, e.g (5 + 3, 4 * 2, etc.)
+        } bin_op;
 
         struct unary_op { 
             CryoTokenType operator;
@@ -79,6 +79,8 @@ typedef struct ASTNode {
 
         struct functionCall {
             char* name;
+            struct ASTNode** args;
+            int argCount;
         } functionCall;
         
         struct ifStmt {
@@ -128,6 +130,7 @@ ASTNode* parseFunctionCall(const char* name);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);
 
+ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 ASTNode* createASTNode(NodeType type); // Add this line to declare createASTNode
 
 #endif // AST_H
