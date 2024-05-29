@@ -12,8 +12,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    init_codegen();
-
     const char* filePath = argv[1];
     char* source = readFile(filePath);
     if (source == NULL) {
@@ -34,23 +32,30 @@ int main(int argc, char* argv[]) {
     }
     printf("[DEBUG] Program parsed\n");
 
-    // Code generation
-    for (int i = 0; i < program->data.program.stmtCount; ++i) 
-    {
-        ASTNode* function = program->data.program.statements[i];
-        if (function) {
-            codegen_function(function); // Generate code for each function
-            printf("[DEBUG] Function code generated\n");
-        } else {
-            printf("[DEBUG] Null function encountered at index %d\n", i);
-        }
+    // Perform semantic analysis
+    if (!analyzeNode(program)) {
+        fprintf(stderr, "Semantic analysis failed.\n");
+        free(source);
+        return 1;
     }
+    printf("[DEBUG] Semantic analysis completed\n");
+
+    // Print AST structure
+    printAST(program, 0);
+    
+    // Initialize LLVM
+    initializeLLVM();
+
+    // Code generation
+    generateCodeFromAST(program);
+    printf("[DEBUG] Code generation completed\n");
 
     // Finalize LLVM codegen (output file produced here)
-    finalize_codegen();
+    finalizeLLVM();
     printf("[DEBUG] Codegen finalized\n");
 
     // Clean up
     free(source);
+    freeAST(program);
     return 0;
 }

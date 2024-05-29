@@ -117,6 +117,9 @@
     "sstream": "c",
     "xlocbuf": "c",
     "xlocmon": "c",
-    "xloctime": "c"
+    "xloctime": "c",
+    "algorithm": "c",
+    "random": "c",
+    "errno.h": "c"
   }
 }

@@ -3,9 +3,14 @@
 
 #include <stdbool.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <errno.h>
+#include <stdbool.h>
 #include "token.h"
+#include "ast.h"
+
 
 typedef union {
     int intValue;
@@ -37,11 +42,12 @@ typedef struct {
     Token lookahead;     
     bool hasPeeked;
 } Lexer;
+bool matchToken(Lexer* lexer, CryoTokenType type); // Add this line
 
-
-char* my_strndup(const char* src, size_t n);
 void initLexer(Lexer* lexer, const char* source);
-CryoTokenType checkKeyword(const char* identifier);
+int lexer(int argc, char* argv[]);
+char* readFile(const char* path);
+char* my_strndup(const char* src, size_t n);
 static bool isAtEnd(Lexer* lexer);
 static char advance(Lexer* lexer);
 static char peek(Lexer* lexer);
@@ -51,19 +57,14 @@ static Token makeToken(Lexer* lexer, CryoTokenType type);
 static Token errorToken(Lexer* lexer, const char* message);
 static Token identifier(Lexer* lexer);
 static Token number(Lexer* lexer);
-Token nextToken(Lexer* lexer, Token* token);
 
 
+CryoTokenType checkKeyword(const char* start, int length);
 // Lexer functions
 Token get_next_token(Lexer *lexer);
 Token getToken(Lexer *lexer);
 Token peekToken(Lexer* lexer);
-void initLexer(Lexer* lexer, const char* source);
-char* getTokenStringValue(Token *token);
-int getTokenIntegerValue(Token* token);
-float getTokenFloatValue(Token* token);
-void unreadToken(Lexer* lexer, Token token);
-int lexer(int argc, char* argv[]);
-char* readFile(const char* path);
+Token nextToken(Lexer* lexer, Token* token);
+
 
 #endif // LEXER_H

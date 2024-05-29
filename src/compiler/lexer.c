@@ -6,8 +6,39 @@
 #include <string.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <stddef.h>
 
+// Define keywords and their corresponding token types
+typedef struct {
+    const char* keyword;
+    CryoTokenType type;
+} KeywordToken;
 
+KeywordToken keywords[] = {
+    {"public", TOKEN_KW_PUBLIC},
+    {"fn", TOKEN_KW_FN},
+    {"if", TOKEN_KW_IF},
+    {"else", TOKEN_KW_ELSE},
+    {"while", TOKEN_KW_WHILE},
+    {"for", TOKEN_KW_FOR},
+    {"return", TOKEN_KW_RETURN},
+    {"const", TOKEN_KW_CONST},
+    {"true", TOKEN_KW_TRUE},
+    {"false", TOKEN_KW_FALSE},
+    {NULL, TOKEN_UNKNOWN} // Sentinel value
+};
+
+CryoTokenType checkKeyword(const char* start, int length) {
+    for (int i = 0; keywords[i].keyword != NULL; ++i) {
+        if (strncmp(start, keywords[i].keyword, length) == 0 && keywords[i].keyword[length] == '\0') {
+            return keywords[i].type;
+        }
+    }
+    return TOKEN_IDENTIFIER;
+}
+
+// Function to peek the next token without consuming it (Assuming you have this function implemented)
+Token peekToken(Lexer* lexer);
 
 char* my_strndup(const char* src, size_t len) {
     char* dest = (char*)malloc(len + 1);
@@ -33,22 +64,7 @@ void initLexer(Lexer* lexer, const char* source) {
     printf("\n{lexer} -------------------- <END> ----------------------\n\n");
 }
 
-CryoTokenType checkKeyword(const char* identifier) {
-    if (strcmp(identifier, "public") == 0) return TOKEN_KW_PUBLIC;
-    if (strcmp(identifier, "fn") == 0) return TOKEN_KW_FN;
-    if (strcmp(identifier, "int") == 0) return TOKEN_KW_INT;
-    if (strcmp(identifier, "float") == 0) return TOKEN_KW_FLOAT;
-    if (strcmp(identifier, "string") == 0) return TOKEN_KW_STRING;
-    if (strcmp(identifier, "return") == 0) return TOKEN_KW_RETURN;
-    if (strcmp(identifier, "if") == 0) return TOKEN_KW_IF;
-    if (strcmp(identifier, "else") == 0) return TOKEN_KW_ELSE;
-    if (strcmp(identifier, "for") == 0) return TOKEN_KW_FOR;
-    if (strcmp(identifier, "while") == 0) return TOKEN_KW_WHILE;
-    if (strcmp(identifier, "break") == 0) return TOKEN_KW_BREAK;
-    if (strcmp(identifier, "continue") == 0) return TOKEN_KW_CONTINUE;
-    // Add other keywords as needed
-    return TOKEN_IDENTIFIER;
-}
+static bool isAtEnd(Lexer* lexer);
 
 static bool isAtEnd(Lexer* lexer) {
     return *lexer->current == '\0';
@@ -118,12 +134,21 @@ static Token errorToken(Lexer* lexer, const char* message) {
 
 static Token identifier(Lexer* lexer) {
     while (isalnum(peek(lexer)) || peek(lexer) == '_') advance(lexer);
-    return makeToken(lexer, TOKEN_IDENTIFIER);
+    return makeToken(lexer, checkKeyword(lexer->start, lexer->current - lexer->start));
 }
 
 static Token number(Lexer* lexer) {
     while (isdigit(peek(lexer))) advance(lexer);
     return makeToken(lexer, TOKEN_INT);
+}
+
+// Function to check if the current token matches the expected type and consume it
+bool matchToken(Lexer* lexer, CryoTokenType type) {
+    if (peekToken(lexer).type == type) {
+        nextToken(lexer, &lexer->currentToken);
+        return true;
+    }
+    return false;
 }
 
 // <nextToken>
@@ -149,20 +174,18 @@ Token nextToken(Lexer* lexer, Token* token) {
     switch (c) {
         case '(': return makeToken(lexer, TOKEN_LPAREN);
         case ')': return makeToken(lexer, TOKEN_RPAREN);
+        case '+': return makeToken(lexer, TOKEN_PLUS);
+        case '-': return makeToken(lexer, TOKEN_MINUS);
+        case '*': return makeToken(lexer, TOKEN_STAR);
+        case '/': return makeToken(lexer, TOKEN_SLASH);
+        case '=': return makeToken(lexer, TOKEN_ASSIGN);
+        case ';': return makeToken(lexer, TOKEN_SEMICOLON);
+        case ',': return makeToken(lexer, TOKEN_COMMA);
+        case ':': return makeToken(lexer, TOKEN_COLON);
         case '{': return makeToken(lexer, TOKEN_LBRACE);
         case '}': return makeToken(lexer, TOKEN_RBRACE);
-        case ';': return makeToken(lexer, TOKEN_SEMICOLON);
-        case '+': return makeToken(lexer, TOKEN_OP_PLUS);
-        case '-': return makeToken(lexer, TOKEN_OP_MINUS);
-        case '*': return makeToken(lexer, TOKEN_OP_STAR);
-        case '/': return makeToken(lexer, TOKEN_OP_SLASH);
-        case '=': return makeToken(lexer, TOKEN_ASSIGN);
         default:
             return errorToken(lexer, "Unexpected character.");
-    }
-    
-    if(token->type == TOKEN_ERROR) {
-        printf("{lexer} Error: Unknown character found: '%c'\n", *lexer->current);
     }
 }
 // </nextToken>
@@ -178,6 +201,14 @@ Token getToken(Lexer* lexer) {
 }
 
 Token get_next_token(Lexer *lexer) {
+    printf("{lexer} [DEBUG] Next token: %.*s, Type: %d, Line: %d, Column: %d\n",
+            lexer->currentToken.length,
+            lexer->currentToken.start,
+            lexer->currentToken.type,
+            lexer->currentToken.line,
+            lexer->currentToken.column
+        );
+    
     return getToken(lexer);
 }
 
@@ -187,26 +218,6 @@ Token peekToken(Lexer* lexer) {
         lexer->hasPeeked = true;
     }
     return lexer->lookahead;
-}
-
-void unreadToken(Lexer* lexer, Token token) {
-    lexer->lookahead = token;
-    lexer->hasPeeked = true;
-}
-
-int getTokenIntegerValue(Token* token) {
-    return strtol(token->start, NULL, 10);
-}
-
-float getTokenFloatValue(Token* token) {
-    return strtof(token->start, NULL);
-}
-
-char* getTokenStringValue(Token* token) {
-    char* buffer = malloc(token->length + 1);
-    strncpy(buffer, token->start, token->length);
-    buffer[token->length] = '\0';
-    return buffer;
 }
 
 char* readFile(const char* path) {

@@ -1,5 +1,5 @@
 # Compiler and Flags
-CC = clang -g
+CC = clang -g -D_CRT_SECURE_NO_WARNINGS
 CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -I./cli/ -Wall -g
 LDFLAGS = -L"C:/Program Files/LLVM/lib"
 

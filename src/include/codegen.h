@@ -22,10 +22,12 @@ extern "C" {
 #include "ir.h"
 #include "token.h"
 
+LLVMValueRef generateCode(ASTNode* node);
+LLVMValueRef generateExpression(ASTNode* node);
+LLVMValueRef generateStatement(ASTNode* node);
 
-void init_codegen();
-LLVMValueRef codegen_expr(ASTNode* node);
-void finalize_codegen();
-void codegen_function(ASTNode* node);
+void initializeLLVM();
+void finalizeLLVM();
+LLVMValueRef generateCodeFromAST(ASTNode* node);
 
 #endif // CODEGEN_H

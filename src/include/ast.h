@@ -3,6 +3,8 @@
 
 #include "lexer.h"
 
+
+
 typedef enum {
     NODE_PROGRAM,
     NODE_FUNCTION_DECLARATION,
@@ -31,6 +33,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode** statements;
             int stmtCount;
+            int stmtCapacity;  // Add this field
         } program;
 
         struct {
@@ -46,6 +49,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode** statements;
             int stmtCount;
+            int stmtCapacity;  // Add this field
         } block;
 
         struct {
@@ -61,42 +65,42 @@ typedef struct ASTNode {
             struct ASTNode* right;
             CryoTokenType operator;
             char* operatorText;  // Descriptive text for the operator
-        } bin_op;
+        } bin_op; // For binary operators, e.g (5 + 3, 4 * 2, etc.)
 
-        struct {
+        struct unary_op { 
             CryoTokenType operator;
             struct ASTNode* operand;
-        } unary_op;
+        } unary_op; // For unary operators, e.g (-5, !true, etc.)
 
         int value;  // For literal number nodes
 
-        struct {
+        struct varName {
             char* varName;
         } varName;
 
-        struct {
+        struct functionCall {
             char* name;
         } functionCall;
         
-        struct {
+        struct ifStmt {
             struct ASTNode* condition;
             struct ASTNode* thenBranch;
             struct ASTNode* elseBranch;
         } ifStmt;
         
-        struct {
+        struct whileStmt {
             struct ASTNode* condition;
             struct ASTNode* body;
         } whileStmt;
         
-        struct {
+        struct forStmt {
             struct ASTNode* initializer;
             struct ASTNode* condition;
             struct ASTNode* increment;
             struct ASTNode* body;
         } forStmt;
 
-        struct {
+        struct returnStmt {
             struct ASTNode* returnValue;
         } returnStmt;
         
@@ -104,7 +108,7 @@ typedef struct ASTNode {
     struct ASTNode* next;  // Next node in the linked list
 } ASTNode;
 
-
+void printAST(ASTNode* node, int indent);
 // Function prototypes for creating AST nodes
 void freeAST(ASTNode* node);
 ASTNode* createLiteralExpr(int value);
@@ -124,5 +128,7 @@ ASTNode* parseFunctionCall(const char* name);
 // Function prototypes for managing the AST
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* function);
+
+ASTNode* createASTNode(NodeType type); // Add this line to declare createASTNode
 
 #endif // AST_H
