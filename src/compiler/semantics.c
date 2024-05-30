@@ -197,5 +197,5 @@ bool analyzeNode(ASTNode* node) {
             return false;
     }
 
-    return analyzeNode(node->next);
+    return analyzeNode(node->nextSibling);
 }

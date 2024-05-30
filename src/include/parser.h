@@ -7,7 +7,8 @@
 #include "ast.h"
 #include "token.h"
 
-
+ASTNode* parseParamList(Lexer* lexer);
+ASTNode* parseType(Lexer* lexer);
 
 // Function prototypes
 ASTNode* parseProgram(Lexer* lexer);

@@ -155,7 +155,7 @@ Token number(Lexer* lexer) {
     while (isDigit(*lexer->current)) {
         advance(lexer);
     }
-    return makeToken(lexer, TOKEN_INT);
+    return makeToken(lexer, TOKEN_TYPE_INT);
 }
 
 // Function to check if the current token matches the expected type and consume it
@@ -177,15 +177,15 @@ Token nextToken(Lexer* lexer, Token* token) {
         *token = makeToken(lexer, TOKEN_EOF);
         return *token;
     }
-    printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
-    
+    // printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
+
     char c = advance(lexer);
 
     if (isAlpha(c)) {
         *token = identifier(lexer);
         return *token;
     }
-    
+
     if (isDigit(c)) {
         *token = number(lexer);
         return *token;
@@ -195,7 +195,14 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '(': *token = makeToken(lexer, TOKEN_LPAREN); break;
         case ')': *token = makeToken(lexer, TOKEN_RPAREN); break;
         case '+': *token = makeToken(lexer, TOKEN_OP_PLUS); break;
-        case '-': *token = makeToken(lexer, TOKEN_OP_MINUS); break;
+        case '-':
+            if (peek(lexer) == '>') {
+                advance(lexer); // consume '>'
+                *token = makeToken(lexer, TOKEN_RESULT_ARROW);
+            } else {
+                *token = makeToken(lexer, TOKEN_OP_MINUS);
+            }
+            break;
         case '*': *token = makeToken(lexer, TOKEN_OP_STAR); break;
         case '/': *token = makeToken(lexer, TOKEN_OP_SLASH); break;
         case '=': *token = makeToken(lexer, TOKEN_ASSIGN); break;
@@ -225,13 +232,13 @@ Token getToken(Lexer* lexer) {
 
 Token get_next_token(Lexer *lexer) {
     nextToken(lexer, &lexer->currentToken);
-    printf("{lexer} [DEBUG] Next token: %.*s, Type: %d, Line: %d, Column: %d\n",
-            lexer->currentToken.length,
-            lexer->currentToken.start,
-            lexer->currentToken.type,
-            lexer->currentToken.line,
-            lexer->currentToken.column
-        );
+    //printf("{lexer} [DEBUG] Next token: %.*s, Type: %d, Line: %d, Column: %d\n",
+    //        lexer->currentToken.length,
+    //        lexer->currentToken.start,
+    //        lexer->currentToken.type,
+    //        lexer->currentToken.line,
+    //        lexer->currentToken.column
+    //    );
     return lexer->currentToken;
 }
 

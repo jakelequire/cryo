@@ -1,8 +1,8 @@
 #ifndef AST_H
 #define AST_H
 
+#include "token.h"
 #include "lexer.h"
-#define INITIAL_STATEMENT_CAPACITY 256
 
 typedef enum {
     NODE_PROGRAM,
@@ -22,12 +22,16 @@ typedef enum {
     NODE_BLOCK,
     NODE_EXPRESSION_STATEMENT,
     NODE_ASSIGN,
+    NODE_PARAM_LIST,
+    NODE_TYPE,
     NODE_UNKNOWN,
 } NodeType;
 
 typedef struct ASTNode {
     NodeType type;
     int line;  // Line number for error reporting
+    struct ASTNode* firstChild;  // First child node (for linked list structure)
+    struct ASTNode* nextSibling; // Next sibling node (for linked list structure)
     union {
         struct {
             struct ASTNode** statements;
@@ -37,6 +41,8 @@ typedef struct ASTNode {
 
         struct {
             char* name;
+            struct ASTNode* params;
+            struct ASTNode* returnType;
             struct ASTNode* body;
         } functionDecl;
 
@@ -48,7 +54,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode** statements;
             int stmtCount;
-            int stmtCapacity;  // Add this field
+            int stmtCapacity;
         } block;
 
         struct {
@@ -66,52 +72,58 @@ typedef struct ASTNode {
             char* operatorText;  // Descriptive text for the operator
         } bin_op;
 
-        struct unary_op { 
+        struct {
             CryoTokenType operator;
             struct ASTNode* operand;
         } unary_op; // For unary operators, e.g (-5, !true, etc.)
 
         int value;  // For literal number nodes
 
-        struct varName {
+        struct {
             char* varName;
         } varName;
 
-        struct functionCall {
+        struct {
             char* name;
             struct ASTNode** args;
             int argCount;
         } functionCall;
         
-        struct ifStmt {
+        struct {
             struct ASTNode* condition;
             struct ASTNode* thenBranch;
             struct ASTNode* elseBranch;
         } ifStmt;
         
-        struct whileStmt {
+        struct {
             struct ASTNode* condition;
             struct ASTNode* body;
         } whileStmt;
         
-        struct forStmt {
+        struct {
             struct ASTNode* initializer;
             struct ASTNode* condition;
             struct ASTNode* increment;
             struct ASTNode* body;
         } forStmt;
 
-        struct returnStmt {
+        struct {
             struct ASTNode* returnValue;
         } returnStmt;
+
+        struct {
+            struct ASTNode** params;
+            int paramCount;
+        } paramList;
         
     } data;
-    struct ASTNode* next;  // Next node in the linked list
 } ASTNode;
 
-void printAST(ASTNode* node, int indent);
 // Function prototypes for creating AST nodes
-void freeAST(ASTNode* node);
+ASTNode* createASTNode(NodeType type);
+ASTNode* createTypeNode(CryoTokenType type);
+ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
+ASTNode* createParamNode(const char* name, ASTNode* type);
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator);
@@ -124,13 +136,12 @@ ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body);
 ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
 ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer);
 ASTNode* createExpressionStatement(ASTNode* expression);
-ASTNode* parseFunctionCall(const char* name);
+ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 
-// Function prototypes for managing the AST
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);
 
-ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
-ASTNode* createASTNode(NodeType type); // Add this line to declare createASTNode
+void freeAST(ASTNode* node);
+void printAST(ASTNode* node, int indent);
 
 #endif // AST_H

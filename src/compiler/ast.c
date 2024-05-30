@@ -59,8 +59,6 @@ void printAST(ASTNode* node, int indent) {
             printf("Unknown Node\n");
             break;
     }
-
-    printAST(node->next, indent);
 }
 
 void freeAST(ASTNode* node) {
@@ -103,7 +101,8 @@ ASTNode* createASTNode(NodeType type) {
     }
     node->type = type;
     node->line = 0; // Initialize line number
-    node->next = NULL;
+    node->firstChild = NULL;
+    node->nextSibling = NULL;
 
     switch (type) {
         case NODE_PROGRAM:

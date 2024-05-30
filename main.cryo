@@ -1,4 +1,4 @@
 
-fn main() -> int {
+public fn main() -> int {
     return 1;
 }
