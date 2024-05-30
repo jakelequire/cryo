@@ -177,7 +177,7 @@ Token nextToken(Lexer* lexer, Token* token) {
         *token = makeToken(lexer, TOKEN_EOF);
         return *token;
     }
-    // printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
+    printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
 
     char c = advance(lexer);
 
