@@ -1,5 +1,6 @@
 # Cryo
 General Purpose, Strongly Typed, OOP & FP paradigms, programming language witten in C _(for now)_.
+
 <i>[Apache 2.0 License](#license)</i>
 
 This is a fun side Project maintained and developed by me, [Jake LeQuire](https://github.com/jakelequire). Currently it is closed for PRs but when I have a more solid foundation of the project, I plan to open source the project completely.
