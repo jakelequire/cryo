@@ -1,19 +1,19 @@
-#include "codegen.h"
-#include <llvm-c/BitWriter.h>
-#include <llvm-c/Core.h>
-#include <stdio.h>
-
+#include "include/codegen.h"
 // LLVM Global Variables
 LLVMModuleRef module;
 LLVMBuilderRef builder;
 LLVMContextRef context;
 
+// <initializeLLVM>
 void initializeLLVM() {
     context = LLVMContextCreate();
     module = LLVMModuleCreateWithNameInContext("CryoModule", context);
     builder = LLVMCreateBuilderInContext(context);
 }
+// </initializeLLVM>
 
+
+// <finalizeLLVM>
 void finalizeLLVM() {
     // Write LLVM IR to a file
     char *error = NULL;
@@ -27,15 +27,10 @@ void finalizeLLVM() {
     LLVMDisposeModule(module);
     LLVMContextDispose(context);
 }
+// </finalizeLLVM>
 
-LLVMValueRef generateCode(ASTNode* node);
-LLVMValueRef generateFunction(ASTNode* node);
-LLVMValueRef generateVariableDeclaration(ASTNode* node);
-LLVMValueRef generateBinaryExpression(ASTNode* node);
-LLVMValueRef generateUnaryExpression(ASTNode* node);
-LLVMValueRef generateReturnStatement(ASTNode* node);
-LLVMValueRef generateBlock(ASTNode* node);
 
+// <generateCodeFromAST>
 LLVMValueRef generateCodeFromAST(ASTNode* node) {
     // Create the main function
     LLVMTypeRef returnType = LLVMInt32TypeInContext(context); // int return type for main
@@ -55,7 +50,10 @@ LLVMValueRef generateCodeFromAST(ASTNode* node) {
 
     return mainFunction;
 }
+// </generateCodeFromAST>
 
+
+// <generateCode>
 LLVMValueRef generateCode(ASTNode* node) {
     switch (node->type) {
         case NODE_FUNCTION_DECLARATION:
@@ -76,7 +74,10 @@ LLVMValueRef generateCode(ASTNode* node) {
             return NULL;
     }
 }
+// </generateCode>
 
+
+// <generateFunction>
 LLVMValueRef generateFunction(ASTNode* node) {
     // Create LLVM function
     LLVMTypeRef returnType = LLVMVoidTypeInContext(context); // Assume void return type for simplicity
@@ -95,7 +96,10 @@ LLVMValueRef generateFunction(ASTNode* node) {
 
     return function;
 }
+// </generateFunction>
 
+
+// <generateVariableDeclaration>
 LLVMValueRef generateVariableDeclaration(ASTNode* node) {
     // For simplicity, assume all variables are integers
     LLVMTypeRef intType = LLVMInt32TypeInContext(context);
@@ -109,7 +113,10 @@ LLVMValueRef generateVariableDeclaration(ASTNode* node) {
 
     return var;
 }
+// </generateVariableDeclaration>
 
+
+// <generateBinaryExpression>
 LLVMValueRef generateBinaryExpression(ASTNode* node) {
     LLVMValueRef left = generateCode(node->data.bin_op.left);
     LLVMValueRef right = generateCode(node->data.bin_op.right);
@@ -128,7 +135,10 @@ LLVMValueRef generateBinaryExpression(ASTNode* node) {
             return NULL;
     }
 }
+// </generateBinaryExpression>
 
+
+// <generateUnaryExpression>
 LLVMValueRef generateUnaryExpression(ASTNode* node) {
     LLVMValueRef operand = generateCode(node->data.unary_op.operand);
 
@@ -142,7 +152,10 @@ LLVMValueRef generateUnaryExpression(ASTNode* node) {
             return NULL;
     }
 }
+// </generateUnaryExpression>
 
+
+// <generateReturnStatement>
 LLVMValueRef generateReturnStatement(ASTNode* node) {
     if (node->data.returnStmt.returnValue) {
         LLVMValueRef returnValue = generateCode(node->data.returnStmt.returnValue);
@@ -151,7 +164,10 @@ LLVMValueRef generateReturnStatement(ASTNode* node) {
         return LLVMBuildRetVoid(builder);
     }
 }
+// </generateReturnStatement>
 
+
+// <generateBlock>
 LLVMValueRef generateBlock(ASTNode* node) {
     LLVMValueRef lastValue = NULL;
     for (int i = 0; i < node->data.block.stmtCount; ++i) {
@@ -159,3 +175,4 @@ LLVMValueRef generateBlock(ASTNode* node) {
     }
     return lastValue;
 }
+// </generateBlock>

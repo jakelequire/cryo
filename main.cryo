@@ -1,4 +1,5 @@
 
 public fn main() -> int {
+    const example = 69;
     return 1;
 }

@@ -1,11 +1,11 @@
 #include "include/ast.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 
 // Define the global program node
 ASTNode* programNode = NULL;
 
+
+// <printAST>
 void printAST(ASTNode* node, int indent) {
     if (!node) return;
 
@@ -60,7 +60,10 @@ void printAST(ASTNode* node, int indent) {
             break;
     }
 }
+// </printAST>
 
+
+// <freeAST>
 void freeAST(ASTNode* node) {
     if (!node) {
         return;
@@ -93,8 +96,11 @@ void freeAST(ASTNode* node) {
     }
     free(node);
 }
+// </freeAST>
 
-ASTNode* createASTNode(NodeType type) {
+
+// <createASTNode>
+ASTNode* createASTNode(CryoNodeType type) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     if (!node) {
         return NULL;
@@ -126,7 +132,10 @@ ASTNode* createASTNode(NodeType type) {
 
     return node;
 }
+// </createASTNode>
 
+
+// <createLiteralExpr>
 ASTNode* createLiteralExpr(int value) {
     ASTNode* node = createASTNode(NODE_LITERAL);
     if (!node) {
@@ -135,7 +144,10 @@ ASTNode* createLiteralExpr(int value) {
     node->data.value = value;
     return node;
 }
+// </createLiteralExpr>
 
+
+// <createVariableExpr>
 ASTNode* createVariableExpr(const char* name) {
     ASTNode* node = createASTNode(NODE_VAR_NAME);
     if (!node) {
@@ -144,7 +156,10 @@ ASTNode* createVariableExpr(const char* name) {
     node->data.varName.varName = strdup(name);
     return node;
 }
+// </createVariableExpr>
 
+
+// <createBinaryExpr>
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator) {
     ASTNode* node = createASTNode(NODE_BINARY_EXPR);
     if (!node) {
@@ -176,7 +191,10 @@ ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator)
 
     return node;
 }
+// </createBinaryExpr>
 
+
+// <createUnaryExpr>
 ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand) {
     ASTNode* node = createASTNode(NODE_UNARY_EXPR);
     if (!node) {
@@ -186,7 +204,10 @@ ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand) {
     node->data.unary_op.operand = operand;
     return node;
 }
+// </createUnaryExpr>
 
+
+// <createFunctionNode>
 ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body) {
     ASTNode* node = createASTNode(NODE_FUNCTION_DECLARATION);
     if (!node) {
@@ -196,7 +217,10 @@ ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body) {
     node->data.functionDecl.body = function_body;
     return node;
 }
+// </createFunctionNode>
 
+
+// <createReturnStatement>
 ASTNode* createReturnStatement(ASTNode* return_val) {
     ASTNode* node = createASTNode(NODE_RETURN_STATEMENT);
     if (!node) {
@@ -205,7 +229,10 @@ ASTNode* createReturnStatement(ASTNode* return_val) {
     node->data.returnStmt.returnValue = return_val;
     return node;
 }
+// </createReturnStatement>
 
+
+// <createBlock>
 ASTNode* createBlock() {
     ASTNode* node = createASTNode(NODE_BLOCK);
     if (!node) {
@@ -216,7 +243,10 @@ ASTNode* createBlock() {
     node->data.block.stmtCapacity = 0;
     return node;
 }
+// </createBlock>
 
+
+// <createIfStatement>
 ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch) {
     ASTNode* node = createASTNode(NODE_IF_STATEMENT);
     if (!node) {
@@ -227,7 +257,10 @@ ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* el
     node->data.ifStmt.elseBranch = else_branch;
     return node;
 }
+// </createIfStatement>
 
+
+// <createWhileStatement>
 ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body) {
     ASTNode* node = createASTNode(NODE_WHILE_STATEMENT);
     if (!node) {
@@ -237,7 +270,10 @@ ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body) {
     node->data.whileStmt.body = body;
     return node;
 }
+// </createWhileStatement>
 
+
+// <createForStatement>
 ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body) {
     ASTNode* node = createASTNode(NODE_FOR_STATEMENT);
     if (!node) {
@@ -249,7 +285,10 @@ ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* i
     node->data.forStmt.body = body;
     return node;
 }
+// </createForStatement>
 
+
+// <createVarDeclarationNode>
 ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer) {
     ASTNode* node = createASTNode(NODE_VAR_DECLARATION);
     if (!node) {
@@ -259,7 +298,10 @@ ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer) {
     node->data.varDecl.initializer = initializer;
     return node;
 }
+// </createVarDeclarationNode>
 
+
+// <createExpressionStatement>
 ASTNode* createExpressionStatement(ASTNode* expression) {
     ASTNode* node = createASTNode(NODE_EXPRESSION_STATEMENT);
     if (!node) {
@@ -268,7 +310,10 @@ ASTNode* createExpressionStatement(ASTNode* expression) {
     node->data.expr.expr = expression;
     return node;
 }
+// </createExpressionStatement>
 
+
+// <createFunctionCallNode>
 ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount) {
     ASTNode* node = createASTNode(NODE_FUNCTION_CALL);
     if (!node) {
@@ -279,7 +324,10 @@ ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount) 
     node->data.functionCall.argCount = argCount;
     return node;
 }
+// </createFunctionCallNode>
 
+
+// <addStatementToBlock>
 void addStatementToBlock(ASTNode* block, ASTNode* statement) {
     if (block->type != NODE_BLOCK) {
         return;
@@ -290,7 +338,10 @@ void addStatementToBlock(ASTNode* block, ASTNode* statement) {
     }
     block->data.block.statements[block->data.block.stmtCount++] = statement;
 }
+// </addStatementToBlock>
 
+
+// <addFunctionToProgram>
 void addFunctionToProgram(ASTNode* program, ASTNode* function) {
     if (program->type != NODE_PROGRAM) {
         return;
@@ -301,3 +352,4 @@ void addFunctionToProgram(ASTNode* program, ASTNode* function) {
     }
     program->data.program.statements[program->data.program.stmtCount++] = function;
 }
+// </addFunctionToProgram>

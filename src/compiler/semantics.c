@@ -1,17 +1,16 @@
-#include "include/ast.h"
 #include "include/semantics.h"
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
 
-bool analyzeNode(ASTNode* node);
 
+// <analyze>
 bool analyze(ASTNode* root) {
     if (!root) return false;
 
     return analyzeNode(root);
 }
+// </analyze>
 
+
+// <analyzeVariableDeclaration>
 bool analyzeVariableDeclaration(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing variable declaration: %s\n", node->data.varDecl.name);
     // Check if variable is redeclared in the same scope
@@ -25,7 +24,10 @@ bool analyzeVariableDeclaration(ASTNode* node) {
     // Additional semantic checks for variable declaration
     return true;
 }
+// </analyzeVariableDeclaration>
 
+
+// <analyzeFunction>
 bool analyzeFunction(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing function declaration: %s\n", node->data.functionDecl.name);
     // Check function parameters, return type, and body
@@ -35,7 +37,10 @@ bool analyzeFunction(ASTNode* node) {
     }
     return true;
 }
+// </analyzeFunction>
 
+
+// <analyzeIfStatement>
 bool analyzeIfStatement(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing if statement\n");
     // Check condition expression
@@ -55,7 +60,10 @@ bool analyzeIfStatement(ASTNode* node) {
     }
     return true;
 }
+// </analyzeIfStatement>
 
+
+// <analyzeWhileStatement>
 bool analyzeWhileStatement(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing while statement\n");
     // Check condition expression
@@ -70,7 +78,10 @@ bool analyzeWhileStatement(ASTNode* node) {
     }
     return true;
 }
+// </analyzeWhileStatement>
 
+
+// <analyzeForStatement>
 bool analyzeForStatement(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing for statement\n");
     // Check initialization, condition, and iteration expressions
@@ -93,7 +104,10 @@ bool analyzeForStatement(ASTNode* node) {
     }
     return true;
 }
+// </analyzeForStatement>
 
+
+// <analyzeUnaryExpression>
 bool analyzeBinaryExpression(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing binary expression with operator: %s\n", node->data.bin_op.operatorText);
     // Check left and right operand types
@@ -108,7 +122,10 @@ bool analyzeBinaryExpression(ASTNode* node) {
     // Additional semantic checks for binary expression
     return true;
 }
+// </analyzeUnaryExpression>
 
+
+// <analyzeUnaryExpression>
 bool analyzeUnaryExpression(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing unary expression with operator: %d\n", node->data.unary_op.operator);
     // Check operand type
@@ -119,7 +136,10 @@ bool analyzeUnaryExpression(ASTNode* node) {
     // Additional semantic checks for unary expression
     return true;
 }
+// </analyzeUnaryExpression>
 
+
+// <analyzeReturn>
 bool analyzeReturn(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing return statement\n");
     // Check return expression type matches function return type
@@ -129,7 +149,10 @@ bool analyzeReturn(ASTNode* node) {
     }
     return true;
 }
+// </analyzeReturn>
 
+
+// <analyzeBlock>
 bool analyzeBlock(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing block statement\n");
     for (int i = 0; i < node->data.block.stmtCount; ++i) {
@@ -140,7 +163,10 @@ bool analyzeBlock(ASTNode* node) {
     }
     return true;
 }
+// </analyzeBlock>
 
+
+// <analyzeProgram>
 bool analyzeProgram(ASTNode* node) {
     printf("{Semantics} [DEBUG] Analyzing program\n");
     for (int i = 0; i < node->data.program.stmtCount; ++i) {
@@ -151,7 +177,10 @@ bool analyzeProgram(ASTNode* node) {
     }
     return true;
 }
+// </analyzeProgram>
 
+
+// <analyzeNode>
 bool analyzeNode(ASTNode* node) {
     if (!node) return true;
 
@@ -199,3 +228,4 @@ bool analyzeNode(ASTNode* node) {
 
     return analyzeNode(node->nextSibling);
 }
+// </analyzeNode>

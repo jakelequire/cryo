@@ -162,4 +162,28 @@ typedef enum {
     TOKEN_RCURLY_BRACKET,       // `}}`             // 145
 } CryoTokenType;
 
+typedef enum {
+    NODE_PROGRAM,
+    NODE_FUNCTION_DECLARATION,
+    NODE_VAR_DECLARATION,
+    NODE_STATEMENT,
+    NODE_EXPRESSION,
+    NODE_BINARY_EXPR,
+    NODE_UNARY_EXPR,
+    NODE_LITERAL,
+    NODE_VAR_NAME,
+    NODE_FUNCTION_CALL,
+    NODE_IF_STATEMENT,
+    NODE_WHILE_STATEMENT,
+    NODE_FOR_STATEMENT,
+    NODE_RETURN_STATEMENT,
+    NODE_BLOCK,
+    NODE_EXPRESSION_STATEMENT,
+    NODE_ASSIGN,
+    NODE_PARAM_LIST,
+    NODE_TYPE,
+    NODE_UNKNOWN,
+} CryoNodeType; // Rename to `CryoNodeType` at home with rename function.
+
+
 #endif // TOKEN_H

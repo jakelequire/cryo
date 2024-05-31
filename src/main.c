@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +10,11 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
         return 1;
     }
+    
+    // Example Implementation of new logging Macro.
+    // included in the `main.h` file as `#include "include/utils.h"`
+    VERBOSE_LOG("Starting Task...\n", "TASK_START");
+    //            *custom msg*       *token example*
 
     const char* filePath = argv[1];
     char* source = readFile(filePath);

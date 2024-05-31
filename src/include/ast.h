@@ -1,34 +1,16 @@
 #ifndef AST_H
 #define AST_H
-
+/*------ <includes> ------*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+/*---<custom_includes>---*/
 #include "token.h"
 #include "lexer.h"
-
-typedef enum {
-    NODE_PROGRAM,
-    NODE_FUNCTION_DECLARATION,
-    NODE_VAR_DECLARATION,
-    NODE_STATEMENT,
-    NODE_EXPRESSION,
-    NODE_BINARY_EXPR,
-    NODE_UNARY_EXPR,
-    NODE_LITERAL,
-    NODE_VAR_NAME,
-    NODE_FUNCTION_CALL,
-    NODE_IF_STATEMENT,
-    NODE_WHILE_STATEMENT,
-    NODE_FOR_STATEMENT,
-    NODE_RETURN_STATEMENT,
-    NODE_BLOCK,
-    NODE_EXPRESSION_STATEMENT,
-    NODE_ASSIGN,
-    NODE_PARAM_LIST,
-    NODE_TYPE,
-    NODE_UNKNOWN,
-} NodeType;
-
+/*---------<end>---------*/
+/*-------<structure_defs>-------*/
 typedef struct ASTNode {
-    NodeType type;
+    CryoNodeType type;
     int line;  // Line number for error reporting
     struct ASTNode* firstChild;  // First child node (for linked list structure)
     struct ASTNode* nextSibling; // Next sibling node (for linked list structure)
@@ -118,12 +100,11 @@ typedef struct ASTNode {
         
     } data;
 } ASTNode;
-
-// Function prototypes for creating AST nodes
-ASTNode* createASTNode(NodeType type);
-ASTNode* createTypeNode(CryoTokenType type);
-ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
-ASTNode* createParamNode(const char* name, ASTNode* type);
+/*-------<end_defs>-------*/
+/*-----<function_prototypes>-----*/
+void printAST(ASTNode* node, int indent);
+void freeAST(ASTNode* node);
+ASTNode* createASTNode(CryoNodeType type);
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator);
@@ -137,11 +118,11 @@ ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* i
 ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer);
 ASTNode* createExpressionStatement(ASTNode* expression);
 ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
-
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);
+/*-----<end_prototypes>-----*/
 
-void freeAST(ASTNode* node);
-void printAST(ASTNode* node, int indent);
+
+
 
 #endif // AST_H

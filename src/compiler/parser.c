@@ -1,10 +1,8 @@
 #include "include/parser.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 
 #ifndef HAVE_STRNDUP
+// <strndup>
 char* strndup(const char* s, size_t n) {
     size_t len = strnlen(s, n);
     char* new_str = (char*)malloc(len + 1);
@@ -15,23 +13,32 @@ char* strndup(const char* s, size_t n) {
     new_str[len] = '\0';
     return new_str;
 }
+// </strndup>
 #endif
 
+// Scope-Declared Current Token.
 Token currentToken;
 
+
+// <error>
 void error(const char* message) {
     fprintf(stderr, "{parser} Error: %s at line %d, column %d\n", message, currentToken.line, currentToken.column);
     exit(1); // Exit on error to prevent further processing
 }
+// </error>
 
+
+// <getNextToken>
 void getNextToken(Lexer *lexer) {
     printf("{parser} [DEBUG] Getting next token...\n");
     currentToken = get_next_token(lexer);
     printf("{parser} [DEBUG] Token: %.*s, Type: %d, Line: %d, Column: %d\n",
            currentToken.length, currentToken.start, currentToken.type, currentToken.line, currentToken.column);
 }
+// </getNextToken>
 
 
+// <consume>
 void consume(Lexer *lexer, CryoTokenType type, const char *message) {
     printf("{parser} [DEBUG] Consuming token: expected: %d, actual: %d\n", type, currentToken.type);
     if (currentToken.type == type) {
@@ -42,8 +49,26 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message) {
         exit(1);
     }
 }
+// </consume>
 
 
+// <getOperatorPrecedence>
+int getOperatorPrecedence(CryoTokenType type) {
+    switch (type) {
+        case TOKEN_OP_PLUS:
+        case TOKEN_OP_MINUS:
+            return 1;
+        case TOKEN_OP_STAR:
+        case TOKEN_OP_SLASH:
+            return 2;
+        default:
+            return 0;
+    }
+}
+// </getOperatorPrecedence>
+
+
+// <parsePrimaryExpression>
 ASTNode* parsePrimaryExpression(Lexer* lexer) {
     switch (currentToken.type) {
         case TOKEN_TYPE_INT: {
@@ -101,7 +126,10 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             return NULL;
     }
 }
+// </parsePrimaryExpression>
 
+
+// <parseUnaryExpression>
 ASTNode* parseUnaryExpression(Lexer* lexer) {
     if (currentToken.type == TOKEN_OP_MINUS || currentToken.type == TOKEN_OP_NOT) {
         CryoTokenType operator = currentToken.type;
@@ -111,8 +139,10 @@ ASTNode* parseUnaryExpression(Lexer* lexer) {
     }
     return parsePrimaryExpression(lexer);
 }
+// </parseUnaryExpression>
 
 
+// <parseBinaryExpression>
 ASTNode* parseBinaryExpression(Lexer* lexer, int precedence) {
     ASTNode* left = parseUnaryExpression(lexer);
 
@@ -129,25 +159,18 @@ ASTNode* parseBinaryExpression(Lexer* lexer, int precedence) {
         left = createBinaryExpr(left, right, operator);
     }
 }
+// </parseBinaryExpression>
 
-int getOperatorPrecedence(CryoTokenType type) {
-    switch (type) {
-        case TOKEN_OP_PLUS:
-        case TOKEN_OP_MINUS:
-            return 1;
-        case TOKEN_OP_STAR:
-        case TOKEN_OP_SLASH:
-            return 2;
-        default:
-            return 0;
-    }
-}
 
+// <parseExpression>
 ASTNode* parseExpression(Lexer* lexer) {
     // Handle primary expressions
     return parseBinaryExpression(lexer, 0);
 }
+// </parseExpression>
 
+
+// <parseStatement>
 ASTNode* parseStatement(Lexer* lexer) {
     printf("{parser} [DEBUG] Parsing statement...\n");
     switch (currentToken.type) {
@@ -179,10 +202,10 @@ ASTNode* parseStatement(Lexer* lexer) {
             return parseExpressionStatement(lexer);
     }
 }
+// </parseStatement>
 
 
-
-
+// <parseIfStatement>
 ASTNode* parseIfStatement(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'if'
     ASTNode* condition = parseExpression(lexer);
@@ -214,7 +237,10 @@ ASTNode* parseIfStatement(Lexer* lexer) {
     }
     return createIfStatement(condition, thenBranch, elseBranch);
 }
+// </parseIfStatement>
 
+
+// <parseReturnStatement>
 ASTNode* parseReturnStatement(Lexer* lexer) {
     printf("{parser} [DEBUG] Parsing return statement...\n");
     consume(lexer, TOKEN_KW_RETURN, "Expected 'return' keyword");
@@ -228,15 +254,20 @@ ASTNode* parseReturnStatement(Lexer* lexer) {
 
     return createReturnStatement(returnValue);
 }
+// </parseReturnStatement>
 
 
+// <parseExpressionStatement>
 ASTNode* parseExpressionStatement(Lexer* lexer) {
     printf("{parser} [DEBUG] Parsing expression statement...\n");
     ASTNode* expr = parseExpression(lexer);
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after expression");
     return createExpressionStatement(expr);
 }
+// </parseExpressionStatement>
 
+
+// <parseWhileStatement>
 ASTNode* parseWhileStatement(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'while'
     ASTNode* condition = parseExpression(lexer);
@@ -253,7 +284,10 @@ ASTNode* parseWhileStatement(Lexer* lexer) {
     getNextToken(lexer);  // Consume '}'
     return createWhileStatement(condition, body);
 }
+// </parseWhileStatement>
 
+
+// <parseForStatement>
 ASTNode* parseForStatement(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'for'
     ASTNode* initializer = parseStatement(lexer);
@@ -272,7 +306,10 @@ ASTNode* parseForStatement(Lexer* lexer) {
     getNextToken(lexer);  // Consume '}'
     return createForStatement(initializer, condition, increment, body);
 }
+// </parseForStatement>
 
+
+// <parseVarDeclaration>
 ASTNode* parseVarDeclaration(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'const' or 'var'
     if (currentToken.type != TOKEN_IDENTIFIER) {
@@ -289,7 +326,10 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
     ASTNode* initializer = parseExpression(lexer);
     return createVarDeclarationNode(varName, initializer);
 }
+// </parseVarDeclaration>
 
+
+// <parseBlock>
 ASTNode* parseBlock(Lexer* lexer) {
     ASTNode* blockNode = createASTNode(NODE_BLOCK);
     blockNode->data.block.statements = malloc(sizeof(ASTNode*) * INITIAL_STATEMENT_CAPACITY);
@@ -323,7 +363,10 @@ ASTNode* parseBlock(Lexer* lexer) {
     printf("{parser} [DEBUG] Finished parsing block\n");
     return blockNode;
 }
+// </parseBlock>
 
+
+// <parseFunctionDeclaration>
 ASTNode* parseFunctionDeclaration(Lexer* lexer) {
     printf("{parser} [DEBUG] Starting function declaration...\n");
 
@@ -367,8 +410,10 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer) {
     // Create and return the function declaration AST node
     return createFunctionDeclNode(name.start, paramList, returnType, body);
 }
+// </parseFunctionDeclaration>
 
 
+// <parseParamList>
 ASTNode* parseParamList(Lexer* lexer) {
     // Create a node for the parameter list
     ASTNode* paramList = createASTNode(NODE_PARAM_LIST);
@@ -408,27 +453,39 @@ ASTNode* parseParamList(Lexer* lexer) {
 
     return paramList;
 }
+// </parseParamList>
 
+
+// <createTypeNode>
 ASTNode* createTypeNode(CryoTokenType type) {
     ASTNode* node = createASTNode(NODE_TYPE);
     node->data.value = type;
     return node;
 }
+// </createTypeNode>
 
+
+// <parseType>
 ASTNode* parseType(Lexer* lexer) {
     // Assuming types are identifiers (e.g., int, float, etc.)
     Token typeName = currentToken;
     consume(lexer, TOKEN_IDENTIFIER, "Expected type name");
     return createTypeNode(typeName.type);
 }
+// </parseType>
 
+
+// <createParamNode>
 ASTNode* createParamNode(const char* name, ASTNode* type) {
     ASTNode* node = createASTNode(NODE_VAR_DECLARATION);
     node->data.varDecl.name = strdup(name);
     node->data.varDecl.initializer = type;
     return node;
 }
+// </createParamNode>
 
+
+// <createFunctionDeclNode>
 ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body) {
     ASTNode* node = createASTNode(NODE_FUNCTION_DECLARATION);
     node->data.functionDecl.name = strdup(name);
@@ -437,7 +494,10 @@ ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* retu
     node->data.functionDecl.body = body;
     return node;
 }
+// </createFunctionDeclNode>
 
+
+// <parseProgram>
 ASTNode* parseProgram(Lexer* lexer) {
     ASTNode* programNode = createASTNode(NODE_PROGRAM);
     if (!programNode) {
@@ -472,3 +532,4 @@ ASTNode* parseProgram(Lexer* lexer) {
     printf("{parser} [DEBUG] Finished parsing program\n");
     return programNode;
 }
+// </parseProgram>

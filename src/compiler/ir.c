@@ -1,7 +1,15 @@
 #include "include/ir.h"
-#include <stdlib.h>
 
 
+
+// <freeIR>
+void freeIR(IRInstruction* instr) {
+    // TODO: Implement
+}
+// </freeIR>
+
+
+// <generate_ir_function>
 IRInstruction* generate_ir_function(ASTNode* node) {
     if (node == NULL || node->type != NODE_FUNCTION_DECLARATION) return NULL;
 
@@ -12,7 +20,10 @@ IRInstruction* generate_ir_function(ASTNode* node) {
     
     return instr;
 }
+// </generate_ir_function>
 
+
+// <generate_ir_return>
 IRInstruction* generate_ir_return(ASTNode* node) {
     if (node == NULL || node->type != NODE_RETURN_STATEMENT) return NULL;
 
@@ -23,7 +34,10 @@ IRInstruction* generate_ir_return(ASTNode* node) {
 
     return instr;
 }
+// </generate_ir_return>
 
+
+// <generate_ir_binary_op>
 IRInstruction* generate_ir_binary_op(ASTNode* node) {
     if (node == NULL || node->type != NODE_BINARY_EXPR) return NULL;
 
@@ -35,7 +49,10 @@ IRInstruction* generate_ir_binary_op(ASTNode* node) {
 
     return instr;
 }
+// </generate_ir_binary_op>
 
+
+// <generate_ir>
 IRInstruction* generate_ir(ASTNode* node) {
     if (node == NULL) return NULL;
 
@@ -51,3 +68,4 @@ IRInstruction* generate_ir(ASTNode* node) {
             return NULL;
     }
 }
+// </generate_ir>

@@ -1,33 +1,35 @@
 #ifndef CODEGEN_H
 #define CODEGEN_H
-
-#include "ast.h"
-#include "ir.h"
-#include "token.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+/*------ <includes> ------*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+/*-------- <LLVM> --------*/
 #include <llvm-c/Core.h>
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
-
-#ifdef __cplusplus
-}
-#endif
-
+#include <llvm-c/BitWriter.h>
+#include <llvm-c/Core.h>
+/*---<custom_includes>---*/
 #include "ast.h"
 #include "ir.h"
 #include "token.h"
+/*---------<end>---------*/
 
-LLVMValueRef generateCode(ASTNode* node);
-LLVMValueRef generateExpression(ASTNode* node);
-LLVMValueRef generateStatement(ASTNode* node);
 
+
+/*-----<function_prototypes>-----*/
 void initializeLLVM();
 void finalizeLLVM();
 LLVMValueRef generateCodeFromAST(ASTNode* node);
+LLVMValueRef generateCode(ASTNode* node);
+LLVMValueRef generateFunction(ASTNode* node);
+LLVMValueRef generateVariableDeclaration(ASTNode* node);
+LLVMValueRef generateBinaryExpression(ASTNode* node);
+LLVMValueRef generateUnaryExpression(ASTNode* node);
+LLVMValueRef generateReturnStatement(ASTNode* node);
+LLVMValueRef generateBlock(ASTNode* node);
+/*-----<end_prototypes>-----*/
 
 #endif // CODEGEN_H

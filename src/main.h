@@ -9,6 +9,7 @@
 #include "include/semantics.h"
 #include "include/ir.h"
 #include "include/codegen.h"
+#include "include/utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +25,7 @@ extern "C" {
 }
 #endif
 
-char* readFile(const char* path);
+//char* readFile(const char* path);
 int main(int argc, char* argv[]);
 
 

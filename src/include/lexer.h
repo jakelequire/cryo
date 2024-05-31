@@ -1,16 +1,22 @@
 #ifndef LEXER_H
 #define LEXER_H
-
+/*------ <includes> ------*/
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <errno.h>
-#include <stdbool.h>
+#include <ctype.h>
+/*---<custom_includes>---*/
 #include "token.h"
 #include "ast.h"
-
+/*---------<end>---------*/
+/*-------<structure_defs>-------*/
+typedef struct {
+    const char* keyword;
+    CryoTokenType type;
+} KeywordToken;
 
 typedef union {
     int intValue;
@@ -20,15 +26,15 @@ typedef union {
 
 typedef struct {
     CryoTokenType type;         // Type of the token
-    const char* start;      // Pointer to the beginning of the token in the source code
-    int length;             // Length of the token
-    int line;               // Line number where the token is found
-    int column;             // Column number where the token is found
-    const char* style;      // Style of the token
-    union {                 // Union to handle different types of token values
-        int intValue;       // Use if the token is an integer
-        float floatValue;   // Use if the token is a float
-        char* stringValue;  // Use if the token is a string
+    const char* start;          // Pointer to the beginning of the token in the source code
+    int length;                 // Length of the token
+    int line;                   // Line number where the token is found
+    int column;                 // Column number where the token is found
+    const char* style;          // Style of the token
+    union {                     // Union to handle different types of token values
+        int intValue;           // Use if the token is an integer
+        float floatValue;       // Use if the token is a float
+        char* stringValue;      // Use if the token is a string
     } value;
 } Token;
 
@@ -43,30 +49,40 @@ typedef struct {
     Token lookahead;     
     bool hasPeeked;
 } Lexer;
-bool matchToken(Lexer* lexer, CryoTokenType type); // Add this line
+/*-------<end_defs>-------*/
 
-void initLexer(Lexer* lexer, const char* source);
-int lexer(int argc, char* argv[]);
-char* readFile(const char* path);
-char* my_strndup(const char* src, size_t n);
-bool isAtEnd(Lexer* lexer);
-static char advance(Lexer* lexer);
-static char peek(Lexer* lexer);
-static char peekNext(Lexer* lexer);
-static void skipWhitespace(Lexer* lexer);
-static Token makeToken(Lexer* lexer, CryoTokenType type);
-static Token errorToken(Lexer* lexer, const char* message);
-Token identifier(Lexer* lexer);
-Token number(Lexer* lexer);
-
+/*-----<function_prototypes>-----*/
+// Helper Functions
 bool isAlpha(char c);
 bool isDigit(char c);
+char* my_strndup(const char* src, size_t len);
+// Lexer Function
+void initLexer(Lexer* lexer, const char* source);
+bool isAtEnd(Lexer* lexer);
+char advance(Lexer* lexer);
+char peek(Lexer* lexer);
+char peekNext(Lexer* lexer);
+bool matchToken(Lexer* lexer, CryoTokenType type);
+void skipWhitespace(Lexer* lexer);
+// Token Creation
+Token makeToken(Lexer* lexer, CryoTokenType type);
+Token errorToken(Lexer* lexer, const char* message);
 CryoTokenType checkKeyword(const char* start, int length);
-// Lexer functions
+Token identifier(Lexer* lexer);
+Token number(Lexer* lexer);
+// Lexer Walking Functions
 Token get_next_token(Lexer *lexer);
-Token getToken(Lexer *lexer);
-Token peekToken(Lexer* lexer);
 Token nextToken(Lexer* lexer, Token* token);
+Token getToken(Lexer* lexer);
+Token peekToken(Lexer* lexer);
+// Final Functions
+/*<!> Moving to utils.h*/ char* readFile(const char* path); /*<!>*/
+void freeLexer(Lexer* lexer);
+int lexer(int argc, char* argv[]);
+/*-----<end_prototypes>-----*/
+
+// Note to self, add more documentation for the structure
+// definitions across the whole program.
 
 
 #endif // LEXER_H

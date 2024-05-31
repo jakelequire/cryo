@@ -1,9 +1,12 @@
 #ifndef IR_H
 #define IR_H
-
-#include "ast.h"
+/*------ <includes> ------*/
 #include <stdbool.h>
-
+#include <stdlib.h>
+/*---<custom_includes>---*/
+#include "ast.h"
+/*---------<end>---------*/
+/*-------<structure_defs>-------*/
 typedef enum {
     IR_FUNC_DEF,
     IR_FUNC_CALL,
@@ -28,14 +31,16 @@ typedef struct IRInstruction {
     };
     struct IRInstruction* next;
 } IRInstruction;        
-
-
+/*-------<end_defs>-------*/
+/*-----<function_prototypes>-----*/
 void freeIR(IRInstruction* instr);
-
 IRInstruction* generate_ir_function(ASTNode* node);
 IRInstruction* generate_ir_return(ASTNode* node);
 IRInstruction* generate_ir_binary_op(ASTNode* node);
-
 IRInstruction* generate_ir(ASTNode* node);
+/*-----<end_prototypes>-----*/
+
+
+
 
 #endif // IR_H
