@@ -1,5 +1,6 @@
 # Cryo
 General Purpose, Strongly Typed, OOP & FP paradigms, programming language witten in C _(for now)_.
+<i>[Apache 2.0 License](#license)</i>
 
 This is a fun side Project maintained and developed by me, [Jake LeQuire](https://github.com/jakelequire). Currently it is closed for PRs but when I have a more solid foundation of the project, I plan to open source the project completely.
 
@@ -158,3 +159,9 @@ There is a set of basic data types in Cryo, in the future, there will be more to
 
 ### Conclusion
 Once again, this is just a side project that I wanted to build for fun and to learn new things. The only real goal of this project is to have a very minimalistic general purpose programming language. I have no intention on a serious roadmap and just adding things as I see fit.
+
+
+
+
+### License
+This project is licensed under the Apache 2.0 License - see the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0) for details.
