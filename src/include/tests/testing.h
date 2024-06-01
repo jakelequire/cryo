@@ -14,18 +14,19 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef GLOBAL_H
-#define GLOBAL_H
+#ifndef TESTING_H
+#define TESTING_H
+#include <stdio.h>
+#include <stdlib.h>
+#include "ast.h"
+#include "parser.h"
+#include "lexer.h"
+#include "token.h"
 
-// Include CLI tools
-#include "../cli/cli.h"
 
-// Include Compiler components
-// #include "../compiler/lexer/lexer.h"
-// #include "../compiler/parser/parser.h"
-// #include "../compiler/tokenizer/token.h"
 
-// Include utility functions
-// #include "../utils/printAST.h"
 
-#endif // GLOBAL_H
+
+
+
+#endif

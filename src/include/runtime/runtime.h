@@ -14,18 +14,17 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef GLOBAL_H
-#define GLOBAL_H
+#ifndef RUNTIME_H
+#define RUNTIME_H
+/*------ <includes> ------*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+/*---<custom_includes>---*/
+/*---------<end>---------*/
 
-// Include CLI tools
-#include "../cli/cli.h"
 
-// Include Compiler components
-// #include "../compiler/lexer/lexer.h"
-// #include "../compiler/parser/parser.h"
-// #include "../compiler/tokenizer/token.h"
 
-// Include utility functions
-// #include "../utils/printAST.h"
 
-#endif // GLOBAL_H
+
+#endif // RUNTIME_H

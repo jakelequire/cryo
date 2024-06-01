@@ -1,5 +1,5 @@
 # Cryo
-General Purpose, Strongly Typed, OOP & FP paradigms, programming language witten in C _(for now)_.
+General Purpose, Strongly Typed, OOP, programming language witten in C _(for now)_.
 
 <i>[Apache 2.0 License](#license)</i>
 
@@ -131,7 +131,7 @@ This will be a light overview of the language. There is additional resources tha
 #### Data Types
 There is a set of basic data types in Cryo, in the future, there will be more to be implemented in the core data types.
 
-- `int` - Integer Data Type (find out LLVM Int type here)
+- `int` -       /*TODO*/
 - `string` -    /*TODO*/
 - `boolean` -   /*TODO*/
 - `symbol` -    /*TODO*/
