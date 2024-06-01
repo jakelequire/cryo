@@ -120,6 +120,9 @@
     "xloctime": "c",
     "algorithm": "c",
     "random": "c",
-    "errno.h": "c"
+    "errno.h": "c",
+    "utils.h": "c",
+    "cli.h": "c",
+    "testing.h": "c"
   }
 }

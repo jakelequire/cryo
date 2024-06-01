@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "include/parser.h"
+#include "parser.h"
 
 
 #ifndef HAVE_STRNDUP
@@ -549,3 +549,31 @@ ASTNode* parseProgram(Lexer* lexer) {
     return programNode;
 }
 // </parseProgram>
+
+// <parser>
+int parser(int argc, char* argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "{parser} Usage: %s <path_to_file>\n", argv[0]);
+        return 1;
+    }
+
+    char* source = readFile(argv[1]);
+    if (source == NULL) return 1;
+
+    Lexer lexer;
+    initLexer(&lexer, source);
+
+    ASTNode* program = parseProgram(&lexer);
+    if (!program) {
+        fprintf(stderr, "{parser} [ERROR] Failed to parse program\n");
+        free(source);
+        return 1;
+    }
+
+    printAST(program, 0);
+
+    free(source);
+    freeAST(program);
+    return 0;
+}
+// </parser>

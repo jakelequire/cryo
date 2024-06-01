@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "include/utils.h"
+#include "utils.h"
 
 /*
 Note to self before I forget,

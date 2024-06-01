@@ -8,6 +8,7 @@
 <param-list>            ::=  <param> { "," <param> }
 <param>                 ::=  <type> <identifier>
 <block>                 ::=  "{" { <statement> } "}"
+<visibility>            ::=  "public" | "private"
 
 
 <expression-statement>    ::=  <expression> ";"

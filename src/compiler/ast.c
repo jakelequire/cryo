@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "include/ast.h"
+#include "ast.h"
 
 
 // Define the global program node

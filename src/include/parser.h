@@ -26,6 +26,7 @@
 #include "lexer.h"
 #include "ast.h"
 #include "token.h"
+#include "utils.h"
 /*---------<end>---------*/
 
 
@@ -33,6 +34,7 @@
 #ifndef HAVE_STRNDUP
 char* strndup(const char* s, size_t n);
 #endif
+int parser(int argc, char* argv[]);
 // Helper Functions
 void error(const char* message);
 void getNextToken(Lexer *lexer);
@@ -60,6 +62,4 @@ ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* retu
 // Entry Point
 ASTNode* parseProgram(Lexer* lexer);
 /*-----<end_prototypes>-----*/
-
-
 #endif // PARSER_H
