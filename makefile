@@ -45,7 +45,7 @@ RUNTIME_BIN = $(BIN_DIR)runtime.exe
 LLVM_LIBS = -lLLVM-C
 
 # Default target
-all: $(MAIN_BIN) $(CLI_BIN_EXE) $(LEXER_BIN) $(PARSER_BIN) $(TEST_BIN)
+all: $(MAIN_BIN) $(CLI_BIN_EXE) $(LEXER_BIN) $(PARSER_BIN) $(TEST_BIN) $(RUNTIME_BIN)
 
 # Ensure the object directory exists
 $(OBJ_DIR):
@@ -98,6 +98,10 @@ $(CLI_BIN_EXE): $(CLI_OBJ) $(UTILS_OBJ)
 	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
+$(RUNTIME_BIN): $(RUNTIME_OBJ) $(UTILS_OBJ) $(COMPILER_OBJ)
+	@if not exist $(DEBUG_BIN_DIR) mkdir $(BIN_DIR)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
+	
 $(LEXER_BIN): $(LEXER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
@@ -109,6 +113,8 @@ $(PARSER_BIN): $(PARSER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)parser.o $(OBJ_DIR)lexe
 $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ)
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
+
+
 
 # Running executables
 runlexer: $(LEXER_BIN)

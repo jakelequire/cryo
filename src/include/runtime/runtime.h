@@ -20,11 +20,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <windows.h>
+#include <time.h>
 /*---<custom_includes>---*/
 /*---------<end>---------*/
-
-
-
-
+/*------ <prototypes> ------*/
+void cryo_runtime(void);
+/*-----<end_prototypes>-----*/
 
 #endif // RUNTIME_H

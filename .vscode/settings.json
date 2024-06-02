@@ -128,6 +128,8 @@
     "optional": "c",
     "xtr1common": "c",
     "stddef.h": "c",
-    "fs.h": "c"
+    "fs.h": "c",
+    "windows.h": "c",
+    "time.h": "c"
   }
 }
