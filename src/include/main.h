@@ -25,7 +25,7 @@
 #include "semantics.h"
 #include "ir.h"
 #include "codegen.h"
-#include "utils.h"
+#include "utils/logger.h"
 
 #ifdef __cplusplus
 extern "C" {

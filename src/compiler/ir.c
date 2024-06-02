@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "ir.h"
+#include "compiler/ir.h"
 
 
 

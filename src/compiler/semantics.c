@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "semantics.h"
+#include "compiler/semantics.h"
 
 
 // <analyze>

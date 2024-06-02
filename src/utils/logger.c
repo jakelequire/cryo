@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "utils.h"
+#include "utils/logger.h"
 
 /*
 Note to self before I forget,
@@ -41,21 +41,22 @@ void critical_log(const char* msg, const char* token, const char* etc) {
 
 // <verbose_cryo_token_log>
 void verbose_cryo_token_log(CryoTokenType* token) {
-    // *implement later with lsp*
+    // Implementation of verbose_cryo_token_log
+    printf("Token: %d\n", *token);  // Example implementation
 }
 // <verbose_cryo_token_log>
 
 
 // <verbose_cryo_node_log>
 void verbose_cryo_node_log(CryoNodeType* node) {
-    // *implement later with lsp*
+    printf("### [VERBOSE] Cryo Node: %s\t\t{node}\n", node);
 }
 // </verbose_cryo_node_log>
 
 
 // <verbose_cryo_astnode_log>
 void verbose_cryo_astnode_log(ASTNode* astNode) {
-    // *implement later with lsp*
+    printf("### [VERBOSE] Cryo ASTNode: %s\t\t{ast}\n", astNode->type);
 }
 // <verbose_cryo_astnode_log>
 

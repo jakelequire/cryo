@@ -19,11 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ast.h"
-#include "parser.h"
-#include "lexer.h"
+#include "compiler/parser.h"
+#include "compiler/lexer.h"
 #include "token.h"
-
-
 
 
 

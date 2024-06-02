@@ -1,5 +1,5 @@
 # Cryo
-General Purpose, Strongly Typed, OOP, programming language witten in C _(for now)_.
+General Purpose, Strongly Typed, OOP, programming language witten in C.
 
 <i>[Apache 2.0 License](#license)</i>
 

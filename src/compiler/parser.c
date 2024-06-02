@@ -14,7 +14,8 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "parser.h"
+
+#include "compiler/parser.h"
 
 
 #ifndef HAVE_STRNDUP

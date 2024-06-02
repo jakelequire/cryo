@@ -24,13 +24,12 @@
 #include <sys/stat.h>
 #include "commands.h"
 #include "compiler.h"
-
+#include "utils/fs.h"
 
 BuildArgs get_build_args(const char* build_args);
 
 void build_command(int argc, char* argv[]);
 void single_build(char* filename);
-char* readFile(const char* path);
 
 
 #endif

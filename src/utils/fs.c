@@ -14,8 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "utils.h"
-
+#include "utils/fs.h"
 
 
 // <readFile> *might rename to fsreadFile*

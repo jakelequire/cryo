@@ -123,6 +123,11 @@
     "errno.h": "c",
     "utils.h": "c",
     "cli.h": "c",
-    "testing.h": "c"
+    "testing.h": "c",
+    "runtime.h": "c",
+    "optional": "c",
+    "xtr1common": "c",
+    "stddef.h": "c",
+    "fs.h": "c"
   }
 }

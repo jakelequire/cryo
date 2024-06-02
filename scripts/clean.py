@@ -26,12 +26,19 @@ files_to_delete = [
     "./src/utils/*.o",
     "./src/cli/*.o",
     "./src/cli/commands/*.o",
+    
     "./src/bin/*.exe",
     "./src/bin/*.ilk",
     "./src/bin/*.pdb",
+    "./src/bin/*.o",
     "./src/bin/.o/*.exe",
     "./src/bin/.o/*.ilk",
     "./src/bin/.o/*.pdb",
+    "./src/bin/.o/*.o",
+    "./src/bin/debug/*.exe",
+    "./src/bin/debug/*.ilk",
+    "./src/bin/debug/*.pdb",
+    "./src/bin/debug/*.o",
     "./src/bin/cleaned.txt",
 ]
 

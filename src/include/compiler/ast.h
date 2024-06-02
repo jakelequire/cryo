@@ -21,8 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 /*---<custom_includes>---*/
-#include "token.h"
-#include "lexer.h"
+#include "compiler/token.h"
+#include "compiler/lexer.h"
 /*---------<end>---------*/
 /*-------<structure_defs>-------*/
 typedef struct ASTNode {

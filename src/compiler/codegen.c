@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen.h"
+#include "compiler/codegen.h"
 // LLVM Global Variables
 LLVMModuleRef module;
 LLVMBuilderRef builder;

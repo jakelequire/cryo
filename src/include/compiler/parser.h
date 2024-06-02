@@ -17,19 +17,22 @@
 #ifndef PARSER_H
 #define PARSER_H
 #define INITIAL_STATEMENT_CAPACITY 256
+
 /*------ <includes> ------*/
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 /*---<custom_includes>---*/
-#include "lexer.h"
+#include "compiler/lexer.h" // Ensure this is included
 #include "ast.h"
 #include "token.h"
-#include "utils.h"
+#include "utils/fs.h"
+#include "utils/logger.h"
 /*---------<end>---------*/
-
-
+typedef struct Lexer Lexer;
+typedef struct ASTNode ASTNode;
 /*-----<function_prototypes>-----*/
 #ifndef HAVE_STRNDUP
 char* strndup(const char* s, size_t n);
@@ -62,4 +65,5 @@ ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* retu
 // Entry Point
 ASTNode* parseProgram(Lexer* lexer);
 /*-----<end_prototypes>-----*/
+
 #endif // PARSER_H

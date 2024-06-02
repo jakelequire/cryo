@@ -1,23 +1,7 @@
-#*******************************************************************************
-#  Copyright 2024 Jacob LeQuire                                                *
-#  SPDX-License-Identifier: Apache-2.0                                         *  
-#    Licensed under the Apache License, Version 2.0 (the "License");           *
-#    you may not use this file except in compliance with the License.          * 
-#    You may obtain a copy of the License at                                   *
-#                                                                              *
-#    http://www.apache.org/licenses/LICENSE-2.0                                *
-#                                                                              *
-#    Unless required by applicable law or agreed to in writing, software       *
-#    distributed under the License is distributed on an "AS IS" BASIS,         *
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
-#    See the License for the specific language governing permissions and       *
-#    limitations under the License.                                            *
-#                                                                              *
-#*******************************************************************************/
 # Compiler and Flags
 CC = clang -g -D_CRT_SECURE_NO_WARNINGS
-CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -Wall -g
-LDFLAGS = -L"C:/Program Files/LLVM/lib"
+CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g -v
+LDFLAGS = -L"C:/Program Files/LLVM/lib" -v
 
 # Define paths
 BIN_DIR = ./src/bin/
@@ -28,79 +12,101 @@ COMPILER_DIR = $(SRC_DIR)compiler/
 UTILS_DIR = $(SRC_DIR)utils/
 CLI_DIR = $(SRC_DIR)cli/
 CLI_COMMANDS_DIR = $(CLI_DIR)commands/
-CLI_BIN_DIR = $(BIN_DIR)
+RUNTIME_DIR = $(SRC_DIR)runtime/
 TESTS_DIR = $(SRC_DIR)tests/
 
 # Source files
 COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)codegen.c $(COMPILER_DIR)ir.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)parser.c
-UTILS_SRC = $(UTILS_DIR)logger.c
+UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
 CLI_SRC = $(CLI_DIR)cli.c $(CLI_DIR)commands.c $(CLI_DIR)compiler.c $(CLI_COMMANDS_DIR)build.c $(CLI_COMMANDS_DIR)init.c
 MAIN_SRC = $(SRC_DIR)main.c
 LEXER_TEST_SRC = $(TESTS_DIR)lexer.test.c
 PARSER_TEST_SRC = $(TESTS_DIR)parser.test.c
+RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # Object files
-COMPILER_OBJ = $(patsubst %.c, $(OBJ_DIR)%.o, $(notdir $(COMPILER_SRC)))
-UTILS_OBJ = $(patsubst %.c, $(OBJ_DIR)%.o, $(notdir $(UTILS_SRC)))
-CLI_OBJ = $(patsubst %.c, $(OBJ_DIR)%.o, $(notdir $(CLI_SRC)) $(notdir $(wildcard $(CLI_COMMANDS_DIR)/*.c)))
-MAIN_OBJ = $(patsubst %.c, $(OBJ_DIR)%.o, $(notdir $(MAIN_SRC)))
-LEXER_TEST_OBJ = $(patsubst %.c, $(OBJ_DIR)%.o, $(notdir $(LEXER_TEST_SRC)))
-PARSER_TEST_OBJ = $(patsubst %.c, $(OBJ_DIR)%.o, $(notdir $(PARSER_TEST_SRC)))
+COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o
+UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o
+CLI_OBJ = $(OBJ_DIR)cli.o $(OBJ_DIR)commands.o $(OBJ_DIR)compiler.o $(OBJ_DIR)build.o $(OBJ_DIR)init.o
+MAIN_OBJ = $(OBJ_DIR)main.o
+LEXER_TEST_OBJ = $(OBJ_DIR)lexer.test.o
+PARSER_TEST_OBJ = $(OBJ_DIR)parser.test.o
+RUNTIME_OBJ = $(OBJ_DIR)runtime.o
+TEST_OBJ = $(OBJ_DIR)test.o
 
 # Binaries
 LEXER_BIN = $(DEBUG_BIN_DIR)lexer.exe
 PARSER_BIN = $(DEBUG_BIN_DIR)parser.exe
 MAIN_BIN = $(BIN_DIR)main.exe
-CLI_BIN_EXE = $(CLI_BIN_DIR)cryo.exe
+CLI_BIN_EXE = $(BIN_DIR)cryo.exe
+RUNTIME_BIN = $(BIN_DIR)runtime.exe
 
 # LLVM libraries (available libraries in your LLVM installation)
 LLVM_LIBS = -lLLVM-C
 
 # Default target
-all: $(MAIN_BIN) $(CLI_BIN_EXE) $(LEXER_BIN) $(PARSER_BIN)
+all: $(MAIN_BIN) $(CLI_BIN_EXE) $(LEXER_BIN) $(PARSER_BIN) $(TEST_BIN)
 
-clean_previous:
-	@if exist $(BIN_DIR)cleaned.txt $echo Hello
-
-# Pattern rules for object files
-$(OBJ_DIR)%.o: $(COMPILER_DIR)%.c
+# Ensure the object directory exists
+$(OBJ_DIR):
 	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+
+# Compilation rules
+$(OBJ_DIR)%.o: $(COMPILER_DIR)%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)%.o: $(UTILS_DIR)%.c
-	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+$(OBJ_DIR)logger.o: $(UTILS_DIR)logger.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)%.o: $(CLI_DIR)%.c
-	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+$(OBJ_DIR)fs.o: $(UTILS_DIR)fs.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)%.o: $(CLI_COMMANDS_DIR)%.c
-	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+$(OBJ_DIR)cli.o: $(CLI_DIR)cli.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)%.o: $(SRC_DIR)%.c
-	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+$(OBJ_DIR)commands.o: $(CLI_DIR)commands.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)%.o: $(TESTS_DIR)%.c
-	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+$(OBJ_DIR)compiler.o: $(CLI_DIR)compiler.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)build.o: $(CLI_COMMANDS_DIR)build.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)init.o: $(CLI_COMMANDS_DIR)init.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)main.o: $(SRC_DIR)main.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)lexer.test.o: $(TESTS_DIR)lexer.test.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)parser.test.o: $(TESTS_DIR)parser.test.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 
 # Linking binaries
 $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ)
 	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
-$(CLI_BIN_EXE): $(CLI_OBJ)
-	@if not exist $(CLI_BIN_DIR) mkdir $(CLI_BIN_DIR)
+$(CLI_BIN_EXE): $(CLI_OBJ) $(UTILS_OBJ)
+	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
-$(LEXER_BIN): $(LEXER_TEST_OBJ) $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o
+$(LEXER_BIN): $(LEXER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
-$(PARSER_BIN): $(PARSER_TEST_OBJ) $(OBJ_DIR)parser.o $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o $(OBJ_DIR)logger.o
+$(PARSER_BIN): $(PARSER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)parser.o $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o $(OBJ_DIR)logger.o
+	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
+
+$(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ)
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
@@ -117,8 +123,11 @@ runmain: $(MAIN_BIN)
 runcli: $(CLI_BIN_EXE)
 	$(CLI_BIN_EXE)
 
+runtest: $(TEST_BIN)
+	$(TEST_BIN)
+
 # Clean up - remove object files and executables
 clean:
 	python ./scripts/clean.py
 
-.PHONY: all clean runlexer runparser runmain runcli
+.PHONY: all clean runlexer runparser runmain runcli runtest
