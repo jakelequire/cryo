@@ -1,19 +1,3 @@
-/********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
- *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
- *    You may obtain a copy of the License at                                   *
- *                                                                              *
- *    http://www.apache.org/licenses/LICENSE-2.0                                *
- *                                                                              *
- *    Unless required by applicable law or agreed to in writing, software       *
- *    distributed under the License is distributed on an "AS IS" BASIS,         *
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *    See the License for the specific language governing permissions and       *
- *    limitations under the License.                                            *
- *                                                                              *
- ********************************************************************************/
 #ifndef RUNTIME_H
 #define RUNTIME_H
 /*------ <includes> ------*/
@@ -23,12 +7,30 @@
 #include <stdbool.h>
 #include <dirent.h>
 #include <sys/types.h>
-#include <windows.h>
 #include <time.h>
 /*---<custom_includes>---*/
 /*---------<end>---------*/
-/*------ <prototypes> ------*/
+#ifdef __linux__
+#include <pthread.h>
+#include <sys/inotify.h>
+#elif defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#include <process.h>  // For _beginthreadex and _endthreadex
+#include <tlhelp32.h>
+#endif
+
+#ifdef __linux__
+#define EVENT_SIZE (sizeof(struct inotify_event))
+#define EVENT_BUF_LEN (1024 * (EVENT_SIZE + 16))
+#endif
+
 void cryo_runtime(void);
-/*-----<end_prototypes>-----*/
+void terminate_running_instance(const char *process_name);
+bool should_ignore_event(const char *event_name);
+#ifdef __linux__
+void* read_user_input(void* arg);
+#elif defined(_WIN32) || defined(_WIN64)
+unsigned __stdcall read_user_input(void* arg);
+#endif
 
 #endif // RUNTIME_H

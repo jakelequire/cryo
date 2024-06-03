@@ -130,6 +130,10 @@
     "stddef.h": "c",
     "fs.h": "c",
     "windows.h": "c",
-    "time.h": "c"
+    "time.h": "c",
+    "runtime_cmd.h": "c",
+    "process.h": "c",
+    "tlhelp32.h": "c",
+    "winapifamily.h": "c"
   }
 }

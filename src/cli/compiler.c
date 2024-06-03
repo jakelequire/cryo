@@ -1,19 +1,6 @@
-#include "compiler.h"
-#include <stdlib.h>
-
-#ifdef _WIN32
-#include <direct.h>
-#define popen _popen
-#define pclose _pclose
-#else
-#include <unistd.h>
-#endif
-
-#include <stdio.h>
-#include <string.h>
+#include "cli/compiler.h"
 
 //   snprintf(command, sizeof(command), "C:/Programming/apps/cryo/src/bin/main.exe %s", input_file);
-
 // Function to get absolute path
 char* get_abs_path(const char* local_path) {
     char temp_path[256];

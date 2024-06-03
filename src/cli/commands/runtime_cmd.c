@@ -14,50 +14,37 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "include/main.h"
+#include "cli/runtime_cmd.h"
 
 
-int main(int argc, char* argv[]) {
-    printf("Hello, world!");
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
-        return 1;
-    }
-    
-    // Example Implementation of new logging Macro.
-    // included in the `main.h` file as `#include "include/utils.h"`
-    VERBOSE_LOG("Starting Task...\n", "TASK_START");
-    //            *custom msg*       *token example*
+// <run_runtime>
+void run_runtime(void) {
+    char command[256];
+    snprintf(command, sizeof(command), "C:/Programming/apps/cryo/src/bin/runtime.exe %s");
 
-    const char* filePath = argv[1];
-    char* source = readFile(filePath);
-    if (source == NULL) {
-        fprintf(stderr, "Failed to read source file.\n");
-        return 1;
+    FILE *fp;
+    char path[1035];
+
+    // Open the command for reading.
+    fp = popen(command, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Failed to run compiler command\n");
+        exit(EXIT_FAILURE);
     }
 
-    Lexer lexer;
-    initLexer(&lexer, source);
-    printf("[DEBUG] Lexer initialized\n");
-
-    // Parse the source code
-    ASTNode* program = parseProgram(&lexer);
-    if (!program) {
-        fprintf(stderr, "Failed to parse program.\n");
-        free(source);
-        return 1;
+    // Read the output a line at a time - output it.
+    while (fgets(path, sizeof(path), fp) != NULL) {
+        printf("%s", path);
     }
-    printf("[DEBUG] Program parsed\n");
 
-    // Print AST structure
-    printAST(program, 0);
-    
-    // Clean up
-    free(source);
-    freeAST(program);
-    return 0;
+    // Close the process.
+    int status = pclose(fp);
+    if (status == -1) {
+        fprintf(stderr, "Error: Failed to close command stream.\n");
+        exit(EXIT_FAILURE);
+    } else if (status != 0) {
+        fprintf(stderr, "Error: Compiler returned a non-zero exit code: %d\n", status);
+        exit(EXIT_FAILURE);
+    }
 }
+// </run_runtime>

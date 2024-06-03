@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
+#include "cli/runtime_cmd.h"
 
 // Command Types
 typedef enum {
@@ -13,14 +14,9 @@ typedef enum {
     CMD_INIT,       // init     (subcommands)
     CMD_VERSION,    // version  (no subcommands)
     CMD_RUN,        // run      (subcommands)
+    CMD_ENV,        // env      (no subcommands)
     CMD_UNKNOWN     // unknown  (no subcommands)
 } CommandType;
-
-// Build Args
-typedef enum {
-    BUILD_SINGLE,   // -s
-    BUILD_DIR       // -d
-} BuildArgs;
 
 // Help Args
 typedef enum {
@@ -32,6 +28,18 @@ typedef enum {
     HELP_UNKNOWN    // unknown
 } HelpArgs;
 
+// Build Args
+typedef enum BuildArgs {
+    BUILD_SINGLE,   // -s
+    BUILD_DIR       // -d
+} BuildArgs;
+
+// Env Args
+typedef enum EnvArgs {
+    VERBOSE_DEBUGGING,   // -V
+} EnvArgs;
+
+
 
 // Function prototypes
 CommandType get_command_type(const char* command);
@@ -40,7 +48,7 @@ void execute_command(int argc, char* argv[]);
 void build_program_(int argc, char* argv[]);
 void help_command(void);
 void version_command(void);
-
+void env_command(void);
 void help_with_command(char* help_args);
 
 

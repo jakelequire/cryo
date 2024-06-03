@@ -109,7 +109,14 @@ CommandType get_command_type(const char* command) {
         strcmp(command, "--run") == 0
     ) {
         return CMD_RUN;
-    } else {
+    } else if (
+        strcmp(command, "env") == 0  ||
+        strcmp(command, "--env") == 0
+    ) {
+        return CMD_ENV;
+    }
+    
+    else {
         return CMD_UNKNOWN;
     }
 }
@@ -146,6 +153,18 @@ BuildArgs get_build_arg(const char* build_args) {
     }
 }
 
+
+//
+// Env Args
+//
+EnvArgs get_env_arg(const char* env_args) {
+    if (strcmp(env_args, "-V") == 0) {
+        return VERBOSE_DEBUGGING;
+    } else {
+        return VERBOSE_DEBUGGING;
+    }
+}
+
 /*
 **************************************************
 ************* Command Implementations ************
@@ -158,7 +177,6 @@ void help_command(void) {
     printf("\n%s\n", cryo_logo);
     printf("\n%s\n", cryo_help_menu);
 }
-
 
 //
 // Version Command
@@ -213,6 +231,13 @@ void build_program_(int argc, char* argv[]) {
     build_command(argc, argv);
 }
 
+//
+// Env Command
+//
+void env_command(void) {
+    run_runtime();
+}
+
 
 //
 // Main Entry Point for the CLI Application
@@ -241,6 +266,10 @@ void execute_command(int argc, char* argv[]) {
             break;
         case CMD_RUN:
             printf("Run command executed.\n");
+            break;
+        case CMD_ENV:
+            printf("Cryo Runtime Environment starting.\n");
+            env_command();
             break;
         case CMD_UNKNOWN:
             printf("Unknown command: %s\n", argv[0]);
