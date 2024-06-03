@@ -16,72 +16,60 @@
  ********************************************************************************/
 #include "utils/logger.h"
 
-/*
-Note to self before I forget,
-printf the size of the Cryo program in the debugging process.
-*/
-
 // <verbose_log>
-void verbose_log(const char* msg, const char* token) {
-    printf("VERBOSE: %s | Token: %s\n", msg, token);
+void verbose_log(const char* component, const char* msg, const char* token) {
+    printf("VERBOSE [%s]: %s | Token: %s\n", component, msg, token);
 }
 // </verbose_log>
 
-
 // <critical_log>
-void critical_log(const char* msg, const char* token, const char* etc) {
-    printf("VERBOSE: %s | Token: %s | Etc: %s\n", msg, token, etc);
+void critical_log(const char* component, const char* msg, const char* token, const char* etc) {
+    printf("CRITICAL [%s]: %s | Token: %s | Etc: %s\n", component, msg, token, etc);
 }
 // </critical_log>
 
-
-/*----------------------------------*/
-/*### VERBOSE LOGGING FUNCTIONS  ###*/
-/*----------------------------------*/
-
 // <verbose_cryo_token_log>
-void verbose_cryo_token_log(CryoTokenType* token) {
-    // Implementation of verbose_cryo_token_log
-    printf("Token: %d\n", *token);  // Example implementation
+void verbose_cryo_token_log(const char* component, CryoTokenType* token) {
+    printf("### [VERBOSE] [%s] Cryo Token: %d\n", component, *token);
 }
-// <verbose_cryo_token_log>
-
+// </verbose_cryo_token_log>
 
 // <verbose_cryo_node_log>
-void verbose_cryo_node_log(CryoNodeType* node) {
-    printf("### [VERBOSE] Cryo Node: %s\t\t{node}\n", node);
+void verbose_cryo_node_log(const char* component, CryoNodeType* node) {
+    printf("### [VERBOSE] [%s] Cryo Node: %d\n", component, *node);
 }
 // </verbose_cryo_node_log>
 
-
 // <verbose_cryo_astnode_log>
-void verbose_cryo_astnode_log(ASTNode* astNode) {
-    printf("### [VERBOSE] Cryo ASTNode: %s\t\t{ast}\n", astNode->type);
+void verbose_cryo_astnode_log(const char* component, ASTNode* astNode) {
+    if (astNode) {
+        printf("### [VERBOSE] [%s] Cryo ASTNode Type: %d\n", component, astNode->type);
+        // Additional details can be printed here
+    } else {
+        printf("### [VERBOSE] [%s] Cryo ASTNode: NULL\n", component);
+    }
 }
-// <verbose_cryo_astnode_log>
-
-
-
-/*-----------------------------------*/
-/*### CRITICAL LOGGING FUNCTIONS  ###*/
-/*-----------------------------------*/
+// </verbose_cryo_astnode_log>
 
 // <critical_cryo_token_log>
-void critical_cryo_token_log(CryoTokenType* token) {
-    // *implement later with lsp*
+void critical_cryo_token_log(const char* component, CryoTokenType* token) {
+    printf("### [CRITICAL] [%s] Cryo Token: %d\n", component, *token);
 }
-// <critical_cryo_token_log>
-
+// </critical_cryo_token_log>
 
 // <critical_cryo_node_log>
-void critical_cryo_node_log(CryoNodeType* node) {
-    // *implement later with lsp*
+void critical_cryo_node_log(const char* component, CryoNodeType* node) {
+    printf("### [CRITICAL] [%s] Cryo Node: %d\n", component, *node);
 }
 // </critical_cryo_node_log>
 
-
 // <critical_cryo_astnode_log>
-void critical_cryo_astnode_log(ASTNode* astNode) {
-    // *implement later with lsp*
+void critical_cryo_astnode_log(const char* component, ASTNode* astNode) {
+    if (astNode) {
+        printf("### [CRITICAL] [%s] Cryo ASTNode Type: %d\n", component, astNode->type);
+        // Additional details can be printed here
+    } else {
+        printf("### [CRITICAL] [%s] Cryo ASTNode: NULL\n", component);
+    }
 }
 // </critical_cryo_astnode_log>

@@ -124,7 +124,7 @@ bool matchToken(Lexer* lexer, CryoTokenType type) {
 
 // <skipWhitespace>
 void skipWhitespace(Lexer* lexer) {
-    for (;;) {
+    while (true) {
         char c = peek(lexer);
         switch (c) {
             case ' ':
@@ -134,12 +134,25 @@ void skipWhitespace(Lexer* lexer) {
                 break;
             case '\n':
                 lexer->line++;
-                lexer->column = 1;
+                lexer->column = 0; // Reset column at new line
                 advance(lexer);
                 break;
             case '/':
                 if (peekNext(lexer) == '/') {
+                    // Skip line comments
                     while (peek(lexer) != '\n' && !isAtEnd(lexer)) advance(lexer);
+                } else if (peekNext(lexer) == '*') {
+                    // Skip block comments
+                    advance(lexer); // Skip '/'
+                    advance(lexer); // Skip '*'
+                    while (!(peek(lexer) == '*' && peekNext(lexer) == '/') && !isAtEnd(lexer)) {
+                        if (peek(lexer) == '\n') lexer->line++;
+                        advance(lexer);
+                    }
+                    if (!isAtEnd(lexer)) {
+                        advance(lexer); // Skip '*'
+                        advance(lexer); // Skip '/'
+                    }
                 } else {
                     return;
                 }
@@ -242,11 +255,11 @@ Token nextToken(Lexer* lexer, Token* token) {
 
     if (isAtEnd(lexer)) {
         *token = makeToken(lexer, TOKEN_EOF);
-        printf("{lexer} [DEBUG] End of file token\n");
+        VERBOSE_LOG("[Lexer]", "End of file token", "EOF");
         return *token;
     }
 
-    printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
+    VERBOSE_LOG("[Lexer]", "Processing char", lexer->current);
 
     char c = advance(lexer);
 
@@ -264,18 +277,18 @@ Token nextToken(Lexer* lexer, Token* token) {
                 break;
         }
         *token = makeToken(lexer, type);
-        printf("{lexer} [DEBUG] Identifier or keyword token: %.*s, type: %d\n", token->length, token->start, token->type);
+        VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         // If it's still an identifier, process the entire identifier
         if (type == TOKEN_IDENTIFIER) {
             *token = identifier(lexer);
-            printf("{lexer} [DEBUG] Full identifier token: %.*s, type: %d\n", token->length, token->start, token->type);
+            VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         }
         return *token;
     }
 
     if (isDigit(c)) {
         *token = number(lexer);
-        printf("{lexer} [DEBUG] Number token: %.*s\n", token->length, token->start);
+        VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         return *token;
     }
 
@@ -301,11 +314,11 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         default:
             *token = makeToken(lexer, TOKEN_ERROR);
-            printf("{lexer} [DEBUG] Error token: %c\n", c);
+            VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
             return *token;
     }
 
-    printf("{lexer} [DEBUG] Token: %.*s\n", token->length, token->start);
+    VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
     return *token;
 }
 // </nextToken>
@@ -358,7 +371,6 @@ int lexer(int argc, char* argv[]) {
     Token token;
     do {
         nextToken(&lexer, &token);
-        VERBOSE_CRYO_TOKEN_LOG(&token);
     } while (token.type != TOKEN_EOF);
 
     freeLexer(&lexer);

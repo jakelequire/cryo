@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     
     // Example Implementation of new logging Macro.
     // included in the `main.h` file as `#include "include/utils.h"`
-    VERBOSE_LOG("Starting Task...\n", "TASK_START");
+    VERBOSE_LOG("[Main]", "Starting Task...\n", "TASK_START");
     //            *custom msg*       *token example*
 
     const char* filePath = argv[1];
