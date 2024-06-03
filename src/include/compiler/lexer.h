@@ -88,7 +88,7 @@ void skipWhitespace(Lexer* lexer);
 // Token Creation
 Token makeToken(Lexer* lexer, CryoTokenType type);
 Token errorToken(Lexer* lexer, const char* message);
-CryoTokenType checkKeyword(const char* start, int length);
+CryoTokenType checkKeyword(Lexer *lexer, const char *keyword, CryoTokenType type);
 Token identifier(Lexer* lexer);
 Token number(Lexer* lexer);
 

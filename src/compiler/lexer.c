@@ -181,11 +181,16 @@ Token errorToken(Lexer* lexer, const char* message) {
 
 
 // <checkKeyword>
-CryoTokenType checkKeyword(const char* start, int length) {
-    for (int i = 0; keywords[i].keyword != NULL; ++i) {
-        if (strncmp(start, keywords[i].keyword, length) == 0 && keywords[i].keyword[length] == '\0') {
-            return keywords[i].type;
-        }
+CryoTokenType checkKeyword(Lexer *lexer, const char *keyword, CryoTokenType type) {
+    const char *start = lexer->start;
+    while (*keyword && tolower(*start) == tolower(*keyword)) {
+        start++;
+        keyword++;
+    }
+    // Ensure the keyword is fully matched and followed by a non-alphanumeric character
+    if (*keyword == '\0' && !isalnum(*start)) {
+        lexer->current = start;  // Update the lexer->current to the end of the matched keyword
+        return type;
     }
     return TOKEN_IDENTIFIER;
 }
@@ -207,7 +212,9 @@ Token number(Lexer* lexer) {
     while (isDigit(*lexer->current)) {
         advance(lexer);
     }
-    return makeToken(lexer, TOKEN_TYPE_INT);
+    Token token = makeToken(lexer, TOKEN_INT_LITERAL);
+    printf("{lexer} [DEBUG] Number token: %.*s\n", token.length, token.start);
+    return token;
 }
 // </number>
 
@@ -235,19 +242,40 @@ Token nextToken(Lexer* lexer, Token* token) {
 
     if (isAtEnd(lexer)) {
         *token = makeToken(lexer, TOKEN_EOF);
+        printf("{lexer} [DEBUG] End of file token\n");
         return *token;
     }
+
     printf("{lexer} Processing char: '%c' at line %d, column %d\n", *lexer->current, lexer->line, lexer->column);
 
     char c = advance(lexer);
 
     if (isAlpha(c)) {
-        *token = identifier(lexer);
+        CryoTokenType type;
+        switch (tolower(c)) {
+            case 'p':
+                type = checkKeyword(lexer, "public", TOKEN_KW_PUBLIC);
+                break;
+            case 'f':
+                type = checkKeyword(lexer, "fn", TOKEN_KW_FN);
+                break;
+            default:
+                type = TOKEN_IDENTIFIER;
+                break;
+        }
+        *token = makeToken(lexer, type);
+        printf("{lexer} [DEBUG] Identifier or keyword token: %.*s, type: %d\n", token->length, token->start, token->type);
+        // If it's still an identifier, process the entire identifier
+        if (type == TOKEN_IDENTIFIER) {
+            *token = identifier(lexer);
+            printf("{lexer} [DEBUG] Full identifier token: %.*s, type: %d\n", token->length, token->start, token->type);
+        }
         return *token;
     }
 
     if (isDigit(c)) {
         *token = number(lexer);
+        printf("{lexer} [DEBUG] Number token: %.*s\n", token->length, token->start);
         return *token;
     }
 
@@ -273,9 +301,11 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         default:
             *token = makeToken(lexer, TOKEN_ERROR);
+            printf("{lexer} [DEBUG] Error token: %c\n", c);
             return *token;
     }
 
+    printf("{lexer} [DEBUG] Token: %.*s\n", token->length, token->start);
     return *token;
 }
 // </nextToken>
@@ -303,48 +333,6 @@ Token peekToken(Lexer* lexer) {
     return lexer->lookahead;
 }
 // </peekToken>
-
-
-// <readFile>
-// char* readFile(const char* path) {
-//     FILE* file;
-//     errno_t err = fopen_s(&file, path, "rb");  // Open the file in binary mode to avoid transformations
-//     if (err != 0) {
-//         perror("{lexer} Could not open file");
-//         return NULL;
-//     }
-// 
-//     fseek(file, 0, SEEK_END);
-//     size_t length = ftell(file);
-//     // handle fseek error
-//     fseek(file, 0, SEEK_SET);
-// 
-//     if (length == 0) {
-//         perror("{lexer} File is empty");
-//         fclose(file);
-//         return NULL;
-//     }
-// 
-//     char* buffer = (char*)malloc(length + 1);
-//     if (buffer == NULL) {
-//         perror("{lexer} Not enough memory to read file");
-//         fclose(file);
-//         return NULL;
-//     }
-// 
-//     size_t bytesRead = fread(buffer, 1, length, file);
-//     if (bytesRead < length) {
-//         perror("{lexer} Failed to read the full file");
-//         free(buffer);
-//         fclose(file);
-//         return NULL;
-//     }
-// 
-//     buffer[length] = '\0';  // Null-terminate the buffer
-//     fclose(file);
-//     return buffer;
-// }
-// </readFile>
 
 
 // <freeLexer>

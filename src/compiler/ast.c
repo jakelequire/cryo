@@ -25,56 +25,43 @@ ASTNode* programNode = NULL;
 void printAST(ASTNode* node, int indent) {
     if (!node) return;
 
-    for (int i = 0; i < indent; ++i) printf("  ");
-
+    for (int i = 0; i < indent; i++) printf("  ");
     switch (node->type) {
-        case NODE_PROGRAM:
-            printf("Program\n");
-            for (int i = 0; i < node->data.program.stmtCount; ++i) {
-                printAST(node->data.program.statements[i], indent + 1);
-            }
-            break;
         case NODE_FUNCTION_DECLARATION:
             printf("Function: %s\n", node->data.functionDecl.name);
+            if (node->data.functionDecl.params) {
+                printf("Parameters:\n");
+                printAST(node->data.functionDecl.params, indent + 1);
+            }
+            if (node->data.functionDecl.returnType) {
+                printf("Return type:\n");
+                printAST(node->data.functionDecl.returnType, indent + 1);
+            }
+            printf("Body:\n");
             printAST(node->data.functionDecl.body, indent + 1);
             break;
-        case NODE_BLOCK:
-            printf("Block\n");
-            for (int i = 0; i < node->data.block.stmtCount; ++i) {
-                printAST(node->data.block.statements[i], indent + 1);
+        case NODE_PARAM_LIST:
+            for (int i = 0; i < node->data.paramList.paramCount; i++) {
+                printAST(node->data.paramList.params[i], indent + 1);
             }
             break;
-        case NODE_LITERAL:
-            printf("Literal: %d\n", node->data.value);
+        case NODE_VAR_DECLARATION:
+            printf("Parameter: %s\n", node->data.varDecl.name);
+            if (node->data.varDecl.type) {
+                printf("Type:\n");
+                printAST(node->data.varDecl.type, indent + 1);
+            }
             break;
-        case NODE_VAR_NAME:
-            printf("Variable: %s\n", node->data.varName.varName);
-            break;
-        case NODE_BINARY_EXPR:
-            printf("Binary Expression: %s\n", node->data.bin_op.operatorText);
-            printAST(node->data.bin_op.left, indent + 1);
-            printAST(node->data.bin_op.right, indent + 1);
-            break;
-        case NODE_UNARY_EXPR:
-            printf("Unary Expression: %d\n", node->data.unary_op.operator);
-            printAST(node->data.unary_op.operand, indent + 1);
-            break;
-        case NODE_RETURN_STATEMENT:
-            printf("Return Statement\n");
-            printAST(node->data.returnStmt.returnValue, indent + 1);
-            break;
-        case NODE_EXPRESSION_STATEMENT:
-            printf("Expression Statement\n");
-            printAST(node->data.expr.expr, indent + 1);
-            break;
-        case NODE_FUNCTION_CALL:
-            printf("Function Call: %s\n", node->data.functionCall.name);
+        case NODE_TYPE:
+            printf("Type: %s\n", node->data.varName.varName);
             break;
         // Handle other node types...
         default:
-            printf("Unknown Node\n");
+            printf("Unknown node type\n");
             break;
     }
+
+    printAST(node->nextSibling, indent);
 }
 // </printAST>
 

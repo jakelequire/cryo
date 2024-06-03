@@ -22,7 +22,6 @@
 
 
 int main(int argc, char* argv[]) {
-    printf("Hello, world!");
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
         return 1;

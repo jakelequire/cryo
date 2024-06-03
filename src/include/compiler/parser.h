@@ -17,6 +17,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 #define INITIAL_STATEMENT_CAPACITY 256
+#define INITIAL_PARAM_CAPACITY 8
 
 /*------ <includes> ------*/
 #include <stdbool.h>
@@ -26,8 +27,8 @@
 
 /*---<custom_includes>---*/
 #include "compiler/lexer.h" // Ensure this is included
-#include "ast.h"
-#include "token.h"
+#include "compiler/ast.h"
+#include "compiler/token.h"
 #include "utils/fs.h"
 #include "utils/logger.h"
 /*---------<end>---------*/
@@ -56,10 +57,12 @@ ASTNode* parseWhileStatement(Lexer* lexer);
 ASTNode* parseForStatement(Lexer* lexer);
 ASTNode* parseVarDeclaration(Lexer* lexer);
 ASTNode* parseBlock(Lexer* lexer);
-ASTNode* parseFunctionDeclaration(Lexer* lexer);
-ASTNode* parseParamList(Lexer* lexer);
-ASTNode* createTypeNode(CryoTokenType type);
+ASTNode* parseStatements(Lexer* lexer);
 ASTNode* parseType(Lexer* lexer);
+ASTNode* parseFunctionDeclaration(Lexer* lexer);
+ASTNode* parseParameterList(Lexer* lexer);
+ASTNode* parseParameter(Lexer* lexer);
+ASTNode* createTypeNode(CryoTokenType type);
 ASTNode* createParamNode(const char* name, ASTNode* type);
 ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
 // Entry Point

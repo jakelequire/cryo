@@ -38,6 +38,7 @@ typedef struct ASTNode {
         } program;
 
         struct {
+            char* visibility;
             char* name;
             struct ASTNode* params;
             struct ASTNode* returnType;
@@ -45,7 +46,14 @@ typedef struct ASTNode {
         } functionDecl;
 
         struct {
+            struct ASTNode** params;
+            int paramCount;
+            int paramCapacity;
+        } paramList;
+
+        struct {
             char* name;
+            struct ASTNode* type; // Added type field
             struct ASTNode* initializer;
         } varDecl;
 
@@ -108,11 +116,6 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* returnValue;
         } returnStmt;
-
-        struct {
-            struct ASTNode** params;
-            int paramCount;
-        } paramList;
         
     } data;
 } ASTNode;

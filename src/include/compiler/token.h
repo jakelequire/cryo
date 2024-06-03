@@ -19,7 +19,7 @@
 
 typedef enum {
     // Special tokens
-    TOKEN_UNKNOWN,              // Unknown token        // -1
+    TOKEN_UNKNOWN = -1,         // Unknown token        // -1
     TOKEN_EOF,                  // End of file token    // 0
     TOKEN_IDENTIFIER,           // `identifier` token   // 1
     TOKEN_ERROR,                // Error token          // 2
@@ -40,6 +40,8 @@ typedef enum {
     TOKEN_TYPE_BOOLEAN,         // `true`, `false`                                  // 15
     TOKEN_TYPE_VOID,            // `void`                                           // 16
     TOKEN_RESULT_ARROW,         // `->` token                                       // 17
+
+    TOKEN_INT_LITERAL,          // `123`         // 18
 
     // Operators
     TOKEN_OP_PLUS,              // `+` token        // 18

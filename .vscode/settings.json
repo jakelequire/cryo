@@ -134,6 +134,7 @@
     "runtime_cmd.h": "c",
     "process.h": "c",
     "tlhelp32.h": "c",
-    "winapifamily.h": "c"
+    "winapifamily.h": "c",
+    "xtree": "c"
   }
 }

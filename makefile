@@ -1,6 +1,6 @@
 # Compiler and Flags
 CC = clang -g -D_CRT_SECURE_NO_WARNINGS
-CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g
+CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g -DDEBUG
 LDFLAGS = -L"C:/Program Files/LLVM/lib"
 
 # Define paths
