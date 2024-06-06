@@ -25,7 +25,9 @@ void initializeLLVM() {
     context = LLVMContextCreate();
     module = LLVMModuleCreateWithNameInContext("CryoModule", context);
     builder = LLVMCreateBuilderInContext(context);
+    printf("LLVM context, module, and builder initialized.\n");
 }
+
 // </initializeLLVM>
 
 
@@ -36,159 +38,109 @@ void finalizeLLVM() {
     if (LLVMPrintModuleToFile(module, "output.ll", &error) != 0) {
         fprintf(stderr, "Error writing LLVM IR to file: %s\n", error);
         LLVMDisposeMessage(error);
+    } else {
+        LLVMDisposeMessage(error);
+        printf("LLVM IR successfully written to output.ll\n");
     }
 
     // Clean up LLVM
     LLVMDisposeBuilder(builder);
     LLVMDisposeModule(module);
     LLVMContextDispose(context);
+    printf("LLVM context, module, and builder finalized.\n");
 }
 // </finalizeLLVM>
 
 
-// <generateCodeFromAST>
-LLVMValueRef generateCodeFromAST(ASTNode* node) {
-    // Create the main function
-    LLVMTypeRef returnType = LLVMInt32TypeInContext(context); // int return type for main
-    LLVMTypeRef funcType = LLVMFunctionType(returnType, NULL, 0, 0);
-    LLVMValueRef mainFunction = LLVMAddFunction(module, "main", funcType);
+// Function to generate LLVM IR for a binary expression
+LLVMValueRef generateBinaryExprLLVM(LLVMBuilderRef builder, ASTNode* node) {
+    LLVMValueRef left = generateLLVM(builder, node->data.bin_op.left);
+    LLVMValueRef right = generateLLVM(builder, node->data.bin_op.right);
 
-    // Create a new basic block to start insertion into
-    LLVMBasicBlockRef entry = LLVMAppendBasicBlockInContext(context, mainFunction, "entry");
-    LLVMPositionBuilderAtEnd(builder, entry);
-
-    // Generate code for the root block (the body of the main function)
-    generateBlock(node);
-
-    // Finish off the main function with a return statement
-    LLVMValueRef retValue = LLVMConstInt(LLVMInt32TypeInContext(context), 0, 0);
-    LLVMBuildRet(builder, retValue);
-
-    return mainFunction;
-}
-// </generateCodeFromAST>
-
-
-// <generateCode>
-LLVMValueRef generateCode(ASTNode* node) {
-    switch (node->type) {
-        case NODE_FUNCTION_DECLARATION:
-            return generateFunction(node);
-        case NODE_VAR_DECLARATION:
-            return generateVariableDeclaration(node);
-        case NODE_BINARY_EXPR:
-            return generateBinaryExpression(node);
-        case NODE_UNARY_EXPR:
-            return generateUnaryExpression(node);
-        case NODE_RETURN_STATEMENT:
-            return generateReturnStatement(node);
-        case NODE_BLOCK:
-            return generateBlock(node);
-        // Handle other node types...
-        default:
-            fprintf(stderr, "Unknown node type in code generation: %d\n", node->type);
-            return NULL;
-    }
-}
-// </generateCode>
-
-
-// <generateFunction>
-LLVMValueRef generateFunction(ASTNode* node) {
-    // Create LLVM function
-    LLVMTypeRef returnType = LLVMVoidTypeInContext(context); // Assume void return type for simplicity
-    LLVMTypeRef funcType = LLVMFunctionType(returnType, NULL, 0, 0);
-    LLVMValueRef function = LLVMAddFunction(module, node->data.functionDecl.name, funcType);
-
-    // Create a new basic block to start insertion into
-    LLVMBasicBlockRef entry = LLVMAppendBasicBlockInContext(context, function, "entry");
-    LLVMPositionBuilderAtEnd(builder, entry);
-
-    // Generate code for the function body
-    generateCode(node->data.functionDecl.body);
-
-    // Finish off the function
-    LLVMBuildRetVoid(builder);
-
-    return function;
-}
-// </generateFunction>
-
-
-// <generateVariableDeclaration>
-LLVMValueRef generateVariableDeclaration(ASTNode* node) {
-    // For simplicity, assume all variables are integers
-    LLVMTypeRef intType = LLVMInt32TypeInContext(context);
-    LLVMValueRef var = LLVMBuildAlloca(builder, intType, node->data.varDecl.name);
-
-    // Initialize the variable if there is an initializer
-    if (node->data.varDecl.initializer) {
-        LLVMValueRef initVal = generateCode(node->data.varDecl.initializer);
-        LLVMBuildStore(builder, initVal, var);
+    if (!left || !right) {
+        fprintf(stderr, "Error generating binary operands.\n");
+        return NULL;
     }
 
-    return var;
-}
-// </generateVariableDeclaration>
-
-
-// <generateBinaryExpression>
-LLVMValueRef generateBinaryExpression(ASTNode* node) {
-    LLVMValueRef left = generateCode(node->data.bin_op.left);
-    LLVMValueRef right = generateCode(node->data.bin_op.right);
-
+    LLVMValueRef result = NULL;
     switch (node->data.bin_op.operator) {
-        case TOKEN_PLUS:
-            return LLVMBuildAdd(builder, left, right, "addtmp");
-        case TOKEN_MINUS:
-            return LLVMBuildSub(builder, left, right, "subtmp");
-        case TOKEN_STAR:
-            return LLVMBuildMul(builder, left, right, "multmp");
-        case TOKEN_SLASH:
-            return LLVMBuildSDiv(builder, left, right, "divtmp");
+        case TOKEN_OP_PLUS:
+            printf("Generating add operation for %p and %p.\n", left, right);
+            result = LLVMBuildAdd(builder, left, right, "addtmp");
+            printf("Generated add result: %p\n", result);
+            break;
+        // Handle other binary operators...
         default:
-            fprintf(stderr, "Unknown binary operator\n");
+            fprintf(stderr, "Unknown binary operator: %d\n", node->data.bin_op.operator);
             return NULL;
     }
-}
-// </generateBinaryExpression>
 
-
-// <generateUnaryExpression>
-LLVMValueRef generateUnaryExpression(ASTNode* node) {
-    LLVMValueRef operand = generateCode(node->data.unary_op.operand);
-
-    switch (node->data.unary_op.operator) {
-        case TOKEN_MINUS:
-            return LLVMBuildNeg(builder, operand, "negtmp");
-        case TOKEN_OP_NOT:
-            return LLVMBuildNot(builder, operand, "nottmp");
-        default:
-            fprintf(stderr, "Unknown unary operator\n");
-            return NULL;
-    }
-}
-// </generateUnaryExpression>
-
-
-// <generateReturnStatement>
-LLVMValueRef generateReturnStatement(ASTNode* node) {
-    if (node->data.returnStmt.returnValue) {
-        LLVMValueRef returnValue = generateCode(node->data.returnStmt.returnValue);
-        return LLVMBuildRet(builder, returnValue);
+    if (result) {
+        printf("Binary operation result in generateBinaryExprLLVM: %p\n", result);
     } else {
-        return LLVMBuildRetVoid(builder);
+        fprintf(stderr, "Error generating binary operation result.\n");
     }
+
+    return result;
 }
-// </generateReturnStatement>
 
 
-// <generateBlock>
-LLVMValueRef generateBlock(ASTNode* node) {
-    LLVMValueRef lastValue = NULL;
-    for (int i = 0; i < node->data.block.stmtCount; ++i) {
-        lastValue = generateCode(node->data.block.statements[i]);
+// Recursive function to generate LLVM IR from AST
+LLVMValueRef generateLLVM(LLVMBuilderRef builder, ASTNode* node) {
+    switch (node->type) {
+        case NODE_LITERAL:
+            printf("Generating literal: %d\n", node->data.value);
+            return LLVMConstInt(LLVMInt32TypeInContext(context), node->data.value, 0);
+        case NODE_BINARY_EXPR:
+            printf("Generating binary expression\n");
+            LLVMValueRef result = generateBinaryExprLLVM(builder, node);
+            printf("Binary expression result in generateLLVM: %p\n", result); // Add debug print
+            return result;
+        default:
+            printf("Unknown node type: %d\n", node->type);
+            return LLVMConstInt(LLVMInt32TypeInContext(context), 0, 0); // Default return value
     }
-    return lastValue;
 }
-// </generateBlock>
+
+
+// Function to generate LLVM IR for the entire program
+void generateProgramLLVM(ASTNode* root, const char* filename) {
+    initializeLLVM();
+
+    LLVMTypeRef mainType = LLVMFunctionType(LLVMInt32TypeInContext(context), NULL, 0, 0);
+    LLVMValueRef mainFunc = LLVMAddFunction(module, "main", mainType);
+    LLVMBasicBlockRef entry = LLVMAppendBasicBlockInContext(context, mainFunc, "entry");
+    LLVMPositionBuilderAtEnd(builder, entry);
+
+    LLVMValueRef result = generateLLVM(builder, root);
+
+    if (!result || LLVMGetTypeKind(LLVMTypeOf(result)) != LLVMIntegerTypeKind) {
+        printf("Invalid result type or value. Defaulting to 0.\n");
+        result = LLVMConstInt(LLVMInt32TypeInContext(context), 0, 0);
+    } else {
+        printf("Valid result generated: %p\n", result);
+    }
+
+    LLVMBuildRet(builder, result);
+
+    char *error = NULL;
+    if (LLVMVerifyModule(module, LLVMAbortProcessAction, &error) != 0) {
+        fprintf(stderr, "Error verifying module: %s\n", error);
+        LLVMDisposeMessage(error);
+    } else {
+        LLVMDisposeMessage(error);
+    }
+
+    if (LLVMPrintModuleToFile(module, filename, &error) != 0) {
+        fprintf(stderr, "Error writing LLVM IR to file: %s\n", error);
+        LLVMDisposeMessage(error);
+    } else {
+        LLVMDisposeMessage(error);
+        printf("LLVM IR successfully written to %s\n", filename);
+    }
+
+    finalizeLLVM();
+
+    printf("LLVM IR generated and written to %s\n", filename);
+}
+

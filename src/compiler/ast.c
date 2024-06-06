@@ -27,6 +27,12 @@ void printAST(ASTNode* node, int indent) {
 
     for (int i = 0; i < indent; i++) printf("  ");
     switch (node->type) {
+        case NODE_PROGRAM:
+            printf("Program:\n");
+            for (int i = 0; i < node->data.program.stmtCount; i++) {
+                printAST(node->data.program.statements[i], indent + 1);
+            }
+            break;
         case NODE_FUNCTION_DECLARATION:
             printf("Function: %s\n", node->data.functionDecl.name);
             if (node->data.functionDecl.params) {
@@ -40,24 +46,31 @@ void printAST(ASTNode* node, int indent) {
             printf("Body:\n");
             printAST(node->data.functionDecl.body, indent + 1);
             break;
-        case NODE_PARAM_LIST:
-            for (int i = 0; i < node->data.paramList.paramCount; i++) {
-                printAST(node->data.paramList.params[i], indent + 1);
-            }
-            break;
         case NODE_VAR_DECLARATION:
-            printf("Parameter: %s\n", node->data.varDecl.name);
-            if (node->data.varDecl.type) {
-                printf("Type:\n");
-                printAST(node->data.varDecl.type, indent + 1);
+            printf("Variable Declaration: %s\n", node->data.varDecl.name);
+            if (node->data.varDecl.initializer) {
+                printf("Initializer:\n");
+                printAST(node->data.varDecl.initializer, indent + 1);
             }
             break;
-        case NODE_TYPE:
-            printf("Type: %s\n", node->data.varName.varName);
+        case NODE_BLOCK:
+            printf("Block:\n");
+            for (int i = 0; i < node->data.block.stmtCount; i++) {
+                printAST(node->data.block.statements[i], indent + 1);
+            }
+            break;
+        case NODE_BINARY_EXPR:
+            printf("Binary Expression:\n");
+            printAST(node->data.bin_op.left, indent + 1);
+            printf("Operator: %d\n", node->data.bin_op.operator);
+            printAST(node->data.bin_op.right, indent + 1);
+            break;
+        case NODE_LITERAL:
+            printf("Literal: %d\n", node->data.value);
             break;
         // Handle other node types...
         default:
-            printf("Unknown node type\n");
+            printf("Unknown node type: %d\n", node->type);
             break;
     }
 
@@ -92,6 +105,13 @@ void freeAST(ASTNode* node) {
                 }
                 free(node->data.block.statements);
             }
+            break;
+        case NODE_BINARY_EXPR:
+            freeAST(node->data.bin_op.left);
+            freeAST(node->data.bin_op.right);
+            break;
+        case NODE_LITERAL:
+            // No dynamic memory to free
             break;
         // Free other node types...
         default:
@@ -164,34 +184,12 @@ ASTNode* createVariableExpr(const char* name) {
 
 // <createBinaryExpr>
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator) {
-    ASTNode* node = createASTNode(NODE_BINARY_EXPR);
-    if (!node) {
-        return NULL;
-    }
+    ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = NODE_BINARY_EXPR; // Ensure the correct node type is set
     node->data.bin_op.left = left;
     node->data.bin_op.right = right;
     node->data.bin_op.operator = operator;
-
-    // Assign descriptive text for the operator
-    switch (operator) {
-        case TOKEN_PLUS:
-            node->data.bin_op.operatorText = "+";
-            break;
-        case TOKEN_MINUS:
-            node->data.bin_op.operatorText = "-";
-            break;
-        case TOKEN_STAR:
-            node->data.bin_op.operatorText = "*";
-            break;
-        case TOKEN_SLASH:
-            node->data.bin_op.operatorText = "/";
-            break;
-        // Handle other operators...
-        default:
-            node->data.bin_op.operatorText = "unknown";
-            break;
-    }
-
+    printf("Created Binary Expression Node: left=%p, right=%p, operator=%d\n", left, right, operator);
     return node;
 }
 // </createBinaryExpr>

@@ -44,19 +44,19 @@ int main(int argc, char* argv[]) {
     printf("[DEBUG] Lexer initialized\n");
 
     // Parse the source code
-    ASTNode* program = parseProgram(&lexer);
-    if (!program) {
-        fprintf(stderr, "Failed to parse program.\n");
-        free(source);
-        return 1;
+    ASTNode* programNode = parseProgram(&lexer);
+    if (programNode) {
+        printAST(programNode, 0);
+        generateProgramLLVM(programNode, "output.ll");
+        freeAST(programNode);
     }
     printf("[DEBUG] Program parsed\n");
 
     // Print AST structure
-    printAST(program, 0);
+    printAST(programNode, 0);
     
     // Clean up
     free(source);
-    freeAST(program);
+    freeAST(programNode);
     return 0;
 }

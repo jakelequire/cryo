@@ -1,4 +1,1 @@
-
-public fn main() -> int {
-    return 1;
-}
+4 + 5;

@@ -26,7 +26,7 @@
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
 #include <llvm-c/BitWriter.h>
-#include <llvm-c/Core.h>
+#include <llvm-c/Analysis.h>
 /*---<custom_includes>---*/
 #include "ast.h"
 #include "ir.h"
@@ -38,14 +38,11 @@
 /*-----<function_prototypes>-----*/
 void initializeLLVM();
 void finalizeLLVM();
-LLVMValueRef generateCodeFromAST(ASTNode* node);
-LLVMValueRef generateCode(ASTNode* node);
-LLVMValueRef generateFunction(ASTNode* node);
-LLVMValueRef generateVariableDeclaration(ASTNode* node);
-LLVMValueRef generateBinaryExpression(ASTNode* node);
-LLVMValueRef generateUnaryExpression(ASTNode* node);
-LLVMValueRef generateReturnStatement(ASTNode* node);
-LLVMValueRef generateBlock(ASTNode* node);
+
+LLVMValueRef generateBinaryExprLLVM(LLVMBuilderRef builder, ASTNode* node);
+LLVMValueRef generateLLVM(LLVMBuilderRef builder, ASTNode* node);
+void generateProgramLLVM(ASTNode* root, const char* filename);
 /*-----<end_prototypes>-----*/
+
 
 #endif // CODEGEN_H

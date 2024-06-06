@@ -135,6 +135,16 @@
     "process.h": "c",
     "tlhelp32.h": "c",
     "winapifamily.h": "c",
-    "xtree": "c"
+    "xtree": "c",
+    "list": "cpp",
+    "map": "cpp",
+    "set": "cpp",
+    "stack": "cpp",
+    "istream": "cpp",
+    "tuple": "cpp",
+    "utility": "cpp",
+    "xlocmes": "cpp",
+    "xlocnum": "cpp",
+    "bitwriter.h": "c"
   }
 }

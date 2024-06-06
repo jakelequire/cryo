@@ -57,7 +57,7 @@ char* my_strndup(const char* src, size_t len) {
         strncpy(dest, src, len);
         dest[len] = '\0';
     } else {
-        fprintf(stderr, "{lexer} Error: Memory allocation failed in my_strndup\n");
+        fprintf(stderr, "[Lexer] Error: Memory allocation failed in my_strndup\n");
     }
     return dest;
 }
@@ -173,7 +173,7 @@ Token makeToken(Lexer* lexer, CryoTokenType type) {
     token.length = (int)(lexer->current - lexer->start);
     token.line = lexer->line;
     token.column = lexer->column;
-    printf("{lexer} [DEBUG] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
+    printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
            token.length, token.start, token.type, token.line, token.column);
     return token;
 }
@@ -226,7 +226,7 @@ Token number(Lexer* lexer) {
         advance(lexer);
     }
     Token token = makeToken(lexer, TOKEN_INT_LITERAL);
-    printf("{lexer} [DEBUG] Number token: %.*s\n", token.length, token.start);
+    printf("[Lexer] Number token: %.*s\n", token.length, token.start);
     return token;
 }
 // </number>
@@ -314,11 +314,11 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         default:
             *token = makeToken(lexer, TOKEN_ERROR);
-            VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
+            VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
             return *token;
     }
 
-    VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
+    VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
     return *token;
 }
 // </nextToken>
