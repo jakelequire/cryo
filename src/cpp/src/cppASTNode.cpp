@@ -1,9 +1,7 @@
 #include "cppASTNode.h"
-#include <iostream>
 
 void IntLiteral::print() const {
-    int value;
-    std::cout >> value;
+    std::cout << value;
 }
 
 void BinaryOp::print() const {
@@ -11,6 +9,5 @@ void BinaryOp::print() const {
     lhs->print();
     std::cout << " " << op << " ";
     rhs->print();
-    std::cout << ")"
+    std::cout << ")";
 }
-

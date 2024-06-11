@@ -1,7 +1,10 @@
 # Compiler and Flags
 CC = clang -g -D_CRT_SECURE_NO_WARNINGS
-CFLAGS = -I"C:/Program Files/LLVM/include" -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g -DDEBUG
-LDFLAGS = -L"C:/Program Files/LLVM/lib"
+CXX = clang++ -g -D_CRT_SECURE_NO_WARNINGS
+LLVM_SRC = -I"B:/LLVM/lib/clang/18/include" -I"B:/LLVM/include" -I"B:/LLVM/lib"
+CFLAGS = -I"B:/LLVM/include" -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g -DDEBUG
+CXXFLAGS = -std=c++17 $(LLVM_SRC) -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g -DDEBUG
+LDFLAGS = -L"B:/LLVM/lib"
 
 # Define paths
 BIN_DIR = ./src/bin/
@@ -14,18 +17,23 @@ CLI_DIR = $(SRC_DIR)cli/
 CLI_COMMANDS_DIR = $(CLI_DIR)commands/
 RUNTIME_DIR = $(SRC_DIR)runtime/
 TESTS_DIR = $(SRC_DIR)tests/
+# C++ paths
+CPP_DIR = $(SRC_DIR)cpp/
+CPP_INCLUDE_DIR = $(CPP_DIR)include/
+CPP_SRC_DIR = $(CPP_DIR)src/
 
 # Source files
-COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)codegen.c $(COMPILER_DIR)ir.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)parser.c
-UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
+COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)parser.c # $(COMPILER_DIR)ir.c $(COMPILER_DIR)codegen.c
+UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_SRC)fs.c
 CLI_SRC = $(CLI_DIR)cli.c $(CLI_DIR)commands.c $(CLI_DIR)compiler.c $(CLI_COMMANDS_DIR)build.c $(CLI_COMMANDS_DIR)init.c $(CLI_COMMANDS_DIR)runtime_cmd.c
 MAIN_SRC = $(SRC_DIR)main.c
 LEXER_TEST_SRC = $(TESTS_DIR)lexer.test.c
 PARSER_TEST_SRC = $(TESTS_DIR)parser.test.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
+CPP_SRC = $(CPP_SRC_DIR)cppASTNode.cpp $(CPP_SRC_DIR)cppCodeGen.cpp $(CPP_DIR)cppmain.cpp
 
 # Object files
-COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o
+COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o # $(OBJ_DIR)ir.o $(OBJ_DIR)codegen.o 
 UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o
 CLI_OBJ = $(OBJ_DIR)cli.o $(OBJ_DIR)commands.o $(OBJ_DIR)compiler.o $(OBJ_DIR)build.o $(OBJ_DIR)init.o $(OBJ_DIR)runtime_cmd.o
 MAIN_OBJ = $(OBJ_DIR)main.o
@@ -33,6 +41,7 @@ LEXER_TEST_OBJ = $(OBJ_DIR)lexer.test.o
 PARSER_TEST_OBJ = $(OBJ_DIR)parser.test.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
+CPP_OBJ = $(OBJ_DIR)cppASTNode.o $(OBJ_DIR)cppCodeGen.o $(OBJ_DIR)cppmain.o
 
 # Binaries
 LEXER_BIN = $(DEBUG_BIN_DIR)lexer.exe
@@ -40,12 +49,10 @@ PARSER_BIN = $(DEBUG_BIN_DIR)parser.exe
 MAIN_BIN = $(BIN_DIR)main.exe
 CLI_BIN_EXE = $(BIN_DIR)cryo.exe
 RUNTIME_BIN = $(BIN_DIR)runtime.exe
-
-# LLVM libraries (available libraries in your LLVM installation)
-LLVM_LIBS = -lLLVM-C
+CPP_BIN = $(BIN_DIR)cpp.exe
 
 # Default target
-all: $(MAIN_BIN) $(CLI_BIN_EXE) $(LEXER_BIN) $(PARSER_BIN) $(TEST_BIN) $(RUNTIME_BIN)
+all: $(MAIN_BIN) $(CLI_BIN_EXE) $(LEXER_BIN) $(PARSER_BIN) $(RUNTIME_BIN) $(CPP_BIN)
 
 # Ensure the object directory exists
 $(OBJ_DIR):
@@ -91,6 +98,24 @@ $(OBJ_DIR)parser.test.o: $(TESTS_DIR)parser.test.c | $(OBJ_DIR)
 $(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Compiling C++ files
+$(OBJ_DIR)cppASTNode.o: $(CPP_SRC_DIR)cppASTNode.cpp | $(OBJ_DIR)
+	@echo "Compiling cppASTNode.cpp"
+	@echo "File path: $(CPP_SRC_DIR)cppASTNode.cpp"
+	@if exist $(CPP_SRC_DIR)cppASTNode.cpp (echo "File found") else (echo "File not found" && exit 1)
+	$(CXX) $(CXXFLAGS) -I$(CPP_INCLUDE_DIR) -c $< -o $@
+
+$(OBJ_DIR)cppCodeGen.o: $(CPP_SRC_DIR)cppCodeGen.cpp | $(OBJ_DIR)
+	@echo "Compiling cppCodeGen.cpp"
+	@echo "File path: $(CPP_SRC_DIR)cppCodeGen.cpp"
+	@if exist $(CPP_SRC_DIR)cppCodeGen.cpp (echo "File found") else (echo "File not found" && exit 1)
+	$(CXX) $(CXXFLAGS) -I$(CPP_INCLUDE_DIR) -c $< -o $@
+
+$(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
+	@echo "Compiling cppmain.cpp"
+	@echo "File path: $(CPP_DIR)cppmain.cpp"
+	@if exist $(CPP_DIR)cppmain.cpp (echo "File found") else (echo "File not found" && exit 1)
+	$(CXX) $(CXXFLAGS) -I$(CPP_INCLUDE_DIR) -c $< -o $@
 
 # Linking binaries
 $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ)
@@ -105,11 +130,11 @@ $(RUNTIME_BIN): $(RUNTIME_OBJ) $(UTILS_OBJ) $(COMPILER_OBJ)
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 	
-$(LEXER_BIN): $(LEXER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o
+$(LEXER_BIN): $(LEXER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
-$(PARSER_BIN): $(PARSER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)parser.o $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o $(OBJ_DIR)codegen.o $(OBJ_DIR)ir.o $(OBJ_DIR)semantics.o $(OBJ_DIR)logger.o
+$(PARSER_BIN): $(PARSER_TEST_OBJ) $(UTILS_OBJ) $(OBJ_DIR)parser.o $(OBJ_DIR)lexer.o $(OBJ_DIR)ast.o  $(OBJ_DIR)semantics.o $(OBJ_DIR)logger.o 
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
@@ -117,7 +142,9 @@ $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ)
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
-
+$(CPP_BIN): $(CPP_OBJ) $(UTILS_OBJ)
+	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
 # Running executables
 runlexer: $(LEXER_BIN)
@@ -135,8 +162,11 @@ runcli: $(CLI_BIN_EXE)
 runtest: $(TEST_BIN)
 	$(TEST_BIN)
 
+runcpp: $(CPP_BIN)
+	$(CPP_BIN)
+
 # Clean up - remove object files and executables
 clean:
 	python ./scripts/clean.py
 
-.PHONY: all clean runlexer runparser runmain runcli runtest
+.PHONY: all clean runlexer runparser runmain runcli runtest runcpp

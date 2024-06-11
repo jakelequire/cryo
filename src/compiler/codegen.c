@@ -20,6 +20,7 @@ LLVMModuleRef module;
 LLVMBuilderRef builder;
 LLVMContextRef context;
 
+
 // <initializeLLVM>
 void initializeLLVM() {
     context = LLVMContextCreate();
@@ -27,7 +28,6 @@ void initializeLLVM() {
     builder = LLVMCreateBuilderInContext(context);
     printf("LLVM context, module, and builder initialized.\n");
 }
-
 // </initializeLLVM>
 
 
@@ -143,4 +143,3 @@ void generateProgramLLVM(ASTNode* root, const char* filename) {
 
     printf("LLVM IR generated and written to %s\n", filename);
 }
-

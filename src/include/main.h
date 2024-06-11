@@ -23,19 +23,19 @@
 #include "parser.h"
 #include "ast.h"
 #include "semantics.h"
-#include "ir.h"
-#include "codegen.h"
+// #include "ir.h"
+// #include "codegen.h"
 #include "utils/logger.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <llvm-c/Core.h>
-#include <llvm-c/Analysis.h>
-#include <llvm-c/ExecutionEngine.h>
-#include <llvm-c/Target.h>
-#include <llvm-c/TargetMachine.h>
+// #include <llvm-c/Core.h>
+// #include <llvm-c/Analysis.h>
+// #include <llvm-c/ExecutionEngine.h>
+// #include <llvm-c/Target.h>
+// #include <llvm-c/TargetMachine.h>
 
 #ifdef __cplusplus
 }

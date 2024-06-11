@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     ASTNode* programNode = parseProgram(&lexer);
     if (programNode) {
         printAST(programNode, 0);
-        generateProgramLLVM(programNode, "output.ll");
+        // generateProgramLLVM(programNode, "output.ll");
         freeAST(programNode);
     }
     printf("[DEBUG] Program parsed\n");

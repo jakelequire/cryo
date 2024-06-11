@@ -259,7 +259,8 @@ Token nextToken(Lexer* lexer, Token* token) {
         return *token;
     }
 
-    VERBOSE_LOG("[Lexer]", "Processing char", lexer->current);
+    printf("[Lexer] Processing Token | Type: %d, Line: %d, Column: %d\n",
+       token->type, token->line, token->column);
 
     char c = advance(lexer);
 
@@ -277,18 +278,18 @@ Token nextToken(Lexer* lexer, Token* token) {
                 break;
         }
         *token = makeToken(lexer, type);
-        VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
+        // VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         // If it's still an identifier, process the entire identifier
         if (type == TOKEN_IDENTIFIER) {
             *token = identifier(lexer);
-            VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
+            // VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         }
         return *token;
     }
 
     if (isDigit(c)) {
         *token = number(lexer);
-        VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
+        // VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         return *token;
     }
 
@@ -314,11 +315,11 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         default:
             *token = makeToken(lexer, TOKEN_ERROR);
-            VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
+            // VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
             return *token;
     }
 
-    VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
+    //VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
     return *token;
 }
 // </nextToken>
