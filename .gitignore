@@ -36,3 +36,18 @@
 /src/cpp/bin/*
 /src/cpp/build/
 /src/cpp/build/*
+
+# Ignore Specific File Extensions
+*.vsidx
+*.vsix
+*.suo
+*.sln
+*.swp
+*.swo
+*.sdf
+*.dbmdl
+*.dbproj
+*.user
+*.userosscache
+*.sln.docstates
+*.cache
