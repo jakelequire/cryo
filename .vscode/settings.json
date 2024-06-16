@@ -189,5 +189,6 @@
     "queue": "cpp",
     "shared_mutex": "cpp",
     "variant": "cpp"
-  }
+  },
+  "cmake.ignoreCMakeListsMissing": true
 }
