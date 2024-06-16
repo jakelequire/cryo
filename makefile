@@ -1,8 +1,6 @@
 # Compiler and Flags
 CC = clang -g -D_CRT_SECURE_NO_WARNINGS
-CXX = clang++ -g -D_CRT_SECURE_NO_WARNINGS
 CFLAGS = -I"C:/Program Files (x86)/LLVM/include" -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g
-CXXFLAGS += /MD -std=c++17 -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests -Wall -g
 LDFLAGS = -L"C:/Program Files (x86)/LLVM/lib" -lLLVMCore -lLLVMSupport -lLLVMIRReader -lLLVMAsmParser -lLLVMBitReader -lLLVMAnalysis
 
 # Define paths
