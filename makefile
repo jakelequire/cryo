@@ -17,11 +17,6 @@ CLI_COMMANDS_DIR = $(CLI_DIR)commands/
 RUNTIME_DIR = $(SRC_DIR)runtime/
 TESTS_DIR = $(SRC_DIR)tests/
 
-# C++ paths
-CPP_DIR = $(SRC_DIR)cpp/
-CPP_INCLUDE_DIR = $(CPP_DIR)include/
-CPP_SRC_DIR = $(CPP_DIR)src/
-
 # Source files
 COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)parser.c # $(COMPILER_DIR)ir.c $(COMPILER_DIR)codegen.c
 UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_SRC)fs.c
@@ -30,7 +25,6 @@ MAIN_SRC = $(SRC_DIR)main.c
 LEXER_TEST_SRC = $(TESTS_DIR)lexer.test.c
 PARSER_TEST_SRC = $(TESTS_DIR)parser.test.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
-CPP_SRC = $(CPP_SRC_DIR)cppASTNode.cpp $(CPP_SRC_DIR)cppCodeGen.cpp $(CPP_DIR)cppmain.cpp
 
 # Object files
 COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o # $(OBJ_DIR)ir.o $(OBJ_DIR)codegen.o 
@@ -41,7 +35,7 @@ LEXER_TEST_OBJ = $(OBJ_DIR)lexer.test.o
 PARSER_TEST_OBJ = $(OBJ_DIR)parser.test.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
-CPP_OBJ = $(OBJ_DIR)cppASTNode.o $(OBJ_DIR)cppCodeGen.o $(OBJ_DIR)cppmain.o
+
 
 # Binaries
 LEXER_BIN = $(DEBUG_BIN_DIR)lexer.exe
@@ -49,7 +43,6 @@ PARSER_BIN = $(DEBUG_BIN_DIR)parser.exe
 MAIN_BIN = $(BIN_DIR)main.exe
 CLI_BIN_EXE = $(BIN_DIR)cryo.exe
 RUNTIME_BIN = $(BIN_DIR)runtime.exe
-CPP_BIN = $(BIN_DIR)cpp.exe
 
 # Default target
 all: $(MAIN_BIN) $(CLI_BIN_EXE) $(LEXER_BIN) $(PARSER_BIN) $(RUNTIME_BIN) $(CPP_BIN)
@@ -98,24 +91,6 @@ $(OBJ_DIR)parser.test.o: $(TESTS_DIR)parser.test.c | $(OBJ_DIR)
 $(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compiling C++ files
-$(OBJ_DIR)cppASTNode.o: $(CPP_SRC_DIR)cppASTNode.cpp | $(OBJ_DIR)
-	@echo "Compiling cppASTNode.cpp"
-	@echo "File path: $(CPP_SRC_DIR)cppASTNode.cpp"
-	@if exist $(CPP_SRC_DIR)cppASTNode.cpp (echo "File found") else (echo "File not found" && exit 1)
-	$(CXX) $(CXXFLAGS) -I$(CPP_INCLUDE_DIR) -c $< -o $@
-
-$(OBJ_DIR)cppCodeGen.o: $(CPP_SRC_DIR)cppCodeGen.cpp | $(OBJ_DIR)
-	@echo "Compiling cppCodeGen.cpp"
-	@echo "File path: $(CPP_SRC_DIR)cppCodeGen.cpp"
-	@if exist $(CPP_SRC_DIR)cppCodeGen.cpp (echo "File found") else (echo "File not found" && exit 1)
-	$(CXX) $(CXXFLAGS) -I$(CPP_INCLUDE_DIR) -c $< -o $@
-
-$(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
-	@echo "Compiling cppmain.cpp"
-	@echo "File path: $(CPP_DIR)cppmain.cpp"
-	@if exist $(CPP_DIR)cppmain.cpp (echo "File found") else (echo "File not found" && exit 1)
-	$(CXX) $(CXXFLAGS) -I$(CPP_INCLUDE_DIR) -c $< -o $@
 
 # Linking binaries
 $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ)
@@ -142,10 +117,6 @@ $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ)
 	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
 
-$(CPP_BIN): $(CPP_OBJ) $(UTILS_OBJ)
-	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
-
 # Running executables
 runlexer: $(LEXER_BIN)
 	$(LEXER_BIN)
@@ -162,11 +133,8 @@ runcli: $(CLI_BIN_EXE)
 runtest: $(TEST_BIN)
 	$(TEST_BIN)
 
-runcpp: $(CPP_BIN)
-	$(CPP_BIN)
-
 # Clean up - remove object files and executables
 clean:
 	python ./scripts/clean.py
 
-.PHONY: all clean runlexer runparser runmain runcli runtest runcpp
+.PHONY: all clean runlexer runparser runmain runcli runtest
