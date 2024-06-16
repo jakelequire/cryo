@@ -4,19 +4,35 @@
 /src/bin/
 /src/bin/*
 
+# Node Modules
 /node_modules/*
 /src/node_modules/*
 /client/node_modules/*
 /server/node_modules/*
 
+# LSP Files
 /client/node_modules/
 /server/node_modules/
 */node_modules/
 
+# Build Files
 /build/
 /build/*
 
+# Visual Studio Code and Visual Studio
 /.vs/
 /.vs/*
 /.vscode/
 /.vscode/*
+/src/cpp/.vs/
+/src/cpp/.vs/*
+/src/cpp/.vscode/
+/src/cpp/.vscode/*
+
+# CPP Project (LLVM Backend for Cryo Compiler)
+/src/cpp/.vs/
+/src/cpp/.vs/*
+/src/cpp/bin/
+/src/cpp/bin/*
+/src/cpp/build/
+/src/cpp/build/*

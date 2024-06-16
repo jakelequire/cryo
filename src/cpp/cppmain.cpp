@@ -16,6 +16,10 @@ int main() {
     CodeGen codegen;
     llvm::Value* result = codegen.generateCode(root.get());
 
+    if (result) {
+        std::cout << "Result: " << result << std::endl;
+    }
+
     return 0;
 }
 
