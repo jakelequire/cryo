@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**"
             ],
-            "compilerPath": "B:/LLVM/include/bin/clang.exe",
+            "compilerPath": "C:/Program Files (x86)/LLVM//include/bin/clang.exe",
             "cStandard": "c23",
             "cppStandard": "c++23",
             "intelliSenseMode": "windows-clang-arm64",
@@ -16,9 +16,12 @@
         {
             "name": "clang",
             "includePath": [
-                "${workspaceFolder}/**",
-                "B:/LLVM/include/**",
-                "${workspaceFolder}/src/include"
+                "c:/Programming/apps/cryo/**",
+                "C:/Program Files (x86)/LLVM/include/**",
+                "C:/Program Files (x86)/LLVM/lib/**",
+                "C:/Program Files (x86)/LLVM/include/llvm/**",
+                "C:/Program Files (x86)/LLVM/lib/clang/**",
+                "c:/Programming/apps/cryo/src/include"
             ],
             "defines": [
                 "_DEBUG",
@@ -26,19 +29,32 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.22621.0",
-            "compilerPath": "B:/LLVM/bin/clang.exe",
+            "compilerPath": "C:\\Program Files (x86)\\LLVM\\bin\\clang.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-clang-x86"
+            "intelliSenseMode": "windows-clang-x86",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "c:/Programming/apps/cryo/**",
+                    "C:/Program Files/LLVM/include/**",
+                    "C:/Program Files/LLVM/lib/**",
+                    "C:/Program Files/LLVM/lib/clang/**",
+                    "c:/Programming/apps/cryo/src/include",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         },
         {
             "name": "clang++",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/include",
-                "B:/LLVM/include/**",
-                "B:/LLVM/lib/**",
-                "B:/LLVM/lib/clang/**"
+                "C:/Program Files (x86)/LLVM/include/**",
+                "C:/Program Files (x86)/LLVM/include/llvm/**",
+                "C:/Program Files (x86)/LLVM/lib/**",
+                "C:/Program Files (x86)/LLVM/lib/clang/**"
             ],
             "defines": [
                 "_DEBUG",
@@ -46,10 +62,10 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.22621.0",
-            "compilerPath": "cl.exe",
+            "compilerPath": "C:/Program Files (x86)/LLVM/bin/clang.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64"
+            "intelliSenseMode": "windows-clang-x86"
         }
     ],
     "version": 4

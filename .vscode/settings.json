@@ -177,6 +177,17 @@
     "typeinfo": "cpp",
     "xfacet": "cpp",
     "xlocinfo": "cpp",
-    "cassert": "cpp"
+    "cassert": "cpp",
+    "bitset": "cpp",
+    "cinttypes": "cpp",
+    "condition_variable": "cpp",
+    "coroutine": "cpp",
+    "resumable": "cpp",
+    "unordered_set": "cpp",
+    "future": "cpp",
+    "numeric": "cpp",
+    "queue": "cpp",
+    "shared_mutex": "cpp",
+    "variant": "cpp"
   }
 }
