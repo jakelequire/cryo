@@ -13,8 +13,11 @@ list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 include(HandleLLVMOptions)
 
 # Include directories
+# Include LLVM
 include_directories(include ${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
+# Include cJSON
+include_directories(lib/cJSON)
 
 # Source files
 file(GLOB SOURCES "src/*.cpp")

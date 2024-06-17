@@ -1,4 +1,4 @@
-# Cryo
+# ![Logo](./assets/cryo-logo.svg) Cryo 
 General Purpose, Strongly Typed, OOP, programming language witten in C.
 
 <i>[Apache 2.0 License](#license)</i>

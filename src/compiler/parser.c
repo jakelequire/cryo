@@ -358,6 +358,9 @@ ASTNode* parseForStatement(Lexer* lexer) {
 // <parseVarDeclaration>
 ASTNode* parseVarDeclaration(Lexer* lexer) {
     getNextToken(lexer);  // Consume 'const' or 'var'
+
+    printf("[Parser] Parsing variable declaration...\n");
+
     if (currentToken.type != TOKEN_IDENTIFIER) {
         error("[Parser] Expected variable name");
         return NULL;
@@ -425,8 +428,13 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer) {
     getNextToken(lexer); // Consume '('
 
     if (currentToken.type != TOKEN_RPAREN) {
+        printf("[Parser] Current token: %d\n", currentToken.type);
         node->data.functionDecl.params = parseParameterList(lexer);
+    } else {
+        // Add the printf statement here
+        printf("[Parser] No parameters provided\n");
     }
+    
     if (currentToken.type != TOKEN_RPAREN) {
         error("Expected ')' after parameter list");
     }
@@ -451,6 +459,8 @@ ASTNode* parseParameterList(Lexer* lexer) {
         fprintf(stderr, "[Parser] [ERROR] Failed to allocate memory for parameter list node\n");
         return NULL;
     }
+
+    printf("[Parser] Parsing parameter list...\n");
 
     paramListNode->data.paramList.params = malloc(sizeof(ASTNode*) * INITIAL_PARAM_CAPACITY);
     paramListNode->data.paramList.paramCount = 0;
@@ -655,9 +665,19 @@ ASTNode* parseProgram(Lexer* lexer) {
     }
 
     printf("[Parser] [DEBUG] Finished parsing program\n");
+
+    // Print out the full AST Tree
+    printf(">==------------- AST Tree -------------==<\n\n");
+    printAST(programNode, 0);
+    printf("\n>==--------- End of AST Tree ---------==<\n");
+
+    // Return the program node (The root of the AST Tree)
     return programNode;
 }
 // </parseProgram>
+
+// ---------------------------------------------------------------------------------------------------------------------
+// DEBUGGING FUNCTIONS
 
 // <parser>
 int parser(int argc, char* argv[]) {

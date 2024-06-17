@@ -1,0 +1,7 @@
+
+const foo: string = "Hello, world!";
+
+public fn main() -> string {
+    return foo;
+}
+
