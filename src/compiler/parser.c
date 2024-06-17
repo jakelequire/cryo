@@ -195,6 +195,7 @@ ASTNode* parseExpression(Lexer* lexer) {
 
 // <parseStatement>
 ASTNode* parseStatement(Lexer* lexer) {
+printf("[Parser] Parsing statement. Current token: %d\n", currentToken.type);
     if (currentToken.type == TOKEN_INT_LITERAL || currentToken.type == TOKEN_IDENTIFIER) {
         ASTNode* expr = parseExpression(lexer);
         if (currentToken.type == TOKEN_SEMICOLON) {
@@ -207,7 +208,6 @@ ASTNode* parseStatement(Lexer* lexer) {
             return NULL;
         }
     }
-    printf("[Parser] Parsing statement...\n");
     switch (currentToken.type) {
         case TOKEN_KW_PUBLIC:
         case TOKEN_KW_FN:
@@ -227,7 +227,7 @@ ASTNode* parseStatement(Lexer* lexer) {
             return parseForStatement(lexer);
         case TOKEN_KW_CONST:
         case TOKEN_KW_LET:
-            printf("[Parser] Parsing variable declaration...\n");
+            printf("[Parser] Parsing variable declaration. Current token: %d\n", currentToken.type);
             return parseVarDeclaration(lexer);
         case TOKEN_LBRACE:
             printf("[Parser] Parsing block...\n");
@@ -357,22 +357,35 @@ ASTNode* parseForStatement(Lexer* lexer) {
 
 // <parseVarDeclaration>
 ASTNode* parseVarDeclaration(Lexer* lexer) {
+    printf("[Parser] Entering parseVarDeclaration\n");
     getNextToken(lexer);  // Consume 'const' or 'var'
-
     printf("[Parser] Parsing variable declaration...\n");
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
         error("[Parser] Expected variable name");
         return NULL;
     }
-    char* varName = _strdup(currentToken.value.stringValue);
+    char* varName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer);  // Consume variable name
+    
+    if (currentToken.type == TOKEN_COLON) {
+        getNextToken(lexer);  // Consume ':'
+        if (currentToken.type != TOKEN_IDENTIFIER) {
+            error("[Parser] Expected type name");
+            return NULL;
+        }
+        char* varType = strndup(currentToken.start, currentToken.length);
+        getNextToken(lexer);  // Consume type name
+    }
+
     if (currentToken.type != TOKEN_ASSIGN) {
         error("[Parser] Expected '=' after variable name");
         return NULL;
     }
     getNextToken(lexer);  // Consume '='
     ASTNode* initializer = parseExpression(lexer);
+    
+    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
     return createVarDeclarationNode(varName, initializer);
 }
 // </parseVarDeclaration>

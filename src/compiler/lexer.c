@@ -200,7 +200,6 @@ CryoTokenType checkKeyword(Lexer *lexer, const char *keyword, CryoTokenType type
         start++;
         keyword++;
     }
-    // Ensure the keyword is fully matched and followed by a non-alphanumeric character
     if (*keyword == '\0' && !isalnum(*start)) {
         lexer->current = start;  // Update the lexer->current to the end of the matched keyword
         return type;
