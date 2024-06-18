@@ -26,11 +26,6 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
         return 1;
     }
-    
-    // Example Implementation of new logging Macro.
-    // included in the `main.h` file as `#include "include/utils.h"`
-    VERBOSE_LOG("[Main]", "Starting Task...\n", "TASK_START");
-    //            *custom msg*       *token example*
 
     const char* filePath = argv[1];
     char* source = readFile(filePath);
@@ -46,15 +41,17 @@ int main(int argc, char* argv[]) {
     // Parse the source code
     ASTNode* programNode = parseProgram(&lexer);
     if (programNode) {
-        // printAST(programNode, 0);
-        // generateProgramLLVM(programNode, "output.ll");
         freeAST(programNode);
     }
     printf("[DEBUG] Program parsed\n");
 
     // Clean up
+    printf("\n>===------- AST Tree -------===<\n");
+    printAST(programNode, 0);
+    printf("\n>===------- End Tree ------===<\n");
+
     free(source);
-    freeAST(programNode);
+    // freeAST(programNode);
     return 0;
 }
 

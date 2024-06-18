@@ -1,0 +1,44 @@
+Microsoft (R) TTDRecord 1.01.11
+Release: 1.11.316.0
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+Initializing Time Travel Debugging for Launch of "C:\Programming\apps\cryo\src\bin\main.exe" C:\Programming\apps\cryo\tests\cryo_src\test2.cryo 
+Time: 06/17/2024 21:47:03
+OS:10.0.19045 EDITION:x64
+
+SessionID: BEE9BE08-3D12-4768-B0F0-36E5E8CD3B5B
+
+   (TTD::ManageTTDTrace:2706)
+Running "C:\Programming\apps\cryo\src\bin\main.exe" C:\Programming\apps\cryo\tests\cryo_src\test2.cryo 
+   (TTD::StartGuestProcess:1479)
+Group tracing GUID: 31A38ADF-1779-4B4F-9B55-940D4E1413C1
+
+Running "C:\Users\jakel\AppData\Local\Microsoft\WindowsApps\Microsoft.WinDbg_8wekyb3d8bbwe\amd64\TTD\TTDInject.exe" /duration 0 /InjectMode LoaderForCombinedRecording /ClientParams "43 C:\Programming\apps\cryo\dbg_out\main01.run 0 0 0 0 0 0 1 0 806001 0" /RecordScenario 268435457 /attach 38248 /SuspendedAtLaunch -TraceFileHandle 4 -GuestEventHandle 8 -ClientEventHandle c -ActiveEventHandle 10 -MutexHandle 14 -CommunicationBufferHandle 18 -SharedSequenceMutexHandle 1c -SharedSequenceBufferHandle 20 /TelemetryFeatureSessionId "BEE9BE08-3D12-4768-B0F0-36E5E8CD3B5B"
+   (TTD::StartGuestProcess:1962)
+Microsoft (R) TTDInject 1.01.11
+Release: 1.11.316.0
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+TTDLoader Params:
+ LauncherDll = TTDLoader
+ ClientDll   = TTDRecordCPU
+ ClientEntry = InitializeNirvanaClient
+ ClientParams= 43 C:\Programming\apps\cryo\dbg_out\main01.run 0 0 0 0 0 0 1 0 806001 0
+ SuspendedAtLaunch
+WaitForMain is on
+Allocated processors:55, running threads:1.
+Loader TTDLoader.dll injected at 0x00007FF833130000 0xc000 -- .reload  TTDLoader.dll=0x00007FF833130000,0xc000
+
+Injection by thread is complete.
+RecordingEngine initialization successful.
+RecordVcpu initialization successful.
+Loader initialization successful.
+Guest Process is x64 binary.
+Tracing started at: Tue Jun 18 04:47:04 2024 (UTC) Mon Jun 17 21:47:04 2024 (Local)
+
+Guest process exited with exit code 3221226356
+Simulation time of '"C:\Programming\apps\cryo\src\bin\main.exe" C:\Programming\apps\cryo\tests\cryo_src\test2.cryo ' (x64): 1219ms.
+Tracing completed at: Tue Jun 18 04:47:05 2024 (UTC) Mon Jun 17 21:47:05 2024 (Local)
+
+Trace dumped to C:\Programming\apps\cryo\dbg_out\main01.run

@@ -32,41 +32,6 @@
 
 typedef struct ASTNode ASTNode;
 
-/*---------<MACROS>---------*/
-// VERBOSE LOGGING
-#if CURRENT_LOG_LEVEL >= LOG_LEVEL_VERBOSE
-    #define VERBOSE_LOG(component, msg, token) verbose_log(component, msg, token)
-    #define VERBOSE_CRYO_TOKEN_LOG(component, token) verbose_cryo_token_log(component, token)
-    #define VERBOSE_CRYO_NODE_LOG(component, node) verbose_cryo_node_log(component, node)
-    #define VERBOSE_CRYO_ASTNODE_LOG(component, astNode) verbose_cryo_astnode_log(component, astNode)
-#else
-    #define VERBOSE_LOG(component, msg, token)
-    #define VERBOSE_CRYO_TOKEN_LOG(component, token)
-    #define VERBOSE_CRYO_NODE_LOG(component, node)
-    #define VERBOSE_CRYO_ASTNODE_LOG(component, astNode)
-#endif
-// CRITICAL LOGGING
-#if CURRENT_LOG_LEVEL >= LOG_LEVEL_CRITICAL
-    #define CRITICAL_LOG(component, msg, token, etc) critical_log(component, msg, token, etc)
-#else
-    #define CRITICAL_LOG(component, msg, token, etc)
-#endif
-/*-------<END_MACROS>-------*/
 
-
-/*-----<function_prototypes>-----*/
-// Logging function prototypes
-void verbose_log(const char* component, const char* msg, const char* token);
-void critical_log(const char* component, const char* msg, const char* token, const char* etc);
-
-// VERBOSE LOGGING FUNCTION PROTOTYPES
-void verbose_cryo_token_log(const char* component, CryoTokenType* token);
-void verbose_cryo_node_log(const char* component, CryoNodeType* node);
-void verbose_cryo_astnode_log(const char* component, ASTNode* astNode);
-// CRITICAL LOGGING FUNCTION PROTOTYPES
-void critical_cryo_token_log(const char* component, CryoTokenType* token);
-void critical_cryo_node_log(const char* component, CryoNodeType* node);
-void critical_cryo_astnode_log(const char* component, ASTNode* astNode);
-/*-------<end_prototypes>-------*/
 
 #endif // LOGGER_H

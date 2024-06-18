@@ -31,13 +31,13 @@ typedef struct ASTNode {
     struct ASTNode* firstChild;  // First child node (for linked list structure)
     struct ASTNode* nextSibling; // Next sibling node (for linked list structure)
     union {
-        struct {
+        struct program {
             struct ASTNode** statements;
             int stmtCount;
             int stmtCapacity;
         } program;
 
-        struct {
+        struct functionDecl {
             char* visibility;
             char* name;
             struct ASTNode* params;
@@ -45,75 +45,75 @@ typedef struct ASTNode {
             struct ASTNode* body;
         } functionDecl;
 
-        struct {
+        struct paramList {
             struct ASTNode** params;
             int paramCount;
             int paramCapacity;
         } paramList;
 
-        struct {
+        struct varDecl {
             char* name;
-            struct ASTNode* type; // Added type field
+            struct ASTNode* type;
             struct ASTNode* initializer;
         } varDecl;
 
-        struct {
+        struct block {
             struct ASTNode** statements;
             int stmtCount;
             int stmtCapacity;
         } block;
 
-        struct {
+        struct stmt {
             struct ASTNode* stmt;
         } stmt;
 
-        struct {
+        struct expr {
             struct ASTNode* expr;
         } expr;
 
-        struct {
+        struct bin_op {
             struct ASTNode* left;
             struct ASTNode* right;
             CryoTokenType operator;
-            char* operatorText;  // Descriptive text for the operator
+            char* operatorText;
         } bin_op;
 
-        struct {
+        struct unary_op {
             CryoTokenType operator;
             struct ASTNode* operand;
         } unary_op; // For unary operators, e.g (-5, !true, etc.)
 
         int value;  // For literal number nodes
 
-        struct {
+        struct varName {
             char* varName;
         } varName;
 
-        struct {
+        struct functionCall {
             char* name;
             struct ASTNode** args;
             int argCount;
         } functionCall;
         
-        struct {
+        struct ifStmt {
             struct ASTNode* condition;
             struct ASTNode* thenBranch;
             struct ASTNode* elseBranch;
         } ifStmt;
         
-        struct {
+        struct whileStmt {
             struct ASTNode* condition;
             struct ASTNode* body;
         } whileStmt;
         
-        struct {
+        struct forStmt {
             struct ASTNode* initializer;
             struct ASTNode* condition;
             struct ASTNode* increment;
             struct ASTNode* body;
         } forStmt;
 
-        struct {
+        struct returnStmt {
             struct ASTNode* returnValue;
         } returnStmt;
         
@@ -134,7 +134,7 @@ ASTNode* createBlock();
 ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
 ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body);
 ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
-ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer);
+ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer, int line);
 ASTNode* createExpressionStatement(ASTNode* expression);
 ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);

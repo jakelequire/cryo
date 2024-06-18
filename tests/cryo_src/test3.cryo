@@ -2,3 +2,4 @@
 public fn main() -> void {
     return 34;
 };
+

@@ -18,21 +18,22 @@
 #include "compiler/lexer.h"
 /*---------<end>---------*/
 
-//#################################
-// Keyword Dictionary. 
-//#################################
+//#################################//
+//       Keyword Dictionary.       //
+//#################################//
 KeywordToken keywords[] = {
-    {"public", TOKEN_KW_PUBLIC},
-    {"fn", TOKEN_KW_FN},
-    {"if", TOKEN_KW_IF},
-    {"else", TOKEN_KW_ELSE},
-    {"while", TOKEN_KW_WHILE},
-    {"for", TOKEN_KW_FOR},
-    {"return", TOKEN_KW_RETURN},
-    {"const", TOKEN_KW_CONST},
-    {"true", TOKEN_KW_TRUE},
-    {"false", TOKEN_KW_FALSE},
-    {NULL, TOKEN_UNKNOWN} // Sentinel value
+    {"public",      TOKEN_KW_PUBLIC },
+    {"fn",          TOKEN_KW_FN     },
+    {"if",          TOKEN_KW_IF     },
+    {"else",        TOKEN_KW_ELSE   },
+    {"while",       TOKEN_KW_WHILE  },
+    {"for",         TOKEN_KW_FOR    },
+    {"return",      TOKEN_KW_RETURN },
+    {"const",       TOKEN_KW_CONST  },
+    {"mut",         TOKEN_KW_MUT    },
+    {"true",        TOKEN_KW_TRUE   },
+    {"false",       TOKEN_KW_FALSE  },
+    {NULL,          TOKEN_UNKNOWN   }   // Sentinel value
 };
 
 
@@ -167,14 +168,17 @@ void skipWhitespace(Lexer* lexer) {
 
 // <makeToken>
 Token makeToken(Lexer* lexer, CryoTokenType type) {
+    // Create the token with the given type and return it
     Token token;
     token.type = type;
     token.start = lexer->start;
     token.length = (int)(lexer->current - lexer->start);
     token.line = lexer->line;
     token.column = lexer->column;
+
     printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
            token.length, token.start, token.type, token.line, token.column);
+
     return token;
 }
 // </makeToken>
@@ -204,6 +208,9 @@ CryoTokenType checkKeyword(Lexer *lexer, const char *keyword, CryoTokenType type
         lexer->current = start;  // Update the lexer->current to the end of the matched keyword
         return type;
     }
+
+    printf("[Lexer] Keyword Identified: %.*s\n", (int)(lexer->current - lexer->start), lexer->start);
+
     return TOKEN_IDENTIFIER;
 }
 // </checkKeyword>
@@ -234,13 +241,6 @@ Token number(Lexer* lexer) {
 // <get_next_token>
 Token get_next_token(Lexer *lexer) {
     nextToken(lexer, &lexer->currentToken);
-    //printf("{lexer} [DEBUG] Next token: %.*s, Type: %d, Line: %d, Column: %d\n",
-    //        lexer->currentToken.length,
-    //        lexer->currentToken.start,
-    //        lexer->currentToken.type,
-    //        lexer->currentToken.line,
-    //        lexer->currentToken.column
-    //    );
     return lexer->currentToken;
 }
 // </get_next_token>
@@ -254,18 +254,33 @@ Token nextToken(Lexer* lexer, Token* token) {
 
     if (isAtEnd(lexer)) {
         *token = makeToken(lexer, TOKEN_EOF);
-        VERBOSE_LOG("[Lexer]", "End of file token", "EOF");
         return *token;
     }
 
     printf("[Lexer] Processing Token | Type: %d, Line: %d, Column: %d\n",
-       token->type, token->line, token->column);
+        token->type, token->line, token->column);
 
     char c = advance(lexer);
 
+    // This is to check if it's an identifier.
     if (isAlpha(c)) {
         CryoTokenType type;
         switch (tolower(c)) {
+            case 'c':
+                type = checkKeyword(lexer, "const", TOKEN_KW_CONST);
+                break;
+            case 'i':
+                type = checkKeyword(lexer, "if", TOKEN_KW_IF);
+                break;
+            case 'e':
+                type = checkKeyword(lexer, "else", TOKEN_KW_ELSE);
+                break;
+            case 'w':
+                type = checkKeyword(lexer, "while", TOKEN_KW_WHILE);
+                break;
+            case 'r':
+                type = checkKeyword(lexer, "return", TOKEN_KW_RETURN);
+                break;
             case 'p':
                 type = checkKeyword(lexer, "public", TOKEN_KW_PUBLIC);
                 break;
@@ -277,18 +292,16 @@ Token nextToken(Lexer* lexer, Token* token) {
                 break;
         }
         *token = makeToken(lexer, type);
-        // VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
+
         // If it's still an identifier, process the entire identifier
         if (type == TOKEN_IDENTIFIER) {
             *token = identifier(lexer);
-            // VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         }
         return *token;
     }
 
     if (isDigit(c)) {
         *token = number(lexer);
-        // VERBOSE_CRYO_TOKEN_LOG("[Lexer]", token);
         return *token;
     }
 
@@ -314,11 +327,9 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         default:
             *token = makeToken(lexer, TOKEN_ERROR);
-            // VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
             return *token;
     }
 
-    //VERBOSE_CRYO_TOKEN_LOG("Lexer", token);
     return *token;
 }
 // </nextToken>

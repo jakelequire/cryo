@@ -81,7 +81,6 @@ typedef enum {
     TOKEN_KW_RETURN,            // `return`         // 50
     TOKEN_KW_FN,                // `fn`             // 51
     TOKEN_KW_CONST,             // `const`          // 52
-    TOKEN_KW_LET,               // `let`            // 53
     TOKEN_KW_PUBLIC,            // `public`         // 54
     TOKEN_KW_PRIVATE,           // `private`        // 55
     TOKEN_KW_STRUCT,            // `struct`         // 56
@@ -180,28 +179,28 @@ typedef enum {
     TOKEN_RCURLY_BRACKET,       // `}}`             // 145
 } CryoTokenType;
 
-typedef enum {
-    NODE_PROGRAM,
-    NODE_FUNCTION_DECLARATION,
-    NODE_VAR_DECLARATION,
-    NODE_STATEMENT,
-    NODE_EXPRESSION,
-    NODE_BINARY_EXPR,
-    NODE_UNARY_EXPR,
-    NODE_LITERAL,
-    NODE_VAR_NAME,
-    NODE_FUNCTION_CALL,
-    NODE_IF_STATEMENT,
-    NODE_WHILE_STATEMENT,
-    NODE_FOR_STATEMENT,
-    NODE_RETURN_STATEMENT,
-    NODE_BLOCK,
-    NODE_EXPRESSION_STATEMENT,
-    NODE_ASSIGN,
-    NODE_PARAM_LIST,
-    NODE_TYPE,
-    NODE_UNKNOWN,
-} CryoNodeType; // Rename to `CryoNodeType` at home with rename function.
+typedef enum CryoNodeType {
+    NODE_PROGRAM,                   // 0
+    NODE_FUNCTION_DECLARATION,      // 1
+    NODE_VAR_DECLARATION,           // 2
+    NODE_STATEMENT,                 // 3
+    NODE_EXPRESSION,                // 4
+    NODE_BINARY_EXPR,               // 5
+    NODE_UNARY_EXPR,                // 6
+    NODE_LITERAL_EXPR,              // 7
+    NODE_VAR_NAME,                  // 8
+    NODE_FUNCTION_CALL,             // 9
+    NODE_IF_STATEMENT,              // 10
+    NODE_WHILE_STATEMENT,           // 11
+    NODE_FOR_STATEMENT,             // 12
+    NODE_RETURN_STATEMENT,          // 13
+    NODE_BLOCK,                     // 14
+    NODE_EXPRESSION_STATEMENT,      // 15
+    NODE_ASSIGN,                    // 16
+    NODE_PARAM_LIST,                // 17
+    NODE_TYPE,                      // 18
+    NODE_UNKNOWN,                   // 19
+} CryoNodeType;
 
 
 #endif // TOKEN_H

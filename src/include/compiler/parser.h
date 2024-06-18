@@ -16,7 +16,7 @@
  ********************************************************************************/
 #ifndef PARSER_H
 #define PARSER_H
-#define INITIAL_STATEMENT_CAPACITY 256
+#define INITIAL_STATEMENT_CAPACITY 512
 #define INITIAL_PARAM_CAPACITY 8
 
 /*------ <includes> ------*/
@@ -46,6 +46,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message);
 int getOperatorPrecedence(CryoTokenType type);
 void addStatementToProgram(ASTNode* program, ASTNode* statement);
 // AST Nodes
+ASTNode* createProgramNode(void);
 ASTNode* parsePrimaryExpression(Lexer* lexer);
 ASTNode* parseUnaryExpression(Lexer* lexer);
 ASTNode* parseBinaryExpression(Lexer* lexer, int precedence);

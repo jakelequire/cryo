@@ -65,3 +65,4 @@ def create_cleaned_log():
 if __name__ == "__main__":
     delete_files()
     create_cleaned_log()
+    print("Cleaned successfully.")
