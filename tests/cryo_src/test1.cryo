@@ -1,4 +1,2 @@
 
-const example = 36;
-
-
+const example: int = 36;

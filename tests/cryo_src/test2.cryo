@@ -1,2 +1,2 @@
 
-const example: int = 36;
+mut example: int = "34 + 35";

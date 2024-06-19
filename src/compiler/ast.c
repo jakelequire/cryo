@@ -38,16 +38,27 @@ void printAST(ASTNode* node, int indent) {
                 printAST(node->data.program.statements[i], indent + 1);
             }
             break;
+            
         case NODE_VAR_DECLARATION:
             printf("Variable Declaration: %s\n", node->data.varDecl.name);
             printAST(node->data.varDecl.initializer, indent + 1);
             break;
+
         case NODE_LITERAL_EXPR:
             printf("Literal: %d\n", node->data.value);
             break;
+
         case NODE_FUNCTION_DECLARATION:
             printf("Function Declaration: %s\n", node->data.functionDecl.name);
             printAST(node->data.functionDecl.body, indent + 1);
+            break;
+
+        case NODE_BOOLEAN_LITERAL:
+            printf("Boolean Literal: %s\n", node->data.value ? "true" : "false");
+            break;
+
+        case NODE_STRING_LITERAL:
+            printf("String Literal: '%s'\n", node->data.str.str);
             break;
         // Add more cases for other node types
         default:
@@ -76,12 +87,14 @@ void freeAST(ASTNode* node) {
                 free(node->data.program.statements);
             }
             break;
+
         case NODE_FUNCTION_DECLARATION:
             printf("[AST] Freeing Function Declaration Node\n");
             printf("[AST] Freeing node: %d\n", node->type);
             free(node->data.functionDecl.name);
             freeAST(node->data.functionDecl.body);
             break;
+
         case NODE_BLOCK:
             printf("[AST] Freeing Block Node\n");
             if (node->data.block.statements) {
@@ -94,12 +107,14 @@ void freeAST(ASTNode* node) {
             }
             printf("[AST] Freeing node: %d\n", node->type);
             break;
+
         case NODE_BINARY_EXPR:
             printf("[AST] Freeing Binary Expression Node\n");
             printf("[AST] Freeing node: %d\n", node->type);
             freeAST(node->data.bin_op.left);
             freeAST(node->data.bin_op.right);
             break;
+
         case NODE_LITERAL_EXPR:
             printf("[AST] Freeing Literal Expression Node\n");
             // No dynamic memory to free
@@ -110,6 +125,11 @@ void freeAST(ASTNode* node) {
             printf("[AST] Freeing node: %d\n", node->type);
             free(node->data.varDecl.name);
             freeAST(node->data.varDecl.initializer);
+            break;
+            
+        case NODE_STRING_LITERAL:
+            printf("[AST] Freeing String Literal Node\n");
+            free(node->data.str.str);
             break;
         // Free other node types...
         default:
@@ -186,6 +206,18 @@ ASTNode* createVariableExpr(const char* name) {
     return node;
 }
 // </createVariableExpr>
+
+
+// <createStringLiteralExpr>
+ASTNode* createStringLiteralExpr(const char* str) {
+    ASTNode* node = createASTNode(NODE_STRING_LITERAL);
+    if (!node) {
+        return NULL;
+    }
+    node->data.str.str = strdup(str);
+    return node;
+}
+// </createStringLiteralExpr
 
 
 // <createBinaryExpr>
@@ -310,11 +342,37 @@ ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer, in
 
     node->data.varDecl.name = strdup(var_name);
     node->data.varDecl.initializer = initializer;
+    node->data.varDecl.type = NULL; // Initialize type as NULL
 
-    printf("[AST] Variable Declaration Node Created: %s\n", var_name);
     return node;
 }
 // </createVarDeclarationNode>
+
+
+// <createStringExpr>
+ASTNode* createStringExpr(const char* str) {
+    ASTNode* node = createASTNode(NODE_STRING_LITERAL);
+    if (!node) {
+        return NULL;
+    }
+    node->data.str.str = strdup(str);
+    return node;
+}
+// </createStringExpr>
+
+
+// <createBooleanLiteralExpr>
+ASTNode* createBooleanLiteralExpr(int value) {
+    ASTNode* node = createASTNode(NODE_BOOLEAN_LITERAL);
+    if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for boolean literal node\n");
+        return NULL;
+    }
+    node->data.value = value;
+    printf("[AST] Boolean Literal Node Created: %s\n", value ? "true" : "false");
+    return node;
+}
+// </createBooleanLiteralExpr>
 
 
 // <createExpressionStatement>

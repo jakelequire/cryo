@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include "include/main.h"
 
 
@@ -55,7 +54,6 @@ int main(int argc, char* argv[]) {
     printf("[DEBUG] Program parsed\n");
 
     free(source);
-    // freeAST(programNode);
     return 0;
 }
 

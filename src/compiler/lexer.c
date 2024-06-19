@@ -226,6 +226,24 @@ Token identifier(Lexer* lexer) {
 // </identifier>
 
 
+// <string>
+Token string(Lexer* lexer) {
+    while (peek(lexer) != '"' && !isAtEnd(lexer)) {
+        if (peek(lexer) == '\n') lexer->line++;
+        advance(lexer);
+    }
+
+    if (isAtEnd(lexer)) {
+        return errorToken(lexer, "Unterminated string.");
+    }
+
+    // The closing quote.
+    advance(lexer);
+    return makeToken(lexer, TOKEN_STRING_LITERAL);
+}
+// </string>
+
+
 // <number>
 Token number(Lexer* lexer) {
     while (isDigit(*lexer->current)) {
@@ -236,6 +254,18 @@ Token number(Lexer* lexer) {
     return token;
 }
 // </number>
+
+
+// <boolean>
+Token boolean(Lexer* lexer) {
+    if (matchToken(lexer, TOKEN_KW_TRUE)) {
+        return makeToken(lexer, TOKEN_KW_TRUE);
+    } else if (matchToken(lexer, TOKEN_KW_FALSE)) {
+        return makeToken(lexer, TOKEN_KW_FALSE);
+    }
+    return errorToken(lexer, "Expected 'true' or 'false'.");
+}
+// </boolean>
 
 
 // <get_next_token>
@@ -269,6 +299,9 @@ Token nextToken(Lexer* lexer, Token* token) {
             case 'c':
                 type = checkKeyword(lexer, "const", TOKEN_KW_CONST);
                 break;
+            case 'm':
+                type = checkKeyword(lexer, "mut", TOKEN_KW_MUT);
+                break;
             case 'i':
                 type = checkKeyword(lexer, "if", TOKEN_KW_IF);
                 break;
@@ -285,7 +318,16 @@ Token nextToken(Lexer* lexer, Token* token) {
                 type = checkKeyword(lexer, "public", TOKEN_KW_PUBLIC);
                 break;
             case 'f':
-                type = checkKeyword(lexer, "fn", TOKEN_KW_FN);
+                if (peek(lexer) == 'n') {
+                    type = checkKeyword(lexer, "fn", TOKEN_KW_FN);
+                } else if (peek(lexer) == 'o') {
+                    type = checkKeyword(lexer, "for", TOKEN_KW_FOR);
+                } else {
+                    type = checkKeyword(lexer, "false", TOKEN_KW_FALSE);
+                }
+                break;
+            case 't':
+                type = checkKeyword(lexer, "true", TOKEN_KW_FALSE);
                 break;
             default:
                 type = TOKEN_IDENTIFIER;
@@ -302,6 +344,11 @@ Token nextToken(Lexer* lexer, Token* token) {
 
     if (isDigit(c)) {
         *token = number(lexer);
+        return *token;
+    }
+
+    if (c == '"') {
+        *token = string(lexer);
         return *token;
     }
 

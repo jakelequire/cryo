@@ -24,7 +24,7 @@ typedef enum {
     TOKEN_IDENTIFIER,           // `identifier` token   // 1
     TOKEN_ERROR,                // Error token          // 2
     TOKEN_SINGLE_COMMENT,       // `//` token           // 3
-    TOKEN_MULTI_COMMENT,        // `/* */` token        // 4    
+    TOKEN_MULTI_COMMENT,        // `/* */` token        // 4
     TOKEN_WHITESPACE,           // ` ` token            // 5
     TOKEN_ASSIGN,               // `=` token            // 6
     TOKEN_NEWLINE,              // `\n` token           // 7
@@ -33,150 +33,155 @@ typedef enum {
     TOKEN_DEDENT,               // Dedent token         // 10
 
     // Data types
-    TOKEN_TYPE_INT,             // `1`, `2`, `3`, etc. integers                     // 11
-    TOKEN_TYPE_FLOAT,           // `1.0`, `2.0`, `3.0`, etc. floats                 // 12
-    TOKEN_TYPE_STRING,          // `"Hello, World!"`, `"Hello, " + "World!"`, etc.  // 13
-    TOKEN_TYPE_STRING_LITERAL,  // `'Hello, World!'`, `'Hello, ' + 'World!'`, etc   // 14
-    TOKEN_TYPE_BOOLEAN,         // `true`, `false`                                  // 15
-    TOKEN_TYPE_VOID,            // `void`                                           // 16
-    TOKEN_RESULT_ARROW,         // `->` token                                       // 17
+    TOKEN_TYPE_INT,             // `1`, `2`, `3`, etc. integers                     // 
+    TOKEN_TYPE_FLOAT,           // `1.0`, `2.0`, `3.0`, etc. floats                 // 
+    TOKEN_TYPE_STRING,          // `"Hello, World!"`, `"Hello, " + "World!"`, etc.  // 
+    TOKEN_TYPE_STRING_LITERAL,  // `'Hello, World!'`, `'Hello, ' + 'World!'`, etc   // 
+    TOKEN_TYPE_BOOLEAN,         // `true`, `false`                                  // 
+    TOKEN_TYPE_VOID,            // `void`                                           // 
+    TOKEN_RESULT_ARROW,         // `->` token                                       // 
 
-    TOKEN_INT_LITERAL,          // `123`         // 18
+    TOKEN_INT_LITERAL,          // `123`         // 
+    TOKEN_FLOAT_LITERAL,        // `123.0`       //
+    TOKEN_STRING_LITERAL,       // `"Hello, World!"`
+    TOKEN_BOOLEAN_LITERAL,      // `true`, `false`
+    TOKEN_VOID_LITERAL,         // `void`
+    TOKEN_NULL_LITERAL,         // `null`
 
     // Operators
-    TOKEN_OP_PLUS,              // `+` token        // 18
-    TOKEN_OP_MINUS,             // `-` token        // 19
-    TOKEN_OP_STAR,              // `*` token        // 20
-    TOKEN_OP_SLASH,             // `/` token        // 21
-    TOKEN_OP_MOD,               // `%` token        // 22
-    TOKEN_OP_AND,               // `&` token        // 23
-    TOKEN_OP_OR,                // `|` token        // 24
-    TOKEN_OP_XOR,               // `^` token        // 25
-    TOKEN_OP_NOT,               // `!` token        // 26
-    TOKEN_OP_LSHIFT,            // `<<` token       // 27
-    TOKEN_OP_RSHIFT,            // `>>` token       // 28
-    TOKEN_OP_LT,                // `<` token        // 29
-    TOKEN_OP_GT,                // `>` token        // 30
-    TOKEN_OP_LTE,               // `<=` token       // 31
-    TOKEN_OP_GTE,               // `>=` token       // 32
-    TOKEN_OP_EQ,                // `==` token       // 33
-    TOKEN_OP_NEQ,               // `!=` token       // 34
-    TOKEN_OP_ASSIGN,            // `=` token        // 35
-    TOKEN_OP_ADD_ASSIGN,        // `+=` token       // 36
-    TOKEN_OP_SUB_ASSIGN,        // `-=` token       // 37
-    TOKEN_OP_MUL_ASSIGN,        // `*=` token       // 38
-    TOKEN_OP_DIV_ASSIGN,        // `/=` token       // 39
-    TOKEN_OP_MOD_ASSIGN,        // `%=` token       // 40
-    TOKEN_OP_AND_ASSIGN,        // `&=` token       // 41
-    TOKEN_OP_OR_ASSIGN,         // `|=` token       // 42
-    TOKEN_OP_XOR_ASSIGN,        // `^=` token       // 43
+    TOKEN_OP_PLUS,              // `+` token        // 
+    TOKEN_OP_MINUS,             // `-` token        // 
+    TOKEN_OP_STAR,              // `*` token        // 
+    TOKEN_OP_SLASH,             // `/` token        // 
+    TOKEN_OP_MOD,               // `%` token        // 
+    TOKEN_OP_AND,               // `&` token        // 
+    TOKEN_OP_OR,                // `|` token        // 
+    TOKEN_OP_XOR,               // `^` token        // 
+    TOKEN_OP_NOT,               // `!` token        // 
+    TOKEN_OP_LSHIFT,            // `<<` token       // 
+    TOKEN_OP_RSHIFT,            // `>>` token       // 
+    TOKEN_OP_LT,                // `<` token        // 
+    TOKEN_OP_GT,                // `>` token        // 
+    TOKEN_OP_LTE,               // `<=` token       // 
+    TOKEN_OP_GTE,               // `>=` token       // 
+    TOKEN_OP_EQ,                // `==` token       // 
+    TOKEN_OP_NEQ,               // `!=` token       // 
+    TOKEN_OP_ASSIGN,            // `=` token        // 
+    TOKEN_OP_ADD_ASSIGN,        // `+=` token       // 
+    TOKEN_OP_SUB_ASSIGN,        // `-=` token       // 
+    TOKEN_OP_MUL_ASSIGN,        // `*=` token       // 
+    TOKEN_OP_DIV_ASSIGN,        // `/=` token       // 
+    TOKEN_OP_MOD_ASSIGN,        // `%=` token       // 
+    TOKEN_OP_AND_ASSIGN,        // `&=` token       // 
+    TOKEN_OP_OR_ASSIGN,         // `|=` token       // 
+    TOKEN_OP_XOR_ASSIGN,        // `^=` token       // 
 
     // Keywords
-    TOKEN_KW_IF,                // `if`             // 44
-    TOKEN_KW_ELSE,              // `else`           // 45
-    TOKEN_KW_FOR,               // `for`            // 46
-    TOKEN_KW_WHILE,             // `while`          // 47
-    TOKEN_KW_BREAK,             // `break`          // 48 
-    TOKEN_KW_CONTINUE,          // `continue`       // 49
-    TOKEN_KW_RETURN,            // `return`         // 50
-    TOKEN_KW_FN,                // `fn`             // 51
-    TOKEN_KW_CONST,             // `const`          // 52
-    TOKEN_KW_PUBLIC,            // `public`         // 54
-    TOKEN_KW_PRIVATE,           // `private`        // 55
-    TOKEN_KW_STRUCT,            // `struct`         // 56
-    TOKEN_KW_ENUM,              // `enum`           // 57
-    TOKEN_KW_TRAIT,             // `trait`          // 58
-    TOKEN_KW_IMPL,              // `impl`           // 59
-    TOKEN_KW_USE,               // `use`            // 60
-    TOKEN_KW_AS,                // `as`             // 61
-    TOKEN_KW_MODULE,            // `module`         // 62
-    TOKEN_KW_NAMESPACE,         // `namespace`      // 63
-    TOKEN_KW_TYPE,              // `type`           // 64
-    TOKEN_KW_CAST,              // `cast`           // 65
-    TOKEN_KW_SIZE,              // `size`           // 66
-    TOKEN_KW_CASE,              // `case`           // 67
-    TOKEN_KW_CLASS,             // `class`          // 68
-    TOKEN_KW_DEFAULT,           // `default`        // 69
-    TOKEN_KW_EXTENDS,           // `extends`        // 70
-    TOKEN_KW_IMPORT,            // `import`         // 71
-    TOKEN_KW_IN,                // `in`             // 72
-    TOKEN_KW_INSTANCEOF,        // `instanceof`     // 73
-    TOKEN_KW_NEW,               // `new`            // 74
-    TOKEN_KW_NULL,              // `null`           // 75
-    TOKEN_KW_PROTECTED,         // `protected`      // 76
-    TOKEN_KW_STATIC,            // `static`         // 77
-    TOKEN_KW_RESULT,            // `result`         // 78
-    TOKEN_KW_TRUE,              // `true`           // 79
-    TOKEN_KW_FALSE,             // `false`          // 80
-    TOKEN_KW_MUT,               // `mut`            // 81
-    TOKEN_KW_BYTE,              // `byte`           // 82
-    TOKEN_KW_SHORT,             // `short`          // 83
-    TOKEN_KW_INT,               // `int`            // 84
-    TOKEN_KW_LONG,              // `long`           // 85
-    TOKEN_KW_FLOAT,             // `float`          // 86
-    TOKEN_KW_DOUBLE,            // `double`         // 87
-    TOKEN_KW_CHAR,              // `char`           // 88
-    TOKEN_KW_BOOL,              // `bool`           // 89
-    TOKEN_KW_VOID,              // `void`           // 90
-    TOKEN_KW_ANY,               // `any`            // 91
-    TOKEN_KW_STRING,            // `string`         // 92
-    TOKEN_KW_ARRAY,             // `array`          // 93
-    TOKEN_KW_MAP,               // `map`            // 94
-    TOKEN_KW_SET,               // `set`            // 95
-    TOKEN_KW_NATIVE,            // `native`         // 96
-    TOKEN_KW_SYNCHRONIZED,      // `synchronized`   // 97
-    TOKEN_KW_VOLATILE,          // `volatile`       // 98
-    TOKEN_KW_INTERFACE,         // `interface`      // 99
-    TOKEN_KW_BOOLEAN,           // `boolean`        // 100
-    TOKEN_KW_TYPEOF,            // `typeof`         // 101
-    TOKEN_KW_AWAIT,             // `await`          // 102
+    TOKEN_KW_IF,                // `if`             // 
+    TOKEN_KW_ELSE,              // `else`           // 
+    TOKEN_KW_FOR,               // `for`            // 
+    TOKEN_KW_WHILE,             // `while`          // 
+    TOKEN_KW_BREAK,             // `break`          // 
+    TOKEN_KW_CONTINUE,          // `continue`       // 
+    TOKEN_KW_RETURN,            // `return`         // 
+    TOKEN_KW_FN,                // `fn`             // 
+    TOKEN_KW_CONST,             // `const`          // 
+    TOKEN_KW_PUBLIC,            // `public`         // 
+    TOKEN_KW_PRIVATE,           // `private`        // 
+    TOKEN_KW_STRUCT,            // `struct`         // 
+    TOKEN_KW_ENUM,              // `enum`           // 
+    TOKEN_KW_TRAIT,             // `trait`          // 
+    TOKEN_KW_IMPL,              // `impl`           // 
+    TOKEN_KW_USE,               // `use`            // 
+    TOKEN_KW_AS,                // `as`             // 
+    TOKEN_KW_MODULE,            // `module`         // 
+    TOKEN_KW_NAMESPACE,         // `namespace`      // 
+    TOKEN_KW_TYPE,              // `type`           // 
+    TOKEN_KW_CAST,              // `cast`           // 
+    TOKEN_KW_SIZE,              // `size`           // 
+    TOKEN_KW_CASE,              // `case`           // 
+    TOKEN_KW_CLASS,             // `class`          // 
+    TOKEN_KW_DEFAULT,           // `default`        // 
+    TOKEN_KW_EXTENDS,           // `extends`        // 
+    TOKEN_KW_IMPORT,            // `import`         // 
+    TOKEN_KW_IN,                // `in`             // 
+    TOKEN_KW_INSTANCEOF,        // `instanceof`     // 
+    TOKEN_KW_NEW,               // `new`            // 
+    TOKEN_KW_NULL,              // `null`           // 
+    TOKEN_KW_PROTECTED,         // `protected`      // 
+    TOKEN_KW_STATIC,            // `static`         // 
+    TOKEN_KW_RESULT,            // `result`         // 
+    TOKEN_KW_TRUE,              // `true`           // 
+    TOKEN_KW_FALSE,             // `false`          // 
+    TOKEN_KW_MUT,               // `mut`            // 
+    TOKEN_KW_BYTE,              // `byte`           // 
+    TOKEN_KW_SHORT,             // `short`          // 
+    TOKEN_KW_INT,               // `int`            // 
+    TOKEN_KW_LONG,              // `long`           // 
+    TOKEN_KW_FLOAT,             // `float`          // 
+    TOKEN_KW_DOUBLE,            // `double`         // 
+    TOKEN_KW_CHAR,              // `char`           // 
+    TOKEN_KW_BOOL,              // `bool`           // 
+    TOKEN_KW_VOID,              // `void`           // 
+    TOKEN_KW_ANY,               // `any`            // 
+    TOKEN_KW_STRING,            // `string`         // 
+    TOKEN_KW_ARRAY,             // `array`          // 
+    TOKEN_KW_MAP,               // `map`            // 
+    TOKEN_KW_SET,               // `set`            // 
+    TOKEN_KW_NATIVE,            // `native`         // 
+    TOKEN_KW_SYNCHRONIZED,      // `synchronized`   // 
+    TOKEN_KW_VOLATILE,          // `volatile`       // 
+    TOKEN_KW_INTERFACE,         // `interface`      // 
+    TOKEN_KW_BOOLEAN,           // `boolean`        // 
+    TOKEN_KW_TYPEOF,            // `typeof`         // 
+    TOKEN_KW_AWAIT,             // `await`          // 
     // Add more keywords as needed
 
 
     // Operators and punctuations
-    TOKEN_BANG,                 // `!`              // 103
-    TOKEN_PLUS,                 // `+`              // 104
-    TOKEN_MINUS,                // `-`              // 105
-    TOKEN_STAR,                 // `*`              // 106
-    TOKEN_SLASH,                // `/`              // 107
-    TOKEN_PIPE,                 // `|`              // 108
-    TOKEN_EXCLAMATION,          // `!`              // 109
-    TOKEN_QUESTION,             // `?`              // 110
-    TOKEN_COLON,                // `:`              // 111
-    TOKEN_LESS,                 // `<`              // 112
-    TOKEN_GREATER,              // `>`              // 113
-    TOKEN_EQUAL,                // `=`              // 114
-    TOKEN_DOT,                  // `.`              // 115
-    TOKEN_COMMA,                // `,`              // 116
-    TOKEN_HASH,                 // `#`              // 117
-    TOKEN_DOLLAR,               // `$`              // 118
-    TOKEN_AT,                   // `@`              // 119
-    TOKEN_BACKSLASH,            // `\`              // 120
-    TOKEN_UNDERSCORE,           // `_`              // 121
-    TOKEN_BACKTICK,             // '`'              // 122
-    TOKEN_QUOTE,                // `'`              // 123
-    TOKEN_APOSTROPHE,           // `'`              // 124
-    TOKEN_SEMICOLON,            // `;`              // 125
-    TOKEN_TILDE,                // `~`              // 126
-    TOKEN_CARET,                // `^`              // 127
-    TOKEN_AMPERSAND,            // `&`              // 128
-    TOKEN_PERCENT,              // `%`              // 129
-    TOKEN_LPAREN,               // `(`              // 130
-    TOKEN_RPAREN,               // `)`              // 131
-    TOKEN_LBRACKET,             // `[`              // 132
-    TOKEN_RBRACKET,             // `]`              // 133
-    TOKEN_LBRACE,               // `{`              // 134
-    TOKEN_RBRACE,               // `}`              // 135
-    TOKEN_LANGLE,               // `<`              // 136
-    TOKEN_RANGLE,               // `>`              // 137
-    TOKEN_LCURLY,               // `{`              // 138            
-    TOKEN_RCURLY,               // `}`              // 139
-    TOKEN_LSQUARE,              // `[`              // 140
-    TOKEN_RSQUARE,              // `]`              // 141
-    TOKEN_LANGLE_BRACKET,       // `<<`             // 142
-    TOKEN_RANGLE_BRACKET,       // `>>`             // 143
-    TOKEN_LCURLY_BRACKET,       // `{{`             // 144
-    TOKEN_RCURLY_BRACKET,       // `}}`             // 145
+    TOKEN_BANG,                 // `!`              // 
+    TOKEN_PLUS,                 // `+`              // 
+    TOKEN_MINUS,                // `-`              // 
+    TOKEN_STAR,                 // `*`              // 
+    TOKEN_SLASH,                // `/`              // 
+    TOKEN_PIPE,                 // `|`              // 
+    TOKEN_EXCLAMATION,          // `!`              // 
+    TOKEN_QUESTION,             // `?`              // 
+    TOKEN_COLON,                // `:`              // 
+    TOKEN_LESS,                 // `<`              // 
+    TOKEN_GREATER,              // `>`              // 
+    TOKEN_EQUAL,                // `=`              // 
+    TOKEN_DOT,                  // `.`              // 
+    TOKEN_COMMA,                // `,`              // 
+    TOKEN_HASH,                 // `#`              // 
+    TOKEN_DOLLAR,               // `$`              // 
+    TOKEN_AT,                   // `@`              // 
+    TOKEN_BACKSLASH,            // `\`              // 
+    TOKEN_UNDERSCORE,           // `_`              // 
+    TOKEN_BACKTICK,             // '`'              // 
+    TOKEN_QUOTE,                // `'`              // 
+    TOKEN_APOSTROPHE,           // `'`              // 
+    TOKEN_SEMICOLON,            // `;`              // 
+    TOKEN_TILDE,                // `~`              // 
+    TOKEN_CARET,                // `^`              // 
+    TOKEN_AMPERSAND,            // `&`              // 
+    TOKEN_PERCENT,              // `%`              // 
+    TOKEN_LPAREN,               // `(`              // 
+    TOKEN_RPAREN,               // `)`              // 
+    TOKEN_LBRACKET,             // `[`              // 
+    TOKEN_RBRACKET,             // `]`              // 
+    TOKEN_LBRACE,               // `{`              // 
+    TOKEN_RBRACE,               // `}`              // 
+    TOKEN_LANGLE,               // `<`              // 
+    TOKEN_RANGLE,               // `>`              // 
+    TOKEN_LCURLY,               // `{`              //          
+    TOKEN_RCURLY,               // `}`              // 
+    TOKEN_LSQUARE,              // `[`              // 
+    TOKEN_RSQUARE,              // `]`              // 
+    TOKEN_LANGLE_BRACKET,       // `<<`             // 
+    TOKEN_RANGLE_BRACKET,       // `>>`             // 
+    TOKEN_LCURLY_BRACKET,       // `{{`             // 
+    TOKEN_RCURLY_BRACKET,       // `}}`             // 
 } CryoTokenType;
 
 typedef enum CryoNodeType {
@@ -199,7 +204,9 @@ typedef enum CryoNodeType {
     NODE_ASSIGN,                    // 16
     NODE_PARAM_LIST,                // 17
     NODE_TYPE,                      // 18
-    NODE_UNKNOWN,                   // 19
+    NODE_STRING_LITERAL,            // 19
+    NODE_BOOLEAN_LITERAL,           // 20
+    NODE_UNKNOWN,                   // 21
 } CryoNodeType;
 
 

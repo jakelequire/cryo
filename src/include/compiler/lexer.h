@@ -91,6 +91,7 @@ Token errorToken(Lexer* lexer, const char* message);
 CryoTokenType checkKeyword(Lexer *lexer, const char *keyword, CryoTokenType type);
 Token identifier(Lexer* lexer);
 Token number(Lexer* lexer);
+Token string(Lexer* lexer);
 
 // Lexer Walking Functions
 Token get_next_token(Lexer *lexer);

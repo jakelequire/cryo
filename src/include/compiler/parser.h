@@ -48,6 +48,7 @@ void addStatementToProgram(ASTNode* program, ASTNode* statement);
 // AST Nodes
 ASTNode* createProgramNode(void);
 ASTNode* parsePrimaryExpression(Lexer* lexer);
+ASTNode* parseExpression(Lexer* lexer);
 ASTNode* parseUnaryExpression(Lexer* lexer);
 ASTNode* parseBinaryExpression(Lexer* lexer, int precedence);
 ASTNode* parseExpression(Lexer* lexer);

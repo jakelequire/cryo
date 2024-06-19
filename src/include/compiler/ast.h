@@ -116,7 +116,14 @@ typedef struct ASTNode {
         struct returnStmt {
             struct ASTNode* returnValue;
         } returnStmt;
-        
+
+        struct str {
+            char* str;
+        } str;
+
+        struct boolean {
+            int value;
+        } boolean;
     } data;
 } ASTNode;
 /*-------<end_defs>-------*/
@@ -126,6 +133,8 @@ void freeAST(ASTNode* node);
 ASTNode* createASTNode(CryoNodeType type);
 ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
+ASTNode* createBooleanLiteralExpr(int value);
+ASTNode* createStringLiteralExpr(const char* str);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator);
 ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand);
 ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body);
@@ -137,6 +146,7 @@ ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* i
 ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer, int line);
 ASTNode* createExpressionStatement(ASTNode* expression);
 ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
+ASTNode* createStringExpr(const char* str);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);
 /*-----<end_prototypes>-----*/
