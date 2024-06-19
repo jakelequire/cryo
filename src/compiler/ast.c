@@ -131,6 +131,12 @@ void freeAST(ASTNode* node) {
             printf("[AST] Freeing String Literal Node\n");
             free(node->data.str.str);
             break;
+
+        case NODE_BOOLEAN_LITERAL:
+            printf("[AST] Freeing Boolean Literal Node\n");
+            // No dynamic memory to free
+            break;
+
         // Free other node types...
         default:
             printf("[AST] Unknown Node Type. <DEFAULTED>\n");
@@ -174,6 +180,13 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.block.stmtCapacity = 0;
             node->data.block.statements = NULL;
             break;
+
+        // case NODE_BINARY_EXPR:
+        //     node->data.bin_op.left = NULL;
+        //     node->data.bin_op.right = NULL;
+        //     node->data.bin_op.operator = TOKEN_UNKNOWN;
+        //     break;
+
         // Initialize other node types...
         default:
             break;

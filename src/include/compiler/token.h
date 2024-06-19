@@ -47,6 +47,7 @@ typedef enum {
     TOKEN_BOOLEAN_LITERAL,      // `true`, `false`
     TOKEN_VOID_LITERAL,         // `void`
     TOKEN_NULL_LITERAL,         // `null`
+    TOKEN_BIN_OP_LITERAL,       // `2 + 2`, `3 * 3`, etc.
 
     // Operators
     TOKEN_OP_PLUS,              // `+` token        // 

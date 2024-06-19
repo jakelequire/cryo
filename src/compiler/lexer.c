@@ -22,18 +22,18 @@
 //       Keyword Dictionary.       //
 //#################################//
 KeywordToken keywords[] = {
-    {"public",      TOKEN_KW_PUBLIC },
-    {"fn",          TOKEN_KW_FN     },
-    {"if",          TOKEN_KW_IF     },
-    {"else",        TOKEN_KW_ELSE   },
-    {"while",       TOKEN_KW_WHILE  },
-    {"for",         TOKEN_KW_FOR    },
-    {"return",      TOKEN_KW_RETURN },
-    {"const",       TOKEN_KW_CONST  },
-    {"mut",         TOKEN_KW_MUT    },
-    {"true",        TOKEN_KW_TRUE   },
-    {"false",       TOKEN_KW_FALSE  },
-    {NULL,          TOKEN_UNKNOWN   }   // Sentinel value
+    {"public",      TOKEN_KW_PUBLIC         },
+    {"fn",          TOKEN_KW_FN             },
+    {"if",          TOKEN_KW_IF             },
+    {"else",        TOKEN_KW_ELSE           },
+    {"while",       TOKEN_KW_WHILE          },
+    {"for",         TOKEN_KW_FOR            },
+    {"return",      TOKEN_KW_RETURN         },
+    {"const",       TOKEN_KW_CONST          },
+    {"mut",         TOKEN_KW_MUT            },
+    {"true",        TOKEN_BOOLEAN_LITERAL   },
+    {"false",       TOKEN_BOOLEAN_LITERAL   },
+    {NULL,          TOKEN_UNKNOWN           }   // Sentinel value
 };
 
 
@@ -258,12 +258,35 @@ Token number(Lexer* lexer) {
 
 // <boolean>
 Token boolean(Lexer* lexer) {
-    if (matchToken(lexer, TOKEN_KW_TRUE)) {
-        return makeToken(lexer, TOKEN_KW_TRUE);
-    } else if (matchToken(lexer, TOKEN_KW_FALSE)) {
-        return makeToken(lexer, TOKEN_KW_FALSE);
+    // TOKEN_BOOLEAN_LITERAL
+    if (peek(lexer) == 't') {
+        advance(lexer);
+        if (peek(lexer) == 'r') {
+            advance(lexer);
+            if (peek(lexer) == 'u') {
+                advance(lexer);
+                if (peek(lexer) == 'e') {
+                    advance(lexer);
+                    return makeToken(lexer, TOKEN_BOOLEAN_LITERAL);
+                }
+            }
+        }
+    } else if (peek(lexer) == 'f') {
+        advance(lexer);
+        if (peek(lexer) == 'a') {
+            advance(lexer);
+            if (peek(lexer) == 'l') {
+                advance(lexer);
+                if (peek(lexer) == 's') {
+                    advance(lexer);
+                    if (peek(lexer) == 'e') {
+                        advance(lexer);
+                        return makeToken(lexer, TOKEN_BOOLEAN_LITERAL);
+                    }
+                }
+            }
+        }
     }
-    return errorToken(lexer, "Expected 'true' or 'false'.");
 }
 // </boolean>
 
@@ -323,11 +346,11 @@ Token nextToken(Lexer* lexer, Token* token) {
                 } else if (peek(lexer) == 'o') {
                     type = checkKeyword(lexer, "for", TOKEN_KW_FOR);
                 } else {
-                    type = checkKeyword(lexer, "false", TOKEN_KW_FALSE);
+                    type = checkKeyword(lexer, "false", TOKEN_BOOLEAN_LITERAL);
                 }
                 break;
             case 't':
-                type = checkKeyword(lexer, "true", TOKEN_KW_FALSE);
+                type = checkKeyword(lexer, "true", TOKEN_BOOLEAN_LITERAL);
                 break;
             default:
                 type = TOKEN_IDENTIFIER;

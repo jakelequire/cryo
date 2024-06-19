@@ -91,18 +91,12 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             return stringNode;
         }
 
-        case TOKEN_KW_TRUE: {
-            getNextToken(lexer); // Consume 'true'
-            ASTNode* boolNode = createBooleanLiteralExpr(1); // true is represented as 1
-            printf("[Parser] Created Boolean Node: true\n");
-            return boolNode;
-        }
-        
-        case TOKEN_KW_FALSE: {
-            getNextToken(lexer); // Consume 'false'
-            ASTNode* boolNode = createBooleanLiteralExpr(0); // false is represented as 0
-            printf("[Parser] Created Boolean Node: false\n");
-            return boolNode;
+        case TOKEN_BOOLEAN_LITERAL: {
+            int value = currentToken.start[0] == 't' ? 1 : 0;
+            getNextToken(lexer);
+            ASTNode* booleanNode = createBooleanLiteralExpr(value);
+            printf("[Parser] Created Boolean Node: %d\n", value);
+            return booleanNode;
         }
 
         case TOKEN_IDENTIFIER: {
