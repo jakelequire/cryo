@@ -150,6 +150,7 @@ ASTNode* parseStatement(Lexer* lexer) {
 }
 // </parseStatement>
 
+
 // <createProgramNode>
 ASTNode* createProgramNode() {
     printf("[AST] Creating Program Node....\n");

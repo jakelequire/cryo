@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "include/main.h"
 
 
@@ -40,15 +41,18 @@ int main(int argc, char* argv[]) {
 
     // Parse the source code
     ASTNode* programNode = parseProgram(&lexer);
+
+    if(programNode != NULL) {
+        printf("\n>===------- AST Tree -------===<\n");
+        printAST(programNode, 0);
+        printf("\n>===------- End Tree ------===<\n");
+    }
+
     if (programNode) {
         freeAST(programNode);
     }
-    printf("[DEBUG] Program parsed\n");
 
-    // Clean up
-    printf("\n>===------- AST Tree -------===<\n");
-    printAST(programNode, 0);
-    printf("\n>===------- End Tree ------===<\n");
+    printf("[DEBUG] Program parsed\n");
 
     free(source);
     // freeAST(programNode);

@@ -1,7 +1,4 @@
 
-const foo: string = "Hello, world!";
-
-public fn main() -> string {
-    return foo;
-}
-
+public fn main() -> void {
+    return 34;
+};

@@ -1,5 +1,4 @@
 
-public fn main() -> void {
-    return 34;
-};
+// This is to test a comment
 
+const example: int = 69;
