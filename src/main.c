@@ -48,6 +48,9 @@ int main(int argc, char* argv[]) {
     }
 
     if (programNode) {
+        printf("[Main] Generating IR code...\n");
+        generateCode(programNode);
+        printf("[Main] IR code generated, freeing AST.\n");
         freeAST(programNode);
     }
 

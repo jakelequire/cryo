@@ -14,16 +14,12 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef TESTING_H
-#define TESTING_H
-#include <stdio.h>
-#include <stdlib.h>
-#include "compiler/ast.h"
-#include "compiler/parser.h"
-#include "compiler/lexer.h"
-#include "compiler/codegen.h"
-#include "compiler/token.h"
+#include "testing.h"
 
-
-
-#endif
+/*
+ * Test for CodeGen
+*/
+int main(int argc, char** argv) {
+    codegen(argc, argv);
+    return 0;
+}

@@ -136,6 +136,8 @@ typedef enum {
     TOKEN_KW_BOOLEAN,           // `boolean`        // 
     TOKEN_KW_TYPEOF,            // `typeof`         // 
     TOKEN_KW_AWAIT,             // `await`          // 
+    TOKEN_KW_ASYNC,             // `async`          //
+    TOKEN_KW_EXPRESSION,        // `expression`     //
     // Add more keywords as needed
 
 

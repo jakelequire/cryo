@@ -188,7 +188,10 @@
     "numeric": "cpp",
     "queue": "cpp",
     "shared_mutex": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "*.def": "c",
+    "passbuilder.h": "c",
+    "initialization.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true
 }

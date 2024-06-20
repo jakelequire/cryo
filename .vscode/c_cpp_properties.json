@@ -50,7 +50,7 @@
             "name": "clang++",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/include",
+                "${workspaceFolder}/src/include/**",
                 "C:/Program Files (x86)/LLVM/include/**",
                 "C:/Program Files (x86)/LLVM/include/llvm/**",
                 "C:/Program Files (x86)/LLVM/lib/**",

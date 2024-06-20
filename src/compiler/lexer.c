@@ -33,6 +33,14 @@ KeywordToken keywords[] = {
     {"mut",         TOKEN_KW_MUT            },
     {"true",        TOKEN_BOOLEAN_LITERAL   },
     {"false",       TOKEN_BOOLEAN_LITERAL   },
+    {"int",         TOKEN_KW_INT            },
+    {"string",      TOKEN_KW_STRING         },
+    {"boolean",     TOKEN_KW_BOOL           },
+    {"expression",  TOKEN_KW_EXPRESSION     },
+    {"void",        TOKEN_KW_VOID           },
+    {"null",        TOKEN_KW_NULL           },
+    {"struct",      TOKEN_KW_STRUCT         },
+    {"enum",        TOKEN_KW_ENUM           },
     {NULL,          TOKEN_UNKNOWN           }   // Sentinel value
 };
 
@@ -176,9 +184,10 @@ Token makeToken(Lexer* lexer, CryoTokenType type) {
     token.line = lexer->line;
     token.column = lexer->column;
 
-    printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
+    if(token.length > 1) {
+        printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
            token.length, token.start, token.type, token.line, token.column);
-
+    }
     return token;
 }
 // </makeToken>
@@ -287,6 +296,7 @@ Token boolean(Lexer* lexer) {
             }
         }
     }
+    return errorToken(lexer, "Invalid boolean literal.");
 }
 // </boolean>
 

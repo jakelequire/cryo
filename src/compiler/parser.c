@@ -32,6 +32,42 @@ char* strndup(const char* s, size_t n) {
 #endif
 
 
+char* tokenTypeToString(CryoTokenType type) {
+    switch (type) {
+        case TOKEN_INT_LITERAL:
+            return "INT_LITERAL";
+        case TOKEN_STRING_LITERAL:
+            return "STRING_LITERAL";
+        case TOKEN_BOOLEAN_LITERAL:
+            return "BOOLEAN_LITERAL";
+        case TOKEN_IDENTIFIER:
+            return "IDENTIFIER";
+        case TOKEN_OP_PLUS:
+            return "OP_PLUS";
+        case TOKEN_OP_MINUS:
+            return "OP_MINUS";
+        case TOKEN_OP_STAR: 
+            return "OP_STAR";
+        case TOKEN_OP_SLASH:
+            return "OP_SLASH";
+        case TOKEN_KW_CONST:
+            return "KW_CONST";
+        case TOKEN_KW_MUT:
+            return "KW_MUT";
+        case TOKEN_COLON:
+            return "COLON";
+        case TOKEN_ASSIGN:
+            return "ASSIGN";
+        case TOKEN_SEMICOLON:
+            return "SEMICOLON";
+        case TOKEN_EOF:
+            return "EOF";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+
 // Scope-Declared Current Token
 Token currentToken;
 
@@ -59,6 +95,7 @@ void getNextToken(Lexer *lexer) {
 // </getNextToken>
 
 
+
 // Function to consume a token and check its type
 // <consume>
 void consume(Lexer *lexer, CryoTokenType type, const char *message) {
@@ -79,7 +116,7 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             int value = atoi(currentToken.start);
             getNextToken(lexer);
             ASTNode* literalNode = createLiteralExpr(value);
-            printf("[Parser] Created Literal Node: %d\n", value);
+            printf("[Parser] Created IntLiteral Node: %d\n", value);
             return literalNode;
         }
 
@@ -99,6 +136,14 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             return booleanNode;
         }
 
+        case TOKEN_BIN_OP_LITERAL: {
+            printf("[Parser] Found binary operator: %s\n", tokenTypeToString(currentToken.type));
+            CryoTokenType operatorType = currentToken.type;
+            getNextToken(lexer); // Consume operator
+            ASTNode* operand = parsePrimaryExpression(lexer);
+            return createUnaryExpr(operatorType, operand);
+        }
+
         case TOKEN_IDENTIFIER: {
             char* name = strndup(currentToken.start, currentToken.length);
             getNextToken(lexer);
@@ -107,10 +152,11 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             return variableNode;
         }
         default:
-            ASTNode* isExpression = parseExpression(lexer);
-            if (isExpression) {
-                return isExpression;
-            }
+            // ASTNode* isExpression = parseExpression(lexer);
+            // if (isExpression) {
+            //     printf("[Parser] Found expression\n");
+            //     return isExpression;
+            // }
             error("Expected an expression");
             return NULL;
     }
@@ -120,15 +166,18 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
 
 // <parseExpression>
 ASTNode* parseExpression(Lexer* lexer) {
+    printf("[Parser] Parsing expression...\n");
     ASTNode* left = parsePrimaryExpression(lexer);
 
-    while (currentToken.type == TOKEN_OP_PLUS || currentToken.type == TOKEN_OP_MINUS) {
+    while (currentToken.type == TOKEN_OP_PLUS || 
+           currentToken.type == TOKEN_OP_MINUS || 
+           currentToken.type == TOKEN_OP_STAR || 
+           currentToken.type == TOKEN_OP_SLASH) {
         CryoTokenType operatorType = currentToken.type;
+        printf("[Parser] Found operator: %s\n", tokenTypeToString(operatorType));
         getNextToken(lexer); // Consume operator
         ASTNode* right = parsePrimaryExpression(lexer);
-
-        ASTNode* binaryExpr = createBinaryExpr(left, right, operatorType);
-        left = binaryExpr;
+        left = createBinaryExpr(left, right, operatorType); // Update the left node
     }
 
     return left;
@@ -140,7 +189,7 @@ ASTNode* parseExpression(Lexer* lexer) {
 // <parseVarDeclaration>
 ASTNode* parseVarDeclaration(Lexer* lexer) {
     printf("[Parser] Entering parseVarDeclaration\n");
-    getNextToken(lexer); // Consume 'const' or 'var'
+    getNextToken(lexer); // Consume 'const' or 'mut'
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
         error("[Parser] Expected variable name");
@@ -167,6 +216,9 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
     getNextToken(lexer); // Consume '='
 
     ASTNode* initializer = parsePrimaryExpression(lexer);
+    if(initializer == NULL) {
+        error("[Parser] Expected expression after '='");
+    } 
 
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
 

@@ -14,16 +14,38 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef TESTING_H
-#define TESTING_H
+#ifndef CODEGEN_H
+#define CODEGEN_H
+/*------ <includes> ------*/
 #include <stdio.h>
 #include <stdlib.h>
-#include "compiler/ast.h"
-#include "compiler/parser.h"
-#include "compiler/lexer.h"
-#include "compiler/codegen.h"
-#include "compiler/token.h"
+#include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#include <llvm-c/Core.h>
+#include <llvm-c/IRReader.h>
+#include <llvm-c/Analysis.h>
+#include <llvm-c/BitWriter.h>
+#include <llvm-c/ExecutionEngine.h>
+#include <llvm-c/Target.h>
+#include <llvm-c/Error.h>
+#include <llvm-c/TargetMachine.h>
+#include <llvm-c/Transforms/PassBuilder.h>
 
 
 
-#endif
+#include "ast.h"
+#include "token.h"
+#include "lexer.h"
+/*---<custom_includes>---*/
+void initializeLLVM();
+void finalizeLLVM();
+LLVMValueRef generateCode(ASTNode* node);
+void handleLLVMError(LLVMErrorRef error);
+// Debugging Functions
+int codegen(int argc, char* argv[]);
+void checkLLVMError(const char* errorMessage);
+#endif // CODEGEN_H
