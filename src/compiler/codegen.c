@@ -139,7 +139,7 @@ LLVMValueRef generateCode(ASTNode* node) {
             printf("[CodeGen] Generating code for binary expression\n");
             LLVMValueRef left = generateCode(node->data.bin_op.left);
             LLVMValueRef right = generateCode(node->data.bin_op.right);
-            switch (node->data.bin_op.operator) {
+            switch (node->data.bin_op.op) {
                 case '+':
                     return LLVMBuildAdd(builder, left, right, "addtmp");
                 case '-':
@@ -199,7 +199,7 @@ int codegen(int argc, char* argv[]) {
     ASTNode* add = createASTNode(NODE_BINARY_EXPR);
     add->data.bin_op.left = left;
     add->data.bin_op.right = right;
-    add->data.bin_op.operator = '+';
+    add->data.bin_op.op = '+';
 
     LLVMValueRef result = generateCode(add);
     if (result) {

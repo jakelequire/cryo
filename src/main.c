@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 
     if (programNode) {
         printf("[Main] Generating IR code...\n");
-        generateCode(programNode);
+        cppFunction(programNode);
         printf("[Main] IR code generated, freeing AST.\n");
         freeAST(programNode);
     }
@@ -59,7 +59,3 @@ int main(int argc, char* argv[]) {
     free(source);
     return 0;
 }
-
-
-
-

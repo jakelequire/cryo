@@ -143,7 +143,7 @@ bool analyzeBinaryExpression(ASTNode* node) {
 
 // <analyzeUnaryExpression>
 bool analyzeUnaryExpression(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing unary expression with operator: %d\n", node->data.unary_op.operator);
+    printf("{Semantics} [DEBUG] Analyzing unary expression with operator: %d\n", node->data.unary_op.op);
     // Check operand type
     if (!analyzeNode(node->data.unary_op.operand)) {
         printf("{Semantics} [ERROR] Invalid operand in unary expression\n");

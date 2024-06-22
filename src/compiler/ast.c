@@ -49,7 +49,7 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_BINARY_EXPR:
-            printf("Binary Expression: %d\n", node->data.bin_op.operator);
+            printf("Binary Expression: %d\n", node->data.bin_op.op);
             printAST(node->data.bin_op.left, indent + 1);
             printAST(node->data.bin_op.right, indent + 1);
             break;
@@ -192,7 +192,7 @@ ASTNode* createASTNode(CryoNodeType type) {
         case NODE_BINARY_EXPR:
             node->data.bin_op.left = NULL;
             node->data.bin_op.right = NULL;
-            node->data.bin_op.operator = 0;
+            node->data.bin_op.op = 0;
             break;
 
         // Initialize other node types...
@@ -247,7 +247,7 @@ ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator)
     node->type = NODE_BINARY_EXPR; // Ensure the correct node type is set
     node->data.bin_op.left = left;
     node->data.bin_op.right = right;
-    node->data.bin_op.operator = operator;
+    node->data.bin_op.op = operator;
     printf("Created Binary Expression Node: left=%p, right=%p, operator=%d\n", left, right, operator);
     return node;
 }
@@ -261,7 +261,7 @@ ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand) {
     if (!node) {
         return NULL;
     }
-    node->data.unary_op.operator = operator;
+    node->data.unary_op.op = operator;
     node->data.unary_op.operand = operand;
     return node;
 }

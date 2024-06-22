@@ -24,6 +24,11 @@
 #include "compiler/token.h"
 #include "compiler/lexer.h"
 /*---------<end>---------*/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*-------<structure_defs>-------*/
 typedef struct ASTNode {
     CryoNodeType type;
@@ -74,12 +79,12 @@ typedef struct ASTNode {
         struct bin_op {
             struct ASTNode* left;
             struct ASTNode* right;
-            CryoTokenType operator;
+            CryoTokenType op;
             char* operatorText;
         } bin_op;
 
         struct unary_op {
-            CryoTokenType operator;
+            CryoTokenType op;
             struct ASTNode* operand;
         } unary_op; // For unary operators, e.g (-5, !true, etc.)
 
@@ -135,8 +140,8 @@ ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
 ASTNode* createBooleanLiteralExpr(int value);
 ASTNode* createStringLiteralExpr(const char* str);
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator);
-ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand);
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType op);
+ASTNode* createUnaryExpr(CryoTokenType op, ASTNode* operand);
 ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body);
 ASTNode* createReturnStatement(ASTNode* return_val);
 ASTNode* createBlock();
@@ -152,6 +157,8 @@ void addFunctionToProgram(ASTNode* program, ASTNode* function);
 /*-----<end_prototypes>-----*/
 
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif // AST_H

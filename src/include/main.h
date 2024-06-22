@@ -24,6 +24,7 @@
 #include "ast.h"
 #include "semantics.h"
 #include "codegen.h"
+#include "cpp/cppmain.h"
 // #include "ir.h"
 // #include "codegen.h"
 #include "utils/logger.h"

@@ -17,6 +17,10 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     // Special tokens
     TOKEN_UNKNOWN = -1,         // Unknown token        // -1
@@ -212,5 +216,9 @@ typedef enum CryoNodeType {
     NODE_UNKNOWN,                   // 21
 } CryoNodeType;
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // TOKEN_H
