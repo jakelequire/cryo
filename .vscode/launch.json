@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Programming/apps/cyro/src/lexer",
-      "program": "c:/Programming/apps/cyro/src/lexer/build/Debug/outDebug",
+      "cwd": "c:/Programming/apps/cryo",
+      "program": "c:/Programming/apps/cryo/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

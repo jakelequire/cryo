@@ -2,8 +2,10 @@
 #include "cpp/cppmain.h"
 #include <iostream>
 
-int cppFunction(ASTNode* node) {
-    std::cout << "Processing ASTNode of type: " << node->type << " on line: " << node->line << std::endl;
+int generateCodeWrapper(ASTNode* node) {
+    std::cout << "[CPP] Starting Code Generation..." << std::endl;
+
+    codegen(node);
 
     return 1;
 }

@@ -3,12 +3,13 @@
 
 #include "compiler/token.h"
 #include "compiler/ast.h"
+#include "cpp/codegen.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int cppFunction(ASTNode* node);
+int generateCodeWrapper(ASTNode* node);
 
 #ifdef __cplusplus
 }

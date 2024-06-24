@@ -191,7 +191,10 @@
     "variant": "cpp",
     "*.def": "c",
     "passbuilder.h": "c",
-    "initialization.h": "c"
+    "initialization.h": "c",
+    "irbuilder.h": "c",
+    "cppmain.h": "c",
+    "logger.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true
 }

@@ -18,7 +18,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "include/main.h"
+#include "main.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void generateCodeWrapper(ASTNode* node);
+
+#ifdef __cplusplus
+}
+#endif
 
 
 int main(int argc, char* argv[]) {
@@ -49,7 +59,7 @@ int main(int argc, char* argv[]) {
 
     if (programNode) {
         printf("[Main] Generating IR code...\n");
-        cppFunction(programNode);
+        generateCodeWrapper(programNode); // <- The C++ wrapper function
         printf("[Main] IR code generated, freeing AST.\n");
         freeAST(programNode);
     }

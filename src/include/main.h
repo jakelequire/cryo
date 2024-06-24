@@ -23,28 +23,19 @@
 #include "parser.h"
 #include "ast.h"
 #include "semantics.h"
-#include "codegen.h"
-#include "cpp/cppmain.h"
-// #include "ir.h"
-// #include "codegen.h"
 #include "utils/logger.h"
 
+// C++ headers
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// #include <llvm-c/Core.h>
-// #include <llvm-c/Analysis.h>
-// #include <llvm-c/ExecutionEngine.h>
-// #include <llvm-c/Target.h>
-// #include <llvm-c/TargetMachine.h>
+void generateCodeWrapper(ASTNode* node);
 
 #ifdef __cplusplus
 }
 #endif
 
-//char* readFile(const char* path);
 int main(int argc, char* argv[]);
-
 
 #endif // MAIN_H

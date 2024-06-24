@@ -31,7 +31,7 @@ extern "C" {
 
 /*-------<structure_defs>-------*/
 typedef struct ASTNode {
-    CryoNodeType type;
+    enum CryoNodeType type;
     int line;  // Line number for error reporting
     struct ASTNode* firstChild;  // First child node (for linked list structure)
     struct ASTNode* nextSibling; // Next sibling node (for linked list structure)

@@ -35,6 +35,7 @@ files_to_delete = [
     "./src/bin/.o/*.ilk",
     "./src/bin/.o/*.pdb",
     "./src/bin/.o/*.o",
+    "./src/bin/.o/*.d",
     "./src/bin/debug/*.exe",
     "./src/bin/debug/*.ilk",
     "./src/bin/debug/*.pdb",

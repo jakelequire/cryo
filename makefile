@@ -1,9 +1,19 @@
 # Compiler and Flags
-CC = clang -g -v -D_CRT_SECURE_NO_WARNINGS
-CXX = clang++ -D_CRT_SECURE_NO_WARNINGS
-CFLAGS = -I"C:/Program Files (x86)/LLVM/include" -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
-LDFLAGS = -L"C:/Program Files (x86)/LLVM/lib" -lLLVM-C
-LLVM_LIBS = 
+CC = clang -g -v -D_CRT_SECURE_NO_WARNINGS -MD
+CXX = clang++ -std=c++17 -g -v -D_CRT_SECURE_NO_WARNINGS -MD
+CFLAGS = -I"C:/Program Files (x86)/LLVM/include" \
+        -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+
+# LLVM Libraries
+LLVM_LIBS := -lLLVMCore -lLLVMIRReader -lLLVMPasses -lLLVMScalarOpts -lLLVMTransformUtils -lLLVMAnalysis -lLLVMObject \
+             -lLLVMBitReader -lLLVMBitWriter -lLLVMExecutionEngine -lLLVMTarget -lLLVMAsmPrinter -lLLVMMC -lLLVMSupport \
+             -lLLVMRemarks -lLLVMDebugInfoDWARF -lLLVMDebugInfoPDB -lLLVMDebugInfoMSF -lLLVMDebugInfoCodeView -lLLVMProfileData \
+             -lLLVMOption -lLLVMMCParser -lLLVMTargetParser -lLLVMLineEditor
+
+# Standard C++ Libraries for Windows
+STDLIBS := -lmsvcrt -lvcruntime -lucrt -lmsvcprt
+
+LDFLAGS = -L"C:/Program Files (x86)/LLVM/lib" $(LLVM_LIBS) $(STDLIBS) -v
 
 
 # Define paths
@@ -21,7 +31,6 @@ TESTS_DIR = $(SRC_DIR)tests/
 # CPP files
 CPP_DIR = $(SRC_DIR)cpp/
 
-
 # Source files
 COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)parser.c
 UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
@@ -30,8 +39,7 @@ MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
-CPPSRC = $(CPP_DIR)cppmain.cpp
-
+CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)src/codegen.cpp
 
 # Object files
 COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o
@@ -42,7 +50,7 @@ RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
-CPPOBJ = $(OBJ_DIR)cppmain.o
+CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o
 
 # Binaries
 MAIN_BIN = $(BIN_DIR)main.exe
@@ -55,6 +63,10 @@ all: $(MAIN_BIN) $(CLI_BIN_EXE) $(RUNTIME_BIN)
 # Ensure the object directory exists
 $(OBJ_DIR):
 	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+
+# Ensure the bin directory exists
+$(BIN_DIR):
+	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
 
 # Compilation rules
 $(OBJ_DIR)%.o: $(COMPILER_DIR)%.c | $(OBJ_DIR)
@@ -81,9 +93,6 @@ $(OBJ_DIR)compiler.o: $(CLI_DIR)compiler.c | $(OBJ_DIR)
 $(OBJ_DIR)build.o: $(CLI_COMMANDS_DIR)build.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)init.o: $(CLI_COMMANDS_DIR)init.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
 $(OBJ_DIR)main.o: $(SRC_DIR)main.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -91,25 +100,24 @@ $(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # CPP Compilation rules
+$(OBJ_DIR)codegen.o: $(CPP_DIR)src/codegen.cpp | $(OBJ_DIR)
+	$(CXX) $(CFLAGS) -c $< -o $@
+
 $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 # Linking binaries
-$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ)
-	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
-	$(CC) -o $@ $^ $(LDFLAGS) $(LLVM_LIBS)
+$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) | $(BIN_DIR)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(CLI_BIN_EXE): $(CLI_OBJ) $(UTILS_OBJ)
-	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
-	$(CC) -o $@ $^ $(LDFLAGS)
+$(CLI_BIN_EXE): $(CLI_OBJ) $(UTILS_OBJ) | $(BIN_DIR)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(RUNTIME_BIN): $(RUNTIME_OBJ) $(UTILS_OBJ) $(COMPILER_OBJ)
-	@if not exist $(DEBUG_BIN_DIR) mkdir $(BIN_DIR)
-	$(CC) -o $@ $^ $(LDFLAGS)
+$(RUNTIME_BIN): $(RUNTIME_OBJ) $(UTILS_OBJ) $(COMPILER_OBJ) | $(BIN_DIR)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) 
-	@if not exist $(DEBUG_BIN_DIR) mkdir $(DEBUG_BIN_DIR)
-	$(CC) -o $@ $^ $(LDFLAGS)
+$(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_BIN_DIR)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Running executables
 runmain: $(MAIN_BIN)
