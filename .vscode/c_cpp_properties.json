@@ -51,10 +51,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/include/**",
-                "C:/Program Files (x86)/LLVM/include/**",
-                "C:/Program Files (x86)/LLVM/include/llvm/**",
-                "C:/Program Files (x86)/LLVM/lib/**",
-                "C:/Program Files (x86)/LLVM/lib/clang/**"
+                "C:/msys64/mingw64/include/**",
+                "C:/msys64/mingw64/lib/**",
             ],
             "defines": [
                 "_DEBUG",
@@ -62,7 +60,7 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.22621.0",
-            "compilerPath": "C:/Program Files (x86)/LLVM/bin/clang.exe",
+            "compilerPath": "C:/msys64/mingw64/bin/clang.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-clang-x86"

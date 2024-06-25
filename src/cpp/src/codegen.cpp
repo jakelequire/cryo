@@ -7,12 +7,15 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
         case CryoNodeType::NODE_FUNCTION_DECLARATION:
             generateFunction(node, builder, module);
             break;
+        case CryoNodeType::NODE_VAR_DECLARATION:
+            std::cout << "Generating code for variable declaration\n";
         // Add cases for other node types as needed
         default:
             std::cerr << "Unknown AST node type\n";
             break;
     }
 }
+
 
 void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     llvm::FunctionType* funcType = llvm::FunctionType::get(builder.getVoidTy(), false);

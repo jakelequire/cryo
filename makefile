@@ -1,20 +1,18 @@
 # Compiler and Flags
-CC = clang -g -v -D_CRT_SECURE_NO_WARNINGS -MD
-CXX = clang++ -std=c++17 -g -v -D_CRT_SECURE_NO_WARNINGS -MD
-CFLAGS = -I"C:/Program Files (x86)/LLVM/include" \
-        -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+CC = clang -g -v -D_CRT_SECURE_NO_WARNINGS 
+CXX = clang++ -std=c++17 -g -v -D_CRT_SECURE_NO_WARNINGS 
+CFLAGS = -I"C:/msys64/mingw64/include" \
+         -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+CXXFLAGS = -I"C:/msys64/mingw64/include" \
+           -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
 
 # LLVM Libraries
-LLVM_LIBS := -lLLVMCore -lLLVMIRReader -lLLVMPasses -lLLVMScalarOpts -lLLVMTransformUtils -lLLVMAnalysis -lLLVMObject \
-             -lLLVMBitReader -lLLVMBitWriter -lLLVMExecutionEngine -lLLVMTarget -lLLVMAsmPrinter -lLLVMMC -lLLVMSupport \
-             -lLLVMRemarks -lLLVMDebugInfoDWARF -lLLVMDebugInfoPDB -lLLVMDebugInfoMSF -lLLVMDebugInfoCodeView -lLLVMProfileData \
-             -lLLVMOption -lLLVMMCParser -lLLVMTargetParser -lLLVMLineEditor
+LLVM_LIBS := -lLLVM-18
 
 # Standard C++ Libraries for Windows
-STDLIBS := -lmsvcrt -lvcruntime -lucrt -lmsvcprt
+STDLIBS := -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32
 
-LDFLAGS = -L"C:/Program Files (x86)/LLVM/lib" $(LLVM_LIBS) $(STDLIBS) -v
-
+LDFLAGS = -L"C:/msys64/mingw64/lib" $(LLVM_LIBS) $(STDLIBS) -v
 
 # Define paths
 BIN_DIR = ./src/bin/
@@ -84,6 +82,9 @@ $(OBJ_DIR)cli.o: $(CLI_DIR)cli.c | $(OBJ_DIR)
 $(OBJ_DIR)commands.o: $(CLI_DIR)commands.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)init.o: $(CLI_COMMANDS_DIR)init.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 $(OBJ_DIR)runtime_cmd.o: $(CLI_COMMANDS_DIR)runtime_cmd.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -101,10 +102,10 @@ $(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)
 
 # CPP Compilation rules
 $(OBJ_DIR)codegen.o: $(CPP_DIR)src/codegen.cpp | $(OBJ_DIR)
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Linking binaries
 $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) | $(BIN_DIR)

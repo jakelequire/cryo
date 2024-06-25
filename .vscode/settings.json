@@ -194,7 +194,8 @@
     "initialization.h": "c",
     "irbuilder.h": "c",
     "cppmain.h": "c",
-    "logger.h": "c"
+    "logger.h": "c",
+    "diagnostichandler.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true
 }
