@@ -15,7 +15,10 @@ extern "C" {
 
 
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+
 void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+
 void codegen(ASTNode* root);
 
 
