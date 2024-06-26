@@ -29,9 +29,12 @@ void codegen(ASTNode* root) {
 }
 
 
+
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     if (!node) return;
-    std::cout << "[CPP] Generating code for node: " << logNode(node) << std::endl;
+    std::cout << "[CPP] Generating code for node: " << std::endl;
+    logNode(node);
+    
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
             std::cout << "[CPP] Starting code generation for program...\n" << std::endl;
@@ -65,6 +68,7 @@ void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
     }
 }
 
+
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for statement\n";
     switch (node->type) {
@@ -82,19 +86,11 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
     }
 }
 
+
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for variable declaration\n";
     llvm::Type* int32Type = llvm::Type::getInt32Ty(module.getContext());
     llvm::Constant* initializer = llvm::ConstantInt::get(int32Type, node->data.varDecl.initializer->data.literalExpression.value);
-    llvm::AllocaInst* alloca = builder.CreateAlloca(int32Type, nullptr, node->data.varDecl.name);
-    std::cout << "[CPP] Variable allocated in memory & initilized\n" << std::endl;
-    if (!initializer) {
-        std::cerr << "[CPP] Error generating variable initializer\n";
-        return;
-    }
-
-    builder.CreateStore(initializer, alloca);
-    std::cout << "[CPP] Variable stored in memory\n" << std::endl;
 
     // Register the variable in the module's global scope
     llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
@@ -102,13 +98,11 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
         int32Type,
         false,
         llvm::GlobalValue::ExternalLinkage,
-        nullptr,
+        initializer,
         node->data.varDecl.name
     );
+
     std::cout << "[CPP] Variable registered in module's global scope\n" << std::endl;
-
-    gVar->setInitializer(initializer);
-
     std::cout << "[CPP] Variable " << node->data.varDecl.name << " declared with initializer " << node->data.varDecl.initializer->data.literalExpression.value << std::endl;
 }
 

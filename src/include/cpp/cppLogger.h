@@ -7,7 +7,7 @@
 #include "compiler/ast.h"
 
 
-const char* logNode(ASTNode* node);
+void logNode(ASTNode* node);
 
 
 
