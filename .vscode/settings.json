@@ -195,7 +195,14 @@
     "irbuilder.h": "c",
     "cppmain.h": "c",
     "logger.h": "c",
-    "diagnostichandler.h": "c"
+    "diagnostichandler.h": "c",
+    "*.tcc": "cpp",
+    "cstdarg": "cpp",
+    "cwctype": "cpp",
+    "memory_resource": "cpp",
+    "string_view": "cpp",
+    "numbers": "cpp",
+    "semaphore": "cpp"
   },
   "cmake.ignoreCMakeListsMissing": true
 }

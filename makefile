@@ -37,7 +37,7 @@ MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
-CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)src/codegen.cpp
+CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)src/codegen.cpp $(CPP_DIR)src/cppLogger.cpp
 
 # Object files
 COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o
@@ -48,7 +48,7 @@ RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
-CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o
+CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppLogger.o
 
 # Binaries
 MAIN_BIN = $(BIN_DIR)main.exe
@@ -101,10 +101,13 @@ $(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # CPP Compilation rules
+$(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 $(OBJ_DIR)codegen.o: $(CPP_DIR)src/codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
+$(OBJ_DIR)cppLogger.o: $(CPP_DIR)src/cppLogger.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Linking binaries

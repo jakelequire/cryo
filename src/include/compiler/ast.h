@@ -76,6 +76,10 @@ typedef struct ASTNode {
             struct ASTNode* expr;
         } expr;
 
+        struct literalExpression {
+            int value;
+        } literalExpression;
+
         struct bin_op {
             struct ASTNode* left;
             struct ASTNode* right;
