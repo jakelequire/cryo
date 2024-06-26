@@ -31,10 +31,14 @@ void codegen(ASTNode* root) {
 
 
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    if (!node) return;
+    std::cout << "[CPP] Generating code for AST node\n" << std::endl;
+    if (!node) {
+        std::cerr << "[CPP] Error generating code: AST node is null\n";
+        return;
+    };
     std::cout << "[CPP] Generating code for node: " << std::endl;
     logNode(node);
-    
+
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
             std::cout << "[CPP] Starting code generation for program...\n" << std::endl;
@@ -61,9 +65,16 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
 
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for program\n";
-    ASTNode* stmt = node->firstChild;
+    ASTNode* stmt = *node->data.program.statements;
+    if(!stmt) {
+        std::cerr << "[CPP] Error generating code for program: No statements found\n";
+        return;
+    }
+    std::cout << "[CPP] Generating code for program statements\n";
     while (stmt) {
+        std::cout << "[CPP] Starting process for generating code...\n";
         generateCode(stmt, builder, module);
+        std::cout << "[CPP] Moving to next statement\n" << std::endl;
         stmt = stmt->nextSibling;
     }
 }
@@ -105,7 +116,6 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     std::cout << "[CPP] Variable registered in module's global scope\n" << std::endl;
     std::cout << "[CPP] Variable " << node->data.varDecl.name << " declared with initializer " << node->data.varDecl.initializer->data.literalExpression.value << std::endl;
 }
-
 
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for expression\n";
