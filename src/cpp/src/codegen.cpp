@@ -1,5 +1,10 @@
 #include "cpp/codegen.h"
 
+/*
+To compile the generated LLVM IR code to an object file, run the following commands:
+llvm-as ./output.ll -o ./output.bc
+llc -filetype=obj ./output.bc -o ./output.o
+*/
 
 
 void codegen(ASTNode* root) {
