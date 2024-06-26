@@ -216,6 +216,15 @@ typedef enum CryoNodeType {
     NODE_UNKNOWN,                   // 21
 } CryoNodeType;
 
+typedef enum CryoDataType {
+    DATA_TYPE_INT,       // 0
+    DATA_TYPE_FLOAT,     // 1
+    DATA_TYPE_STRING,    // 2
+    DATA_TYPE_BOOLEAN,   // 3
+    DATA_TYPE_VOID,      // 4
+    DATA_TYPE_NULL,      // 5
+    DATA_TYPE_UNKNOWN,   // 6
+} CryoDataType;
 
 #ifdef __cplusplus
 }

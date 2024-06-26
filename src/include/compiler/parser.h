@@ -46,6 +46,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message);
 int getOperatorPrecedence(CryoTokenType type);
 void addStatementToProgram(ASTNode* program, ASTNode* statement);
 char* tokenTypeToString(CryoTokenType type);
+CryoDataType getCryoDataType(const char* typeStr);
 // AST Nodes
 ASTNode* createProgramNode(void);
 ASTNode* parsePrimaryExpression(Lexer* lexer);

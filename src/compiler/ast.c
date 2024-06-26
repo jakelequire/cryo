@@ -211,10 +211,25 @@ ASTNode* createLiteralExpr(int value) {
     if (!node) {
         return NULL;
     }
-    node->data.value = value;
+    node->data.literalExpression.dataType = DATA_TYPE_INT;
+    node->data.literalExpression.intValue = value;
     return node;
 }
 // </createLiteralExpr>
+
+
+// <createStringLiteralExpr>
+ASTNode* createStringLiteralExpr(const char* str) {
+    ASTNode* node = createASTNode(NODE_LITERAL_EXPR);
+    if (!node) {
+        return NULL;
+    }
+    node->type = NODE_LITERAL_EXPR;
+    node->data.literalExpression.dataType = DATA_TYPE_STRING;
+    node->data.literalExpression.stringValue = strdup(str);
+    return node;
+}
+// </createStringLiteralExpr
 
 
 // <createVariableExpr>
@@ -227,18 +242,6 @@ ASTNode* createVariableExpr(const char* name) {
     return node;
 }
 // </createVariableExpr>
-
-
-// <createStringLiteralExpr>
-ASTNode* createStringLiteralExpr(const char* str) {
-    ASTNode* node = createASTNode(NODE_STRING_LITERAL);
-    if (!node) {
-        return NULL;
-    }
-    node->data.str.str = strdup(str);
-    return node;
-}
-// </createStringLiteralExpr
 
 
 // <createBinaryExpr>
@@ -350,7 +353,7 @@ ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* i
 
 
 // <createVarDeclarationNode>
-ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer, int line) {
+ASTNode* createVarDeclarationNode(const char* var_name, CryoDataType dataType, ASTNode* initializer, int line) {
     ASTNode* node = (ASTNode*)calloc(1, sizeof(ASTNode));  // Use calloc to initialize memory
     if (!node) {
         fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for variable declaration node\n");
@@ -363,8 +366,8 @@ ASTNode* createVarDeclarationNode(const char* var_name, ASTNode* initializer, in
     node->nextSibling = NULL;
 
     node->data.varDecl.name = strdup(var_name);
+    node->data.varDecl.dataType = dataType;  // Set the data type
     node->data.varDecl.initializer = initializer;
-    node->data.varDecl.type = NULL; // Initialize type as NULL
 
     return node;
 }

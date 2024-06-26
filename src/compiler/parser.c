@@ -108,6 +108,26 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message) {
 // </consume>
 
 
+// Helper function to map type strings to CryoDataType
+CryoDataType getCryoDataType(const char* typeStr) {
+    if (strcmp(typeStr, "int") == 0) {
+        return DATA_TYPE_INT;
+    } else if (strcmp(typeStr, "float") == 0) {
+        return DATA_TYPE_FLOAT;
+    } else if (strcmp(typeStr, "string") == 0) {
+        return DATA_TYPE_STRING;
+    } else if (strcmp(typeStr, "bool") == 0) {
+        return DATA_TYPE_BOOLEAN;
+    } else if (strcmp(typeStr, "void") == 0) {
+        return DATA_TYPE_VOID;
+    } else if (strcmp(typeStr, "null") == 0) {
+        return DATA_TYPE_NULL;
+    } else {
+        return DATA_TYPE_UNKNOWN;
+    }
+}
+
+
 // Function to parse a primary expression
 // <parsePrimaryExpression>
 ASTNode* parsePrimaryExpression(Lexer* lexer) {
@@ -123,7 +143,7 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
         case TOKEN_STRING_LITERAL: {
             char* value = strndup(currentToken.start + 1, currentToken.length - 2); // Remove quotes
             getNextToken(lexer);
-            ASTNode* stringNode = createStringExpr(value);
+            ASTNode* stringNode = createStringLiteralExpr(value);
             printf("[Parser] Created String Node: %s\n", value);
             return stringNode;
         }
@@ -198,6 +218,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
     getNextToken(lexer); // Consume variable name
 
     char* varType = NULL;
+    CryoDataType dataType = DATA_TYPE_UNKNOWN;
 
     if (currentToken.type == TOKEN_COLON) {
         getNextToken(lexer); // Consume ':'
@@ -205,6 +226,8 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
             error("[Parser] Expected type name");
         }
         varType = strndup(currentToken.start, currentToken.length);
+        dataType = getCryoDataType(varType); // Convert type string to CryoDataType
+        free(varType); // Free the type string as we don't need it anymore
         getNextToken(lexer); // Consume type name
     } else {
         error("[Parser] Expected ':' after variable name");
@@ -223,8 +246,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
 
     // Create and return the variable declaration node
-    ASTNode* varDeclNode = createVarDeclarationNode(varName, initializer, currentToken.line);
-    varDeclNode->data.varDecl.type = (ASTNode*)varType; // Set the type
+    ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, currentToken.line);
     printf("[Parser] Created Variable Declaration Node: %s\n", varName);
     printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->type);
     return varDeclNode;

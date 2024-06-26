@@ -1,3 +1,19 @@
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
 #include "cpp/codegen.h"
 
 /*
@@ -105,33 +121,82 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
 
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for variable declaration\n";
-    llvm::Type* int32Type = llvm::Type::getInt32Ty(module.getContext());
-    llvm::Constant* initializer = llvm::ConstantInt::get(int32Type, node->data.varDecl.initializer->data.literalExpression.value);
 
-    // Register the variable in the module's global scope
+    llvm::Type* varType = nullptr;
+    llvm::Constant* initializer = nullptr;
+
+    switch (node->data.varDecl.dataType) {
+        case DATA_TYPE_INT:
+            std::cout << "[CPP] Variable type: int\n";
+            varType = llvm::Type::getInt32Ty(module.getContext());
+            initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.intValue);
+            break;
+        case DATA_TYPE_STRING: {
+            std::cout << "[CPP] Variable type: string\n";
+            varType = createStringType(module.getContext(), builder);
+            std::cout << "[CPP] String type created\n";
+
+            llvm::Value* buffer = builder.CreateGlobalStringPtr(node->data.varDecl.initializer->data.literalExpression.stringValue, "str");
+            std::cout << "[CPP] String buffer created\n";
+
+            llvm::Constant* length = llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), strlen(node->data.varDecl.initializer->data.literalExpression.stringValue));
+            std::cout << "[CPP] String length created\n";
+
+            llvm::Constant* maxlen = length;
+            std::cout << "[CPP] String maxlen created\n";
+
+            llvm::Constant* factor = llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), 16); // Example factor
+            std::cout << "[CPP] String factor created\n";
+
+            std::vector<llvm::Constant*> structElements = {
+                llvm::dyn_cast<llvm::Constant>(buffer),
+                length,
+                maxlen,
+                factor
+            };
+            initializer = llvm::ConstantStruct::get(static_cast<llvm::StructType*>(varType), structElements);
+            break;
+        }
+        default:
+            std::cerr << "[CPP] Unknown variable type\n";
+            return;
+    }
+
     llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
         module,
-        int32Type,
+        varType,
         false,
         llvm::GlobalValue::ExternalLinkage,
         initializer,
         node->data.varDecl.name
     );
 
-    std::cout << "[CPP] Variable registered in module's global scope\n" << std::endl;
-    std::cout << "[CPP] Variable " << node->data.varDecl.name << " declared with initializer " << node->data.varDecl.initializer->data.literalExpression.value << std::endl;
+    std::cout << "[CPP] Variable registered in module's global scope\n";
+    std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
+    std::cout << "[CPP] Variable type: " << varType << "\n";
+    std::cout << "[CPP] Variable initializer: " << initializer << std::endl;
 }
+
+
+
 
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for expression\n";
     switch (node->type) {
         case CryoNodeType::NODE_LITERAL_EXPR:
             std::cout << "[CPP] Generating code for literal expression\n";
-            return builder.getInt32(node->data.literalExpression.value);
+            switch (node->data.literalExpression.dataType) {
+                case DATA_TYPE_INT:
+                    return llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), node->data.literalExpression.intValue);
+                case DATA_TYPE_STRING:
+                    return builder.CreateGlobalStringPtr(node->data.literalExpression.stringValue);
+                default:
+                    std::cerr << "[CPP] Unknown literal expression type\n";
+                    return nullptr;
+            }
         case CryoNodeType::NODE_BINARY_EXPR:
             std::cout << "[CPP] Generating code for binary operation\n";
             return generateBinaryOperation(node, builder, module);
-        // Add cases for other expression types
         default:
             std::cerr << "[CPP] Unknown expression type\n";
             return nullptr;
@@ -171,3 +236,18 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
     }
 }
 
+llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
+    return llvm::StructType::create(context, "String");
+}
+
+llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder) {
+    llvm::StructType *stringType = createStringStruct(context);
+    std::vector<llvm::Type *> elements = {
+        builder.getInt8Ty(),        // buffer
+        builder.getInt32Ty(),       // length
+        builder.getInt32Ty(),       // maxlen
+        builder.getInt32Ty()        // factor
+    };
+    stringType->setBody(elements);
+    return stringType;
+}
