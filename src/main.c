@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) {
     if (programNode) {
         printf("[Main] Generating IR code...\n");
         generateCodeWrapper(programNode); // <- The C++ wrapper function
+        printf(">===------------- CPP End Code Generation -------------===<\n");
         printf("[Main] IR code generated, freeing AST.\n");
         freeAST(programNode);
     }

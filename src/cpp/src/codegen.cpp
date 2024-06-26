@@ -28,20 +28,25 @@ void codegen(ASTNode* root) {
     }
 }
 
+
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     if (!node) return;
     std::cout << "[CPP] Generating code for node: " << logNode(node) << std::endl;
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
+            std::cout << "[CPP] Starting code generation for program...\n" << std::endl;
             generateProgram(node, builder, module);
             break;
         case CryoNodeType::NODE_STATEMENT:
+            std::cout << "[CPP] Starting code generation for <statement>\n" << std::endl;
             generateStatement(node, builder, module);
             break;
         case CryoNodeType::NODE_EXPRESSION:
+            std::cout << "[CPP] Starting code generation for <expression>\n" << std::endl;
             generateExpression(node, builder, module);
             break;
         case CryoNodeType::NODE_VAR_DECLARATION:
+            std::cout << "[CPP] Starting code generation for <var declaration>\n" << std::endl;
             generateVarDeclaration(node, builder, module);
             break;
         // Add cases for other node types
@@ -64,21 +69,58 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
     std::cout << "[CPP] Generating code for statement\n";
     switch (node->type) {
         case CryoNodeType::NODE_EXPRESSION_STATEMENT:
+            std::cout << "[CPP] Generating code for expression statement!\n" << std::endl;
             generateExpression(node->data.stmt.stmt, builder, module);
             break;
-        // Add cases for other statement types
+        case CryoNodeType::NODE_VAR_DECLARATION:
+            std::cout << "[CPP] Generating code for variable declaration!\n" << std::endl;
+            generateVarDeclaration(node, builder, module);
+            break;
         default:
             std::cerr << "[CPP] Unknown statement type\n";
             break;
     }
 }
 
+void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::cout << "[CPP] Generating code for variable declaration\n";
+    llvm::Type* int32Type = llvm::Type::getInt32Ty(module.getContext());
+    llvm::Constant* initializer = llvm::ConstantInt::get(int32Type, node->data.varDecl.initializer->data.literalExpression.value);
+    llvm::AllocaInst* alloca = builder.CreateAlloca(int32Type, nullptr, node->data.varDecl.name);
+    std::cout << "[CPP] Variable allocated in memory & initilized\n" << std::endl;
+    if (!initializer) {
+        std::cerr << "[CPP] Error generating variable initializer\n";
+        return;
+    }
+
+    builder.CreateStore(initializer, alloca);
+    std::cout << "[CPP] Variable stored in memory\n" << std::endl;
+
+    // Register the variable in the module's global scope
+    llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
+        module,
+        int32Type,
+        false,
+        llvm::GlobalValue::ExternalLinkage,
+        nullptr,
+        node->data.varDecl.name
+    );
+    std::cout << "[CPP] Variable registered in module's global scope\n" << std::endl;
+
+    gVar->setInitializer(initializer);
+
+    std::cout << "[CPP] Variable " << node->data.varDecl.name << " declared with initializer " << node->data.varDecl.initializer->data.literalExpression.value << std::endl;
+}
+
+
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for expression\n";
     switch (node->type) {
         case CryoNodeType::NODE_LITERAL_EXPR:
+            std::cout << "[CPP] Generating code for literal expression\n";
             return builder.getInt32(node->data.literalExpression.value);
         case CryoNodeType::NODE_BINARY_EXPR:
+            std::cout << "[CPP] Generating code for binary operation\n";
             return generateBinaryOperation(node, builder, module);
         // Add cases for other expression types
         default:
@@ -87,19 +129,6 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
     }
 }
 
-void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    std::cout << "[CPP] Generating code for variable declaration\n";
-    llvm::Type* int32Type = llvm::Type::getInt32Ty(module.getContext());
-    llvm::Value* initializer = builder.getInt32(node->data.varDecl.initializer->data.literalExpression.value);
-    llvm::AllocaInst* alloca = builder.CreateAlloca(int32Type, nullptr, node->data.varDecl.name);
-
-    if (!initializer) {
-        std::cerr << "[CPP] Error generating variable initializer\n";
-        return;
-    }
-
-    builder.CreateStore(initializer, alloca);
-}
 
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for binary operation\n";
@@ -111,14 +140,20 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
         return nullptr;
     }
 
+    std::cout << "[CPP] Binary operation operands generated\n";
+
     switch (node->data.bin_op.op) {
         case CryoTokenType::TOKEN_PLUS:
+            std::cout << "[CPP] Generating code for binary operation: ADD\n";
             return builder.CreateAdd(left, right);
         case CryoTokenType::TOKEN_MINUS:
+            std::cout << "[CPP] Generating code for binary operation: SUB\n";
             return builder.CreateSub(left, right);
         case CryoTokenType::TOKEN_STAR:
+            std::cout << "[CPP] Generating code for binary operation: MUL\n";
             return builder.CreateMul(left, right);
         case CryoTokenType::TOKEN_SLASH:
+            std::cout << "[CPP] Generating code for binary operation: DIV\n";
             return builder.CreateSDiv(left, right);
         // Add cases for other binary operators
         default:
