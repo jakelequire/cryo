@@ -26,6 +26,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/Type.h"
 #include "llvm/Support/FileSystem.h"
 #include <llvm/Support/raw_ostream.h>
 
