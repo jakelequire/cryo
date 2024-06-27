@@ -17,123 +17,193 @@
 #include "cpp/cppLogger.h"
 
 
-void logNode(ASTNode* node) {
-    if (!node) return;
+void printIndentation(int level) {
+    for (int i = 0; i < level; ++i) {
+        std::cout << "  ";
+    }
+}
+
+void logNode(ASTNode* node, int indentLevel = 0) {
+    if (!node) {
+        printIndentation(indentLevel);
+        std::cout << "\"Node\": null" << std::endl;
+        return;
+    };
+
+    printIndentation(indentLevel);
+    std::cout << "\"Node\": {" << std::endl;
+    indentLevel++;
+
+    printIndentation(indentLevel);
+    std::cout << "\"Type\": \"" << node->type << "\"," << std::endl;
 
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
-            std::cout   << "\n### Program Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nStatements:\t" << node->data.program.stmtCount
-                        << "\nCapacity:\t" << node->data.program.stmtCapacity
-                        << "\nStatements:\t"
-                        << "\n######################"
-                        << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Program\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Statements\": " << node->data.program.stmtCount << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Capacity\": " << node->data.program.stmtCapacity << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"StatementNodes\": [" << std::endl;
             for (int i = 0; i < node->data.program.stmtCount; ++i) {
-                logNode(node->data.program.statements[i]);
+                logNode(node->data.program.statements[i], indentLevel + 1);
+                if (i < node->data.program.stmtCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
             }
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
-        
+
         case CryoNodeType::NODE_STATEMENT:
-            std::cout   << "\n### Statement Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nStatement:\t"
-                        << "\n######################"
-                        << std::endl;
-            logNode(node->data.stmt.stmt);
+            printIndentation(indentLevel);
+            std::cout << "\"Statement\": {" << std::endl;
+            logNode(node->data.stmt.stmt, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
 
         case CryoNodeType::NODE_EXPRESSION:
-            std::cout   << "\n### Expression Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nExpression:\t"
-                        << "\n######################"
-                        << std::endl;
-            logNode(node->data.expr.expr);
+            printIndentation(indentLevel);
+            std::cout << "\"Expression\": {" << std::endl;
+            logNode(node->data.expr.expr, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
 
         case CryoNodeType::NODE_LITERAL_EXPR:
-            std::cout   << "### Literal Node ###\nType:\t" 
-                        << node->type 
-                        << "\n######################"
-                        << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Literal\": {" << std::endl;
             switch (node->data.literalExpression.dataType) {
                 case DATA_TYPE_INT:
-                    std::cout << "Integer Literal: " << node->data.literalExpression.intValue << std::endl;
+                    printIndentation(indentLevel + 1);
+                    std::cout << "\"Integer\": " << node->data.literalExpression.intValue << std::endl;
                     break;
                 case DATA_TYPE_STRING:
-                    std::cout << "String Literal: " << node->data.literalExpression.stringValue << std::endl;
+                    printIndentation(indentLevel + 1);
+                    std::cout << "\"String\": \"" << node->data.literalExpression.stringValue << "\"" << std::endl;
                     break;
-                // Handle other types
+                case DATA_TYPE_BOOLEAN:
+                    printIndentation(indentLevel + 1);
+                    std::cout << "\"Boolean\": " << (node->data.literalExpression.booleanValue ? "true" : "false") << std::endl;
+                    break;
                 default:
-                    std::cerr << "Unknown data type\n";
+                    printIndentation(indentLevel + 1);
+                    std::cerr << "\"Unknown data type\"" << std::endl;
                     break;
             }
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
-
 
         case CryoNodeType::NODE_FUNCTION_DECLARATION:
-            std::cout   << "\n### Function Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nVisibility:\t" << node->data.functionDecl.visibility
-                        << "\nName:\t" << node->data.functionDecl.name
-                        << "\nParams:\t" << node->data.functionDecl.params
-                        << "\nReturn Type:\t" << node->data.functionDecl.returnType
-                        << "\nBody:\t" << node->data.functionDecl.body
-                        << "\n######################"
-                        << std::endl;
-            logNode(node->data.functionDecl.body);
+            printIndentation(indentLevel);
+            std::cout << "\"Function\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Visibility\": \"" << node->data.functionDecl.visibility << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Name\": \"" << node->data.functionDecl.name << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Params\": " << node->data.functionDecl.params << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"ReturnType\": \"" << node->data.functionDecl.returnType << "\"," << std::endl;
+            logNode(node->data.functionDecl.body, indentLevel + 1);
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
-        
+
         case CryoNodeType::NODE_VAR_DECLARATION:
-            std::cout   << "\n### Variable Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nName:\t" << node->data.varDecl.name
-                        << "\nVar Type:\t" << node->data.varDecl.dataType
-                        << "\nInitializer:\t"
-                        << "\n######################"
-                        << std::endl;
-            logNode(node->data.varDecl.initializer);
+            printIndentation(indentLevel);
+            std::cout << "\"Variable\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Name\": \"" << node->data.varDecl.name << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"VarType\": \"" << node->data.varDecl.dataType << "\"," << std::endl;
+            logNode(node->data.varDecl.initializer, indentLevel + 1);
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
 
         case CryoNodeType::NODE_PARAM_LIST:
-            std::cout   << "\n### Parameter Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nParams:\t" << node->data.paramList.params
-                        << "\nParam Count:\t" << node->data.paramList.paramCount
-                        << "\nParam Capacity:\t" << node->data.paramList.paramCapacity
-                        << "\n######################"
-                        << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Parameters\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Params\": " << node->data.paramList.params << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"ParamCount\": " << node->data.paramList.paramCount << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"ParamCapacity\": " << node->data.paramList.paramCapacity << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
-        
+
         case CryoNodeType::NODE_BLOCK:
-            std::cout   << "\n### Block Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nStatements:\t" << node->data.block.statements
-                        << "\nStmt Count:\t" << node->data.block.stmtCount
-                        << "\nStmt Capacity:\t" << node->data.block.stmtCapacity
-                        << "\n######################"
-                        << std::endl;
-            logNode(*node->data.block.statements);
+            printIndentation(indentLevel);
+            std::cout << "\"Block\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Statements\": " << node->data.block.stmtCount << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"StmtCapacity\": " << node->data.block.stmtCapacity << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"StatementNodes\": [" << std::endl;
+            for (int i = 0; i < node->data.block.stmtCount; ++i) {
+                logNode(node->data.block.statements[i], indentLevel + 1);
+                if (i < node->data.block.stmtCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
 
         case CryoNodeType::NODE_BINARY_EXPR:
-            std::cout   << "\n### Binary Operation Node ###"
-                        << "\nType:\t" << node->type
-                        << "\nLeft:\t" << node->data.bin_op.left
-                        << "\nRight:\t" << node->data.bin_op.right
-                        << "\nOperator:\t" << node->data.bin_op.op
-                        << "\nOperator Text:\t" << node->data.bin_op.operatorText
-                        << "\n######################"
-                        << std::endl;
-            logNode(node->data.bin_op.left);
-            logNode(node->data.bin_op.right);
+            printIndentation(indentLevel);
+            std::cout << "\"BinaryOperation\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Left\": " << node->data.bin_op.left << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Right\": " << node->data.bin_op.right << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Operator\": " << node->data.bin_op.op << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"OperatorText\": \"" << node->data.bin_op.operatorText << "\"" << std::endl;
+            logNode(node->data.bin_op.left, indentLevel + 1);
+            logNode(node->data.bin_op.right, indentLevel + 1);
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
 
         default:
-            std::cerr << "Unknown node type\n";
+            printIndentation(indentLevel);
+            std::cerr << "\"UnknownNodeType\"" << std::endl;
             break;
     }
+
+    indentLevel--;
+    printIndentation(indentLevel);
+    std::cout << "}" << std::endl;
 }
 
 

@@ -7,8 +7,8 @@
 #include "compiler/ast.h"
 
 
-void logNode(ASTNode* node);
-
+void printIndentation(int level);
+void logNode(ASTNode* node, int indentLevel);
 
 
 

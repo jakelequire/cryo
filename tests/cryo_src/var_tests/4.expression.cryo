@@ -1,2 +1,2 @@
 
-const exampleExpression: expression = 34 + 35;
+const exampleExpression: number = 34 - 35;

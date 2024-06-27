@@ -31,25 +31,45 @@ void printAST(ASTNode* node, int indent) {
         printf(" ");
     }
 
+    printf("Node type: %d\n", node->type);
+
     switch (node->type) {
         case NODE_PROGRAM:
-            printf("Program:\n");
+            printf("Program with %d statements (capacity: %d):\n", node->data.program.stmtCount, node->data.program.stmtCapacity);
             for (int i = 0; i < node->data.program.stmtCount; i++) {
                 printAST(node->data.program.statements[i], indent + 1);
             }
             break;
-            
+
         case NODE_VAR_DECLARATION:
             printf("Variable Declaration: %s\n", node->data.varDecl.name);
             printAST(node->data.varDecl.initializer, indent + 1);
             break;
 
         case NODE_LITERAL_EXPR:
-            printf("Literal: %d\n", node->data.value);
+            switch (node->data.literalExpression.dataType) {
+                case DATA_TYPE_INT:
+                    printf("Literal (int): %d\n", node->data.literalExpression.intValue);
+                    break;
+                case DATA_TYPE_STRING:
+                    printf("Literal (string): %s\n", node->data.literalExpression.stringValue);
+                    break;
+                case DATA_TYPE_BOOLEAN:
+                    printf("Literal (boolean): %s\n", node->data.literalExpression.booleanValue ? "true" : "false");
+                    break;
+                default:
+                    printf("Literal (unknown type)\n");
+                    break;
+            }
+            break;
+
+        case NODE_UNARY_EXPR:
+            printf("Unary Expression: %s\n", tokenTypeToString(node->data.unary_op.op));
+            printAST(node->data.unary_op.operand, indent + 1);
             break;
 
         case NODE_BINARY_EXPR:
-            printf("Binary Expression: %d\n", node->data.bin_op.op);
+            printf("Binary Expression: %s\n", tokenTypeToString(node->data.bin_op.op));
             printAST(node->data.bin_op.left, indent + 1);
             printAST(node->data.bin_op.right, indent + 1);
             break;
@@ -60,13 +80,17 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_BOOLEAN_LITERAL:
-            printf("Boolean Literal: %s\n", node->data.value ? "true" : "false");
+            printf("Boolean Literal: %s\n", node->data.boolean.value ? "true" : "false");
             break;
 
         case NODE_STRING_LITERAL:
             printf("String Literal: '%s'\n", node->data.str.str);
             break;
-        // Add more cases for other node types
+
+        case NODE_VAR_NAME:
+            printf("Variable Name: %s\n", node->data.varName.varName);
+            break;
+
         default:
             printf("Unknown node type: %d\n", node->type);
             break;
@@ -123,7 +147,7 @@ void freeAST(ASTNode* node) {
 
         case NODE_LITERAL_EXPR:
             printf("[AST] Freeing Literal Expression Node\n");
-            // No dynamic memory to free
+            printf("[AST] Freeing node: %d\n", node->type);
             break;
 
         case NODE_VAR_DECLARATION:
@@ -140,35 +164,32 @@ void freeAST(ASTNode* node) {
 
         case NODE_BOOLEAN_LITERAL:
             printf("[AST] Freeing Boolean Literal Node\n");
-            // No dynamic memory to free
             break;
 
-        // Free other node types...
         default:
             printf("[AST] Unknown Node Type. <DEFAULTED>\n");
             exit(0);
             break;
     }
-    printf("[AST] Freeing node: %d\n", node->type);
-    // free(node);
+    free(node);
 }
 // </freeAST>
 
 
 // <createASTNode>
 ASTNode* createASTNode(CryoNodeType type) {
-    printf("[AST] Creating node: %d\n", type);
-    ASTNode* node = (ASTNode*)calloc(1, sizeof(ASTNode));  // Use calloc to initialize memory
+    printf("[AST_DEBUG] Creating node: %d\n", type);
+    ASTNode* node = (ASTNode*)calloc(1, sizeof(ASTNode));
     if (!node) {
-        printf("[AST] [ERROR] Failed to allocate memory for AST node\n");
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for AST node\n");
         return NULL;
     }
     node->type = type;
-    node->line = 0; // Initialize line number
+    node->line = 0;
     node->firstChild = NULL;
     node->nextSibling = NULL;
 
-    printf("[AST] Initialized node: %d\n", type);
+    printf("[AST_DEBUG] Initialized node: %d\n", type);
 
     switch (type) {
         case NODE_FUNCTION_DECLARATION:
@@ -189,13 +210,23 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.block.statements = NULL;
             break;
 
+        case NODE_PROGRAM:
+            node->data.program.stmtCount = 0;
+            node->data.program.stmtCapacity = 2;
+            node->data.program.statements = (ASTNode**)calloc(node->data.program.stmtCapacity, sizeof(ASTNode*));
+            if (!node->data.program.statements) {
+                fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program statements\n");
+                free(node);
+                return NULL;
+            }
+            break;
+
         case NODE_BINARY_EXPR:
             node->data.bin_op.left = NULL;
             node->data.bin_op.right = NULL;
             node->data.bin_op.op = 0;
             break;
 
-        // Initialize other node types...
         default:
             break;
     }
@@ -209,6 +240,7 @@ ASTNode* createASTNode(CryoNodeType type) {
 ASTNode* createLiteralExpr(int value) {
     ASTNode* node = createASTNode(NODE_LITERAL_EXPR);
     if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for literal expression node\n");
         return NULL;
     }
     node->data.literalExpression.dataType = DATA_TYPE_INT;
@@ -222,9 +254,9 @@ ASTNode* createLiteralExpr(int value) {
 ASTNode* createStringLiteralExpr(const char* str) {
     ASTNode* node = createASTNode(NODE_LITERAL_EXPR);
     if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for string literal expression node\n");
         return NULL;
     }
-    node->type = NODE_LITERAL_EXPR;
     node->data.literalExpression.dataType = DATA_TYPE_STRING;
     node->data.literalExpression.stringValue = strdup(str);
     return node;
@@ -236,6 +268,7 @@ ASTNode* createStringLiteralExpr(const char* str) {
 ASTNode* createVariableExpr(const char* name) {
     ASTNode* node = createASTNode(NODE_VAR_NAME);
     if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for variable expression node\n");
         return NULL;
     }
     node->data.varName.varName = strdup(name);
@@ -245,13 +278,17 @@ ASTNode* createVariableExpr(const char* name) {
 
 
 // <createBinaryExpr>
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType operator) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = NODE_BINARY_EXPR; // Ensure the correct node type is set
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType op) {
+    ASTNode* node = createASTNode(NODE_BINARY_EXPR);
+    if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for binary expression node\n");
+        return NULL;
+    }
     node->data.bin_op.left = left;
     node->data.bin_op.right = right;
-    node->data.bin_op.op = operator;
-    printf("Created Binary Expression Node: left=%p, right=%p, operator=%d\n", left, right, operator);
+    node->data.bin_op.op = op;
+    node->data.bin_op.operatorText = strdup(tokenTypeToString(op));
+    printf("Created Binary Expression Node: left=%p, right=%p, operator=%d\n", left, right, op);
     return node;
 }
 // </createBinaryExpr>
@@ -394,9 +431,8 @@ ASTNode* createBooleanLiteralExpr(int value) {
         fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for boolean literal node\n");
         return NULL;
     }
-    node->data.boolean.value = value;
-    node->data.boolean.dataType = DATA_TYPE_BOOLEAN;
-    printf("[AST] Boolean Literal Node Created: %s\n", value ? "true" : "false");
+    node->data.literalExpression.dataType = DATA_TYPE_BOOLEAN;
+    node->data.literalExpression.booleanValue = value;
     return node;
 }
 // </createBooleanLiteralExpr>
@@ -431,13 +467,19 @@ ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount) 
 // <addStatementToBlock>
 void addStatementToBlock(ASTNode* block, ASTNode* statement) {
     if (block->type != NODE_BLOCK) {
+        printf("[AST] Error: addStatementToBlock called on non-block node\n");
         return;
     }
     if (block->data.block.stmtCount >= block->data.block.stmtCapacity) {
         block->data.block.stmtCapacity = block->data.block.stmtCapacity == 0 ? 2 : block->data.block.stmtCapacity * 2;
         block->data.block.statements = realloc(block->data.block.statements, block->data.block.stmtCapacity * sizeof(ASTNode*));
+        if (!block->data.block.statements) {
+            fprintf(stderr, "[AST] [ERROR] Failed to reallocate memory for block statements\n");
+            return;
+        }
     }
     block->data.block.statements[block->data.block.stmtCount++] = statement;
+    printf("[AST] Statement added to block. Total statements: %d\n", block->data.block.stmtCount);
 }
 // </addStatementToBlock>
 
@@ -445,12 +487,20 @@ void addStatementToBlock(ASTNode* block, ASTNode* statement) {
 // <addFunctionToProgram>
 void addFunctionToProgram(ASTNode* program, ASTNode* function) {
     if (program->type != NODE_PROGRAM) {
+        printf("[AST] Error: addFunctionToProgram called on non-program node\n");
         return;
     }
+    printf("[AST_DEBUG] Before adding function: stmtCount = %d, stmtCapacity = %d\n", program->data.program.stmtCount, program->data.program.stmtCapacity);
     if (program->data.program.stmtCount >= program->data.program.stmtCapacity) {
-        program->data.program.stmtCapacity = program->data.program.stmtCapacity == 0 ? 2 : program->data.program.stmtCapacity * 2;
-        program->data.program.statements = realloc(program->data.program.statements, program->data.program.stmtCapacity * sizeof(ASTNode*));
+        program->data.program.stmtCapacity *= 2;  // Double the capacity
+        printf("[AST_DEBUG] Increasing stmtCapacity to: %d\n", program->data.program.stmtCapacity);
+        program->data.program.statements = (ASTNode**)realloc(program->data.program.statements, program->data.program.stmtCapacity * sizeof(ASTNode*));
+        if (!program->data.program.statements) {
+            fprintf(stderr, "[AST] [ERROR] Failed to reallocate memory for program statements\n");
+            return;
+        }
     }
     program->data.program.statements[program->data.program.stmtCount++] = function;
+    printf("[AST_DEBUG] After adding function: stmtCount = %d, stmtCapacity = %d\n", program->data.program.stmtCount, program->data.program.stmtCapacity);
 }
 // </addFunctionToProgram>

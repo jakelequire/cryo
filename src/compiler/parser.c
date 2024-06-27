@@ -133,37 +133,30 @@ CryoDataType getCryoDataType(const char* typeStr) {
 ASTNode* parsePrimaryExpression(Lexer* lexer) {
     switch (currentToken.type) {
         case TOKEN_INT_LITERAL: {
-            int value = atoi(currentToken.start);
+            char buffer[32];
+            strncpy(buffer, currentToken.start, currentToken.length);
+            buffer[currentToken.length] = '\0';
+            int value = atoi(buffer);
+            printf("[Parser Debug] Token: %.*s, Parsed Value: %d\n", currentToken.length, currentToken.start, value);
             getNextToken(lexer);
             ASTNode* literalNode = createLiteralExpr(value);
             printf("[Parser] Created IntLiteral Node: %d\n", value);
             return literalNode;
         }
-
         case TOKEN_STRING_LITERAL: {
-            char* value = strndup(currentToken.start + 1, currentToken.length - 2); // Remove quotes
+            char* value = strndup(currentToken.start + 1, currentToken.length - 2);
             getNextToken(lexer);
             ASTNode* stringNode = createStringLiteralExpr(value);
             printf("[Parser] Created String Node: %s\n", value);
             return stringNode;
         }
-
         case TOKEN_BOOLEAN_LITERAL: {
-            int value = currentToken.start[0] == 't' ? 1 : 0;
+            int value = (strncmp(currentToken.start, "true", currentToken.length) == 0) ? 1 : 0;
             getNextToken(lexer);
             ASTNode* booleanNode = createBooleanLiteralExpr(value);
             printf("[Parser] Created Boolean Node: %d\n", value);
             return booleanNode;
         }
-
-        case TOKEN_BIN_OP_LITERAL: {
-            printf("[Parser] Found binary operator: %s\n", tokenTypeToString(currentToken.type));
-            CryoTokenType operatorType = currentToken.type;
-            getNextToken(lexer); // Consume operator
-            ASTNode* operand = parsePrimaryExpression(lexer);
-            return createUnaryExpr(operatorType, operand);
-        }
-
         case TOKEN_IDENTIFIER: {
             char* name = strndup(currentToken.start, currentToken.length);
             getNextToken(lexer);
@@ -190,9 +183,9 @@ ASTNode* parseExpression(Lexer* lexer) {
            currentToken.type == TOKEN_OP_SLASH) {
         CryoTokenType operatorType = currentToken.type;
         printf("[Parser] Found operator: %s\n", tokenTypeToString(operatorType));
-        getNextToken(lexer); // Consume operator
+        getNextToken(lexer);
         ASTNode* right = parsePrimaryExpression(lexer);
-        left = createBinaryExpr(left, right, operatorType); // Update the left node
+        left = createBinaryExpr(left, right, operatorType);
     }
 
     return left;
@@ -204,25 +197,25 @@ ASTNode* parseExpression(Lexer* lexer) {
 // <parseVarDeclaration>
 ASTNode* parseVarDeclaration(Lexer* lexer) {
     printf("[Parser] Entering parseVarDeclaration\n");
-    getNextToken(lexer); // Consume 'const' or 'mut'
+    getNextToken(lexer);
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
         error("[Parser] Expected variable name");
     }
     char* varName = strndup(currentToken.start, currentToken.length);
-    getNextToken(lexer); // Consume variable name
+    getNextToken(lexer);
 
     CryoDataType dataType = DATA_TYPE_UNKNOWN;
 
     if (currentToken.type == TOKEN_COLON) {
-        getNextToken(lexer); // Consume ':'
+        getNextToken(lexer);
         if (currentToken.type != TOKEN_IDENTIFIER) {
             error("[Parser] Expected type name");
         }
         char* varType = strndup(currentToken.start, currentToken.length);
-        dataType = getCryoDataType(varType); // Convert type string to CryoDataType
-        free(varType); // Free the type string as we don't need it anymore
-        getNextToken(lexer); // Consume type name
+        dataType = getCryoDataType(varType);
+        free(varType);
+        getNextToken(lexer);
     } else {
         error("[Parser] Expected ':' after variable name");
     }
@@ -230,16 +223,15 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
     if (currentToken.type != TOKEN_ASSIGN) {
         error("[Parser] Expected '=' after variable name");
     }
-    getNextToken(lexer); // Consume '='
+    getNextToken(lexer);
 
     ASTNode* initializer = parseExpression(lexer);
-    if(initializer == NULL) {
+    if (initializer == NULL) {
         error("[Parser] Expected expression after '='");
     } 
 
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
 
-    // Create and return the variable declaration node
     ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, currentToken.line);
     printf("[Parser] Created Variable Declaration Node: %s\n", varName);
     printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->type);
@@ -262,48 +254,55 @@ ASTNode* parseStatement(Lexer* lexer) {
             printf("[Parser] Reached end of file.\n");
             return NULL;
         default:
-            // Error since this is not a valid statement
             error("Expected statement");
             return NULL;
-            break;
     }
-
 }
 // </parseStatement>
 
 
 // <createProgramNode>
 ASTNode* createProgramNode() {
-    printf("[AST] Creating Program Node....\n");
     ASTNode* node = createASTNode(NODE_PROGRAM);
     if (!node) {
-        printf("[AST] Failed to create program node\n");
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program node\n");
         return NULL;
     }
-    node->data.program.statements = NULL;
     node->data.program.stmtCount = 0;
-    node->data.program.stmtCapacity = 0;
-
-    printf("[AST] Program Node Created\n");
+    node->data.program.stmtCapacity = 2;
+    node->data.program.statements = (ASTNode**)calloc(node->data.program.stmtCapacity, sizeof(ASTNode*));
+    if (!node->data.program.statements) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program statements\n");
+        free(node);
+        return NULL;
+    }
     return node;
 }
 // </createProgramNode>
+
 
 // Function to add a statement to the program node
 // <addStatementToProgram>
 void addStatementToProgram(ASTNode* programNode, ASTNode* statement) {
     if (!programNode || programNode->type != NODE_PROGRAM) {
-        fprintf(stderr, "[AST] Invalid program node\n");
+        fprintf(stderr, "[AST_ERROR] Invalid program node\n");
         return;
     }
 
+    printf("[AST_DEBUG] Before adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
     if (programNode->data.program.stmtCount >= programNode->data.program.stmtCapacity) {
         int newCapacity = programNode->data.program.stmtCapacity == 0 ? 2 : programNode->data.program.stmtCapacity * 2;
+        printf("[AST_DEBUG] Increasing stmtCapacity to: %d\n", newCapacity);
         programNode->data.program.statements = realloc(programNode->data.program.statements, newCapacity * sizeof(ASTNode*));
+        if (!programNode->data.program.statements) {
+            fprintf(stderr, "[AST_ERROR] Failed to reallocate memory for program statements\n");
+            return;
+        }
         programNode->data.program.stmtCapacity = newCapacity;
     }
 
     programNode->data.program.statements[programNode->data.program.stmtCount++] = statement;
+    printf("[AST_DEBUG] After adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
 }
 // </addStatementToProgram>
 
@@ -318,15 +317,6 @@ ASTNode* parseProgram(Lexer* lexer) {
         fprintf(stderr, "[Parser] [ERROR] Failed to create program node\n");
         return NULL;
     }
-
-    programNode->data.program.statements = malloc(sizeof(ASTNode*) * INITIAL_STATEMENT_CAPACITY);
-    if (!programNode->data.program.statements) {
-        fprintf(stderr, "[Parser] [ERROR] Failed to allocate memory for statements\n");
-        free(programNode);
-        return NULL;
-    }
-    programNode->data.program.stmtCount = 0;
-    programNode->data.program.stmtCapacity = INITIAL_STATEMENT_CAPACITY;
 
     getNextToken(lexer);
 

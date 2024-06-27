@@ -37,6 +37,9 @@
 /src/cpp/build/
 /src/cpp/build/*
 
+# Cryo Build Files
+output.ll
+
 # Ignore Specific File Extensions
 *.vsidx
 *.vsix

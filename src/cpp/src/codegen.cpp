@@ -62,7 +62,7 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
         return;
     };
     std::cout << "[CPP] Generating code for node: " << std::endl;
-    logNode(node);
+    logNode(node, 2);
 
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
@@ -93,17 +93,14 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
 // <generateProgram>
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for program\n";
-    ASTNode* stmt = *node->data.program.statements;
-    if(!stmt) {
+    if (node->data.program.stmtCount == 0) {
         std::cerr << "[CPP] Error generating code for program: No statements found\n";
         return;
     }
-    std::cout << "[CPP] Generating code for program statements\n";
-    while (stmt) {
-        std::cout << "[CPP] Starting process for generating code...\n";
-        generateCode(stmt, builder, module);
-        std::cout << "[CPP] Moving to next statement\n" << std::endl;
-        stmt = stmt->nextSibling;
+    for (int i = 0; i < node->data.program.stmtCount; ++i) {
+        std::cout << "[CPP] Generating code for program statement " << i << "\n";
+        generateCode(node->data.program.statements[i], builder, module);
+        std::cout << "[CPP] Moving to next statement\n";
     }
 }
 // </generateProgram>
@@ -182,7 +179,7 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             varType = llvm::Type::getInt1Ty(module.getContext());
             initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.intValue);
             break;
-            
+
         default:
             std::cerr << "[CPP] Unknown variable type\n";
             return;
