@@ -20,13 +20,14 @@ import glob
 from datetime import datetime
 
 files_to_delete = [
+    # Compiled files within root directory
     "./src/*.o",
     "./src/tests/*.o",
     "./src/compiler/*.o",
     "./src/utils/*.o",
     "./src/cli/*.o",
     "./src/cli/commands/*.o",
-    
+    # Compiled files within bin directory
     "./src/bin/*.exe",
     "./src/bin/*.ilk",
     "./src/bin/*.pdb",
@@ -41,6 +42,10 @@ files_to_delete = [
     "./src/bin/debug/*.pdb",
     "./src/bin/debug/*.o",
     "./src/bin/cleaned.txt",
+    # Compiled Cryo files
+    "./*.ll",
+    "./*.bc",
+    "./*.s",
 ]
 
 # Function to delete files

@@ -23,6 +23,7 @@ llc -filetype=obj ./output.bc -o ./output.o
 */
 
 
+// <codegen> 
 void codegen(ASTNode* root) {
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder(context);
@@ -48,9 +49,10 @@ void codegen(ASTNode* root) {
         }
     }
 }
+// </codegen>
 
 
-
+// <generateCode>
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for AST node\n" << std::endl;
     if (!node) {
@@ -83,7 +85,10 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             break;
     }
 }
+// </generateCode>
 
+
+// <generateProgram>
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for program\n";
     ASTNode* stmt = *node->data.program.statements;
@@ -99,8 +104,10 @@ void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
         stmt = stmt->nextSibling;
     }
 }
+// </generateProgram>
 
 
+// <generateStatement>
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for statement\n";
     switch (node->type) {
@@ -117,8 +124,10 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
             break;
     }
 }
+// </generateStatement>
 
 
+// <generateVarDeclaration>
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for variable declaration\n";
 
@@ -133,28 +142,29 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             break;
         case DATA_TYPE_STRING: {
             std::cout << "[CPP] Variable type: string\n";
-            varType = createStringType(module.getContext(), builder);
-            std::cout << "[CPP] String type created\n";
+            
+            // using the createString function to create a string
+            llvm::Value *string = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
+            llvm::Type *varType = string->getType();
+            // Convert to LLVM::Constant
 
-            llvm::Value* buffer = builder.CreateGlobalStringPtr(node->data.varDecl.initializer->data.literalExpression.stringValue, "str");
-            std::cout << "[CPP] String buffer created\n";
+            initializer = llvm::ConstantExpr::getPointerCast((llvm::Constant *)string, varType);
 
-            llvm::Constant* length = llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), strlen(node->data.varDecl.initializer->data.literalExpression.stringValue));
-            std::cout << "[CPP] String length created\n";
+            // Add the string to the module
+            module.getOrInsertGlobal(node->data.varDecl.name, varType);
 
-            llvm::Constant* maxlen = length;
-            std::cout << "[CPP] String maxlen created\n";
+            // Create a global variable
+            llvm::GlobalVariable *gVar = new llvm::GlobalVariable(
+                module,
+                varType,
+                false,
+                llvm::GlobalValue::ExternalLinkage,
+                initializer,
+                node->data.varDecl.name
+            );
 
-            llvm::Constant* factor = llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), 16); // Example factor
-            std::cout << "[CPP] String factor created\n";
-
-            std::vector<llvm::Constant*> structElements = {
-                llvm::dyn_cast<llvm::Constant>(buffer),
-                length,
-                maxlen,
-                factor
-            };
-            initializer = llvm::ConstantStruct::get(static_cast<llvm::StructType*>(varType), structElements);
+            std::cout << "[CPP] Variable registered in module's global scope\n";
+            std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
             break;
         }
         default:
@@ -176,10 +186,10 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     std::cout << "[CPP] Variable type: " << varType << "\n";
     std::cout << "[CPP] Variable initializer: " << initializer << std::endl;
 }
+// </generateVarDeclaration>
 
 
-
-
+// <generateExpression>
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for expression\n";
     switch (node->type) {
@@ -202,8 +212,10 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
             return nullptr;
     }
 }
+// </generateExpression>
 
 
+// <generateBinaryOperation>
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for binary operation\n";
     llvm::Value* left = generateExpression(node->data.bin_op.left, builder, module);
@@ -235,11 +247,17 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
             return nullptr;
     }
 }
+// </generateBinaryOperation>
 
+
+// <createStringStruct>
 llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
     return llvm::StructType::create(context, "String");
 }
+// </createStringStruct>
 
+
+// <createStringType>
 llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder) {
     llvm::StructType *stringType = createStringStruct(context);
     std::vector<llvm::Type *> elements = {
@@ -251,3 +269,30 @@ llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<>
     stringType->setBody(elements);
     return stringType;
 }
+// </createStringType>
+
+
+// <createString>
+llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str) {
+    // Set up the string type & struct
+    llvm::LLVMContext &context = module.getContext();
+    llvm::StructType *stringType = createStringType(context, builder);
+    // Use the ConstantDataArray to create a buffer
+    llvm::Constant *buffer = llvm::ConstantDataArray::getString(context, str);
+    // Create a global variable for the buffer
+    llvm::GlobalVariable *globalBuffer = new llvm::GlobalVariable(module, buffer->getType(), true, llvm::GlobalValue::PrivateLinkage, buffer);
+    // Create a constant struct with the buffer, length, maxlen, and factor
+    llvm::Constant *length = llvm::ConstantInt::get(builder.getInt32Ty(), str.size());
+    llvm::Constant *maxlen = llvm::ConstantInt::get(builder.getInt32Ty(), str.size());
+    llvm::Constant *factor = llvm::ConstantInt::get(builder.getInt32Ty(), 16);
+    // Create the struct
+    std::vector<llvm::Constant *> elements = {
+        llvm::ConstantExpr::getPointerCast(globalBuffer, builder.getInt8Ty()->getPointerTo()),
+        length,
+        maxlen,
+        factor
+    };
+    // Return the constant struct
+    return llvm::ConstantStruct::get(stringType, elements);
+}
+// </createString>

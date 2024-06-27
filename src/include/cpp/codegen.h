@@ -47,6 +47,7 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
 
 llvm::StructType *createStringStruct(llvm::LLVMContext &context);
 llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder);
+llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str);
 
 void codegen(ASTNode* root);
 

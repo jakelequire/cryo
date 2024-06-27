@@ -27,6 +27,7 @@ void logNode(ASTNode* node) {
                         << "\nStatements:\t" << node->data.program.stmtCount
                         << "\nCapacity:\t" << node->data.program.stmtCapacity
                         << "\nStatements:\t"
+                        << "\n######################"
                         << std::endl;
             for (int i = 0; i < node->data.program.stmtCount; ++i) {
                 logNode(node->data.program.statements[i]);
@@ -37,6 +38,7 @@ void logNode(ASTNode* node) {
             std::cout   << "\n### Statement Node ###"
                         << "\nType:\t" << node->type
                         << "\nStatement:\t"
+                        << "\n######################"
                         << std::endl;
             logNode(node->data.stmt.stmt);
             break;
@@ -45,12 +47,16 @@ void logNode(ASTNode* node) {
             std::cout   << "\n### Expression Node ###"
                         << "\nType:\t" << node->type
                         << "\nExpression:\t"
+                        << "\n######################"
                         << std::endl;
             logNode(node->data.expr.expr);
             break;
 
         case CryoNodeType::NODE_LITERAL_EXPR:
-            std::cout << "### Literal Node ###\nType:\t" << node->type << "\n";
+            std::cout   << "### Literal Node ###\nType:\t" 
+                        << node->type 
+                        << "\n######################"
+                        << std::endl;
             switch (node->data.literalExpression.dataType) {
                 case DATA_TYPE_INT:
                     std::cout << "Integer Literal: " << node->data.literalExpression.intValue << std::endl;
@@ -74,6 +80,7 @@ void logNode(ASTNode* node) {
                         << "\nParams:\t" << node->data.functionDecl.params
                         << "\nReturn Type:\t" << node->data.functionDecl.returnType
                         << "\nBody:\t" << node->data.functionDecl.body
+                        << "\n######################"
                         << std::endl;
             logNode(node->data.functionDecl.body);
             break;
@@ -84,6 +91,7 @@ void logNode(ASTNode* node) {
                         << "\nName:\t" << node->data.varDecl.name
                         << "\nVar Type:\t" << node->data.varDecl.dataType
                         << "\nInitializer:\t"
+                        << "\n######################"
                         << std::endl;
             logNode(node->data.varDecl.initializer);
             break;
@@ -94,6 +102,7 @@ void logNode(ASTNode* node) {
                         << "\nParams:\t" << node->data.paramList.params
                         << "\nParam Count:\t" << node->data.paramList.paramCount
                         << "\nParam Capacity:\t" << node->data.paramList.paramCapacity
+                        << "\n######################"
                         << std::endl;
             break;
         
@@ -103,6 +112,7 @@ void logNode(ASTNode* node) {
                         << "\nStatements:\t" << node->data.block.statements
                         << "\nStmt Count:\t" << node->data.block.stmtCount
                         << "\nStmt Capacity:\t" << node->data.block.stmtCapacity
+                        << "\n######################"
                         << std::endl;
             logNode(*node->data.block.statements);
             break;
@@ -114,6 +124,7 @@ void logNode(ASTNode* node) {
                         << "\nRight:\t" << node->data.bin_op.right
                         << "\nOperator:\t" << node->data.bin_op.op
                         << "\nOperator Text:\t" << node->data.bin_op.operatorText
+                        << "\n######################"
                         << std::endl;
             logNode(node->data.bin_op.left);
             logNode(node->data.bin_op.right);
