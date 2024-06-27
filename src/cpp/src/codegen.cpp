@@ -131,59 +131,61 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     std::cout << "[CPP] Generating code for variable declaration\n";
 
     llvm::Type* varType = nullptr;
-    llvm::Constant* initializer = nullptr;
+    llvm::Value* initializer = nullptr;
+
+    std::cout << "[CPP DEBUG] Variable name: " << node->data.varDecl.name << "\n";
+    std::cout << "[CPP DEBUG] Variable data type: " << node->data.varDecl.dataType << "\n";
+    std::cout << "[CPP DEBUG] Variable initializer: " << node->data.varDecl.initializer << "\n";
+    
 
     switch (node->data.varDecl.dataType) {
         case DATA_TYPE_INT:
             std::cout << "[CPP] Variable type: int\n";
             varType = llvm::Type::getInt32Ty(module.getContext());
-            initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.intValue);
+            initializer = generateExpression(node->data.varDecl.initializer, builder, module);
             break;
         case DATA_TYPE_STRING: {
             std::cout << "[CPP] Variable type: string\n";
-            
-            // using the createString function to create a string
-            llvm::Value *string = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
-            llvm::Type *varType = string->getType();
-            // Convert to LLVM::Constant
-
-            initializer = llvm::ConstantExpr::getPointerCast((llvm::Constant *)string, varType);
-
-            // Add the string to the module
-            module.getOrInsertGlobal(node->data.varDecl.name, varType);
-
-            // Create a global variable
-            llvm::GlobalVariable *gVar = new llvm::GlobalVariable(
-                module,
-                varType,
-                false,
-                llvm::GlobalValue::ExternalLinkage,
-                initializer,
-                node->data.varDecl.name
-            );
-
-            std::cout << "[CPP] Variable registered in module's global scope\n";
-            std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
-
-            llvm::GlobalVariable *globalVar = module.getNamedGlobal(node->data.varDecl.name);
-            if (!globalVar) {
-                std::cerr << "[CPP] Error creating global variable\n";
-                return;
-            }
-
+            llvm::Value* string = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
+            varType = string->getType();
+            initializer = string;
             break;
         }
-
         case DATA_TYPE_BOOLEAN:
             std::cout << "[CPP] Variable type: boolean\n";
             varType = llvm::Type::getInt1Ty(module.getContext());
-            initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.intValue);
+            initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.booleanValue);
             break;
-
+        case DATA_TYPE_FLOAT:
+            std::cout << "[CPP] Variable type: float\n";
+            varType = llvm::Type::getFloatTy(module.getContext());
+            initializer = llvm::ConstantFP::get(varType, node->data.varDecl.initializer->data.literalExpression.floatValue);
+            break;
+        case DATA_TYPE_VOID:
+            std::cerr << "[CPP] Void type cannot be used as a variable\n";
+            return;
         default:
             std::cerr << "[CPP] Unknown variable type\n";
             return;
     }
+
+    if (!initializer) {
+        std::cerr << "[CPP] Error: Initializer for variable is null\n";
+        return;
+    }
+
+    std::string varName = node->data.varDecl.name;
+    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
+        module,
+        varType,
+        false,
+        llvm::GlobalValue::ExternalLinkage,
+        static_cast<llvm::Constant*>(initializer),
+        varName
+    );
+
+    std::cout << "[CPP] Variable registered in module's global scope\n";
+    std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
 }
 // </generateVarDeclaration>
 
@@ -198,7 +200,11 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
                 case DATA_TYPE_INT:
                     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), node->data.literalExpression.intValue);
                 case DATA_TYPE_STRING:
-                    return builder.CreateGlobalStringPtr(node->data.literalExpression.stringValue);
+                    return createString(builder, module, node->data.literalExpression.stringValue);
+                case DATA_TYPE_BOOLEAN:
+                    return llvm::ConstantInt::get(llvm::Type::getInt1Ty(module.getContext()), node->data.literalExpression.booleanValue);
+                case DATA_TYPE_FLOAT:
+                    return llvm::ConstantFP::get(llvm::Type::getFloatTy(module.getContext()), node->data.literalExpression.floatValue);
                 default:
                     std::cerr << "[CPP] Unknown literal expression type\n";
                     return nullptr;
@@ -240,7 +246,6 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
         case CryoTokenType::TOKEN_SLASH:
             std::cout << "[CPP] Generating code for binary operation: DIV\n";
             return builder.CreateSDiv(left, right);
-        // Add cases for other binary operators
         default:
             std::cerr << "[CPP] Unknown binary operator\n";
             return nullptr;
