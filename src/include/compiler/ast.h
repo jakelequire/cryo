@@ -138,6 +138,7 @@ typedef struct ASTNode {
         } str;
 
         struct {
+            CryoDataType dataType;
             int value;
         } boolean;
     } data;

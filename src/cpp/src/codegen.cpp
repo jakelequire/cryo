@@ -176,28 +176,17 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
 
             break;
         }
+
+        case DATA_TYPE_BOOLEAN:
+            std::cout << "[CPP] Variable type: boolean\n";
+            varType = llvm::Type::getInt1Ty(module.getContext());
+            initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.intValue);
+            break;
+            
         default:
             std::cerr << "[CPP] Unknown variable type\n";
             return;
     }
-
-    /*
-    llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
-        module,
-        varType,
-        false,
-        llvm::GlobalValue::ExternalLinkage,
-        initializer,
-        node->data.varDecl.name
-    );
-    */
-
-    // std::cout << "[CPP] Global variable created\n";
-    // 
-    // std::cout << "[CPP] Variable registered in module's global scope\n";
-    // std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
-    // std::cout << "[CPP] Variable type: " << varType << "\n";
-    // std::cout << "[CPP] Variable initializer: " << initializer << std::endl;
 }
 // </generateVarDeclaration>
 

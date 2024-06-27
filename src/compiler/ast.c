@@ -388,12 +388,14 @@ ASTNode* createStringExpr(const char* str) {
 
 // <createBooleanLiteralExpr>
 ASTNode* createBooleanLiteralExpr(int value) {
+    printf("[AST] Creating boolean literal node!");
     ASTNode* node = createASTNode(NODE_BOOLEAN_LITERAL);
     if (!node) {
         fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for boolean literal node\n");
         return NULL;
     }
-    node->data.value = value;
+    node->data.boolean.value = value;
+    node->data.boolean.dataType = DATA_TYPE_BOOLEAN;
     printf("[AST] Boolean Literal Node Created: %s\n", value ? "true" : "false");
     return node;
 }

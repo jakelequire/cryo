@@ -172,11 +172,6 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             return variableNode;
         }
         default:
-            // ASTNode* isExpression = parseExpression(lexer);
-            // if (isExpression) {
-            //     printf("[Parser] Found expression\n");
-            //     return isExpression;
-            // }
             error("Expected an expression");
             return NULL;
     }
@@ -217,7 +212,6 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
     char* varName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer); // Consume variable name
 
-    char* varType = NULL;
     CryoDataType dataType = DATA_TYPE_UNKNOWN;
 
     if (currentToken.type == TOKEN_COLON) {
@@ -225,7 +219,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
         if (currentToken.type != TOKEN_IDENTIFIER) {
             error("[Parser] Expected type name");
         }
-        varType = strndup(currentToken.start, currentToken.length);
+        char* varType = strndup(currentToken.start, currentToken.length);
         dataType = getCryoDataType(varType); // Convert type string to CryoDataType
         free(varType); // Free the type string as we don't need it anymore
         getNextToken(lexer); // Consume type name
@@ -238,7 +232,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer) {
     }
     getNextToken(lexer); // Consume '='
 
-    ASTNode* initializer = parsePrimaryExpression(lexer);
+    ASTNode* initializer = parseExpression(lexer);
     if(initializer == NULL) {
         error("[Parser] Expected expression after '='");
     } 
