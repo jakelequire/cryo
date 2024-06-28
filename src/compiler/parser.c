@@ -116,7 +116,7 @@ CryoDataType getCryoDataType(const char* typeStr) {
         return DATA_TYPE_FLOAT;
     } else if (strcmp(typeStr, "string") == 0) {
         return DATA_TYPE_STRING;
-    } else if (strcmp(typeStr, "bool") == 0) {
+    } else if (strcmp(typeStr, "boolean") == 0) {
         return DATA_TYPE_BOOLEAN;
     } else if (strcmp(typeStr, "void") == 0) {
         return DATA_TYPE_VOID;

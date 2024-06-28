@@ -62,7 +62,7 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
         return;
     };
     std::cout << "[CPP] Generating code for node: " << std::endl;
-    logNode(node, 2);
+    logASTNode(node, 2);
 
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
@@ -133,9 +133,10 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     llvm::Type* varType = nullptr;
     llvm::Value* initializer = nullptr;
 
-    std::cout << "[CPP DEBUG] Variable name: " << node->data.varDecl.name << "\n";
-    std::cout << "[CPP DEBUG] Variable data type: " << node->data.varDecl.dataType << "\n";
-    std::cout << "[CPP DEBUG] Variable initializer: " << node->data.varDecl.initializer << "\n";
+    std::cout << "[CPP DEBUG] Variable name: <" << node->data.varDecl.name << ">\n";
+    std::cout << "[CPP DEBUG] Variable data type:" << "\n";
+    logCryoDataType(node->data.varDecl.dataType);
+    std::cout << "[CPP DEBUG] Variable initializer: <" << node->data.varDecl.initializer << ">\n";
     
 
     switch (node->data.varDecl.dataType) {
@@ -165,7 +166,11 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             std::cerr << "[CPP] Void type cannot be used as a variable\n";
             return;
         default:
-            std::cerr << "[CPP] Unknown variable type\n";
+            std::cout << "[CPP] Attempting to generate expression for variable initializer\n";
+            std::cout << "[CPP] Variable Name: " << node->data.varDecl.name << "\n";
+            std::cout << "[CPP] Variable Initializer: " << node->data.varDecl.initializer << "\n";
+            std::cout << "[CPP] Variable Initializer Type: " << node->data.varDecl.initializer->type << "\n";
+            generateExpression(node->data.varDecl.initializer, builder, module);
             return;
     }
 
@@ -227,23 +232,23 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
     llvm::Value* right = generateExpression(node->data.bin_op.right, builder, module);
 
     if (!left || !right) {
-        std::cerr << "[CPP] Error generating binary operation\n";
+        std::cerr << "[CPP] Error generating binary operation: operands are null\n";
         return nullptr;
     }
 
     std::cout << "[CPP] Binary operation operands generated\n";
 
     switch (node->data.bin_op.op) {
-        case CryoTokenType::TOKEN_PLUS:
+        case CryoTokenType::TOKEN_OP_PLUS:
             std::cout << "[CPP] Generating code for binary operation: ADD\n";
             return builder.CreateAdd(left, right);
-        case CryoTokenType::TOKEN_MINUS:
+        case CryoTokenType::TOKEN_OP_MINUS:
             std::cout << "[CPP] Generating code for binary operation: SUB\n";
             return builder.CreateSub(left, right);
-        case CryoTokenType::TOKEN_STAR:
+        case CryoTokenType::TOKEN_OP_STAR:
             std::cout << "[CPP] Generating code for binary operation: MUL\n";
             return builder.CreateMul(left, right);
-        case CryoTokenType::TOKEN_SLASH:
+        case CryoTokenType::TOKEN_OP_SLASH:
             std::cout << "[CPP] Generating code for binary operation: DIV\n";
             return builder.CreateSDiv(left, right);
         default:
@@ -313,3 +318,6 @@ llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, cons
     return llvm::ConstantStruct::get(stringType, elements);
 }
 // </createString>
+
+
+

@@ -23,7 +23,7 @@ void printIndentation(int level) {
     }
 }
 
-void logNode(ASTNode* node, int indentLevel = 0) {
+void logASTNode(ASTNode* node, int indentLevel = 0) {
     if (!node) {
         printIndentation(indentLevel);
         std::cout << "\"Node\": null" << std::endl;
@@ -49,7 +49,7 @@ void logNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "\"StatementNodes\": [" << std::endl;
             for (int i = 0; i < node->data.program.stmtCount; ++i) {
-                logNode(node->data.program.statements[i], indentLevel + 1);
+                logASTNode(node->data.program.statements[i], indentLevel + 1);
                 if (i < node->data.program.stmtCount - 1) {
                     printIndentation(indentLevel + 1);
                     std::cout << "," << std::endl;
@@ -66,7 +66,7 @@ void logNode(ASTNode* node, int indentLevel = 0) {
         case CryoNodeType::NODE_STATEMENT:
             printIndentation(indentLevel);
             std::cout << "\"Statement\": {" << std::endl;
-            logNode(node->data.stmt.stmt, indentLevel + 1);
+            logASTNode(node->data.stmt.stmt, indentLevel + 1);
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
@@ -74,7 +74,7 @@ void logNode(ASTNode* node, int indentLevel = 0) {
         case CryoNodeType::NODE_EXPRESSION:
             printIndentation(indentLevel);
             std::cout << "\"Expression\": {" << std::endl;
-            logNode(node->data.expr.expr, indentLevel + 1);
+            logASTNode(node->data.expr.expr, indentLevel + 1);
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
@@ -116,7 +116,7 @@ void logNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Params\": " << node->data.functionDecl.params << "," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"ReturnType\": \"" << node->data.functionDecl.returnType << "\"," << std::endl;
-            logNode(node->data.functionDecl.body, indentLevel + 1);
+            logASTNode(node->data.functionDecl.body, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
@@ -130,7 +130,7 @@ void logNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Name\": \"" << node->data.varDecl.name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"VarType\": \"" << node->data.varDecl.dataType << "\"," << std::endl;
-            logNode(node->data.varDecl.initializer, indentLevel + 1);
+            logASTNode(node->data.varDecl.initializer, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
@@ -162,7 +162,7 @@ void logNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "\"StatementNodes\": [" << std::endl;
             for (int i = 0; i < node->data.block.stmtCount; ++i) {
-                logNode(node->data.block.statements[i], indentLevel + 1);
+                logASTNode(node->data.block.statements[i], indentLevel + 1);
                 if (i < node->data.block.stmtCount - 1) {
                     printIndentation(indentLevel + 1);
                     std::cout << "," << std::endl;
@@ -188,8 +188,8 @@ void logNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Operator\": " << node->data.bin_op.op << "," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"OperatorText\": \"" << node->data.bin_op.operatorText << "\"" << std::endl;
-            logNode(node->data.bin_op.left, indentLevel + 1);
-            logNode(node->data.bin_op.right, indentLevel + 1);
+            logASTNode(node->data.bin_op.left, indentLevel + 1);
+            logASTNode(node->data.bin_op.right, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
@@ -207,5 +207,29 @@ void logNode(ASTNode* node, int indentLevel = 0) {
 }
 
 
+
+
+void logCryoDataType(CryoDataType dataType) {
+    switch (dataType) {
+        case DATA_TYPE_INT:
+            std::cout << "Data Type: {int}\n";
+            break;
+        case DATA_TYPE_FLOAT:
+            std::cout << "Data Type: {float}\n";
+            break;
+        case DATA_TYPE_STRING:
+            std::cout << "Data Type: {string}\n";
+            break;
+        case DATA_TYPE_BOOLEAN:
+            std::cout << "Data Type: {boolean}\n";
+            break;
+        case DATA_TYPE_VOID:
+            std::cout << "Data Type: {void}\n";
+            break;
+        default:
+            std::cerr << "Data Type: Unknown data type";
+            break;
+    }
+}
 
 

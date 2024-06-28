@@ -8,8 +8,8 @@
 
 
 void printIndentation(int level);
-void logNode(ASTNode* node, int indentLevel);
-
+void logASTNode(ASTNode* node, int indentLevel);
+void logCryoDataType(CryoDataType dataType);
 
 
 
