@@ -270,10 +270,10 @@ llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
 llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder) {
     llvm::StructType *stringType = createStringStruct(context);
     std::vector<llvm::Type *> elements = {
-        builder.getInt8Ty()->getPointerTo(), // buffer
-        builder.getInt32Ty(),    // length
-        builder.getInt32Ty(),    // maxlen
-        builder.getInt32Ty()     // factor
+        builder.getInt8Ty()->getPointerTo(),    // buffer
+        builder.getInt32Ty(),                   // length
+        builder.getInt32Ty(),                   // maxlen
+        builder.getInt32Ty()                    // factor
     };
     stringType->setBody(elements);
     return stringType;
@@ -318,6 +318,3 @@ llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, cons
     return llvm::ConstantStruct::get(stringType, elements);
 }
 // </createString>
-
-
-

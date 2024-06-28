@@ -1,4 +1,7 @@
+// Cryo Test Case 4: Expressions
 
+// At the moment, the only expressions that are supported are simple arithmetic expressions.
 const exampleExpression: int = 34 + 35;
 
+// Result: 69
 

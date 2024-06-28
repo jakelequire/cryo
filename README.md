@@ -10,7 +10,7 @@ ___Note: This is a side project and not a production ready product. There may be
 ### Development Milestones
 
 
-- [ ] Compiles to native instruction set (only x86_64 for now)
+- [X] Compiles to native instruction set (only x86_64 for now)
 
 - [ ] [Turing Complete.](https://en.wikipedia.org/wiki/Rule_110)
 
