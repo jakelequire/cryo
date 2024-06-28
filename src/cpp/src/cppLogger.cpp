@@ -35,7 +35,10 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
     indentLevel++;
 
     printIndentation(indentLevel);
-    std::cout << "\"Type\": \"" << node->type << "\"," << std::endl;
+    std::cout 
+    << "\"Type\": \"" 
+    << nodeTypeToString(node->type) 
+    << "\"," << std::endl;
 
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
@@ -109,15 +112,44 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Function\": {" << std::endl;
             indentLevel++;
             printIndentation(indentLevel);
-            std::cout << "\"Visibility\": \"" << node->data.functionDecl.visibility << "\"," << std::endl;
+            std::cout 
+            << "\"Visibility\": \"" 
+            << visibilityToString(node->data.functionDecl.visibility) 
+            << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Name\": \"" << node->data.functionDecl.name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Params\": " << node->data.functionDecl.params << "," << std::endl;
             printIndentation(indentLevel);
-            std::cout << "\"ReturnType\": \"" << node->data.functionDecl.returnType << "\"," << std::endl;
+
+            std::cout << "\"ReturnType\": \"" 
+            << dataTypeToString(node->data.functionDecl.returnType) 
+            << "\"," 
+            << std::endl;
+            
             logASTNode(node->data.functionDecl.body, indentLevel + 1);
             indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_FUNCTION_BLOCK:
+            printIndentation(indentLevel);
+            std::cout << "\"FunctionBlock\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Function\": " << node->data.functionBlock.function << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Block\": " << node->data.functionBlock.block << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_RETURN_STATEMENT:
+            printIndentation(indentLevel);
+            std::cout << "\"ReturnStatement\": {" << std::endl;
+            logASTNode(node->data.stmt.stmt, indentLevel + 1);
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
@@ -129,7 +161,11 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "\"Name\": \"" << node->data.varDecl.name << "\"," << std::endl;
             printIndentation(indentLevel);
-            std::cout << "\"VarType\": \"" << node->data.varDecl.dataType << "\"," << std::endl;
+            std::cout 
+            << "\"VarType\": \"" 
+            << dataTypeToString(node->data.varDecl.dataType) 
+            << "\"," 
+            << std::endl;
             logASTNode(node->data.varDecl.initializer, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
@@ -195,6 +231,8 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "}" << std::endl;
             break;
 
+
+
         default:
             printIndentation(indentLevel);
             std::cerr << "\"UnknownNodeType\"" << std::endl;
@@ -233,3 +271,65 @@ void logCryoDataType(CryoDataType dataType) {
 }
 
 
+
+
+char* dataTypeToString(CryoDataType dataType) {
+    switch (dataType) {
+        case DATA_TYPE_INT:
+            return "<int>";
+        case DATA_TYPE_FLOAT:
+            return "<float>";
+        case DATA_TYPE_STRING:
+            return "<string>";
+        case DATA_TYPE_BOOLEAN:
+            return "<boolean>";
+        case DATA_TYPE_VOID:
+            return "<void>";
+        default:
+            return "<unknown>";
+    }
+}
+
+
+char* visibilityToString(CryoVisibilityType visibility) {
+    switch (visibility) {
+        case VISIBILITY_PUBLIC:
+            return "public";
+        case VISIBILITY_PRIVATE:
+            return "private";
+        case VISIBILITY_PROTECTED:
+            return "protected";
+        default:
+            return "unknown";
+    }
+}
+
+
+char* nodeTypeToString(CryoNodeType type) {
+    switch (type) {
+        case NODE_PROGRAM:
+            return "Program";
+        case NODE_STATEMENT:
+            return "Statement";
+        case NODE_EXPRESSION:
+            return "Expression";
+        case NODE_LITERAL_EXPR:
+            return "Literal";
+        case NODE_FUNCTION_DECLARATION:
+            return "Function";
+        case NODE_FUNCTION_BLOCK:
+            return "FunctionBlock";
+        case NODE_RETURN_STATEMENT:
+            return "ReturnStatement";
+        case NODE_VAR_DECLARATION:
+            return "Variable";
+        case NODE_PARAM_LIST:
+            return "Parameters";
+        case NODE_BLOCK:
+            return "Block";
+        case NODE_BINARY_EXPR:
+            return "BinaryOperation";
+        default:
+            return "Unknown";
+    }
+}

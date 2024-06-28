@@ -64,12 +64,14 @@ ASTNode* parseVarDeclaration(Lexer* lexer);
 ASTNode* parseBlock(Lexer* lexer);
 ASTNode* parseStatements(Lexer* lexer);
 ASTNode* parseType(Lexer* lexer);
-ASTNode* parseFunctionDeclaration(Lexer* lexer);
+ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility);
+ASTNode* parseFunctionBlock(Lexer* lexer);
 ASTNode* parseParameterList(Lexer* lexer);
 ASTNode* parseParameter(Lexer* lexer);
 ASTNode* createTypeNode(CryoTokenType type);
 ASTNode* createParamNode(const char* name, ASTNode* type);
 ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
+ASTNode* parsePublicDeclaration(Lexer* lexer);
 // Entry Point
 ASTNode* parseProgram(Lexer* lexer);
 /*-----<end_prototypes>-----*/

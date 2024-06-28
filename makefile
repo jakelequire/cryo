@@ -53,10 +53,9 @@ CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppLogger.o
 # Binaries
 MAIN_BIN = $(BIN_DIR)main.exe
 CLI_BIN_EXE = $(BIN_DIR)cryo.exe
-RUNTIME_BIN = $(BIN_DIR)runtime.exe
 
 # Default target
-all: $(MAIN_BIN) $(CLI_BIN_EXE) $(RUNTIME_BIN) 
+all: $(MAIN_BIN) $(CLI_BIN_EXE)
 
 # Ensure the object directory exists
 $(OBJ_DIR):
@@ -111,13 +110,10 @@ $(OBJ_DIR)cppLogger.o: $(CPP_DIR)src/cppLogger.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Linking binaries
-$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) | $(BIN_DIR)
+$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(CLI_BIN_EXE): $(CLI_OBJ) $(UTILS_OBJ) | $(BIN_DIR)
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-$(RUNTIME_BIN): $(RUNTIME_OBJ) $(UTILS_OBJ) $(COMPILER_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_BIN_DIR)

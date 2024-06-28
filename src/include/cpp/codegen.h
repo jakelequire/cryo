@@ -42,6 +42,8 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);

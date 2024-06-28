@@ -89,7 +89,7 @@ typedef enum {
     TOKEN_KW_BREAK,             // `break`          55
     TOKEN_KW_CONTINUE,          // `continue`       56
     TOKEN_KW_RETURN,            // `return`         57
-    TOKEN_KW_FN,                // `fn`             58
+    TOKEN_KW_FN,                // `function`       58
     TOKEN_KW_CONST,             // `const`          59
     TOKEN_KW_PUBLIC,            // `public`         60  
     TOKEN_KW_PRIVATE,           // `private`        61   
@@ -181,15 +181,14 @@ typedef enum {
     TOKEN_RBRACE,               // `}`          143
     TOKEN_LANGLE,               // `<`          144
     TOKEN_RANGLE,               // `>`          145
-    TOKEN_LCURLY,               // `{`          146
-    TOKEN_RCURLY,               // `}`          147
-    TOKEN_LSQUARE,              // `[`          148
-    TOKEN_RSQUARE,              // `]`          149
-    TOKEN_LANGLE_BRACKET,       // `<<`         150
-    TOKEN_RANGLE_BRACKET,       // `>>`         151
-    TOKEN_LCURLY_BRACKET,       // `{{`         152
-    TOKEN_RCURLY_BRACKET,       // `}}`         153
+    TOKEN_LSQUARE,              // `[`          146
+    TOKEN_RSQUARE,              // `]`          147
+    TOKEN_LANGLE_BRACKET,       // `<<`         148
+    TOKEN_RANGLE_BRACKET,       // `>>`         149
+    TOKEN_LCURLY_BRACKET,       // `{{`         150
+    TOKEN_RCURLY_BRACKET,       // `}}`         151
 } CryoTokenType;
+
 
 typedef enum CryoNodeType {
     NODE_PROGRAM,                   // 0
@@ -207,27 +206,39 @@ typedef enum CryoNodeType {
     NODE_FOR_STATEMENT,             // 12
     NODE_RETURN_STATEMENT,          // 13
     NODE_BLOCK,                     // 14
-    NODE_EXPRESSION_STATEMENT,      // 15
-    NODE_ASSIGN,                    // 16
-    NODE_PARAM_LIST,                // 17
-    NODE_TYPE,                      // 18
-    NODE_STRING_LITERAL,            // 19
-    NODE_BOOLEAN_LITERAL,           // 20
-    NODE_UNKNOWN,                   // 21
+    NODE_FUNCTION_BLOCK,            // 15
+    NODE_EXPRESSION_STATEMENT,      // 16
+    NODE_ASSIGN,                    // 17
+    NODE_PARAM_LIST,                // 18
+    NODE_TYPE,                      // 19
+    NODE_STRING_LITERAL,            // 20
+    NODE_BOOLEAN_LITERAL,           // 21
+    NODE_UNKNOWN,                   // 22
 } CryoNodeType;
 
+
 typedef enum CryoDataType {
-    DATA_TYPE_INT,       // `int`       0
-    DATA_TYPE_FLOAT,     // `float`     1
-    DATA_TYPE_STRING,    // `string`    2
-    DATA_TYPE_BOOLEAN,   // `boolean`   3
-    DATA_TYPE_VOID,      // `void`      4
-    DATA_TYPE_NULL,      // `null`      5
-    DATA_TYPE_UNKNOWN,   // `<UNKNOWN>` 6
+    DATA_TYPE_INT,       // `int`               0
+    DATA_TYPE_FLOAT,     // `float`             1
+    DATA_TYPE_STRING,    // `string`            2
+    DATA_TYPE_BOOLEAN,   // `boolean`           3
+    DATA_TYPE_VOID,      // `void`              4
+    DATA_TYPE_NULL,      // `null`              5
+    DATA_TYPE_UNKNOWN,   // `<UNKNOWN>`         6
 } CryoDataType;
+
+
+typedef enum CryoVisibilityType {
+    VISIBILITY_PUBLIC,      // `public`         0
+    VISIBILITY_PRIVATE,     // `private`        1
+    VISIBILITY_PROTECTED,   // `protected`      2
+    VISIBILITY_UNKNOWN,     // `<UNKNOWN>`      3
+} CryoVisibilityType;
+
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif // TOKEN_H
+

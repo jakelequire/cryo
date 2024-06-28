@@ -4,4 +4,3 @@
 const exampleExpression: int = 34 + 35;
 
 // Result: 69
-

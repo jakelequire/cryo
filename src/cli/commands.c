@@ -17,9 +17,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <init.h>
 #include <build.h>
+#include "cli/commands.h"
 
 #define CRYO_VERSION "0.1.0"
 
@@ -235,9 +235,9 @@ void build_program_(int argc, char* argv[]) {
 //
 // Env Command
 //
-void env_command(void) {
-    run_runtime();
-}
+// void env_command(void) {
+//     run_runtime();
+// }
 
 
 //
@@ -268,10 +268,10 @@ void execute_command(int argc, char* argv[]) {
         case CMD_RUN:
             printf("Run command executed.\n");
             break;
-        case CMD_ENV:
-            printf("Cryo Runtime Environment starting.\n");
-            env_command();
-            break;
+        // case CMD_ENV:
+        //     printf("Cryo Runtime Environment starting.\n");
+        //     env_command();
+        //     break;
         case CMD_UNKNOWN:
             printf("Unknown command: %s\n", argv[0]);
             break;

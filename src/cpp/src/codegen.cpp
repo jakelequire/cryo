@@ -73,6 +73,13 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             std::cout << "[CPP] Starting code generation for <statement>\n" << std::endl;
             generateStatement(node, builder, module);
             break;
+        case CryoNodeType::NODE_FUNCTION_DECLARATION:
+            // Add function declaration handling here
+            break;
+        case CryoNodeType::NODE_BLOCK:
+            std::cout << "[CPP] Generating code for block\n";
+            generateBlock(node, builder, module);
+            break;
         case CryoNodeType::NODE_EXPRESSION:
             std::cout << "[CPP] Starting code generation for <expression>\n" << std::endl;
             generateExpression(node, builder, module);
@@ -193,6 +200,52 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
 }
 // </generateVarDeclaration>
+
+
+// <generateFunction>
+void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::cout << "[CPP] Generating code for function: " << node->data.functionDecl.name << "\n";
+    
+    // Define function return type and parameters
+    llvm::FunctionType* funcType = llvm::FunctionType::get(builder.getVoidTy(), false);
+    llvm::Function::LinkageTypes linkageType = llvm::Function::ExternalLinkage;
+    
+    // Check visibility
+    if (node->data.functionDecl.visibility == CryoVisibilityType::VISIBILITY_PUBLIC) {
+        linkageType = llvm::Function::ExternalLinkage;
+    } else if (node->data.functionDecl.visibility == CryoVisibilityType::VISIBILITY_PRIVATE) {
+        linkageType = llvm::Function::PrivateLinkage;
+    }
+
+    llvm::Function* function = llvm::Function::Create(funcType, linkageType, node->data.functionDecl.name, module);
+
+    // Create a new basic block for the function body
+    llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), "entry", function);
+    builder.SetInsertPoint(BB);
+
+    // Generate code for the function body (statements)
+    generateCode(node->data.functionDecl.body, builder, module);
+
+    // Finish up function generation
+    builder.CreateRetVoid();
+}
+// </generateFunction>
+
+
+// <generateBlock>
+void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::cout << "[CPP] Generating code for block\n";
+    if (node->data.block.stmtCount == 0) {
+        std::cerr << "[CPP] Error generating code for block: No statements found\n";
+        return;
+    }
+    for (int i = 0; i < node->data.block.stmtCount; ++i) {
+        std::cout << "[CPP] Generating code for block statement " << i << "\n";
+        generateCode(node->data.block.statements[i], builder, module);
+        std::cout << "[CPP] Moving to next statement\n";
+    }
+}
+// </generateBlock>
 
 
 // <generateExpression>

@@ -98,6 +98,7 @@ Token get_next_token(Lexer *lexer);
 Token nextToken(Lexer* lexer, Token* token);
 Token getToken(Lexer* lexer);
 Token peekToken(Lexer* lexer);
+Token peekNextToken(Lexer* lexer);
 
 // Final Functions
 void freeLexer(Lexer* lexer);

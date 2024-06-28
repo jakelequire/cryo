@@ -28,5 +28,5 @@
 #include <stdio.h>
 #include <string.h>
 /*------ </includes> -----*/
-void run_runtime(void);
+
 #endif // RUNTIME_CMD_H

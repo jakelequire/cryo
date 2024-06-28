@@ -41,28 +41,49 @@ typedef struct ASTNode {
             int stmtCount;
             int stmtCapacity;
         } program;
-
+        
+        // >=------<Function Declaration>------=<
         struct {
-            char* visibility;
+            CryoVisibilityType visibility;
             char* name;
             struct ASTNode* params;
-            struct ASTNode* returnType;
             struct ASTNode* body;
+            CryoDataType returnType;
         } functionDecl;
+
+        struct {
+            char* name;
+            struct ASTNode** args;
+            int argCount;
+        } functionCall;
+
+        struct {
+            struct ASTNode* function;
+            struct ASTNode* block;
+        } functionBlock;
 
         struct {
             struct ASTNode** params;
             int paramCount;
             int paramCapacity;
         } paramList;
+        // >=--------------<End>--------------=<
 
+        
+        // >=------<Variable Declaration>------=<
         struct {
             char* name;
             CryoDataType dataType;   // Data type of the variable
             struct ASTNode* initializer;
         } varDecl;
 
+        struct {
+            char* varName;
+        } varName;
+        // >=--------------<End>--------------=<
 
+        int value;  // For literal number nodes
+    
         struct {
             struct ASTNode** statements;
             int stmtCount;
@@ -99,17 +120,6 @@ typedef struct ASTNode {
             struct ASTNode* operand;
         } unary_op; // For unary operators, e.g (-5, !true, etc.)
 
-        int value;  // For literal number nodes
-
-        struct {
-            char* varName;
-        } varName;
-
-        struct {
-            char* name;
-            struct ASTNode** args;
-            int argCount;
-        } functionCall;
         
         struct {
             struct ASTNode* condition;
@@ -131,6 +141,7 @@ typedef struct ASTNode {
 
         struct {
             struct ASTNode* returnValue;
+            struct ASTNode* expression;
         } returnStmt;
 
         struct {
@@ -154,7 +165,7 @@ ASTNode* createBooleanLiteralExpr(int value);
 ASTNode* createStringLiteralExpr(const char* str);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType op);
 ASTNode* createUnaryExpr(CryoTokenType op, ASTNode* operand);
-ASTNode* createFunctionNode(const char* function_name, ASTNode* function_body);
+ASTNode* createFunctionNode(const char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType);
 ASTNode* createReturnStatement(ASTNode* return_val);
 ASTNode* createBlock();
 ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
@@ -164,6 +175,7 @@ ASTNode* createVarDeclarationNode(const char* var_name, CryoDataType dataType, A
 ASTNode* createExpressionStatement(ASTNode* expression);
 ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 ASTNode* createStringExpr(const char* str);
+void addChildNode(ASTNode* parent, ASTNode* child);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);
 /*-----<end_prototypes>-----*/

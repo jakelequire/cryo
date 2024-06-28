@@ -11,6 +11,7 @@ void printIndentation(int level);
 void logASTNode(ASTNode* node, int indentLevel);
 void logCryoDataType(CryoDataType dataType);
 
-
-
+char* dataTypeToString(CryoDataType dataType);
+char* visibilityToString(CryoVisibilityType visibility);
+char* nodeTypeToString(CryoNodeType type);
 #endif // CPP_LOGGER_H

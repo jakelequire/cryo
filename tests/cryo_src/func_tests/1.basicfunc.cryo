@@ -1,0 +1,5 @@
+
+public function testBasicfunc() -> int {
+    const example: int = 1;
+    return 34;
+}

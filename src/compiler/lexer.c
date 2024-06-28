@@ -23,7 +23,7 @@
 //#################################//
 KeywordToken keywords[] = {
     {"public",      TOKEN_KW_PUBLIC         },
-    {"fn",          TOKEN_KW_FN             },
+    {"function",    TOKEN_KW_FN             },
     {"if",          TOKEN_KW_IF             },
     {"else",        TOKEN_KW_ELSE           },
     {"while",       TOKEN_KW_WHILE          },
@@ -41,7 +41,9 @@ KeywordToken keywords[] = {
     {"null",        TOKEN_KW_NULL           },
     {"struct",      TOKEN_KW_STRUCT         },
     {"enum",        TOKEN_KW_ENUM           },
-    {NULL,          TOKEN_UNKNOWN           }   // Sentinel value
+    {"break",       TOKEN_KW_BREAK          },
+    {"continue",    TOKEN_KW_CONTINUE       },
+    {NULL,          TOKEN_UNKNOWN           }  // Sentinel value
 };
 
 
@@ -172,6 +174,17 @@ void skipWhitespace(Lexer* lexer) {
     }
 }
 // </skipWhitespace>
+
+
+
+// <peekNextToken>
+Token peekNextToken(Lexer* lexer) {
+    Lexer tempLexer = *lexer;  // Copy the current lexer state
+    Token tempNextToken = nextToken(&tempLexer, &tempLexer.currentToken);  // Get the next token from the copied state
+    printf("[Lexer - DEBUG] Peeked Next Token: %.*s\n", tempNextToken.length, tempNextToken.start);
+    return tempNextToken;
+}
+// </peekNextToken>
 
 
 // <makeToken>
@@ -325,6 +338,7 @@ Token nextToken(Lexer* lexer, Token* token) {
 
     char c = advance(lexer);
 
+
     // This is to check if it's an identifier.
     if (isAlpha(c)) {
         CryoTokenType type;
@@ -351,8 +365,8 @@ Token nextToken(Lexer* lexer, Token* token) {
                 type = checkKeyword(lexer, "public", TOKEN_KW_PUBLIC);
                 break;
             case 'f':
-                if (peek(lexer) == 'n') {
-                    type = checkKeyword(lexer, "fn", TOKEN_KW_FN);
+                if (peek(lexer) == 'u') {
+                    type = checkKeyword(lexer, "function", TOKEN_KW_FN);
                 } else if (peek(lexer) == 'o') {
                     type = checkKeyword(lexer, "for", TOKEN_KW_FOR);
                 } else {
@@ -386,9 +400,17 @@ Token nextToken(Lexer* lexer, Token* token) {
     }
 
     switch (c) {
+        case '{': *token = makeToken(lexer, TOKEN_LBRACE); break;
+        case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         case '(': *token = makeToken(lexer, TOKEN_LPAREN); break;
         case ')': *token = makeToken(lexer, TOKEN_RPAREN); break;
         case '+': *token = makeToken(lexer, TOKEN_OP_PLUS); break;
+        case '*': *token = makeToken(lexer, TOKEN_OP_STAR); break;
+        case '/': *token = makeToken(lexer, TOKEN_OP_SLASH); break;
+        case '=': *token = makeToken(lexer, TOKEN_ASSIGN); break;
+        case ';': *token = makeToken(lexer, TOKEN_SEMICOLON); break;
+        case ',': *token = makeToken(lexer, TOKEN_COMMA); break;
+        case ':': *token = makeToken(lexer, TOKEN_COLON); break;
         case '-':
             if (peek(lexer) == '>') {
                 advance(lexer); // consume '>'
@@ -397,16 +419,8 @@ Token nextToken(Lexer* lexer, Token* token) {
                 *token = makeToken(lexer, TOKEN_OP_MINUS);
             }
             break;
-        case '*': *token = makeToken(lexer, TOKEN_OP_STAR); break;
-        case '/': *token = makeToken(lexer, TOKEN_OP_SLASH); break;
-        case '=': *token = makeToken(lexer, TOKEN_ASSIGN); break;
-        case ';': *token = makeToken(lexer, TOKEN_SEMICOLON); break;
-        case ',': *token = makeToken(lexer, TOKEN_COMMA); break;
-        case ':': *token = makeToken(lexer, TOKEN_COLON); break;
-        case '{': *token = makeToken(lexer, TOKEN_LBRACE); break;
-        case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         default:
-            *token = makeToken(lexer, TOKEN_ERROR);
+            *token = errorToken(lexer, "Unexpected character.");
             return *token;
     }
 

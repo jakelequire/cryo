@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
-#include "cli/runtime_cmd.h"
 
 // Command Types
 typedef enum {
@@ -64,7 +63,6 @@ void execute_command(int argc, char* argv[]);
 void build_program_(int argc, char* argv[]);
 void help_command(void);
 void version_command(void);
-void env_command(void);
 void help_with_command(char* help_args);
 
 
