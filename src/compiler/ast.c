@@ -54,9 +54,9 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_FUNCTION_BLOCK:
-            printf("Function Block with %d statements:\n", node->data.block.stmtCount);
-            for (int i = 0; i < node->data.block.stmtCount; i++) {
-                printAST(node->data.block.statements[i], indent + 2);
+            printf("Function Block with %d statements:\n", node->data.functionBlock.block->data.block.stmtCount);
+            for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; i++) {
+                printAST(node->data.functionBlock.block->data.block.statements[i], indent + 2);
             }
             break;
         case NODE_VAR_DECLARATION:
@@ -237,9 +237,11 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.functionDecl.returnType = DATA_TYPE_VOID;
             break;
         case NODE_FUNCTION_BLOCK:
-            node->data.block.statements = NULL;
-            node->data.block.stmtCount = 0;
-            node->data.block.stmtCapacity = 0;
+            node->data.functionBlock.function = NULL;
+            node->data.functionBlock.block = createASTNode(NODE_BLOCK); // Ensure block is initialized
+            node->data.functionBlock.block->data.block.statements = (ASTNode**)malloc(sizeof(ASTNode*) * INITIAL_CAPACITY);
+            node->data.functionBlock.block->data.block.stmtCount = 0;
+            node->data.functionBlock.block->data.block.stmtCapacity = INITIAL_CAPACITY;
             break;
         case NODE_VAR_DECLARATION:
             node->data.varDecl.name = NULL;
@@ -514,17 +516,17 @@ ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount) 
 
 
 // <addStatementToBlock>
-void addStatementToBlock(ASTNode* block, ASTNode* statement) {
-    if (block->type != NODE_BLOCK) {
+void addStatementToBlock(ASTNode* blockNode, ASTNode* statement) {
+    if (blockNode->type != NODE_BLOCK) {
         printf("[AST] Error: addStatementToBlock called on non-block node\n");
         return;
     }
-    if (block->data.block.stmtCount >= block->data.block.stmtCapacity) {
-        block->data.block.stmtCapacity *= 2;
-        block->data.block.statements = (ASTNode**)realloc(block->data.block.statements, sizeof(ASTNode*) * block->data.block.stmtCapacity);
+    if (blockNode->data.block.stmtCount >= blockNode->data.block.stmtCapacity) {
+        blockNode->data.block.stmtCapacity *= 2;
+        blockNode->data.block.statements = (ASTNode**)realloc(blockNode->data.block.statements, sizeof(ASTNode*) * blockNode->data.block.stmtCapacity);
     }
-    block->data.block.statements[block->data.block.stmtCount++] = statement;
-    printf("[AST] Statement added to block. Total statements: %d\n", block->data.block.stmtCount);
+    blockNode->data.block.statements[blockNode->data.block.stmtCount++] = statement;
+    printf("[AST] Statement added to block. Total statements: %d\n", blockNode->data.block.stmtCount);
 }
 // </addStatementToBlock>
 

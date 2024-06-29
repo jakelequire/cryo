@@ -463,20 +463,13 @@ ASTNode* parseBlock(Lexer* lexer) {
 
 
 ASTNode* parseFunctionBlock(Lexer* lexer) {
-    printf("[Parser] Parsing function block...\n");
     ASTNode* blockNode = createASTNode(NODE_FUNCTION_BLOCK);
-    blockNode->data.block.statements = NULL;
-    blockNode->data.block.stmtCount = 0;
-    blockNode->data.block.stmtCapacity = 0;
-    
     consume(lexer, TOKEN_LBRACE, "Expected '{' to start function block");
 
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
         ASTNode* stmt = parseStatement(lexer);
         if (stmt) {
-            addChildNode(blockNode, stmt);
-        } else {
-            error("Failed to parse statement in function block");
+            addStatementToBlock(blockNode->data.functionBlock.block, stmt);
         }
     }
 

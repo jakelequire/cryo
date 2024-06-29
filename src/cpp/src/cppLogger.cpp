@@ -133,21 +133,36 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "}" << std::endl;
             break;
 
-        case CryoNodeType::NODE_FUNCTION_BLOCK:
-            printIndentation(indentLevel);
-            std::cout << "\"FunctionBlock\": {" << std::endl;
-            indentLevel++;
-            printIndentation(indentLevel);
-            std::cout << "\"Function\": " << node->data.functionBlock.function << "," << std::endl;
-            printIndentation(indentLevel);
-            std::cout 
-            << "\"Block\": " 
-            << node->data.functionBlock.block
-            << std::endl;
-            indentLevel--;
-            printIndentation(indentLevel);
-            std::cout << "}" << std::endl;
-            break;
+            case CryoNodeType::NODE_FUNCTION_BLOCK:
+                printIndentation(indentLevel);
+                std::cout << "\"FunctionBlock\": {" << std::endl;
+                indentLevel++;
+                printIndentation(indentLevel);
+                std::cout << "\"Block\": [" << std::endl;
+
+                if(!node->data.functionBlock.function) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "\"Function\": null" << std::endl;
+                } else {
+                    logASTNode(node->data.functionBlock.function, indentLevel + 1);
+                }
+
+                if (node->data.functionBlock.block) {
+                    for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
+                        logASTNode(node->data.functionBlock.block->data.block.statements[i], indentLevel + 1);
+                        if (i < node->data.functionBlock.block->data.block.stmtCount - 1) {
+                            std::cout << "," << std::endl;
+                        }
+                    }
+                }
+
+                std::cout << std::endl;
+                printIndentation(indentLevel);
+                std::cout << "]" << std::endl;
+                indentLevel--;
+                printIndentation(indentLevel);
+                std::cout << "}" << std::endl;
+                break;
 
         case CryoNodeType::NODE_RETURN_STATEMENT:
             printIndentation(indentLevel);

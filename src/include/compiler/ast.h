@@ -25,6 +25,9 @@
 #include "compiler/lexer.h"
 /*---------<end>---------*/
 
+#define INITIAL_CAPACITY 8
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
