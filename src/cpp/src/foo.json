@@ -1,0 +1,89 @@
+{
+    "Node": {
+        "Type": "Program",
+        "Program": {
+            "Statements": 1,
+            "Capacity": 2,
+            "StatementNodes": [
+                {
+                    "Node": {
+                        "Type": "Function",
+                        "Function": {
+                            "Visibility": "public",
+                            "Name": "testBasicfunc",
+                            "Params": 0,
+                            "ReturnType": "<int>",
+                            "Node": {
+                                "Type": "FunctionBlock",
+                                "FunctionBlock": {
+                                    "Block": [
+                                        {
+                                            "Node": {
+                                                "Type": "Variable",
+                                                "Variable": {
+                                                    "Name": "example",
+                                                    "VarType": "<int>",
+                                                    "Node": {
+                                                        "Type": "Literal",
+                                                        "Literal": {
+                                                            "Integer": 1
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "Node": {
+                                                "Type": "Variable",
+                                                "Variable": {
+                                                    "Name": "result",
+                                                    "VarType": "<int>",
+                                                    "Node": {
+                                                        "Type": "BinaryOperation",
+                                                        "BinaryOperation": {
+                                                            "Left": "0x1e6ffae2d20",
+                                                            "Right": "0x1e6ffae2c80",
+                                                            "Operator": 25,
+                                                            "OperatorText": "OP_PLUS",
+                                                            "Node": {
+                                                                "Type": "Literal",
+                                                                "Literal": {
+                                                                    "Integer": 4
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "Node": {
+                                                "Type": "Literal",
+                                                "Literal": {
+                                                    "Integer": 5
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "Node": {
+                                                "Type": "ReturnStatement",
+                                                "ReturnStatement": {
+                                                    "Node": {
+                                                        "Type": "Literal",
+                                                        "Literal": {
+                                                            "Integer": 34
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
