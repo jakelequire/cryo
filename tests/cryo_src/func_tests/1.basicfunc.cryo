@@ -1,5 +1,6 @@
 
 public function testBasicfunc() -> int {
     const example: int = 1;
+    const result: int = 4 + 5;
     return 34;
 }

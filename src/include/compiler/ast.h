@@ -41,6 +41,12 @@ typedef struct ASTNode {
             int stmtCount;
             int stmtCapacity;
         } program;
+
+        struct {
+            struct ASTNode** statements;
+            int stmtCount;
+            int stmtCapacity;
+        } block;
         
         // >=------<Function Declaration>------=<
         struct {
@@ -84,11 +90,7 @@ typedef struct ASTNode {
 
         int value;  // For literal number nodes
     
-        struct {
-            struct ASTNode** statements;
-            int stmtCount;
-            int stmtCapacity;
-        } block;
+
 
         struct {
             struct ASTNode* stmt;

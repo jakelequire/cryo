@@ -140,7 +140,10 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "\"Function\": " << node->data.functionBlock.function << "," << std::endl;
             printIndentation(indentLevel);
-            std::cout << "\"Block\": " << node->data.functionBlock.block << std::endl;
+            std::cout 
+            << "\"Block\": " 
+            << node->data.functionBlock.block
+            << std::endl;
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
