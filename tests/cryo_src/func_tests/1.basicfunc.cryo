@@ -3,5 +3,5 @@ public function testBasicfunc() -> int {
     const exampleVar: int = 69;
     const exampleVar2: int = 420;
     const exampleVar3: int = exampleVar + exampleVar2;
-    return 34;
+    return 69;
 }

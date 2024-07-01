@@ -180,7 +180,7 @@ void checkFunctionDeclaration(ASTNode* node, CryoSymbolTable* table) {
 
     // Add function parameters to the symbol table
     for (int i = 0; i < node->data.functionDecl.params; i++) {
-        ASTNode* param = node->data.functionDecl.params[i];
+        ASTNode* param = node->data.functionDecl.params->data.paramList.params[i];
         addSymbol(table, param->data.varDecl.name, param->data.varDecl.dataType, false);
     }
 

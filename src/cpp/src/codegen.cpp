@@ -260,12 +260,19 @@ void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mo
     if (node->data.returnStmt.returnValue) {
         std::cout << "[CPP] Return statement node has return value of type: " << node->data.returnStmt.returnValue->type << "\n";
         retValue = generateExpression(node->data.returnStmt.returnValue, builder, module);
-        std::cout << "[CPP] Return Statement Node with return value generated\n";
-    } else {
+    }
+
+    if (!retValue) {
         std::cerr << "[CPP] Error: Return statement value is null\n";
         builder.CreateRetVoid();
         return;
     }
+
+    // Check if the return value is a variable name and load its value
+    if (node->data.returnStmt.returnValue->type == CryoNodeType::NODE_VAR_NAME) {
+        retValue = getVariableValue(node->data.returnStmt.returnValue->data.varName.varName, builder);
+    }
+
     if (retValue) {
         std::cout << "[CPP] Return value: " << retValue << "\n";
         builder.CreateRet(retValue);
@@ -484,6 +491,7 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
                 std::cerr << "[CPP] Error: Variable not found: " << node->data.varName.varName << "\n";
                 return nullptr;
             }
+            // Return the loaded value instead of the pointer
             return var;
         }
         default:
