@@ -113,6 +113,7 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         default:
+            printf("[ERROR] Unknown node type: %d\n", node->data);
             fprintf(stderr, "[ERROR] Unknown node type: %d\n", node->type);
             break;
     }
@@ -196,6 +197,51 @@ void freeAST(ASTNode* node) {
 
         case NODE_BOOLEAN_LITERAL:
             printf("[AST] Freeing Boolean Literal Node\n");
+            break;
+            
+        case NODE_VAR_NAME:
+            printf("[AST] Freeing Variable Name Node\n");
+            free(node->data.varName.varName);
+            break;
+
+        case NODE_UNARY_EXPR:
+            printf("[AST] Freeing Unary Expression Node\n");
+            freeAST(node->data.unary_op.operand);
+            break;
+
+        case NODE_EXPRESSION_STATEMENT:
+            printf("[AST] Freeing Expression Statement Node\n");
+            freeAST(node->data.expr.expr);
+            break;
+
+        case NODE_FUNCTION_CALL:
+            printf("[AST] Freeing Function Call Node\n");
+            free(node->data.functionCall.name);
+            for (int i = 0; i < node->data.functionCall.argCount; i++) {
+                freeAST(node->data.functionCall.args[i]);
+            }
+            free(node->data.functionCall.args);
+            break;
+
+        case NODE_IF_STATEMENT:
+            printf("[AST] Freeing If Statement Node\n");
+            freeAST(node->data.ifStmt.condition);
+            freeAST(node->data.ifStmt.thenBranch);
+            freeAST(node->data.ifStmt.elseBranch);
+            break;
+
+        case NODE_WHILE_STATEMENT:
+            printf("[AST] Freeing While Statement Node\n");
+            freeAST(node->data.whileStmt.condition);
+            freeAST(node->data.whileStmt.body);
+            break;
+
+        case NODE_FOR_STATEMENT:
+            printf("[AST] Freeing For Statement Node\n");
+            freeAST(node->data.forStmt.initializer);
+            freeAST(node->data.forStmt.condition);
+            freeAST(node->data.forStmt.increment);
+            freeAST(node->data.forStmt.body);
             break;
 
         default:

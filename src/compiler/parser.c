@@ -181,11 +181,10 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             return booleanNode;
         }
         case TOKEN_IDENTIFIER: {
-            char* name = strndup(currentToken.start, currentToken.length);
+            // Handle identifier as a variable reference
+            char* varName = strndup(currentToken.start, currentToken.length);
             getNextToken(lexer);
-            ASTNode* variableNode = createVariableExpr(name);
-            printf("[Parser] Created Variable Node: %s\n", name);
-            return variableNode;
+            return createVariableExpr(varName);
         }
 
         case NODE_RETURN_STATEMENT: {
@@ -205,10 +204,7 @@ ASTNode* parseExpression(Lexer* lexer) {
     printf("[Parser] Parsing expression...\n");
     ASTNode* left = parsePrimaryExpression(lexer);
 
-    while (currentToken.type == TOKEN_OP_PLUS || 
-            currentToken.type == TOKEN_OP_MINUS || 
-            currentToken.type == TOKEN_OP_STAR || 
-            currentToken.type == TOKEN_OP_SLASH) {
+    while (currentToken.type == TOKEN_OP_PLUS || currentToken.type == TOKEN_OP_MINUS || currentToken.type == TOKEN_OP_STAR || currentToken.type == TOKEN_OP_SLASH) {
         CryoTokenType operatorType = currentToken.type;
         printf("[Parser] Found operator: %s\n", tokenTypeToString(operatorType));
         getNextToken(lexer);

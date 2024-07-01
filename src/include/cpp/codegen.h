@@ -19,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -38,9 +39,11 @@ extern "C" {
     #include "compiler/ast.h"
 }
 
+
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+llvm::Value* getVariableValue(const std::string& name);
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);

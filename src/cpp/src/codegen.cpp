@@ -22,6 +22,9 @@ llvm-as ./output.ll -o ./output.bc
 llc -filetype=obj ./output.bc -o ./output.o
 */
 
+std::unordered_map<std::string, llvm::Value*> namedValues;
+
+
 
 // <codegen> 
 void codegen(ASTNode* root) {
@@ -173,6 +176,15 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
 // </generateStatement>
 
 
+llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder) {
+    auto it = namedValues.find(name);
+    if (it != namedValues.end()) {
+        llvm::Value* var = it->second;
+        return builder.CreateLoad(var->getType(), var, llvm::Twine(name));
+    }
+    return nullptr;
+}
+
 // <generateVarDeclaration>
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for variable declaration\n";
@@ -184,7 +196,6 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     std::cout << "[CPP DEBUG] Variable data type:" << "\n";
     logCryoDataType(node->data.varDecl.dataType);
     std::cout << "[CPP DEBUG] Variable initializer: <" << node->data.varDecl.initializer << ">\n";
-    
 
     switch (node->data.varDecl.dataType) {
         case DATA_TYPE_INT:
@@ -213,11 +224,7 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             std::cerr << "[CPP] Void type cannot be used as a variable\n";
             return;
         default:
-            std::cout << "[CPP] Attempting to generate expression for variable initializer\n";
-            std::cout << "[CPP] Variable Name: " << node->data.varDecl.name << "\n";
-            std::cout << "[CPP] Variable Initializer: " << node->data.varDecl.initializer << "\n";
-            std::cout << "[CPP] Variable Initializer Type: " << node->data.varDecl.initializer->type << "\n";
-            generateExpression(node->data.varDecl.initializer, builder, module);
+            std::cerr << "[CPP] Unknown data type\n";
             return;
     }
 
@@ -226,17 +233,18 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
         return;
     }
 
-    std::string varName = node->data.varDecl.name;
-    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-        module,
-        varType,
-        false,
-        llvm::GlobalValue::ExternalLinkage,
-        static_cast<llvm::Constant*>(initializer),
-        varName
-    );
+    // Allocate the variable in the function's entry block
+    llvm::Function* function = builder.GetInsertBlock()->getParent();
+    llvm::IRBuilder<> tmpB(&function->getEntryBlock(), function->getEntryBlock().begin());
+    llvm::AllocaInst* alloca = tmpB.CreateAlloca(varType, 0, node->data.varDecl.name);
 
-    std::cout << "[CPP] Variable registered in module's global scope\n";
+    // Store the initializer in the allocated variable
+    builder.CreateStore(initializer, alloca);
+
+    // Add the variable to the named values map
+    namedValues[node->data.varDecl.name] = alloca;
+
+    std::cout << "[CPP] Variable registered in function's local scope\n";
     std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
 }
 // </generateVarDeclaration>
@@ -398,7 +406,6 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
 
     std::cout << "[CPP - DEBUG] Expression type: " << node->type << "\n";
     std::cout << "[CPP - DEBUG] Expression data type: " << node->data.literalExpression.dataType << "\n";
-    
 
     switch (node->type) {
         case CryoNodeType::NODE_LITERAL_EXPR:
@@ -407,14 +414,78 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
                 case DATA_TYPE_INT:
                     std::cout << "[CPP] Generating int literal: " << node->data.literalExpression.intValue << "\n";
                     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), node->data.literalExpression.intValue);
-                // Handle other data types...
+
+                case DATA_TYPE_FLOAT:
+                    std::cout << "[CPP] Generating float literal: " << node->data.literalExpression.floatValue << "\n";
+                    return llvm::ConstantFP::get(llvm::Type::getFloatTy(module.getContext()), node->data.literalExpression.floatValue);
+
+                case DATA_TYPE_STRING:
+                    std::cout << "[CPP] Generating string literal: " << node->data.literalExpression.stringValue << "\n";
+                    return createString(builder, module, node->data.literalExpression.stringValue);
+
+                case DATA_TYPE_BOOLEAN:
+                    std::cout << "[CPP] Generating boolean literal: " << node->data.literalExpression.booleanValue << "\n";
+                    return llvm::ConstantInt::get(llvm::Type::getInt1Ty(module.getContext()), node->data.literalExpression.booleanValue);
+
+                case DATA_TYPE_VOID:
+                    std::cerr << "[CPP] Error: Void type cannot be used as an expression\n";
+                    return nullptr;
+
+                case DATA_TYPE_UNKNOWN:
+                    std::cerr << "[CPP] Error: Unknown data type\n";
+                    return nullptr;
+
                 default:
                     std::cerr << "[CPP] Unknown literal expression type\n";
                     return nullptr;
             }
-        case CryoNodeType::NODE_BINARY_EXPR:
-            std::cout << "[CPP] Generating code for binary operation\n";
-            return generateBinaryOperation(node, builder, module);
+            
+        case CryoNodeType::NODE_BINARY_EXPR: {
+            llvm::Value* left = generateExpression(node->data.bin_op.left, builder, module);
+            llvm::Value* right = generateExpression(node->data.bin_op.right, builder, module);
+            if (!left || !right) {
+                std::cerr << "[CPP] Error generating binary operation: operands are null\n";
+                return nullptr;
+            }
+            std::cout << "[CPP] Binary operation operands generated\n";
+        
+            // Check and cast the operands to integer types if necessary
+            if (left->getType()->isPointerTy()) {
+                left = builder.CreatePtrToInt(left, llvm::Type::getInt32Ty(module.getContext()));
+            }
+            if (right->getType()->isPointerTy()) {
+                right = builder.CreatePtrToInt(right, llvm::Type::getInt32Ty(module.getContext()));
+            }
+        
+            if (!left->getType()->isIntegerTy() || !right->getType()->isIntegerTy()) {
+                std::cerr << "[CPP] Error: Binary operation requires integer operands\n";
+                return nullptr;
+            }
+        
+            switch (node->data.bin_op.op) {
+                case TOKEN_OP_PLUS:
+                    return builder.CreateAdd(left, right, "addtmp");
+                case TOKEN_OP_MINUS:
+                    return builder.CreateSub(left, right, "subtmp");
+                case TOKEN_OP_STAR:
+                    return builder.CreateMul(left, right, "multmp");
+                case TOKEN_OP_SLASH:
+                    return builder.CreateSDiv(left, right, "divtmp");
+                default:
+                    std::cerr << "[CPP] Unknown binary operator\n";
+                    return nullptr;
+            }
+            break;
+        }
+
+        case CryoNodeType::NODE_VAR_NAME: {
+            llvm::Value* var = getVariableValue(node->data.varName.varName, builder);
+            if (!var) {
+                std::cerr << "[CPP] Error: Variable not found: " << node->data.varName.varName << "\n";
+                return nullptr;
+            }
+            return var;
+        }
         default:
             std::cerr << "[CPP] Unknown expression type\n";
             return nullptr;
@@ -426,6 +497,7 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
 // <generateBinaryOperation>
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for binary operation\n";
+
     llvm::Value* left = generateExpression(node->data.bin_op.left, builder, module);
     llvm::Value* right = generateExpression(node->data.bin_op.right, builder, module);
 
@@ -439,16 +511,16 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
     switch (node->data.bin_op.op) {
         case CryoTokenType::TOKEN_OP_PLUS:
             std::cout << "[CPP] Generating code for binary operation: ADD\n";
-            return builder.CreateAdd(left, right);
+            return builder.CreateAdd(left, right, "addtmp");
         case CryoTokenType::TOKEN_OP_MINUS:
             std::cout << "[CPP] Generating code for binary operation: SUB\n";
-            return builder.CreateSub(left, right);
+            return builder.CreateSub(left, right, "subtmp");
         case CryoTokenType::TOKEN_OP_STAR:
             std::cout << "[CPP] Generating code for binary operation: MUL\n";
-            return builder.CreateMul(left, right);
+            return builder.CreateMul(left, right, "multmp");
         case CryoTokenType::TOKEN_OP_SLASH:
             std::cout << "[CPP] Generating code for binary operation: DIV\n";
-            return builder.CreateSDiv(left, right);
+            return builder.CreateSDiv(left, right, "divtmp");
         default:
             std::cerr << "[CPP] Unknown binary operator\n";
             return nullptr;
