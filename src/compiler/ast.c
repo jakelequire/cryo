@@ -293,6 +293,7 @@ ASTNode* createLiteralExpr(int value) {
     }
     node->data.literalExpression.dataType = DATA_TYPE_INT;
     node->data.literalExpression.intValue = value;
+    printf("[Parser] Created IntLiteral Node with value: %d and type: %d\n", value, node->data.literalExpression.dataType);
     return node;
 }
 // </createLiteralExpr>
@@ -364,12 +365,25 @@ ASTNode* createFunctionNode(const char* function_name, ASTNode* params, ASTNode*
     }
     node->data.functionDecl.name = strdup(function_name);
     node->data.functionDecl.params = params;
+    node->data.functionDecl.paramCount = 0;
     node->data.functionDecl.body = function_body;
     node->data.functionDecl.returnType = returnType;
+    node->data.functionDecl.visibility = VISIBILITY_PUBLIC;
+    printf("\n[AST] Function Node Created: %s with return type: %d\n", function_name, returnType);
     return node;
 }
 
 // </createFunctionNode>
+
+
+// <createReturnNode>
+ASTNode* createReturnNode(ASTNode* returnValue) {
+    ASTNode* node = createASTNode(NODE_RETURN_STATEMENT);
+    node->data.returnStmt.returnValue = returnValue;
+    printf("[AST] Return Node Created with return value of type: %d\n", returnValue ? returnValue->type : -1);
+    return node;
+}
+// </createReturnNode>
 
 
 // <createReturnStatement>

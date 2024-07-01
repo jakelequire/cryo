@@ -33,11 +33,14 @@ extern "C" {
 #endif
 
 /*-------<structure_defs>-------*/
+//
+
 typedef struct ASTNode {
     enum CryoNodeType type;
     int line;  // Line number for error reporting
     struct ASTNode* firstChild;  // First child node (for linked list structure)
     struct ASTNode* nextSibling; // Next sibling node (for linked list structure)
+
     union {
         struct {
             struct ASTNode** statements;
@@ -56,6 +59,7 @@ typedef struct ASTNode {
             CryoVisibilityType visibility;
             char* name;
             struct ASTNode* params;
+            int paramCount;
             struct ASTNode* body;
             CryoDataType returnType;
         } functionDecl;
@@ -160,6 +164,7 @@ typedef struct ASTNode {
     } data;
 } ASTNode;
 /*-------<end_defs>-------*/
+
 /*-----<function_prototypes>-----*/
 void printAST(ASTNode* node, int indent);
 void freeAST(ASTNode* node);
@@ -171,6 +176,7 @@ ASTNode* createStringLiteralExpr(const char* str);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType op);
 ASTNode* createUnaryExpr(CryoTokenType op, ASTNode* operand);
 ASTNode* createFunctionNode(const char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType);
+ASTNode* createReturnNode(ASTNode* returnValue);
 ASTNode* createReturnStatement(ASTNode* return_val);
 ASTNode* createBlock();
 ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);

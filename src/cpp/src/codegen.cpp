@@ -64,33 +64,73 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
     std::cout << "[CPP] Generating code for node: " << std::endl;
     logASTNode(node, 2);
 
-    switch (node->type) {
+    switch(node->type) {
         case CryoNodeType::NODE_PROGRAM:
-            std::cout << "[CPP] Starting code generation for program...\n" << std::endl;
+            std::cout << "[CPP] Generating code for program\n";
             generateProgram(node, builder, module);
             break;
+
+        case CryoNodeType::NODE_FUNCTION_DECLARATION:
+            std::cout << "[CPP] Generating code for function\n";
+            generateFunction(node, builder, module);
+            break;
+
+        case CryoNodeType::NODE_VAR_DECLARATION:
+            std::cout << "[CPP] Generating code for variable declaration\n";
+            generateVarDeclaration(node, builder, module);
+            break;
+
         case CryoNodeType::NODE_STATEMENT:
-            std::cout << "[CPP] Starting code generation for <statement>\n" << std::endl;
+            std::cout << "[CPP] Generating code for statement\n";
             generateStatement(node, builder, module);
             break;
-        case CryoNodeType::NODE_FUNCTION_DECLARATION:
-            // Add function declaration handling here
+
+        case CryoNodeType::NODE_EXPRESSION:
+            std::cout << "[CPP] Generating code for expression\n";
+            generateExpression(node, builder, module);
             break;
+
+        case CryoNodeType::NODE_BINARY_EXPR:
+            std::cout << "[CPP] Generating code for binary expression\n";
+            generateBinaryOperation(node, builder, module);
+            break;        
+
+        case CryoNodeType::NODE_UNARY_EXPR:
+            std::cout << "[CPP] Generating code for unary expression\n";
+            // TODO: Implement unary expression code generation
+            break;
+        
+        case CryoNodeType::NODE_LITERAL_EXPR:
+            std::cout << "[CPP] Generating code for literal expression\n";
+            // TODO: Implement literal expression code generation
+            break;
+        
+        case CryoNodeType::NODE_VAR_NAME:
+            std::cout << "[CPP] Generating code for variable name\n";
+            // TODO: Implement variable name code generation
+            break;
+
+        case CryoNodeType::NODE_FUNCTION_CALL:
+            std::cout << "[CPP] Generating code for function call\n";
+            // TODO: Implement function call code generation
+
+        case CryoNodeType::NODE_RETURN_STATEMENT:
+            std::cout << "[CPP] Generating code for return statement\n";
+            generateReturnStatement(node, builder, module);
+            break;
+
         case CryoNodeType::NODE_BLOCK:
             std::cout << "[CPP] Generating code for block\n";
             generateBlock(node, builder, module);
             break;
-        case CryoNodeType::NODE_EXPRESSION:
-            std::cout << "[CPP] Starting code generation for <expression>\n" << std::endl;
-            generateExpression(node, builder, module);
+
+        case CryoNodeType::NODE_FUNCTION_BLOCK:
+            std::cout << "[CPP] Generating code for function block\n";
+            generateFunctionBlock(node, builder, module);
             break;
-        case CryoNodeType::NODE_VAR_DECLARATION:
-            std::cout << "[CPP] Starting code generation for <var declaration>\n" << std::endl;
-            generateVarDeclaration(node, builder, module);
-            break;
-        // Add cases for other node types
+
         default:
-            std::cerr << "[CPP] Unknown AST node type\n";
+            std::cerr << "[CPP] Unknown node type\n";
             break;
     }
 }
@@ -202,32 +242,113 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
 // </generateVarDeclaration>
 
 
+// <generateReturnStatement>
+void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    if (!node) {
+        std::cerr << "[CPP] Error: Return statement node is null\n";
+        return;
+    }
+    llvm::Value* retValue = nullptr;
+    if (node->data.returnStmt.returnValue) {
+        std::cout << "[CPP] Return statement node has return value of type: " << node->data.returnStmt.returnValue->type << "\n";
+        retValue = generateExpression(node->data.returnStmt.returnValue, builder, module);
+        std::cout << "[CPP] Return Statement Node with return value generated\n";
+    } else {
+        std::cerr << "[CPP] Error: Return statement value is null\n";
+        builder.CreateRetVoid();
+        return;
+    }
+    if (retValue) {
+        std::cout << "[CPP] Return value: " << retValue << "\n";
+        builder.CreateRet(retValue);
+    } else {
+        std::cerr << "[CPP] Error: Failed to generate return value\n";
+        builder.CreateRetVoid();
+    }
+}
+// </generateReturnStatement>
+
+
 // <generateFunction>
 void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for function: " << node->data.functionDecl.name << "\n";
-    
-    // Define function return type and parameters
-    llvm::FunctionType* funcType = llvm::FunctionType::get(builder.getVoidTy(), false);
-    llvm::Function::LinkageTypes linkageType = llvm::Function::ExternalLinkage;
-    
-    // Check visibility
-    if (node->data.functionDecl.visibility == CryoVisibilityType::VISIBILITY_PUBLIC) {
-        linkageType = llvm::Function::ExternalLinkage;
-    } else if (node->data.functionDecl.visibility == CryoVisibilityType::VISIBILITY_PRIVATE) {
-        linkageType = llvm::Function::PrivateLinkage;
+
+    // Retrieve and handle the function return type
+    llvm::Type* returnType = nullptr;
+    switch (node->data.functionDecl.returnType) {
+        case DATA_TYPE_INT:
+            returnType = llvm::Type::getInt32Ty(module.getContext());
+            break;
+        case DATA_TYPE_FLOAT:
+            returnType = llvm::Type::getFloatTy(module.getContext());
+            break;
+        case DATA_TYPE_BOOLEAN:
+            returnType = llvm::Type::getInt1Ty(module.getContext());
+            break;
+        case DATA_TYPE_VOID:
+            returnType = builder.getVoidTy();
+            break;
+        default:
+            std::cerr << "[CPP] Error: Unknown function return type: " << node->data.functionDecl.returnType << "\n";
+            return;
+    }
+    std::cout << "[CPP] Function return type: " << node->data.functionDecl.returnType << " mapped to LLVM type: " << returnType << "\n";
+
+    // Define function parameters
+    std::vector<llvm::Type*> paramTypes;
+    if (node->data.functionDecl.params) {
+        for (int i = 0; i < node->data.functionDecl.paramCount; ++i) {
+            ASTNode* paramNode = node->data.functionDecl.params->data.paramList.params[i];
+            switch (paramNode->data.varDecl.dataType) {
+                case DATA_TYPE_INT:
+                    paramTypes.push_back(llvm::Type::getInt32Ty(module.getContext()));
+                    break;
+                case DATA_TYPE_FLOAT:
+                    paramTypes.push_back(llvm::Type::getFloatTy(module.getContext()));
+                    break;
+                case DATA_TYPE_BOOLEAN:
+                    paramTypes.push_back(llvm::Type::getInt1Ty(module.getContext()));
+                    break;
+                default:
+                    std::cerr << "[CPP] Error: Unknown parameter type\n";
+                    return;
+            }
+        }
     }
 
+    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
+    llvm::Function::LinkageTypes linkageType = node->data.functionDecl.visibility == CryoVisibilityType::VISIBILITY_PRIVATE ? llvm::Function::PrivateLinkage : llvm::Function::ExternalLinkage;
     llvm::Function* function = llvm::Function::Create(funcType, linkageType, node->data.functionDecl.name, module);
 
-    // Create a new basic block for the function body
+    // Assign names to the parameters
+    auto paramIter = function->arg_begin();
+    if (node->data.functionDecl.params) {
+        for (int i = 0; i < node->data.functionDecl.paramCount; ++i, ++paramIter) {
+            ASTNode* paramNode = node->data.functionDecl.params->data.paramList.params[i];
+            paramIter->setName(paramNode->data.varDecl.name);
+        }
+    }
+
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), "entry", function);
     builder.SetInsertPoint(BB);
 
-    // Generate code for the function body (statements)
-    generateCode(node->data.functionDecl.body, builder, module);
+    // Check for a valid function body
+    if (node->data.functionDecl.body) {
+        generateCode(node->data.functionDecl.body, builder, module);
+    } else {
+        std::cerr << "[CPP] Error: Function body is null\n";
+        return;
+    }
 
-    // Finish up function generation
-    builder.CreateRetVoid();
+    // Ensure proper function termination
+    if (returnType->isVoidTy()) {
+        builder.CreateRetVoid();
+    } else {
+        if (BB->getTerminator() == nullptr) {
+            std::cerr << "[CPP] Error: Missing return statement\n";
+            builder.CreateRet(llvm::Constant::getNullValue(returnType));
+        }
+    }
 }
 // </generateFunction>
 
@@ -235,7 +356,7 @@ void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
 // <generateBlock>
 void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for block\n";
-    if (node->data.block.stmtCount == 0) {
+    if (!node || node->data.block.stmtCount == 0) {
         std::cerr << "[CPP] Error generating code for block: No statements found\n";
         return;
     }
@@ -248,21 +369,45 @@ void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modu
 // </generateBlock>
 
 
+// <generateFunctionBlock>
+void generateFunctionBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::cout << "[CPP] Generating code for function block\n";
+    if (!node || !node->data.functionBlock.block) {
+        std::cerr << "[CPP] Error generating code for function block: Invalid function block\n";
+        return;
+    }
+    std::cout << "[CPP] Function block contains " << node->data.functionBlock.block->data.block.stmtCount << " statements\n";
+
+    // Generate code for each statement in the block
+    for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
+        std::cout << "[CPP] Generating code for block statement " << i << "\n";
+        generateCode(node->data.functionBlock.block->data.block.statements[i], builder, module);
+        std::cout << "[CPP] Moving to next statement\n";
+    }
+}
+// </generateFunctionBlock>
+
+
 // <generateExpression>
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for expression\n";
+    if (!node) {
+        std::cerr << "[CPP] Error: Expression node is null\n";
+        return nullptr;
+    }
+
+    std::cout << "[CPP - DEBUG] Expression type: " << node->type << "\n";
+    std::cout << "[CPP - DEBUG] Expression data type: " << node->data.literalExpression.dataType << "\n";
+    
+
     switch (node->type) {
         case CryoNodeType::NODE_LITERAL_EXPR:
             std::cout << "[CPP] Generating code for literal expression\n";
             switch (node->data.literalExpression.dataType) {
                 case DATA_TYPE_INT:
+                    std::cout << "[CPP] Generating int literal: " << node->data.literalExpression.intValue << "\n";
                     return llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), node->data.literalExpression.intValue);
-                case DATA_TYPE_STRING:
-                    return createString(builder, module, node->data.literalExpression.stringValue);
-                case DATA_TYPE_BOOLEAN:
-                    return llvm::ConstantInt::get(llvm::Type::getInt1Ty(module.getContext()), node->data.literalExpression.booleanValue);
-                case DATA_TYPE_FLOAT:
-                    return llvm::ConstantFP::get(llvm::Type::getFloatTy(module.getContext()), node->data.literalExpression.floatValue);
+                // Handle other data types...
                 default:
                     std::cerr << "[CPP] Unknown literal expression type\n";
                     return nullptr;

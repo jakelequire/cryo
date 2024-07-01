@@ -52,9 +52,13 @@ int main(int argc, char* argv[]) {
     ASTNode* programNode = parseProgram(&lexer);
 
     if(programNode != NULL) {
-        printf("\n>===------- AST Tree -------===<\n");
+        printf("\n\n>===------- AST Tree -------===<\n\n");
         printAST(programNode, 0);
-        printf("\n>===------- End Tree ------===<\n");
+        printf("\n>===------- End Tree ------===<\n\n");
+
+        printf("\n>===------- Semantic Analysis -------===<\n\n");
+        analyzeNode(programNode);
+        printf("\n\n>===------- End Analysis ------===<\n\n");
     }
 
     if (programNode) {

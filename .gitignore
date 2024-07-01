@@ -54,3 +54,9 @@ output.ll
 *.userosscache
 *.sln.docstates
 *.cache
+
+
+# Notes
+./notes/
+./notes/*
+./notes/**

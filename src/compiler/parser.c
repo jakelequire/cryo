@@ -126,6 +126,7 @@ CryoDataType getCryoDataType(const char* typeStr) {
     } else if (strcmp(typeStr, "null") == 0) {
         return DATA_TYPE_NULL;
     } else {
+        printf("\n\n[!!Parser!!] Unknown data type: %s\n\n", typeStr); // Debugging
         return DATA_TYPE_UNKNOWN;
     }
 }
@@ -292,17 +293,18 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility) {
             error("Expected return type");
         }
         char* returnTypeStr = strndup(currentToken.start, currentToken.length);
-        returnType = getCryoDataType(returnTypeStr);  // Store and use this return type
+        returnType = getCryoDataType(returnTypeStr);
+        printf("\n\n[Parser] Return type identified: %s, Enum: %d\n", returnTypeStr, returnType);  // Add this line to debug
         free(returnTypeStr);
         getNextToken(lexer);
-}
+    }
 
     ASTNode* body = parseFunctionBlock(lexer);
     ASTNode* functionNode = createFunctionNode(functionName, params, body, returnType);
     functionNode->data.functionDecl.visibility = visibility;
     functionNode->data.functionDecl.returnType = returnType;
 
-    printf("[Parser] Created Function Declaration Node: %s\n", functionName);
+    printf("[Parser] Created Function Declaration Node: %s with return type: %d\n", functionName, returnType);
     return functionNode;
 }
 // </parseFunctionDeclaration>
@@ -313,6 +315,7 @@ ASTNode* parseParameterList(Lexer* lexer) {
     // Parse parameter list
     ASTNode* paramList = createASTNode(NODE_PARAM_LIST);
     paramList->data.paramList.paramCount = 0;  // Initialize count
+    paramList->data.functionDecl.paramCount = 0;  // Initialize count
 
     while (currentToken.type != TOKEN_RPAREN && currentToken.type != TOKEN_EOF) {
         if (currentToken.type == TOKEN_IDENTIFIER) {
@@ -330,7 +333,8 @@ ASTNode* parseParameterList(Lexer* lexer) {
             ASTNode* paramNode = createVarDeclarationNode(paramName, dataType, NULL, currentToken.line);
             addChildNode(paramList, paramNode);
             paramList->data.paramList.paramCount++;  // Increment count
-
+            paramList->data.functionDecl.paramCount++;  // Increment count
+            
             if (currentToken.type == TOKEN_COMMA) {
                 getNextToken(lexer);
             } else if (currentToken.type != TOKEN_RPAREN) {
@@ -354,15 +358,23 @@ ASTNode* parseReturnStatement(Lexer* lexer) {
 
     // Parse the return value if present
     if (currentToken.type != TOKEN_SEMICOLON) {
-        returnNode->data.returnStmt.returnValue = parseExpression(lexer);
+        ASTNode* returnValue = parseExpression(lexer);
+        if (returnValue) {
+            returnNode->data.returnStmt.returnValue = returnValue;
+            printf("[Parser] Return value parsed with type: %d\n", returnValue->type);
+        } else {
+            printf("[Parser] Error: Failed to parse return value\n");
+        }
     } else {
         returnNode->data.returnStmt.returnValue = NULL;
+        printf("[Parser] No return value\n");
     }
 
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after return value");
-    printf("[Parser] Created Return Statement Node\n");
+    printf("[Parser] Created Return Statement Node with return value of type: %d\n", returnNode->data.returnStmt.returnValue ? returnNode->data.returnStmt.returnValue->type : -1);
     return returnNode;
 }
+
 // </parseReturnStatement>
 
 

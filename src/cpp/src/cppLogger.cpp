@@ -35,10 +35,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
     indentLevel++;
 
     printIndentation(indentLevel);
-    std::cout 
-    << "\"Type\": \"" 
-    << nodeTypeToString(node->type) 
-    << "\"," << std::endl;
+    std::cout << "\"Type\": \"" << nodeTypeToString(node->type) << "\"," << std::endl;
 
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
@@ -112,62 +109,54 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Function\": {" << std::endl;
             indentLevel++;
             printIndentation(indentLevel);
-            std::cout 
-            << "\"Visibility\": \"" 
-            << visibilityToString(node->data.functionDecl.visibility) 
-            << "\"," << std::endl;
+            std::cout << "\"Visibility\": \"" << visibilityToString(node->data.functionDecl.visibility) << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Name\": \"" << node->data.functionDecl.name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Params\": " << node->data.functionDecl.params << "," << std::endl;
             printIndentation(indentLevel);
-
-            std::cout << "\"ReturnType\": \"" 
-            << dataTypeToString(node->data.functionDecl.returnType) 
-            << "\"," 
-            << std::endl;
-            
+            std::cout << "\"ReturnType\": \"" << dataTypeToString(node->data.functionDecl.returnType) << "\"," << std::endl;
             logASTNode(node->data.functionDecl.body, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
 
-            case CryoNodeType::NODE_FUNCTION_BLOCK:
-                printIndentation(indentLevel);
-                std::cout << "\"FunctionBlock\": {" << std::endl;
-                indentLevel++;
-                printIndentation(indentLevel);
-                std::cout << "\"Block\": [" << std::endl;
+        case CryoNodeType::NODE_FUNCTION_BLOCK:
+            printIndentation(indentLevel);
+            std::cout << "\"FunctionBlock\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Block\": [" << std::endl;
 
-                if(!node->data.functionBlock.function) {
-                    printIndentation(indentLevel + 1);
-                    std::cout << "\"Function\": null" << std::endl;
-                } else {
-                    logASTNode(node->data.functionBlock.function, indentLevel + 1);
-                }
+            if (!node->data.functionBlock.function) {
+                printIndentation(indentLevel + 1);
+                std::cout << "\"Function\": null" << std::endl;
+            } else {
+                logASTNode(node->data.functionBlock.function, indentLevel + 1);
+            }
 
-                if (node->data.functionBlock.block) {
-                    for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
-                        logASTNode(node->data.functionBlock.block->data.block.statements[i], indentLevel + 1);
-                        if (i < node->data.functionBlock.block->data.block.stmtCount - 1) {
-                            std::cout << "," << std::endl;
-                        }
+            if (node->data.functionBlock.block) {
+                for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
+                    logASTNode(node->data.functionBlock.block->data.block.statements[i], indentLevel + 1);
+                    if (i < node->data.functionBlock.block->data.block.stmtCount - 1) {
+                        std::cout << "," << std::endl;
                     }
                 }
+            }
 
-                std::cout << std::endl;
-                printIndentation(indentLevel);
-                std::cout << "]" << std::endl;
-                indentLevel--;
-                printIndentation(indentLevel);
-                std::cout << "}" << std::endl;
-                break;
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
 
         case CryoNodeType::NODE_RETURN_STATEMENT:
             printIndentation(indentLevel);
             std::cout << "\"ReturnStatement\": {" << std::endl;
-            logASTNode(node->data.stmt.stmt, indentLevel + 1);
+            logASTNode(node->data.returnStmt.returnValue, indentLevel + 1);
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
@@ -179,11 +168,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "\"Name\": \"" << node->data.varDecl.name << "\"," << std::endl;
             printIndentation(indentLevel);
-            std::cout 
-            << "\"VarType\": \"" 
-            << dataTypeToString(node->data.varDecl.dataType) 
-            << "\"," 
-            << std::endl;
+            std::cout << "\"VarType\": \"" << dataTypeToString(node->data.varDecl.dataType) << "\"," << std::endl;
             logASTNode(node->data.varDecl.initializer, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
@@ -249,7 +234,131 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "}" << std::endl;
             break;
 
+        case CryoNodeType::NODE_UNARY_EXPR:
+            printIndentation(indentLevel);
+            std::cout << "\"UnaryOperation\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Operand\": " << node->data.unary_op.operand << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Operator\": " << node->data.unary_op.op << std::endl;
+            logASTNode(node->data.unary_op.operand, indentLevel + 1);
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
 
+        case CryoNodeType::NODE_VAR_NAME:
+            printIndentation(indentLevel);
+            std::cout << "\"VariableName\": \"" << node->data.varName.varName << "\"" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_FUNCTION_CALL:
+            printIndentation(indentLevel);
+            std::cout << "\"FunctionCall\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Name\": \"" << node->data.functionCall.name << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Args\": [" << std::endl;
+            for (int i = 0; i < node->data.functionCall.argCount; ++i) {
+                logASTNode(node->data.functionCall.args[i], indentLevel + 1);
+                if (i < node->data.functionCall.argCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_IF_STATEMENT:
+            printIndentation(indentLevel);
+            std::cout << "\"IfStatement\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Condition\": {" << std::endl;
+            logASTNode(node->data.ifStmt.condition, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Then\": {" << std::endl;
+            logASTNode(node->data.ifStmt.thenBranch, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}," << std::endl;
+            if (node->data.ifStmt.elseBranch) {
+                printIndentation(indentLevel);
+                std::cout << "\"Else\": {" << std::endl;
+                logASTNode(node->data.ifStmt.elseBranch, indentLevel + 1);
+                printIndentation(indentLevel);
+                std::cout << "}," << std::endl;
+            }
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_WHILE_STATEMENT:
+            printIndentation(indentLevel);
+            std::cout << "\"WhileStatement\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Condition\": {" << std::endl;
+            logASTNode(node->data.whileStmt.condition, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Body\": {" << std::endl;
+            logASTNode(node->data.whileStmt.body, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_FOR_STATEMENT:
+            printIndentation(indentLevel);
+            std::cout << "\"ForStatement\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Initializer\": {" << std::endl;
+            logASTNode(node->data.forStmt.initializer, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Condition\": {" << std::endl;
+            logASTNode(node->data.forStmt.condition, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Increment\": {" << std::endl;
+            logASTNode(node->data.forStmt.increment, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Body\": {" << std::endl;
+            logASTNode(node->data.forStmt.body, indentLevel + 1);
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_STRING_LITERAL:
+            printIndentation(indentLevel);
+            std::cout << "\"StringLiteral\": \"" << node->data.str.str << "\"" << std::endl;
+            break;
+
+        case CryoNodeType::NODE_BOOLEAN_LITERAL:
+            printIndentation(indentLevel);
+            std::cout << "\"BooleanLiteral\": " << (node->data.boolean.value ? "true" : "false") << std::endl;
+            break;
 
         default:
             printIndentation(indentLevel);
@@ -261,7 +370,6 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
     printIndentation(indentLevel);
     std::cout << "}" << std::endl;
 }
-
 
 
 
@@ -325,29 +433,24 @@ char* visibilityToString(CryoVisibilityType visibility) {
 
 char* nodeTypeToString(CryoNodeType type) {
     switch (type) {
-        case NODE_PROGRAM:
-            return "Program";
-        case NODE_STATEMENT:
-            return "Statement";
-        case NODE_EXPRESSION:
-            return "Expression";
-        case NODE_LITERAL_EXPR:
-            return "Literal";
-        case NODE_FUNCTION_DECLARATION:
-            return "Function";
-        case NODE_FUNCTION_BLOCK:
-            return "FunctionBlock";
-        case NODE_RETURN_STATEMENT:
-            return "ReturnStatement";
-        case NODE_VAR_DECLARATION:
-            return "Variable";
-        case NODE_PARAM_LIST:
-            return "Parameters";
-        case NODE_BLOCK:
-            return "Block";
-        case NODE_BINARY_EXPR:
-            return "BinaryOperation";
-        default:
-            return "Unknown";
+        case NODE_PROGRAM: return "Program";
+        case NODE_FUNCTION_DECLARATION: return "Function Declaration";
+        case NODE_VAR_DECLARATION: return "Variable Declaration";
+        case NODE_STATEMENT: return "Statement";
+        case NODE_EXPRESSION: return "Expression";
+        case NODE_LITERAL_EXPR: return "Literal Expression";
+        case NODE_FUNCTION_BLOCK: return "Function Block";
+        case NODE_RETURN_STATEMENT: return "Return Statement";
+        case NODE_PARAM_LIST: return "Parameter List";
+        case NODE_BLOCK: return "Block";
+        case NODE_BINARY_EXPR: return "Binary Expression";
+        case NODE_UNARY_EXPR: return "Unary Expression";
+        case NODE_FUNCTION_CALL: return "Function Call";
+        case NODE_IF_STATEMENT: return "If Statement";
+        case NODE_WHILE_STATEMENT: return "While Statement";
+        case NODE_FOR_STATEMENT: return "For Statement";
+
+        // Add all other cases...
+        default: return "Unknown";
     }
 }

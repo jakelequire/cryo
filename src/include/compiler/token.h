@@ -218,13 +218,15 @@ typedef enum CryoNodeType {
 
 
 typedef enum CryoDataType {
-    DATA_TYPE_INT,       // `int`               0
-    DATA_TYPE_FLOAT,     // `float`             1
-    DATA_TYPE_STRING,    // `string`            2
-    DATA_TYPE_BOOLEAN,   // `boolean`           3
-    DATA_TYPE_VOID,      // `void`              4
-    DATA_TYPE_NULL,      // `null`              5
-    DATA_TYPE_UNKNOWN,   // `<UNKNOWN>`         6
+    DATA_TYPE_UNKNOWN = -1,     // `<UNKNOWN>`         -1
+    DATA_TYPE_INT,              // `int`               0
+    NODE_LITERAL_INT,           // `123`               1
+    DATA_TYPE_FLOAT,            // `float`             2
+    DATA_TYPE_STRING,           // `string`            3
+    DATA_TYPE_BOOLEAN,          // `boolean`           4
+    DATA_TYPE_VOID,             // `void`              5
+    DATA_TYPE_FUNCTION,         // `function`          6
+    DATA_TYPE_NULL,             // `null`              7
 } CryoDataType;
 
 

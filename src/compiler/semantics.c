@@ -16,232 +16,277 @@
  ********************************************************************************/
 #include "compiler/semantics.h"
 
-
-// <analyze>
-bool analyze(ASTNode* root) {
-    if (!root) return false;
-
-    return analyzeNode(root);
+char* logCryoDataType(CryoDataType type) {
+    switch (type) {
+        case DATA_TYPE_INT:
+            return "int";
+        case DATA_TYPE_FLOAT:
+            return "float";
+        case DATA_TYPE_BOOLEAN:
+            return "bool";
+        case DATA_TYPE_STRING:
+            return "string";
+        case DATA_TYPE_FUNCTION:
+            return "function";
+        default:
+            return "unknown";
+    }
 }
-// </analyze>
+
+CryoSymbolTable* createSymbolTable() {
+    CryoSymbolTable* table = (CryoSymbolTable*)malloc(sizeof(CryoSymbolTable));
+    table->count = 0;
+    table->capacity = 10;
+    table->symbols = (CryoSymbol**)malloc(table->capacity * sizeof(CryoSymbol*));
+    table->scopeDepth = 0;
+    return table;
+}
+
+void freeSymbolTable(CryoSymbolTable* table) {
+    for (int i = 0; i < table->count; i++) {
+        free(table->symbols[i]);
+    }
+    free(table->symbols);
+    free(table);
+}
+
+void printSymbolTable(CryoSymbolTable* table) {
+    printf("[Debug] Symbol count: %d\n", table->count);
+    printf("[Debug] Scope depth: %d\n", table->scopeDepth);
+    printf("[Debug] Table capacity: %d\n", table->capacity);
+    printf("\n-----------------------------------------------------\n");
+    printf("Symbol Table:\n\n");
+    printf("Name               Type    Scope   Const   ArgCount");
+    printf("\n-----------------------------------------------------\n");
+    for (int i = 0; i < table->count; i++) {
+        CryoSymbol* symbol = table->symbols[i];
+        printf("%-18s %-7s %-7d %-7s %-8d\n",
+               symbol->name,
+               logCryoDataType(symbol->type),
+               symbol->scopeLevel,
+               symbol->isConstant ? "true" : "false",
+               symbol->argCount);
+    }
+    printf("-----------------------------------------------------\n");
+}
 
 
-// <analyzeVariableDeclaration>
-bool analyzeVariableDeclaration(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing variable declaration: %s\n", node->data.varDecl.name);
-    // Check if variable is redeclared in the same scope
-    // Ensure the initialization expression is valid
-    if (node->data.varDecl.initializer) {
-        if (!analyzeNode(node->data.varDecl.initializer)) {
-            printf("{Semantics} [ERROR] Invalid initialization for variable: %s\n", node->data.varDecl.name);
-            return false;
+
+
+// >===------------------------------------===< //
+// >===-------- Symbol Management ---------===< //
+// >===------------------------------------===< //
+
+
+void enterScope(CryoSymbolTable* table) {
+    table->scopeDepth++;
+}
+
+void exitScope(CryoSymbolTable* table) {
+    int originalCount = table->count;
+    for (int i = originalCount - 1; i >= 0; i--) {
+        if (table->symbols[i]->scopeLevel >= table->scopeDepth) {
+            free(table->symbols[i]->name);
+            free(table->symbols[i]);
+            table->count--;
+        } else {
+            break;
         }
     }
-    // Additional semantic checks for variable declaration
-    return true;
+    table->scopeDepth--;
 }
-// </analyzeVariableDeclaration>
 
-
-// <analyzeFunction>
-bool analyzeFunction(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing function declaration: %s\n", node->data.functionDecl.name);
-    // Check function parameters, return type, and body
-    if (!analyzeNode(node->data.functionDecl.body)) {
-        printf("{Semantics} [ERROR] Invalid function body for function: %s\n", node->data.functionDecl.name);
-        return false;
-    }
-    return true;
+void enterBlockScope(CryoSymbolTable* table) {
+    enterScope(table);
 }
-// </analyzeFunction>
 
-
-// <analyzeIfStatement>
-bool analyzeIfStatement(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing if statement\n");
-    // Check condition expression
-    if (!analyzeNode(node->data.ifStmt.condition)) {
-        printf("{Semantics} [ERROR] Invalid condition in if statement\n");
-        return false;
-    }
-    // Analyze then branch
-    if (!analyzeNode(node->data.ifStmt.thenBranch)) {
-        printf("{Semantics} [ERROR] Invalid then branch in if statement\n");
-        return false;
-    }
-    // Analyze else branch if it exists
-    if (node->data.ifStmt.elseBranch && !analyzeNode(node->data.ifStmt.elseBranch)) {
-        printf("{Semantics} [ERROR] Invalid else branch in if statement\n");
-        return false;
-    }
-    return true;
+void exitBlockScope(CryoSymbolTable* table) {
+    exitScope(table);
 }
-// </analyzeIfStatement>
 
 
-// <analyzeWhileStatement>
-bool analyzeWhileStatement(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing while statement\n");
-    // Check condition expression
-    if (!analyzeNode(node->data.whileStmt.condition)) {
-        printf("{Semantics} [ERROR] Invalid condition in while statement\n");
-        return false;
+void addSymbol(CryoSymbolTable* table, const char* name, CryoDataType type, bool isConstant) {
+    if (table->count >= table->capacity) {
+        table->capacity *= 2;
+        table->symbols = (CryoSymbol**)realloc(table->symbols, table->capacity * sizeof(CryoSymbol*));
     }
-    // Analyze body
-    if (!analyzeNode(node->data.whileStmt.body)) {
-        printf("{Semantics} [ERROR] Invalid body in while statement\n");
-        return false;
-    }
-    return true;
+    CryoSymbol* symbol = (CryoSymbol*)malloc(sizeof(CryoSymbol));
+    symbol->name = strdup(name);
+    symbol->type = type;
+    symbol->isConstant = isConstant;
+    symbol->scopeLevel = table->scopeDepth;
+    symbol->argCount = 0;
+    table->symbols[table->count++] = symbol;
+
+    printf("[Debug] Added symbol: %s, Type: %d, Scope: %d\n", symbol->name, symbol->type, symbol->scopeLevel);
 }
-// </analyzeWhileStatement>
 
 
-// <analyzeForStatement>
-bool analyzeForStatement(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing for statement\n");
-    // Check initialization, condition, and iteration expressions
-    if (node->data.forStmt.initializer && !analyzeNode(node->data.forStmt.initializer)) {
-        printf("{Semantics} [ERROR] Invalid initialization in for statement\n");
-        return false;
-    }
-    if (node->data.forStmt.condition && !analyzeNode(node->data.forStmt.condition)) {
-        printf("{Semantics} [ERROR] Invalid condition in for statement\n");
-        return false;
-    }
-    if (node->data.forStmt.increment && !analyzeNode(node->data.forStmt.increment)) {
-        printf("{Semantics} [ERROR] Invalid iteration in for statement\n");
-        return false;
-    }
-    // Analyze body
-    if (!analyzeNode(node->data.forStmt.body)) {
-        printf("{Semantics} [ERROR] Invalid body in for statement\n");
-        return false;
-    }
-    return true;
-}
-// </analyzeForStatement>
 
 
-// <analyzeUnaryExpression>
-bool analyzeBinaryExpression(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing binary expression with operator: %s\n", node->data.bin_op.operatorText);
-    // Check left and right operand types
-    if (!analyzeNode(node->data.bin_op.left)) {
-        printf("{Semantics} [ERROR] Invalid left operand in binary expression\n");
-        return false;
-    }
-    if (!analyzeNode(node->data.bin_op.right)) {
-        printf("{Semantics} [ERROR] Invalid right operand in binary expression\n");
-        return false;
-    }
-    // Additional semantic checks for binary expression
-    return true;
-}
-// </analyzeUnaryExpression>
-
-
-// <analyzeUnaryExpression>
-bool analyzeUnaryExpression(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing unary expression with operator: %d\n", node->data.unary_op.op);
-    // Check operand type
-    if (!analyzeNode(node->data.unary_op.operand)) {
-        printf("{Semantics} [ERROR] Invalid operand in unary expression\n");
-        return false;
-    }
-    // Additional semantic checks for unary expression
-    return true;
-}
-// </analyzeUnaryExpression>
-
-
-// <analyzeReturn>
-bool analyzeReturn(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing return statement\n");
-    // Check return expression type matches function return type
-    if (node->data.returnStmt.returnValue && !analyzeNode(node->data.returnStmt.returnValue)) {
-        printf("{Semantics} [ERROR] Invalid return value in return statement\n");
-        return false;
-    }
-    return true;
-}
-// </analyzeReturn>
-
-
-// <analyzeBlock>
-bool analyzeBlock(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing block statement\n");
-    for (int i = 0; i < node->data.block.stmtCount; ++i) {
-        if (!analyzeNode(node->data.block.statements[i])) {
-            printf("{Semantics} [ERROR] Failed to analyze block statement\n");
-            return false;
+CryoSymbol* findSymbol(CryoSymbolTable* table, const char* name) {
+    for (int i = table->count - 1; i >= 0; i--) {
+        if (strcmp(table->symbols[i]->name, name) == 0) {
+            return table->symbols[i];
         }
     }
-    return true;
+    return NULL;
 }
-// </analyzeBlock>
 
 
-// <analyzeProgram>
-bool analyzeProgram(ASTNode* node) {
-    printf("{Semantics} [DEBUG] Analyzing program\n");
-    for (int i = 0; i < node->data.program.stmtCount; ++i) {
-        if (!analyzeNode(node->data.program.statements[i])) {
-            printf("{Semantics} [ERROR] Failed to analyze program statement\n");
-            return false;
-        }
+// >===------------------------------------===< //
+// >===--------- Semantic Checks ----------===< //
+// >===------------------------------------===< //
+void checkVariable(ASTNode* node, CryoSymbolTable* table) {
+    CryoSymbol* symbol = findSymbol(table, node->data.varDecl.name);
+    if (!symbol) {
+        fprintf(stderr, "[Semantics] Error: Undefined variable '%s'\n", node->data.varDecl.name);
+        exit(1);
     }
-    return true;
 }
-// </analyzeProgram>
+
+// Check if an assignment is valid
+void checkAssignment(ASTNode* node, CryoSymbolTable* table) {
+    CryoSymbol* symbol = findSymbol(table, node->data.varName.varName);
+    if (!symbol) {
+        fprintf(stderr, "[Sema] Error: Undefined variable '%s' in assignment\n", node->data.varName.varName);
+        exit(1);
+    }
+    if (symbol->isConstant) {
+        fprintf(stderr, "[Sema] Error: Cannot assign to constant variable '%s'\n", node->data.varName.varName);
+        exit(1);
+    }
+    if (symbol->type != node->data.expr.expr->data.literalExpression.dataType) {
+        fprintf(stderr, "[Sema] Error: Type mismatch in assignment to '%s'\n", node->data.varName.varName);
+        exit(1);
+    }
+}
+
+// Check a function call
+void checkFunctionCall(ASTNode* node, CryoSymbolTable* table) {
+    CryoSymbol* symbol = findSymbol(table, node->data.functionCall.name);
+    if (!symbol || symbol->type != DATA_TYPE_FUNCTION) {
+        fprintf(stderr, "[Sema] Error: Undefined function '%s'\n", node->data.functionCall.name);
+        exit(1);
+    }
+    if (node->data.functionCall.argCount != symbol->argCount) {
+        fprintf(stderr, "[Sema] Error: Argument count mismatch in function call to '%s'\n", node->data.functionCall.name);
+        exit(1);
+    }
+}
+
+void checkFunctionDeclaration(ASTNode* node, CryoSymbolTable* table) {
+    enterScope(table);
+
+    // Add function parameters to the symbol table
+    for (int i = 0; i < node->data.functionDecl.params; i++) {
+        ASTNode* param = node->data.functionDecl.params[i];
+        addSymbol(table, param->data.varDecl.name, param->data.varDecl.dataType, false);
+    }
+
+    // Traverse the function body
+    traverseAST(node->data.functionDecl.body, table);
+
+    // Ensure return type matches
+    // (Assuming a function body can only have one return type, extend if necessary)
+    if (node->data.functionDecl.returnType != node->data.functionDecl.body->data.expr.expr->type) {
+        fprintf(stderr, "[Sema] Error: Return type mismatch in function '%s'.\n", node->data.functionDecl.name);
+        exit(1);
+    }
+
+    exitScope(table);
+}
 
 
-// <analyzeNode>
-bool analyzeNode(ASTNode* node) {
-    if (!node) return true;
+void checkBinaryExpression(ASTNode* node, CryoSymbolTable* table) {
+    if (!node) return;
+    
+    ASTNode* left = node->data.bin_op.left;
+    ASTNode* right = node->data.bin_op.right;
 
-    printf("{Semantics} [DEBUG] Analyzing node of type %d...\n", node->type);
+    // Recursively check both operands
+    traverseAST(left, table);
+    traverseAST(right, table);
+
+    // Check if types of left and right operands are compatible
+    if (left->data.expr.expr->type != right->data.expr.expr->type) {
+        fprintf(stderr, "[Sema] Error: Type mismatch in binary expression.\n");
+        exit(1);
+    }
+
+    // Assign result type to the expression node
+    node->data.expr.expr->type = left->data.expr.expr->type;
+}
+
+
+
+// Recursive traversal of AST
+void traverseAST(ASTNode* node, CryoSymbolTable* table) {
+    if (!node) return;
 
     switch (node->type) {
         case NODE_PROGRAM:
+            enterScope(table);
             for (int i = 0; i < node->data.program.stmtCount; i++) {
-                if (!analyzeNode(node->data.program.statements[i])) {
-                    return false;
-                }
+                traverseAST(node->data.program.statements[i], table);
             }
+            printf("\n#------- Symbol Table -------#\n");
+            printSymbolTable(table);
+            printf("\n#--------- End Table --------#\n");
+            exitScope(table);
             break;
-        case NODE_FUNCTION_DECLARATION:
-            return analyzeFunction(node);
 
         case NODE_VAR_DECLARATION:
-            return analyzeVariableDeclaration(node);
+            addSymbol(table, node->data.varDecl.name, node->data.varDecl.dataType, false);
+            break;
 
-        case NODE_IF_STATEMENT:
-            return analyzeIfStatement(node);
 
-        case NODE_WHILE_STATEMENT:
-            return analyzeWhileStatement(node);
+        case NODE_ASSIGN:
+            printf("[Semantics] Checking assignment to '%s'\n", node->data.varName.varName);
+            checkAssignment(node, table);
+            break;
 
-        case NODE_FOR_STATEMENT:
-            return analyzeForStatement(node);
+        case NODE_VAR_NAME:
+            printf("[Semantics] Checking variable '%s'\n", node->data.varName.varName);
+            checkVariable(node, table);
+            break;
 
-        case NODE_BINARY_EXPR:
-            return analyzeBinaryExpression(node);
-
-        case NODE_UNARY_EXPR:
-            return analyzeUnaryExpression(node);
-
-        case NODE_RETURN_STATEMENT:
-            return analyzeReturn(node);
+        case NODE_FUNCTION_CALL:
+            printf("[Semantics] Checking function call to '%s'\n", node->data.functionCall.name);
+            checkFunctionCall(node, table);
+            break;
 
         case NODE_BLOCK:
-            return analyzeBlock(node);
+            printf("[Semantics] Entering block scope\n");
+            enterScope(table);
+            for (int i = 0; i < node->data.block.stmtCount; i++) {
+                traverseAST(node->data.block.statements[i], table);
+            }
+            exitScope(table);
+            break;
 
         default:
-            printf("{Semantics} [ERROR] Unknown node type %d\n", node->type);
-            return false;
+            printf("[Semantics] Skipping node type %d\n", node->type);
+            break;
     }
 
-    return analyzeNode(node->nextSibling);
+    traverseAST(node->nextSibling, table);
+}
+
+
+// Main Entry Point
+// <analyzeNode>
+bool analyzeNode(ASTNode* node) {
+    CryoSymbolTable* table = createSymbolTable();
+    traverseAST(node, table);
+
+    // Cleanup
+    for (int i = 0; i < table->count; i++) {
+        free(table->symbols[i]->name);
+        free(table->symbols[i]);
+    }
+    free(table->symbols);
+    free(table);
+    return true;
 }
 // </analyzeNode>
