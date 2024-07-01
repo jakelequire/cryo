@@ -1,7 +1,7 @@
 
 public function testBasicfunc() -> int {
-    const exampleVar: int = 69;
-    const exampleVar2: int = 420;
+    const exampleVar: int = 34;
+    const exampleVar2: int = 35;
     const exampleVar3: int = exampleVar + exampleVar2;
-    return 69;
+    return exampleVar3;
 }

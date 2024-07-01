@@ -180,10 +180,17 @@ llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builde
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
         llvm::Value* var = it->second;
-        return builder.CreateLoad(var->getType(), var, llvm::Twine(name));
+        if (!var) {
+            std::cerr << "[CPP] Error: Variable value is null\n";
+            return nullptr;
+        }
+        if(var->getType()->isPointerTy()) {
+            return builder.CreateLoad(var->getType()->getPointerTo(), var, llvm::Twine(name));
+        }
     }
     return nullptr;
 }
+
 
 // <generateVarDeclaration>
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
@@ -193,7 +200,7 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     llvm::Value* initializer = nullptr;
 
     std::cout << "[CPP DEBUG] Variable name: <" << node->data.varDecl.name << ">\n";
-    std::cout << "[CPP DEBUG] Variable data type:" << "\n";
+    std::cout << "[CPP DEBUG] Variable data type: " << node->data.varDecl.dataType << "\n";
     logCryoDataType(node->data.varDecl.dataType);
     std::cout << "[CPP DEBUG] Variable initializer: <" << node->data.varDecl.initializer << ">\n";
 
@@ -256,6 +263,7 @@ void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mo
         std::cerr << "[CPP] Error: Return statement node is null\n";
         return;
     }
+
     llvm::Value* retValue = nullptr;
     if (node->data.returnStmt.returnValue) {
         std::cout << "[CPP] Return statement node has return value of type: " << node->data.returnStmt.returnValue->type << "\n";
@@ -268,13 +276,17 @@ void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mo
         return;
     }
 
-    // Check if the return value is a variable name and load its value
+    // If the return value is a variable, we need to load its value
     if (node->data.returnStmt.returnValue->type == CryoNodeType::NODE_VAR_NAME) {
-        retValue = getVariableValue(node->data.returnStmt.returnValue->data.varName.varName, builder);
+        llvm::Type* retType = retValue->getType();
+        llvm::PointerType* retPtr = PointerType::get(retType, 0);
+        retValue = builder.CreateLoad(retPtr, retValue);
     }
 
+    std::cout << "[CPP] Return Statement Node with return value generated\n";
+
     if (retValue) {
-        std::cout << "[CPP] Return value: " << retValue << "\n";
+        std::cout << "[CPP] Return value: " << retValue << "\n"; // Print the value for debugging
         builder.CreateRet(retValue);
     } else {
         std::cerr << "[CPP] Error: Failed to generate return value\n";
