@@ -25,11 +25,12 @@ llc -filetype=obj ./output.bc -o ./output.o
 std::unordered_map<std::string, llvm::Value*> namedValues;
 
 
-// <codegen> 
+// <codegen>
 void codegen(ASTNode* root) {
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder(context);
     std::unique_ptr<llvm::Module> module = std::make_unique<llvm::Module>("CryoModule", context);
+
     // Create the main function (temporary for testing)
     llvm::FunctionType* funcType = llvm::FunctionType::get(builder.getVoidTy(), false);
     llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module.get());
@@ -66,6 +67,7 @@ void codegen(ASTNode* root) {
 // </codegen>
 
 
+// <generateCode>
 // <generateCode>
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for AST node\n" << std::endl;
@@ -150,6 +152,10 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             generateIfStatement(node, builder, module);
             break;
 
+        case CryoNodeType::NODE_EXPRESSION_STATEMENT:
+            generateExpression(node->data.stmt.stmt, builder, module);
+            break;
+
         default:
             std::cerr << "[CPP] Unknown node type\n";
             break;
@@ -178,28 +184,16 @@ void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for statement\n";
     switch (node->type) {
-        case CryoNodeType::NODE_EXPRESSION_STATEMENT:
+        case NODE_EXPRESSION_STATEMENT:
             std::cout << "[CPP] Generating code for expression statement!\n" << std::endl;
             generateExpression(node->data.stmt.stmt, builder, module);
             break;
-        case CryoNodeType::NODE_VAR_DECLARATION:
+        case NODE_VAR_DECLARATION:
             std::cout << "[CPP] Generating code for variable declaration!\n" << std::endl;
             generateVarDeclaration(node, builder, module);
             break;
         case NODE_IF_STATEMENT:
             generateIfStatement(node, builder, module);
-            break;
-        case NODE_VAR_NAME:
-            std::cout << "[CPP] Generating code for variable name!\n" << std::endl;
-            std::cout << "[CPP] Variable Name UNIMPLEMENTED\n";
-            break;
-        case NODE_FUNCTION_CALL:
-            std::cout << "[CPP] Generating code for function call!\n" << std::endl;
-            generateFunctionCall(node, builder, module);
-            break;
-        case NODE_BLOCK:
-            std::cout << "[CPP] Generating code for block!\n" << std::endl;
-            generateBlock(node, builder, module);
             break;
         default:
             std::cout << node->type << std::endl;
@@ -211,18 +205,15 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
 
 
 // <generateBlock>
-void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void generateBlock(ASTNode* blockNode, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for block\n";
-    if (!node || node->data.block.stmtCount == 0) {
-        std::cerr << "[CPP] Error generating code for block: No statements found\n";
-        return;
-    }
-    for (int i = 0; i < node->data.block.stmtCount; ++i) {
+    for (int i = 0; i < blockNode->data.block.stmtCount; ++i) {
         std::cout << "[CPP] Generating code for block statement " << i << "\n";
-        generateCode(node->data.block.statements[i], builder, module);
-        std::cout << "[CPP] Moving to next statement\n";
+        generateCode(blockNode->data.block.statements[i], builder, module);
     }
+    std::cout << "[CPP] Block code generation complete\n";
 }
+
 // </generateBlock>
 
 
@@ -258,9 +249,6 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
                     return llvm::ConstantInt::get(llvm::Type::getInt1Ty(module.getContext()), node->data.literalExpression.booleanValue);
 
                 case DATA_TYPE_VOID:
-                    std::cerr << "[CPP] Error: Void type cannot be used as an expression\n";
-                    return nullptr;
-
                 case DATA_TYPE_UNKNOWN:
                     std::cerr << "[CPP] Error: Unknown data type\n";
                     return nullptr;
@@ -275,16 +263,11 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
             return generateBinaryOperation(node, builder, module);
         }
 
-        case CryoNodeType::NODE_VAR_NAME: {
-            llvm::Value* var = getVariableValue(node->data.varName.varName, builder);
-            if (!var) {
-                std::cerr << "[CPP] Error: Variable not found: " << node->data.varName.varName << "\n";
-                return nullptr;
-            }
-            // Return the loaded value instead of the pointer
-            return var;
-        }
+        case CryoNodeType::NODE_VAR_NAME:
+            return namedValues[node->data.varName.varName];
+            
         default:
+            std::cout << "[CPP - Error] Unknown expression type: " << node->type << "\n";
             std::cerr << "[CPP] Unknown expression type\n";
             return nullptr;
     }
@@ -308,26 +291,26 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
     std::cout << "[CPP] Binary operation operands generated\n";
 
     switch (node->data.bin_op.op) {
-        case CryoOperatorType::OPERATOR_ADD:
+        case OPERATOR_ADD:
             return builder.CreateAdd(left, right, "addtmp");
-        case CryoOperatorType::OPERATOR_SUB:
+        case OPERATOR_SUB:
             return builder.CreateSub(left, right, "subtmp");
-        case CryoOperatorType::OPERATOR_MUL:
+        case OPERATOR_MUL:
             return builder.CreateMul(left, right, "multmp");
-        case CryoOperatorType::OPERATOR_DIV:
+        case OPERATOR_DIV:
             return builder.CreateSDiv(left, right, "divtmp");
-        case CryoOperatorType::OPERATOR_LT:
-            return builder.CreateICmpSLT(left, right, "lttmp");
-        case CryoOperatorType::OPERATOR_GT:
-            return builder.CreateICmpSGT(left, right, "gttmp");
-        case CryoOperatorType::OPERATOR_LTE:
-            return builder.CreateICmpSLE(left, right, "ltetmp");
-        case CryoOperatorType::OPERATOR_GTE:
-            return builder.CreateICmpSGE(left, right, "gtetmp");
-        case CryoOperatorType::OPERATOR_EQ:
+        case OPERATOR_EQ:
             return builder.CreateICmpEQ(left, right, "eqtmp");
-        case CryoOperatorType::OPERATOR_NEQ:
+        case OPERATOR_NEQ:
             return builder.CreateICmpNE(left, right, "neqtmp");
+        case OPERATOR_LT:
+            return builder.CreateICmpSLT(left, right, "lttmp");
+        case OPERATOR_GT:
+            return builder.CreateICmpSGT(left, right, "gttmp");
+        case OPERATOR_LTE:
+            return builder.CreateICmpSLE(left, right, "letmp");
+        case OPERATOR_GTE:
+            return builder.CreateICmpSGE(left, right, "getmp");
         default:
             std::cerr << "[CPP] Unknown binary operator\n";
             return nullptr;

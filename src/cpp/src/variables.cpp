@@ -125,80 +125,18 @@ llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builde
 // <generateVarDeclaration>
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for variable declaration\n";
+    std::string varName = node->data.varDecl.name;
 
-    llvm::Type* varType = nullptr;
+    llvm::Value* initValue = generateExpression(node->data.varDecl.initializer, builder, module);
 
-    std::cout << "[CPP DEBUG] Variable name: <" << node->data.varDecl.name << ">\n";
-    std::cout << "[CPP DEBUG] Variable data type: " << node->data.varDecl.dataType << "\n";
-    logCryoDataType(node->data.varDecl.dataType);
-    std::cout << "[CPP DEBUG] Variable initializer: <" << node->data.varDecl.initializer << ">\n";
-
-    llvm::Value* initializer = nullptr;
-    switch (node->data.varDecl.dataType) {
-        case DATA_TYPE_INT:
-            std::cout << "[CPP] Variable type: int\n";
-            varType = llvm::Type::getInt32Ty(module.getContext());
-            initializer = generateExpression(node->data.varDecl.initializer, builder, module);
-            break;
-        case DATA_TYPE_STRING:
-            std::cout << "[CPP] Variable type: string\n";
-            {
-                llvm::Value* string = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
-                varType = string->getType();
-                initializer = string;
-            }
-            break;
-        case DATA_TYPE_BOOLEAN:
-            std::cout << "[CPP] Variable type: boolean\n";
-            varType = llvm::Type::getInt1Ty(module.getContext());
-            initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.booleanValue);
-            break;
-        case DATA_TYPE_FLOAT:
-            std::cout << "[CPP] Variable type: float\n";
-            varType = llvm::Type::getFloatTy(module.getContext());
-            initializer = llvm::ConstantFP::get(varType, node->data.varDecl.initializer->data.literalExpression.floatValue);
-            break;
-        case DATA_TYPE_VOID:
-            std::cerr << "[CPP] Void type cannot be used as a variable\n";
-            return;
-        default:
-            std::cerr << "[CPP] Unknown data type\n";
-            return;
-    }
-
-    if (!initializer) {
-        std::cerr << "[CPP] Error: Initializer for variable is null\n";
+    if (!initValue) {
+        std::cerr << "[CPP] Error: Failed to generate initializer for variable: " << varName << "\n";
         return;
     }
 
-    // This was the error in the previous code
-    // Fixed by adding the initializer to the GlobalVariable constructor
-    // Allocate the variable as a global variable
-    std::cout << "[CPP] Allocating variable as global variable\n";
-    // std::string varName = node->data.varDecl.name;
-    // llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-    //     module,
-    //     varType,
-    //     false,
-    //     llvm::GlobalValue::ExternalLinkage,
-    //     static_cast<llvm::Constant*>(initializer),
-    //     node->data.varDecl.name
-    // );
-    llvm::AllocaInst* alloca = builder.CreateAlloca(varType, 0, node->data.varDecl.name);
-    builder.CreateStore(initializer, alloca);
-    // if (!globalVar) {
-    //     std::cerr << "[CPP] Error: Allocation failed\n";
-    //     return;
-    // }
-
-    // std::cout << "[CPP] Global Variable: " << globalVar << "\n";
-
-    // Add the variable to the named values map
-    namedValues[node->data.varDecl.name] = alloca;
-
-    std::cout << "[CPP] Variable registered in global scope\n";
-    std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
-    std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
+    llvm::AllocaInst* alloca = builder.CreateAlloca(llvm::Type::getInt32Ty(module.getContext()), nullptr, varName);
+    builder.CreateStore(initValue, alloca);
+    namedValues[varName] = alloca;
 }
 // </generateVarDeclaration>
 
