@@ -1,0 +1,7 @@
+// Test 1: Print an integer variable
+// Variable declaration and initialization
+const foo: int = 34;
+
+// Print an integer variable
+cryo_print_int(foo);
+

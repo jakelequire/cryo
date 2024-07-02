@@ -127,8 +127,8 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
 
         case CryoNodeType::NODE_FUNCTION_CALL:
             std::cout << "[CPP] Generating code for function call\n";
-            std::cout << "[CPP] Function Call UNIMPLEMENTED\n";
-            // TODO: Implement function call code generation
+            generateFunctionCall(node, builder, module);
+            break;
 
         case CryoNodeType::NODE_RETURN_STATEMENT:
             std::cout << "[CPP] Generating code for return statement\n";

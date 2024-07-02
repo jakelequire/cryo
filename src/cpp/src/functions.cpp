@@ -17,8 +17,27 @@
 #include "cpp/codegen.h"
 
 
+// <generateFunctionCall>
+void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::string functionName = node->data.functionCall.name;
+    std::vector<llvm::Value*> args;
+    std::vector<llvm::Type*> argTypes;
 
+    for (int i = 0; i < node->data.functionCall.argCount; ++i) {
+        llvm::Value* argValue = generateExpression(node->data.functionCall.args[i], builder, module);
+        args.push_back(argValue);
+        argTypes.push_back(argValue->getType());
+    }
 
+    llvm::Function* func = getCryoFunction(module, functionName, argTypes);
+    if (!func) {
+        std::cerr << "[CPP] Error: Function not found: " << functionName << "\n";
+        return;
+    }
+
+    builder.CreateCall(func, args);
+}
+// </generateFunctionCall>
 
 
 // <generateReturnStatement>
@@ -157,3 +176,17 @@ void generateFunctionBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modu
     }
 }
 // </generateFunctionBlock>
+
+
+
+// <getCryoFunction>
+llvm::Function* getCryoFunction(llvm::Module& module, const std::string& name, llvm::ArrayRef<llvm::Type*> argTypes) {
+    llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(module.getContext()), argTypes, false);
+
+    llvm::Function* func = module.getFunction(name);
+    if (!func) {
+        func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, name, module);
+    }
+    return func;
+}
+// </getCryoFunction>

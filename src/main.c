@@ -56,9 +56,9 @@ int main(int argc, char* argv[]) {
         printAST(programNode, 0);
         printf("\n>===------- End Tree ------===<\n\n");
 
-        printf("\n>===------- Semantic Analysis -------===<\n\n");
-        analyzeNode(programNode);
-        printf("\n\n>===------- End Analysis ------===<\n\n");
+        // printf("\n>===------- Semantic Analysis -------===<\n\n");
+        // analyzeNode(programNode);
+        // printf("\n\n>===------- End Analysis ------===<\n\n");
     }
 
     if (programNode) {

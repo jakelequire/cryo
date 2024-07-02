@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -181,12 +181,17 @@ ASTNode* parsePrimaryExpression(Lexer* lexer) {
             return booleanNode;
         }
         case TOKEN_IDENTIFIER: {
-            // Handle identifier as a variable reference
-            char* varName = strndup(currentToken.start, currentToken.length);
+            printf("[Parser - DEBUG] Identifier: %.*s\n", currentToken.length, currentToken.start); // Debugging
+            // Check if it is a function call
+            char* identifier = strndup(currentToken.start, currentToken.length);
             getNextToken(lexer);
-            return createVariableExpr(varName);
+            printf("[Parser - DEBUG] Next Token: %s\n", tokenTypeToString(currentToken.type)); // Debugging
+            if (currentToken.type == TOKEN_LPAREN) {
+                return parseFunctionCall(lexer, identifier);
+            } else {
+                return createVariableExpr(identifier);
+            }
         }
-
         case NODE_RETURN_STATEMENT: {
             return parseReturnStatement(lexer);
         }
@@ -370,8 +375,39 @@ ASTNode* parseReturnStatement(Lexer* lexer) {
     printf("[Parser] Created Return Statement Node with return value of type: %d\n", returnNode->data.returnStmt.returnValue ? returnNode->data.returnStmt.returnValue->type : -1);
     return returnNode;
 }
-
 // </parseReturnStatement>
+
+
+// <parseFunctionCall>
+ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName) {
+    printf("[Parser] Parsing function call for function: %s\n", functionName);
+    consume(lexer, TOKEN_LPAREN, "Expected '(' after function name");
+    
+    ASTNode** arguments = NULL;
+    int argCount = 0;
+    
+    if (currentToken.type != TOKEN_RPAREN) {
+        arguments = (ASTNode**)malloc(sizeof(ASTNode*) * MAX_ARGUMENTS);
+        do {
+            arguments[argCount++] = parseExpression(lexer);
+            if (argCount >= MAX_ARGUMENTS) {
+                error("Too many arguments in function call");
+            }
+        } while (currentToken.type == TOKEN_COMMA);
+    }
+    
+    consume(lexer, TOKEN_RPAREN, "Expected ')' after function arguments");
+    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after function call");
+    
+    ASTNode* node = createASTNode(NODE_FUNCTION_CALL);
+    node->data.functionCall.name = strdup(functionName);
+    node->data.functionCall.args = arguments;
+    node->data.functionCall.argCount = argCount;
+    
+    printf("[Parser] Created Function Call Node: %s with %d arguments\n", functionName, argCount);
+    return node;
+}
+// </parseFunctionCall>
 
 
 // Function to parse a statement
@@ -385,6 +421,9 @@ ASTNode* parseStatement(Lexer* lexer) {
         case TOKEN_KW_MUT:
             printf("[Parser] Parsing variable declaration.\n");
             return parseVarDeclaration(lexer);
+        case TOKEN_IDENTIFIER:
+            printf("[Parser] Identified Identifier: %.*s\n", currentToken.length, currentToken.start);
+            return parsePrimaryExpression(lexer);
         case TOKEN_KW_PUBLIC:
             return parsePublicDeclaration(lexer);
         case TOKEN_KW_PRIVATE:

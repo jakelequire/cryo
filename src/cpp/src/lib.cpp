@@ -14,12 +14,47 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "testing.h"
+#include "cpp/lib.h"
 
-/*
- * Test for CodeGen
-*/
-int main(int argc, char** argv) {
-    codegen(argc, argv);
-    return 0;
+
+// <generatePrintStatement>
+// void generatePrintStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+//     ASTNode* expr = node->data.printStatement.expr;
+//     llvm::Value* value = generateExpression(expr, builder, module);
+//     llvm::Function* printFunc = getCryoPrintFunction(module, value->getType());
+// 
+//     if (!printFunc) {
+//         std::cerr << "[CPP] Error: Failed to get print function\n";
+//         return;
+//     }
+// 
+//     builder.CreateCall(printFunc, value);
+// }
+// </generatePrintStatement>
+
+// <getPrintfFunction>
+llvm::Function* getPrintfFunction(llvm::Module& module) {
+    llvm::FunctionType* printfType = llvm::FunctionType::get(
+        llvm::IntegerType::getInt32Ty(module.getContext()), // Return type
+        llvm::PointerType::get(llvm::Type::getInt8Ty(module.getContext()), 0), // First argument type
+        true // Variable number of arguments
+    );
+
+    llvm::Function* func = llvm::Function::Create(
+        printfType,
+        llvm::Function::ExternalLinkage,
+        "printf",
+        module
+    );
+
+    if (!func) {
+        std::cerr << "[CPP] Error: Failed to create printf function\n";
+    }
+
+    return func;
 }
+// </getPrintfFunction>
+
+
+
+

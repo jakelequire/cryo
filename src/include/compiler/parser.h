@@ -18,7 +18,7 @@
 #define PARSER_H
 #define INITIAL_STATEMENT_CAPACITY 512
 #define INITIAL_PARAM_CAPACITY 8
-
+#define MAX_ARGUMENTS 255
 /*------ <includes> ------*/
 #include <stdbool.h>
 #include <stdio.h>
@@ -72,6 +72,7 @@ ASTNode* createTypeNode(CryoTokenType type);
 ASTNode* createParamNode(const char* name, ASTNode* type);
 ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
 ASTNode* parsePublicDeclaration(Lexer* lexer);
+ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName);
 // Entry Point
 ASTNode* parseProgram(Lexer* lexer);
 /*-----<end_prototypes>-----*/

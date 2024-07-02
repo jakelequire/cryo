@@ -25,6 +25,7 @@ CLI_DIR = $(SRC_DIR)cli/
 CLI_COMMANDS_DIR = $(CLI_DIR)commands/
 RUNTIME_DIR = $(SRC_DIR)runtime/
 TESTS_DIR = $(SRC_DIR)tests/
+CRYO_DIR = $(SRC_DIR)cryo/
 
 # CPP files
 CPP_DIR = $(SRC_DIR)cpp/
@@ -38,7 +39,11 @@ RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
 CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)src/codegen.cpp $(CPP_DIR)src/cppLogger.cpp $(CPP_DIR)src/variables.cpp $(CPP_DIR)src/functions.cpp \
-$(CPP_DIR)src/structs.cpp
+$(CPP_DIR)src/structs.cpp $(CPP_DIR)src/lib.cpp
+
+
+# Cryo Lib Files
+CRYO_SRC = $(CRYO_DIR)cryolib.c
 
 # Object files
 COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o
@@ -49,7 +54,10 @@ RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
-CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppLogger.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o $(OBJ_DIR)structs.o
+CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppLogger.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o $(OBJ_DIR)structs.o $(OBJ_DIR)lib.o
+
+# Cryo Lib Object files
+CRYO_OBJ = $(OBJ_DIR)cryolib.o
 
 # Binaries
 MAIN_BIN = $(BIN_DIR)main.exe
@@ -116,11 +124,19 @@ $(OBJ_DIR)functions.o: $(CPP_DIR)src/functions.cpp | $(OBJ_DIR)
 $(OBJ_DIR)structs.o: $(CPP_DIR)src/structs.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 	
+$(OBJ_DIR)lib.o: $(CPP_DIR)src/lib.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 $(OBJ_DIR)cppLogger.o: $(CPP_DIR)src/cppLogger.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# Cryo Lib Compilation rules
+$(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
 # Linking binaries
-$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) | $(BIN_DIR)
+$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(CLI_BIN_EXE): $(CLI_OBJ) $(UTILS_OBJ) | $(BIN_DIR)
