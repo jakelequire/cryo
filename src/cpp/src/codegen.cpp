@@ -30,14 +30,20 @@ void codegen(ASTNode* root) {
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder(context);
     std::unique_ptr<llvm::Module> module = std::make_unique<llvm::Module>("CryoModule", context);
-    // create non function block
-    llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "entry", module->getFunction("main"));
+    // Create the main function (temporary for testing)
+    llvm::FunctionType* funcType = llvm::FunctionType::get(builder.getVoidTy(), false);
+    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module.get());
+    llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "entry", function);
     builder.SetInsertPoint(entry);
 
     generateCode(root, builder, *module);
 
+    builder.CreateRetVoid();
+
     if (llvm::verifyModule(*module, &llvm::errs())) {
-        module->print(llvm::outs(), nullptr);
+        std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
+        module->print(llvm::errs(), nullptr);
+        std::cout << "\n>===----------------- End Error -----------------===<\n";
         std::cerr << "Error: LLVM module verification failed\n";
     } else {
         // Output the generated LLVM IR code to a .ll file

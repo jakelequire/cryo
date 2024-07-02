@@ -436,6 +436,7 @@ char* nodeTypeToString(CryoNodeType type) {
         case NODE_PROGRAM: return "Program";
         case NODE_FUNCTION_DECLARATION: return "Function Declaration";
         case NODE_VAR_DECLARATION: return "Variable Declaration";
+        case NODE_VAR_NAME: return "Variable Name";
         case NODE_STATEMENT: return "Statement";
         case NODE_EXPRESSION: return "Expression";
         case NODE_LITERAL_EXPR: return "Literal Expression";

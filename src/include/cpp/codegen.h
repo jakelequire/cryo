@@ -20,6 +20,9 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
+#include <memory>
+#include <assert.h>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -28,6 +31,16 @@
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/Type.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/ValueSymbolTable.h"
+#include "llvm/IR/ValueMap.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/FileSystem.h"
 #include <llvm/Support/raw_ostream.h>
 
@@ -45,12 +58,17 @@ extern "C" {
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
-llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder);
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunctionBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+
+llvm::Value* getVariable(const std::string& name);
+llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder);
+llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder<>& builder, const std::string& name);
+llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, const std::string& name);
+
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 

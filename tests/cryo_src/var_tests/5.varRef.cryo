@@ -2,3 +2,4 @@
 
 const foo: int = 34;
 const bar: int = foo;
+

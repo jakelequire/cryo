@@ -19,6 +19,70 @@
 extern std::unordered_map<std::string, llvm::Value*> namedValues;
 
 
+// Function to retrieve a variable from the namedValues map
+// <getVariable>
+llvm::Value* getVariable(const std::string& name) {
+    auto it = namedValues.find(name);
+    if (it != namedValues.end()) {
+        llvm::Value* var = it->second;
+        if (!var) {
+            std::cerr << "[CPP] Error: Variable value is null\n";
+            return nullptr;
+        }
+        return var;
+    } else {
+        std::cerr << "[CPP] Error: Variable not found\n";
+        return nullptr;
+    }
+}
+// </getVariable>
+
+
+// Function to load a global variable value
+// <loadGlobalVariable>
+llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder<>& builder, const std::string& name) {
+    std::cout << "[CPP] Loading global variable value\n";
+    llvm::Type* globalVarType = globalVar->getValueType();
+    std::cout << "[CPP] Global Variable Type: " << globalVarType << "\n";
+
+    if (!globalVar) {
+        std::cerr << "[CPP] Error: globalVar is null\n";
+        return nullptr;
+    }
+    if (!globalVarType) {
+        std::cerr << "[CPP] Error: globalVarType is null\n";
+        return nullptr;
+    }
+
+    std::cout << "[CPP] Creating load instruction\n";
+    llvm::LoadInst* load = builder.CreateLoad(globalVarType, globalVar, llvm::Twine(name));
+    std::cout << "[CPP] Created load instruction\n";
+    assert(load && "[CPP] Error: Failed to load global variable value");
+
+    std::cout << "[CPP] Loaded global variable value\n";
+    return load;
+}
+// </loadGlobalVariable>
+
+
+// Function to load a pointer variable value
+// <loadPointerVariable>
+llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, const std::string& name) {
+    std::cout << "[CPP] Loading pointer variable value\n";
+    llvm::Type* pointedType = var->getType();
+    std::cout << "[CPP] Variable pointer type: " << pointedType << "\n";
+    llvm::LoadInst* load = builder.CreateLoad(pointedType, var, llvm::Twine(name));
+    if (!load) {
+        std::cerr << "[CPP] Error: Failed to load pointer variable value\n";
+        return nullptr;
+    }
+    std::cout << "[CPP] Loaded pointer variable value\n";
+    return load;
+}
+// </loadPointerVariable>
+
+
+// Function to get the variable value
 // <getVariableValue>
 llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder) {
     auto it = namedValues.find(name);
@@ -28,14 +92,34 @@ llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builde
             std::cerr << "[CPP] Error: Variable value is null\n";
             return nullptr;
         }
-        if(var->getType()->isPointerTy()) {
-            std::cout << "[CPP] Loading variable value\n";
-            return builder.CreateLoad(var->getType()->getPointerTo(), var, llvm::Twine(name));
+        std::cout << "[CPP] Found variable: " << name << " of type " << (var->getType()) << "\n";
+
+        if (llvm::GlobalVariable* globalVar = llvm::dyn_cast<llvm::GlobalVariable>(var)) {
+            std::cout << "[CPP] Loading global variable value\n";
+            llvm::Type* globalVarType = globalVar->getValueType();
+            std::cout << "[CPP] Global Variable Type: " << globalVarType << "\n";
+            llvm::LoadInst* load = builder.CreateLoad(globalVarType, globalVar, llvm::Twine(name));
+            assert(load && "[CPP] Error: Failed to load global variable value");
+            std::cout << "[CPP] Loaded global variable value\n";
+            return load;
+        } else if (var->getType()->isPointerTy()) {
+            std::cout << "[CPP] Loading pointer variable value\n";
+            llvm::LoadInst* load = builder.CreateLoad(var->getType(), var, llvm::Twine(name));
+            assert(load && "[CPP] Error: Failed to load pointer variable value");
+            std::cout << "[CPP] Loaded pointer variable value\n";
+            return load;
+        } else {
+            std::cerr << "[CPP] Error: Variable is neither a pointer nor a global variable\n";
+            return nullptr;
         }
+    } else {
+        std::cerr << "[CPP] Error: Variable not found\n";
+        return nullptr;
     }
-    return nullptr;
 }
+
 // </getVariableValue>
+
 
 
 // <generateVarDeclaration>
@@ -91,25 +175,26 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     // Fixed by adding the initializer to the GlobalVariable constructor
     // Allocate the variable as a global variable
     std::cout << "[CPP] Allocating variable as global variable\n";
-    std::string varName = node->data.varDecl.name;
-    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-        module,
-        varType,
-        false,
-        llvm::GlobalValue::ExternalLinkage,
-        static_cast<llvm::Constant*>(initializer),
-        varName
-    );
+    // std::string varName = node->data.varDecl.name;
+    // llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
+    //     module,
+    //     varType,
+    //     false,
+    //     llvm::GlobalValue::ExternalLinkage,
+    //     static_cast<llvm::Constant*>(initializer),
+    //     node->data.varDecl.name
+    // );
+    llvm::AllocaInst* alloca = builder.CreateAlloca(varType, 0, node->data.varDecl.name);
+    builder.CreateStore(initializer, alloca);
+    // if (!globalVar) {
+    //     std::cerr << "[CPP] Error: Allocation failed\n";
+    //     return;
+    // }
 
-    if (!globalVar) {
-        std::cerr << "[CPP] Error: Allocation failed\n";
-        return;
-    }
-
-    std::cout << "[CPP] Global Variable: " << globalVar << "\n";
+    // std::cout << "[CPP] Global Variable: " << globalVar << "\n";
 
     // Add the variable to the named values map
-    namedValues[node->data.varDecl.name] = globalVar;
+    namedValues[node->data.varDecl.name] = alloca;
 
     std::cout << "[CPP] Variable registered in global scope\n";
     std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
