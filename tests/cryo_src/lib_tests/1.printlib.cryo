@@ -1,7 +1,8 @@
 // Test 1: Print an integer variable
 // Variable declaration and initialization
 const foo: int = 34;
-
+const bar: int = 35;
+const baz: int = foo + bar;
 // Print an integer variable
-cryo_print_int(foo);
+cryo_print_int(baz);
 
