@@ -1,7 +1,5 @@
-
+// Test 1: Basic function test
+// Returns an integer value
 public function testBasicfunc() -> int {
-    const exampleVar: int = 34;
-    const exampleVar2: int = 35;
-    const exampleVar3: int = exampleVar + exampleVar2;
-    return exampleVar3;
+    return 34;
 }

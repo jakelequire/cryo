@@ -25,16 +25,19 @@ llc -filetype=obj ./output.bc -o ./output.o
 std::unordered_map<std::string, llvm::Value*> namedValues;
 
 
-
 // <codegen> 
 void codegen(ASTNode* root) {
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder(context);
     std::unique_ptr<llvm::Module> module = std::make_unique<llvm::Module>("CryoModule", context);
+    // create non function block
+    llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "entry", module->getFunction("main"));
+    builder.SetInsertPoint(entry);
 
     generateCode(root, builder, *module);
 
     if (llvm::verifyModule(*module, &llvm::errs())) {
+        module->print(llvm::outs(), nullptr);
         std::cerr << "Error: LLVM module verification failed\n";
     } else {
         // Output the generated LLVM IR code to a .ll file
@@ -100,21 +103,25 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
 
         case CryoNodeType::NODE_UNARY_EXPR:
             std::cout << "[CPP] Generating code for unary expression\n";
+            std::cout << "[CPP] Unary Expression UNIMPLEMENTED\n";
             // TODO: Implement unary expression code generation
             break;
         
         case CryoNodeType::NODE_LITERAL_EXPR:
             std::cout << "[CPP] Generating code for literal expression\n";
+            std::cout << "[CPP] Literal Expression UNIMPLEMENTED\n";
             // TODO: Implement literal expression code generation
             break;
         
         case CryoNodeType::NODE_VAR_NAME:
             std::cout << "[CPP] Generating code for variable name\n";
+            std::cout << "[CPP] Variable Name UNIMPLEMENTED\n";
             // TODO: Implement variable name code generation
             break;
 
         case CryoNodeType::NODE_FUNCTION_CALL:
             std::cout << "[CPP] Generating code for function call\n";
+            std::cout << "[CPP] Function Call UNIMPLEMENTED\n";
             // TODO: Implement function call code generation
 
         case CryoNodeType::NODE_RETURN_STATEMENT:
@@ -176,210 +183,6 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
 // </generateStatement>
 
 
-llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder) {
-    auto it = namedValues.find(name);
-    if (it != namedValues.end()) {
-        llvm::Value* var = it->second;
-        if (!var) {
-            std::cerr << "[CPP] Error: Variable value is null\n";
-            return nullptr;
-        }
-        if(var->getType()->isPointerTy()) {
-            return builder.CreateLoad(var->getType()->getPointerTo(), var, llvm::Twine(name));
-        }
-    }
-    return nullptr;
-}
-
-
-// <generateVarDeclaration>
-void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    std::cout << "[CPP] Generating code for variable declaration\n";
-
-    llvm::Type* varType = nullptr;
-    llvm::Value* initializer = nullptr;
-
-    std::cout << "[CPP DEBUG] Variable name: <" << node->data.varDecl.name << ">\n";
-    std::cout << "[CPP DEBUG] Variable data type: " << node->data.varDecl.dataType << "\n";
-    logCryoDataType(node->data.varDecl.dataType);
-    std::cout << "[CPP DEBUG] Variable initializer: <" << node->data.varDecl.initializer << ">\n";
-
-    switch (node->data.varDecl.dataType) {
-        case DATA_TYPE_INT:
-            std::cout << "[CPP] Variable type: int\n";
-            varType = llvm::Type::getInt32Ty(module.getContext());
-            initializer = generateExpression(node->data.varDecl.initializer, builder, module);
-            break;
-        case DATA_TYPE_STRING: {
-            std::cout << "[CPP] Variable type: string\n";
-            llvm::Value* string = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
-            varType = string->getType();
-            initializer = string;
-            break;
-        }
-        case DATA_TYPE_BOOLEAN:
-            std::cout << "[CPP] Variable type: boolean\n";
-            varType = llvm::Type::getInt1Ty(module.getContext());
-            initializer = llvm::ConstantInt::get(varType, node->data.varDecl.initializer->data.literalExpression.booleanValue);
-            break;
-        case DATA_TYPE_FLOAT:
-            std::cout << "[CPP] Variable type: float\n";
-            varType = llvm::Type::getFloatTy(module.getContext());
-            initializer = llvm::ConstantFP::get(varType, node->data.varDecl.initializer->data.literalExpression.floatValue);
-            break;
-        case DATA_TYPE_VOID:
-            std::cerr << "[CPP] Void type cannot be used as a variable\n";
-            return;
-        default:
-            std::cerr << "[CPP] Unknown data type\n";
-            return;
-    }
-
-    if (!initializer) {
-        std::cerr << "[CPP] Error: Initializer for variable is null\n";
-        return;
-    }
-
-    // Allocate the variable in the function's entry block
-    llvm::Function* function = builder.GetInsertBlock()->getParent();
-    llvm::IRBuilder<> tmpB(&function->getEntryBlock(), function->getEntryBlock().begin());
-    llvm::AllocaInst* alloca = tmpB.CreateAlloca(varType, 0, node->data.varDecl.name);
-
-    // Store the initializer in the allocated variable
-    builder.CreateStore(initializer, alloca);
-
-    // Add the variable to the named values map
-    namedValues[node->data.varDecl.name] = alloca;
-
-    std::cout << "[CPP] Variable registered in function's local scope\n";
-    std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
-}
-// </generateVarDeclaration>
-
-
-// <generateReturnStatement>
-void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    if (!node) {
-        std::cerr << "[CPP] Error: Return statement node is null\n";
-        return;
-    }
-
-    llvm::Value* retValue = nullptr;
-    if (node->data.returnStmt.returnValue) {
-        std::cout << "[CPP] Return statement node has return value of type: " << node->data.returnStmt.returnValue->type << "\n";
-        retValue = generateExpression(node->data.returnStmt.returnValue, builder, module);
-    }
-
-    if (!retValue) {
-        std::cerr << "[CPP] Error: Return statement value is null\n";
-        builder.CreateRetVoid();
-        return;
-    }
-
-    // If the return value is a variable, we need to load its value
-    if (node->data.returnStmt.returnValue->type == CryoNodeType::NODE_VAR_NAME) {
-        llvm::Type* retType = retValue->getType();
-        llvm::PointerType* retPtr = PointerType::get(retType, 0);
-        retValue = builder.CreateLoad(retPtr, retValue);
-    }
-
-    std::cout << "[CPP] Return Statement Node with return value generated\n";
-
-    if (retValue) {
-        std::cout << "[CPP] Return value: " << retValue << "\n"; // Print the value for debugging
-        builder.CreateRet(retValue);
-    } else {
-        std::cerr << "[CPP] Error: Failed to generate return value\n";
-        builder.CreateRetVoid();
-    }
-}
-// </generateReturnStatement>
-
-
-// <generateFunction>
-void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    std::cout << "[CPP] Generating code for function: " << node->data.functionDecl.name << "\n";
-
-    // Retrieve and handle the function return type
-    llvm::Type* returnType = nullptr;
-    switch (node->data.functionDecl.returnType) {
-        case DATA_TYPE_INT:
-            returnType = llvm::Type::getInt32Ty(module.getContext());
-            break;
-        case DATA_TYPE_FLOAT:
-            returnType = llvm::Type::getFloatTy(module.getContext());
-            break;
-        case DATA_TYPE_BOOLEAN:
-            returnType = llvm::Type::getInt1Ty(module.getContext());
-            break;
-        case DATA_TYPE_VOID:
-            returnType = builder.getVoidTy();
-            break;
-        default:
-            std::cerr << "[CPP] Error: Unknown function return type: " << node->data.functionDecl.returnType << "\n";
-            return;
-    }
-    std::cout << "[CPP] Function return type: " << node->data.functionDecl.returnType << " mapped to LLVM type: " << returnType << "\n";
-
-    // Define function parameters
-    std::vector<llvm::Type*> paramTypes;
-    if (node->data.functionDecl.params) {
-        for (int i = 0; i < node->data.functionDecl.paramCount; ++i) {
-            ASTNode* paramNode = node->data.functionDecl.params->data.paramList.params[i];
-            switch (paramNode->data.varDecl.dataType) {
-                case DATA_TYPE_INT:
-                    paramTypes.push_back(llvm::Type::getInt32Ty(module.getContext()));
-                    break;
-                case DATA_TYPE_FLOAT:
-                    paramTypes.push_back(llvm::Type::getFloatTy(module.getContext()));
-                    break;
-                case DATA_TYPE_BOOLEAN:
-                    paramTypes.push_back(llvm::Type::getInt1Ty(module.getContext()));
-                    break;
-                default:
-                    std::cerr << "[CPP] Error: Unknown parameter type\n";
-                    return;
-            }
-        }
-    }
-
-    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
-    llvm::Function::LinkageTypes linkageType = node->data.functionDecl.visibility == CryoVisibilityType::VISIBILITY_PRIVATE ? llvm::Function::PrivateLinkage : llvm::Function::ExternalLinkage;
-    llvm::Function* function = llvm::Function::Create(funcType, linkageType, node->data.functionDecl.name, module);
-
-    // Assign names to the parameters
-    auto paramIter = function->arg_begin();
-    if (node->data.functionDecl.params) {
-        for (int i = 0; i < node->data.functionDecl.paramCount; ++i, ++paramIter) {
-            ASTNode* paramNode = node->data.functionDecl.params->data.paramList.params[i];
-            paramIter->setName(paramNode->data.varDecl.name);
-        }
-    }
-
-    llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), "entry", function);
-    builder.SetInsertPoint(BB);
-
-    // Check for a valid function body
-    if (node->data.functionDecl.body) {
-        generateCode(node->data.functionDecl.body, builder, module);
-    } else {
-        std::cerr << "[CPP] Error: Function body is null\n";
-        return;
-    }
-
-    // Ensure proper function termination
-    if (returnType->isVoidTy()) {
-        builder.CreateRetVoid();
-    } else {
-        if (BB->getTerminator() == nullptr) {
-            std::cerr << "[CPP] Error: Missing return statement\n";
-            builder.CreateRet(llvm::Constant::getNullValue(returnType));
-        }
-    }
-}
-// </generateFunction>
-
-
 // <generateBlock>
 void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for block\n";
@@ -394,25 +197,6 @@ void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modu
     }
 }
 // </generateBlock>
-
-
-// <generateFunctionBlock>
-void generateFunctionBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    std::cout << "[CPP] Generating code for function block\n";
-    if (!node || !node->data.functionBlock.block) {
-        std::cerr << "[CPP] Error generating code for function block: Invalid function block\n";
-        return;
-    }
-    std::cout << "[CPP] Function block contains " << node->data.functionBlock.block->data.block.stmtCount << " statements\n";
-
-    // Generate code for each statement in the block
-    for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
-        std::cout << "[CPP] Generating code for block statement " << i << "\n";
-        generateCode(node->data.functionBlock.block->data.block.statements[i], builder, module);
-        std::cout << "[CPP] Moving to next statement\n";
-    }
-}
-// </generateFunctionBlock>
 
 
 // <generateExpression>
@@ -510,6 +294,7 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
             std::cerr << "[CPP] Unknown expression type\n";
             return nullptr;
     }
+    std::cout << "[CPP] Expression generated\n";
 }
 // </generateExpression>
 
@@ -549,34 +334,13 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
 // </generateBinaryOperation>
 
 
-// <createStringStruct>
-llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
-    return llvm::StructType::create(context, "String");
-}
-// </createStringStruct>
-
-
-// <createStringType>
-llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder) {
-    llvm::StructType *stringType = createStringStruct(context);
-    std::vector<llvm::Type *> elements = {
-        builder.getInt8Ty()->getPointerTo(),    // buffer
-        builder.getInt32Ty(),                   // length
-        builder.getInt32Ty(),                   // maxlen
-        builder.getInt32Ty()                    // factor
-    };
-    stringType->setBody(elements);
-    return stringType;
-}
-// </createStringType>
-
 
 // <createString>
 llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str) {
     std::cout << "[CPP_DEBUG - createString] Creating string\n - Value: " << str << "\n";
     // Set up the string type & struct
     llvm::LLVMContext &context = module.getContext();
-    std::cout << "[CPP_DEBUG - createString] Setting up string type & struct\n";
+    std::cout << "[CPP_DEBUG - createString] Setting uqp string type & struct\n";
     
     llvm::StructType *stringType = createStringType(context, builder);
     std::cout << "[CPP_DEBUG - createString] String type set up\n";

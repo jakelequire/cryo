@@ -1,0 +1,5 @@
+
+
+public function stringFunc() -> string {
+    return "Hello, World!";
+}

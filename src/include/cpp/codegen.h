@@ -33,6 +33,8 @@
 
 #include "cpp/cppLogger.h"
 
+
+
 using namespace llvm;
 
 extern "C" {
@@ -43,7 +45,7 @@ extern "C" {
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
-llvm::Value* getVariableValue(const std::string& name);
+llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder);
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
