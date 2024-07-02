@@ -19,6 +19,7 @@
 extern std::unordered_map<std::string, llvm::Value*> namedValues;
 
 
+// <getVariableValue>
 llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder) {
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
@@ -34,6 +35,8 @@ llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builde
     }
     return nullptr;
 }
+// </getVariableValue>
+
 
 // <generateVarDeclaration>
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
@@ -86,6 +89,8 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
 
     // This was the error in the previous code
     // Fixed by adding the initializer to the GlobalVariable constructor
+    // Allocate the variable as a global variable
+    std::cout << "[CPP] Allocating variable as global variable\n";
     std::string varName = node->data.varDecl.name;
     llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
         module,
@@ -96,7 +101,18 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
         varName
     );
 
-    std::cout << "[CPP] Variable registered in function's local scope\n";
+    if (!globalVar) {
+        std::cerr << "[CPP] Error: Allocation failed\n";
+        return;
+    }
+
+    std::cout << "[CPP] Global Variable: " << globalVar << "\n";
+
+    // Add the variable to the named values map
+    namedValues[node->data.varDecl.name] = globalVar;
+
+    std::cout << "[CPP] Variable registered in global scope\n";
+    std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
     std::cout << "[CPP] Variable name: " << node->data.varDecl.name << "\n";
 }
 // </generateVarDeclaration>
