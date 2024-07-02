@@ -34,6 +34,12 @@
 /*---------<end>---------*/
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
+
+typedef struct {
+    bool isParsingIfCondition;
+    // Add other context flags as needed
+} ParsingContext;
+
 /*-----<function_prototypes>-----*/
 #ifndef HAVE_STRNDUP
 char* strndup(const char* s, size_t n);
@@ -53,13 +59,10 @@ ASTNode* parsePrimaryExpression(Lexer* lexer);
 ASTNode* parseExpression(Lexer* lexer);
 ASTNode* parseUnaryExpression(Lexer* lexer);
 ASTNode* parseBinaryExpression(Lexer* lexer, int precedence);
-ASTNode* parseExpression(Lexer* lexer);
 ASTNode* parseStatement(Lexer* lexer);
-ASTNode* parseIfStatement(Lexer* lexer);
 ASTNode* parseReturnStatement(Lexer* lexer);
 ASTNode* parseExpressionStatement(Lexer* lexer);
-ASTNode* parseWhileStatement(Lexer* lexer);
-ASTNode* parseForStatement(Lexer* lexer);
+
 ASTNode* parseVarDeclaration(Lexer* lexer);
 ASTNode* parseBlock(Lexer* lexer);
 ASTNode* parseStatements(Lexer* lexer);
@@ -73,6 +76,12 @@ ASTNode* createParamNode(const char* name, ASTNode* type);
 ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
 ASTNode* parsePublicDeclaration(Lexer* lexer);
 ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName);
+
+
+ASTNode* parsePrimaryExpression(Lexer* lexer);
+ASTNode* parseIfStatement(Lexer* lexer);
+ASTNode* parseWhileStatement(Lexer* lexer);
+ASTNode* parseForStatement(Lexer* lexer);
 // Entry Point
 ASTNode* parseProgram(Lexer* lexer);
 /*-----<end_prototypes>-----*/

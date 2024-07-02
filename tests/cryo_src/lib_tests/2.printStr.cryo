@@ -2,4 +2,4 @@
 // Variable declaration and initialization
 const foo: string = "Hello, world!";
 // Print a string variable
-cryo_print_str(foo);
+printStr(foo);

@@ -72,12 +72,18 @@ llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, c
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
+
+// Strings & String Structs
 llvm::StructType *createStringStruct(llvm::LLVMContext &context);
 llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder);
 llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str);
 
+// Functions
 void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 llvm::Function* getCryoFunction(llvm::Module& module, const std::string& name, llvm::ArrayRef<llvm::Type*> argTypes);
+
+
+void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 void codegen(ASTNode* root);
 

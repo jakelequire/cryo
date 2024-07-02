@@ -1,0 +1,9 @@
+// Test if statement
+const a: int = 10;
+const b: int = 20;
+
+if(a < b) {
+    printInt(a);
+} else {
+    printInt(b);
+}

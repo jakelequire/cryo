@@ -17,14 +17,14 @@
 
 #include "cryo/cryolib.h"
 
-void cryo_print_int(int value) {
+void printInt(int value) {
     printf("%d\n", value);
 }
 
-void cryo_print_float(float value) {
+void printFloat(float value) {
     printf("%f\n", value);
 }
 
-void cryo_print_string(const char* value) {
+void printStr(const char* value) {
     printf("%s\n", value);
 }

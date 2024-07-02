@@ -181,6 +181,9 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
             std::cout << "[CPP] Generating code for variable declaration!\n" << std::endl;
             generateVarDeclaration(node, builder, module);
             break;
+        case NODE_IF_STATEMENT:
+            generateIfStatement(node, builder, module);
+            break;
         default:
             std::cerr << "[CPP] Unknown statement type\n";
             break;

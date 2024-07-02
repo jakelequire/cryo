@@ -39,6 +39,8 @@
 
 # Cryo Build Files
 output.ll
+output.bc
+output.o
 
 # Ignore Specific File Extensions
 *.vsidx

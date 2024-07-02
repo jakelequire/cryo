@@ -39,7 +39,7 @@ RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
 CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)src/codegen.cpp $(CPP_DIR)src/cppLogger.cpp $(CPP_DIR)src/variables.cpp $(CPP_DIR)src/functions.cpp \
-$(CPP_DIR)src/structs.cpp $(CPP_DIR)src/lib.cpp
+$(CPP_DIR)src/structs.cpp $(CPP_DIR)src/lib.cpp $(CPP_DIR)src/conditionals.cpp
 
 
 # Cryo Lib Files
@@ -54,7 +54,8 @@ RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
-CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppLogger.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o $(OBJ_DIR)structs.o $(OBJ_DIR)lib.o
+CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppLogger.o $(OBJ_DIR)variables.o \
+$(OBJ_DIR)functions.o $(OBJ_DIR)structs.o $(OBJ_DIR)lib.o $(OBJ_DIR)conditionals.o
 
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
@@ -123,7 +124,10 @@ $(OBJ_DIR)functions.o: $(CPP_DIR)src/functions.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR)structs.o: $(CPP_DIR)src/structs.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	
+
+$(OBJ_DIR)conditionals.o: $(CPP_DIR)src/conditionals.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 $(OBJ_DIR)lib.o: $(CPP_DIR)src/lib.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

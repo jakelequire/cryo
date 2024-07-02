@@ -42,6 +42,8 @@ typedef struct ASTNode {
     struct ASTNode* nextSibling; // Next sibling node (for linked list structure)
 
     union {
+        int value;  // For literal number nodes
+
         struct {
             struct ASTNode** statements;
             int stmtCount;
@@ -80,6 +82,11 @@ typedef struct ASTNode {
             int paramCount;
             int paramCapacity;
         } paramList;
+
+        struct {
+            struct ASTNode* returnValue;
+            struct ASTNode* expression;
+        } returnStmt;
         // >=--------------<End>--------------=<
 
         
@@ -94,10 +101,27 @@ typedef struct ASTNode {
             char* varName;
         } varName;
         // >=--------------<End>--------------=<
+        
 
-        int value;  // For literal number nodes
-    
-
+        // >=------<Control Flow>------=<
+        struct {
+            struct ASTNode* condition;
+            struct ASTNode* thenBranch;
+            struct ASTNode* elseBranch;
+        } ifStmt;
+        
+        struct {
+            struct ASTNode* condition;
+            struct ASTNode* body;
+        } whileStmt;
+        
+        struct {
+            struct ASTNode* initializer;
+            struct ASTNode* condition;
+            struct ASTNode* increment;
+            struct ASTNode* body;
+        } forStmt;
+        // >=--------------<End>--------------=<
 
         struct {
             struct ASTNode* stmt;
@@ -130,28 +154,9 @@ typedef struct ASTNode {
         } unary_op; // For unary operators, e.g (-5, !true, etc.)
 
         
-        struct {
-            struct ASTNode* condition;
-            struct ASTNode* thenBranch;
-            struct ASTNode* elseBranch;
-        } ifStmt;
-        
-        struct {
-            struct ASTNode* condition;
-            struct ASTNode* body;
-        } whileStmt;
-        
-        struct {
-            struct ASTNode* initializer;
-            struct ASTNode* condition;
-            struct ASTNode* increment;
-            struct ASTNode* body;
-        } forStmt;
 
-        struct {
-            struct ASTNode* returnValue;
-            struct ASTNode* expression;
-        } returnStmt;
+
+
 
         struct {
             char* str;

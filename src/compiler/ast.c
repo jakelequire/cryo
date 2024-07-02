@@ -112,6 +112,15 @@ void printAST(ASTNode* node, int indent) {
             printf("Variable Name: %s\n", node->data.varName.varName);
             break;
 
+        case NODE_IF_STATEMENT:
+            printf("If Statement:\n");
+            printAST(node->data.ifStmt.condition, indent + 2);
+            printAST(node->data.ifStmt.thenBranch, indent + 2);
+            if (node->data.ifStmt.elseBranch) {
+                printAST(node->data.ifStmt.elseBranch, indent + 2);
+            }
+            break;
+
         default:
             printf("[ERROR] Unknown node type: %d\n", node->data);
             fprintf(stderr, "[ERROR] Unknown node type: %d\n", node->type);
@@ -293,8 +302,34 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.varDecl.name = NULL;
             node->data.varDecl.initializer = NULL;
             break;
+        case NODE_VAR_NAME:
+            node->data.varName.varName = NULL;
+            break;
         case NODE_RETURN_STATEMENT:
             node->data.returnStmt.returnValue = NULL;
+            break;
+        case NODE_IF_STATEMENT:
+            node->data.ifStmt.condition = NULL;
+            node->data.ifStmt.thenBranch = NULL;
+            node->data.ifStmt.elseBranch = NULL;
+            break;
+        case NODE_BINARY_EXPR:
+            node->data.bin_op.left = NULL;
+            node->data.bin_op.right = NULL;
+            node->data.bin_op.op = TOKEN_UNKNOWN;
+            break;
+        case NODE_LITERAL_EXPR:
+            node->data.literalExpression.dataType = DATA_TYPE_UNKNOWN;
+            break;
+        case NODE_FUNCTION_CALL:
+            node->data.functionCall.name = NULL;
+            node->data.functionCall.args = NULL;
+            node->data.functionCall.argCount = 0;
+            break;
+        case NODE_BLOCK:
+            node->data.block.statements = NULL;
+            node->data.block.stmtCount = 0;
+            node->data.block.stmtCapacity = 0;
             break;
         default:
             fprintf(stderr, "[AST] [ERROR] Unknown node type during creation: %d\n", type);

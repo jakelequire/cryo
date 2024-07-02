@@ -4,5 +4,5 @@ const foo: int = 34;
 const bar: int = 35;
 const baz: int = foo + bar;
 // Print an integer variable
-cryo_print_int(baz);
+printInt(baz);
 

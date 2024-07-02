@@ -202,7 +202,9 @@
     "memory_resource": "cpp",
     "string_view": "cpp",
     "numbers": "cpp",
-    "semaphore": "cpp"
+    "semaphore": "cpp",
+    "cryolib.h": "c",
+    "stdarg.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true
 }

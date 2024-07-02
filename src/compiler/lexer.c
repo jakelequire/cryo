@@ -411,6 +411,32 @@ Token nextToken(Lexer* lexer, Token* token) {
         case ';': *token = makeToken(lexer, TOKEN_SEMICOLON); break;
         case ',': *token = makeToken(lexer, TOKEN_COMMA); break;
         case ':': *token = makeToken(lexer, TOKEN_COLON); break;
+        case '<': *token = makeToken(lexer, TOKEN_OP_LT); break;
+        case '>': *token = makeToken(lexer, TOKEN_OP_GT); break;
+        case '!':
+            if (peek(lexer) == '=') {
+                advance(lexer);
+                *token = makeToken(lexer, TOKEN_OP_NEQ);
+            } else {
+                *token = makeToken(lexer, TOKEN_OP_NOT);
+            }
+            break;
+        case '&':
+            if (peek(lexer) == '&') {
+                advance(lexer);
+                *token = makeToken(lexer, TOKEN_OP_AND);
+            } else {
+                *token = errorToken(lexer, "Unexpected character.");
+            }
+            break;
+        case '|':
+            if (peek(lexer) == '|') {
+                advance(lexer);
+                *token = makeToken(lexer, TOKEN_OP_OR);
+            } else {
+                *token = errorToken(lexer, "Unexpected character.");
+            }
+            break;
         case '-':
             if (peek(lexer) == '>') {
                 advance(lexer); // consume '>'

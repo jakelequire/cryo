@@ -14,14 +14,43 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_LIB_H
-#define CRYO_LIB_H
-#include <stdio.h>
+#include "cpp/codegen.h"
 
 
-void printInt(int value);
-void printFloat(float value);
-void printStr(const char* value);
+
+// <generateIfStatement>
+void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    llvm::Function* function = builder.GetInsertBlock()->getParent();
+
+    llvm::BasicBlock* thenBB = llvm::BasicBlock::Create(builder.getContext(), "then", function);
+    llvm::BasicBlock* elseBB = llvm::BasicBlock::Create(builder.getContext(), "else");
+    llvm::BasicBlock* mergeBB = llvm::BasicBlock::Create(builder.getContext(), "ifcont");
+
+    llvm::Value* condValue = generateExpression(node->data.ifStmt.condition, builder, module);
+    builder.CreateCondBr(condValue, thenBB, elseBB);
+
+    // Then block
+    builder.SetInsertPoint(thenBB);
+    generateStatement(node->data.ifStmt.thenBranch, builder, module);
+    builder.CreateBr(mergeBB);
+
+    // Else block
+    function->splice(function->end(), function, elseBB->getIterator());
+    builder.SetInsertPoint(elseBB);
+    if (node->data.ifStmt.elseBranch) {
+        generateStatement(node->data.ifStmt.elseBranch, builder, module);
+    }
+    builder.CreateBr(mergeBB);
+
+    // Merge block
+    function->splice(function->end(), function, mergeBB->getIterator());
+    builder.SetInsertPoint(mergeBB);
+}
+// </generateIfStatement>
 
 
-#endif // CRYO_LIB_H
+
+
+
+
+
