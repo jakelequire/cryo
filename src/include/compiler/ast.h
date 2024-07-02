@@ -144,7 +144,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* left;
             struct ASTNode* right;
-            CryoTokenType op;
+            CryoOperatorType op;
             char* operatorText;
         } bin_op;
 
@@ -152,11 +152,6 @@ typedef struct ASTNode {
             CryoTokenType op;
             struct ASTNode* operand;
         } unary_op; // For unary operators, e.g (-5, !true, etc.)
-
-        
-
-
-
 
         struct {
             char* str;
@@ -178,7 +173,7 @@ ASTNode* createLiteralExpr(int value);
 ASTNode* createVariableExpr(const char* name);
 ASTNode* createBooleanLiteralExpr(int value);
 ASTNode* createStringLiteralExpr(const char* str);
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType op);
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoOperatorType op);
 ASTNode* createUnaryExpr(CryoTokenType op, ASTNode* operand);
 ASTNode* createFunctionNode(const char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType);
 ASTNode* createReturnNode(ASTNode* returnValue);

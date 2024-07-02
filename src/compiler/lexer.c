@@ -404,27 +404,27 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '}': *token = makeToken(lexer, TOKEN_RBRACE); break;
         case '(': *token = makeToken(lexer, TOKEN_LPAREN); break;
         case ')': *token = makeToken(lexer, TOKEN_RPAREN); break;
-        case '+': *token = makeToken(lexer, TOKEN_OP_PLUS); break;
-        case '*': *token = makeToken(lexer, TOKEN_OP_STAR); break;
-        case '/': *token = makeToken(lexer, TOKEN_OP_SLASH); break;
+        case '+': *token = makeToken(lexer, OPERATOR_ADD); break;
+        case '*': *token = makeToken(lexer, OPERATOR_MUL); break;
+        case '/': *token = makeToken(lexer, OPERATOR_DIV); break;
         case '=': *token = makeToken(lexer, TOKEN_ASSIGN); break;
         case ';': *token = makeToken(lexer, TOKEN_SEMICOLON); break;
         case ',': *token = makeToken(lexer, TOKEN_COMMA); break;
         case ':': *token = makeToken(lexer, TOKEN_COLON); break;
-        case '<': *token = makeToken(lexer, TOKEN_OP_LT); break;
-        case '>': *token = makeToken(lexer, TOKEN_OP_GT); break;
+        case '<': *token = makeToken(lexer, OPERATOR_LT); break;
+        case '>': *token = makeToken(lexer, OPERATOR_GT); break;
         case '!':
             if (peek(lexer) == '=') {
                 advance(lexer);
-                *token = makeToken(lexer, TOKEN_OP_NEQ);
+                *token = makeToken(lexer, OPERATOR_NEQ);
             } else {
-                *token = makeToken(lexer, TOKEN_OP_NOT);
+                *token = makeToken(lexer, OPERATOR_NOT);
             }
             break;
         case '&':
             if (peek(lexer) == '&') {
                 advance(lexer);
-                *token = makeToken(lexer, TOKEN_OP_AND);
+                *token = makeToken(lexer, OPERATOR_AND);
             } else {
                 *token = errorToken(lexer, "Unexpected character.");
             }
@@ -432,7 +432,7 @@ Token nextToken(Lexer* lexer, Token* token) {
         case '|':
             if (peek(lexer) == '|') {
                 advance(lexer);
-                *token = makeToken(lexer, TOKEN_OP_OR);
+                *token = makeToken(lexer, OPERATOR_OR);
             } else {
                 *token = errorToken(lexer, "Unexpected character.");
             }
@@ -442,7 +442,7 @@ Token nextToken(Lexer* lexer, Token* token) {
                 advance(lexer); // consume '>'
                 *token = makeToken(lexer, TOKEN_RESULT_ARROW);
             } else {
-                *token = makeToken(lexer, TOKEN_OP_MINUS);
+                *token = makeToken(lexer, OPERATOR_SUB);
             }
             break;
         default:

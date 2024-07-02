@@ -55,35 +55,34 @@ char* tokenTypeToString(CryoTokenType type);
 CryoDataType getCryoDataType(const char* typeStr);
 // AST Nodes
 ASTNode* createProgramNode(void);
-ASTNode* parsePrimaryExpression(Lexer* lexer);
-ASTNode* parseExpression(Lexer* lexer);
-ASTNode* parseUnaryExpression(Lexer* lexer);
-ASTNode* parseBinaryExpression(Lexer* lexer, int precedence);
-ASTNode* parseStatement(Lexer* lexer);
-ASTNode* parseReturnStatement(Lexer* lexer);
-ASTNode* parseExpressionStatement(Lexer* lexer);
+ASTNode* parsePrimaryExpression(Lexer* lexer, ParsingContext* context);
+ASTNode* parseExpression(Lexer* lexer, ParsingContext* context);
+ASTNode* parseUnaryExpression(Lexer* lexer, ParsingContext* context);
+ASTNode* parseBinaryExpression(Lexer* lexer, int precedence, ParsingContext* context);
+ASTNode* parseStatement(Lexer* lexer, ParsingContext* context);
+ASTNode* parseReturnStatement(Lexer* lexer, ParsingContext* context);
+ASTNode* parseExpressionStatement(Lexer* lexer, ParsingContext* context);
 
-ASTNode* parseVarDeclaration(Lexer* lexer);
-ASTNode* parseBlock(Lexer* lexer);
-ASTNode* parseStatements(Lexer* lexer);
-ASTNode* parseType(Lexer* lexer);
-ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility);
-ASTNode* parseFunctionBlock(Lexer* lexer);
-ASTNode* parseParameterList(Lexer* lexer);
-ASTNode* parseParameter(Lexer* lexer);
-ASTNode* createTypeNode(CryoTokenType type);
+ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context);
+ASTNode* parseBlock(Lexer* lexer, ParsingContext* context);
+ASTNode* parseStatements(Lexer* lexer, ParsingContext* context);
+ASTNode* parseType(Lexer* lexer, ParsingContext* context);
+ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility, ParsingContext* context);
+ASTNode* parseFunctionBlock(Lexer* lexer, ParsingContext* context);
+ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context);
 ASTNode* createParamNode(const char* name, ASTNode* type);
+ASTNode* parsePublicDeclaration(Lexer* lexer, ParsingContext* context);
+ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName, ParsingContext* context);
+
+ASTNode* createTypeNode(CryoTokenType type);
+ASTNode* parseParameter(Lexer* lexer, ParsingContext* context);
 ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
-ASTNode* parsePublicDeclaration(Lexer* lexer);
-ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName);
 
-
-ASTNode* parsePrimaryExpression(Lexer* lexer);
-ASTNode* parseIfStatement(Lexer* lexer);
+ASTNode* parseIfStatement(Lexer* lexer, ParsingContext* context);
 ASTNode* parseWhileStatement(Lexer* lexer);
-ASTNode* parseForStatement(Lexer* lexer);
-// Entry Point
 ASTNode* parseProgram(Lexer* lexer);
-/*-----<end_prototypes>-----*/
 
 #endif // PARSER_H
+
+// Entry Point
+/*-----<end_prototypes>-----*/

@@ -41,15 +41,22 @@ void printAST(ASTNode* node, int indent) {
             }
             break;
 
+        case NODE_BLOCK:
+            printf("Block with %d statements:\n", node->data.block.stmtCount);
+            for (int i = 0; i < node->data.block.stmtCount; i++) {
+                printAST(node->data.block.statements[i], indent + 1);
+            }
+            break;
+
         case NODE_FUNCTION_DECLARATION:
             printf("Function Declaration: %s\n", node->data.functionDecl.name);
             printAST(node->data.functionDecl.body, indent + 2);
             break;
 
-        case NODE_BLOCK:
-            printf("Block with %d statements:\n", node->data.block.stmtCount);
-            for (int i = 0; i < node->data.block.stmtCount; i++) {
-                printAST(node->data.block.statements[i], indent + 1);
+        case NODE_FUNCTION_CALL:
+            printf("Function Call: %s\n", node->data.functionCall.name);
+            for (int i = 0; i < node->data.functionCall.argCount; i++) {
+                printAST(node->data.functionCall.args[i], indent + 2);
             }
             break;
 
@@ -95,7 +102,7 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_BINARY_EXPR:
-            printf("Binary Expression: %s\n", tokenTypeToString(node->data.bin_op.op));
+            printf("Binary Expression: %s\n", operatorToString(node->data.bin_op.op));
             printAST(node->data.bin_op.left, indent + 1);
             printAST(node->data.bin_op.right, indent + 1);
             break;
@@ -119,6 +126,45 @@ void printAST(ASTNode* node, int indent) {
             if (node->data.ifStmt.elseBranch) {
                 printAST(node->data.ifStmt.elseBranch, indent + 2);
             }
+            break;
+
+        case NODE_EXPRESSION_STATEMENT:
+            printf("Expression Statement:\n");
+            printAST(node->data.expr.expr, indent + 2);
+            break;
+        
+        case NODE_EXPRESSION:
+            printf("Expression:\n");
+            printAST(node->data.expr.expr, indent + 2);
+            break;
+        
+        case NODE_STATEMENT:
+            printf("Statement:\n");
+            printAST(node->data.stmt.stmt, indent + 2);
+            break;
+
+        case NODE_PARAM_LIST:
+            printf("Parameter List:\n");
+            for (int i = 0; i < node->data.paramList.paramCount; i++) {
+                printAST(node->data.paramList.params[i], indent + 2);
+            }
+            break;
+        case NODE_WHILE_STATEMENT:
+            printf("While Statement:\n");
+            printAST(node->data.whileStmt.condition, indent + 2);
+            printAST(node->data.whileStmt.body, indent + 2);
+            break;
+
+        case NODE_FOR_STATEMENT:
+            printf("For Statement:\n");
+            printAST(node->data.forStmt.initializer, indent + 2);
+            printAST(node->data.forStmt.condition, indent + 2);
+            printAST(node->data.forStmt.increment, indent + 2);
+            printAST(node->data.forStmt.body, indent + 2);
+            break;
+
+        case NODE_TYPE:
+            printf("Data Type: <UNIMPLEMENTED>\n");
             break;
 
         default:
@@ -316,7 +362,7 @@ ASTNode* createASTNode(CryoNodeType type) {
         case NODE_BINARY_EXPR:
             node->data.bin_op.left = NULL;
             node->data.bin_op.right = NULL;
-            node->data.bin_op.op = TOKEN_UNKNOWN;
+            node->data.bin_op.op = OPERATOR_NA;
             break;
         case NODE_LITERAL_EXPR:
             node->data.literalExpression.dataType = DATA_TYPE_UNKNOWN;
@@ -408,7 +454,7 @@ ASTNode* createVariableExpr(const char* name) {
 
 
 // <createBinaryExpr>
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType op) {
+ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoOperatorType op) {
     ASTNode* node = createASTNode(NODE_BINARY_EXPR);
     if (!node) {
         fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for binary expression node\n");
@@ -417,7 +463,7 @@ ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoTokenType op) {
     node->data.bin_op.left = left;
     node->data.bin_op.right = right;
     node->data.bin_op.op = op;
-    node->data.bin_op.operatorText = strdup(tokenTypeToString(op));
+    node->data.bin_op.operatorText = strdup(operatorToString(op));
     printf("Created Binary Expression Node: left=%p, right=%p, operator=%d\n", left, right, op);
     return node;
 }

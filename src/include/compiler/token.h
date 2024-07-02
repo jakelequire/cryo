@@ -190,6 +190,38 @@ typedef enum {
 } CryoTokenType;
 
 
+typedef enum {
+    OPERATOR_UNKNOWN = -1,      // `<UNKNOWN>`       -1
+    OPERATOR_ADD,               // `+`               0
+    OPERATOR_SUB,               // `-`               1
+    OPERATOR_MUL,               // `*`               2
+    OPERATOR_DIV,               // `/`               3
+    OPERATOR_MOD,               // `%`               4
+    OPERATOR_AND,               // `&`               5
+    OPERATOR_OR,                // `|`               6
+    OPERATOR_XOR,               // `^`               7
+    OPERATOR_NOT,               // `!`               8
+    OPERATOR_LSHIFT,            // `<<`              9
+    OPERATOR_RSHIFT,            // `>>`              10
+    OPERATOR_LT,                // `<`               11
+    OPERATOR_GT,                // `>`               12
+    OPERATOR_LTE,               // `<=`              13
+    OPERATOR_GTE,               // `>=`              14
+    OPERATOR_EQ,                // `==`              15
+    OPERATOR_NEQ,               // `!=`              16
+    OPERATOR_ASSIGN,            // `=`               17
+    OPERATOR_ADD_ASSIGN,        // `+=`              18
+    OPERATOR_SUB_ASSIGN,        // `-=`              19
+    OPERATOR_MUL_ASSIGN,        // `*=`              20
+    OPERATOR_DIV_ASSIGN,        // `/=`              21
+    OPERATOR_MOD_ASSIGN,        // `%=`              22
+    OPERATOR_AND_ASSIGN,        // `&=`              23
+    OPERATOR_OR_ASSIGN,         // `|=`              24
+    OPERATOR_XOR_ASSIGN,        // `^=`              25
+    OPERATOR_NA,                // `<UNKNOWN>`       26
+} CryoOperatorType;
+
+
 typedef enum CryoNodeType {
     NODE_PROGRAM,                   // 0
     NODE_FUNCTION_DECLARATION,      // 1
@@ -236,6 +268,13 @@ typedef enum CryoVisibilityType {
     VISIBILITY_PROTECTED,   // `protected`      2
     VISIBILITY_UNKNOWN,     // `<UNKNOWN>`      3
 } CryoVisibilityType;
+
+
+
+//
+// Function prototypes for the token module
+//
+char* operatorToString(CryoOperatorType op);
 
 
 #ifdef __cplusplus

@@ -145,6 +145,11 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             generateFunctionBlock(node, builder, module);
             break;
 
+        case CryoNodeType::NODE_IF_STATEMENT:
+            std::cout << "[CPP] Generating code for if statement\n";
+            generateIfStatement(node, builder, module);
+            break;
+
         default:
             std::cerr << "[CPP] Unknown node type\n";
             break;
@@ -184,7 +189,20 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
         case NODE_IF_STATEMENT:
             generateIfStatement(node, builder, module);
             break;
+        case NODE_VAR_NAME:
+            std::cout << "[CPP] Generating code for variable name!\n" << std::endl;
+            std::cout << "[CPP] Variable Name UNIMPLEMENTED\n";
+            break;
+        case NODE_FUNCTION_CALL:
+            std::cout << "[CPP] Generating code for function call!\n" << std::endl;
+            generateFunctionCall(node, builder, module);
+            break;
+        case NODE_BLOCK:
+            std::cout << "[CPP] Generating code for block!\n" << std::endl;
+            generateBlock(node, builder, module);
+            break;
         default:
+            std::cout << node->type << std::endl;
             std::cerr << "[CPP] Unknown statement type\n";
             break;
     }
@@ -253,41 +271,8 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
             }
             
         case CryoNodeType::NODE_BINARY_EXPR: {
-            llvm::Value* left = generateExpression(node->data.bin_op.left, builder, module);
-            llvm::Value* right = generateExpression(node->data.bin_op.right, builder, module);
-            if (!left || !right) {
-                std::cerr << "[CPP] Error generating binary operation: operands are null\n";
-                return nullptr;
-            }
-            std::cout << "[CPP] Binary operation operands generated\n";
-        
-            // Check and cast the operands to integer types if necessary
-            if (left->getType()->isPointerTy()) {
-                left = builder.CreatePtrToInt(left, llvm::Type::getInt32Ty(module.getContext()));
-            }
-            if (right->getType()->isPointerTy()) {
-                right = builder.CreatePtrToInt(right, llvm::Type::getInt32Ty(module.getContext()));
-            }
-        
-            if (!left->getType()->isIntegerTy() || !right->getType()->isIntegerTy()) {
-                std::cerr << "[CPP] Error: Binary operation requires integer operands\n";
-                return nullptr;
-            }
-        
-            switch (node->data.bin_op.op) {
-                case TOKEN_OP_PLUS:
-                    return builder.CreateAdd(left, right, "addtmp");
-                case TOKEN_OP_MINUS:
-                    return builder.CreateSub(left, right, "subtmp");
-                case TOKEN_OP_STAR:
-                    return builder.CreateMul(left, right, "multmp");
-                case TOKEN_OP_SLASH:
-                    return builder.CreateSDiv(left, right, "divtmp");
-                default:
-                    std::cerr << "[CPP] Unknown binary operator\n";
-                    return nullptr;
-            }
-            break;
+            std::cout << "[CPP] Generating code for binary expression!\n";
+            return generateBinaryOperation(node, builder, module);
         }
 
         case CryoNodeType::NODE_VAR_NAME: {
@@ -323,22 +308,32 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
     std::cout << "[CPP] Binary operation operands generated\n";
 
     switch (node->data.bin_op.op) {
-        case CryoTokenType::TOKEN_OP_PLUS:
-            std::cout << "[CPP] Generating code for binary operation: ADD\n";
+        case CryoOperatorType::OPERATOR_ADD:
             return builder.CreateAdd(left, right, "addtmp");
-        case CryoTokenType::TOKEN_OP_MINUS:
-            std::cout << "[CPP] Generating code for binary operation: SUB\n";
+        case CryoOperatorType::OPERATOR_SUB:
             return builder.CreateSub(left, right, "subtmp");
-        case CryoTokenType::TOKEN_OP_STAR:
-            std::cout << "[CPP] Generating code for binary operation: MUL\n";
+        case CryoOperatorType::OPERATOR_MUL:
             return builder.CreateMul(left, right, "multmp");
-        case CryoTokenType::TOKEN_OP_SLASH:
-            std::cout << "[CPP] Generating code for binary operation: DIV\n";
+        case CryoOperatorType::OPERATOR_DIV:
             return builder.CreateSDiv(left, right, "divtmp");
+        case CryoOperatorType::OPERATOR_LT:
+            return builder.CreateICmpSLT(left, right, "lttmp");
+        case CryoOperatorType::OPERATOR_GT:
+            return builder.CreateICmpSGT(left, right, "gttmp");
+        case CryoOperatorType::OPERATOR_LTE:
+            return builder.CreateICmpSLE(left, right, "ltetmp");
+        case CryoOperatorType::OPERATOR_GTE:
+            return builder.CreateICmpSGE(left, right, "gtetmp");
+        case CryoOperatorType::OPERATOR_EQ:
+            return builder.CreateICmpEQ(left, right, "eqtmp");
+        case CryoOperatorType::OPERATOR_NEQ:
+            return builder.CreateICmpNE(left, right, "neqtmp");
         default:
             std::cerr << "[CPP] Unknown binary operator\n";
             return nullptr;
     }
+
+    std::cout << "[CPP] DEBUG Binary operation generated.\n";
 }
 // </generateBinaryOperation>
 
