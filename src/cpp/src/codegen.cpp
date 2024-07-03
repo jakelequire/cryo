@@ -275,6 +275,33 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
 }
 // </generateExpression>
 
+// New overloaded function
+std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module, bool checkStringLiteral) {
+    if (!checkStringLiteral) {
+        return {generateExpression(node, builder, module), false};
+    }
+
+    std::cout << "[CPP] Generating code for expression (with string literal check)\n";
+    if (!node) {
+        std::cerr << "[CPP] Error: Expression node is null\n";
+        return {nullptr, false};
+    }
+
+    std::cout << "[CPP - DEBUG] Expression type: " << node->type << "\n";
+    std::cout << "[CPP - DEBUG] Expression data type: " << node->data.literalExpression.dataType << "\n";
+
+    switch (node->type) {
+        case CryoNodeType::NODE_LITERAL_EXPR:
+            if (node->data.literalExpression.dataType == DATA_TYPE_STRING) {
+                std::cout << "[CPP] Generating string literal: " << node->data.literalExpression.stringValue << "\n";
+                return {createString(builder, module, node->data.literalExpression.stringValue), true};
+            }
+            // For non-string literals, fall through to the default case
+        default:
+            return {generateExpression(node, builder, module), false};
+    }
+}
+
 
 // <generateBinaryOperation>
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {

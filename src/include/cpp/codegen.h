@@ -70,6 +70,8 @@ llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder
 llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, const std::string& name);
 
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module, bool checkStringLiteral);
+
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 

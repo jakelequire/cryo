@@ -32,10 +32,10 @@ llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
 ptr @1, i32 19, i32 19, i32 16 })
 */
 // <createStringType>
-llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder) {
-    llvm::StructType *stringType = createStringStruct(context);
-    std::vector<llvm::Type *> elements = {
-        builder.getInt8Ty()->getPointerTo(),    // buffer
+llvm::StructType* createStringType(llvm::LLVMContext& context, llvm::IRBuilder<>& builder) {
+    llvm::StructType* stringType = llvm::StructType::create(context, "String");
+    std::vector<llvm::Type*> elements = {
+        builder.getInt8Ty()->getPointerTo(),    // ptr
         builder.getInt32Ty(),                   // length
         builder.getInt32Ty(),                   // maxlen
         builder.getInt32Ty()                    // factor
@@ -43,42 +43,18 @@ llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<>
     stringType->setBody(elements);
     return stringType;
 }
+
 // </createStringType>
 
 // <createString>
-llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str) {
-    std::cout << "[CPP_DEBUG - createString] Creating string\n - Value: " << str << "\n";
-    // Set up the string type & struct
-    llvm::LLVMContext &context = module.getContext();
-    std::cout << "[CPP_DEBUG - createString] Setting uqp string type & struct\n";
-    
-    llvm::StructType *stringType = createStringType(context, builder);
-    std::cout << "[CPP_DEBUG - createString] String type set up\n";
+llvm::Value* createString(llvm::IRBuilder<>& builder, llvm::Module& module, const std::string& str) {
+    llvm::LLVMContext& context = module.getContext();
+    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(context, str, true);
+    llvm::GlobalVariable* globalStr = new llvm::GlobalVariable(module, strConstant->getType(), true,
+                                                               llvm::GlobalValue::PrivateLinkage, strConstant, "stringLiteral");
 
-    // Use the ConstantDataArray to create a buffer
-    llvm::Constant *buffer = llvm::ConstantDataArray::getString(context, str);
-    std::cout << "[CPP_DEBUG - createString] Buffer created\n";
-
-    // Create a global variable for the buffer
-    llvm::GlobalVariable *globalBuffer = new llvm::GlobalVariable(module, buffer->getType(), true, llvm::GlobalValue::PrivateLinkage, buffer);
-    std::cout << "[CPP_DEBUG - createString] Global buffer created\n";
-
-    // Create a constant struct with the buffer, length, maxlen, and factor
-    llvm::Constant *length = llvm::ConstantInt::get(builder.getInt32Ty(), str.size());
-    llvm::Constant *maxlen = llvm::ConstantInt::get(builder.getInt32Ty(), str.size());
-    llvm::Constant *factor = llvm::ConstantInt::get(builder.getInt32Ty(), 16);
-    std::cout << "[CPP_DEBUG - createString] Constants created\n";
-
-    // Create the struct
-    std::vector<llvm::Constant *> elements = {
-        llvm::ConstantExpr::getPointerCast(globalBuffer, builder.getInt8Ty()->getPointerTo()),
-        length,
-        maxlen,
-        factor
-    };
-    std::cout << "[CPP_DEBUG - createString] Elements created\n";
-
-    // Return the constant struct
-    return llvm::ConstantStruct::get(stringType, elements);
+    // Return the global string pointer
+    return builder.CreatePointerCast(globalStr, builder.getInt8Ty()->getPointerTo());
 }
+
 // </createString>

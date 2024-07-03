@@ -23,10 +23,20 @@ void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modul
     std::vector<llvm::Value*> args;
     std::vector<llvm::Type*> argTypes;
 
+    static int stringLiteralCount = 0;
+
     for (int i = 0; i < node->data.functionCall.argCount; ++i) {
-        llvm::Value* argValue = generateExpression(node->data.functionCall.args[i], builder, module);
-        args.push_back(argValue);
-        argTypes.push_back(argValue->getType());
+        auto [argValue, isStringLiteral] = generateExpression(node->data.functionCall.args[i], builder, module, true);
+
+        if (isStringLiteral) {
+            llvm::Value* globalString = createString(builder, module, node->data.functionCall.args[i]->data.literalExpression.stringValue);
+            args.push_back(globalString);
+            argTypes.push_back(globalString->getType());
+        } else {
+            llvm::Value* loadedValue = builder.CreateLoad(argValue->getType(), argValue, "loadtmp");
+            args.push_back(loadedValue);
+            argTypes.push_back(loadedValue->getType());
+        }
     }
 
     llvm::Function* func = getCryoFunction(module, functionName, argTypes);
@@ -36,8 +46,7 @@ void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modul
     }
 
     builder.CreateCall(func, args);
-}
-// </generateFunctionCall>
+}// </generateFunctionCall>
 
 
 // <generateReturnStatement>

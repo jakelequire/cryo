@@ -125,18 +125,42 @@ llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builde
 // <generateVarDeclaration>
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for variable declaration\n";
+    llvm::Type* varType = nullptr;
+    llvm::Value* initialValue = nullptr;
     std::string varName = node->data.varDecl.name;
 
-    llvm::Value* initValue = generateExpression(node->data.varDecl.initializer, builder, module);
+    switch (node->data.varDecl.dataType) {
+        case DATA_TYPE_STRING:
+            varType = builder.getInt8Ty()->getPointerTo();
+            initialValue = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
+            break;
+        
+        case DATA_TYPE_INT:
+            varType = builder.getInt32Ty();
+            break;
 
-    if (!initValue) {
-        std::cerr << "[CPP] Error: Failed to generate initializer for variable: " << varName << "\n";
-        return;
+        case DATA_TYPE_FLOAT:
+            varType = builder.getFloatTy();
+            break;
+
+        case DATA_TYPE_BOOLEAN:
+            varType = builder.getInt1Ty();
+            break;
+        // Handle other types...
     }
 
-    llvm::AllocaInst* alloca = builder.CreateAlloca(llvm::Type::getInt32Ty(module.getContext()), nullptr, varName);
-    builder.CreateStore(initValue, alloca);
+    if (!initialValue) {
+        initialValue = generateExpression(node->data.varDecl.initializer, builder, module);
+        if (!initialValue) {
+            std::cerr << "[CPP] Error: Failed to generate initializer for variable: " << varName << "\n";
+            return;
+        }
+    }
+
+    llvm::AllocaInst* alloca = builder.CreateAlloca(varType, nullptr, varName);
+    builder.CreateStore(initialValue, alloca);
     namedValues[varName] = alloca;
 }
+
 // </generateVarDeclaration>
 
