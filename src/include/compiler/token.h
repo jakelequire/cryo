@@ -187,6 +187,10 @@ typedef enum {
     TOKEN_RANGLE_BRACKET,       // `>>`         149
     TOKEN_LCURLY_BRACKET,       // `{{`         150
     TOKEN_RCURLY_BRACKET,       // `}}`         151
+    TOKEN_ELLIPSIS,             // `...`        152
+
+    TOKEN_ITER_VAR,             // `$`          153
+    TOKEN_ITER_STEP,            // `..`         154
 } CryoTokenType;
 
 

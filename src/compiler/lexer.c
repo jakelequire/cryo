@@ -333,11 +333,9 @@ Token nextToken(Lexer* lexer, Token* token) {
         return *token;
     }
 
-    printf("[Lexer] Processing Token | Type: %d, Line: %d, Column: %d\n",
-        token->type, token->line, token->column);
+    //printf("[Lexer] Current token: %.*s, Type: %s\n", token->length, token->start, tokenTypeToString(token->type));
 
     char c = advance(lexer);
-
 
     // This is to check if it's an identifier.
     if (isAlpha(c)) {
@@ -417,34 +415,60 @@ Token nextToken(Lexer* lexer, Token* token) {
             if (peek(lexer) == '=') {
                 advance(lexer);
                 *token = makeToken(lexer, OPERATOR_NEQ);
+                break;
             } else {
                 *token = makeToken(lexer, OPERATOR_NOT);
+                break;
             }
             break;
         case '&':
             if (peek(lexer) == '&') {
                 advance(lexer);
                 *token = makeToken(lexer, OPERATOR_AND);
+                break;
             } else {
                 *token = errorToken(lexer, "Unexpected character.");
+                break;
             }
             break;
         case '|':
             if (peek(lexer) == '|') {
                 advance(lexer);
                 *token = makeToken(lexer, OPERATOR_OR);
+                break;
             } else {
                 *token = errorToken(lexer, "Unexpected character.");
+                break;
             }
             break;
         case '-':
             if (peek(lexer) == '>') {
                 advance(lexer); // consume '>'
                 *token = makeToken(lexer, TOKEN_RESULT_ARROW);
+                break;
             } else {
                 *token = makeToken(lexer, OPERATOR_SUB);
+                break;
             }
             break;
+        case '$':
+            if (isAlpha(peek(lexer))) {
+                while (isAlpha(peek(lexer))) advance(lexer);
+                *token = makeToken(lexer, TOKEN_ITER_VAR);
+                break;
+            }
+            break;
+        case '.':
+            if (peek(lexer) == '.') {
+                advance(lexer);
+                *token = makeToken(lexer, TOKEN_ITER_STEP);         // `..` is the iterator step operator
+                break;
+                if(peek(lexer) == '.') {
+                    advance(lexer);
+                    *token = makeToken(lexer, TOKEN_ELLIPSIS);      // `...` is the ellipsis operator
+                    break;
+                }
+            }
         default:
             *token = errorToken(lexer, "Unexpected character.");
             return *token;

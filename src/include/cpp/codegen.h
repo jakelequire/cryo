@@ -84,7 +84,7 @@ llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, cons
 void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 llvm::Function* getCryoFunction(llvm::Module& module, const std::string& name, llvm::ArrayRef<llvm::Type*> argTypes);
 
-
+void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 void codegen(ASTNode* root);

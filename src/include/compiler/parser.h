@@ -79,6 +79,7 @@ ASTNode* parseParameter(Lexer* lexer, ParsingContext* context);
 ASTNode* createFunctionDeclNode(const char* name, ASTNode* params, ASTNode* returnType, ASTNode* body);
 
 ASTNode* parseIfStatement(Lexer* lexer, ParsingContext* context);
+ASTNode* parseForLoop(Lexer* lexer, ParsingContext* context);
 ASTNode* parseWhileStatement(Lexer* lexer);
 ASTNode* parseProgram(Lexer* lexer);
 

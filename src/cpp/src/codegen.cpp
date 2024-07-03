@@ -152,6 +152,11 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             generateIfStatement(node, builder, module);
             break;
 
+        case CryoNodeType::NODE_FOR_STATEMENT:
+            std::cout << "[CPP] Generating code for for loop\n";
+            generateForLoop(node, builder, module);
+            break;
+
         case CryoNodeType::NODE_EXPRESSION_STATEMENT:
             generateExpression(node->data.stmt.stmt, builder, module);
             break;
@@ -265,6 +270,7 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
 
         case CryoNodeType::NODE_VAR_NAME:
             return namedValues[node->data.varName.varName];
+
             
         default:
             std::cout << "[CPP - Error] Unknown expression type: " << node->type << "\n";
@@ -287,8 +293,8 @@ std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<
         return {nullptr, false};
     }
 
-    std::cout << "[CPP - DEBUG] Expression type: " << node->type << "\n";
-    std::cout << "[CPP - DEBUG] Expression data type: " << node->data.literalExpression.dataType << "\n";
+    std::cout << "[CPP - DEBUG 2] Expression type: " << node->type << "\n";
+    std::cout << "[CPP - DEBUG 2] Expression data type: " << node->data.literalExpression.dataType << "\n";
 
     switch (node->type) {
         case CryoNodeType::NODE_LITERAL_EXPR:
@@ -297,6 +303,10 @@ std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<
                 return {createString(builder, module, node->data.literalExpression.stringValue), true};
             }
             // For non-string literals, fall through to the default case
+        case CryoNodeType::NODE_VAR_NAME:
+            std::cout << "[CPP 2] Generating code for variable name\n";
+            return {namedValues[node->data.varName.varName], false};
+
         default:
             return {generateExpression(node, builder, module), false};
     }

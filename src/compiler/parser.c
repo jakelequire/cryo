@@ -45,6 +45,14 @@ char* tokenTypeToString(CryoTokenType type) {
             return "ASSIGN";
         case TOKEN_SEMICOLON:
             return "SEMICOLON";
+        case TOKEN_LPAREN:
+            return "LPAREN";
+        case TOKEN_RPAREN:
+            return "RPAREN";
+        case TOKEN_ITER_STEP:
+            return "ITER_STEP";
+        case TOKEN_ITER_VAR:
+            return "ITER_VAR";
         case TOKEN_EOF:
             return "EOF";
         default:
@@ -85,7 +93,7 @@ void getNextToken(Lexer *lexer) {
 // <consume>
 void consume(Lexer *lexer, CryoTokenType type, const char *message) {
     printf("[Parser] Consuming token: %s (Expecting: %s)\n",
-           tokenTypeToString(currentToken.type), tokenTypeToString(type));
+            tokenTypeToString(currentToken.type), tokenTypeToString(type));
     if (currentToken.type == type) {
         getNextToken(lexer);
     } else {
@@ -176,6 +184,12 @@ ASTNode* parsePrimaryExpression(Lexer* lexer, ParsingContext* context) {
         }
         case NODE_RETURN_STATEMENT: {
             return parseReturnStatement(lexer, context);
+        }
+
+        case TOKEN_ITER_VAR: {
+            char* identifier = strndup(currentToken.start, currentToken.length);
+            getNextToken(lexer);
+            return createVariableExpr(identifier);
         }
 
         default:
@@ -429,6 +443,36 @@ ASTNode* parseIfStatement(Lexer* lexer, ParsingContext* context) {
 // </parseIfStatement>
 
 
+// Function to parse a for loop
+// <parseForLoop>
+ASTNode* parseForLoop(Lexer* lexer, ParsingContext* context) {
+    printf("[Parser] Parsing for loop...\n");
+    consume(lexer, TOKEN_KW_FOR, "Expected 'for'");
+    consume(lexer, TOKEN_LPAREN, "Expected '(' after 'for'");
+    
+    // Parse the iterator variable
+    Token iter_var_token = currentToken;
+
+    consume(lexer, TOKEN_ITER_VAR, "Expected iterator variable '$'");
+
+    // create the iterator variable node
+    ASTNode* iter_var_init = createLiteralExpr(0);
+    consume(lexer, TOKEN_ITER_STEP, "Expected '..' after iterator variable");
+    
+    // Parse the end expression
+    ASTNode* end_expr = parseExpression(lexer, context);
+    
+    consume(lexer, TOKEN_RPAREN, "Expected ')' after end expression");
+    
+    // Parse the loop body
+    ASTNode* body = parseBlock(lexer, context);
+    
+    // Create the for loop node in the AST
+    ASTNode* for_node = createForStatement(createVariableExpr(strndup(iter_var_token.start, iter_var_token.length)), end_expr, createLiteralExpr(1), body);
+    for_node->data.forStmt.initializer = iter_var_init;  // Set the initializer to 0
+    return for_node;
+}
+// </parseForLoop>
 
 
 // Function to parse a statement
@@ -453,6 +497,8 @@ ASTNode* parseStatement(Lexer* lexer, ParsingContext* context) {
             return parsePublicDeclaration(lexer, context);
         case TOKEN_KW_RETURN:
             return parseReturnStatement(lexer, context);
+        case TOKEN_KW_FOR:
+            return parseForLoop(lexer, context);
         case TOKEN_EOF:
             printf("[Parser] Reached end of file.\n");
             return NULL;

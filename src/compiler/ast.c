@@ -148,6 +148,7 @@ void printAST(ASTNode* node, int indent) {
             printAST(node->data.forStmt.body, indent + 2);
             break;
 
+
         case NODE_TYPE:
             printf("Data Type: <UNIMPLEMENTED>\n");
             break;
@@ -343,6 +344,12 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.ifStmt.condition = NULL;
             node->data.ifStmt.thenBranch = NULL;
             node->data.ifStmt.elseBranch = NULL;
+            break;
+        case NODE_FOR_STATEMENT:
+            node->data.forStmt.initializer = NULL;
+            node->data.forStmt.condition = NULL;
+            node->data.forStmt.increment = NULL;
+            node->data.forStmt.body = NULL;
             break;
         case NODE_BINARY_EXPR:
             node->data.bin_op.left = NULL;
