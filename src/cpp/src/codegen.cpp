@@ -304,7 +304,7 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
         case OPERATOR_NEQ:
             return builder.CreateICmpNE(left, right, "neqtmp");
         case OPERATOR_LT:
-            return builder.CreateICmpSLT(left, right, "lttmp");
+            return builder.CreateICmpSLT(left, right, "ltcmp");
         case OPERATOR_GT:
             return builder.CreateICmpSGT(left, right, "gttmp");
         case OPERATOR_LTE:

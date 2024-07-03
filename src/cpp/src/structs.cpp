@@ -28,7 +28,9 @@ llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
 }
 // </createStringStruct>
 
-
+/*
+ptr @1, i32 19, i32 19, i32 16 })
+*/
 // <createStringType>
 llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder) {
     llvm::StructType *stringType = createStringStruct(context);

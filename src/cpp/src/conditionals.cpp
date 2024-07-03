@@ -36,7 +36,7 @@ void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module
     // Then block
     builder.SetInsertPoint(thenBB);
     std::cout << "[CPP] Generating 'then' block\n";
-    generateBlock(node->data.ifStmt.thenBranch, builder, module); // <-- Doesn't make it past here.
+    generateBlock(node->data.ifStmt.thenBranch, builder, module); // Doesn't make it past here.
     std::cout << "[CPP] 'Then' block generated\n";
     builder.CreateBr(mergeBB);
     std::cout << "[CPP] 'Then' block branch created\n";
