@@ -204,7 +204,8 @@
     "numbers": "cpp",
     "semaphore": "cpp",
     "cryolib.h": "c",
-    "stdarg.h": "c"
+    "stdarg.h": "c",
+    "symtable.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true
 }

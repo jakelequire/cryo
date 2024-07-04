@@ -1,0 +1,11 @@
+//
+// For Loop Test Case #1 
+// For Loop Handling Tests
+// 
+// Most basic form of a for loop test.
+//
+
+for($i .. 10) {
+    mut cv: int = 0;
+}
+

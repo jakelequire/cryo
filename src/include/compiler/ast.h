@@ -23,6 +23,7 @@
 /*---<custom_includes>---*/
 #include "compiler/token.h"
 #include "compiler/lexer.h"
+#include "compiler/symtable.h"
 /*---------<end>---------*/
 
 #define INITIAL_CAPACITY 8
@@ -93,9 +94,11 @@ typedef struct ASTNode {
         
         // >=------<Variable Declaration>------=<
         struct {
-            char* name;
             CryoDataType dataType;   // Data type of the variable
+            char* name;
             struct ASTNode* initializer;
+            bool isGlobal;
+            int scopeLevel;
         } varDecl;
 
         struct {
@@ -183,7 +186,7 @@ ASTNode* createBlock();
 ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
 ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body);
 ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
-ASTNode* createVarDeclarationNode(const char* var_name, CryoDataType dataType, ASTNode* initializer, int line);
+ASTNode* createVarDeclarationNode(const char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal);
 ASTNode* createExpressionStatement(ASTNode* expression);
 ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 ASTNode* createStringExpr(const char* str);

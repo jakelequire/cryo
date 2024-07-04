@@ -55,3 +55,32 @@ llvm::Value* createString(llvm::IRBuilder<>& builder, llvm::Module& module, cons
     return builder.CreateBitCast(globalStr, llvm::Type::getInt8Ty(module.getContext())->getPointerTo());
 }
 // </createString>
+
+
+
+
+llvm::Value* createNumber(llvm::IRBuilder<>& builder, llvm::Module& module, int num) {
+    std::cout << "[CPP - DEBUG] Creating number constant: " << num << "\n";
+    llvm::Constant* numConstant = llvm::ConstantInt::get(module.getContext(), llvm::APInt(32, num, true));
+    std::cout << "[CPP - DEBUG] Created number constant\n";
+    return numConstant;
+}
+
+
+// <createConstantInt>
+llvm::Constant* createConstantInt(llvm::IRBuilder<>& builder, int value) {
+    return llvm::ConstantInt::get(builder.getInt32Ty(), value, true); // true for signed
+}
+// </createConstantInt>
+
+
+// <createReferenceInt>
+llvm::Value* createReferenceInt(llvm::IRBuilder<>& builder, llvm::Module& module, int value) {
+    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
+        module, builder.getInt32Ty(), true,
+        llvm::GlobalValue::PrivateLinkage, createConstantInt(builder, value), ".int");
+    return globalVar;
+}
+// </createReferenceInt>
+
+

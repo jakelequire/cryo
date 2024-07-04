@@ -1,4 +1,19 @@
-
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
 #include "compiler/parser.h"
 
 #ifndef HAVE_STRNDUP
@@ -262,7 +277,8 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
 
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
 
-    ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, currentToken.line);
+    bool isGlobal = (context->scopeLevel == 0);
+    ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, currentToken.line, isGlobal);
     printf("[Parser] Created Variable Declaration Node: %s\n", varName);
     printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->type);
     return varDeclNode;
@@ -332,7 +348,7 @@ ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context) {
             free(paramType);
             getNextToken(lexer);
 
-            ASTNode* paramNode = createVarDeclarationNode(paramName, dataType, NULL, currentToken.line);
+            ASTNode* paramNode = createVarDeclarationNode(paramName, dataType, NULL, currentToken.line, false);
             addChildNode(paramList, paramNode);
             paramList->data.paramList.paramCount++;  // Increment count
             paramList->data.functionDecl.paramCount++;  // Increment count
@@ -563,6 +579,7 @@ void addStatementToProgram(ASTNode* programNode, ASTNode* statement) {
 // <parseBlock>
 ASTNode* parseBlock(Lexer* lexer, ParsingContext* context) {
     printf("[Parser] Parsing block...\n");
+    context->scopeLevel++;
     ASTNode* blockNode = createASTNode(NODE_BLOCK);
     consume(lexer, TOKEN_LBRACE, "Expected '{' to start block");
 
@@ -576,12 +593,15 @@ ASTNode* parseBlock(Lexer* lexer, ParsingContext* context) {
     }
 
     consume(lexer, TOKEN_RBRACE, "Expected '}' to end block");
+    context->scopeLevel--;
     return blockNode;
 }
 // </parseBlock>
 
 
 ASTNode* parseFunctionBlock(Lexer* lexer, ParsingContext* context) {
+    printf("[Parser] Parsing function block...\n");
+    context->scopeLevel++;
     ASTNode* blockNode = createASTNode(NODE_FUNCTION_BLOCK);
     consume(lexer, TOKEN_LBRACE, "Expected '{' to start function block");
 
@@ -593,6 +613,7 @@ ASTNode* parseFunctionBlock(Lexer* lexer, ParsingContext* context) {
     }
 
     consume(lexer, TOKEN_RBRACE, "Expected '}' to end function block");
+    context->scopeLevel--;
     return blockNode;
 }
 
@@ -603,7 +624,10 @@ ASTNode* parseFunctionBlock(Lexer* lexer, ParsingContext* context) {
 ASTNode* parseProgram(Lexer* lexer) {
     printf("[Parser] Parsing program\n");
 
-    ParsingContext context = {false}; // Initialize context
+    ParsingContext context = {
+        false,
+        0
+    }; // Initialize context
 
     ASTNode* programNode = createProgramNode();
     if (!programNode) {

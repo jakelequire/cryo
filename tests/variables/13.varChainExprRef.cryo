@@ -5,6 +5,6 @@
 // This is to test if Variables can reference eachother.
 //
 
-const exampleExprRef: number = 34 + 35 * 5;
+const exampleExprRef: int = 34 + 35 * 5;
 
-const exmapleExprRefTwo: number = exampleExprRef;
+const exmapleExprRefTwo: int = exampleExprRef;

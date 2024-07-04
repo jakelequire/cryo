@@ -22,7 +22,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "ast.h"
-#include "semantics.h"
+#include "compiler/symtable.h"
 #include "utils/logger.h"
 
 

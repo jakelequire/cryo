@@ -31,7 +31,7 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_DIR = $(SRC_DIR)cpp/
 
 # Source files
-COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c
+COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c
 UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
 CLI_SRC = $(CLI_DIR)cli.c $(CLI_DIR)commands.c $(CLI_DIR)compiler.c $(CLI_COMMANDS_DIR)build.c $(CLI_COMMANDS_DIR)init.c $(CLI_COMMANDS_DIR)runtime_cmd.c
 MAIN_SRC = $(SRC_DIR)main.c
@@ -39,14 +39,14 @@ RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
 CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)src/codegen.cpp $(CPP_DIR)src/cppLogger.cpp $(CPP_DIR)src/variables.cpp $(CPP_DIR)src/functions.cpp \
-$(CPP_DIR)src/structs.cpp $(CPP_DIR)src/lib.cpp $(CPP_DIR)src/conditionals.cpp
+$(CPP_DIR)src/structs.cpp $(CPP_DIR)src/lib.cpp $(CPP_DIR)src/conditionals.cpp $(CPP_DIR)src/schema.cpp
 
 
 # Cryo Lib Files
 CRYO_SRC = $(CRYO_DIR)cryolib.c
 
 # Object files
-COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o $(OBJ_DIR)token.o
+COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o $(OBJ_DIR)token.o $(OBJ_DIR)symtable.o
 UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o
 CLI_OBJ = $(OBJ_DIR)cli.o $(OBJ_DIR)commands.o $(OBJ_DIR)compiler.o $(OBJ_DIR)build.o $(OBJ_DIR)init.o $(OBJ_DIR)runtime_cmd.o
 MAIN_OBJ = $(OBJ_DIR)main.o
@@ -55,7 +55,7 @@ TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
 CPPOBJ = $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppLogger.o $(OBJ_DIR)variables.o \
-$(OBJ_DIR)functions.o $(OBJ_DIR)structs.o $(OBJ_DIR)lib.o $(OBJ_DIR)conditionals.o
+$(OBJ_DIR)functions.o $(OBJ_DIR)structs.o $(OBJ_DIR)lib.o $(OBJ_DIR)conditionals.o $(OBJ_DIR)schema.o
 
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
@@ -112,11 +112,11 @@ $(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)
 $(OBJ_DIR)token.o : $(COMPILER_DIR)token.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)symtable.o : $(COMPILER_DIR)symtable.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # CPP Compilation rules
 $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ_DIR)codegen.o: $(CPP_DIR)src/codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)variables.o: $(CPP_DIR)src/variables.cpp | $(OBJ_DIR)
@@ -135,6 +135,12 @@ $(OBJ_DIR)lib.o: $(CPP_DIR)src/lib.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)cppLogger.o: $(CPP_DIR)src/cppLogger.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)schema.o: $(CPP_DIR)src/schema.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)codegen.o: $(CPP_DIR)src/codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Cryo Lib Compilation rules

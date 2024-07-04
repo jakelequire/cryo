@@ -1,5 +1,0 @@
-// Test 3: Function with a parameter
-// Returns the parameter value
-public function exampleThreeFunc(paramOne: int) -> int {
-    return paramOne;
-}

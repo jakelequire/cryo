@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -14,36 +14,57 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef SEMANTICS_H
-#define SEMANTICS_H
-/*------ <includes> ------*/
+#ifndef SYMTABLE_H
+#define SYMTABLE_H
+
+#include "compiler/ast.h"
+#include "compiler/token.h"
+#include "compiler/lexer.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include "compiler/ast.h"
-#include "compiler/token.h"
-#include "compiler/symtable.h"
-/*---------<end>---------*/
-//
+
+typedef struct ASTNode ASTNode;
 
 
-/*-----<function_prototypes>-----*/
+
+typedef struct {
+    char* name;
+    CryoDataType type;
+    int scopeLevel;
+    bool isConstant;
+    int argCount;
+} CryoSymbol;
+
+typedef struct {
+    CryoSymbol** symbols;
+    int count;
+    int capacity;
+    int scopeDepth;
+} CryoSymbolTable;
 
 
-// Symbol Management
-void checkVariable(ASTNode* node, CryoSymbolTable* table);
-void checkAssignment(ASTNode* node, CryoSymbolTable* table);
-void checkFunctionCall(ASTNode* node, CryoSymbolTable* table);
+
+char* logSymCryoDataType(CryoDataType type);
+
+
+CryoSymbolTable* createSymbolTable();
+void freeSymbolTable(CryoSymbolTable* table);
+void printSymbolTable(CryoSymbolTable* table);
+void enterScope(CryoSymbolTable* table);
+void jumpScope(CryoSymbolTable* table);
+void exitScope(CryoSymbolTable* table);
+void enterBlockScope(CryoSymbolTable* table);
+void exitBlockScope(CryoSymbolTable* table);
+void addSymbol(CryoSymbolTable* table, const char* name, CryoDataType type, bool isConstant);
+CryoSymbol* findSymbol(CryoSymbolTable* table, const char* name);
+
+
 void traverseAST(ASTNode* node, CryoSymbolTable* table);
-//Entry Point
 bool analyzeNode(ASTNode* node);
-/*-----<end_prototypes>-----*/
-
-#endif // SEMANTICS_H
 
 
-
-
-
+#endif // SYMTABLE_H

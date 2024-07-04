@@ -16,93 +16,42 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
-
-
-// <declareFunctions>
-bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    bool mainFunctionExists = false;
-
-    if (!node) {
-        std::cerr << "[CPP] Error in declareFunctions: AST node is null\n";
-        return mainFunctionExists;
-    }
-
-    if (node->type == CryoNodeType::NODE_FUNCTION_DECLARATION) {
-        if (std::string(node->data.functionDecl.name) == "main") {
-            mainFunctionExists = true;
-        }
-        generateFunctionPrototype(node, builder, module);
-    }
-
-    // Recursively declare functions for all child nodes
-    switch (node->type) {
-        case CryoNodeType::NODE_PROGRAM:
-            for (int i = 0; i < node->data.program.stmtCount; ++i) {
-                if (declareFunctions(node->data.program.statements[i], builder, module)) {
-                    mainFunctionExists = true;
-                }
-            }
-            break;
-
-        case CryoNodeType::NODE_BLOCK:
-            for (int i = 0; i < node->data.block.stmtCount; ++i) {
-                if (declareFunctions(node->data.block.statements[i], builder, module)) {
-                    mainFunctionExists = true;
-                }
-            }
-            break;
-
+// <getLLVMType>
+llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module) {
+    switch (type) {
+        case DATA_TYPE_INT:
+            return llvm::Type::getInt32Ty(module.getContext());
+        case DATA_TYPE_FLOAT:
+            return llvm::Type::getFloatTy(module.getContext());
+        case DATA_TYPE_BOOLEAN:
+            return llvm::Type::getInt1Ty(module.getContext());
+        case DATA_TYPE_STRING:
+            return llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
+        case DATA_TYPE_VOID:
+            return llvm::Type::getVoidTy(module.getContext());
         default:
-            break;
+            std::cerr << "[CPP] Error: Unknown data type\n";
+            return nullptr;
     }
-    return mainFunctionExists;
 }
-// </declareFunctions>
+// </getLLVMType>
+
 
 // <generateFunctionPrototype>
 void generateFunctionPrototype(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating function prototype: " << node->data.functionDecl.name << "\n";
 
-    llvm::Type* returnType = nullptr;
-    switch (node->data.functionDecl.returnType) {
-        case DATA_TYPE_INT:
-            returnType = llvm::Type::getInt32Ty(module.getContext());
-            break;
-        case DATA_TYPE_FLOAT:
-            returnType = llvm::Type::getFloatTy(module.getContext());
-            break;
-        case DATA_TYPE_BOOLEAN:
-            returnType = llvm::Type::getInt1Ty(module.getContext());
-            break;
-        case DATA_TYPE_STRING:
-            returnType = llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
-            break;
-        case DATA_TYPE_VOID:
-            returnType = llvm::Type::getVoidTy(module.getContext());
-            break;
-        default:
-            std::cerr << "[CPP] Error: Unknown function return type: " << node->data.functionDecl.returnType << "\n";
-            return;
-    }
+    llvm::Type* returnType = getLLVMType(node->data.functionDecl.returnType, module);
 
     std::vector<llvm::Type*> paramTypes;
     if (node->data.functionDecl.params) {
         for (int i = 0; i < node->data.functionDecl.paramCount; ++i) {
-            ASTNode* paramNode = node->data.functionDecl.params->data.paramList.params[i];
-            switch (paramNode->data.varDecl.dataType) {
-                case DATA_TYPE_INT:
-                    paramTypes.push_back(llvm::Type::getInt32Ty(module.getContext()));
-                    break;
-                case DATA_TYPE_FLOAT:
-                    paramTypes.push_back(llvm::Type::getFloatTy(module.getContext()));
-                    break;
-                case DATA_TYPE_BOOLEAN:
-                    paramTypes.push_back(llvm::Type::getInt1Ty(module.getContext()));
-                    break;
-                default:
-                    std::cerr << "[CPP] Error: Unknown parameter type\n";
-                    return;
+            llvm::Type* paramType = getLLVMType(node->data.functionDecl.params->data.paramList.params[i]->data.varDecl.dataType, module);
+            if (!paramType) {
+                std::cerr << "[CPP] Error: Unknown parameter type\n";
+                return;
             }
+            paramTypes.push_back(paramType);
         }
     }
 
@@ -121,7 +70,7 @@ void createDefaultMainFunction(llvm::IRBuilder<>& builder, llvm::Module& module)
     std::cout << "[CPP] Created basic block for default main function\n";
 
     builder.SetInsertPoint(entry);
-    // builder.CreateRetVoid();
+    builder.CreateRetVoid();
     
     std::cout << "[CPP] Added return statement to default main function\n";
 }
@@ -134,18 +83,102 @@ void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modul
     std::vector<llvm::Value*> args;
 
     for (int i = 0; i < node->data.functionCall.argCount; ++i) {
-        args.push_back(generateExpression(node->data.functionCall.args[i], builder, module));
+        llvm::Value* arg = generateExpression(node->data.functionCall.args[i], builder, module);
+        if (!arg) {
+            std::cerr << "[CPP] Error generating argument for function call\n";
+            return;
+        }
+        args.push_back(arg);
     }
 
     llvm::Function* callee = module.getFunction(functionName);
     if (!callee) {
-        std::cerr << "Unknown function referenced: " << functionName << "\n";
+        std::cerr << "[CPP] Unknown function referenced: " << functionName << "\n";
         return;
     }
 
-    builder.CreateCall(callee, args);
+    llvm::CallInst* call = builder.CreateCall(callee, args);
+    std::cout << "[CPP] Created function call for " << functionName << "\n";
+
+    llvm::BasicBlock* currentBlock = builder.GetInsertBlock();
+    llvm::Function* parentFunction = currentBlock->getParent();
+    if (parentFunction == callee) {
+        std::cout << "[CPP] Function call is in the same function\n";
+    } else {
+        std::cout << "[CPP] Function call is in a different function\n";
+    }
+
+    // Ensure the current block has a terminator if it is not a void function
+    if (!callee->getReturnType()->isVoidTy()) {
+        if (!currentBlock->getTerminator()) {
+            builder.CreateRet(call);
+            std::cout << "[CPP] Added return statement after function call\n";
+        }
+    }
 }
 // </generateFunctionCall>
+
+
+// <generateFunction>
+void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::cout << "[CPP] Generating code for function: " << node->data.functionDecl.name << "\n";
+
+    llvm::Type* returnType = getLLVMType(node->data.functionDecl.returnType, module);
+
+    std::vector<llvm::Type*> paramTypes;
+    if (node->data.functionDecl.params) {
+        for (int i = 0; i < node->data.functionDecl.paramCount; ++i) {
+            llvm::Type* paramType = getLLVMType(node->data.functionDecl.params->data.paramList.params[i]->data.varDecl.dataType, module);
+            if (!paramType) {
+                std::cerr << "[CPP] Error: Unknown parameter type\n";
+                return;
+            }
+            paramTypes.push_back(paramType);
+        }
+    }
+
+    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
+    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, node->data.functionDecl.name, &module);
+
+    llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), "entry", function);
+    builder.SetInsertPoint(BB);
+
+    // Generate code for the function body
+    if (node->data.functionDecl.body) {
+        generateCode(node->data.functionDecl.body, builder, module);
+    }
+
+    // Ensure the function has a return statement or terminator
+    if (!BB->getTerminator()) {
+        if (returnType->isVoidTy()) {
+            builder.CreateRetVoid();
+        } else {
+            // builder.CreateRet(llvm::Constant::getNullValue(returnType));
+        }
+    }
+    std::cout << "[CPP] Generated function: " << node->data.functionDecl.name << "\n";
+}
+// </generateFunction>
+
+
+// <generateFunctionBlock>
+void generateFunctionBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::cout << "[CPP] Generating code for function block\n";
+    if (!node || !node->data.functionBlock.block) {
+        std::cerr << "[CPP] Error generating code for function block: Invalid function block\n";
+        return;
+    }
+    std::cout << "[CPP] Function block contains " << node->data.functionBlock.block->data.block.stmtCount << " statements\n";
+
+    // Generate code for each statement in the block
+    for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
+        std::cout << "[CPP] Generating code for block statement " << i << "\n";
+        generateCode(node->data.functionBlock.block->data.block.statements[i], builder, module);
+        std::cout << "[CPP] Moving to next statement\n";
+    }
+}
+// </generateFunctionBlock>
+
 
 
 // <generateReturnStatement>
@@ -176,103 +209,16 @@ void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mo
                 retValue = builder.CreateBitCast(retValue, returnType);
             }
         }
-        builder.CreateRet(retValue);
+        // Notes:
+        // Removing this will make function calls work.
+        // Keeping it will make regular functions work.
+        builder.CreateRet(retValue);    // <--- This is the line that causes the error
     } else {
         std::cerr << "Error: Return value expected but not provided\n";
         builder.CreateRet(llvm::UndefValue::get(returnType));
     }
 }
 // </generateReturnStatement>
-
-
-// <generateFunction>
-void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    std::cout << "[CPP] Generating code for function: " << node->data.functionDecl.name << "\n";
-
-    llvm::Type* returnType = nullptr;
-    switch (node->data.functionDecl.returnType) {
-        case DATA_TYPE_INT:
-            returnType = llvm::Type::getInt32Ty(module.getContext());
-            break;
-        case DATA_TYPE_FLOAT:
-            returnType = llvm::Type::getFloatTy(module.getContext());
-            break;
-        case DATA_TYPE_BOOLEAN:
-            returnType = llvm::Type::getInt1Ty(module.getContext());
-            break;
-        case DATA_TYPE_STRING:
-            returnType = llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
-            break;
-        case DATA_TYPE_VOID:
-            returnType = llvm::Type::getVoidTy(module.getContext());
-            break;
-        default:
-            std::cerr << "[CPP] Error: Unknown function return type: " << node->data.functionDecl.returnType << "\n";
-            return;
-    }
-
-    std::vector<llvm::Type*> paramTypes;
-    if (node->data.functionDecl.params) {
-        for (int i = 0; i < node->data.functionDecl.paramCount; ++i) {
-            ASTNode* paramNode = node->data.functionDecl.params->data.paramList.params[i];
-            switch (paramNode->data.varDecl.dataType) {
-                case DATA_TYPE_INT:
-                    paramTypes.push_back(llvm::Type::getInt32Ty(module.getContext()));
-                    break;
-                case DATA_TYPE_FLOAT:
-                    paramTypes.push_back(llvm::Type::getFloatTy(module.getContext()));
-                    break;
-                case DATA_TYPE_BOOLEAN:
-                    paramTypes.push_back(llvm::Type::getInt1Ty(module.getContext()));
-                    break;
-                default:
-                    std::cerr << "[CPP] Error: Unknown parameter type\n";
-                    return;
-            }
-        }
-    }
-
-    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, node->data.functionDecl.name, &module);
-
-    // Generate a unique basic block name
-    std::string basicBlockName = node->data.functionDecl.name;
-    llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), basicBlockName, function);
-    builder.SetInsertPoint(BB);
-
-    if (node->data.functionDecl.body) {
-        generateCode(node->data.functionDecl.body, builder, module);
-    }
-
-    if (!BB->getTerminator()) {
-        if (returnType->isVoidTy()) {
-            //builder.CreateRetVoid();
-        } else {
-            builder.CreateRet(llvm::Constant::getNullValue(returnType));
-        }
-    }
-}
-// </generateFunction>
-
-
-
-// <generateFunctionBlock>
-void generateFunctionBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    std::cout << "[CPP] Generating code for function block\n";
-    if (!node || !node->data.functionBlock.block) {
-        std::cerr << "[CPP] Error generating code for function block: Invalid function block\n";
-        return;
-    }
-    std::cout << "[CPP] Function block contains " << node->data.functionBlock.block->data.block.stmtCount << " statements\n";
-
-    // Generate code for each statement in the block
-    for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
-        std::cout << "[CPP] Generating code for block statement " << i << "\n";
-        generateCode(node->data.functionBlock.block->data.block.statements[i], builder, module);
-        std::cout << "[CPP] Moving to next statement\n";
-    }
-}
-// </generateFunctionBlock>
 
 
 

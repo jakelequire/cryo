@@ -38,6 +38,28 @@ llvm::Value* getVariable(const std::string& name) {
 // </getVariable>
 
 
+llvm::GlobalVariable* createGlobalVariable(llvm::Module& module, llvm::Type* varType, llvm::Constant* initialValue, const std::string& varName) {
+    std::cout << "[CPP] Creating global variable\n";
+    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
+        module,
+        varType,
+        false,
+        llvm::GlobalValue::ExternalLinkage,
+        initialValue,
+        varName
+    );
+
+    if (!globalVar) {
+        std::cerr << "[CPP] Error: Failed to create global variable: " << varName << "\n";
+        return nullptr;
+    }
+
+    std::cout << "[CPP] Created global variable: " << varName << "\n";
+    return globalVar;
+}
+
+
+
 // Function to load a global variable value
 // <loadGlobalVariable>
 llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder<>& builder, const std::string& name) {
@@ -126,27 +148,51 @@ llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builde
 void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for variable declaration\n";
     llvm::Type* varType = nullptr;
-    llvm::Value* initialValue = nullptr;
+    llvm::Constant* initialValue = nullptr;
     std::string varName = node->data.varDecl.name;
 
     switch (node->data.varDecl.dataType) {
         case DATA_TYPE_STRING:
             std::cout << "[CPP] Generating code for string variable\n";
-            // Check if it's a variable reference and not an explicit string
             if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
                 std::cout << "[CPP] Initializer is a literal expression\n";
-                initialValue = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
+                initialValue = llvm::cast<llvm::Constant>(createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue));
+                varType = builder.getInt8Ty()->getPointerTo();
             } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
                 std::cout << "[CPP] Initializer is a variable name\n";
-                initialValue = namedValues[node->data.varDecl.initializer->data.varName.varName];
+                llvm::GlobalVariable* refVar = module.getGlobalVariable(node->data.varDecl.initializer->data.varName.varName);
+                if (refVar) {
+                    initialValue = llvm::ConstantExpr::getPointerCast(refVar, refVar->getType());
+                    varType = refVar->getValueType();
+                } else {
+                    std::cerr << "[CPP] Error: Referenced variable not found: " << node->data.varDecl.initializer->data.varName.varName << "\n";
+                    return;
+                }
+            } else {
+                std::cerr << "[CPP] Unknown expression type for string variable initializer\n";
+                return;
             }
-            varType = builder.getInt8Ty()->getPointerTo();
             break;
         
         case DATA_TYPE_INT:
             std::cout << "[CPP] Generating code for int variable\n";
-            varType = builder.getInt32Ty()->getPointerTo();
-            //                              ^ Added this and it worked.
+            varType = builder.getInt32Ty();
+            if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
+                std::cout << "[CPP] Initializer is a literal expression\n";
+                initialValue = createConstantInt(builder, node->data.varDecl.initializer->data.literalExpression.intValue);
+            } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
+                std::cout << "[CPP] Initializer is a variable name\n";
+                llvm::GlobalVariable* refVar = module.getGlobalVariable(node->data.varDecl.initializer->data.varName.varName);
+                if (refVar) {
+                    initialValue = llvm::cast<llvm::Constant>(refVar->getInitializer());
+                } else {
+                    std::cerr << "[CPP] Error: Referenced variable not found: " << node->data.varDecl.initializer->data.varName.varName << "\n";
+                    return;
+                }
+            } else {
+                std::cerr << "[CPP] Unknown expression type for int variable initializer\n";
+                return;
+            }
             break;
 
         case DATA_TYPE_FLOAT:
@@ -171,18 +217,57 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             return;
     }
 
+
+    std::cout << "[CPP - DEBUG] varType: " << varType << "\n";
+    std::cout << "[CPP - DEBUG] varType is pointer: " << varType->isPointerTy() << "\n";
+
     if (!initialValue) {
-        std::cout << "[CPP] Generating code for variable initializer\n";
-        initialValue = generateExpression(node->data.varDecl.initializer, builder, module);
-        if (!initialValue) {
-            std::cerr << "[CPP] Error: Failed to generate initializer for variable: " << varName << "\n";
-            return;
-        }
+        std::cerr << "[CPP] Error: Initial value is null for variable: " << varName << "\n";
+        return;
     }
 
-    llvm::AllocaInst* alloca = builder.CreateAlloca(varType, nullptr, varName);
-    builder.CreateStore(initialValue, alloca);
-    namedValues[varName] = alloca;
+    std::cout << "[CPP - DEBUG] varType: " << varType << "\n";
+    if (varType) {
+        std::cout << "[CPP - DEBUG] varType is pointer: " << varType->isPointerTy() << "\n";
+    } else {
+        std::cerr << "[CPP] Error: varType is null\n";
+        return;
+    }
+
+    std::cout << "[CPP - DEBUG] initialValue type: " << initialValue->getType() << "\n";
+    if (initialValue->getType()->isPointerTy()) {
+        std::cout << "[CPP - DEBUG] initialValue is a pointer type\n";
+    } else {
+        std::cout << "[CPP - DEBUG] initialValue is not a pointer type\n";
+    }
+
+    // Determine if this is a global variable
+    // Ensure initialValue is of type llvm::Constant* for global variables
+    if (node->data.varDecl.isGlobal) {
+        std::cout << "[CPP] Creating global variable\n";
+        llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
+            module,
+            varType,
+            false,
+            llvm::GlobalValue::ExternalLinkage,
+            initialValue,
+            varName
+        );
+        if (globalVar) {
+            std::cout << "[CPP] Created global variable: " << varName << "\n";
+            namedValues[varName] = globalVar;
+        } else {
+            std::cerr << "[CPP] Error: Failed to create global variable: " << varName << "\n";
+        }
+    } else {
+        std::cout << "[CPP] Creating alloca instruction\n";
+        llvm::AllocaInst* alloca = builder.CreateAlloca(varType, nullptr, varName);
+        std::cout << "[CPP] Created alloca instruction\n";
+        builder.CreateStore(initialValue, alloca);
+        std::cout << "[CPP] Stored initial value in alloca\n";
+        namedValues[varName] = alloca;
+        std::cout << "[CPP] Stored alloca in namedValues\n";
+    }
 }
 // </generateVarDeclaration>
 

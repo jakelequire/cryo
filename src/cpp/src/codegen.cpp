@@ -47,6 +47,8 @@ void codegen(ASTNode* root) {
     std::cout << "\nSecond Pass: Generate code for the entire program\n";
     generateCode(root, builder, *module);
 
+    module->getValueSymbolTable().dump();
+
     // Ensure the default main function has a terminator
     llvm::Function* defaultMain = module->getFunction("_defaulted");
     if (defaultMain) {
@@ -57,6 +59,7 @@ void codegen(ASTNode* root) {
             std::cout << "[CPP] Added return statement to default main function in entry block\n";
         }
     }
+
 
     std::cout << "\nGenerating code for AST node\n";
     if (llvm::verifyModule(*module, &llvm::errs())) {

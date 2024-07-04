@@ -1,5 +1,0 @@
-// Test 1: Basic function test
-// Returns an integer value
-public function testBasicfunc() -> int {
-    return 34;
-}

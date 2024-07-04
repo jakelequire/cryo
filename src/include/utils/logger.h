@@ -30,7 +30,6 @@
 
 #define CURRENT_LOG_LEVEL LOG_LEVEL_VERBOSE
 
-typedef struct ASTNode ASTNode;
 
 
 

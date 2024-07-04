@@ -1,7 +1,0 @@
-
-// Test 2: Function with a constant variable
-// Returns a constant integer value
-public function exampleTwoFunc() -> void {
-    const x: int = 34;
-    return x;
-}

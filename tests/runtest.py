@@ -36,7 +36,12 @@ func_tests = [
 ]
 
 if_tests = [
-    "./tests/ifstatement/1.basicIf.cryo"
+    "./tests/ifstatement/1.basicIf.cryo",
+    "./tests/ifstatement/2.varIntIf.cryo",
+]
+
+for_tests = [
+    "./tests/forloop/1.basicFor.cryo"
 ]
 
 cryo_path = "C:/Programming/apps/cryo/src/bin/main.exe"
@@ -86,10 +91,19 @@ if __name__ == "__main__":
     print("\nRunning if statement tests...")
     if_results = run_tests(if_tests)
     print_results("If Statement Tests", if_results)
+
+    print("\nRunning for loop tests...")
+    for_results = run_tests(for_tests)
+    print_results("For Loop Tests", for_results)
     
     var_passed, var_failed = summarize_results(var_results)
+    var_percent = (var_passed / (var_passed + var_failed)) * 100
     func_passed, func_failed = summarize_results(func_results)
+    func_percent = (func_passed / (func_passed + func_failed)) * 100
     if_passed, if_failed = summarize_results(if_results)
+    if_percent = (if_passed / (if_passed + if_failed)) * 100
+    for_passed, for_failed = summarize_results(for_results)
+    for_percent = (for_passed / (for_passed + for_failed)) * 100
 
     total_passed = var_passed + func_passed + if_passed
     total_failed = var_failed + func_failed + if_failed
@@ -103,9 +117,16 @@ if __name__ == "__main__":
     print("\nVariable Tests Summary")
     print(f"  Passed: {var_passed}")
     print(f"  Failed: {var_failed}")
+    print(f"  Pass Rate: {var_percent:.2f}%")
     print("\nFunction Tests Summary")
     print(f"  Passed: {func_passed}")
     print(f"  Failed: {func_failed}")
+    print(f"  Pass Rate: {func_percent:.2f}%")
     print("\nIf Statement Tests Summary")
     print(f"  Passed: {if_passed}")
     print(f"  Failed: {if_failed}")
+    print(f"  Pass Rate: {if_percent:.2f}%")
+    print("\nFor Loop Tests Summary")
+    print(f"  Passed: {for_passed}")
+    print(f"  Failed: {for_failed}")
+    print(f"  Pass Rate: {for_percent:.2f}%")

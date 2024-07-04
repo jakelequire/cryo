@@ -26,9 +26,10 @@
 #include <string.h>
 
 /*---<custom_includes>---*/
-#include "compiler/lexer.h" // Ensure this is included
+#include "compiler/lexer.h"
 #include "compiler/ast.h"
 #include "compiler/token.h"
+#include "compiler/symtable.h"
 #include "utils/fs.h"
 #include "utils/logger.h"
 /*---------<end>---------*/
@@ -37,6 +38,7 @@ typedef struct ASTNode ASTNode;
 
 typedef struct {
     bool isParsingIfCondition;
+    int scopeLevel;
     // Add other context flags as needed
 } ParsingContext;
 

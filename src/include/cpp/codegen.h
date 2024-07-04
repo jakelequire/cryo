@@ -54,6 +54,8 @@ extern "C" {
     #include "compiler/ast.h"
 }
 
+
+
 // Code Generation
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
@@ -67,6 +69,7 @@ void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mo
 // Variables
 llvm::Value* getVariable(const std::string& name);
 llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder);
+llvm::GlobalVariable* createGlobalVariable(llvm::Module& module, llvm::Type* varType, llvm::Constant* initialValue, const std::string& varName);
 llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder<>& builder, const std::string& name);
 llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, const std::string& name);
 
@@ -76,13 +79,16 @@ std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 
-// Strings & String Structs
+// Structs
 llvm::StructType *createStringStruct(llvm::LLVMContext &context);
 llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder);
 llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str);
+llvm::Value* createNumber(llvm::IRBuilder<>& builder, llvm::Module& module, int num);
+llvm::Constant* createConstantInt(llvm::IRBuilder<>& builder, int value);
+llvm::Value* createReferenceInt(llvm::IRBuilder<>& builder, llvm::Module& module, int value);
 
 // Functions
-bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module);
 void generateFunctionPrototype(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void createDefaultMainFunction(llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
@@ -91,6 +97,8 @@ llvm::Function* getCryoFunction(llvm::Module& module, const std::string& name, l
 void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
+
+bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void codegen(ASTNode* root);
 
 
