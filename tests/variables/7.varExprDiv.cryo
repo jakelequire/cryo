@@ -1,0 +1,8 @@
+//
+// Variable Test Case #7
+// Variable Expression Declaration.
+// 
+// This will evaluate a simple <division> expression in a variable.
+//
+
+const exampleDivExpr: int = 512 / 8;

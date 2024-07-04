@@ -1,0 +1,11 @@
+//
+// Variable Test Case #1
+// Simple Variable Declaration.
+// 
+// This Variable Declaration is for type <int> only. 
+//
+
+const exampleInt: int = 34;
+
+
+

@@ -1,0 +1,12 @@
+//
+// Function Test Case #14
+// Function Handling Tests
+// 
+// Simple function implementation with a call to the main function to execute `main();`.
+//
+
+public function main() -> boolean {
+    const exampleBool: boolean = false;
+    return exampleBool;
+}
+main();

@@ -1,0 +1,10 @@
+//
+// Variable Test Case #3
+// Simple Variable Declaration.
+// 
+// This Variable Declaration is for type <boolean> only.
+// It will evaluate both `true` & `false` Variables 
+//
+
+const exampleTrue: boolean = true;
+const exampleFalse: boolean = false;

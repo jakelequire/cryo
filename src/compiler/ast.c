@@ -285,6 +285,14 @@ void freeAST(ASTNode* node) {
             freeAST(node->data.forStmt.body);
             break;
 
+        case NODE_PARAM_LIST:
+            printf("[AST] Freeing Parameter List Node\n");
+            for (int i = 0; i < node->data.paramList.paramCount; i++) {
+                freeAST(node->data.paramList.params[i]);
+            }
+            free(node->data.paramList.params);
+            break;
+
         default:
             printf("[AST] Unknown Node Type. <DEFAULTED>\n");
             exit(0);
@@ -329,6 +337,11 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.functionBlock.block->data.block.statements = (ASTNode**)malloc(sizeof(ASTNode*) * INITIAL_CAPACITY);
             node->data.functionBlock.block->data.block.stmtCount = 0;
             node->data.functionBlock.block->data.block.stmtCapacity = INITIAL_CAPACITY;
+            break;
+        case NODE_PARAM_LIST:
+            node->data.paramList.params = NULL;
+            node->data.paramList.paramCount = 0;
+            node->data.paramList.paramCapacity = 0;
             break;
         case NODE_VAR_DECLARATION:
             node->data.varDecl.name = NULL;

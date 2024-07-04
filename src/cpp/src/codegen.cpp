@@ -30,22 +30,41 @@ void codegen(ASTNode* root) {
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder(context);
     std::unique_ptr<llvm::Module> module = std::make_unique<llvm::Module>("CryoModule", context);
+    
+    std::cout << "\nGenerating code...\n";
 
-    // Create the main function (temporary for testing)
-    llvm::FunctionType* funcType = llvm::FunctionType::get(builder.getVoidTy(), false);
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module.get());
-    llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "entry", function);
-    builder.SetInsertPoint(entry);
+    // First Pass: Declare all functions
+    std::cout << "\nFirst Pass: Declare all functions\n";
+    bool mainFunctionExists = declareFunctions(root, builder, *module);
 
+    // Create main function if it doesn't exist
+    if (!mainFunctionExists) {
+        std::cout << "[CPP] Main function not found, creating default main function\n";
+        createDefaultMainFunction(builder, *module);
+    }
+
+    // Second Pass: Generate code for the entire program
+    std::cout << "\nSecond Pass: Generate code for the entire program\n";
     generateCode(root, builder, *module);
 
-    builder.CreateRetVoid();
+    // Ensure the default main function has a terminator
+    llvm::Function* defaultMain = module->getFunction("_defaulted");
+    if (defaultMain) {
+        llvm::BasicBlock& entryBlock = defaultMain->getEntryBlock();
+        if (!entryBlock.getTerminator()) {
+            builder.SetInsertPoint(&entryBlock);
+            builder.CreateRetVoid();
+            std::cout << "[CPP] Added return statement to default main function in entry block\n";
+        }
+    }
 
+    std::cout << "\nGenerating code for AST node\n";
     if (llvm::verifyModule(*module, &llvm::errs())) {
         std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
         module->print(llvm::errs(), nullptr);
         std::cout << "\n>===----------------- End Error -----------------===<\n";
         std::cerr << "Error: LLVM module verification failed\n";
+        exit(1);
     } else {
         // Output the generated LLVM IR code to a .ll file
         std::error_code EC;
@@ -67,7 +86,8 @@ void codegen(ASTNode* root) {
 // </codegen>
 
 
-// <generateCode>
+
+
 // <generateCode>
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating code for AST node\n" << std::endl;
@@ -158,6 +178,7 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             break;
 
         case CryoNodeType::NODE_EXPRESSION_STATEMENT:
+            std::cout << "[CPP] Generating code for expression statement\n";
             generateExpression(node->data.stmt.stmt, builder, module);
             break;
 
@@ -246,6 +267,10 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
                     return llvm::ConstantFP::get(llvm::Type::getFloatTy(module.getContext()), node->data.literalExpression.floatValue);
 
                 case DATA_TYPE_STRING:
+                    if (node->data.literalExpression.stringValue == nullptr) {
+                        std::cerr << "[CPP] Error: String literal is null\n";
+                        return nullptr;
+                    }
                     std::cout << "[CPP] Generating string literal: " << node->data.literalExpression.stringValue << "\n";
                     return createString(builder, module, node->data.literalExpression.stringValue);
 

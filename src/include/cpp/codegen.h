@@ -54,7 +54,7 @@ extern "C" {
     #include "compiler/ast.h"
 }
 
-
+// Code Generation
 void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
@@ -64,14 +64,15 @@ void generateBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modu
 void generateFunctionBlock(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
+// Variables
 llvm::Value* getVariable(const std::string& name);
 llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder);
 llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder<>& builder, const std::string& name);
 llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, const std::string& name);
 
+// Expressions
 llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module, bool checkStringLiteral);
-
 llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 
@@ -81,6 +82,9 @@ llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<>
 llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str);
 
 // Functions
+bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+void generateFunctionPrototype(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+void createDefaultMainFunction(llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 llvm::Function* getCryoFunction(llvm::Module& module, const std::string& name, llvm::ArrayRef<llvm::Type*> argTypes);
 

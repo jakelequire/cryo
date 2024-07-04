@@ -1,0 +1,8 @@
+//
+// Variable Test Case #2
+// Simple Variable Declaration.
+// 
+// This Variable Declaration is for type <string> only. 
+//
+
+const exampleStr: string = "Hello, world!";

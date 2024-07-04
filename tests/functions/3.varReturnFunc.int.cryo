@@ -1,0 +1,12 @@
+//
+// Function Test Case #3
+// Function Handling Tests
+// 
+// Handling Variables within functions & following the correct scope.
+// Returning the variable.
+//
+
+public function main() -> int {
+    const returnVar: int = 35;
+    return returnVar;
+}

@@ -1,0 +1,14 @@
+//
+// Function Test Case #8
+// Function Handling Tests
+// 
+// Returning void with variables in the function body.
+//
+
+public function main() -> void {
+    const exampleVar: int = 34;
+    const exampleTwoVar: int = 35;
+    const exampleThreeVar: int = exampleVar + exampleTwoVar;
+    return;
+}
+

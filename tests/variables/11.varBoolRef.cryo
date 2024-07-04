@@ -1,0 +1,15 @@
+//
+// Variable Test Case #11
+// Variable References.
+// 
+// This is to test if Variables can reference eachother.
+//
+
+const exampleBoolOne: boolean = true;
+
+const exampleBoolTwo: boolean = exampleBoolOne;
+
+const exampleBoolThree: boolean = false;
+
+const exampleBoolTwo: boolean = exampleBoolThree;
+

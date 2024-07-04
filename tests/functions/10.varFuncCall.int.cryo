@@ -1,0 +1,12 @@
+//
+// Function Test Case #10
+// Function Handling Tests
+// 
+// Simple function implementation with a call to the main function to execute `main();`.
+//
+
+public function main() -> int {
+    const exampleInt: int = 34;
+    return exampleInt;
+}
+main();

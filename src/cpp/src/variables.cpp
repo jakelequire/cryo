@@ -131,25 +131,41 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
 
     switch (node->data.varDecl.dataType) {
         case DATA_TYPE_STRING:
+            std::cout << "[CPP] Generating code for string variable\n";
             varType = builder.getInt8Ty()->getPointerTo();
             initialValue = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
             break;
         
         case DATA_TYPE_INT:
-            varType = builder.getInt32Ty();
+            std::cout << "[CPP] Generating code for int variable\n";
+            varType = builder.getInt32Ty()->getPointerTo();
+            //                              ^ Added this and it worked.
             break;
 
         case DATA_TYPE_FLOAT:
-            varType = builder.getFloatTy();
+            std::cout << "[CPP] Generating code for float variable\n";
+            varType = builder.getFloatTy()->getPointerTo();
             break;
 
         case DATA_TYPE_BOOLEAN:
-            varType = builder.getInt1Ty();
+            std::cout << "[CPP] Generating code for boolean variable\n";
+            varType = builder.getInt1Ty()->getPointerTo();
             break;
+        
+        case DATA_TYPE_UNKNOWN:
+        case DATA_TYPE_VOID:
+            std::cerr << "[CPP] Error: Cannot declare variable of type void\n";
+            return;
         // Handle other types...
+
+        default:
+            std::cout << "[CPP] Error: Invalid data type\n";
+            std::cerr << "[CPP - ERROR] Invalid data type for variable: " << varName << "\n";
+            return;
     }
 
     if (!initialValue) {
+        std::cout << "[CPP] Generating code for variable initializer\n";
         initialValue = generateExpression(node->data.varDecl.initializer, builder, module);
         if (!initialValue) {
             std::cerr << "[CPP] Error: Failed to generate initializer for variable: " << varName << "\n";
@@ -161,6 +177,5 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     builder.CreateStore(initialValue, alloca);
     namedValues[varName] = alloca;
 }
-
 // </generateVarDeclaration>
 

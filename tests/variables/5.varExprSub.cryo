@@ -1,0 +1,8 @@
+//
+// Variable Test Case #5
+// Variable Expression Declaration.
+// 
+// This will evaluate a simple <subtraction> expression in a variable.
+//
+
+const exampleSubExpr: int = 99 - 30;

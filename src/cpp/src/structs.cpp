@@ -48,13 +48,10 @@ llvm::StructType* createStringType(llvm::LLVMContext& context, llvm::IRBuilder<>
 
 // <createString>
 llvm::Value* createString(llvm::IRBuilder<>& builder, llvm::Module& module, const std::string& str) {
-    llvm::LLVMContext& context = module.getContext();
-    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(context, str, true);
-    llvm::GlobalVariable* globalStr = new llvm::GlobalVariable(module, strConstant->getType(), true,
-                                                               llvm::GlobalValue::PrivateLinkage, strConstant, "stringLiteral");
-
-    // Return the global string pointer
-    return builder.CreatePointerCast(globalStr, builder.getInt8Ty()->getPointerTo());
+    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(module.getContext(), str);
+    llvm::GlobalVariable* globalStr = new llvm::GlobalVariable(
+        module, strConstant->getType(), true,
+        llvm::GlobalValue::PrivateLinkage, strConstant, ".str");
+    return builder.CreateBitCast(globalStr, llvm::Type::getInt8Ty(module.getContext())->getPointerTo());
 }
-
 // </createString>

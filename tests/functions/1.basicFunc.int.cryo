@@ -1,0 +1,10 @@
+//
+// Function Test Case #1
+// Function Handling Tests
+// 
+// Most basic form of a function test.
+//
+
+public function main() -> int {
+    return 34;
+}

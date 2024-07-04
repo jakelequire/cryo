@@ -1,0 +1,8 @@
+//
+// Variable Test Case #8
+// Variable Expression Declaration.
+// 
+// This will evaluate a chained arithmatic Expression.
+//
+
+const exampleChainExpr: int = 23 * 3 + 420 - 32;
