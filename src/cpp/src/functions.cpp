@@ -155,19 +155,29 @@ void generateReturnStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mo
         retValue = generateExpression(node->data.returnStmt.returnValue, builder, module);
     }
 
-    llvm::BasicBlock* currentFunction = builder.GetInsertBlock();
-    llvm::Type* returnType = currentFunction->getParent()->getReturnType();
+    llvm::BasicBlock* currentBlock = builder.GetInsertBlock();
+    llvm::Function* currentFunction = currentBlock->getParent();
+    llvm::Type* returnType = currentFunction->getReturnType();
+
+    if (!returnType) {
+        returnType = llvm::Type::getVoidTy(module.getContext());
+    }
 
     if (returnType->isVoidTy()) {
-        // builder.CreateRetVoid();
+        builder.CreateRetVoid();
     } else if (retValue) {
         if (returnType != retValue->getType()) {
-            // Perform necessary type casting
-            retValue = builder.CreateBitCast(retValue, returnType);
+            // Perform necessary type casting if types do not match
+            if (retValue->getType()->isPointerTy() && returnType->isIntegerTy()) {
+                retValue = builder.CreatePtrToInt(retValue, returnType);
+            } else if (retValue->getType()->isIntegerTy() && returnType->isPointerTy()) {
+                retValue = builder.CreateIntToPtr(retValue, returnType);
+            } else {
+                retValue = builder.CreateBitCast(retValue, returnType);
+            }
         }
         builder.CreateRet(retValue);
     } else {
-        // Handle error: return value expected but not provided
         std::cerr << "Error: Return value expected but not provided\n";
         builder.CreateRet(llvm::UndefValue::get(returnType));
     }
@@ -194,6 +204,7 @@ void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
             returnType = llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
             break;
         case DATA_TYPE_VOID:
+            returnType = llvm::Type::getVoidTy(module.getContext());
             break;
         default:
             std::cerr << "[CPP] Error: Unknown function return type: " << node->data.functionDecl.returnType << "\n";
@@ -224,7 +235,9 @@ void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
     llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, node->data.functionDecl.name, &module);
 
-    llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), "entry", function);
+    // Generate a unique basic block name
+    std::string basicBlockName = node->data.functionDecl.name;
+    llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), basicBlockName, function);
     builder.SetInsertPoint(BB);
 
     if (node->data.functionDecl.body) {

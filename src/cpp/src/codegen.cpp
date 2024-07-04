@@ -114,6 +114,12 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             generateVarDeclaration(node, builder, module);
             break;
 
+        case CryoNodeType::NODE_VAR_NAME:
+            std::cout << "[CPP] Generating code for variable name\n";
+            std::cout << "[CPP] Variable Name UNIMPLEMENTED\n";
+            // TODO: Implement variable name code generation
+            break;
+
         case CryoNodeType::NODE_STATEMENT:
             std::cout << "[CPP] Generating code for statement\n";
             generateStatement(node, builder, module);
@@ -141,12 +147,6 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             // TODO: Implement literal expression code generation
             break;
         
-        case CryoNodeType::NODE_VAR_NAME:
-            std::cout << "[CPP] Generating code for variable name\n";
-            std::cout << "[CPP] Variable Name UNIMPLEMENTED\n";
-            // TODO: Implement variable name code generation
-            break;
-
         case CryoNodeType::NODE_FUNCTION_CALL:
             std::cout << "[CPP] Generating code for function call\n";
             generateFunctionCall(node, builder, module);

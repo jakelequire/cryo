@@ -86,6 +86,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* returnValue;
             struct ASTNode* expression;
+            CryoDataType returnType;
         } returnStmt;
         // >=--------------<End>--------------=<
 

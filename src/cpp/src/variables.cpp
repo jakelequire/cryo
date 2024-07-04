@@ -132,8 +132,15 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
     switch (node->data.varDecl.dataType) {
         case DATA_TYPE_STRING:
             std::cout << "[CPP] Generating code for string variable\n";
+            // Check if it's a variable reference and not an explicit string
+            if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
+                std::cout << "[CPP] Initializer is a literal expression\n";
+                initialValue = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
+            } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
+                std::cout << "[CPP] Initializer is a variable name\n";
+                initialValue = namedValues[node->data.varDecl.initializer->data.varName.varName];
+            }
             varType = builder.getInt8Ty()->getPointerTo();
-            initialValue = createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue);
             break;
         
         case DATA_TYPE_INT:

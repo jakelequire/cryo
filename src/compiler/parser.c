@@ -363,12 +363,15 @@ ASTNode* parseReturnStatement(Lexer* lexer, ParsingContext* context) {
         ASTNode* returnValue = parseExpression(lexer, context);
         if (returnValue) {
             returnNode->data.returnStmt.returnValue = returnValue;
+            returnNode->data.returnStmt.returnType = returnValue->type;
             printf("[Parser] Return value parsed with type: %d\n", returnValue->type);
         } else {
             printf("[Parser] Error: Failed to parse return value\n");
         }
     } else {
+        // No return value, set return type to void
         returnNode->data.returnStmt.returnValue = NULL;
+        returnNode->data.returnStmt.returnType = DATA_TYPE_VOID;
         printf("[Parser] No return value\n");
     }
 
