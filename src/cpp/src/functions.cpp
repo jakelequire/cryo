@@ -93,7 +93,7 @@ void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modul
 
     llvm::Function* callee = module.getFunction(functionName);
     if (!callee) {
-        std::cerr << "[CPP] Unknown function referenced: " << functionName << "\n";
+        std::cout << "[CPP] Unknown function referenced: " << functionName << "\n";
         return;
     }
 

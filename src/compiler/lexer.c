@@ -42,7 +42,9 @@ KeywordToken keywords[] = {
     {"struct",      TOKEN_KW_STRUCT             },
     {"enum",        TOKEN_KW_ENUM               },
     {"break",       TOKEN_KW_BREAK              },
+    {"extern",      TOKEN_KW_EXTERN             },
     {"continue",    TOKEN_KW_CONTINUE           },
+    {"import",      TOKEN_KW_IMPORT             },
     {"int[]",       TOKEN_TYPE_INT_ARRAY        },
     {"string[]",    TOKEN_TYPE_STRING_ARRAY     },
     {"boolean[]",   TOKEN_TYPE_BOOLEAN_ARRAY    },
@@ -367,17 +369,20 @@ Token nextToken(Lexer* lexer, Token* token) {
                 type = checkKeyword(lexer, "mut", TOKEN_KW_MUT);
                 break;
             case 'i':
-                if (strncmp(lexer->start, "int[]", 5) == 0) {
+                if (strncmp(lexer->start, "import", 6) == 0) {
+                    lexer->current = lexer->start + 6;
+                    type = TOKEN_KW_IMPORT;
+                } else if (strncmp(lexer->start, "int[]", 5) == 0) {
                     lexer->current = lexer->start + 5;
                     type = TOKEN_TYPE_INT_ARRAY;
-                } else if (peek(lexer) == "f") {
-                    type = checkKeyword(lexer, "if", TOKEN_KW_IF);
-                } 
-                else {
+                } else {
                     type = checkKeyword(lexer, "int", TOKEN_KW_INT);
                 }
                 break;
             case 'e':
+                if(peek(lexer) == 'x') {
+                    type = checkKeyword(lexer, "extern", TOKEN_KW_EXTERN);
+                }
                 type = checkKeyword(lexer, "else", TOKEN_KW_ELSE);
                 break;
             case 'w':
@@ -420,22 +425,6 @@ Token nextToken(Lexer* lexer, Token* token) {
             default:
                 type = TOKEN_IDENTIFIER;
                 break;
-        }
-        // If still TOKEN_IDENTIFIER, check for array types
-        if (type == TOKEN_IDENTIFIER) {
-            if (strncmp(lexer->start, "int[]", 5) == 0) {
-                lexer->current = lexer->start + 5;
-                type = TOKEN_TYPE_INT_ARRAY;
-            } else if (strncmp(lexer->start, "string[]", 8) == 0) {
-                lexer->current = lexer->start + 8;
-                type = TOKEN_TYPE_STRING_ARRAY;
-            } else if (strncmp(lexer->start, "boolean[]", 9) == 0) {
-                lexer->current = lexer->start + 9;
-                type = TOKEN_TYPE_BOOLEAN_ARRAY;
-            } else if (strncmp(lexer->start, "float[]", 7) == 0) {
-                lexer->current = lexer->start + 7;
-                type = TOKEN_TYPE_FLOAT_ARRAY;
-            }
         }
 
         *token = makeToken(lexer, type);

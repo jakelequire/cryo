@@ -590,6 +590,28 @@ ASTNode* parseArrayLiteral(Lexer* lexer, ParsingContext* context) {
 // </parseArrayLiteral>
 
 
+ASTNode* parseImport(Lexer* lexer, ParsingContext* context) {
+    printf("[Parser] Parsing import statement...\n");
+    getNextToken(lexer); // Consume 'import'
+
+    if (currentToken.type != TOKEN_STRING_LITERAL) {
+        error("Expected string literal for import path");
+    }
+
+    char* modulePath = strndup(currentToken.start + 1, currentToken.length - 2); // Remove quotes
+    getNextToken(lexer); // Consume string literal
+
+    // Here you would load and process the module
+    // Since we're disregarding symbol table management, we'll just print the modulePath for now
+    printf("[Parser] Importing module: %s\n", modulePath);
+
+    ASTNode* importNode = createImportNode(modulePath);
+
+    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after import statement");
+
+}
+
+
 // Function to parse a statement
 // <parseStatement>
 ASTNode* parseStatement(Lexer* lexer, ParsingContext* context) {
@@ -614,6 +636,10 @@ ASTNode* parseStatement(Lexer* lexer, ParsingContext* context) {
             return parseReturnStatement(lexer, context);
         case TOKEN_KW_FOR:
             return parseForLoop(lexer, context);
+        case TOKEN_KW_IMPORT:
+            return parseImport(lexer, context);
+        case TOKEN_KW_EXTERN:
+            printf("[Parser] Parsing extern declaration...\n");
         case TOKEN_EOF:
             printf("[Parser] Reached end of file.\n");
             return NULL;

@@ -556,6 +556,28 @@ ASTNode* createReturnStatement(ASTNode* return_val) {
 // </createReturnStatement>
 
 
+// <createImportNode>
+ASTNode* createImportNode(ASTNode* importPath) {
+    ASTNode* node = createASTNode(NODE_IMPORT_STATEMENT);
+    if (!node) {
+        return NULL;
+    }
+    node->type = NODE_IMPORT_STATEMENT;
+    node->data.importStatementNode.modulePath = importPath;
+    return node;
+}
+// </createImportNode>
+
+
+ASTNode* createExternNode(ASTNode* symbol) {
+    ASTNode* node = createASTNode(NODE_EXTERN_STATEMENT);
+    if (!node) {
+        return NULL;
+    }
+    return node;
+}
+
+
 // <createBlock>
 ASTNode* createBlock() {
     ASTNode* node = createASTNode(NODE_BLOCK);
@@ -655,6 +677,7 @@ ASTNode* createBooleanLiteralExpr(int value) {
         fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for boolean literal node\n");
         return NULL;
     }
+    node->type = NODE_BOOLEAN_LITERAL;
     node->data.literalExpression.dataType = DATA_TYPE_BOOLEAN;
     node->data.literalExpression.booleanValue = value;
     return node;

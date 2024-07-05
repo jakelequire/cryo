@@ -146,6 +146,7 @@ typedef enum {
     TOKEN_KW_AWAIT,             // `await`          108
     TOKEN_KW_ASYNC,             // `async`          109
     TOKEN_KW_EXPRESSION,        // `expression`     110
+    TOKEN_KW_EXTERN,            // `extern`         111
     // Add more keywords as needed
 
 
@@ -256,6 +257,8 @@ typedef enum CryoNodeType {
     NODE_STRING_LITERAL,            // 20
     NODE_BOOLEAN_LITERAL,           // 21
     NODE_ARRAY_LITERAL,             // 22
+    NODE_IMPORT_STATEMENT,          // 23
+    NODE_EXTERN_STATEMENT,          // 24
     NODE_UNKNOWN,                   // 22
 } CryoNodeType;
 
