@@ -32,6 +32,7 @@ char* strndup(const char* s, size_t n) {
 #endif
 
 
+
 char* tokenTypeToString(CryoTokenType type) {
     switch (type) {
         case TOKEN_INT_LITERAL:
@@ -68,6 +69,36 @@ char* tokenTypeToString(CryoTokenType type) {
             return "ITER_STEP";
         case TOKEN_ITER_VAR:
             return "ITER_VAR";
+        case TOKEN_LBRACE:
+            return "LBRACE";
+        case TOKEN_RBRACE:
+            return "RBRACE";
+        case TOKEN_KW_FN:
+            return "KW_FN";
+        case TOKEN_KW_IF:
+            return "KW_IF";
+        case TOKEN_KW_ELSE:
+            return "KW_ELSE";
+        case TOKEN_KW_FOR:
+            return "KW_FOR";
+        case TOKEN_KW_WHILE:
+            return "KW_WHILE";
+        case TOKEN_KW_ARRAY:
+            return "KW_ARRAY";
+        case TOKEN_KW_PUBLIC:
+            return "KW_PUBLIC";
+        case TOKEN_KW_PRIVATE:
+            return "KW_PRIVATE";
+        case TOKEN_KW_RETURN:
+            return "KW_RETURN";
+        case TOKEN_TYPE_INT_ARRAY:
+            return "TYPE_INT_ARRAY";
+        case TOKEN_TYPE_FLOAT_ARRAY:
+            return "TYPE_FLOAT_ARRAY";
+        case TOKEN_TYPE_STRING_ARRAY:
+            return "TYPE_STRING_ARRAY";
+        case TOKEN_TYPE_BOOLEAN_ARRAY:
+            return "TYPE_BOOLEAN_ARRAY";
         case TOKEN_EOF:
             return "EOF";
         default:
@@ -79,6 +110,11 @@ char* tokenTypeToString(CryoTokenType type) {
 // Scope-Declared Current Token
 Token currentToken;
 
+
+void debugCurrentToken() {
+    printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",
+           tokenTypeToString(currentToken.type), currentToken.length, currentToken.start);
+}
 
 // Error handling function
 // <error>
@@ -121,6 +157,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message) {
 // Helper function to map type strings to CryoDataType
 // <getCryoDataType>
 CryoDataType getCryoDataType(const char* typeStr) {
+    printf("\n[Parser DEBUG] Getting CryoDataType for: %s\n", typeStr);  // Add this line to debug
     if (strcmp(typeStr, "int") == 0) {
         return DATA_TYPE_INT;
     } else if (strcmp(typeStr, "float") == 0) {
@@ -243,30 +280,39 @@ ASTNode* parseExpression(Lexer* lexer, ParsingContext* context) {
 
 
 
-
 // Function to parse a variable declaration
 // <parseVarDeclaration>
 ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
     printf("[Parser] Entering parseVarDeclaration\n");
     getNextToken(lexer);
+    printf("[Parser] Current token: %s\n", tokenTypeToString(currentToken.type));
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
         error("[Parser] Expected variable name");
     }
     char* varName = strndup(currentToken.start, currentToken.length);
-    getNextToken(lexer);
+    getNextToken(lexer); // Consume the identifier
+    printf("[Parser] Current token: %s\n", tokenTypeToString(currentToken.type));
 
     CryoDataType dataType = DATA_TYPE_UNKNOWN;
 
     if (currentToken.type == TOKEN_COLON) {
         getNextToken(lexer);
-        if ( currentToken.type == TOKEN_TYPE_INT_ARRAY ||
-            currentToken.type == TOKEN_TYPE_FLOAT_ARRAY || currentToken.type == TOKEN_TYPE_STRING_ARRAY ||
-            currentToken.type == TOKEN_TYPE_BOOLEAN_ARRAY  || currentToken.type == TOKEN_IDENTIFIER) {
+        printf("[Parser] Current token after colon: %s\n", tokenTypeToString(currentToken.type));
+        if (currentToken.type == TOKEN_TYPE_INT_ARRAY ||
+            currentToken.type == TOKEN_TYPE_FLOAT_ARRAY || 
+            currentToken.type == TOKEN_TYPE_STRING_ARRAY ||
+            currentToken.type == TOKEN_TYPE_BOOLEAN_ARRAY ||
+            currentToken.type == TOKEN_KW_INT ||
+            currentToken.type == TOKEN_KW_STRING ||
+            currentToken.type == TOKEN_KW_BOOL ||
+            currentToken.type == TOKEN_KW_VOID) {
             char* varType = strndup(currentToken.start, currentToken.length);
+            printf("[Parser] Identified variable type: %s\n", varType);
             dataType = getCryoDataType(varType);
             free(varType);
             getNextToken(lexer);
+            printf("[Parser] Current token after type: %s\n", tokenTypeToString(currentToken.type));
         } else {
             error("[Parser] Expected type name");
         }
@@ -278,6 +324,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
         error("[Parser] Expected '=' after variable name");
     }
     getNextToken(lexer);
+    printf("[Parser] Current token after '=': %s\n", tokenTypeToString(currentToken.type));
 
     ASTNode* initializer;
     if (currentToken.type == TOKEN_LBRACKET) {

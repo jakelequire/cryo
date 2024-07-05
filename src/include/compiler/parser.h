@@ -48,6 +48,7 @@ char* strndup(const char* s, size_t n);
 #endif
 int parser(int argc, char* argv[]);
 // Helper Functions
+void debugCurrentToken();
 void error(const char* message);
 void getNextToken(Lexer *lexer);
 void consume(Lexer *lexer, CryoTokenType type, const char *message);
