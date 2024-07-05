@@ -44,6 +44,12 @@ for_tests = [
     "./tests/forloop/1.basicFor.cryo"
 ]
 
+array_tests = [
+    "./tests/arrays/1.intArray.cryo",
+    "./tests/arrays/2.strArray.cryo",
+    "./tests/arrays/3.boolArray.cryo",
+]
+
 cryo_path = "C:/Programming/apps/cryo/src/bin/main.exe"
 
 def run_test(test_file):
@@ -95,15 +101,25 @@ if __name__ == "__main__":
     print("\nRunning for loop tests...")
     for_results = run_tests(for_tests)
     print_results("For Loop Tests", for_results)
+
+    print("\nRunning array tests...")
+    array_results = run_tests(array_tests)
+    print_results("Array Tests", array_results)
     
     var_passed, var_failed = summarize_results(var_results)
     var_percent = (var_passed / (var_passed + var_failed)) * 100
+
     func_passed, func_failed = summarize_results(func_results)
     func_percent = (func_passed / (func_passed + func_failed)) * 100
+
     if_passed, if_failed = summarize_results(if_results)
     if_percent = (if_passed / (if_passed + if_failed)) * 100
+
     for_passed, for_failed = summarize_results(for_results)
     for_percent = (for_passed / (for_passed + for_failed)) * 100
+
+    array_passed, array_failed = summarize_results(array_results)
+    array_percent = (array_passed / (array_passed + array_failed)) * 100
 
     total_passed = var_passed + func_passed + if_passed
     total_failed = var_failed + func_failed + if_failed
@@ -130,3 +146,7 @@ if __name__ == "__main__":
     print(f"  Passed: {for_passed}")
     print(f"  Failed: {for_failed}")
     print(f"  Pass Rate: {for_percent:.2f}%")
+    print("\nArray Tests Summary")
+    print(f"  Passed: {array_passed}")
+    print(f"  Failed: {array_failed}")
+    print(f"  Pass Rate: {array_percent:.2f}%")

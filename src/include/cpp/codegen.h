@@ -86,6 +86,7 @@ llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, cons
 llvm::Value* createNumber(llvm::IRBuilder<>& builder, llvm::Module& module, int num);
 llvm::Constant* createConstantInt(llvm::IRBuilder<>& builder, int value);
 llvm::Value* createReferenceInt(llvm::IRBuilder<>& builder, llvm::Module& module, int value);
+std::vector<llvm::Constant*> generateArrayElements(ASTNode* arrayLiteral, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 // Functions
 llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module);
@@ -96,6 +97,9 @@ llvm::Function* getCryoFunction(llvm::Module& module, const std::string& name, l
 
 void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+
+void generateCodeForArrayLiteral(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+
 
 
 bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);

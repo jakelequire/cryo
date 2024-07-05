@@ -131,13 +131,19 @@ CryoDataType getCryoDataType(const char* typeStr) {
         return DATA_TYPE_BOOLEAN;
     } else if (strcmp(typeStr, "void") == 0) {
         return DATA_TYPE_VOID;
-    } else if (strcmp(typeStr, "null") == 0) {
-        return DATA_TYPE_NULL;
+    } else if (strcmp(typeStr, "int[]") == 0) {
+        return DATA_TYPE_INT_ARRAY;
+    } else if (strcmp(typeStr, "float[]") == 0) {
+        return DATA_TYPE_FLOAT_ARRAY;
+    } else if (strcmp(typeStr, "string[]") == 0) {
+        return DATA_TYPE_STRING_ARRAY;
+    } else if (strcmp(typeStr, "boolean[]") == 0) {
+        return DATA_TYPE_BOOLEAN_ARRAY;
     } else {
-        printf("\n\n[!!Parser!!] Unknown data type: %s\n\n", typeStr); // Debugging
         return DATA_TYPE_UNKNOWN;
     }
 }
+
 // </getCryoDataType>
 
 
@@ -254,13 +260,16 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
 
     if (currentToken.type == TOKEN_COLON) {
         getNextToken(lexer);
-        if (currentToken.type != TOKEN_IDENTIFIER) {
+        if ( currentToken.type == TOKEN_TYPE_INT_ARRAY ||
+            currentToken.type == TOKEN_TYPE_FLOAT_ARRAY || currentToken.type == TOKEN_TYPE_STRING_ARRAY ||
+            currentToken.type == TOKEN_TYPE_BOOLEAN_ARRAY  || currentToken.type == TOKEN_IDENTIFIER) {
+            char* varType = strndup(currentToken.start, currentToken.length);
+            dataType = getCryoDataType(varType);
+            free(varType);
+            getNextToken(lexer);
+        } else {
             error("[Parser] Expected type name");
         }
-        char* varType = strndup(currentToken.start, currentToken.length);
-        dataType = getCryoDataType(varType);
-        free(varType);
-        getNextToken(lexer);
     } else {
         error("[Parser] Expected ':' after variable name");
     }
@@ -270,10 +279,16 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
     }
     getNextToken(lexer);
 
-    ASTNode* initializer = parseExpression(lexer, context);
+    ASTNode* initializer;
+    if (currentToken.type == TOKEN_LBRACKET) {
+        initializer = parseArrayLiteral(lexer, context);
+    } else {
+        initializer = parseExpression(lexer, context);
+    }
+
     if (initializer == NULL) {
         error("[Parser] Expected expression after '='");
-    } 
+    }
 
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
 
@@ -492,6 +507,40 @@ ASTNode* parseForLoop(Lexer* lexer, ParsingContext* context) {
     return for_node;
 }
 // </parseForLoop>
+
+
+// <parseArrayLiteral>
+ASTNode* parseArrayLiteral(Lexer* lexer, ParsingContext* context) {
+    printf("[Parser] Parsing array literal...\n");
+    consume(lexer, TOKEN_LBRACKET, "Expected '[' to start array literal");
+
+    ASTNode** elements = (ASTNode**)malloc(sizeof(ASTNode*) * INITIAL_CAPACITY);
+    int elementCount = 0;
+    int capacity = INITIAL_CAPACITY;
+
+    while (currentToken.type != TOKEN_RBRACKET) {
+        if (elementCount >= capacity) {
+            capacity *= 2;
+            elements = (ASTNode**)realloc(elements, sizeof(ASTNode*) * capacity);
+        }
+
+        ASTNode* element = parseExpression(lexer, context);
+        if (!element) {
+            error("Expected expression in array literal");
+        }
+        elements[elementCount++] = element;
+
+        if (currentToken.type == TOKEN_COMMA) {
+            getNextToken(lexer);
+        } else if (currentToken.type != TOKEN_RBRACKET) {
+            error("Expected ',' or ']' in array literal");
+        }
+    }
+
+    consume(lexer, TOKEN_RBRACKET, "Expected ']' to end array literal");
+    return createArrayLiteralNode(elements, elementCount);
+}
+// </parseArrayLiteral>
 
 
 // Function to parse a statement

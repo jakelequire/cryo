@@ -1,13 +1,5 @@
 
 
 
-const x: int = 5;
+const foo: int[] = [1, 2, 3, 4, 5];
 
-public function main() -> int {
-    const foo: string = "Hello, world!";
-    const bar: string = "Goodbye, world!";
-    const baz: int = 34;
-    return baz;
-}
-
-main();

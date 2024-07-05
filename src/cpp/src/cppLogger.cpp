@@ -360,6 +360,31 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"BooleanLiteral\": " << (node->data.boolean.value ? "true" : "false") << std::endl;
             break;
 
+        case CryoNodeType::NODE_ARRAY_LITERAL:
+            printIndentation(indentLevel);
+            std::cout << "\"ArrayLiteral\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Elements\": " << node->data.arrayLiteral.elementCount << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Capacity\": " << node->data.arrayLiteral.elementCount << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Elements\": [" << std::endl;
+            for (int i = 0; i < node->data.arrayLiteral.elementCount; ++i) {
+                logASTNode(node->data.arrayLiteral.elements[i], indentLevel + 1);
+                if (i < node->data.arrayLiteral.elementCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
+
         default:
             printIndentation(indentLevel);
             std::cerr << "\"UnknownNodeType\"" << std::endl;
@@ -390,6 +415,21 @@ void logCryoDataType(CryoDataType dataType) {
         case DATA_TYPE_VOID:
             std::cout << "Data Type: {void}\n";
             break;
+        case DATA_TYPE_ARRAY:
+            std::cout << "Data Type: {array}\n";
+            break;
+        case DATA_TYPE_INT_ARRAY:
+            std::cout << "Data Type: {int array}\n";
+            break;
+        case DATA_TYPE_FLOAT_ARRAY:
+            std::cout << "Data Type: {float array}\n";
+            break;
+        case DATA_TYPE_STRING_ARRAY:
+            std::cout << "Data Type: {string array}\n";
+            break;
+        case DATA_TYPE_BOOLEAN_ARRAY:
+            std::cout << "Data Type: {boolean array}\n";
+            break;
         default:
             std::cerr << "Data Type: Unknown data type";
             break;
@@ -411,6 +451,16 @@ char* dataTypeToString(CryoDataType dataType) {
             return "<boolean>";
         case DATA_TYPE_VOID:
             return "<void>";
+        case DATA_TYPE_ARRAY:
+            return "<array>";
+        case DATA_TYPE_INT_ARRAY:
+            return "<int array>";
+        case DATA_TYPE_FLOAT_ARRAY:
+            return "<float array>";
+        case DATA_TYPE_STRING_ARRAY:
+            return "<string array>";
+        case DATA_TYPE_BOOLEAN_ARRAY:
+            return "<boolean array>";
         default:
             return "<unknown>";
     }
@@ -450,6 +500,7 @@ char* nodeTypeToString(CryoNodeType type) {
         case NODE_IF_STATEMENT: return "If Statement";
         case NODE_WHILE_STATEMENT: return "While Statement";
         case NODE_FOR_STATEMENT: return "For Statement";
+        case NODE_ARRAY_LITERAL: return "Array Literal";
 
         // Add all other cases...
         default: return "Unknown";

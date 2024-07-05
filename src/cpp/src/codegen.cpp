@@ -185,6 +185,10 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             generateExpression(node->data.stmt.stmt, builder, module);
             break;
 
+        case CryoNodeType::NODE_ARRAY_LITERAL:
+            generateCodeForArrayLiteral(node, builder, module);
+            break;
+
         default:
             std::cerr << "[CPP] Unknown node type\n";
             break;

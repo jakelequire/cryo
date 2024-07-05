@@ -165,6 +165,13 @@ typedef struct ASTNode {
             CryoDataType dataType;
             int value;
         } boolean;
+
+        struct {
+            struct ASTNode** elements;
+            int elementCount;
+        } arrayLiteral; // Add this for array literals
+
+
     } data;
 } ASTNode;
 /*-------<end_defs>-------*/
@@ -190,6 +197,7 @@ ASTNode* createVarDeclarationNode(const char* var_name, CryoDataType dataType, A
 ASTNode* createExpressionStatement(ASTNode* expression);
 ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 ASTNode* createStringExpr(const char* str);
+ASTNode* createArrayLiteralNode(ASTNode** elements, int elementCount);
 void addChildNode(ASTNode* parent, ASTNode* child);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);

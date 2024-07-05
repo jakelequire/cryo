@@ -204,6 +204,18 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             std::cout << "[CPP] Generating code for boolean variable\n";
             varType = builder.getInt1Ty()->getPointerTo();
             break;
+
+        case DATA_TYPE_INT_ARRAY:
+        case DATA_TYPE_FLOAT_ARRAY:
+        case DATA_TYPE_STRING_ARRAY:
+        case DATA_TYPE_BOOLEAN_ARRAY:
+            std::cout << "[CPP] Generating code for array variable\n";
+            varType = llvm::ArrayType::get(builder.getInt32Ty(), node->data.varDecl.initializer->data.arrayLiteral.elementCount);
+            initialValue = llvm::ConstantArray::get(
+                llvm::cast<llvm::ArrayType>(varType),
+                llvm::ArrayRef<llvm::Constant*>(generateArrayElements(node->data.varDecl.initializer, builder, module))
+            );
+            break;
         
         case DATA_TYPE_UNKNOWN:
         case DATA_TYPE_VOID:
@@ -271,3 +283,39 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
 }
 // </generateVarDeclaration>
 
+
+
+
+
+std::vector<llvm::Constant*> generateArrayElements(ASTNode* arrayLiteral, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    std::vector<llvm::Constant*> elements;
+    for (int i = 0; i < arrayLiteral->data.arrayLiteral.elementCount; i++) {
+        ASTNode* element = arrayLiteral->data.arrayLiteral.elements[i];
+        if (element->type == NODE_LITERAL_EXPR && element->data.literalExpression.dataType == DATA_TYPE_INT) {
+            elements.push_back(llvm::ConstantInt::get(builder.getInt32Ty(), element->data.literalExpression.intValue));
+        }
+        // Handle other types if needed
+    }
+    return elements;
+}
+
+
+// Add this to handle array literals in your code generator
+void generateCodeForArrayLiteral(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+    if (node->type != NODE_ARRAY_LITERAL) {
+        fprintf(stderr, "[CodeGen] [ERROR] Expected array literal node, got %d\n", node->type);
+        return;
+    }
+
+    std::cout << "[CodeGen] Generating code for array literal\n";
+
+    // Generate code for each element in the array
+    for (int i = 0; i < node->data.arrayLiteral.elementCount; i++) {
+        generateCode(node->data.arrayLiteral.elements[i], builder, module);
+        if (i < node->data.arrayLiteral.elementCount - 1) {
+            // Handle element separation if needed
+        }
+    }
+
+    std::cout << "[CodeGen] Completed code generation for array literal\n";
+}

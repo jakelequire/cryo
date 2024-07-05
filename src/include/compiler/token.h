@@ -43,15 +43,19 @@ typedef enum {
     TOKEN_TYPE_STRING_LITERAL,  // `'Hello, World!'`, `'Hello, ' + 'World!'`, etc       14
     TOKEN_TYPE_BOOLEAN,         // `true`, `false`                                      15
     TOKEN_TYPE_VOID,            // `void`                                               16
-    TOKEN_RESULT_ARROW,         // `->` token                                           17
+    TOKEN_TYPE_INT_ARRAY,       // `int[]`                                               17
+    TOKEN_TYPE_FLOAT_ARRAY,     // `float[]`                                             18
+    TOKEN_TYPE_STRING_ARRAY,    // `string[]`                                            19
+    TOKEN_TYPE_BOOLEAN_ARRAY,   // `boolean[]`                                           20
+    TOKEN_RESULT_ARROW,         // `->` token                                           21
 
-    TOKEN_INT_LITERAL,          // `123`                        18
-    TOKEN_FLOAT_LITERAL,        // `123.0`                      19
-    TOKEN_STRING_LITERAL,       // `"Hello, World!"`            20
-    TOKEN_BOOLEAN_LITERAL,      // `true`, `false`              21
-    TOKEN_VOID_LITERAL,         // `void`                       22
-    TOKEN_NULL_LITERAL,         // `null`                       23
-    TOKEN_BIN_OP_LITERAL,       // `2 + 2`, `3 * 3`, etc.       24
+    TOKEN_INT_LITERAL,          // `123`                        22
+    TOKEN_FLOAT_LITERAL,        // `123.0`                      23
+    TOKEN_STRING_LITERAL,       // `"Hello, World!"`            24
+    TOKEN_BOOLEAN_LITERAL,      // `true`, `false`              25
+    TOKEN_VOID_LITERAL,         // `void`                       26
+    TOKEN_NULL_LITERAL,         // `null`                       27
+    TOKEN_BIN_OP_LITERAL,       // `2 + 2`, `3 * 3`, etc.       28
 
     // Operators
     TOKEN_OP_PLUS,              // `+` token        25
@@ -191,6 +195,8 @@ typedef enum {
 
     TOKEN_ITER_VAR,             // `$`          153
     TOKEN_ITER_STEP,            // `..`         154
+
+    TOKEN_EMPTY_ARRAY,         // `[]`          155
 } CryoTokenType;
 
 
@@ -249,6 +255,7 @@ typedef enum CryoNodeType {
     NODE_TYPE,                      // 19
     NODE_STRING_LITERAL,            // 20
     NODE_BOOLEAN_LITERAL,           // 21
+    NODE_ARRAY_LITERAL,             // 22
     NODE_UNKNOWN,                   // 22
 } CryoNodeType;
 
@@ -260,9 +267,15 @@ typedef enum CryoDataType {
     DATA_TYPE_FLOAT,            // `float`             2
     DATA_TYPE_STRING,           // `string`            3
     DATA_TYPE_BOOLEAN,          // `boolean`           4
-    DATA_TYPE_VOID,             // `void`              5
-    DATA_TYPE_FUNCTION,         // `function`          6
+    DATA_TYPE_FUNCTION,         // `function`          5
+    DATA_TYPE_VOID,             // `void`              6
     DATA_TYPE_NULL,             // `null`              7
+    DATA_TYPE_ARRAY,            // `[]`                8
+    DATA_TYPE_INT_ARRAY,        // `int[]`             9
+    DATA_TYPE_FLOAT_ARRAY,      // `float[]`           10
+    DATA_TYPE_STRING_ARRAY,     // `string[]`          11
+    DATA_TYPE_BOOLEAN_ARRAY,    // `boolean[]`         12
+    DATA_TYPE_VOID_ARRAY,       // `void[]`            13
 } CryoDataType;
 
 

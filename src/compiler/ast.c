@@ -159,6 +159,13 @@ void printAST(ASTNode* node, int indent) {
             printAST(node->data.forStmt.body, indent + 2);
             break;
 
+        case NODE_ARRAY_LITERAL:
+            printf("Array Literal:\n");
+            for (int i = 0; i < node->data.arrayLiteral.elementCount; i++) {
+                printAST(node->data.arrayLiteral.elements[i], indent + 2);
+            }
+            break;
+
 
         case NODE_TYPE:
             printf("Data Type: <UNIMPLEMENTED>\n");
@@ -302,6 +309,14 @@ void freeAST(ASTNode* node) {
                 freeAST(node->data.paramList.params[i]);
             }
             free(node->data.paramList.params);
+            break;
+
+        case NODE_ARRAY_LITERAL:
+            printf("[AST] Freeing Array Literal Node\n");
+            for (int i = 0; i < node->data.arrayLiteral.elementCount; i++) {
+                freeAST(node->data.arrayLiteral.elements[i]);
+            }
+            free(node->data.arrayLiteral.elements);
             break;
 
         default:
@@ -671,6 +686,21 @@ ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount) 
     return node;
 }
 // </createFunctionCallNode>
+
+
+
+// <createArrayLiteralNode>
+ASTNode* createArrayLiteralNode(ASTNode** elements, int elementCount) {
+    ASTNode* node = createASTNode(NODE_ARRAY_LITERAL);
+    if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for array literal node\n");
+        return NULL;
+    }
+    node->data.arrayLiteral.elements = elements;
+    node->data.arrayLiteral.elementCount = elementCount;
+    return node;
+}
+// </createArrayLiteralNode>
 
 
 // <addStatementToBlock>

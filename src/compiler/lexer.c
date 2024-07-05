@@ -22,28 +22,32 @@
 //       Keyword Dictionary.       //
 //#################################//
 KeywordToken keywords[] = {
-    {"public",      TOKEN_KW_PUBLIC         },
-    {"function",    TOKEN_KW_FN             },
-    {"if",          TOKEN_KW_IF             },
-    {"else",        TOKEN_KW_ELSE           },
-    {"while",       TOKEN_KW_WHILE          },
-    {"for",         TOKEN_KW_FOR            },
-    {"return",      TOKEN_KW_RETURN         },
-    {"const",       TOKEN_KW_CONST          },
-    {"mut",         TOKEN_KW_MUT            },
-    {"true",        TOKEN_BOOLEAN_LITERAL   },
-    {"false",       TOKEN_BOOLEAN_LITERAL   },
-    {"int",         TOKEN_KW_INT            },
-    {"string",      TOKEN_KW_STRING         },
-    {"boolean",     TOKEN_KW_BOOL           },
-    {"expression",  TOKEN_KW_EXPRESSION     },
-    {"void",        TOKEN_KW_VOID           },
-    {"null",        TOKEN_KW_NULL           },
-    {"struct",      TOKEN_KW_STRUCT         },
-    {"enum",        TOKEN_KW_ENUM           },
-    {"break",       TOKEN_KW_BREAK          },
-    {"continue",    TOKEN_KW_CONTINUE       },
-    {NULL,          TOKEN_UNKNOWN           }  // Sentinel value
+    {"public",      TOKEN_KW_PUBLIC             },
+    {"function",    TOKEN_KW_FN                 },
+    {"if",          TOKEN_KW_IF                 },
+    {"else",        TOKEN_KW_ELSE               },
+    {"while",       TOKEN_KW_WHILE              },
+    {"for",         TOKEN_KW_FOR                },
+    {"return",      TOKEN_KW_RETURN             },
+    {"const",       TOKEN_KW_CONST              },
+    {"mut",         TOKEN_KW_MUT                },
+    {"true",        TOKEN_BOOLEAN_LITERAL       },
+    {"false",       TOKEN_BOOLEAN_LITERAL       },
+    {"int",         TOKEN_KW_INT                },
+    {"string",      TOKEN_KW_STRING             },
+    {"boolean",     TOKEN_KW_BOOL               },
+    {"expression",  TOKEN_KW_EXPRESSION         },
+    {"void",        TOKEN_KW_VOID               },
+    {"null",        TOKEN_KW_NULL               },
+    {"struct",      TOKEN_KW_STRUCT             },
+    {"enum",        TOKEN_KW_ENUM               },
+    {"break",       TOKEN_KW_BREAK              },
+    {"continue",    TOKEN_KW_CONTINUE           },
+    {"int[]",       TOKEN_TYPE_INT_ARRAY        },
+    {"string[]",    TOKEN_TYPE_STRING_ARRAY     },
+    {"boolean[]",   TOKEN_TYPE_BOOLEAN_ARRAY    },
+    {"float[]",     TOKEN_TYPE_FLOAT_ARRAY      },
+    {NULL,          TOKEN_UNKNOWN               }  // Sentinel value
 };
 
 
@@ -89,6 +93,21 @@ void initLexer(Lexer* lexer, const char* source) {
     printf("\n{lexer} -------------------- <END> ----------------------\n\n");
 }
 // </initLexer>
+
+
+CryoTokenType checkArrayType(Lexer* lexer, const char* baseType, CryoTokenType arrayTokenType) {
+    for (int i = 0; baseType[i] != '\0'; i++) {
+        if (advance(lexer) != baseType[i]) {
+            return TOKEN_IDENTIFIER;
+        }
+    }
+    if (peek(lexer) == '[' && peekNext(lexer) == ']') {
+        advance(lexer); // consume '['
+        advance(lexer); // consume ']'
+        return arrayTokenType;
+    }
+    return TOKEN_IDENTIFIER;
+}
 
 
 // <isAtEnd>
@@ -322,6 +341,8 @@ Token get_next_token(Lexer *lexer) {
 // </get_next_token>
 
 
+
+
 // <nextToken>
 Token nextToken(Lexer* lexer, Token* token) {
     skipWhitespace(lexer);
@@ -371,6 +392,12 @@ Token nextToken(Lexer* lexer, Token* token) {
                     type = checkKeyword(lexer, "false", TOKEN_BOOLEAN_LITERAL);
                 }
                 break;
+            case 's':
+                type = checkArrayType(lexer, "tring", TOKEN_TYPE_STRING_ARRAY);
+                break;
+            case 'b':
+                type = checkArrayType(lexer, "oolean", TOKEN_TYPE_BOOLEAN_ARRAY);
+                break;
             case 't':
                 type = checkKeyword(lexer, "true", TOKEN_BOOLEAN_LITERAL);
                 break;
@@ -383,6 +410,21 @@ Token nextToken(Lexer* lexer, Token* token) {
         // If it's still an identifier, process the entire identifier
         if (type == TOKEN_IDENTIFIER) {
             *token = identifier(lexer);
+
+            // Check for array type
+            if (peek(lexer) == '[' && peekNext(lexer) == ']') {
+                advance(lexer); // consume '['
+                advance(lexer); // consume ']'
+                if (strncmp(token->start, "int", token->length) == 0) {
+                    token->type = TOKEN_TYPE_INT_ARRAY;
+                } else if (strncmp(token->start, "float", token->length) == 0) {
+                    token->type = TOKEN_TYPE_FLOAT_ARRAY;
+                } else if (strncmp(token->start, "string", token->length) == 0) {
+                    token->type = TOKEN_TYPE_STRING_ARRAY;
+                } else if (strncmp(token->start, "boolean", token->length) == 0) {
+                    token->type = TOKEN_TYPE_BOOLEAN_ARRAY;
+                }
+            }
         }
         return *token;
     }
@@ -469,6 +511,12 @@ Token nextToken(Lexer* lexer, Token* token) {
                     break;
                 }
             }
+        case '[':
+            *token = makeToken(lexer, TOKEN_LBRACKET);
+            return *token;
+        case ']':
+        *token = makeToken(lexer, TOKEN_RBRACKET);
+        return *token;
         default:
             *token = errorToken(lexer, "Unexpected character.");
             return *token;

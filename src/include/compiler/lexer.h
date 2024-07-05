@@ -63,9 +63,9 @@ typedef struct Lexer {
     const char* end;
     const char *current;
     int line;
-    int column;          
-    Token currentToken;  
-    Token lookahead;     
+    int column;
+    Token currentToken;
+    Token lookahead;
     bool hasPeeked;
 } Lexer;
 /*-------<end_defs>-------*/
@@ -89,6 +89,7 @@ void skipWhitespace(Lexer* lexer);
 Token makeToken(Lexer* lexer, CryoTokenType type);
 Token errorToken(Lexer* lexer, const char* message);
 CryoTokenType checkKeyword(Lexer *lexer, const char *keyword, CryoTokenType type);
+CryoTokenType checkArrayType(Lexer* lexer, const char* baseType, CryoTokenType arrayTokenType);
 Token identifier(Lexer* lexer);
 Token number(Lexer* lexer);
 Token string(Lexer* lexer);

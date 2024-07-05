@@ -85,6 +85,8 @@ ASTNode* parseForLoop(Lexer* lexer, ParsingContext* context);
 ASTNode* parseWhileStatement(Lexer* lexer);
 ASTNode* parseProgram(Lexer* lexer);
 
+ASTNode* parseArrayLiteral(Lexer* lexer, ParsingContext* context);
+
 #endif // PARSER_H
 
 // Entry Point

@@ -1,0 +1,5 @@
+
+
+
+const boolArray: boolean[] = [true, false, true];
+
