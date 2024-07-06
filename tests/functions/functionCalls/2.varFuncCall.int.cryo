@@ -5,8 +5,13 @@
 // Simple function implementation with a call to the main function to execute `main();`.
 //
 
-public function main() -> int {
-    const exampleInt: int = 34;
-    return exampleInt;
+public function anotherInt() -> int {
+    const intVar: int = 35;
+    return intVar;
 }
-main();
+
+public function main() -> int {
+    anotherInt();
+    
+    return 1;
+}

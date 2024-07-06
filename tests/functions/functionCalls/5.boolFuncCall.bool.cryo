@@ -5,7 +5,13 @@
 // Simple function implementation with a call to the main function to execute `main();`.
 //
 
-public function main() -> boolean {
+public function boolFunc() -> boolean {
     return true;
 }
-main();
+
+
+public function main() -> boolean {
+    boolFunc();
+
+    return false;
+}

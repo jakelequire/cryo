@@ -1,0 +1,11 @@
+// Extern Test #1
+// This test is to handle external function defined in the .o file produced from cryolib
+
+extern function printInt();
+
+public function main() -> void {
+    printInt(34);
+    return;
+}
+
+

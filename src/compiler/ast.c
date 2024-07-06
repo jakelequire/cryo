@@ -166,6 +166,19 @@ void printAST(ASTNode* node, int indent) {
             }
             break;
 
+        case NODE_IMPORT_STATEMENT:
+            printf("Import Statement:\n");
+            printAST(node->data.importStatementNode.modulePath, indent + 2);
+            break;
+
+        case NODE_EXTERN_STATEMENT:
+            printf("Extern Statement:\n");
+            if (node->data.externNode.type == NODE_FUNCTION_DECLARATION) {
+                printAST(node->data.externNode.decl.function, indent + 2);
+            } else if (node->data.externNode.type == NODE_VAR_DECLARATION) {
+                printAST(node->data.externNode.decl.variable, indent + 2);
+            }
+            break;
 
         case NODE_TYPE:
             printf("Data Type: <UNIMPLEMENTED>\n");
@@ -319,6 +332,20 @@ void freeAST(ASTNode* node) {
             free(node->data.arrayLiteral.elements);
             break;
 
+        case NODE_IMPORT_STATEMENT:
+            printf("[AST] Freeing Import Statement Node\n");
+            freeAST(node->data.importStatementNode.modulePath);
+            break;
+        
+        case NODE_EXTERN_STATEMENT:
+            printf("[AST] Freeing Extern Statement Node\n");
+            if (node->data.externNode.type == NODE_FUNCTION_DECLARATION) {
+                freeAST(node->data.externNode.decl.function);
+            } else if (node->data.externNode.type == NODE_VAR_DECLARATION) {
+                freeAST(node->data.externNode.decl.variable);
+            }
+            break;
+        
         default:
             printf("[AST] Unknown Node Type. <DEFAULTED>\n");
             exit(0);
@@ -407,6 +434,14 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.block.statements = NULL;
             node->data.block.stmtCount = 0;
             node->data.block.stmtCapacity = 0;
+            break;
+        case NODE_IMPORT_STATEMENT:
+            node->data.importStatementNode.modulePath = NULL;
+            break;
+        case NODE_EXTERN_STATEMENT:
+            node->data.externNode.type = NODE_UNKNOWN;
+            node->data.externNode.decl.function = NULL;
+            node->data.externNode.decl.variable = NULL;
             break;
         default:
             fprintf(stderr, "[AST] [ERROR] Unknown node type during creation: %d\n", type);
@@ -569,13 +604,26 @@ ASTNode* createImportNode(ASTNode* importPath) {
 // </createImportNode>
 
 
-ASTNode* createExternNode(ASTNode* symbol) {
+// <createExternNode>
+ASTNode* createExternNode(ASTNode* decl) {
     ASTNode* node = createASTNode(NODE_EXTERN_STATEMENT);
     if (!node) {
         return NULL;
     }
+
+    if (decl->type == NODE_FUNCTION_DECLARATION) {
+        node->data.externNode.type = NODE_FUNCTION_DECLARATION;
+        node->data.externNode.decl.function = decl;
+    } else if (decl->type == NODE_VAR_DECLARATION) {
+        node->data.externNode.type = NODE_VAR_DECLARATION;
+        node->data.externNode.decl.variable = decl;
+    } else {
+        error("Unknown declaration type for extern");
+    }
+
     return node;
 }
+// </createExternNode>
 
 
 // <createBlock>

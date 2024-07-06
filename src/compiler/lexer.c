@@ -380,10 +380,11 @@ Token nextToken(Lexer* lexer, Token* token) {
                 }
                 break;
             case 'e':
-                if(peek(lexer) == 'x') {
+                if (peek(lexer) == 'x') {
                     type = checkKeyword(lexer, "extern", TOKEN_KW_EXTERN);
+                } else {
+                    type = checkKeyword(lexer, "else", TOKEN_KW_ELSE);
                 }
-                type = checkKeyword(lexer, "else", TOKEN_KW_ELSE);
                 break;
             case 'w':
                 type = checkKeyword(lexer, "while", TOKEN_KW_WHILE);
@@ -422,16 +423,18 @@ Token nextToken(Lexer* lexer, Token* token) {
             case 't':
                 type = checkKeyword(lexer, "true", TOKEN_BOOLEAN_LITERAL);
                 break;
+            case 'v':
+                type = checkKeyword(lexer, "void", TOKEN_KW_VOID);
+                break;
             default:
                 type = TOKEN_IDENTIFIER;
                 break;
         }
 
-        *token = makeToken(lexer, type);
-        printf("[Lexer] Created token: %.*s (Type: %s, Line: %d, Column: %d)\n",
-               token->length, token->start, tokenTypeToString(token->type), token->line, token->column);
         if (type == TOKEN_IDENTIFIER) {
             *token = identifier(lexer);
+        } else {
+            *token = makeToken(lexer, type);
         }
         return *token;
     }

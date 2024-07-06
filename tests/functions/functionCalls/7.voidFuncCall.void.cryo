@@ -5,7 +5,13 @@
 // Simple function implementation with a call to the main function to execute `main();`.
 //
 
-public function main() -> void {
+public function voidFunc() -> void {
     return;
 }
-main();
+
+
+public function main() -> void {
+    voidFunc();
+
+    return;
+}

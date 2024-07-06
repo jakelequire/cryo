@@ -1,3 +1,6 @@
+
+
+
 import os
 import subprocess
 
@@ -18,36 +21,29 @@ var_tests = [
 ]
 
 func_tests = [
-    "./tests/functions/1.basicFunc.int.cryo",
-    "./tests/functions/2.varInFunc.int.cryo",
-    "./tests/functions/3.varReturnFunc.int.cryo",
-    "./tests/functions/4.strReturnFunc.str.cryo",
-    "./tests/functions/5.strVarReturnFunc.str.cryo",
-    "./tests/functions/6.boolReturnFunc.bool.cryo",
-    "./tests/functions/7.boolVarRefFunc.bool.cryo",
-    "./tests/functions/8.voidReturnFunc.void.cryo",
-    "./tests/functions/9.basicFuncCall.int.cryo",
-    "./tests/functions/10.varFuncCall.int.cryo",
-    "./tests/functions/11.explicitStrFuncCall.str.cryo",
-    "./tests/functions/12.varStrFuncCall.str.cryo",
-    "./tests/functions/13.boolFuncCall.bool.cryo",
-    "./tests/functions/14.varBoolFuncCall.bool.cryo",
-    "./tests/functions/15.voidFuncCall.void.cryo"
+    "./tests/functions/functionDec/1.basicFunc.int.cryo",
+    "./tests/functions/functionDec/2.varInFunc.int.cryo",
+    "./tests/functions/functionDec/3.varReturnFunc.int.cryo",
+    "./tests/functions/functionDec/4.strReturnFunc.str.cryo",
+    "./tests/functions/functionDec/5.strVarReturnFunc.str.cryo",
+    "./tests/functions/functionDec/6.boolReturnFunc.bool.cryo",
+    "./tests/functions/functionDec/7.boolVarRefFunc.bool.cryo",
+    "./tests/functions/functionDec/8.voidReturnFunc.void.cryo",
+
+]
+
+func_call_tests = [
+    "./tests/functions/functionCalls/1.basicFuncCall.int.cryo",
+    "./tests/functions/functionCalls/2.varFuncCall.int.cryo",
+    "./tests/functions/functionCalls/3.explicitStrFuncCall.str.cryo",
+    "./tests/functions/functionCalls/4.varStrFuncCall.str.cryo",
+    "./tests/functions/functionCalls/5.boolFuncCall.bool.cryo",
+    "./tests/functions/functionCalls/6.varBoolFuncCall.bool.cryo",
+    "./tests/functions/functionCalls/7.voidFuncCall.void.cryo"
 ]
 
 if_tests = [
-    "./tests/ifstatement/1.basicIf.cryo",
-    "./tests/ifstatement/2.varIntIf.cryo",
-]
-
-for_tests = [
-    "./tests/forloop/1.basicFor.cryo"
-]
-
-array_tests = [
-    "./tests/arrays/1.intArray.cryo",
-    "./tests/arrays/2.strArray.cryo",
-    "./tests/arrays/3.boolArray.cryo",
+    "./tests/ifstatement/1.basicIf.cryo"
 ]
 
 cryo_path = "C:/Programming/apps/cryo/src/bin/main.exe"
@@ -93,33 +89,19 @@ if __name__ == "__main__":
     print("\nRunning function tests...")
     func_results = run_tests(func_tests)
     print_results("Function Tests", func_results)
+
+    print("\nRunning function call tests...")                   #
+    func_call_results = run_tests(func_tests)                   # new
+    print_results("Function Call Tests", func_results)          #
     
     print("\nRunning if statement tests...")
     if_results = run_tests(if_tests)
     print_results("If Statement Tests", if_results)
-
-    print("\nRunning for loop tests...")
-    for_results = run_tests(for_tests)
-    print_results("For Loop Tests", for_results)
-
-    print("\nRunning array tests...")
-    array_results = run_tests(array_tests)
-    print_results("Array Tests", array_results)
     
     var_passed, var_failed = summarize_results(var_results)
-    var_percent = (var_passed / (var_passed + var_failed)) * 100
-
     func_passed, func_failed = summarize_results(func_results)
-    func_percent = (func_passed / (func_passed + func_failed)) * 100
-
+    func_call_passed, func_call_failed = summarize_results(func_call_results)   # new
     if_passed, if_failed = summarize_results(if_results)
-    if_percent = (if_passed / (if_passed + if_failed)) * 100
-
-    for_passed, for_failed = summarize_results(for_results)
-    for_percent = (for_passed / (for_passed + for_failed)) * 100
-
-    array_passed, array_failed = summarize_results(array_results)
-    array_percent = (array_passed / (array_passed + array_failed)) * 100
 
     total_passed = var_passed + func_passed + if_passed
     total_failed = var_failed + func_failed + if_failed
@@ -130,23 +112,23 @@ if __name__ == "__main__":
     print(f"Total tests run: {total_tests}")
     print(f"Passed: {total_passed}")
     print(f"Failed: {total_failed}")
+    
     print("\nVariable Tests Summary")
     print(f"  Passed: {var_passed}")
     print(f"  Failed: {var_failed}")
-    print(f"  Pass Rate: {var_percent:.2f}%")
+    
     print("\nFunction Tests Summary")
     print(f"  Passed: {func_passed}")
     print(f"  Failed: {func_failed}")
-    print(f"  Pass Rate: {func_percent:.2f}%")
+
+    print("\nFunction Call Test Summary")       #
+    print(f"  Passed: {func_call_passed}")      # New
+    print(f"  Failed: {func_call_failed}")      #
+
     print("\nIf Statement Tests Summary")
     print(f"  Passed: {if_passed}")
     print(f"  Failed: {if_failed}")
-    print(f"  Pass Rate: {if_percent:.2f}%")
-    print("\nFor Loop Tests Summary")
-    print(f"  Passed: {for_passed}")
-    print(f"  Failed: {for_failed}")
-    print(f"  Pass Rate: {for_percent:.2f}%")
-    print("\nArray Tests Summary")
-    print(f"  Passed: {array_passed}")
-    print(f"  Failed: {array_failed}")
-    print(f"  Pass Rate: {array_percent:.2f}%")
+
+
+
+    

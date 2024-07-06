@@ -51,7 +51,10 @@ typedef struct ASTNode {
 
         struct {
             CryoNodeType type;
-            char* symbol;
+            union {
+                struct functionDeclNode* function;
+                struct varDeclNode* variable;
+            } decl;
         } externNode;
 
         struct {
@@ -208,6 +211,7 @@ ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 ASTNode* createStringExpr(const char* str);
 ASTNode* createArrayLiteralNode(ASTNode** elements, int elementCount);
 ASTNode* createImportNode(ASTNode* importPath);
+ASTNode* createExternNode(ASTNode* decl);
 void addChildNode(ASTNode* parent, ASTNode* child);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);

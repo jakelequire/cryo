@@ -1,12 +1,17 @@
 //
-// Function Test Case #12
+// Function Test Case #11
 // Function Handling Tests
 // 
 // Simple function implementation with a call to the main function to execute `main();`.
 //
 
-public function main() -> string {
-    const exampleStr: string = "Hello, world!";
-    return exampleStr;
+public function strFunction() -> string {
+    return "Hello, world!";
 }
-main();
+
+
+public function main() -> string {
+    strFunction();
+
+    return "Test!";
+}
