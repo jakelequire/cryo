@@ -7,6 +7,7 @@
 #include "compiler/ast.h"
 
 
+
 void printIndentation(int level);
 void logASTNode(ASTNode* node, int indentLevel);
 void logCryoDataType(CryoDataType dataType);

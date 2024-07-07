@@ -35,6 +35,13 @@ extern "C" {
 
 /*-------<structure_defs>-------*/
 //
+typedef struct {
+    char* name;
+    ASTNode** params;
+    int paramCount;
+    struct ASTNode* body;
+    CryoDataType returnType;
+} FunctionDeclNode;
 
 typedef struct ASTNode {
     enum CryoNodeType type;
@@ -49,11 +56,11 @@ typedef struct ASTNode {
             char* modulePath;
         } importStatementNode;
 
-        struct {
+        struct externNode {
             CryoNodeType type;
-            union {
-                struct functionDeclNode* function;
-                struct varDeclNode* variable;
+            union decl {
+                FunctionDeclNode* function;
+                // Will add more types here
             } decl;
         } externNode;
 
@@ -186,9 +193,12 @@ typedef struct ASTNode {
 
     } data;
 } ASTNode;
+
+
 /*-------<end_defs>-------*/
 
 /*-----<function_prototypes>-----*/
+CryoDataType getDataTypeFromASTNode(ASTNode* node);
 void printAST(ASTNode* node, int indent);
 void freeAST(ASTNode* node);
 ASTNode* createASTNode(CryoNodeType type);
@@ -211,7 +221,7 @@ ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
 ASTNode* createStringExpr(const char* str);
 ASTNode* createArrayLiteralNode(ASTNode** elements, int elementCount);
 ASTNode* createImportNode(ASTNode* importPath);
-ASTNode* createExternNode(ASTNode* decl);
+ASTNode* createExternNode();
 void addChildNode(ASTNode* parent, ASTNode* child);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);

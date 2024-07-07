@@ -4,5 +4,7 @@ extern function printInt(number: int) -> void;
 
 const foo: int[] = [1, 2, 3, 4, 5];
 
-printInt(foo);
+public function main() -> void {
+    printInt(foo);
+}
 

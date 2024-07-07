@@ -17,6 +17,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -259,7 +260,8 @@ typedef enum CryoNodeType {
     NODE_ARRAY_LITERAL,             // 22
     NODE_IMPORT_STATEMENT,          // 23
     NODE_EXTERN_STATEMENT,          // 24
-    NODE_UNKNOWN,                   // 22
+    NODE_EXTERN_FUNCTION,           // 25
+    NODE_UNKNOWN,                   // 26
 } CryoNodeType;
 
 
@@ -295,6 +297,11 @@ typedef enum CryoVisibilityType {
 // Function prototypes for the token module
 //
 char* operatorToString(CryoOperatorType op);
+char* CryoNodeTypeToString(CryoNodeType node);
+char* CryoDataTypeToString(CryoDataType type);
+char* CryoVisibilityTypeToString(CryoVisibilityType visibility);
+char* CryoTokenToString(CryoTokenType node);
+
 
 
 #ifdef __cplusplus

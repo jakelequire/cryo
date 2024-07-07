@@ -385,6 +385,29 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "}" << std::endl;
             break;
 
+        case CryoNodeType::NODE_EXTERN_STATEMENT:
+            printIndentation(indentLevel);
+            std::cout << "ExternStatement\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Name\": \"" << node->data.externNode.decl.function->name << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\n\t\tParams: " << "\n";
+            for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
+                logASTNode(node->data.externNode.decl.function->params[i], indentLevel + 1);
+                if (i < node->data.externNode.decl.function->paramCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
+            printIndentation(indentLevel);
+            std::cout << "\"ReturnType\": \"" << dataTypeToString(node->data.externNode.decl.function->returnType) << "\"" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+
+            break;
+
         default:
             printIndentation(indentLevel);
             std::cerr << "\"UnknownNodeType\"" << std::endl;
@@ -501,6 +524,7 @@ char* nodeTypeToString(CryoNodeType type) {
         case NODE_WHILE_STATEMENT: return "While Statement";
         case NODE_FOR_STATEMENT: return "For Statement";
         case NODE_ARRAY_LITERAL: return "Array Literal";
+        case NODE_EXTERN_STATEMENT: return "Extern Statement";
 
         // Add all other cases...
         default: return "Unknown";

@@ -47,7 +47,7 @@ void codegen(ASTNode* root) {
     std::cout << "\nSecond Pass: Generate code for the entire program\n";
     generateCode(root, builder, *module);
 
-    module->getValueSymbolTable().dump();
+    //module->getValueSymbolTable().dump();
 
     // Ensure the default main function has a terminator
     llvm::Function* defaultMain = module->getFunction("_defaulted");
@@ -106,6 +106,10 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             std::cout << "[CPP] Generating code for program\n";
             generateProgram(node, builder, module);
             break;
+
+        case CryoNodeType::NODE_EXTERN_STATEMENT:
+            std::cout << "[CPP] Generating code for extern statement\n";
+            generateExternalDeclaration(node, builder, module);
 
         case CryoNodeType::NODE_FUNCTION_DECLARATION:
             std::cout << "[CPP] Generating code for function\n";

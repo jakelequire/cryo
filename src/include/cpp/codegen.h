@@ -93,8 +93,8 @@ llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module);
 void generateFunctionPrototype(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void createDefaultMainFunction(llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
+void generateExternalDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 llvm::Function* getCryoFunction(llvm::Module& module, const std::string& name, llvm::ArrayRef<llvm::Type*> argTypes);
-
 void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 
