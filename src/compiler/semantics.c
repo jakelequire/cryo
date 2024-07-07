@@ -63,18 +63,18 @@ void checkFunctionDeclaration(ASTNode* node, CryoSymbolTable* table) {
     enterScope(table);
 
     // Add function parameters to the symbol table
-    for (int i = 0; i < node->data.functionDecl.params; i++) {
-        ASTNode* param = node->data.functionDecl.params->data.paramList.params[i];
+    for (int i = 0; i < node->data.functionDecl.function->params; i++) {
+        ASTNode* param = node->data.functionDecl.function->params[i];
         addSymbol(table, param->data.varDecl.name, param->data.varDecl.dataType, false);
     }
 
     // Traverse the function body
-    traverseAST(node->data.functionDecl.body, table);
+    traverseAST(node->data.functionDecl.function->body, table);
 
     // Ensure return type matches
     // (Assuming a function body can only have one return type, extend if necessary)
-    if (node->data.functionDecl.returnType != node->data.functionDecl.body->data.expr.expr->type) {
-        fprintf(stderr, "[Sema] Error: Return type mismatch in function '%s'.\n", node->data.functionDecl.name);
+    if (node->data.functionDecl.function->returnType != node->data.functionDecl.function->body->data.expr.expr->type) {
+        fprintf(stderr, "[Sema] Error: Return type mismatch in function '%s'.\n", node->data.functionDecl.function->name);
         exit(1);
     }
 

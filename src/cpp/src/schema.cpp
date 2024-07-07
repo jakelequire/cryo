@@ -27,7 +27,7 @@ bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
     }
 
     if (node->type == CryoNodeType::NODE_FUNCTION_DECLARATION) {
-        if (std::string(node->data.functionDecl.name) == "main") {
+        if (std::string(node->data.functionDecl.function->name) == "main") {
             mainFunctionExists = true;
         }
         generateFunctionPrototype(node, builder, module);

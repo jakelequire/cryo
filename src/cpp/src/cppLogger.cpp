@@ -109,14 +109,20 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Function\": {" << std::endl;
             indentLevel++;
             printIndentation(indentLevel);
-            std::cout << "\"Visibility\": \"" << visibilityToString(node->data.functionDecl.visibility) << "\"," << std::endl;
+            std::cout << "\"Visibility\": \"" << visibilityToString(node->data.functionDecl.function->visibility) << "\"," << std::endl;
             printIndentation(indentLevel);
-            std::cout << "\"Name\": \"" << node->data.functionDecl.name << "\"," << std::endl;
+            std::cout << "\"Name\": \"" << node->data.functionDecl.function->name << "\"," << std::endl;
             printIndentation(indentLevel);
-            std::cout << "\"Params\": " << node->data.functionDecl.params << "," << std::endl;
+            for (int i = 0; i < node->data.functionDecl.function->paramCount; ++i) {
+                logASTNode(node->data.functionDecl.function->params[i], indentLevel + 1);
+                if (i < node->data.functionDecl.function->paramCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
             printIndentation(indentLevel);
-            std::cout << "\"ReturnType\": \"" << dataTypeToString(node->data.functionDecl.returnType) << "\"," << std::endl;
-            logASTNode(node->data.functionDecl.body, indentLevel + 1);
+            std::cout << "\"ReturnType\": \"" << dataTypeToString(node->data.functionDecl.function->returnType) << "\"," << std::endl;
+            logASTNode(node->data.functionDecl.function->body, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;

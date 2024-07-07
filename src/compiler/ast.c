@@ -37,7 +37,7 @@ CryoDataType getDataTypeFromASTNode(ASTNode* node) {
         case NODE_FUNCTION_CALL:
             return DATA_TYPE_UNKNOWN;
         case NODE_FUNCTION_DECLARATION:
-            return node->data.functionDecl.returnType;
+            return node->data.functionDecl.function->returnType;
         case NODE_RETURN_STATEMENT:
             return getDataTypeFromASTNode(node->data.returnStmt.returnValue);
         case NODE_STRING_LITERAL:
@@ -94,8 +94,14 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_FUNCTION_DECLARATION:
-            printf("Function Declaration: %s\n", node->data.functionDecl.name);
-            printAST(node->data.functionDecl.body, indent + 2);
+            printf("Function Declaration: %s\n", node->data.functionDecl.function->name);
+            printf("Function Return Type: %d\n", node->data.functionDecl.function->returnType);
+            printf("Function Visibility: %d\n", node->data.functionDecl.function->visibility);
+            printf("Function Parameters:\n");
+            for (int i = 0; i < node->data.functionDecl.function->paramCount; i++) {
+                printAST(node->data.functionDecl.function->params[i], indent + 2);
+            }
+            printAST(node->data.functionDecl.function->body, indent + 2);
             break;
 
         case NODE_FUNCTION_CALL:
@@ -268,8 +274,7 @@ void freeAST(ASTNode* node) {
         case NODE_FUNCTION_DECLARATION:
             printf("[AST] Freeing Function Declaration Node\n");
             printf("[AST] Freeing node: %d\n", node->type);
-            free(node->data.functionDecl.name);
-            freeAST(node->data.functionDecl.body);
+            free(node->data.functionDecl.function->name);
             break;
 
         case NODE_BLOCK:
@@ -399,7 +404,6 @@ void freeAST(ASTNode* node) {
 
         case NODE_EXTERN_FUNCTION:
             printf("[AST] Freeing Extern Function Node\n");
-            free(node->data.externNode.decl.function->name);
             free(node->data.externNode.decl.function);
             break;
         
@@ -436,10 +440,13 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.program.stmtCapacity = 0;
             break;
         case NODE_FUNCTION_DECLARATION:
-            node->data.functionDecl.name = NULL;
-            node->data.functionDecl.params = NULL;
-            node->data.functionDecl.body = NULL;
-            node->data.functionDecl.returnType = DATA_TYPE_VOID;
+            node->data.functionDecl.type = NODE_UNKNOWN;
+            node->data.functionDecl.function = NULL;
+            break;
+
+        case NODE_EXTERN_STATEMENT:
+            node->data.externNode.type = NODE_UNKNOWN;
+            node->data.externNode.decl.function = NULL;
             break;
         case NODE_FUNCTION_BLOCK:
             node->data.functionBlock.function = NULL;
@@ -494,10 +501,6 @@ ASTNode* createASTNode(CryoNodeType type) {
             break;
         case NODE_IMPORT_STATEMENT:
             node->data.importStatementNode.modulePath = NULL;
-            break;
-        case NODE_EXTERN_STATEMENT:
-            node->data.externNode.type = NODE_UNKNOWN;
-            node->data.externNode.decl.function = NULL;
             break;
 
         default:
@@ -622,19 +625,70 @@ ASTNode* createUnaryExpr(CryoTokenType operator, ASTNode* operand) {
 // </createUnaryExpr>
 
 
+// <createExternNode>
+ASTNode* createExternNode() {
+    ASTNode* node = createASTNode(NODE_EXTERN_STATEMENT);
+    if (!node) {
+        printf("[Parser] Error: Failed to create AST node for extern statement\n");
+        return NULL;
+    }
+
+    FunctionDeclNode* function = (FunctionDeclNode*)calloc(1, sizeof(FunctionDeclNode));
+    if (!function) {
+        printf("[Parser] Error: Failed to allocate memory for function declaration\n");
+        free(node);
+        return NULL;
+    }
+
+    // Initialize the function declaration node correctly
+    function->body = NULL;
+    function->name = NULL;
+    function->params = NULL;
+    function->paramCount = 0;
+    function->visibility = VISIBILITY_PUBLIC;
+
+    // Link the function declaration node to the extern node
+    node->data.externNode.type = NODE_EXTERN_FUNCTION;
+    node->data.externNode.decl.function = function;
+
+    printf("[Parser] Extern function node created: %p\n", (void*)node);
+    printf("[Parser] FunctionDeclNode: %p\n", (void*)function);
+
+    return node;
+}
+// </createExternNode>
+
 // <createFunctionNode>
-ASTNode* createFunctionNode(const char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType) {
+ASTNode* createFunctionNode() {
+    printf("[AST - DEBUG] Creating function node\n");
     ASTNode* node = createASTNode(NODE_FUNCTION_DECLARATION);
     if (!node) {
         return NULL;
     }
-    node->data.functionDecl.name = strdup(function_name);
-    node->data.functionDecl.params = params;
-    node->data.functionDecl.paramCount = 0;
-    node->data.functionDecl.body = function_body;
-    node->data.functionDecl.returnType = returnType;
-    node->data.functionDecl.visibility = VISIBILITY_PUBLIC;
-    printf("\n[AST] Function Node Created: %s with return type: %d\n", function_name, returnType);
+
+    printf("[AST - DEBUG] Function node created\n");
+
+    FunctionDeclNode* function = (FunctionDeclNode*)calloc(1, sizeof(FunctionDeclNode));
+    if (!function) {
+        free(node);
+        return NULL;
+    }
+
+    printf("[AST - DEBUG] FunctionDeclNode created\n");
+
+    function->name = NULL;
+    function->params = NULL;
+    function->paramCount = 0;
+    function->body = NULL;
+    function->returnType = DATA_TYPE_VOID;
+    function->visibility = VISIBILITY_PUBLIC;
+
+    node->data.functionDecl.type = NODE_FUNCTION_DECLARATION;
+    node->data.functionDecl.function = function;
+    
+    printf("[AST] Function Node Created: %p\n", (void*)node);
+    printf("[AST] FunctionDeclNode: %p\n", (void*)function);
+
     return node;
 }
 
@@ -674,39 +728,6 @@ ASTNode* createImportNode(ASTNode* importPath) {
     return node;
 }
 // </createImportNode>
-
-
-// <createExternNode>
-ASTNode* createExternNode() {
-    ASTNode* node = createASTNode(NODE_EXTERN_STATEMENT);
-    if (!node) {
-        printf("[Parser] Error: Failed to create AST node for extern statement\n");
-        return NULL;
-    }
-
-    FunctionDeclNode* function = (FunctionDeclNode*)calloc(1, sizeof(FunctionDeclNode));
-    if (!function) {
-        printf("[Parser] Error: Failed to allocate memory for function declaration\n");
-        free(node);
-        return NULL;
-    }
-
-    // Initialize the function declaration node correctly
-    function->body = NULL;
-    function->name = NULL;
-    function->params = NULL;
-    function->paramCount = 0;
-
-    // Link the function declaration node to the extern node
-    node->data.externNode.type = NODE_EXTERN_FUNCTION;
-    node->data.externNode.decl.function = function;
-
-    printf("[Parser] Extern function node created: %p\n", (void*)node);
-    printf("[Parser] FunctionDeclNode: %p\n", (void*)function);
-
-    return node;
-}
-// </createExternNode>
 
 
 // <createBlock>

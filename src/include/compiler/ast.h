@@ -36,11 +36,12 @@ extern "C" {
 /*-------<structure_defs>-------*/
 //
 typedef struct {
+    CryoVisibilityType visibility;
+    CryoDataType returnType;
     char* name;
-    ASTNode** params;
+    struct ASTNode** params;
     int paramCount;
     struct ASTNode* body;
-    CryoDataType returnType;
 } FunctionDeclNode;
 
 typedef struct ASTNode {
@@ -78,12 +79,8 @@ typedef struct ASTNode {
         
         // >=------<Function Declaration>------=<
         struct {
-            CryoVisibilityType visibility;
-            char* name;
-            struct ASTNode* params;
-            int paramCount;
-            struct ASTNode* body;
-            CryoDataType returnType;
+            CryoNodeType type;
+            FunctionDeclNode* function;
         } functionDecl;
 
         struct {
@@ -208,7 +205,7 @@ ASTNode* createBooleanLiteralExpr(int value);
 ASTNode* createStringLiteralExpr(const char* str);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoOperatorType op);
 ASTNode* createUnaryExpr(CryoTokenType op, ASTNode* operand);
-ASTNode* createFunctionNode(const char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType);
+ASTNode* createFunctionNode();
 ASTNode* createReturnNode(ASTNode* returnValue);
 ASTNode* createReturnStatement(ASTNode* return_val);
 ASTNode* createBlock();

@@ -208,14 +208,14 @@ while (node) {
                 break;
 
             case NODE_FUNCTION_DECLARATION:
-                printf("[SymTable] Checking function '%s'\n", node->data.functionDecl.name);
-                addSymbol(table, node->data.functionDecl.name, DATA_TYPE_FUNCTION, false);
+                printf("[SymTable] Checking function '%s'\n", node->data.functionDecl.function->name);
+                addSymbol(table, node->data.functionDecl.function->name, DATA_TYPE_FUNCTION, false);
                 enterScope(table); // Enter function scope
                 // Add function parameters to symbol table
-                for (int i = 0; i < node->data.functionDecl.paramCount; i++) {
-                    addSymbol(table, node->data.functionDecl.params[i].data.varDecl.name, node->data.functionDecl.params[i].data.varDecl.dataType, false);
+                for (int i = 0; i < node->data.functionDecl.function->paramCount; i++) {
+                    addSymbol(table, node->data.functionDecl.function->params[i]->data.varDecl.name, node->data.functionDecl.function->params[i]->data.varDecl.dataType, false);
                 }
-                traverseAST(node->data.functionDecl.body, table);
+                traverseAST(node->data.functionDecl.function->body, table);
                 break;
 
             case NODE_FUNCTION_BLOCK:

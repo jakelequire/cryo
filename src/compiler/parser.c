@@ -274,45 +274,6 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
 // </parseVarDeclaration>
 
 
-
-/*
-        case NODE_EXTERN_STATEMENT:
-            node->data.externNode.type = NODE_UNKNOWN;
-            node->data.externNode.decl.function->body = NULL;
-            node->data.externNode.decl.function->name = NULL;
-            node->data.externNode.decl.function->params = NULL;
-            node->data.externNode.decl.function->paramCount = 0;
-typedef struct {
-    char* name;
-    ASTNode** params;
-    int paramCount;
-    struct ASTNode* body;
-    CryoDataType returnType;
-} FunctionDeclNode;
-
-typedef struct ASTNode {
-    enum CryoNodeType type;
-    int line;  // Line number for error reporting
-    struct ASTNode* firstChild;  // First child node (for linked list structure)
-    struct ASTNode* nextSibling; // Next sibling node (for linked list structure)
-
-    union {
-        int value;  // For literal number nodes
-
-        struct {
-            char* modulePath;
-        } importStatementNode;
-
-        struct externNode {
-            CryoNodeType type;
-            union decl {
-                FunctionDeclNode* function;
-                // Will add more types here
-            } decl;
-        } externNode;
-
-        // ...
-*/
 // <parseExternFunctionDeclaration>
 ASTNode* parseExternFunctionDeclaration(Lexer* lexer, ParsingContext* context) {
     printf("[Parser] Entering parseExternFunctionDeclaration\n");
@@ -395,9 +356,15 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility, P
     }
 
     ASTNode* body = parseFunctionBlock(lexer, context);
-    ASTNode* functionNode = createFunctionNode(functionName, params, body, returnType);
-    functionNode->data.functionDecl.visibility = visibility;
-    functionNode->data.functionDecl.returnType = returnType;
+    ASTNode* functionNode = createFunctionNode();
+    printf("[Parser] Function node created\n");
+    functionNode->data.functionDecl.function->visibility = visibility;
+    functionNode->data.functionDecl.function->name = functionName;
+    functionNode->data.functionDecl.function->params = params  ? params->data.paramList.params : NULL;
+    functionNode->data.functionDecl.function->paramCount = params ? params->data.paramList.paramCount : 0;
+    functionNode->data.functionDecl.function->returnType = returnType;
+    functionNode->data.functionDecl.function->body = body;
+    printf("[Parser] Function declaration parsed\n");
 
     printf("[Parser] Created Function Declaration Node: %s with return type: %d\n", functionName, returnType);
     return functionNode;
