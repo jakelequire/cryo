@@ -78,6 +78,7 @@ char* CryoNodeTypeToString(CryoNodeType node) {
         case NODE_IMPORT_STATEMENT:         return "NODE_IMPORT_STATEMENT";
         case NODE_EXTERN_STATEMENT:         return "NODE_EXTERN_STATEMENT";
         case NODE_EXTERN_FUNCTION:          return "NODE_EXTERN_FUNCTION";
+        case NODE_ARG_LIST:                 return "NODE_ARG_LIST";
         case NODE_UNKNOWN:                  return "NODE_UNKNOWN";
         default:                            return "<NODE TYPE DEFAULTED>";
     }

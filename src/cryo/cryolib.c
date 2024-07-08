@@ -25,6 +25,6 @@ void printFloat(float value) {
     printf("%f\n", value);
 }
 
-void printStr(char* value) {
+void printStr(const char* value) {
     printf("%s\n", value);
 }

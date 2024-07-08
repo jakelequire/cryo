@@ -101,6 +101,12 @@ typedef struct ASTNode {
         } paramList;
 
         struct {
+            struct ASTNode** args;
+            int argCount;
+            int argCapacity;
+        } argList;
+
+        struct {
             struct ASTNode* returnValue;
             struct ASTNode* expression;
             CryoDataType returnType;

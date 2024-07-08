@@ -14,23 +14,17 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
-
-/*
-To compile the generated LLVM IR code to an object file, run the following commands:
-llvm-as ./output.ll -o ./output.bc
-llc -filetype=obj ./output.bc -o ./output.o
-*/
-
-std::unordered_map<std::string, llvm::Value*> namedValues;
+#include "cpp/devCodegen.h"
 
 
-// <codegen>
-void codegen(ASTNode* root) {
-    llvm::LLVMContext context;
-    llvm::IRBuilder<> builder(context);
-    std::unique_ptr<llvm::Module> module = std::make_unique<llvm::Module>("CryoModule", context);
-    
+namespace Cryo {
+
+CodeGen::CodeGen(ASTNode* root) : context(), builder(context), module(std::make_unique<llvm::Module>("CryoModule", context)) {
+    namedValues = std::unordered_map<std::string, llvm::Value*>();
+    codegen(root);
+}
+
+void CodeGen::codegen(ASTNode* root) {
     std::cout << "\nGenerating code...\n";
 
     // First Pass: Declare all functions
@@ -45,11 +39,8 @@ void codegen(ASTNode* root) {
 
     // Second Pass: Generate code for the entire program
     std::cout << "\nSecond Pass: Generate code for the entire program\n";
-    generateCode(root, builder, *module);
+    generateCode(root);
 
-    //module->getValueSymbolTable().dump();
-
-    // Ensure the default main function has a terminator
     llvm::Function* defaultMain = module->getFunction("_defaulted");
     if (defaultMain) {
         llvm::BasicBlock& entryBlock = defaultMain->getEntryBlock();
@@ -60,8 +51,6 @@ void codegen(ASTNode* root) {
         }
     }
 
-    // module->print(llvm::outs(), nullptr);
-    std::cout << "\nGenerating code for AST node\n";
     if (llvm::verifyModule(*module, &llvm::errs())) {
         std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
         module->print(llvm::errs(), nullptr);
@@ -69,7 +58,6 @@ void codegen(ASTNode* root) {
         std::cerr << "Error: LLVM module verification failed\n";
         exit(1);
     } else {
-        // Output the generated LLVM IR code to a .ll file
         std::error_code EC;
         llvm::raw_fd_ostream dest("output.ll", EC, llvm::sys::fs::OF_None);
 
@@ -86,39 +74,35 @@ void codegen(ASTNode* root) {
 
     std::cout << "\nCode generation complete\n";
 }
-// </codegen>
 
-
-
-
-// <generateCode>
-void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
-    std::cout << "[CPP] Generating code for AST node\n" << std::endl;
+void CodeGen::generateCode(ASTNode* node) {
+    std::cout << "[CPP] Generating code for AST node\n";
     if (!node) {
         std::cerr << "[CPP] Error generating code: AST node is null\n";
         return;
-    };
+    }
     std::cout << "[CPP] Generating code for node: " << std::endl;
     logASTNode(node, 2);
 
     switch(node->type) {
         case CryoNodeType::NODE_PROGRAM:
             std::cout << "[CPP] Generating code for program\n";
-            generateProgram(node, builder, module);
+            generateProgram(node);
             break;
 
         case CryoNodeType::NODE_EXTERN_STATEMENT:
             std::cout << "[CPP] Generating code for extern statement\n";
-            generateExternalDeclaration(node, builder, module);
+            generateExternalDeclaration(node, builder, *module);
+            break;
 
         case CryoNodeType::NODE_FUNCTION_DECLARATION:
             std::cout << "[CPP] Generating code for function\n";
-            generateFunction(node, builder, module);
+            generateFunction(node, builder, *module);
             break;
 
         case CryoNodeType::NODE_VAR_DECLARATION:
             std::cout << "[CPP] Generating code for variable declaration\n";
-            generateVarDeclaration(node, builder, module);
+            generateVarDeclaration(node, builder, *module);
             break;
 
         case CryoNodeType::NODE_VAR_NAME:
@@ -129,17 +113,17 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
 
         case CryoNodeType::NODE_STATEMENT:
             std::cout << "[CPP] Generating code for statement\n";
-            generateStatement(node, builder, module);
+            generateStatement(node);
             break;
 
         case CryoNodeType::NODE_EXPRESSION:
             std::cout << "[CPP] Generating code for expression\n";
-            generateExpression(node, builder, module);
+            generateExpression(node);
             break;
 
         case CryoNodeType::NODE_BINARY_EXPR:
             std::cout << "[CPP] Generating code for binary expression\n";
-            generateBinaryOperation(node, builder, module);
+            generateBinaryOperation(node);
             break;        
 
         case CryoNodeType::NODE_UNARY_EXPR:
@@ -156,41 +140,41 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
         
         case CryoNodeType::NODE_FUNCTION_CALL:
             std::cout << "[CPP] Generating code for function call\n";
-            generateFunctionCall(node, builder, module);
+            generateFunctionCall(node, builder, *module);
             break;
 
         case CryoNodeType::NODE_RETURN_STATEMENT:
             std::cout << "[CPP] Generating code for return statement\n";
-            generateReturnStatement(node, builder, module);
+            generateReturnStatement(node, builder, *module);
             break;
 
         case CryoNodeType::NODE_BLOCK:
             std::cout << "[CPP] Generating code for block\n";
-            generateBlock(node, builder, module);
+            generateBlock(node);
             break;
 
         case CryoNodeType::NODE_FUNCTION_BLOCK:
             std::cout << "[CPP] Generating code for function block\n";
-            generateFunctionBlock(node, builder, module);
+            generateFunctionBlock(node, builder, *module);
             break;
 
         case CryoNodeType::NODE_IF_STATEMENT:
             std::cout << "[CPP] Generating code for if statement\n";
-            generateIfStatement(node, builder, module);
+            generateIfStatement(node, builder, *module);
             break;
 
         case CryoNodeType::NODE_FOR_STATEMENT:
             std::cout << "[CPP] Generating code for for loop\n";
-            generateForLoop(node, builder, module);
+            generateForLoop(node, builder, *module);
             break;
 
         case CryoNodeType::NODE_EXPRESSION_STATEMENT:
             std::cout << "[CPP] Generating code for expression statement\n";
-            generateExpression(node->data.stmt.stmt, builder, module);
+            generateExpression(node->data.stmt.stmt);
             break;
 
         case CryoNodeType::NODE_ARRAY_LITERAL:
-            generateCodeForArrayLiteral(node, builder, module);
+            generateCodeForArrayLiteral(node, builder, *module);
             break;
 
         default:
@@ -198,11 +182,8 @@ void generateCode(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& modul
             break;
     }
 }
-// </generateCode>
 
-
-// <generateProgram>
-void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void CodeGen::generateProgram(ASTNode* node) {
     std::cout << "[CPP] Generating code for program\n";
     if (node->data.program.stmtCount == 0) {
         std::cerr << "[CPP] Error generating code for program: No statements found\n";
@@ -210,27 +191,24 @@ void generateProgram(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
     }
     for (int i = 0; i < node->data.program.stmtCount; ++i) {
         std::cout << "[CPP] Generating code for program statement " << i << "\n";
-        generateCode(node->data.program.statements[i], builder, module);
+        generateCode(node->data.program.statements[i]);
         std::cout << "[CPP] Moving to next statement\n";
     }
 }
-// </generateProgram>
 
-
-// <generateStatement>
-void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void CodeGen::generateStatement(ASTNode* node) {
     std::cout << "[CPP] Generating code for statement\n";
     switch (node->type) {
         case NODE_EXPRESSION_STATEMENT:
             std::cout << "[CPP] Generating code for expression statement!\n" << std::endl;
-            generateExpression(node->data.stmt.stmt, builder, module);
+            generateExpression(node->data.stmt.stmt);
             break;
         case NODE_VAR_DECLARATION:
             std::cout << "[CPP] Generating code for variable declaration!\n" << std::endl;
-            generateVarDeclaration(node, builder, module);
+            generateVarDeclaration(node, builder, *module);
             break;
         case NODE_IF_STATEMENT:
-            generateIfStatement(node, builder, module);
+            generateIfStatement(node, builder, *module);
             break;
         default:
             std::cout << node->type << std::endl;
@@ -238,24 +216,17 @@ void generateStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& 
             break;
     }
 }
-// </generateStatement>
 
-
-// <generateBlock>
-void generateBlock(ASTNode* blockNode, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void CodeGen::generateBlock(ASTNode* blockNode) {
     std::cout << "[CPP] Generating code for block\n";
     for (int i = 0; i < blockNode->data.block.stmtCount; ++i) {
         std::cout << "[CPP] Generating code for block statement " << i << "\n";
-        generateCode(blockNode->data.block.statements[i], builder, module);
+        generateCode(blockNode->data.block.statements[i]);
     }
     std::cout << "[CPP] Block code generation complete\n";
 }
 
-// </generateBlock>
-
-
-// <generateExpression>
-llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+llvm::Value* CodeGen::generateExpression(ASTNode* node) {
     std::cout << "[CPP] Generating code for expression\n";
     if (!node) {
         std::cerr << "[CPP] Error: Expression node is null\n";
@@ -271,11 +242,11 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
             switch (node->data.literalExpression.dataType) {
                 case DATA_TYPE_INT:
                     std::cout << "[CPP] Generating int literal: " << node->data.literalExpression.intValue << "\n";
-                    return llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), node->data.literalExpression.intValue);
+                    return llvm::ConstantInt::get(llvm::Type::getInt32Ty(module->getContext()), node->data.literalExpression.intValue);
 
                 case DATA_TYPE_FLOAT:
                     std::cout << "[CPP] Generating float literal: " << node->data.literalExpression.floatValue << "\n";
-                    return llvm::ConstantFP::get(llvm::Type::getFloatTy(module.getContext()), node->data.literalExpression.floatValue);
+                    return llvm::ConstantFP::get(llvm::Type::getFloatTy(module->getContext()), node->data.literalExpression.floatValue);
 
                 case DATA_TYPE_STRING:
                     if (node->data.literalExpression.stringValue == nullptr) {
@@ -283,11 +254,11 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
                         return nullptr;
                     }
                     std::cout << "[CPP] Generating string literal: " << node->data.literalExpression.stringValue << "\n";
-                    return createString(builder, module, node->data.literalExpression.stringValue);
+                    return createString(builder, *module, node->data.literalExpression.stringValue);
 
                 case DATA_TYPE_BOOLEAN:
                     std::cout << "[CPP] Generating boolean literal: " << node->data.literalExpression.booleanValue << "\n";
-                    return llvm::ConstantInt::get(llvm::Type::getInt1Ty(module.getContext()), node->data.literalExpression.booleanValue);
+                    return llvm::ConstantInt::get(llvm::Type::getInt1Ty(module->getContext()), node->data.literalExpression.booleanValue);
 
                 case DATA_TYPE_VOID:
                 case DATA_TYPE_UNKNOWN:
@@ -301,7 +272,7 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
             
         case CryoNodeType::NODE_BINARY_EXPR: {
             std::cout << "[CPP] Generating code for binary expression!\n";
-            return generateBinaryOperation(node, builder, module);
+            return generateBinaryOperation(node);
         }
 
         case CryoNodeType::NODE_VAR_NAME:
@@ -315,12 +286,10 @@ llvm::Value* generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm:
     }
     std::cout << "[CPP] Expression generated\n";
 }
-// </generateExpression>
 
-// New overloaded function
-std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module, bool checkStringLiteral) {
+std::pair<llvm::Value*, bool> CodeGen::generateExpression(ASTNode* node, bool checkStringLiteral) {
     if (!checkStringLiteral) {
-        return {generateExpression(node, builder, module), false};
+        return {generateExpression(node), false};
     }
 
     std::cout << "[CPP] Generating code for expression (with string literal check)\n";
@@ -336,7 +305,7 @@ std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<
         case CryoNodeType::NODE_LITERAL_EXPR:
             if (node->data.literalExpression.dataType == DATA_TYPE_STRING) {
                 std::cout << "[CPP] Generating string literal: " << node->data.literalExpression.stringValue << "\n";
-                return {createString(builder, module, node->data.literalExpression.stringValue), true};
+                return {createString(builder, *module, node->data.literalExpression.stringValue), true};
             }
             // For non-string literals, fall through to the default case
         case CryoNodeType::NODE_VAR_NAME:
@@ -344,17 +313,15 @@ std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, llvm::IRBuilder<
             return {namedValues[node->data.varName.varName], false};
 
         default:
-            return {generateExpression(node, builder, module), false};
+            return {generateExpression(node), false};
     }
 }
 
-
-// <generateBinaryOperation>
-llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+llvm::Value* CodeGen::generateBinaryOperation(ASTNode* node) {
     std::cout << "[CPP] Generating code for binary operation\n";
 
-    llvm::Value* left = generateExpression(node->data.bin_op.left, builder, module);
-    llvm::Value* right = generateExpression(node->data.bin_op.right, builder, module);
+    llvm::Value* left = generateExpression(node->data.bin_op.left);
+    llvm::Value* right = generateExpression(node->data.bin_op.right);
 
     if (!left || !right) {
         std::cerr << "[CPP] Error generating binary operation: operands are null\n";
@@ -391,5 +358,5 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
 
     std::cout << "[CPP] DEBUG Binary operation generated.\n";
 }
-// </generateBinaryOperation>
 
+} // namespace Cryo

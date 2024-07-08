@@ -18,7 +18,7 @@
 
 
 // <getLLVMType>
-llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module) {
+llvm::Type* getLLVMType(CryoDataType type, llvm::IRBuilder<>& builder, llvm::Module& module) {
     switch (type) {
         case DATA_TYPE_INT:
             return llvm::Type::getInt32Ty(module.getContext());
@@ -54,12 +54,12 @@ llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module) {
 void generateFunctionPrototype(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::cout << "[CPP] Generating function prototype: " << node->data.functionDecl.function->name << "\n";
 
-    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType, module);
+    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType, builder, module);
 
     std::vector<llvm::Type*> paramTypes;
     if (node->data.functionDecl.function->params) {
         for (int i = 0; i < node->data.functionDecl.function->paramCount; ++i) {
-            llvm::Type* paramType = getLLVMType(node->data.functionDecl.function->params[i]->data.varDecl.dataType, module);
+            llvm::Type* paramType = getLLVMType(node->data.functionDecl.function->params[i]->data.varDecl.dataType, builder, module);
             if (!paramType) {
                 std::cerr << "[CPP] Error: Unknown parameter type\n";
                 return;
@@ -91,6 +91,39 @@ void createDefaultMainFunction(llvm::IRBuilder<>& builder, llvm::Module& module)
 // </createDefaultMainFunction>
 
 
+/*
+Call parameter type does not match function signature!
+  %0 = load ptr, ptr @foo, align 8
+ i32  call void @printInt(ptr %0)
+
+>===------- Error: LLVM module verification failed -------===<
+; ModuleID = 'CryoModule'
+source_filename = "CryoModule"
+
+@foo = global i32 69
+@.str = private constant [14 x i8] c"Hello, World!\00"
+@exampleStr = global ptr @.str
+@.str.1 = private constant [11 x i8] c"From Cryo!\00"
+@baz = global ptr @.str.1
+@buz = global i32 10
+@bar = global i32 20
+
+define void @main() {
+entry:
+  %0 = load ptr, ptr @foo, align 8
+  call void @printInt(ptr %0)
+  %1 = load ptr, ptr @exampleStr, align 8
+  call void @printStr(ptr %1)
+  ret void
+}
+
+declare void @printInt(i32)
+
+declare void @printStr(ptr)
+
+>===----------------- End Error -----------------===<
+*/
+
 // <generateFunctionCall>
 void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     std::string functionName = node->data.functionCall.name;
@@ -98,14 +131,17 @@ void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modul
 
     for (int i = 0; i < node->data.functionCall.argCount; ++i) {
         llvm::Value* arg = generateExpression(node->data.functionCall.args[i], builder, module);
+        ASTNode* argNode = node->data.functionCall.args[i];
+        std::cout << "[CPP DEBUG] Argument value: " << arg << "\n";
+        std::cout << "[CPP DEBUG] Argument name: " << CryoNodeTypeToString(argNode->type) << "\n";
+        std::cout << "[CPP DEBUG] Argument data type: " << CryoDataTypeToString(argNode->data.varDecl.dataType) << "\n";
+
+
         if (!arg) {
             std::cerr << "[CPP] Error generating argument for function call\n";
             return;
         }
-        // Ensure the argument is correctly loaded if it's a pointer
-        if (arg->getType()->isPointerTy()) {
-            arg = builder.CreateLoad(arg->getType()->getInt32Ty(module.getContext()), arg, "load");
-        }
+
         args.push_back(arg);
     }
 
@@ -122,6 +158,7 @@ void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modul
 // </generateFunctionCall>
 
 
+
 // <generateFunction>
 void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
     char* functionName;
@@ -135,7 +172,7 @@ void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
     }
     std::cout << "[CPP] Generating code for function NAME: " << functionName << "\n";
 
-    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType, module);
+    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType, builder, module);
 
     std::cout << "[CPP] Function return type: " << returnType << "\n";
 
@@ -149,7 +186,7 @@ void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
             std::cout << "[CPP - DEBUG] Parameter type: " << parameterType->data.varDecl.dataType << "\n";
             CryoDataType parameterTypeData = parameterType->data.varDecl.dataType;
             std:: cout << "[CPP - DEBUG] Parameter type data: " << parameterTypeData << "\n";
-            llvm::Type* paramType = getLLVMType(parameterTypeData, module);
+            llvm::Type* paramType = getLLVMType(parameterTypeData, builder, module);
             if (!paramType) {
                 std::cerr << "[CPP] Error: Unknown parameter type\n";
                 return;
@@ -270,7 +307,7 @@ void generateExternalDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm
     CryoDataType returnTypeData = node->data.externNode.decl.function->returnType;
     std::cout << "[CPP] Extern Function return type: " << returnTypeData << "\n";
 
-    llvm::Type* returnType = getLLVMType(returnTypeData, module);
+    llvm::Type* returnType = getLLVMType(returnTypeData, builder, module);
     std::cout << "[CPP] LLVM Extern Function return type: " << returnType << "\n";
     std::vector<llvm::Type*> paramTypes;
     std::cout << "[CPP] Extern Function parameter count: " << node->data.externNode.decl.function->paramCount << "\n";
@@ -292,7 +329,7 @@ void generateExternalDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm
         if(parameter->data.varDecl.dataType == DATA_TYPE_STRING) {
             std::cout << "[CPP] Extern <STRING> Parameter: " << i << " type: " << parameter->data.varDecl.dataType << "\n";
             // Create a new LLVM type for the parameter of type string `ptr i8`
-            paramType = llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
+            paramType = getLLVMType(DATA_TYPE_STRING, builder, module);
             paramTypes.push_back(paramType);
             break;
         }

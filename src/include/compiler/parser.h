@@ -75,6 +75,7 @@ ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context);
 ASTNode* createParamNode(const char* name, ASTNode* type);
 ASTNode* parsePublicDeclaration(Lexer* lexer, ParsingContext* context);
 ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName, ParsingContext* context);
+ASTNode* parseArgumentList(Lexer* lexer, ParsingContext* context);  
 
 ASTNode* createTypeNode(CryoTokenType type);
 ASTNode* parseParameter(Lexer* lexer, ParsingContext* context);

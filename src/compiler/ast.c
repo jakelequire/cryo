@@ -95,7 +95,7 @@ void printAST(ASTNode* node, int indent) {
 
         case NODE_FUNCTION_DECLARATION:
             printf("Function Declaration: %s\n", node->data.functionDecl.function->name);
-            printf("Function Return Type: %d\n", node->data.functionDecl.function->returnType);
+            printf("Function Return Type: %d\n",CryoDataTypeToString(node->data.functionDecl.function->returnType));
             printf("Function Visibility: %d\n", node->data.functionDecl.function->visibility);
             printf("Function Parameters:\n");
             for (int i = 0; i < node->data.functionDecl.function->paramCount; i++) {
@@ -229,13 +229,20 @@ void printAST(ASTNode* node, int indent) {
 
         case NODE_EXTERN_STATEMENT:
             printf("Extern Statement:\n");
-            printf("Extern Node Type: %d\n", node->data.externNode.type);
+            printf("Extern Node Type: %d\n", CryoNodeTypeToString(node->data.externNode.type));
             if (node->data.externNode.type == NODE_EXTERN_FUNCTION) {
                 printf("Extern Function Declaration:\n");
                 printf("Function Name: %s\n", node->data.externNode.decl.function->name);
-                printf("Function Return Type: %d\n", node->data.externNode.decl.function->returnType);
+                printf("Function Return Type: %d\n", CryoDataTypeToString(node->data.externNode.decl.function->returnType));
                 printf("Function Body:\n");
                 printAST(node->data.externNode.decl.function->body, indent + 2);
+            }
+            break;
+
+        case NODE_ARG_LIST:
+            printf("Argument List:\n");
+            for (int i = 0; i < node->data.argList.argCount; i++) {
+                printAST(node->data.argList.args[i], indent + 2);
             }
             break;
 
@@ -245,7 +252,7 @@ void printAST(ASTNode* node, int indent) {
 
         default:
             printf("[ERROR] Unknown node type: %d\n", node->data);
-            fprintf(stderr, "[ERROR] Unknown node type: %d\n", node->type);
+            fprintf(stderr, "[ERROR] Unknown node type: %d\n", CryoNodeTypeToString(node->type));
             break;
     }
 }
@@ -406,6 +413,14 @@ void freeAST(ASTNode* node) {
             printf("[AST] Freeing Extern Function Node\n");
             free(node->data.externNode.decl.function);
             break;
+
+        case NODE_ARG_LIST:
+            printf("[AST] Freeing Argument List Node\n");
+            for (int i = 0; i < node->data.argList.argCount; i++) {
+                freeAST(node->data.argList.args[i]);
+            }
+            free(node->data.argList.args);
+            break;
         
         default:
             printf("[AST] Unknown Node Type. <DEFAULTED>\n");
@@ -501,6 +516,11 @@ ASTNode* createASTNode(CryoNodeType type) {
             break;
         case NODE_IMPORT_STATEMENT:
             node->data.importStatementNode.modulePath = NULL;
+            break;
+        case NODE_ARG_LIST:
+            node->data.argList.args = NULL;
+            node->data.argList.argCount = 0;
+            node->data.argList.argCapacity = 0;
             break;
 
         default:

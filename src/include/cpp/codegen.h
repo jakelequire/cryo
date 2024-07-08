@@ -80,7 +80,6 @@ llvm::Value* generateBinaryOperation(ASTNode* node, llvm::IRBuilder<>& builder, 
 
 
 // Structs
-llvm::Type* cryoTypeToLLVMType(llvm::LLVMContext& context, llvm::IRBuilder<>& builder, const std::string& typeName);
 llvm::StructType *createStringStruct(llvm::LLVMContext &context);
 llvm::StructType *createStringType(llvm::LLVMContext &context, llvm::IRBuilder<> &builder);
 llvm::Value *createString(llvm::IRBuilder<> &builder, llvm::Module &module, const std::string &str);
@@ -90,6 +89,7 @@ llvm::Value* createReferenceInt(llvm::IRBuilder<>& builder, llvm::Module& module
 std::vector<llvm::Constant*> generateArrayElements(ASTNode* arrayLiteral, llvm::IRBuilder<>& builder, llvm::Module& module);
 
 // Functions
+llvm::Type* getLLVMType(CryoDataType type, llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunctionPrototype(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);
 void createDefaultMainFunction(llvm::IRBuilder<>& builder, llvm::Module& module);
 void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module);

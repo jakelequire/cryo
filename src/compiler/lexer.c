@@ -375,8 +375,12 @@ Token nextToken(Lexer* lexer, Token* token) {
                 } else if (strncmp(lexer->start, "int[]", 5) == 0) {
                     lexer->current = lexer->start + 5;
                     type = TOKEN_TYPE_INT_ARRAY;
-                } else {
-                    type = checkKeyword(lexer, "int", TOKEN_KW_INT);
+                } else if (strncmp(lexer->start, "if", 2) == 0) {
+                    lexer->current = lexer->start + 2;
+                    type = TOKEN_KW_IF;
+                } else if (strncmp(lexer->start, "int", 3) == 0) {
+                    lexer->current = lexer->start + 3;
+                    type = TOKEN_KW_INT;
                 }
                 break;
             case 'e':
@@ -384,7 +388,7 @@ Token nextToken(Lexer* lexer, Token* token) {
                     type = checkKeyword(lexer, "extern", TOKEN_KW_EXTERN);
                 } else {
                     type = checkKeyword(lexer, "else", TOKEN_KW_ELSE);
-                }
+                } 
                 break;
             case 'w':
                 type = checkKeyword(lexer, "while", TOKEN_KW_WHILE);

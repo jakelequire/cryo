@@ -261,7 +261,8 @@ typedef enum CryoNodeType {
     NODE_IMPORT_STATEMENT,          // 23
     NODE_EXTERN_STATEMENT,          // 24
     NODE_EXTERN_FUNCTION,           // 25
-    NODE_UNKNOWN,                   // 26
+    NODE_ARG_LIST,                  // 26
+    NODE_UNKNOWN,                   // 27
 } CryoNodeType;
 
 

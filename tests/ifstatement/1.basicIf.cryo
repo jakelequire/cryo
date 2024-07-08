@@ -5,8 +5,13 @@
 // Most basic form of an if statement test.
 //
 
-if(10 > 20) {
-    printInt(34);
-} else {
-    printInt(35);
+extern function printInt(num: int) -> void;
+
+public function main() -> void {
+    if(10 > 20) {
+        printInt(34);
+    } else {
+        printInt(35);
+    }
 }
+

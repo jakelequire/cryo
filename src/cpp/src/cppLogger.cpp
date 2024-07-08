@@ -411,7 +411,31 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
+            break;
 
+        case CryoNodeType::NODE_ARG_LIST:
+            printIndentation(indentLevel);
+            std::cout << "\"ArgumentList\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Args\": " << node->data.argList.argCount << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Capacity\": " << node->data.argList.argCapacity << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Arguments\": [" << std::endl;
+            for (int i = 0; i < node->data.argList.argCount; ++i) {
+                logASTNode(node->data.argList.args[i], indentLevel + 1);
+                if (i < node->data.argList.argCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
             break;
 
         default:

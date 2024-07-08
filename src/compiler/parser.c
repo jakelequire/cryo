@@ -176,6 +176,23 @@ ASTNode* parsePrimaryExpression(Lexer* lexer, ParsingContext* context) {
             return createVariableExpr(identifier);
         }
 
+        case TOKEN_LBRACE: {
+            return parseBlock(lexer, context);
+        }
+
+        case NODE_VAR_NAME: {
+            char* identifier = strndup(currentToken.start, currentToken.length);
+            getNextToken(lexer);
+            return createVariableExpr(identifier);
+        }
+
+        case TOKEN_LPAREN: {
+            getNextToken(lexer);
+            ASTNode* expr = parseExpression(lexer, context);
+            consume(lexer, TOKEN_RPAREN, "Expected ')' after expression");
+            return expr;
+        }
+
         default:
             error("Expected an expression");
             return NULL;
@@ -457,14 +474,19 @@ ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName, ParsingContex
     if (currentToken.type != TOKEN_RPAREN) {
         arguments = (ASTNode**)malloc(sizeof(ASTNode*) * MAX_ARGUMENTS);
         do {
-            arguments[argCount++] = parseExpression(lexer, context);
+            // Using the new `parseArgumentList` function
+            ASTNode* arg = parseArgumentList(lexer, context);
+
+            if (arg) {
+                arguments[argCount++] = arg;
+            }
+            
             if (argCount >= MAX_ARGUMENTS) {
                 error("Too many arguments in function call");
             }
         } while (currentToken.type == TOKEN_COMMA);
     }
     
-    consume(lexer, TOKEN_RPAREN, "Expected ')' after function arguments");
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after function call");
     
     ASTNode* node = createASTNode(NODE_FUNCTION_CALL);
@@ -476,6 +498,37 @@ ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName, ParsingContex
     return node;
 }
 // </parseFunctionCall>
+
+
+// <parseArgumentList>
+ASTNode* parseArgumentList(Lexer* lexer, ParsingContext* context) {
+    ASTNode* argList = createASTNode(NODE_ARG_LIST);
+    argList->data.argList.argCount = 0;
+
+    getNextToken(lexer); // Consume '('
+
+    while (currentToken.type != TOKEN_RPAREN && currentToken.type != TOKEN_EOF) {
+        ASTNode* arg = parseExpression(lexer, context);
+        if (arg) {
+            addChildNode(argList, arg);
+            argList->data.argList.argCount++;
+        }
+
+        if (currentToken.type == TOKEN_COMMA) {
+            getNextToken(lexer);
+        } else if (currentToken.type != TOKEN_RPAREN) {
+            error("Expected ',' or ')' after argument");
+        }
+    }
+
+    if (currentToken.type == TOKEN_RPAREN) {
+        getNextToken(lexer); // Consume the ')'
+    } else {
+        error("Expected ')' after arguments");
+    }
+
+    return argList;
+}
 
 
 // <parseIfStatement>
