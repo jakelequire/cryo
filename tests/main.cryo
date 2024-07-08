@@ -1,10 +1,15 @@
 
 
 extern function printInt(number: int) -> void;
+// extern function printStr(str: string) -> void;
 
-const foo: int[] = [1, 2, 3, 4, 5];
+const foo: int = 69;
+//const bar: string = "Hello, World!";
 
 public function main() -> void {
     printInt(foo);
+    // printStr(bar);
+    return;
 }
+
 

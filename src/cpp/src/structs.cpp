@@ -28,9 +28,7 @@ llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
 }
 // </createStringStruct>
 
-/*
-ptr @1, i32 19, i32 19, i32 16 })
-*/
+
 // <createStringType>
 llvm::StructType* createStringType(llvm::LLVMContext& context, llvm::IRBuilder<>& builder) {
     llvm::StructType* stringType = llvm::StructType::create(context, "String");
@@ -43,8 +41,8 @@ llvm::StructType* createStringType(llvm::LLVMContext& context, llvm::IRBuilder<>
     stringType->setBody(elements);
     return stringType;
 }
-
 // </createStringType>
+
 
 // <createString>
 llvm::Value* createString(llvm::IRBuilder<>& builder, llvm::Module& module, const std::string& str) {
@@ -55,7 +53,6 @@ llvm::Value* createString(llvm::IRBuilder<>& builder, llvm::Module& module, cons
     return builder.CreateBitCast(globalStr, llvm::Type::getInt8Ty(module.getContext())->getPointerTo());
 }
 // </createString>
-
 
 
 
@@ -82,5 +79,4 @@ llvm::Value* createReferenceInt(llvm::IRBuilder<>& builder, llvm::Module& module
     return globalVar;
 }
 // </createReferenceInt>
-
 

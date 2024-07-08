@@ -60,7 +60,7 @@ void codegen(ASTNode* root) {
         }
     }
 
-
+    module->print(llvm::outs(), nullptr);
     std::cout << "\nGenerating code for AST node\n";
     if (llvm::verifyModule(*module, &llvm::errs())) {
         std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";

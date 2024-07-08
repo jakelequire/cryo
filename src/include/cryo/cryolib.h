@@ -21,7 +21,7 @@
 
 void printInt(int value);
 void printFloat(float value);
-void printStr(const char* value);
+void printStr(char* value);
 
 
 #endif // CRYO_LIB_H

@@ -377,9 +377,7 @@ ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context) {
     ASTNode* paramList = createASTNode(NODE_PARAM_LIST);
     paramList->data.paramList.paramCount = 0;
 
-    getNextToken(lexer);  // Consume '('
-
-
+    getNextToken(lexer); // Consume '('
 
     while (currentToken.type != TOKEN_RPAREN && currentToken.type != TOKEN_EOF) {
         if (currentToken.type == TOKEN_IDENTIFIER) {
@@ -393,7 +391,7 @@ ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context) {
             getNextToken(lexer);
 
             ASTNode* paramNode = createVarDeclarationNode(paramName, dataType, NULL, currentToken.line, false);
-            addChildNode(paramList, paramNode);  // Ensure addChildNode works for PARAM_LIST
+            addChildNode(paramList, paramNode); // Ensure addChildNode works for PARAM_LIST
             paramList->data.paramList.paramCount++;
 
             if (currentToken.type == TOKEN_COMMA) {
@@ -407,7 +405,7 @@ ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context) {
     }
 
     if (currentToken.type == TOKEN_RPAREN) {
-        getNextToken(lexer);  // Consume the ')'
+        getNextToken(lexer); // Consume the ')'
     } else {
         error("Expected ')' after parameters");
     }

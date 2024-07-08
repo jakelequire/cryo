@@ -399,13 +399,13 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Name\": \"" << node->data.externNode.decl.function->name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\n\t\tParams: " << "\n";
-            for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
-                logASTNode(node->data.externNode.decl.function->params[i], indentLevel + 1);
-                if (i < node->data.externNode.decl.function->paramCount - 1) {
-                    printIndentation(indentLevel + 1);
-                    std::cout << "," << std::endl;
-                }
-            }
+            // for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
+            //     logASTNode(node->data.externNode.decl.function->params[i], indentLevel + 1);
+            //     if (i < node->data.externNode.decl.function->paramCount - 1) {
+            //         printIndentation(indentLevel + 1);
+            //         std::cout << "," << std::endl;
+            //     }
+            // }
             printIndentation(indentLevel);
             std::cout << "\"ReturnType\": \"" << dataTypeToString(node->data.externNode.decl.function->returnType) << "\"" << std::endl;
             indentLevel--;

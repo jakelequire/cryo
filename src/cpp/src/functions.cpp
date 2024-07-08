@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
+
 // <getLLVMType>
 llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module) {
     switch (type) {
@@ -23,20 +24,24 @@ llvm::Type* getLLVMType(CryoDataType type, llvm::Module& module) {
             return llvm::Type::getInt32Ty(module.getContext());
         case DATA_TYPE_FLOAT:
             return llvm::Type::getFloatTy(module.getContext());
-        case DATA_TYPE_BOOLEAN:
-            return llvm::Type::getInt1Ty(module.getContext());
         case DATA_TYPE_STRING:
             return llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
+        case DATA_TYPE_BOOLEAN:
+            return llvm::Type::getInt1Ty(module.getContext());
         case DATA_TYPE_VOID:
             return llvm::Type::getVoidTy(module.getContext());
+        case DATA_TYPE_NULL:
+            return llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
         case DATA_TYPE_INT_ARRAY:
-            return llvm::Type::getInt32Ty(module.getContext())->getPointerTo();
+            return llvm::ArrayType::get(llvm::Type::getInt32Ty(module.getContext()), 0);
         case DATA_TYPE_FLOAT_ARRAY:
-            return llvm::Type::getFloatTy(module.getContext())->getPointerTo();
-        case DATA_TYPE_BOOLEAN_ARRAY:
-            return llvm::Type::getInt1Ty(module.getContext())->getPointerTo();
+            return llvm::ArrayType::get(llvm::Type::getFloatTy(module.getContext()), 0);
         case DATA_TYPE_STRING_ARRAY:
-            return llvm::Type::getInt8Ty(module.getContext())->getPointerTo()->getPointerTo();
+            return llvm::ArrayType::get(llvm::Type::getInt8Ty(module.getContext())->getPointerTo(), 0);
+        case DATA_TYPE_BOOLEAN_ARRAY:
+            return llvm::ArrayType::get(llvm::Type::getInt1Ty(module.getContext()), 0);
+        case DATA_TYPE_VOID_ARRAY:
+            return llvm::ArrayType::get(llvm::Type::getVoidTy(module.getContext()), 0);
         default:
             std::cerr << "[CPP] Error: Unknown data type\n";
             return nullptr;
@@ -97,33 +102,22 @@ void generateFunctionCall(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Modul
             std::cerr << "[CPP] Error generating argument for function call\n";
             return;
         }
+        // Ensure the argument is correctly loaded if it's a pointer
+        if (arg->getType()->isPointerTy()) {
+            arg = builder.CreateLoad(arg->getType()->getInt32Ty(module.getContext()), arg, "load");
+        }
         args.push_back(arg);
     }
 
     llvm::Function* callee = module.getFunction(functionName);
     if (!callee) {
-        std::cout << "[CPP] Unknown function referenced: " << functionName << "\n";
+        std::cerr << "[CPP] Error: Unknown function referenced: " << functionName << "\n";
         return;
     }
 
-    llvm::CallInst* call = builder.CreateCall(callee, args);
+    builder.CreateCall(callee, args);
+
     std::cout << "[CPP] Created function call for " << functionName << "\n";
-
-    llvm::BasicBlock* currentBlock = builder.GetInsertBlock();
-    llvm::Function* parentFunction = currentBlock->getParent();
-    if (parentFunction == callee) {
-        std::cout << "[CPP] Function call is in the same function\n";
-    } else {
-        std::cout << "[CPP] Function call is in a different function\n";
-    }
-
-    // Ensure the current block has a terminator if it is not a void function
-    if (!callee->getReturnType()->isVoidTy()) {
-        if (!currentBlock->getTerminator()) {
-            builder.CreateRet(call);
-            std::cout << "[CPP] Added return statement after function call\n";
-        }
-    }
 }
 // </generateFunctionCall>
 
@@ -167,7 +161,12 @@ void generateFunction(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
     std::cout << "[CPP] Function parameter types generated\n";
 
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, llvm::Twine(functionName), &module);
+    llvm::Function* function = module.getFunction(functionName);
+    if (!function) {
+        function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, &module);
+    } else {
+        std::cerr << "[CPP] Warning: Function " << functionName << " already exists in the module\n";
+    }
 
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(module.getContext(), "entry", function);
     builder.SetInsertPoint(BB);
@@ -267,33 +266,45 @@ void generateExternalDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm
 
     std::cout << "[CPP] Generating external function declaration\n";
     char* functionName = node->data.externNode.decl.function->name;
-    std::cout << "\n\n[CPP] Extern Function name: " << functionName << "\n\n";
+    std::cout << "[CPP] Extern Function name: " << functionName << "\n";
     CryoDataType returnTypeData = node->data.externNode.decl.function->returnType;
     std::cout << "[CPP] Extern Function return type: " << returnTypeData << "\n";
 
-
     llvm::Type* returnType = getLLVMType(returnTypeData, module);
-    std::cout << "[CPP] Extern Function return type: " << returnType << "\n";
+    std::cout << "[CPP] LLVM Extern Function return type: " << returnType << "\n";
     std::vector<llvm::Type*> paramTypes;
     std::cout << "[CPP] Extern Function parameter count: " << node->data.externNode.decl.function->paramCount << "\n";
 
     for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
-        if (i % 2 == 0) {
-            return;
+        ASTNode* parameter = node->data.externNode.decl.function->params[i];
+        llvm::Type* paramType;
+        if (parameter == nullptr) {
+            std::cerr << "[CPP] Error: Extern Parameter is null\n";
+            break;
         }
-        ASTNode * parameter = node->data.externNode.decl.function->params[i];
-        std::cout << "[CPP] Extern  Parameter: " << i << " type: " << parameter->data.varDecl.dataType << "\n";
-        llvm::Type* paramType = getLLVMType(node->data.externNode.decl.function->params[i]->data.varDecl.dataType, module);
+        if(parameter->data.varDecl.dataType == DATA_TYPE_INT) {
+            std::cout << "[CPP] Extern <INT> Parameter: " << i << " type: " << parameter->data.varDecl.dataType << "\n";
+            // Create a new LLVM type for the parameter of type int `ptr i32`
+            paramType = llvm::Type::getInt32Ty(module.getContext());
+            paramTypes.push_back(paramType);
+            break;
+        }
+        if(parameter->data.varDecl.dataType == DATA_TYPE_STRING) {
+            std::cout << "[CPP] Extern <STRING> Parameter: " << i << " type: " << parameter->data.varDecl.dataType << "\n";
+            // Create a new LLVM type for the parameter of type string `ptr i8`
+            paramType = llvm::Type::getInt8Ty(module.getContext())->getPointerTo();
+            paramTypes.push_back(paramType);
+            break;
+        }
         if (!paramType) {
             std::cerr << "[CPP] Error: Extern Unknown parameter type\n";
             return;
         }
-        paramTypes.push_back(paramType);
     }
 
     std::cout << "[CPP] Extern Function parameter types generated\n";
 
-    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
+    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes[0], false);
     std::cout << "[CPP] Extern Function type generated\n";
     llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module);
     std::cout << "[CPP] Extern Function created\n";

@@ -10,7 +10,7 @@ CXXFLAGS = -I"C:/msys64/mingw64/include" \
 LLVM_LIBS := -lLLVM-18
 
 # Standard C++ Libraries for Windows
-STDLIBS := -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32
+STDLIBS := -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32 -Wl,-subsystem,console
 
 LDFLAGS = -L"C:/msys64/mingw64/lib" $(LLVM_LIBS) $(STDLIBS) -v
 
@@ -145,7 +145,7 @@ $(OBJ_DIR)codegen.o: $(CPP_DIR)src/codegen.cpp | $(OBJ_DIR)
 
 # Cryo Lib Compilation rules
 $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ 
 
 
 # Linking binaries
