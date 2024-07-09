@@ -16,16 +16,15 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
-extern std::unordered_map<std::string, llvm::Value*> namedValues;
+namespace Cryo {
 
-// <generateIfStatement>
-void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void CodeGen::generateIfStatement(ASTNode* node) {
     llvm::Function* function = builder.GetInsertBlock()->getParent();
     llvm::BasicBlock* thenBB = llvm::BasicBlock::Create(builder.getContext(), "then", function);
     llvm::BasicBlock* elseBB = llvm::BasicBlock::Create(builder.getContext(), "else", function);
     llvm::BasicBlock* mergeBB = llvm::BasicBlock::Create(builder.getContext(), "ifcont", function);
 
-    llvm::Value* condValue = generateExpression(node->data.ifStmt.condition, builder, module);
+    llvm::Value* condValue = generateExpression(node->data.ifStmt.condition);
     if (!condValue) {
         std::cerr << "[CPP] Error generating if statement condition\n";
         return;
@@ -36,7 +35,7 @@ void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module
     // Then block
     builder.SetInsertPoint(thenBB);
     std::cout << "[CPP] Generating 'then' block\n";
-    generateBlock(node->data.ifStmt.thenBranch, builder, module);
+    generateBlock(node->data.ifStmt.thenBranch);
     std::cout << "[CPP] 'Then' block generated\n";
     builder.CreateBr(mergeBB);
     std::cout << "[CPP] 'Then' block branch created\n";
@@ -47,7 +46,7 @@ void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module
     builder.SetInsertPoint(elseBB);
     if (node->data.ifStmt.elseBranch) {
         std::cout << "[CPP] Generating 'else' block\n";
-        generateBlock(node->data.ifStmt.elseBranch, builder, module);
+        generateBlock(node->data.ifStmt.elseBranch);
     }
     builder.CreateBr(mergeBB);
     elseBB = builder.GetInsertBlock(); // Update elseBB after generating the block
@@ -58,11 +57,8 @@ void generateIfStatement(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module
     builder.SetInsertPoint(mergeBB);
     std::cout << "[CPP] 'If' statement generated with 'then' and 'else' branches\n";
 }
-// </generateIfStatement>
 
-
-
-void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void CodeGen::generateForLoop(ASTNode* node) {
     llvm::Function* function = builder.GetInsertBlock()->getParent();
     std::cout << "[CPP] Generating for loop\n";
 
@@ -75,11 +71,11 @@ void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
     std::cout << "[CPP] Blocks created\n";
 
     // Generate initialization code
-    llvm::Value* initValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(module.getContext()), 0); // Initialize iterator to 0
+    llvm::Value* initValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(module->getContext()), 0); // Initialize iterator to 0
     std::cout << "[DEBUG] Created iterator initial value: " << initValue << std::endl;
 
     // Simplified allocation
-    llvm::AllocaInst* iterator = builder.CreateAlloca(llvm::Type::getInt32Ty(module.getContext()), nullptr, "iter");
+    llvm::AllocaInst* iterator = builder.CreateAlloca(llvm::Type::getInt32Ty(module->getContext()), nullptr, "iter");
     std::cout << "[CPP] Iterator allocated: " << iterator << std::endl;
 
     if (!iterator) {
@@ -99,7 +95,7 @@ void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
     std::cout << "[CPP] Loop entry block inserted\n";
 
     // Generate condition code
-    llvm::Value* condValue = generateExpression(node->data.forStmt.condition, builder, module);
+    llvm::Value* condValue = generateExpression(node->data.forStmt.condition);
     if (!condValue) {
         std::cerr << "[ERROR] Failed to generate condition value\n";
         return;
@@ -108,11 +104,10 @@ void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
     std::cout << "[CPP] Condition code generated\n";
 
     // Generate loop body code
-    // function->splice(function->end(), function, loopBodyBB->getIterator());
     std::cout << "[CPP - DEBUG] Generating loop body code\n";
     builder.SetInsertPoint(loopBodyBB);
     std::cout << "[CPP] Loop body block inserted\n";
-    generateBlock(node->data.forStmt.body, builder, module);
+    generateBlock(node->data.forStmt.body);
     std:: cout << "[CPP] Loop body generated\n";
     builder.CreateBr(loopIncrementBB);
     std::cout << "[CPP] Loop body code generated\n";
@@ -120,7 +115,7 @@ void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
     // Generate increment code
     function->splice(function->end(), function, loopIncrementBB->getIterator());
     builder.SetInsertPoint(loopIncrementBB);
-    llvm::Value* incrementValue = generateExpression(node->data.forStmt.increment, builder, module);
+    llvm::Value* incrementValue = generateExpression(node->data.forStmt.increment);
     if (!incrementValue) {
         std::cerr << "[ERROR] Failed to generate increment value\n";
         return;
@@ -137,3 +132,4 @@ void generateForLoop(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& mo
     std::cout << "[CPP] After loop block inserted\n";
 }
 
+} // namespace Cryo

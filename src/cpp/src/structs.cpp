@@ -16,67 +16,48 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
+namespace Cryo {
 
-
-// >===------------------------------------------===< 
-// >===        String Struct Functions           ===<
-// >===------------------------------------------===<
-
-// <createStringStruct>
-llvm::StructType *createStringStruct(llvm::LLVMContext &context) {
+llvm::StructType* CodeGen::createStringStruct() {
     return llvm::StructType::create(context, "String");
 }
-// </createStringStruct>
 
-
-// <createStringType>
-llvm::StructType* createStringType(llvm::LLVMContext& context, llvm::IRBuilder<>& builder) {
+llvm::StructType* CodeGen::createStringType() {
     llvm::StructType* stringType = llvm::StructType::create(context, "String");
     std::vector<llvm::Type*> elements = {
-        builder.getInt8Ty()->getPointerTo(),    // ptr
-        builder.getInt32Ty(),                   // length
-        builder.getInt32Ty(),                   // maxlen
-        builder.getInt32Ty()                    // factor
+        builder.getInt8Ty()->getPointerTo(),
+        builder.getInt32Ty(),
+        builder.getInt32Ty(),
+        builder.getInt32Ty()
     };
     stringType->setBody(elements);
     return stringType;
 }
-// </createStringType>
 
-
-// <createString>
-llvm::Value* createString(llvm::IRBuilder<>& builder, llvm::Module& module, const std::string& str) {
-    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(module.getContext(), str);
+llvm::Value* CodeGen::createString(const std::string& str) {
+    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(context, str);
     llvm::GlobalVariable* globalStr = new llvm::GlobalVariable(
-        module, strConstant->getType(), true,
+        *module, strConstant->getType(), true,
         llvm::GlobalValue::PrivateLinkage, strConstant, ".str");
-    return builder.CreateBitCast(globalStr, llvm::Type::getInt8Ty(module.getContext())->getPointerTo());
+    return builder.CreateBitCast(globalStr, llvm::Type::getInt8Ty(context)->getPointerTo());
 }
-// </createString>
 
-
-
-llvm::Value* createNumber(llvm::IRBuilder<>& builder, llvm::Module& module, int num) {
+llvm::Value* CodeGen::createNumber(int num) {
     std::cout << "[CPP - DEBUG] Creating number constant: " << num << "\n";
-    llvm::Constant* numConstant = llvm::ConstantInt::get(module.getContext(), llvm::APInt(32, num, true));
+    llvm::Constant* numConstant = llvm::ConstantInt::get(context, llvm::APInt(32, num, true));
     std::cout << "[CPP - DEBUG] Created number constant\n";
     return numConstant;
 }
 
-
-// <createConstantInt>
-llvm::Constant* createConstantInt(llvm::IRBuilder<>& builder, int value) {
-    return llvm::ConstantInt::get(builder.getInt32Ty(), value, true); // true for signed
+llvm::Constant* CodeGen::createConstantInt(int value) {
+    return llvm::ConstantInt::get(builder.getInt32Ty(), value, true);
 }
-// </createConstantInt>
 
-
-// <createReferenceInt>
-llvm::Value* createReferenceInt(llvm::IRBuilder<>& builder, llvm::Module& module, int value) {
+llvm::Value* CodeGen::createReferenceInt(int value) {
     llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-        module, builder.getInt32Ty(), true,
-        llvm::GlobalValue::PrivateLinkage, createConstantInt(builder, value), ".int");
+        *module, builder.getInt32Ty(), true,
+        llvm::GlobalValue::PrivateLinkage, createConstantInt(value), ".int");
     return globalVar;
 }
-// </createReferenceInt>
 
+} // namespace Cryo

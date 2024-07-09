@@ -17,11 +17,13 @@
 #include "cpp/cppmain.h"
 #include <iostream>
 
+using namespace Cryo;
+
 int generateCodeWrapper(ASTNode* node) {
     std::cout << ">===------------- CPP Code Generation -------------===<\n" << std::endl;
     std::cout << "[CPP] Starting Code Generation..." << std::endl;
 
-    codegen(node);
+    Cryo::CodeGen codegen(node); 
 
     return 1;
 }

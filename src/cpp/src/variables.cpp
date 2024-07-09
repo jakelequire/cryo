@@ -16,12 +16,9 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
-extern std::unordered_map<std::string, llvm::Value*> namedValues;
+namespace Cryo {
 
-
-// Function to retrieve a variable from the namedValues map
-// <getVariable>
-llvm::Value* getVariable(const std::string& name) {
+llvm::Value* CodeGen::getVariable(const std::string& name) {
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
         llvm::Value* var = it->second;
@@ -35,13 +32,11 @@ llvm::Value* getVariable(const std::string& name) {
         return nullptr;
     }
 }
-// </getVariable>
 
-
-llvm::GlobalVariable* createGlobalVariable(llvm::Module& module, llvm::Type* varType, llvm::Constant* initialValue, const std::string& varName) {
+llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, const std::string& varName) {
     std::cout << "[CPP] Creating global variable\n";
     llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-        module,
+        *module,
         varType,
         false,
         llvm::GlobalValue::ExternalLinkage,
@@ -58,11 +53,7 @@ llvm::GlobalVariable* createGlobalVariable(llvm::Module& module, llvm::Type* var
     return globalVar;
 }
 
-
-
-// Function to load a global variable value
-// <loadGlobalVariable>
-llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder<>& builder, const std::string& name) {
+llvm::Value* CodeGen::loadGlobalVariable(llvm::GlobalVariable* globalVar, const std::string& name) {
     std::cout << "[CPP] Loading global variable value\n";
     llvm::Type* globalVarType = globalVar->getValueType();
     std::cout << "[CPP] Global Variable Type: " << globalVarType << "\n";
@@ -84,12 +75,8 @@ llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, llvm::IRBuilder
     std::cout << "[CPP] Loaded global variable value\n";
     return load;
 }
-// </loadGlobalVariable>
 
-
-// Function to load a pointer variable value
-// <loadPointerVariable>
-llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, const std::string& name) {
+llvm::Value* CodeGen::loadPointerVariable(llvm::Value* var, const std::string& name) {
     std::cout << "[CPP] Loading pointer variable value\n";
     llvm::Type* pointedType = var->getType();
     std::cout << "[CPP] Variable pointer type: " << pointedType << "\n";
@@ -101,12 +88,8 @@ llvm::Value* loadPointerVariable(llvm::Value* var, llvm::IRBuilder<>& builder, c
     std::cout << "[CPP] Loaded pointer variable value\n";
     return load;
 }
-// </loadPointerVariable>
 
-
-// Function to get the variable value
-// <getVariableValue>
-llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builder) {
+llvm::Value* CodeGen::getVariableValue(const std::string& name) {
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
         llvm::Value* var = it->second;
@@ -140,12 +123,7 @@ llvm::Value* getVariableValue(const std::string& name, llvm::IRBuilder<>& builde
     }
 }
 
-// </getVariableValue>
-
-
-
-// <generateVarDeclaration>
-void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void CodeGen::generateVarDeclaration(ASTNode* node) {
     std::cout << "[CPP] Generating code for variable declaration\n";
     llvm::Type* varType = nullptr;
     llvm::Constant* initialValue = nullptr;
@@ -156,11 +134,11 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             std::cout << "[CPP] Generating code for string variable\n";
             if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
                 std::cout << "[CPP] Initializer is a literal expression\n";
-                initialValue = llvm::cast<llvm::Constant>(createString(builder, module, node->data.varDecl.initializer->data.literalExpression.stringValue));
+                initialValue = llvm::cast<llvm::Constant>(createString(node->data.varDecl.initializer->data.literalExpression.stringValue));
                 varType = builder.getInt8Ty()->getPointerTo();
             } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
                 std::cout << "[CPP] Initializer is a variable name\n";
-                llvm::GlobalVariable* refVar = module.getGlobalVariable(node->data.varDecl.initializer->data.varName.varName);
+                llvm::GlobalVariable* refVar = module->getGlobalVariable(node->data.varDecl.initializer->data.varName.varName);
                 if (refVar) {
                     initialValue = llvm::ConstantExpr::getPointerCast(refVar, refVar->getType());
                     varType = refVar->getValueType();
@@ -179,10 +157,10 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             varType = builder.getInt32Ty();
             if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
                 std::cout << "[CPP] Initializer is a literal expression\n";
-                initialValue = createConstantInt(builder, node->data.varDecl.initializer->data.literalExpression.intValue);
+                initialValue = createConstantInt(node->data.varDecl.initializer->data.literalExpression.intValue);
             } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
                 std::cout << "[CPP] Initializer is a variable name\n";
-                llvm::GlobalVariable* refVar = module.getGlobalVariable(node->data.varDecl.initializer->data.varName.varName);
+                llvm::GlobalVariable* refVar = module->getGlobalVariable(node->data.varDecl.initializer->data.varName.varName);
                 if (refVar) {
                     initialValue = llvm::cast<llvm::Constant>(refVar->getInitializer());
                 } else {
@@ -213,7 +191,7 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
             varType = llvm::ArrayType::get(builder.getInt32Ty(), node->data.varDecl.initializer->data.arrayLiteral.elementCount);
             initialValue = llvm::ConstantArray::get(
                 llvm::cast<llvm::ArrayType>(varType),
-                llvm::ArrayRef<llvm::Constant*>(generateArrayElements(node->data.varDecl.initializer, builder, module))
+                llvm::ArrayRef<llvm::Constant*>(generateArrayElements(node->data.varDecl.initializer))
             );
             break;
         
@@ -221,44 +199,20 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
         case DATA_TYPE_VOID:
             std::cerr << "[CPP] Error: Cannot declare variable of type void\n";
             return;
-        // Handle other types...
-
         default:
-            std::cout << "[CPP] Error: Invalid data type\n";
             std::cerr << "[CPP - ERROR] Invalid data type for variable: " << varName << "\n";
             return;
     }
-
-
-    std::cout << "[CPP - DEBUG] varType: " << varType << "\n";
-    std::cout << "[CPP - DEBUG] varType is pointer: " << varType->isPointerTy() << "\n";
 
     if (!initialValue) {
         std::cerr << "[CPP] Error: Initial value is null for variable: " << varName << "\n";
         return;
     }
 
-    std::cout << "[CPP - DEBUG] varType: " << varType << "\n";
-    if (varType) {
-        std::cout << "[CPP - DEBUG] varType is pointer: " << varType->isPointerTy() << "\n";
-    } else {
-        std::cerr << "[CPP] Error: varType is null\n";
-        return;
-    }
-
-    std::cout << "[CPP - DEBUG] initialValue type: " << initialValue->getType() << "\n";
-    if (initialValue->getType()->isPointerTy()) {
-        std::cout << "[CPP - DEBUG] initialValue is a pointer type\n";
-    } else {
-        std::cout << "[CPP - DEBUG] initialValue is not a pointer type\n";
-    }
-
-    // Determine if this is a global variable
-    // Ensure initialValue is of type llvm::Constant* for global variables
     if (node->data.varDecl.isGlobal) {
         std::cout << "[CPP] Creating global variable\n";
         llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-            module,
+            *module,
             varType,
             false,
             llvm::GlobalValue::ExternalLinkage,
@@ -281,41 +235,31 @@ void generateVarDeclaration(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Mod
         std::cout << "[CPP] Stored alloca in namedValues\n";
     }
 }
-// </generateVarDeclaration>
 
-
-
-
-
-std::vector<llvm::Constant*> generateArrayElements(ASTNode* arrayLiteral, llvm::IRBuilder<>& builder, llvm::Module& module) {
+std::vector<llvm::Constant*> CodeGen::generateArrayElements(ASTNode* arrayLiteral) {
     std::vector<llvm::Constant*> elements;
     for (int i = 0; i < arrayLiteral->data.arrayLiteral.elementCount; i++) {
         ASTNode* element = arrayLiteral->data.arrayLiteral.elements[i];
         if (element->type == NODE_LITERAL_EXPR && element->data.literalExpression.dataType == DATA_TYPE_INT) {
             elements.push_back(llvm::ConstantInt::get(builder.getInt32Ty(), element->data.literalExpression.intValue));
         }
-        // Handle other types if needed
     }
     return elements;
 }
 
-
-// Add this to handle array literals in your code generator
-void generateCodeForArrayLiteral(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+void CodeGen::generateCodeForArrayLiteral(ASTNode* node) {
     if (node->type != NODE_ARRAY_LITERAL) {
-        fprintf(stderr, "[CodeGen] [ERROR] Expected array literal node, got %d\n", node->type);
+        std::cerr << "[CodeGen] [ERROR] Expected array literal node, got " << node->type << "\n";
         return;
     }
 
     std::cout << "[CodeGen] Generating code for array literal\n";
 
-    // Generate code for each element in the array
     for (int i = 0; i < node->data.arrayLiteral.elementCount; i++) {
-        generateCode(node->data.arrayLiteral.elements[i], builder, module);
-        if (i < node->data.arrayLiteral.elementCount - 1) {
-            // Handle element separation if needed
-        }
+        generateCode(node->data.arrayLiteral.elements[i]);
     }
 
     std::cout << "[CodeGen] Completed code generation for array literal\n";
 }
+
+} // namespace Cryo

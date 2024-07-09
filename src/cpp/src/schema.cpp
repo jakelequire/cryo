@@ -16,9 +16,9 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
+namespace Cryo {
 
-
-bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& module) {
+bool CodeGen::declareFunctions(ASTNode* node) {
     bool mainFunctionExists = false;
 
     if (!node) {
@@ -30,14 +30,13 @@ bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
         if (std::string(node->data.functionDecl.function->name) == "main") {
             mainFunctionExists = true;
         }
-        generateFunctionPrototype(node, builder, module);
+        generateFunctionPrototype(node);
     }
 
-    // Recursively declare functions for all child nodes
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
             for (int i = 0; i < node->data.program.stmtCount; ++i) {
-                if (declareFunctions(node->data.program.statements[i], builder, module)) {
+                if (declareFunctions(node->data.program.statements[i])) {
                     mainFunctionExists = true;
                 }
             }
@@ -45,7 +44,7 @@ bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
 
         case CryoNodeType::NODE_BLOCK:
             for (int i = 0; i < node->data.block.stmtCount; ++i) {
-                if (declareFunctions(node->data.block.statements[i], builder, module)) {
+                if (declareFunctions(node->data.block.statements[i])) {
                     mainFunctionExists = true;
                 }
             }
@@ -57,6 +56,4 @@ bool declareFunctions(ASTNode* node, llvm::IRBuilder<>& builder, llvm::Module& m
     return mainFunctionExists;
 }
 
-
-
-
+} // namespace Cryo
