@@ -72,6 +72,7 @@ ASTNode* parseType(Lexer* lexer, ParsingContext* context);
 ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility, ParsingContext* context);
 ASTNode* parseFunctionBlock(Lexer* lexer, ParsingContext* context);
 ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context);
+ASTNode* parseParameter(Lexer* lexer, ParsingContext* context);
 ASTNode* createParamNode(const char* name, ASTNode* type);
 ASTNode* parsePublicDeclaration(Lexer* lexer, ParsingContext* context);
 ASTNode* parseFunctionCall(Lexer* lexer, const char* functionName, ParsingContext* context);

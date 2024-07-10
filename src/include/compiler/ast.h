@@ -120,6 +120,7 @@ typedef struct ASTNode {
             char* name;
             struct ASTNode* initializer;
             bool isGlobal;
+            bool isReference;
             int scopeLevel;
         } varDecl;
 
@@ -191,6 +192,7 @@ typedef struct ASTNode {
         struct {
             struct ASTNode** elements;
             int elementCount;
+            int elementCapacity;
         } arrayLiteral; // Add this for array literals
 
 
@@ -206,9 +208,9 @@ void printAST(ASTNode* node, int indent);
 void freeAST(ASTNode* node);
 ASTNode* createASTNode(CryoNodeType type);
 ASTNode* createLiteralExpr(int value);
-ASTNode* createVariableExpr(const char* name);
+ASTNode* createVariableExpr(char* name);
 ASTNode* createBooleanLiteralExpr(int value);
-ASTNode* createStringLiteralExpr(const char* str);
+ASTNode* createStringLiteralExpr(char* str);
 ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoOperatorType op);
 ASTNode* createUnaryExpr(CryoTokenType op, ASTNode* operand);
 ASTNode* createFunctionNode();
@@ -218,13 +220,16 @@ ASTNode* createBlock();
 ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
 ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body);
 ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
-ASTNode* createVarDeclarationNode(const char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal);
+ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal);
 ASTNode* createExpressionStatement(ASTNode* expression);
-ASTNode* createFunctionCallNode(const char* name, ASTNode** args, int argCount);
-ASTNode* createStringExpr(const char* str);
+ASTNode* createFunctionCallNode(char* name, ASTNode** args, int argCount);
+ASTNode* createStringExpr(char* str);
 ASTNode* createArrayLiteralNode(ASTNode** elements, int elementCount);
 ASTNode* createImportNode(ASTNode* importPath);
 ASTNode* createExternNode();
+ASTNode* createVarDeclNode();
+ASTNode* createParamListNode();
+void addParameterToList(ASTNode* paramListNode, ASTNode* param);
 void addChildNode(ASTNode* parent, ASTNode* child);
 void addStatementToBlock(ASTNode* block, ASTNode* statement);
 void addFunctionToProgram(ASTNode* program, ASTNode* function);

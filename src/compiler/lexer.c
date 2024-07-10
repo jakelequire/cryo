@@ -372,15 +372,15 @@ Token nextToken(Lexer* lexer, Token* token) {
                 if (strncmp(lexer->start, "import", 6) == 0) {
                     lexer->current = lexer->start + 6;
                     type = TOKEN_KW_IMPORT;
-                } else if (strncmp(lexer->start, "int[]", 5) == 0) {
-                    lexer->current = lexer->start + 5;
-                    type = TOKEN_TYPE_INT_ARRAY;
                 } else if (strncmp(lexer->start, "if", 2) == 0) {
                     lexer->current = lexer->start + 2;
                     type = TOKEN_KW_IF;
                 } else if (strncmp(lexer->start, "int", 3) == 0) {
                     lexer->current = lexer->start + 3;
                     type = TOKEN_KW_INT;
+                } else if (strncmp(lexer->start, "int[]", 5) == 0) {
+                    lexer->current = lexer->start + 5;
+                    type = TOKEN_TYPE_INT_ARRAY;
                 }
                 break;
             case 'e':

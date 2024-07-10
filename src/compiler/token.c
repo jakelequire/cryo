@@ -293,3 +293,29 @@ char* CryoTokenToString(CryoTokenType node) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+CryoDataType CryoDataTypeStringToType(char* typeStr) {
+    if(strcmp(typeStr, "int") == 0) {
+        return DATA_TYPE_INT;
+    } else if(strcmp(typeStr, "float") == 0) {
+        return DATA_TYPE_FLOAT;
+    } else if(strcmp(typeStr, "string") == 0) {
+        return DATA_TYPE_STRING;
+    } else if(strcmp(typeStr, "boolean") == 0) {
+        return DATA_TYPE_BOOLEAN;
+    } else if(strcmp(typeStr, "void") == 0) {
+        return DATA_TYPE_VOID;
+    } else if(strcmp(typeStr, "null") == 0) {
+        return DATA_TYPE_NULL;
+    } else if(strcmp(typeStr, "int[]") == 0) {
+        return DATA_TYPE_INT_ARRAY;
+    } else if(strcmp(typeStr, "float[]") == 0) {
+        return DATA_TYPE_FLOAT_ARRAY;
+    } else if(strcmp(typeStr, "string[]") == 0) {
+        return DATA_TYPE_STRING_ARRAY;
+    } else if(strcmp(typeStr, "boolean[]") == 0) {
+        return DATA_TYPE_BOOLEAN_ARRAY;
+    } else {
+        fprintf(stderr, "<!> [Token] Error: Unknown data type: %s\n", typeStr);
+        return DATA_TYPE_UNKNOWN;
+    }
+}

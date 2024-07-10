@@ -37,13 +37,14 @@ char* strndup(const char* s, size_t n) {
 Token currentToken;
 
 
+//      X
 void debugCurrentToken() {
     printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",
            CryoTokenToString(currentToken.type), currentToken.length, currentToken.start);
 }
 
 // Error handling function
-// <error>
+// <error>      X
 void error(const char* message) {
     fprintf(stderr, "[Parser] Error: %s at line %d, column %d\n", message, currentToken.line, currentToken.column);
     exit(1);
@@ -52,7 +53,7 @@ void error(const char* message) {
 
 
 // Function to get the next token from the lexer
-// <getNextToken>
+// <getNextToken>   X
 void getNextToken(Lexer *lexer) {
     if (isAtEnd(lexer)) {
         currentToken.type = TOKEN_EOF;
@@ -67,7 +68,7 @@ void getNextToken(Lexer *lexer) {
 
 
 // Function to consume a token and check its type
-// <consume>
+// <consume>    X
 void consume(Lexer *lexer, CryoTokenType type, const char *message) {
     printf("[Parser] Consuming token: %s (Expecting: %s)\n",
             CryoTokenToString(currentToken.type), CryoTokenToString(type));
@@ -81,7 +82,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message) {
 
 
 // Helper function to map type strings to CryoDataType
-// <getCryoDataType>
+// <getCryoDataType>        X
 CryoDataType getCryoDataType(const char* typeStr) {
     printf("\n[Parser DEBUG] Getting CryoDataType for: %s\n", typeStr);  // Add this line to debug
     if (strcmp(typeStr, "int") == 0) {
@@ -103,6 +104,7 @@ CryoDataType getCryoDataType(const char* typeStr) {
     } else if (strcmp(typeStr, "boolean[]") == 0) {
         return DATA_TYPE_BOOLEAN_ARRAY;
     } else {
+        printf("[Parser] Unknown data type: %s\n", typeStr);  // Add this line to debug
         return DATA_TYPE_UNKNOWN;
     }
 }
@@ -242,14 +244,14 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
     if (currentToken.type == TOKEN_COLON) {
         getNextToken(lexer);
         printf("[Parser] Current token after colon: %s\n", CryoTokenToString(currentToken.type));
-        if (currentToken.type == TOKEN_TYPE_INT_ARRAY ||
-            currentToken.type == TOKEN_TYPE_FLOAT_ARRAY || 
-            currentToken.type == TOKEN_TYPE_STRING_ARRAY ||
-            currentToken.type == TOKEN_TYPE_BOOLEAN_ARRAY ||
-            currentToken.type == TOKEN_KW_INT ||
+        if (currentToken.type == TOKEN_KW_INT ||
             currentToken.type == TOKEN_KW_STRING ||
             currentToken.type == TOKEN_KW_BOOL ||
-            currentToken.type == TOKEN_KW_VOID) {
+            currentToken.type == TOKEN_KW_VOID ||
+            currentToken.type == TOKEN_TYPE_INT_ARRAY ||
+            currentToken.type == TOKEN_TYPE_FLOAT_ARRAY || 
+            currentToken.type == TOKEN_TYPE_STRING_ARRAY ||
+            currentToken.type == TOKEN_TYPE_BOOLEAN_ARRAY) {
             char* varType = strndup(currentToken.start, currentToken.length);
             printf("[Parser] Identified variable type: %s\n", varType);
             dataType = getCryoDataType(varType);
@@ -329,15 +331,41 @@ ASTNode* parseExternFunctionDeclaration(Lexer* lexer, ParsingContext* context) {
     }
 
     // Initialize the function declaration node within the extern node
+    externNode->data.externNode.decl.function = (FunctionDeclNode*)malloc(sizeof(FunctionDeclNode));
+    if (externNode->data.externNode.decl.function == NULL) {
+        perror("Failed to allocate memory for function declaration");
+        exit(EXIT_FAILURE);
+    }
+    externNode->data.externNode.type = NODE_EXTERN_FUNCTION;
     externNode->data.externNode.decl.function->name = functionName;
+    externNode->data.externNode.decl.function->visibility = VISIBILITY_PUBLIC;
+    externNode->data.externNode.decl.function->body = NULL;
     externNode->data.externNode.decl.function->params = params ? params->data.paramList.params : NULL;
     externNode->data.externNode.decl.function->paramCount = params ? params->data.paramList.paramCount : 0;
     externNode->data.externNode.decl.function->returnType = returnType;
-    
+
     printf("[Parser] Extern node created\n");
+    printf("[Parser] Node type: %d\n", externNode->type);
+    printf("[Parser] Extern node type: %d\n", externNode->data.externNode.type);
+    printf("[Parser] Function name: %s\n", externNode->data.externNode.decl.function->name);
+    printf("[Parser] Parameter count: %d\n", externNode->data.externNode.decl.function->paramCount);
+    printf("[Parser] Return type: %d\n", externNode->data.externNode.decl.function->returnType);
+
+    // Log each parameter
+    if (params) {
+        for (int i = 0; i < params->data.paramList.paramCount; ++i) {
+            printf("[Parser] Parameter %d: Name: %s, Type: %d\n", 
+                i, 
+                params->data.paramList.params[i]->data.varDecl.name, 
+                params->data.paramList.params[i]->data.varDecl.dataType
+            );
+        }
+    }
+
     return externNode;
 }
 // </parseExternFunctionDeclaration>
+
 
 
 
@@ -351,15 +379,15 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility, P
     }
     char* functionName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer);
-
-    ASTNode* params = parseParameterList(lexer, context);
+    ASTNode* params = NULL;
+    params = parseParameterList(lexer, context);
     if (params->data.paramList.paramCapacity == 0) {
         params = NULL;  // Set to NULL if no parameters are present
     }
 
     CryoDataType returnType = DATA_TYPE_VOID;  // Default to void
     if (currentToken.type == TOKEN_RESULT_ARROW) {
-        getNextToken(lexer);
+        getNextToken(lexer); 
         if (currentToken.type != TOKEN_KW_VOID && currentToken.type != TOKEN_KW_INT &&
             currentToken.type != TOKEN_KW_FLOAT && currentToken.type != TOKEN_KW_STRING &&
             currentToken.type != TOKEN_KW_BOOL) {
@@ -377,7 +405,7 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility, P
     printf("[Parser] Function node created\n");
     functionNode->data.functionDecl.function->visibility = visibility;
     functionNode->data.functionDecl.function->name = functionName;
-    functionNode->data.functionDecl.function->params = params  ? params->data.paramList.params : NULL;
+    functionNode->data.functionDecl.function->params = params;
     functionNode->data.functionDecl.function->paramCount = params ? params->data.paramList.paramCount : 0;
     functionNode->data.functionDecl.function->returnType = returnType;
     functionNode->data.functionDecl.function->body = body;
@@ -391,46 +419,88 @@ ASTNode* parseFunctionDeclaration(Lexer* lexer, CryoVisibilityType visibility, P
 
 // <parseParameterList>
 ASTNode* parseParameterList(Lexer* lexer, ParsingContext* context) {
-    ASTNode* paramList = createASTNode(NODE_PARAM_LIST);
-    paramList->data.paramList.paramCount = 0;
+    ASTNode* paramListNode = createParamListNode();
+    if (paramListNode == NULL) {
+        error("Failed to create parameter list node");
+    }
 
-    getNextToken(lexer); // Consume '('
+    consume(lexer, TOKEN_LPAREN, "Expected '('");
 
     while (currentToken.type != TOKEN_RPAREN && currentToken.type != TOKEN_EOF) {
-        if (currentToken.type == TOKEN_IDENTIFIER) {
-            char* paramName = strndup(currentToken.start, currentToken.length);
-            getNextToken(lexer);
-            consume(lexer, TOKEN_COLON, "Expected ':' after parameter name");
+        ASTNode* param = parseParameter(lexer, context);
+        if (param) {
+            addParameterToList(paramListNode, param);
+        }
 
-            char* paramType = strndup(currentToken.start, currentToken.length);
-            CryoDataType dataType = getCryoDataType(paramType);
-            free(paramType);
-            getNextToken(lexer);
-
-            ASTNode* paramNode = createVarDeclarationNode(paramName, dataType, NULL, currentToken.line, false);
-            addChildNode(paramList, paramNode); // Ensure addChildNode works for PARAM_LIST
-            paramList->data.paramList.paramCount++;
-
-            if (currentToken.type == TOKEN_COMMA) {
-                getNextToken(lexer);
-            } else if (currentToken.type != TOKEN_RPAREN) {
-                error("Expected ',' or ')' after parameter");
-            }
-        } else {
-            error("Expected parameter name");
+        if (currentToken.type == TOKEN_COMMA) {
+            getNextToken(lexer); // Consume the comma
+        } else if (currentToken.type != TOKEN_RPAREN) {
+            error("Expected ',' or ')' after parameter");
         }
     }
 
-    if (currentToken.type == TOKEN_RPAREN) {
-        getNextToken(lexer); // Consume the ')'
-    } else {
-        error("Expected ')' after parameters");
-    }
+    consume(lexer, TOKEN_RPAREN, "Expected ')'");
 
-    return paramList;
+    return paramListNode;
 }
 // </parseParameterList>
 
+
+ASTNode* parseParameter(Lexer* lexer, ParsingContext* context) {
+    if (currentToken.type != TOKEN_IDENTIFIER) {
+        error("Expected parameter name");
+    }
+    char* paramName = strndup(currentToken.start, currentToken.length);
+    getNextToken(lexer);
+
+    consume(lexer, TOKEN_COLON, "Expected ':' after parameter name");
+
+    CryoDataType paramType = DATA_TYPE_UNKNOWN;
+    if (currentToken.type == TOKEN_KW_INT) {
+        paramType = DATA_TYPE_INT;
+    } else if (currentToken.type == TOKEN_KW_FLOAT) {
+        paramType = DATA_TYPE_FLOAT;
+    } else if (currentToken.type == TOKEN_KW_STRING) {
+        paramType = DATA_TYPE_STRING;
+    } else if (currentToken.type == TOKEN_KW_BOOL) {
+        paramType = DATA_TYPE_BOOLEAN;
+    } else if (currentToken.type == TOKEN_KW_VOID) {
+        paramType = DATA_TYPE_VOID;
+    } else if (currentToken.type == DATA_TYPE_UNKNOWN) {
+        printf("[Parser] Unknown type\n");
+        error("[Parser] Expected parameter type");
+    } else {
+        error("Expected parameter type");
+    }
+    getNextToken(lexer);
+
+    ASTNode* paramNode = createVarDeclNode();
+    paramNode->data.varDecl.name = paramName;
+    paramNode->data.varDecl.dataType = paramType;
+
+    return paramNode;
+}
+
+
+void addParameterToList(ASTNode* paramListNode, ASTNode* param) {
+    if (paramListNode->data.paramList.paramCapacity == 0) {
+        paramListNode->data.paramList.paramCapacity = 4;
+        paramListNode->data.paramList.params = (ASTNode**)malloc(paramListNode->data.paramList.paramCapacity * sizeof(ASTNode*));
+        if (paramListNode->data.paramList.params == NULL) {
+            perror("Failed to allocate memory for parameters");
+            exit(EXIT_FAILURE);
+        }
+    } else if (paramListNode->data.paramList.paramCount == paramListNode->data.paramList.paramCapacity) {
+        paramListNode->data.paramList.paramCapacity *= 2;
+        ASTNode** newParams = (ASTNode**)realloc(paramListNode->data.paramList.params, paramListNode->data.paramList.paramCapacity * sizeof(ASTNode*));
+        if (newParams == NULL) {
+            perror("Failed to reallocate memory for parameters");
+            exit(EXIT_FAILURE);
+        }
+        paramListNode->data.paramList.params = newParams;
+    }
+    paramListNode->data.paramList.params[paramListNode->data.paramList.paramCount++] = param;
+}
 
 // <parseReturnStatement>
 ASTNode* parseReturnStatement(Lexer* lexer, ParsingContext* context) {
@@ -737,7 +807,7 @@ ASTNode* createProgramNode() {
 
 
 // Function to add a statement to the program node
-// <addStatementToProgram>
+// <addStatementToProgram>      X
 void addStatementToProgram(ASTNode* programNode, ASTNode* statement) {
     if (!programNode || programNode->type != NODE_PROGRAM) {
         fprintf(stderr, "[AST_ERROR] Invalid program node\n");
