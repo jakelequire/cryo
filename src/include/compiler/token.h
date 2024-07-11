@@ -258,13 +258,14 @@ typedef enum CryoNodeType {
     NODE_PARAM_LIST,                // 18
     NODE_TYPE,                      // 19
     NODE_STRING_LITERAL,            // 20
-    NODE_BOOLEAN_LITERAL,           // 21
-    NODE_ARRAY_LITERAL,             // 22
-    NODE_IMPORT_STATEMENT,          // 23
-    NODE_EXTERN_STATEMENT,          // 24
-    NODE_EXTERN_FUNCTION,           // 25
-    NODE_ARG_LIST,                  // 26
-    NODE_UNKNOWN,                   // 27
+    NODE_STRING_EXPRESSION,         // 21
+    NODE_BOOLEAN_LITERAL,           // 22
+    NODE_ARRAY_LITERAL,             // 23
+    NODE_IMPORT_STATEMENT,          // 24
+    NODE_EXTERN_STATEMENT,          // 25
+    NODE_EXTERN_FUNCTION,           // 26
+    NODE_ARG_LIST,                  // 27
+    NODE_UNKNOWN,                   // 28
 } CryoNodeType;
 
 

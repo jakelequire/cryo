@@ -206,7 +206,8 @@
     "cryolib.h": "c",
     "stdarg.h": "c",
     "symtable.h": "c",
-    "new_parser.h": "c"
+    "new_parser.h": "c",
+    "new_ast.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true
 }

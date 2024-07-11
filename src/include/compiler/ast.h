@@ -26,15 +26,7 @@
 #include "compiler/symtable.h"
 /*---------<end>---------*/
 
-#define INITIAL_CAPACITY 8
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*-------<structure_defs>-------*/
-//
 typedef struct {
     CryoVisibilityType visibility;
     CryoDataType returnType;
@@ -43,6 +35,7 @@ typedef struct {
     int paramCount;
     struct ASTNode* body;
 } FunctionDeclNode;
+
 
 typedef struct ASTNode {
     enum CryoNodeType type;
@@ -126,6 +119,7 @@ typedef struct ASTNode {
 
         struct {
             char* varName;
+            bool isReference;
         } varName;
         // >=--------------<End>--------------=<
         
@@ -195,45 +189,85 @@ typedef struct ASTNode {
             int elementCapacity;
         } arrayLiteral; // Add this for array literals
 
-
     } data;
 } ASTNode;
 
 
-/*-------<end_defs>-------*/
+#define INITIAL_CAPACITY 8
 
-/*-----<function_prototypes>-----*/
-CryoDataType getDataTypeFromASTNode(ASTNode* node);
-void printAST(ASTNode* node, int indent);
-void freeAST(ASTNode* node);
-ASTNode* createASTNode(CryoNodeType type);
-ASTNode* createLiteralExpr(int value);
-ASTNode* createVariableExpr(char* name);
-ASTNode* createBooleanLiteralExpr(int value);
-ASTNode* createStringLiteralExpr(char* str);
-ASTNode* createBinaryExpr(ASTNode* left, ASTNode* right, CryoOperatorType op);
-ASTNode* createUnaryExpr(CryoTokenType op, ASTNode* operand);
-ASTNode* createFunctionNode();
-ASTNode* createReturnNode(ASTNode* returnValue);
-ASTNode* createReturnStatement(ASTNode* return_val);
-ASTNode* createBlock();
-ASTNode* createIfStatement(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
-ASTNode* createWhileStatement(ASTNode* condition, ASTNode* body);
-ASTNode* createForStatement(ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
-ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal);
-ASTNode* createExpressionStatement(ASTNode* expression);
-ASTNode* createFunctionCallNode(char* name, ASTNode** args, int argCount);
-ASTNode* createStringExpr(char* str);
-ASTNode* createArrayLiteralNode(ASTNode** elements, int elementCount);
-ASTNode* createImportNode(ASTNode* importPath);
-ASTNode* createExternNode();
-ASTNode* createVarDeclNode();
-ASTNode* createParamListNode();
-void addParameterToList(ASTNode* paramListNode, ASTNode* param);
-void addChildNode(ASTNode* parent, ASTNode* child);
-void addStatementToBlock(ASTNode* block, ASTNode* statement);
-void addFunctionToProgram(ASTNode* program, ASTNode* function);
-/*-----<end_prototypes>-----*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+
+/* @Node_Accessors */
+void printAST                               (ASTNode* node, int indent);
+void freeAST                                (ASTNode* node);
+
+/* @Node_Management */
+ASTNode* createASTNode                      (CryoNodeType type);
+void addChildNode                           (ASTNode* parent, ASTNode* child);
+void addStatementToBlock                    (ASTNode* block, ASTNode* statement);
+void addFunctionToProgram                   (ASTNode* program, ASTNode* function);
+
+/* @Node_Creation - Expressions & Statements */
+ASTNode* createLiteralExpr                  (int value);
+ASTNode* createExpressionStatement          (ASTNode* expression);
+ASTNode* createBinaryExpr                   (ASTNode* left, ASTNode* right, CryoOperatorType op);
+ASTNode* createUnaryExpr                    (CryoTokenType op, ASTNode* operand);
+
+/* @Node_Creation - Literals */
+ASTNode* createIntLiteralNode               (int value);
+ASTNode* createFloatLiteralNode             (float value);
+ASTNode* createStringLiteralNode            (char* value);
+ASTNode* createBooleanLiteralNode           (int value);
+ASTNode* createIdentifierNode               (char* name);
+
+/* @Node_Blocks - Blocks */
+ASTNode* createBlockNode                    (void);
+ASTNode* createFunctionBlock                (ASTNode* function);
+ASTNode* createIfBlock                      (ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
+ASTNode* createForBlock                     (ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
+ASTNode* createWhileBlock                   (ASTNode* condition, ASTNode* body);
+
+
+/* @Node_Blocks - Literals */
+ASTNode* createBooleanLiteralExpr           (int value);
+ASTNode* createStringLiteralExpr            (char* str);
+ASTNode* createStringExpr                   (char* str);
+
+
+/* @Node_Creation - Variables */
+ASTNode* createVarDeclarationNode           (char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal);
+ASTNode* createVariableExpr                 (char* name, bool isReference);
+
+/* @Node_Creation - Functions */
+ASTNode* createFunctionNode                 (CryoVisibilityType visibility, char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType);
+ASTNode* createExternDeclNode               (char* functionName, ASTNode* params, CryoDataType returnType);
+ASTNode* createFunctionCallNode             (char* name, ASTNode** args, int argCount);
+ASTNode* createReturnNode                   (ASTNode* returnValue);
+ASTNode* createReturnExpression             (ASTNode* returnExpression, CryoDataType returnType);
+
+/* @Node_Creation - Parameters */
+ASTNode* createParamListNode                (void);
+ASTNode* createArgumentListNode             (void);
+ASTNode* createParamNode                    (char* name, ASTNode* type);
+
+
+/* @Node_Creation - Modules & Externals */
+ASTNode* createImportNode                   (ASTNode* importPath);
+ASTNode* createExternNode                   (ASTNode* externNode);
+
+
+/* @Node_Creation - Conditionals */
+ASTNode* createIfStatement                  (ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
+ASTNode* createForStatement                 (ASTNode* initializer, ASTNode* condition, ASTNode* increment, ASTNode* body);
+ASTNode* createWhileStatement               (ASTNode* condition, ASTNode* body);
+
+/* @Node_Creation - Arrays */
+ASTNode* createArrayLiteralNode             (void);
+
 
 
 #ifdef __cplusplus

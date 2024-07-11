@@ -16,7 +16,6 @@
  ********************************************************************************/
 #ifndef LEXER_H
 #define LEXER_H
-
 /*------ <includes> ------*/
 #include <stdbool.h>
 #include <string.h>
@@ -26,16 +25,21 @@
 #include <errno.h>
 #include <ctype.h>
 /*---<custom_includes>---*/
-#include "compiler/token.h"
-#include "compiler/ast.h"
-#include "utils/logger.h"
+#include "token.h"
+#include "ast.h"
+#include "logger.h"
 #include "utils/fs.h"
 /*---------<end>---------*/
-/*-------<structure_defs>-------*/
+
 typedef struct {
-    const char* keyword;
+    char* keyword;
     CryoTokenType type;
 } KeywordToken;
+
+typedef struct {
+    char* baseType;
+    CryoTokenType dataType;
+} DataTypeToken;
 
 typedef union {
     int intValue;
@@ -45,7 +49,7 @@ typedef union {
 
 typedef struct Token {
     CryoTokenType type;         // Type of the token
-    const char* start;          // Pointer to the beginning of the token in the source code
+    char* start;          // Pointer to the beginning of the token in the source code
     int length;                 // Length of the token
     int line;                   // Line number where the token is found
     int column;                 // Column number where the token is found
@@ -68,45 +72,54 @@ typedef struct Lexer {
     Token lookahead;
     bool hasPeeked;
 } Lexer;
-/*-------<end_defs>-------*/
 
-/*-----<function_prototypes>-----*/
-// Helper Functions
-bool isAlpha(char c);
-bool isDigit(char c);
-char* my_strndup(const char* src, size_t len);
 
-// Lexer Function
-void initLexer(Lexer* lexer, const char* source);
-bool isAtEnd(Lexer* lexer);
-char advance(Lexer* lexer);
-char peek(Lexer* lexer);
-char peekNext(Lexer* lexer);
-bool matchToken(Lexer* lexer, CryoTokenType type);
-void skipWhitespace(Lexer* lexer);
+/* @Util_Functions */
+char* my_strndup                            (const char* src, size_t len);
 
-// Token Creation
-Token makeToken(Lexer* lexer, CryoTokenType type);
-Token errorToken(Lexer* lexer, const char* message);
-CryoTokenType checkKeyword(Lexer *lexer, const char *keyword, CryoTokenType type);
-CryoTokenType checkArrayType(Lexer* lexer, const char* baseType, CryoTokenType arrayTokenType);
-Token identifier(Lexer* lexer);
-Token number(Lexer* lexer);
-Token string(Lexer* lexer);
 
-// Lexer Walking Functions
-Token get_next_token(Lexer *lexer);
-Token nextToken(Lexer* lexer, Token* token);
-Token getToken(Lexer* lexer);
-Token peekToken(Lexer* lexer);
-Token peekNextToken(Lexer* lexer);
+/* @Lexer */
+void initLexer                              (Lexer* lexer, const char* source);
+void freeLexer                              (Lexer* lexer);
 
-// Final Functions
-void freeLexer(Lexer* lexer);
+
+/* @Lexer_Utils */
+char* advance                               (Lexer* lexer);
+bool isAtEnd                                (Lexer* lexer);
+char* peek                                  (Lexer* lexer);
+char* peekNext                              (Lexer* lexer);
+bool* matchToken                            (Lexer* lexer, CryoTokenType type);
+void skipWhitespace                         (Lexer* lexer);
+
+
+/* @Lexer_Functions */
+Token nextToken                             (Lexer* lexer, Token* token);
+Token get_next_token                        (Lexer* lexer);
+Token getToken                              (Lexer* lexer);
+Token peekToken                             (Lexer* lexer);
+Token peekNextToken                         (Lexer* lexer);
+
+
+/* @Token_Creation */
+Token makeToken                             (Lexer* lexer, CryoTokenType type);
+Token errorToken                            (Lexer* lexer, char* message);
+Token number                                (Lexer* lexer);
+Token string                                (Lexer* lexer);
+Token boolean                               (Lexer* lexer);
+Token symbolChar                            (Lexer* lexer);
+Token identifier                            (Lexer* lexer);
+
+/* @Data_Types */
+CryoTokenType checkKeyword                  (Lexer* lexer, char* keyword, CryoTokenType type);
+CryoTokenType checkDataType                 (Lexer* lexer, char* dataType, CryoTokenType type);
+
+/* @DataType_Evaluation */
+bool isAlpha                                (char* c);
+bool isDigit                                (char* c);
+bool isType                                 (char* c);
+
+/* =========================================================== */
+/* @DEBUG | Used to debug the parser in a different executable */
 int lexer(int argc, char* argv[]);
-/*-----<end_prototypes>-----*/
-
-// Note to self, add more documentation for the structure
-// definitions across the whole program.
 
 #endif // LEXER_H
