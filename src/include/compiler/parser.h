@@ -25,7 +25,7 @@
 #include <assert.h>
 /*---<custom_includes>---*/
 #include "compiler/lexer.h"
-#include "compiler/new_ast.h"
+#include "compiler/ast.h"
 #include "compiler/token.h"
 #include "compiler/symtable.h"
 #include "utils/fs.h"
@@ -47,7 +47,7 @@ typedef struct {
 
 
 #ifndef HAVE_STRNDUP
-char* strndup(char* s, size_t n);
+char* strndup(const char* s, size_t n);
 #endif
 
 /* =========================================================== */
@@ -64,6 +64,7 @@ void debugCurrentToken                      (void);
 
 /* @DataType_Management */
 CryoDataType getCryoDataType                (const char* typeStr);
+int getOperatorPrecedence                   (CryoTokenType type);
 
 /* @Parser_Management */
 // ASTNode* createProgramNode               (void);     !! Move to AST

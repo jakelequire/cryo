@@ -290,6 +290,40 @@ char* CryoTokenToString(CryoTokenType node) {
     }
 }
 
+
+char* CryoOperatorTypeToString(CryoOperatorType op) {
+    switch(op) {
+        case OPERATOR_ADD:                  return "OPERATOR_ADD";
+        case OPERATOR_SUB:                  return "OPERATOR_SUB";
+        case OPERATOR_MUL:                  return "OPERATOR_MUL";
+        case OPERATOR_DIV:                  return "OPERATOR_DIV";
+        case OPERATOR_MOD:                  return "OPERATOR_MOD";
+        case OPERATOR_AND:                  return "OPERATOR_AND";
+        case OPERATOR_OR:                   return "OPERATOR_OR";
+        case OPERATOR_XOR:                  return "OPERATOR_XOR";
+        case OPERATOR_NOT:                  return "OPERATOR_NOT";
+        case OPERATOR_LSHIFT:               return "OPERATOR_LSHIFT";
+        case OPERATOR_RSHIFT:               return "OPERATOR_RSHIFT";
+        case OPERATOR_LT:                   return "OPERATOR_LT";
+        case OPERATOR_GT:                   return "OPERATOR_GT";
+        case OPERATOR_LTE:                  return "OPERATOR_LTE";
+        case OPERATOR_GTE:                  return "OPERATOR_GTE";
+        case OPERATOR_EQ:                   return "OPERATOR_EQ";
+        case OPERATOR_NEQ:                  return "OPERATOR_NEQ";
+        case OPERATOR_ASSIGN:               return "OPERATOR_ASSIGN";
+        case OPERATOR_ADD_ASSIGN:           return "OPERATOR_ADD_ASSIGN";
+        case OPERATOR_SUB_ASSIGN:           return "OPERATOR_SUB_ASSIGN";
+        case OPERATOR_MUL_ASSIGN:           return "OPERATOR_MUL_ASSIGN";
+        case OPERATOR_DIV_ASSIGN:           return "OPERATOR_DIV_ASSIGN";
+        case OPERATOR_MOD_ASSIGN:           return "OPERATOR_MOD_ASSIGN";
+        case OPERATOR_AND_ASSIGN:           return "OPERATOR_AND_ASSIGN";
+        case OPERATOR_OR_ASSIGN:            return "OPERATOR_OR_ASSIGN";
+        case OPERATOR_XOR_ASSIGN:           return "OPERATOR_XOR_ASSIGN";
+        case OPERATOR_NA:                   return "OPERATOR_NA";
+        default:                            return "<OPERATOR UNKNOWN>";
+    }
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

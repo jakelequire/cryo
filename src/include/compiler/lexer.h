@@ -84,11 +84,11 @@ void freeLexer                              (Lexer* lexer);
 
 
 /* @Lexer_Utils */
-char* advance                               (Lexer* lexer);
+const char advance                          (Lexer* lexer);
 bool isAtEnd                                (Lexer* lexer);
-char* peek                                  (Lexer* lexer);
-char* peekNext                              (Lexer* lexer);
-bool* matchToken                            (Lexer* lexer, CryoTokenType type);
+const char* peek                            (Lexer* lexer);
+const char peekNext                         (Lexer* lexer);
+bool matchToken                             (Lexer* lexer, CryoTokenType type);
 void skipWhitespace                         (Lexer* lexer);
 
 

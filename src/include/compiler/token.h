@@ -305,8 +305,9 @@ char* CryoNodeTypeToString(CryoNodeType node);
 char* CryoDataTypeToString(CryoDataType type);
 char* CryoVisibilityTypeToString(CryoVisibilityType visibility);
 char* CryoTokenToString(CryoTokenType node);
+char* CryoOperatorTypeToString(CryoOperatorType op);
 
-
+CryoDataType CryoDataTypeStringToType(char* typeStr);
 
 #ifdef __cplusplus
 }

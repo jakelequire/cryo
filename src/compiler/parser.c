@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "compiler/new_parser.h"
+#include "compiler/parser.h"
 
 #ifndef HAVE_STRNDUP
 // <strndup>
@@ -80,8 +80,8 @@ ASTNode* parseProgram(Lexer* lexer) {
 // <consume>
 void consume(Lexer *lexer, CryoTokenType type, char* message) {
     printf("[Parser] Consuming token: %s (Expecting: %s)\n",
-        getTokenName(currentToken.type),
-        getTokenName(type)
+        CryoTokenToString(currentToken.type),
+        CryoTokenToString(type)
     );
 
     if(currentToken.type == type) {
@@ -132,7 +132,7 @@ void debugCurrentToken() {
 /* @DataType_Management                                                   */
 
 // <getCryoDataType>
-CryoDataType* getCryoDataType(char* typeStr) {
+CryoDataType getCryoDataType(const char* typeStr) {
     printf("[Parser] Getting data type for <char*> input: %s\n", typeStr);
     CryoDataType type = CryoDataTypeStringToType(typeStr);
     return type;
@@ -152,6 +152,39 @@ CryoDataType* parseType(Lexer* lexer, ParsingContext* context) {
 }
 // </parseType>
 
+
+// <getOperatorPrecedence>
+int getOperatorPrecedence(CryoTokenType type) {
+    switch(type) {
+        case TOKEN_PLUS:
+        case TOKEN_MINUS:
+            return 1;
+
+        case TOKEN_STAR:
+        case TOKEN_SLASH:
+            return 2;
+
+        case TOKEN_OP_EQ:
+        case TOKEN_OP_NEQ:
+            return 3;
+
+        case TOKEN_OP_LT:
+        case TOKEN_OP_LTE:
+        case TOKEN_OP_GT:
+        case TOKEN_OP_GTE:
+            return 4;
+
+        case TOKEN_OP_AND:
+            return 5;
+
+        case TOKEN_OP_OR:
+            return 6;
+
+        default:
+            return 0;
+    }
+}
+// </getOperatorPrecedence>
 
 
 /* ====================================================================== */
@@ -220,31 +253,33 @@ ASTNode* parseStatement(Lexer *lexer, ParsingContext *context) {
 
 // <parsePrimaryExpression>
 ASTNode* parsePrimaryExpression(Lexer *lexer, ParsingContext *context) {
+    printf("[Parser] Parsing primary expression...\n");
+
+    ASTNode* node = NULL;
+
     switch(currentToken.type) {
         case TOKEN_INT_LITERAL:
             printf("[Parser] Parsing integer literal\n");
-            // TODO: Implement `createIntLiteralNode` as it is undefined atm
-            ASTNode* node = createIntLiteralNode(atoi(currentToken.start));
+            node = createIntLiteralNode(atoi(currentToken.start));
             getNextToken(lexer);
             return node;
 
         case TOKEN_STRING_LITERAL:
             printf("[Parser] Parsing string literal\n");
             char* str = strndup(currentToken.start + 1, currentToken.length - 2);
-            ASTNode* node = createStringLiteralNode(str);
+            node = createStringLiteralNode(str);
             getNextToken(lexer);
             return node;
 
         case TOKEN_BOOLEAN_LITERAL:
             printf("[Parser] Parsing boolean literal\n");
-            ASTNode* node = createBooleanLiteralNode(strcmp(currentToken.start, "true") == 0);
+            node = createBooleanLiteralNode(strcmp(currentToken.start, "true") == 0);
             getNextToken(lexer);
             return node;
 
         case TOKEN_IDENTIFIER:
             printf("[Parser] Parsing identifier\n");
-            // TODO: Implement `createIdentifierNode` as it is undefined atm
-            ASTNode* node = createIdentifierNode(strndup(currentToken.start, currentToken.length));
+            node = createIdentifierNode(strndup(currentToken.start, currentToken.length));
             getNextToken(lexer);
             return node;
 
@@ -276,7 +311,7 @@ ASTNode* parseExpressionStatement(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing expression statement...\n");
     ASTNode* expression = parseExpression(lexer, context);
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon");
-    return createExpressionStatementNode(expression);
+    return createExpressionStatement(expression);
 }
 // </parseExpressionStatement>
 
@@ -289,14 +324,14 @@ ASTNode* parseBinaryExpression(Lexer *lexer, ParsingContext *context, int preced
     getNextToken(lexer);
 
     ASTNode* right = parseUnaryExpression(lexer, context);
-    ASTNode* left = createBinaryExpressionNode(operator, left, right);
+    ASTNode* left = createBinaryExpr(operator, left, right);
 
     while (getOperatorPrecedence(currentToken.type) > precedence) {
         operator = currentToken.type;
         getNextToken(lexer);
 
         right = parseUnaryExpression(lexer, context);
-        left = createBinaryExpressionNode(operator, left, right);
+        left = createBinaryExpr(operator, left, right);
     }
 
     return left;
@@ -314,10 +349,10 @@ ASTNode* parseUnaryExpression(Lexer *lexer, ParsingContext *context) {
         operator = currentToken.type;
         getNextToken(lexer);
         right = parseUnaryExpression(lexer, context);
-        return createUnaryExpressionNode(operator, right);
+        return createUnaryExpression(operator, right);
     }
 
-    return createUnaryExpressionNode(operator, right);
+    return createUnaryExpression(operator, right);
 }
 // </parseUnaryExpression>
 
@@ -572,7 +607,7 @@ ASTNode* parseParameterList(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing parameter list...\n");
     consume(lexer, TOKEN_LPAREN, "Expected `(` to start parameter list");
 
-    ASTNode* paramListNode = createParameterListNode();
+    ASTNode* paramListNode = createParamListNode();
     if(paramListNode == NULL) {
         fprintf(stderr, "[Parser] [ERROR] Failed to create parameter list node\n");
         return NULL;
@@ -711,7 +746,7 @@ ASTNode* parseIfStatement(Lexer *lexer, ParsingContext *context) {
     }
 
     context->isParsingIfCondition = false;
-    return createIfStatementNode(condition, ifBlock, elseBlock);
+    return createIfStatement(condition, ifBlock, elseBlock);
 }
 // </parseIfStatement>
 
@@ -746,7 +781,7 @@ ASTNode* parseWhileStatement(Lexer *lexer, ParsingContext *context) {
     consume(lexer, TOKEN_RPAREN, "Expected `)` to end while loop");
 
     ASTNode* body = parseBlock(lexer, context);
-    return createWhileLoopNode(condition, body);
+    return createWhileStatement(condition, body);
 }
 // </parseWhileStatement>
 

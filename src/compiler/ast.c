@@ -16,13 +16,15 @@
  ********************************************************************************/
 #include "compiler/ast.h"
 
+
 /* ====================================================================== */
 // @Global_Variables
 ASTNode* programNode = NULL;
 
+
+
 /* ====================================================================== */
 /* @Node_Accessors */
-
 
 // <printAST>
 void printAST(ASTNode* node, int indent) {
@@ -347,7 +349,6 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_BOOLEAN_LITERAL:
-            free(node->data.literalExpression.booleanValue);
             break;
 
         case NODE_ARRAY_LITERAL:
@@ -660,6 +661,28 @@ void addFunctionToProgram(ASTNode* program, ASTNode* function) {
 /* ====================================================================== */
 /* @Node_Creation - Expressions & Statements */
 
+
+ASTNode* createProgramNode() {
+    printf("[AST] Creating Program Node\n");
+
+    ASTNode* node = createASTNode(NODE_PROGRAM);
+    if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program node\n");
+        return NULL;
+    }
+
+    node->data.program.stmtCount = 0;
+    node->data.program.stmtCapacity = 2;
+    node->data.program.statements = (ASTNode**)calloc(node->data.program.stmtCapacity, sizeof(ASTNode*));
+    if (!node->data.program.statements) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program statements\n");
+        free(node);
+        return NULL;
+    }
+
+    printf("[AST] Created Program Node\n");
+    return node;
+}
 
 // <createLiteralExpr>
 ASTNode* createLiteralExpr(int value) {
@@ -1205,6 +1228,7 @@ ASTNode* createParamNode(char* name, ASTNode* type) {
 /* ====================================================================== */
 /* @Node_Creation - Modules & Externals */
 
+// <createImportNode>
 ASTNode* createImportNode(ASTNode* importPath) {
     printf("[AST] Creating Import Node\n");
 
@@ -1214,11 +1238,14 @@ ASTNode* createImportNode(ASTNode* importPath) {
         return NULL;
     }
 
-    node->data.importStatementNode.modulePath = importPath;
+    node->data.importStatementNode.modulePath = (char*)importPath;
     
     return node;
 }
+// </createImportNode>
 
+
+// <createExternNode>
 ASTNode* createExternNode(ASTNode* externNode) {
     printf("[AST] Creating Extern Node\n");
 
@@ -1233,6 +1260,8 @@ ASTNode* createExternNode(ASTNode* externNode) {
     
     return node;
 }
+// </createExternNode>
+
 
 
 /* ====================================================================== */

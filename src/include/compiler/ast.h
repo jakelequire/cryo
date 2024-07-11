@@ -212,6 +212,7 @@ void addStatementToBlock                    (ASTNode* block, ASTNode* statement)
 void addFunctionToProgram                   (ASTNode* program, ASTNode* function);
 
 /* @Node_Creation - Expressions & Statements */
+ASTNode* createProgramNode                  (void);
 ASTNode* createLiteralExpr                  (int value);
 ASTNode* createExpressionStatement          (ASTNode* expression);
 ASTNode* createBinaryExpr                   (ASTNode* left, ASTNode* right, CryoOperatorType op);

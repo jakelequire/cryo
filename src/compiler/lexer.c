@@ -112,7 +112,7 @@ void freeLexer(Lexer* lexer) {
 
 
 // <advance>
-char* advance(Lexer* lexer) {
+const char advance(Lexer* lexer) {
     lexer->current++;
     lexer->column++;
     return lexer->current[-1];
@@ -128,14 +128,14 @@ bool isAtEnd(Lexer* lexer) {
 
 
 // <peek>
-char* peek(Lexer* lexer) {
-    return *lexer->current;
+const char* peek(Lexer* lexer) {
+    return lexer->current;
 }
 // </peek>
 
 
 // <peekNext>
-char* peekNext(Lexer* lexer) {
+const char peekNext(Lexer* lexer) {
     if (isAtEnd(lexer)) return '\0';
     return lexer->current[1];
 }
@@ -143,7 +143,7 @@ char* peekNext(Lexer* lexer) {
 
 
 // <matchToken>
-bool* matchToken(Lexer* lexer, CryoTokenType type) {
+bool matchToken(Lexer* lexer, CryoTokenType type) {
     if (peekToken(lexer).type == type) {
         nextToken(lexer, &lexer->currentToken);
         return true;
@@ -156,8 +156,8 @@ bool* matchToken(Lexer* lexer, CryoTokenType type) {
 // <skipWhitespace>
 void skipWhitespace(Lexer* lexer) {
     for (;;) {
-        char c = peek(lexer);
-        switch (c) {
+        const char* c = peek(lexer);
+        switch (*c) {
             case ' ':
             case '\r':
             case '\t':
@@ -210,11 +210,11 @@ Token nextToken(Lexer* lexer, Token* token) {
 
     char c = advance(lexer);
 
-    if (isAlpha(c)) {
+    if (isAlpha(&c)) {
         return identifier(lexer);
     }
 
-    if (isDigit(c)) {
+    if (isDigit(&c)) {
         return number(lexer);
     }
 
@@ -311,7 +311,7 @@ Token errorToken(Lexer* lexer, char* message) {
 
 // <number>
 Token number(Lexer* lexer) {
-    while (isDigit(*lexer->current)) {
+    while (isDigit(lexer->current)) {
         advance(lexer);
     }
     Token token = makeToken(lexer, TOKEN_INT_LITERAL);
@@ -426,12 +426,12 @@ Token symbolChar(Lexer* lexer) {
 
 // <identifier>
 Token identifier(Lexer* lexer) {
-    char* currentToken = *lexer->current;
+    const char* currentToken = lexer->current;
 
     while (
-        isAlpha(*lexer->current) ||
-        isDigit(*lexer->current) ||
-        isType(*lexer->current)
+        isAlpha(lexer->current) ||
+        isDigit(lexer->current) ||
+        isType(lexer->current)
     ) {
         advance(lexer);
     }
@@ -463,8 +463,9 @@ CryoTokenType checkKeyword(Lexer* lexer, char* keyword, CryoTokenType type) {
 CryoTokenType checkDataType(Lexer* lexer, char* dataType, CryoTokenType type) {
     int i = 0;
     while (dataTypes[i].dataType != NULL) {
-        if (strcmp(dataTypes[i].dataType, dataType) == 0) {
-            return dataTypes[i].baseType;
+        const char* currentDataType = CryoTokenToString(dataTypes[i].dataType);
+        if (strcmp(currentDataType, dataType) == 0) {
+            return dataTypes[i].dataType;
         }
         i++;
     }
