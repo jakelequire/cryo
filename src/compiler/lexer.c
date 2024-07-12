@@ -123,7 +123,7 @@ char advance(Lexer* lexer) {
 
 // <isAtEnd>
 bool isAtEnd(Lexer* lexer) {
-    return lexer->current == NULL || *lexer->current == '\0';
+    return *lexer->current == '\0' || *lexer->current == NULL || lexer->current >= lexer->end;
 }
 // </isAtEnd>
 
@@ -138,6 +138,7 @@ char peek(Lexer* lexer) {
 // <peekNext>
 char peekNext(Lexer* lexer) {
     if (isAtEnd(lexer)) return '\0';
+    printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
     return lexer->current[1];
 }
 // </peekNext>
@@ -210,8 +211,6 @@ Token nextToken(Lexer* lexer, Token* token) {
         return *token;
     }
 
-    printf("[Lexer] Current token before advancing: %.*s, Type: %d\n", token->length, token->start, token->type);
-
     char c = advance(lexer);
 
     if (isAlpha(c)) {
@@ -232,13 +231,16 @@ Token nextToken(Lexer* lexer, Token* token) {
         return *token;
     }
 
-    if(symbolChar(lexer, c).type != TOKEN_UNKNOWN) {
-        *token = symbolChar(lexer, c);
+    Token symToken = symbolChar(lexer, c);
+    if (symToken.type != TOKEN_UNKNOWN) {
+        *token = symToken;
         printf("[Lexer] Symbol token created: %.*s\n", token->length, token->start);
         return *token;
     }
 
-    return *token;
+    printf("[Lexer] Created unknown token: %c\n", c);
+
+    return makeToken(lexer, TOKEN_ERROR);
 }
 // </nextToken>
 
@@ -248,7 +250,6 @@ Token nextToken(Lexer* lexer, Token* token) {
 Token get_next_token(Lexer* lexer) {\
     printf("[Lexer] Getting next token...\n");
     nextToken(lexer, &lexer->currentToken);
-    printf("[Lexer] Next token: %.*s\n", lexer->currentToken.length, lexer->currentToken.start);
     return lexer->currentToken;
 }
 // </get_next_token>
@@ -301,8 +302,7 @@ Token makeToken(Lexer* lexer, CryoTokenType type) {
     token.column = lexer->column;
 
     printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
-            token.length, token.start, token.type, token.line, token.column
-        );
+           token.length, token.start, token.type, token.line, token.column);
     return token;
 }
 // </makeToken>
@@ -397,10 +397,12 @@ Token symbolChar(Lexer* lexer, char symbol) {
         case ':':
             return makeToken(lexer, TOKEN_COLON);
         case '-':
-            if(peek(lexer) == '>' && !isAtEnd(lexer)) {
+            if (peek(lexer) == '>') {
                 advance(lexer);
+                printf("[Lexer] Creating TOKEN_RESULT_ARROW for '->'\n");
                 return makeToken(lexer, TOKEN_RESULT_ARROW);
             }
+            printf("[Lexer] Creating TOKEN_MINUS for '-'\n");
             return makeToken(lexer, TOKEN_MINUS);
         case '+':
             return makeToken(lexer, TOKEN_PLUS);

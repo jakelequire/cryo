@@ -62,7 +62,6 @@ ASTNode* parseProgram(Lexer* lexer) {
 
     while (currentToken.type != TOKEN_EOF) {
         ASTNode* statement = parseStatement(lexer, &context);
-        printf("[Parser] Statement parsed: %s\n", CryoNodeTypeToString(statement->type));
         if (statement) {
             addStatementToProgram(program, statement);
         } else {
@@ -110,7 +109,7 @@ void getNextToken(Lexer *lexer) {
         return;
     }
     currentToken = get_next_token(lexer);
-    printf("[Parser] Next Token: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
+    printf("[Parser] @getNextToken | Next Token: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
 }
 // </getNextToken>
 
@@ -148,13 +147,30 @@ CryoDataType getCryoDataType(const char* typeStr) {
 // <parseType>
 CryoDataType parseType(Lexer* lexer, ParsingContext* context) {
     printf("[Parser] Parsing type...\n");
-    if (currentToken.type == TOKEN_IDENTIFIER) {
-        char* typeStr = strndup(currentToken.start, currentToken.length);
-        CryoDataType type = getCryoDataType(typeStr);
-        getNextToken(lexer);
+    CryoDataType type = DATA_TYPE_UNKNOWN;
 
+    switch (currentToken.type) {
+        case TOKEN_KW_VOID:
+        case TOKEN_KW_INT:
+        case TOKEN_KW_STRING:
+        case TOKEN_KW_BOOL:
+            type = getCryoDataType(strndup(currentToken.start, currentToken.length));
+            getNextToken(lexer);  // Consume the type keyword
+            break;
+
+        case TOKEN_IDENTIFIER:
+            type = getCryoDataType(strndup(currentToken.start, currentToken.length));
+            getNextToken(lexer);  // Consume the type identifier
+            break;
+
+        default:
+            error("Expected a type identifier");
+            break;
     }
+
+    return type;
 }
+
 // </parseType>
 
 
@@ -197,25 +213,26 @@ int getOperatorPrecedence(CryoTokenType type) {
 
 // <addStatementToProgram>
 void addStatementToProgram(ASTNode* programNode, ASTNode* statement) {
+    printf("[Parser] Adding statement to program...\n");
     if (!programNode || programNode->type != NODE_PROGRAM) {
         fprintf(stderr, "[AST_ERROR] Invalid program node\n");
         return;
     }
 
-    printf("[AST_DEBUG] Before adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
+    printf("[AST] Before adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
     if (programNode->data.program.stmtCount >= programNode->data.program.stmtCapacity) {
         int newCapacity = programNode->data.program.stmtCapacity == 0 ? 2 : programNode->data.program.stmtCapacity * 2;
-        printf("[AST_DEBUG] Increasing stmtCapacity to: %d\n", newCapacity);
+        printf("[AST] Increasing stmtCapacity to: %d\n", newCapacity);
         programNode->data.program.statements = realloc(programNode->data.program.statements, newCapacity * sizeof(ASTNode*));
         if (!programNode->data.program.statements) {
-            fprintf(stderr, "[AST_ERROR] Failed to reallocate memory for program statements\n");
+            fprintf(stderr, "<!> [AST] Error: Failed to reallocate memory for program statements\n");
             return;
         }
         programNode->data.program.stmtCapacity = newCapacity;
     }
 
     programNode->data.program.statements[programNode->data.program.stmtCount++] = statement;
-    printf("[AST_DEBUG] After adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
+    printf("[AST] After adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
 }
 // </addStatementToProgram>
 
@@ -237,6 +254,7 @@ ASTNode* parseStatement(Lexer *lexer, ParsingContext *context) {
             return parsePublicDeclaration(lexer, context);
 
         case TOKEN_KW_RETURN:
+            printf("[Parser] Parsing return statement\n");
             return parseReturnStatement(lexer, context);
 
         case TOKEN_KW_FOR:
@@ -441,9 +459,10 @@ ASTNode* parseFunctionBlock(Lexer *lexer, ParsingContext *context) {
 
     consume(lexer, TOKEN_LBRACE, "Expected `{` to start function block");
 
-    while (currentToken.type != TOKEN_RBRACE) {
+    while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
         ASTNode* statement = parseStatement(lexer, context);
         if (statement) {
+            printf("[Parser] Adding statement to function block\n");
             addStatementToBlock(functionBlock, statement);
         } else {
             fprintf(stderr, "[Parser] [ERROR] Failed to parse statement\n");
@@ -454,6 +473,7 @@ ASTNode* parseFunctionBlock(Lexer *lexer, ParsingContext *context) {
 
     consume(lexer, TOKEN_RBRACE, "Expected `}` to end function block");
     context->scopeLevel--;
+    printf("[Parser] Exiting function block\n");
     return functionBlock;
 }
 // </parseFunctionBlock>
@@ -534,13 +554,32 @@ ASTNode* parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     getNextToken(lexer);
 
     ASTNode* params = parseParameterList(lexer, context);
-    CryoDataType returnType;
+
+    CryoDataType returnType = DATA_TYPE_VOID;  // Default return type
     if (currentToken.type == TOKEN_RESULT_ARROW) {
+        printf("[Parser] Found return type arrow\n");
         getNextToken(lexer);
         returnType = parseType(lexer, context);
+    } else {
+        error("Expected `->` for return type");
     }
 
+    printf("[Parser] Function return type: %s\n", CryoDataTypeToString(returnType));
+
+    // Ensure the next token is `{` for the function block
+    if (currentToken.type != TOKEN_LBRACE) {
+        printf("<DEBUG> [Parser] Current Token: %s\n ", CryoTokenToString(currentToken.type));
+        error("Expected `{` to start function block");
+        return NULL;
+    }
+
+    // Parse the function block
     ASTNode* functionBlock = parseFunctionBlock(lexer, context);
+    if (!functionBlock) {
+        error("Failed to parse function block");
+        return NULL;
+    }
+
     return createFunctionNode(visibility, functionName, params, functionBlock, returnType);
 }
 // </parseFunctionDeclaration>
@@ -598,11 +637,15 @@ ASTNode* parseReturnStatement(Lexer *lexer, ParsingContext *context) {
     ASTNode* expression = NULL;
     if (currentToken.type != TOKEN_SEMICOLON) {
         expression = parseExpression(lexer, context);
+        printf("[Parser] Parsed return expression\n");
     }
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon");
-    return createReturnNode(expression);
+    ASTNode* returnNode = createReturnNode(expression);
+    printf("[AST] Created Return Node: Type = %d\n", returnNode->type);
+    return returnNode;
 }
+
 // </parseReturnStatement>
 
 

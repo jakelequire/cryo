@@ -66,8 +66,8 @@ typedef struct ASTNode {
 
         struct {
             struct ASTNode** statements;
-            int stmtCount;
-            int stmtCapacity;
+            size_t stmtCount;
+            size_t stmtCapacity;
         } block;
         
         // >=------<Function Declaration>------=<
