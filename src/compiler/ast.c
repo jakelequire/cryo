@@ -1204,7 +1204,7 @@ ASTNode* createArgumentListNode(void) {
 
 
 // <createParamNode>
-ASTNode* createParamNode(char* name, ASTNode* type) {
+ASTNode* createParamNode(char* name, CryoDataType type) {
     printf("[AST] Creating Parameter Node: %s\n", name);
 
     ASTNode* node = createASTNode(NODE_VAR_DECLARATION);

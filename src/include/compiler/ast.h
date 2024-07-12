@@ -253,7 +253,7 @@ ASTNode* createReturnExpression             (ASTNode* returnExpression, CryoData
 /* @Node_Creation - Parameters */
 ASTNode* createParamListNode                (void);
 ASTNode* createArgumentListNode             (void);
-ASTNode* createParamNode                    (char* name, ASTNode* type);
+ASTNode* createParamNode                    (char* name, CryoDataType type);
 
 
 /* @Node_Creation - Modules & Externals */

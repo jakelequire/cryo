@@ -141,7 +141,7 @@ CryoDataType getCryoDataType(const char* typeStr) {
 
 
 // <parseType>
-CryoDataType* parseType(Lexer* lexer, ParsingContext* context) {
+CryoDataType parseType(Lexer* lexer, ParsingContext* context) {
     printf("[Parser] Parsing type...\n");
     if (currentToken.type == TOKEN_IDENTIFIER) {
         char* typeStr = strndup(currentToken.start, currentToken.length);
@@ -321,17 +321,22 @@ ASTNode* parseBinaryExpression(Lexer *lexer, ParsingContext *context, int preced
     printf("[Parser] Parsing binary expression...\n");
 
     CryoTokenType operator = currentToken.type;
+    CryoOperatorType op = CryoTokenToOperator(operator);
+    if (op == OPERATOR_NA) {
+        error("Invalid operator");
+        return NULL;
+    }
     getNextToken(lexer);
 
     ASTNode* right = parseUnaryExpression(lexer, context);
-    ASTNode* left = createBinaryExpr(operator, left, right);
+    ASTNode* left = createBinaryExpr(left, right, op);
 
     while (getOperatorPrecedence(currentToken.type) > precedence) {
         operator = currentToken.type;
         getNextToken(lexer);
 
         right = parseUnaryExpression(lexer, context);
-        left = createBinaryExpr(operator, left, right);
+        left = createBinaryExpr(left, right, op);
     }
 
     return left;
@@ -349,10 +354,10 @@ ASTNode* parseUnaryExpression(Lexer *lexer, ParsingContext *context) {
         operator = currentToken.type;
         getNextToken(lexer);
         right = parseUnaryExpression(lexer, context);
-        return createUnaryExpression(operator, right);
+        return createUnaryExpr(operator, right);
     }
 
-    return createUnaryExpression(operator, right);
+    return createUnaryExpr(operator, right);
 }
 // </parseUnaryExpression>
 
@@ -470,7 +475,7 @@ ASTNode* parseVarDeclaration(Lexer *lexer, ParsingContext *context) {
     char* varName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer);
 
-    CryoDataType type = NULL;
+    CryoDataType type;
     if (currentToken.type == TOKEN_COLON) {
         getNextToken(lexer);
         type = parseType(lexer, context);
@@ -506,14 +511,14 @@ ASTNode* parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     getNextToken(lexer);
 
     ASTNode* params = parseParameterList(lexer, context);
-    ASTNode* returnType = NULL;
+    CryoDataType returnType;
     if (currentToken.type == TOKEN_RESULT_ARROW) {
         getNextToken(lexer);
         returnType = parseType(lexer, context);
     }
 
     ASTNode* functionBlock = parseFunctionBlock(lexer, context);
-    return createFunctionNode(visibility, functionName, params, returnType, functionBlock);
+    return createFunctionNode(visibility, functionName, params, functionBlock, returnType);
 }
 // </parseFunctionDeclaration>
 
@@ -533,7 +538,7 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context) {
     getNextToken(lexer);
 
     ASTNode* params = parseParameterList(lexer, context);
-    ASTNode* returnType = NULL;
+    CryoDataType returnType;
     if (currentToken.type == TOKEN_RESULT_ARROW) {
         getNextToken(lexer);
         returnType = parseType(lexer, context);
@@ -546,7 +551,7 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context) {
 
 
 // <parseFunctionCall>
-ASTNode* parseFunctionCall(Lexer *lexer, ParsingContext *context, const char* functionName) {
+ASTNode* parseFunctionCall(Lexer *lexer, ParsingContext *context, char* functionName) {
     printf("[Parser] Parsing function call...\n");
     consume(lexer, TOKEN_LPAREN, "Expected `(` to start function call");
 
@@ -596,7 +601,7 @@ ASTNode* parseParameter(Lexer *lexer, ParsingContext *context) {
 
     consume(lexer, TOKEN_COLON, "Expected `:` after parameter name");
 
-    ASTNode* paramType = parseType(lexer, context);
+    CryoDataType paramType = parseType(lexer, context);
     return createParamNode(paramName, paramType);
 }
 // </parseParameter>
@@ -646,10 +651,10 @@ ASTNode* parseArgumentList(Lexer *lexer, ParsingContext *context) {
     while (currentToken.type != TOKEN_RPAREN) {
         ASTNode* arg = parseExpression(lexer, context);
         if (arg) {
-            addArgumentToArgList(argListNode, arg);
+            addArgumentToList(argListNode, arg);
         } else {
             fprintf(stderr, "[Parser] [ERROR] Failed to parse argument\n");
-            freeAST(argListNode);
+            freeAST(argListNode); 
             return NULL;
         }
 
@@ -678,6 +683,23 @@ void addParameterToList(ASTNode* paramListNode, ASTNode* param) {
     }
 }
 // </addParameterToList>
+
+
+// <addArgumentToList>
+void addArgumentToList(ASTNode* argListNode, ASTNode* arg) {
+    printf("[Parser] Adding argument to list\n");
+    if (argListNode->type == NODE_ARG_LIST) {
+        if (argListNode->data.argList.argCount >= argListNode->data.argList.argCapacity) {
+            argListNode->data.argList.argCapacity *= 2;
+            argListNode->data.argList.args = (ASTNode**)realloc(argListNode->data.argList.args, argListNode->data.argList.argCapacity * sizeof(ASTNode*));
+        }
+
+        argListNode->data.argList.args[argListNode->data.argList.argCount++] = arg;
+    } else {
+        fprintf(stderr, "[Parser] [ERROR] Expected argument list node, got %s\n", CryoNodeTypeToString(argListNode->type));
+    }
+}
+// </addArgumentToList>
 
 
 
@@ -766,7 +788,7 @@ ASTNode* parseForLoop(Lexer *lexer, ParsingContext *context) {
     consume(lexer, TOKEN_RPAREN, "Expected `)` to end for loop");
 
     ASTNode* body = parseBlock(lexer, context);
-    return createForLoopNode(init, condition, update, body);
+    return createForStatement(init, condition, update, body);
 }
 // </parseForLoop>
 

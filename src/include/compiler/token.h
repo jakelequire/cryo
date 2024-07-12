@@ -306,6 +306,7 @@ char* CryoDataTypeToString(CryoDataType type);
 char* CryoVisibilityTypeToString(CryoVisibilityType visibility);
 char* CryoTokenToString(CryoTokenType node);
 char* CryoOperatorTypeToString(CryoOperatorType op);
+CryoOperatorType CryoTokenToOperator(CryoTokenType token);
 
 CryoDataType CryoDataTypeStringToType(char* typeStr);
 

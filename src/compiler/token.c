@@ -17,6 +17,7 @@
 #include "compiler/token.h"
 
 
+// <CryoTokenTypeToString>
 char* operatorToString(CryoOperatorType op) {
     switch (op) {
         case OPERATOR_ADD:                  return "+";
@@ -49,7 +50,10 @@ char* operatorToString(CryoOperatorType op) {
         default:                            return "<OPERATOR UNKNOWN>";
     }
 }
+// </CryoTokenTypeToString>
 
+
+// <CryoNodeTypeToString>
 char* CryoNodeTypeToString(CryoNodeType node) {
     switch(node) {
         case NODE_PROGRAM:                  return "NODE_PROGRAM";
@@ -83,8 +87,10 @@ char* CryoNodeTypeToString(CryoNodeType node) {
         default:                            return "<NODE TYPE DEFAULTED>";
     }
 }
+// </CryoNodeTypeToString>
 
 
+// <CryoDataTypeToString>
 char* CryoDataTypeToString(CryoDataType type) {
     switch(type) {
         case DATA_TYPE_INT:                 return "DATA_TYPE_INT";
@@ -105,7 +111,10 @@ char* CryoDataTypeToString(CryoDataType type) {
         default:                            return "<DATA TYPE UNKNOWN>";
     }
 }
+// </CryoDataTypeToString>
 
+
+// <CryoVisibilityTypeToString>
 char* CryoVisibilityTypeToString(CryoVisibilityType visibility) {
     switch(visibility) {
         case VISIBILITY_PUBLIC:             return "VISIBILITY_PUBLIC";  
@@ -115,7 +124,10 @@ char* CryoVisibilityTypeToString(CryoVisibilityType visibility) {
         default:                            return "<VISIBILITY UNKNOWN>";
     }
 }
+// </CryoVisibilityTypeToString>
 
+
+// <CryoTokenToString>
 char* CryoTokenToString(CryoTokenType node) {
     switch(node) {
         case TOKEN_EOF:                         return "TOKEN_EOF";
@@ -289,8 +301,10 @@ char* CryoTokenToString(CryoTokenType node) {
         default:                                return "<TOKEN UNKNOWN>";
     }
 }
+// </CryoTokenToString>
 
 
+// <CryoOperatorTypeToString>
 char* CryoOperatorTypeToString(CryoOperatorType op) {
     switch(op) {
         case OPERATOR_ADD:                  return "OPERATOR_ADD";
@@ -323,6 +337,43 @@ char* CryoOperatorTypeToString(CryoOperatorType op) {
         default:                            return "<OPERATOR UNKNOWN>";
     }
 }
+// </CryoOperatorTypeToString>
+
+
+// <CryoTokenToOperator>
+CryoOperatorType CryoTokenToOperator(CryoTokenType token) {
+    switch(token) {
+        case TOKEN_OP_PLUS:                 return OPERATOR_ADD;
+        case TOKEN_OP_MINUS:                return OPERATOR_SUB;
+        case TOKEN_OP_STAR:                 return OPERATOR_MUL;
+        case TOKEN_OP_SLASH:                return OPERATOR_DIV;
+        case TOKEN_OP_MOD:                  return OPERATOR_MOD;
+        case TOKEN_OP_AND:                  return OPERATOR_AND;
+        case TOKEN_OP_OR:                   return OPERATOR_OR;
+        case TOKEN_OP_XOR:                  return OPERATOR_XOR;
+        case TOKEN_OP_NOT:                  return OPERATOR_NOT;
+        case TOKEN_OP_LSHIFT:               return OPERATOR_LSHIFT;
+        case TOKEN_OP_RSHIFT:               return OPERATOR_RSHIFT;
+        case TOKEN_OP_LT:                   return OPERATOR_LT;
+        case TOKEN_OP_GT:                   return OPERATOR_GT;
+        case TOKEN_OP_LTE:                  return OPERATOR_LTE;
+        case TOKEN_OP_GTE:                  return OPERATOR_GTE;
+        case TOKEN_OP_EQ:                   return OPERATOR_EQ;
+        case TOKEN_OP_NEQ:                  return OPERATOR_NEQ;
+        case TOKEN_OP_ASSIGN:               return OPERATOR_ASSIGN;
+        case TOKEN_OP_ADD_ASSIGN:           return OPERATOR_ADD_ASSIGN;
+        case TOKEN_OP_SUB_ASSIGN:           return OPERATOR_SUB_ASSIGN;
+        case TOKEN_OP_MUL_ASSIGN:           return OPERATOR_MUL_ASSIGN;
+        case TOKEN_OP_DIV_ASSIGN:           return OPERATOR_DIV_ASSIGN;
+        case TOKEN_OP_MOD_ASSIGN:           return OPERATOR_MOD_ASSIGN;
+        case TOKEN_OP_AND_ASSIGN:           return OPERATOR_AND_ASSIGN;
+        case TOKEN_OP_OR_ASSIGN:            return OPERATOR_OR_ASSIGN;
+        case TOKEN_OP_XOR_ASSIGN:           return OPERATOR_XOR_ASSIGN;
+        default:                            return OPERATOR_NA;
+    }
+}
+// </CryoTokenToOperator>
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

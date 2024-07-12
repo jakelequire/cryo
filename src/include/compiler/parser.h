@@ -64,6 +64,7 @@ void debugCurrentToken                      (void);
 
 /* @DataType_Management */
 CryoDataType getCryoDataType                (const char* typeStr);
+CryoDataType parseType                      (Lexer* lexer, ParsingContext* context);
 int getOperatorPrecedence                   (CryoTokenType type);
 
 /* @Parser_Management */
@@ -97,6 +98,7 @@ ASTNode* parseParameter                     (Lexer *lexer, ParsingContext *conte
 ASTNode* parseParameterList                 (Lexer *lexer, ParsingContext *context);
 ASTNode* parseArgumentList                  (Lexer *lexer, ParsingContext *context);
 void addParameterToList                     (ASTNode* paramListNode, ASTNode* param);
+void addArgumentToList                      (ASTNode* argListNode, ASTNode* arg);
 
 /* @ASTNode_Parsing - Modules & Externals */
 ASTNode* parseImport                        (Lexer *lexer, ParsingContext *context);

@@ -1,18 +1,2 @@
 
-
-extern function printInt(num: int) -> void;
-extern function printStr(str: string) -> void;
-
-const foo: int = 69;
-const exampleStr: string = "Hello, World!";
-const baz: string = "From Cryo!";
-
-const buz: int = 10;
-const bar: int = 20;
-
-public function main() -> void {
-    printInt(foo);
-    printStr(exampleStr);
-    return;
-}
-
+const foo: int = 34;
