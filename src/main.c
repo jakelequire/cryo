@@ -55,10 +55,6 @@ int main(int argc, char* argv[]) {
         printf("\n\n>===------- AST Tree -------===<\n\n");
         printAST(programNode, 0);
         printf("\n>===------- End Tree ------===<\n\n");
-
-        //printf("\n>===------- Symtable Analysis -------===<\n\n");
-        //analyzeNode(programNode);
-        //printf("\n\n>===------- End Symtable ------===<\n\n");
     }
 
     if (programNode) {

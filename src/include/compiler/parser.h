@@ -57,7 +57,7 @@ char* strndup(const char* s, size_t n);
 ASTNode* parseProgram                       (Lexer* lexer);
 
 /* @Helper_Functions | Debugging, Errors, Walkers */
-void consume                                (Lexer *lexer, CryoTokenType type, char* message);
+void consume                                (Lexer *lexer, CryoTokenType type, const char* message);
 void getNextToken                           (Lexer *lexer);
 void error                                  (char *message);
 void debugCurrentToken                      (void);

@@ -85,6 +85,7 @@ char* my_strndup(const char* src, size_t len) {
 
 // <initLexer>
 void initLexer(Lexer* lexer, const char* source) {
+    printf("Starting Lexer Initialization...\n");
     lexer->start = source;
     lexer->current = source;
     lexer->end = source + strlen(source);
@@ -112,7 +113,7 @@ void freeLexer(Lexer* lexer) {
 
 
 // <advance>
-const char advance(Lexer* lexer) {
+char advance(Lexer* lexer) {
     lexer->current++;
     lexer->column++;
     return lexer->current[-1];
@@ -122,20 +123,20 @@ const char advance(Lexer* lexer) {
 
 // <isAtEnd>
 bool isAtEnd(Lexer* lexer) {
-    return *lexer->current == '\0';
+    return lexer->current == NULL || *lexer->current == '\0';
 }
 // </isAtEnd>
 
 
 // <peek>
-const char* peek(Lexer* lexer) {
-    return lexer->current;
+char peek(Lexer* lexer) {
+    return *lexer->current;
 }
-// </peek>
+// </peek>c
 
 
 // <peekNext>
-const char peekNext(Lexer* lexer) {
+char peekNext(Lexer* lexer) {
     if (isAtEnd(lexer)) return '\0';
     return lexer->current[1];
 }
@@ -156,8 +157,8 @@ bool matchToken(Lexer* lexer, CryoTokenType type) {
 // <skipWhitespace>
 void skipWhitespace(Lexer* lexer) {
     for (;;) {
-        const char* c = peek(lexer);
-        switch (*c) {
+        char c = peek(lexer);
+        switch (c) {
             case ' ':
             case '\r':
             case '\t':
@@ -205,34 +206,50 @@ Token nextToken(Lexer* lexer, Token* token) {
     lexer->start = lexer->current;
 
     if (isAtEnd(lexer)) {
-        return makeToken(lexer, TOKEN_EOF);
+        *token = makeToken(lexer, TOKEN_EOF);
+        return *token;
     }
+
+    printf("[Lexer] Current token before advancing: %.*s, Type: %d\n", token->length, token->start, token->type);
 
     char c = advance(lexer);
 
-    if (isAlpha(&c)) {
-        return identifier(lexer);
+    if (isAlpha(c)) {
+        *token = checkKeyword(lexer);
+        printf("[Lexer] Identifier token created: %.*s\n", token->length, token->start);
+        return *token;
     }
 
-    if (isDigit(&c)) {
-        return number(lexer);
+    if (isDigit(c)) {
+        *token = number(lexer);
+        printf("[Lexer] Number token created: %.*s\n", token->length, token->start);
+        return *token;
     }
 
-    switch(c) {
-        case '"':
-            return string(lexer);
+    if (c == '"') {
+        *token = string(lexer);
+        printf("[Lexer] String token created: %.*s\n", token->length, token->start);
+        return *token;
     }
 
-    return symbolChar(lexer);
+    if(symbolChar(lexer, c).type != TOKEN_UNKNOWN) {
+        *token = symbolChar(lexer, c);
+        printf("[Lexer] Symbol token created: %.*s\n", token->length, token->start);
+        return *token;
+    }
+
+    return *token;
 }
 // </nextToken>
 
 
+
 // <get_next_token>
-Token get_next_token(Lexer* lexer) {
-    Token token = nextToken(lexer, &lexer->lookahead);
-    lexer->hasPeeked = true;
-    return token;
+Token get_next_token(Lexer* lexer) {\
+    printf("[Lexer] Getting next token...\n");
+    nextToken(lexer, &lexer->currentToken);
+    printf("[Lexer] Next token: %.*s\n", lexer->currentToken.length, lexer->currentToken.start);
+    return lexer->currentToken;
 }
 // </get_next_token>
 
@@ -243,7 +260,8 @@ Token getToken(Lexer* lexer) {
         lexer->hasPeeked = false;
         return lexer->lookahead;
     } else {
-        return get_next_token(lexer);
+        nextToken(lexer, &lexer->currentToken);
+        return lexer->currentToken;
     }
 }
 // </getToken>
@@ -251,24 +269,20 @@ Token getToken(Lexer* lexer) {
 
 // <peekToken>
 Token peekToken(Lexer* lexer) {
-    if (lexer->hasPeeked) {
-        return lexer->lookahead;
-    } else {
-        lexer->lookahead = get_next_token(lexer);
+    if (!lexer->hasPeeked) {
+        nextToken(lexer, &lexer->lookahead);
         lexer->hasPeeked = true;
-        return lexer->lookahead;
     }
+    return lexer->lookahead;
 }
 // </peekToken>
 
 
 // <peekNextToken>
 Token peekNextToken(Lexer* lexer) {
-    if (lexer->hasPeeked) {
-        return lexer->lookahead;
-    } else {
-        return get_next_token(lexer);
-    }
+    Lexer tempLexer = *lexer;  // Copy the current lexer state
+    Token tempNextToken = nextToken(&tempLexer, &tempLexer.currentToken);  // Get the next token from the copied state
+    return tempNextToken;
 }
 // </peekNextToken>
 
@@ -286,18 +300,16 @@ Token makeToken(Lexer* lexer, CryoTokenType type) {
     token.line = lexer->line;
     token.column = lexer->column;
 
-    if(token.length > 1) {
-        printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
-                token.length, token.start, token.type, token.line, token.column
-            );
-    }
+    printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
+            token.length, token.start, token.type, token.line, token.column
+        );
     return token;
 }
 // </makeToken>
 
 
 // <errorToken>
-Token errorToken(Lexer* lexer, char* message) {
+Token errorToken(Lexer* lexer, const char* message) {
     Token token;
     token.type = TOKEN_ERROR;
     token.start = message;
@@ -311,7 +323,7 @@ Token errorToken(Lexer* lexer, char* message) {
 
 // <number>
 Token number(Lexer* lexer) {
-    while (isDigit(lexer->current)) {
+    while (isDigit(peek(lexer))) {
         advance(lexer);
     }
     Token token = makeToken(lexer, TOKEN_INT_LITERAL);
@@ -363,8 +375,9 @@ Token boolean(Lexer* lexer) {
 
 
 // <symbolChar>
-Token symbolChar(Lexer* lexer) {
-    switch (*lexer->current) {
+Token symbolChar(Lexer* lexer, char symbol) {
+    printf("[Lexer] Symbol token: %c\n", *lexer->current);
+    switch (symbol) {
         case '(':
             return makeToken(lexer, TOKEN_LPAREN);
         case ')':
@@ -381,6 +394,8 @@ Token symbolChar(Lexer* lexer) {
             return makeToken(lexer, TOKEN_COMMA);
         case '.':
             return makeToken(lexer, TOKEN_DOT);
+        case ':':
+            return makeToken(lexer, TOKEN_COLON);
         case '-':
             if(peek(lexer) == '>' && !isAtEnd(lexer)) {
                 advance(lexer);
@@ -415,8 +430,7 @@ Token symbolChar(Lexer* lexer) {
             return makeToken(lexer, TOKEN_TILDE);
         case '?':
             return makeToken(lexer, TOKEN_QUESTION);
-        case ':':
-            return makeToken(lexer, TOKEN_COLON);
+
         default:
             return errorToken(lexer, "Unexpected character.");
     }
@@ -426,17 +440,12 @@ Token symbolChar(Lexer* lexer) {
 
 // <identifier>
 Token identifier(Lexer* lexer) {
-    const char* currentToken = lexer->current;
-
-    while (
-        isAlpha(lexer->current) ||
-        isDigit(lexer->current) ||
-        isType(lexer->current)
-    ) {
+    while (isAlpha(peek(lexer)) || isDigit(peek(lexer)) || isType(peek(lexer))) {
         advance(lexer);
     }
-
     Token token = makeToken(lexer, TOKEN_IDENTIFIER);
+    printf("[Lexer] Identifier token: %.*s\n", token.length, token.start);
+    return token;
 }
 // </identifier>
 
@@ -446,21 +455,27 @@ Token identifier(Lexer* lexer) {
 /* @Data_Types */
 
 // <checkKeyword>
-CryoTokenType checkKeyword(Lexer* lexer, char* keyword, CryoTokenType type) {
+Token checkKeyword(Lexer* lexer) {
+    while (isAlpha(peek(lexer))) advance(lexer);
+
+    int length = (int)(lexer->current - lexer->start);
+    const char* keyword = my_strndup(lexer->start, length);
+
     int i = 0;
     while (keywords[i].keyword != NULL) {
         if (strcmp(keywords[i].keyword, keyword) == 0) {
-            return keywords[i].type;
+            return makeToken(lexer, keywords[i].type);
         }
         i++;
     }
-    return type;
+
+    return makeToken(lexer, TOKEN_IDENTIFIER);
 }
 // </checkKeyword>
 
 
 // <checkDataType>
-CryoTokenType checkDataType(Lexer* lexer, char* dataType, CryoTokenType type) {
+CryoTokenType checkDataType(Lexer* lexer, const char* dataType, CryoTokenType type) {
     int i = 0;
     while (dataTypes[i].dataType != NULL) {
         const char* currentDataType = CryoTokenToString(dataTypes[i].dataType);
@@ -478,15 +493,15 @@ CryoTokenType checkDataType(Lexer* lexer, char* dataType, CryoTokenType type) {
 /* =========================================================== */
 /* @DataType_Evaluation */
 
-bool isAlpha(char* c) {
+bool isAlpha(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
-bool isDigit(char* c) {
+bool isDigit(char c) {
     return c >= '0' && c <= '9';
 }
 
-bool isType(char* c) {
+bool isType(char c) {
     return c == '[' || c == ']';
 }
 

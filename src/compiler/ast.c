@@ -394,21 +394,20 @@ void freeAST(ASTNode* node) {
 
 // <createASTNode>
 ASTNode* createASTNode(CryoNodeType type) {
-    printf("[AST] Creating ASTNode: %s\n", CryoNodeTypeToString(type));
-
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    if(!node) {
-        fprintf(stderr, "[AST] Failed to allocate memory for ASTNode\n");
+    printf("[AST_DEBUG] Creating node: %d\n", type);
+    ASTNode* node = (ASTNode*)calloc(1, sizeof(ASTNode));
+    if (!node) {
+        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for AST node\n");
         return NULL;
     }
-
     node->type = type;
-    node->nextSibling = NULL;
     node->firstChild = NULL;
+    node->nextSibling = NULL;
 
-    printf("[AST] Created ASTNode: %s\n", CryoNodeTypeToString(type));
+    printf("[AST_DEBUG] Initialized node: %d\n", type);
 
-    switch(type) {
+    // Initialize based on node type
+    switch (type) {
         case NODE_PROGRAM:
             node->data.program.statements = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
             if (!node->data.program.statements) {
@@ -419,105 +418,33 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.program.stmtCount = 0;
             node->data.program.stmtCapacity = 8;
             break;
-
-        case NODE_BLOCK:
-            node->data.block.statements = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
-            if (!node->data.block.statements) {
-                fprintf(stderr, "[AST] Failed to allocate memory for block statements\n");
-                free(node);
-                return NULL;
-            }
-            node->data.block.stmtCount = 0;
-            node->data.block.stmtCapacity = 8;
-            break;
-
+            
         case NODE_FUNCTION_DECLARATION:
-            node->data.functionDecl.function = (FunctionDeclNode*)malloc(sizeof(FunctionDeclNode));
-            if (!node->data.functionDecl.function) {
-                fprintf(stderr, "[AST] Failed to allocate memory for function declaration\n");
-                free(node);
-                return NULL;
-            }
+            node->data.functionDecl.function->name = NULL;
+            node->data.functionDecl.function->params = NULL;
+            node->data.functionDecl.function->body = NULL;
+            node->data.functionDecl.function->returnType = DATA_TYPE_VOID;
             break;
-
-        case NODE_VAR_DECLARATION:
-            node->data.varDecl.name = NULL;
-            node->data.varDecl.initializer = NULL;
-            break;
-
-        case NODE_STATEMENT:
-            node->data.stmt.stmt = NULL;
-            break;
-
-        case NODE_EXPRESSION:
-            node->data.expr.expr = NULL;
-            break;
-
-        case NODE_BINARY_EXPR:
-            node->data.bin_op.left = NULL;
-            node->data.bin_op.right = NULL;
-            node->data.bin_op.operatorText = NULL;
-            break;
-
-        case NODE_UNARY_EXPR:
-            node->data.unary_op.operand = NULL;
-            break;
-
-        case NODE_LITERAL_EXPR:
-            node->data.literalExpression.dataType = DATA_TYPE_INT;
-            node->data.literalExpression.intValue = 0;
-            break;
-
-        case NODE_VAR_NAME:
-            node->data.varName.varName = NULL;
-            break;
-        
-        case NODE_FUNCTION_CALL:
-            node->data.functionCall.name = NULL;
-            node->data.functionCall.args = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
-            if (!node->data.functionCall.args) {
-                fprintf(stderr, "[AST] Failed to allocate memory for function call arguments\n");
-                free(node);
-                return NULL;
-            }
-            node->data.functionCall.argCount = 0;
-            break;
-
-        case NODE_IF_STATEMENT:
-            node->data.ifStmt.condition = NULL;
-            node->data.ifStmt.thenBranch = NULL;
-            node->data.ifStmt.elseBranch = NULL;
-            break;
-
-        case NODE_WHILE_STATEMENT:
-            node->data.whileStmt.condition = NULL;
-            node->data.whileStmt.body = NULL;
-            break;
-
-        case NODE_FOR_STATEMENT:
-            node->data.forStmt.initializer = NULL;
-            node->data.forStmt.condition = NULL;
-            node->data.forStmt.increment = NULL;
-            node->data.forStmt.body = NULL;
-            break;
-
-        case NODE_RETURN_STATEMENT:
-            node->data.returnStmt.returnValue = NULL;
-            break;
-
+            
         case NODE_FUNCTION_BLOCK:
             node->data.functionBlock.function = NULL;
-            node->data.functionBlock.block = NULL;
+            node->data.functionBlock.block = createASTNode(NODE_BLOCK); // Ensure block is initialized
+            if (!node->data.functionBlock.block) {
+                fprintf(stderr, "[AST] Failed to create block for function block\n");
+                free(node);
+                return NULL;
+            }
+            node->data.functionBlock.block->data.block.statements = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
+            if (!node->data.functionBlock.block->data.block.statements) {
+                fprintf(stderr, "[AST] Failed to allocate memory for block statements\n");
+                free(node->data.functionBlock.block);
+                free(node);
+                return NULL;
+            }
+            node->data.functionBlock.block->data.block.stmtCount = 0;
+            node->data.functionBlock.block->data.block.stmtCapacity = 8;
             break;
-
-        case NODE_EXPRESSION_STATEMENT:
-            node->data.expr.expr = NULL;
-            break;
-
-        case NODE_ASSIGN:
-            printf("[AST] Assignment Node [UNIMPLEMENTED]");
-            break;
-
+            
         case NODE_PARAM_LIST:
             node->data.paramList.params = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
             if (!node->data.paramList.params) {
@@ -528,19 +455,77 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.paramList.paramCount = 0;
             node->data.paramList.paramCapacity = 8;
             break;
-
-        case NODE_TYPE:
-            printf("[AST] Type Node [UNIMPLEMENTED]");
+            
+        case NODE_VAR_DECLARATION:
+            node->data.varDecl.name = NULL;
+            node->data.varDecl.initializer = NULL;
             break;
-
+            
+        case NODE_VAR_NAME:
+            node->data.varName.varName = NULL;
+            break;
+            
+        case NODE_RETURN_STATEMENT:
+            node->data.returnStmt.returnValue = NULL;
+            break;
+            
+        case NODE_IF_STATEMENT:
+            node->data.ifStmt.condition = NULL;
+            node->data.ifStmt.thenBranch = NULL;
+            node->data.ifStmt.elseBranch = NULL;
+            break;
+            
+        case NODE_FOR_STATEMENT:
+            node->data.forStmt.initializer = NULL;
+            node->data.forStmt.condition = NULL;
+            node->data.forStmt.increment = NULL;
+            node->data.forStmt.body = NULL;
+            break;
+            
+        case NODE_BINARY_EXPR:
+            node->data.bin_op.left = NULL;
+            node->data.bin_op.right = NULL;
+            node->data.bin_op.op = OPERATOR_NA;
+            break;
+            
+        case NODE_LITERAL_EXPR:
+            node->data.literalExpression.dataType = DATA_TYPE_UNKNOWN;
+            break;
+            
+        case NODE_FUNCTION_CALL:
+            node->data.functionCall.name = NULL;
+            node->data.functionCall.args = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
+            if (!node->data.functionCall.args) {
+                fprintf(stderr, "[AST] Failed to allocate memory for function call arguments\n");
+                free(node);
+                return NULL;
+            }
+            node->data.functionCall.argCount = 0;
+            break;
+            
+        case NODE_BLOCK:
+            node->data.block.statements = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
+            if (!node->data.block.statements) {
+                fprintf(stderr, "[AST] Failed to allocate memory for block statements\n");
+                free(node);
+                return NULL;
+            }
+            node->data.block.stmtCount = 0;
+            node->data.block.stmtCapacity = 8;
+            break;
+            
+        case NODE_UNARY_EXPR:
+            node->data.unary_op.operand = NULL;
+            break;
+            
         case NODE_STRING_LITERAL:
             node->data.str.str = NULL;
             break;
-
+            
         case NODE_BOOLEAN_LITERAL:
             node->data.boolean.value = 0;
             break;
-
+            
         case NODE_ARRAY_LITERAL:
             node->data.arrayLiteral.elements = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
             if (!node->data.arrayLiteral.elements) {
@@ -551,15 +536,15 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.arrayLiteral.elementCount = 0;
             node->data.arrayLiteral.elementCapacity = 8;
             break;
-
+            
         case NODE_IMPORT_STATEMENT:
             node->data.importStatementNode.modulePath = NULL;
             break;
-
+            
         case NODE_EXTERN_STATEMENT:
             node->data.externNode.decl.function = NULL;
             break;
-
+            
         case NODE_EXTERN_FUNCTION:
             node->data.externNode.decl.function = (FunctionDeclNode*)malloc(sizeof(FunctionDeclNode));
             if (!node->data.externNode.decl.function) {
@@ -568,7 +553,7 @@ ASTNode* createASTNode(CryoNodeType type) {
                 return NULL;
             }
             break;
-
+            
         case NODE_ARG_LIST:
             node->data.argList.args = (ASTNode**)malloc(sizeof(ASTNode*) * 8);
             if (!node->data.argList.args) {
@@ -579,18 +564,16 @@ ASTNode* createASTNode(CryoNodeType type) {
             node->data.argList.argCount = 0;
             node->data.argList.argCapacity = 8;
             break;
-
-        case NODE_UNKNOWN:
-            fprintf(stderr, "[AST] Unknown Node\n");
-            break;
-
+            
         default:
-            fprintf(stderr, "[AST] Unknown Node\n");
+            fprintf(stderr, "[AST] [ERROR] Unknown node type during creation: %d\n", type);
             break;
     }
 
+    printf("[DEBUG] Created node of type: %d\n", type);
+
+    return node;
 }
-// </createASTNode>
 
 
 // <addChildNode>
@@ -671,14 +654,20 @@ ASTNode* createProgramNode() {
         return NULL;
     }
 
+    printf("[AST] [DEBUG] Program Node created\n");
+
     node->data.program.stmtCount = 0;
     node->data.program.stmtCapacity = 2;
-    node->data.program.statements = (ASTNode**)calloc(node->data.program.stmtCapacity, sizeof(ASTNode*));
-    if (!node->data.program.statements) {
-        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program statements\n");
-        free(node);
-        return NULL;
-    }
+    
+    // Allocate memory for the statements array
+    // node->data.program.statements = (ASTNode*)malloc(node->data.program.stmtCapacity * sizeof(ASTNode*));
+    // if (!node->data.program.statements) {
+    //     fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program statements\n");
+    //     free(node);
+    //     return NULL;
+    // }
+
+    printf("[AST] [DEBUG] Program Node statements allocated\n");
 
     printf("[AST] Created Program Node\n");
     return node;
