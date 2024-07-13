@@ -241,7 +241,7 @@ ASTNode* createStringExpr                   (char* str);
 
 
 /* @Node_Creation - Variables */
-ASTNode* createVarDeclarationNode           (char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal);
+ASTNode* createVarDeclarationNode           (char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal, bool isReference);
 ASTNode* createVariableExpr                 (char* name, bool isReference);
 
 /* @Node_Creation - Functions */

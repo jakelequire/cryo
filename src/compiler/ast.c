@@ -230,6 +230,8 @@ void freeAST(ASTNode* node) {
     switch (node->type) {
         case NODE_PROGRAM:
             for (int i = 0; i < node->data.program.stmtCount; i++) {
+                printf("[AST] attempting to free program statement %d\n", i);
+                printf("[AST] statement type: %s\n", CryoNodeTypeToString(node->data.program.statements[i]->type));
                 freeAST(node->data.program.statements[i]);
             }
             free(node->data.program.statements);
@@ -243,6 +245,7 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_VAR_DECLARATION:
+            printf("[AST] Freeing Variable Declaration Node: %s\n", node->data.varDecl.name);
             free(node->data.varDecl.name);
             freeAST(node->data.varDecl.initializer);
             break;
@@ -386,6 +389,7 @@ void freeAST(ASTNode* node) {
             fprintf(stderr, "<!> [AST] Unknown Node\n");
             break;
     }
+    printf("[AST] Node of type %s successfully freed.\n", CryoNodeTypeToString(node->type));
 }
 // </freeAST>
 
@@ -460,6 +464,7 @@ ASTNode* createASTNode(CryoNodeType type) {
             
         case NODE_VAR_NAME:
             node->data.varName.varName = NULL;
+            node->data.varName.isReference = false;
             break;
             
         case NODE_RETURN_STATEMENT:
@@ -1013,7 +1018,7 @@ ASTNode* createStringExpr(char* str) {
 /* @Node_Creation - Variables */
 
 // <createVarDeclarationNode>
-ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal) {
+ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal, bool isReference) {
     printf("[AST] Creating Variable Declaration Node: %s\n", var_name);
 
     ASTNode* node = createASTNode(NODE_VAR_DECLARATION);
@@ -1026,7 +1031,7 @@ ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode
     node->data.varDecl.dataType = dataType;
     node->data.varDecl.initializer = initializer;
     node->data.varDecl.isGlobal = isGlobal;
-    node->data.varDecl.isReference = false;
+    node->data.varDecl.isReference = isReference;
     node->data.varDecl.scopeLevel = 0;
 
     printf("[AST] Created Variable Declaration Node: %s\n", var_name);
@@ -1128,6 +1133,12 @@ ASTNode* createReturnNode(ASTNode* returnValue) {
     if (!node) {
         fprintf(stderr, "[AST] Failed to create return node\n");
         return NULL;
+    }
+
+    if(returnValue == NULL) {
+        node->data.returnStmt.returnType = DATA_TYPE_VOID;
+    } else {
+        node->data.returnStmt.returnType = returnValue->data.literalExpression.dataType;
     }
 
     node->data.returnStmt.returnValue = returnValue;

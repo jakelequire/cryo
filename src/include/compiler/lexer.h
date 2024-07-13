@@ -59,9 +59,9 @@ typedef struct Token {
 
 typedef struct Lexer {
     const char* source;
-    const char *start;
+    const char* start;
     const char* end;
-    const char *current;
+    const char* current;
     int line;
     int column;
     Token currentToken;

@@ -53,6 +53,8 @@ char* strndup(const char* s, size_t n);
 /* =========================================================== */
 /* @Function_Prototypes                                        */
 
+void printLine(const char* source, int line);
+
 /* @Entry_Point | Lexer passes tokens to the entry point to be processed. */
 ASTNode* parseProgram                       (Lexer* lexer);
 
@@ -76,7 +78,7 @@ ASTNode* parseStatement                     (Lexer *lexer, ParsingContext *conte
 ASTNode* parsePrimaryExpression             (Lexer *lexer, ParsingContext *context);
 ASTNode* parseExpression                    (Lexer *lexer, ParsingContext *context);
 ASTNode* parseExpressionStatement           (Lexer *lexer, ParsingContext *context);
-ASTNode* parseBinaryExpression              (Lexer *lexer, ParsingContext *context, int precedence);
+ASTNode* parseBinaryExpression              (Lexer *lexer, ParsingContext *context, ASTNode* left, int precedence);
 ASTNode* parseUnaryExpression               (Lexer *lexer, ParsingContext *context);
 ASTNode* parsePublicDeclaration             (Lexer *lexer, ParsingContext *context);
 

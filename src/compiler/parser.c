@@ -32,9 +32,27 @@ char* strndup(const char* s, size_t n) {
 #endif
 
 
+void printLine(const char* source, int line) {
+    const char* lineStart = source;
+    while (*lineStart && line > 1) {
+        if (*lineStart == '\n') line--;
+        lineStart++;
+    }
+
+    const char* lineEnd = lineStart;
+    while (*lineEnd && *lineEnd != '\n') {
+        lineEnd++;
+    }
+
+    printf("%.*s\n", (int)(lineEnd - lineStart), lineStart);
+}
+
+
 /* ====================================================================== */
 // Scope-Declared Current Token
 Token currentToken;
+const char* source;
+
 
 
 
@@ -44,6 +62,8 @@ Token currentToken;
 // <parseProgram>
 ASTNode* parseProgram(Lexer* lexer) {
     printf("\n[Parser] Parsing program...\n");
+
+    source = lexer->start;
 
     ParsingContext context = {
         false,
@@ -116,8 +136,21 @@ void getNextToken(Lexer *lexer) {
 
 // <error>
 void error(char *message) {
-    fprintf(stderr, "\n<!> [Parser] Error: %s at line %d, column %d\n\n", 
-            message, currentToken.line, currentToken.column);
+    int line = currentToken.line;
+    int column = currentToken.column;
+
+    printf("\n<!> [Parser] Error: %s at line %d, column %d\n", message, line, column);
+    printf("------------------------------------------------------------------------\n\n");
+    // Print the line containing the error
+    printf("%d ", line);
+    printLine(source, line);
+
+    for (int i = line; i < column + line; i++) {
+        printf(" ");
+    }
+    
+    printf("^ %s\n", message);
+    printf("\n------------------------------------------------------------------------\n\n");
     exit(1);
 }
 // </error>
@@ -170,7 +203,6 @@ CryoDataType parseType(Lexer* lexer, ParsingContext* context) {
 
     return type;
 }
-
 // </parseType>
 
 
@@ -318,13 +350,10 @@ ASTNode* parsePrimaryExpression(Lexer *lexer, ParsingContext *context) {
 ASTNode* parseExpression(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing expression...\n");
     ASTNode* left = parsePrimaryExpression(lexer, context);
-
-    while (getOperatorPrecedence(currentToken.type) > 0) {
-        int precedence = getOperatorPrecedence(currentToken.type);
-        left = parseBinaryExpression(lexer, context, precedence);
+    if (!left) {
+        error("Expected an expression");
     }
-
-    return left;
+    return parseBinaryExpression(lexer, context, left, 1);
 }
 // </parseExpression>
 
@@ -341,29 +370,35 @@ ASTNode* parseExpressionStatement(Lexer *lexer, ParsingContext *context) {
 
 
 // <parseBinaryExpression>
-ASTNode* parseBinaryExpression(Lexer *lexer, ParsingContext *context, int precedence) {
-    printf("[Parser] Parsing binary expression...\n");
+ASTNode* parseBinaryExpression(Lexer *lexer, ParsingContext *context, ASTNode* left, int precedence) {
+    while (true) {
+        int currentPrecedence = getOperatorPrecedence(currentToken.type);
+        if (currentPrecedence < precedence) {
+            return left;
+        }
 
-    CryoTokenType operator = currentToken.type;
-    CryoOperatorType op = CryoTokenToOperator(operator);
-    if (op == OPERATOR_NA) {
-        error("Invalid operator");
-        return NULL;
-    }
-    getNextToken(lexer);
+        CryoTokenType operator = currentToken.type;
+        printf("[Parser] Operator type: %s\n", CryoTokenToString(operator));
+        CryoOperatorType op = CryoTokenToOperator(operator);
+        if (op == OPERATOR_NA) {
+            error("Invalid operator");
+            return NULL;
+        }
 
-    ASTNode* right = parseUnaryExpression(lexer, context);
-    ASTNode* left = createBinaryExpr(left, right, op);
+        getNextToken(lexer);  // consume operator
 
-    while (getOperatorPrecedence(currentToken.type) > precedence) {
-        operator = currentToken.type;
-        getNextToken(lexer);
+        ASTNode* right = parsePrimaryExpression(lexer, context);
+        if (!right) {
+            error("Expected an expression on the right side of the binary operator");
+        }
 
-        right = parseUnaryExpression(lexer, context);
+        int nextPrecedence = getOperatorPrecedence(currentToken.type);
+        if (currentPrecedence < nextPrecedence) {
+            right = parseBinaryExpression(lexer, context, right, currentPrecedence + 1);
+        }
+
         left = createBinaryExpr(left, right, op);
     }
-
-    return left;
 }
 // </parseBinaryExpression>
 
@@ -483,6 +518,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
 
     bool isMutable = currentToken.type == TOKEN_KW_MUT;
     bool isConstant = currentToken.type == TOKEN_KW_CONST;
+    bool isReference = currentToken.type == TOKEN_AMPERSAND;
 
     // Skip the 'const' or 'mut' keyword
     if (isMutable || isConstant) {
@@ -515,6 +551,11 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
     }
     getNextToken(lexer);
 
+    if(currentToken.type == TOKEN_AMPERSAND) {
+        isReference = true;
+        getNextToken(lexer);
+    }
+
     ASTNode* initializer = parseExpression(lexer, context);
     if (initializer == NULL) {
         error("[Parser] Expected expression after '='");
@@ -522,7 +563,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
 
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
 
-    ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, isMutable, isConstant);
+    ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, isMutable, isConstant, isReference);
     printf("[Parser] Created Variable Declaration Node: %s\n", varName);
     printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->type);
     return varDeclNode;

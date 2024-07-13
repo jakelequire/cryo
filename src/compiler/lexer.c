@@ -231,6 +231,12 @@ Token nextToken(Lexer* lexer, Token* token) {
         return *token;
     }
 
+    if (c == '&') {
+        *token = makeToken(lexer, TOKEN_AMPERSAND);
+        printf("[Lexer] Ampersand token created: %.*s\n", token->length, token->start);
+        return *token;
+    }
+
     Token symToken = symbolChar(lexer, c);
     if (symToken.type != TOKEN_UNKNOWN) {
         *token = symToken;
@@ -396,6 +402,8 @@ Token symbolChar(Lexer* lexer, char symbol) {
             return makeToken(lexer, TOKEN_DOT);
         case ':':
             return makeToken(lexer, TOKEN_COLON);
+        //case '&':
+        //    return makeToken(lexer, TOKEN_AMPERSAND);
         case '-':
             if (peek(lexer) == '>') {
                 advance(lexer);
@@ -422,8 +430,6 @@ Token symbolChar(Lexer* lexer, char symbol) {
             return makeToken(lexer, TOKEN_LESS);
         case '>':
             return makeToken(lexer, TOKEN_GREATER);
-        case '&':
-            return makeToken(lexer, TOKEN_AMPERSAND);
         case '|':
             return makeToken(lexer, TOKEN_PIPE);
         case '^':

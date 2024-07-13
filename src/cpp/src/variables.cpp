@@ -18,6 +18,8 @@
 
 namespace Cryo {
 
+
+// <getVariable>
 llvm::Value* CodeGen::getVariable(const std::string& name) {
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
@@ -32,7 +34,10 @@ llvm::Value* CodeGen::getVariable(const std::string& name) {
         return nullptr;
     }
 }
+// </getVariable>
 
+
+// <createGlobalVariable>
 llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, const std::string& varName) {
     std::cout << "[CPP] Creating global variable\n";
     llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
@@ -52,7 +57,10 @@ llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::C
     std::cout << "[CPP] Created global variable: " << varName << "\n";
     return globalVar;
 }
+// </createGlobalVariable>
 
+
+// <loadGlobalVariable>
 llvm::Value* CodeGen::loadGlobalVariable(llvm::GlobalVariable* globalVar, const std::string& name) {
     std::cout << "[CPP] Loading global variable value\n";
     llvm::Type* globalVarType = globalVar->getValueType();
@@ -75,7 +83,10 @@ llvm::Value* CodeGen::loadGlobalVariable(llvm::GlobalVariable* globalVar, const 
     std::cout << "[CPP] Loaded global variable value\n";
     return load;
 }
+// </loadGlobalVariable>
 
+
+// <loadPointerVariable>
 llvm::Value* CodeGen::loadPointerVariable(llvm::Value* var, const std::string& name) {
     std::cout << "[CPP] Loading pointer variable value\n";
     llvm::Type* pointedType = var->getType();
@@ -88,7 +99,10 @@ llvm::Value* CodeGen::loadPointerVariable(llvm::Value* var, const std::string& n
     std::cout << "[CPP] Loaded pointer variable value\n";
     return load;
 }
+// <loadPointerVariable>
 
+
+// <getVariableValue>
 llvm::Value* CodeGen::getVariableValue(const std::string& name) {
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
@@ -122,11 +136,15 @@ llvm::Value* CodeGen::getVariableValue(const std::string& name) {
         return nullptr;
     }
 }
+// </getVariableValue>
 
+
+// <generateVarDeclaration>
 void CodeGen::generateVarDeclaration(ASTNode* node) {
     std::cout << "[CPP] Generating code for variable declaration\n";
     llvm::Type* varType = nullptr;
     llvm::Constant* initialValue = nullptr;
+    llvm::Value* computedValue = nullptr; // For non-literal initializers
     std::string varName = node->data.varDecl.name;
 
     switch (node->data.varDecl.dataType) {
@@ -167,6 +185,13 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
                     std::cerr << "[CPP] Error: Referenced variable not found: " << node->data.varDecl.initializer->data.varName.varName << "\n";
                     return;
                 }
+            } else if (node->data.varDecl.initializer->type == NODE_BINARY_EXPR) {
+                std::cout << "[CPP] Initializer is a binary expression\n";
+                computedValue = generateBinaryOperation(node->data.varDecl.initializer);
+                if (!computedValue) {
+                    std::cerr << "[CPP] Error: Failed to generate code for binary expression\n";
+                    return;
+                }
             } else {
                 std::cerr << "[CPP] Unknown expression type for int variable initializer\n";
                 return;
@@ -204,7 +229,9 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
             return;
     }
 
-    if (!initialValue) {
+    llvm::Value* finalValue = initialValue ? initialValue : computedValue;
+
+    if (!finalValue) {
         std::cerr << "[CPP] Error: Initial value is null for variable: " << varName << "\n";
         return;
     }
@@ -216,7 +243,7 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
             varType,
             false,
             llvm::GlobalValue::ExternalLinkage,
-            initialValue,
+            llvm::cast<llvm::Constant>(finalValue),
             varName
         );
         if (globalVar) {
@@ -229,13 +256,17 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
         std::cout << "[CPP] Creating alloca instruction\n";
         llvm::AllocaInst* alloca = builder.CreateAlloca(varType, nullptr, varName);
         std::cout << "[CPP] Created alloca instruction\n";
-        builder.CreateStore(initialValue, alloca);
+        builder.CreateStore(finalValue, alloca);
         std::cout << "[CPP] Stored initial value in alloca\n";
         namedValues[varName] = alloca;
         std::cout << "[CPP] Stored alloca in namedValues\n";
     }
 }
+// </generateVarDeclaration>
 
+
+
+// <generateArrayElements>
 std::vector<llvm::Constant*> CodeGen::generateArrayElements(ASTNode* arrayLiteral) {
     std::vector<llvm::Constant*> elements;
     for (int i = 0; i < arrayLiteral->data.arrayLiteral.elementCount; i++) {
@@ -246,7 +277,10 @@ std::vector<llvm::Constant*> CodeGen::generateArrayElements(ASTNode* arrayLitera
     }
     return elements;
 }
+// </generateArrayElements>
 
+
+// <generateCodeForArrayLiteral>
 void CodeGen::generateCodeForArrayLiteral(ASTNode* node) {
     if (node->type != NODE_ARRAY_LITERAL) {
         std::cerr << "[CodeGen] [ERROR] Expected array literal node, got " << node->type << "\n";
@@ -261,5 +295,6 @@ void CodeGen::generateCodeForArrayLiteral(ASTNode* node) {
 
     std::cout << "[CodeGen] Completed code generation for array literal\n";
 }
+// </generateCodeForArrayLiteral>
 
 } // namespace Cryo

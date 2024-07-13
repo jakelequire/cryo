@@ -333,6 +333,32 @@ char* CryoOperatorTypeToString(CryoOperatorType op) {
         case OPERATOR_AND_ASSIGN:           return "OPERATOR_AND_ASSIGN";
         case OPERATOR_OR_ASSIGN:            return "OPERATOR_OR_ASSIGN";
         case OPERATOR_XOR_ASSIGN:           return "OPERATOR_XOR_ASSIGN";
+        case TOKEN_PLUS:                    return "TOKEN_PLUS";
+        case TOKEN_MINUS:                   return "TOKEN_MINUS";
+        case TOKEN_STAR:                    return "TOKEN_STAR";
+        case TOKEN_SLASH:                   return "TOKEN_SLASH";
+        case TOKEN_OP_MOD:                  return "TOKEN_OP_MOD";
+        case TOKEN_OP_AND:                  return "TOKEN_OP_AND";
+        case TOKEN_OP_OR:                   return "TOKEN_OP_OR";
+        case TOKEN_OP_XOR:                  return "TOKEN_OP_XOR";
+        case TOKEN_OP_NOT:                  return "TOKEN_OP_NOT";
+        case TOKEN_OP_LSHIFT:               return "TOKEN_OP_LSHIFT";
+        case TOKEN_OP_RSHIFT:               return "TOKEN_OP_RSHIFT";
+        case TOKEN_OP_LT:                   return "TOKEN_OP_LT";
+        case TOKEN_OP_GT:                   return "TOKEN_OP_GT";
+        case TOKEN_OP_LTE:                  return "TOKEN_OP_LTE";
+        case TOKEN_OP_GTE:                  return "TOKEN_OP_GTE";
+        case TOKEN_OP_EQ:                   return "TOKEN_OP_EQ";
+        case TOKEN_OP_NEQ:                  return "TOKEN_OP_NEQ";
+        case TOKEN_OP_ASSIGN:               return "TOKEN_OP_ASSIGN";
+        case TOKEN_OP_ADD_ASSIGN:           return "TOKEN_OP_ADD_ASSIGN";
+        case TOKEN_OP_SUB_ASSIGN:           return "TOKEN_OP_SUB_ASSIGN";
+        case TOKEN_OP_MUL_ASSIGN:           return "TOKEN_OP_MUL_ASSIGN";
+        case TOKEN_OP_DIV_ASSIGN:           return "TOKEN_OP_DIV_ASSIGN";
+        case TOKEN_OP_MOD_ASSIGN:           return "TOKEN_OP_MOD_ASSIGN";
+        case TOKEN_OP_AND_ASSIGN:           return "TOKEN_OP_AND_ASSIGN";
+        case TOKEN_OP_OR_ASSIGN:            return "TOKEN_OP_OR_ASSIGN";
+        case TOKEN_OP_XOR_ASSIGN:           return "TOKEN_OP_XOR_ASSIGN";
         case OPERATOR_NA:                   return "OPERATOR_NA";
         default:                            return "<OPERATOR UNKNOWN>";
     }
@@ -343,10 +369,10 @@ char* CryoOperatorTypeToString(CryoOperatorType op) {
 // <CryoTokenToOperator>
 CryoOperatorType CryoTokenToOperator(CryoTokenType token) {
     switch(token) {
-        case TOKEN_OP_PLUS:                 return OPERATOR_ADD;
-        case TOKEN_OP_MINUS:                return OPERATOR_SUB;
-        case TOKEN_OP_STAR:                 return OPERATOR_MUL;
-        case TOKEN_OP_SLASH:                return OPERATOR_DIV;
+        case TOKEN_PLUS:                    return OPERATOR_ADD;
+        case TOKEN_MINUS:                   return OPERATOR_SUB;
+        case TOKEN_STAR:                    return OPERATOR_MUL;
+        case TOKEN_SLASH:                   return OPERATOR_DIV;
         case TOKEN_OP_MOD:                  return OPERATOR_MOD;
         case TOKEN_OP_AND:                  return OPERATOR_AND;
         case TOKEN_OP_OR:                   return OPERATOR_OR;
