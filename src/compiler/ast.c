@@ -417,7 +417,6 @@ ASTNode* createASTNode(CryoNodeType type) {
             }
             node->data.program.stmtCount = 0;
             node->data.program.stmtCapacity = 8;
-            printf("[AST_DEBUG] NODE_PROGRAM initialized with stmtCount = %zu and stmtCapacity = %zu\n", node->data.program.stmtCount, node->data.program.stmtCapacity);
             break;
             
         case NODE_FUNCTION_DECLARATION:
@@ -510,7 +509,6 @@ ASTNode* createASTNode(CryoNodeType type) {
             }
             node->data.block.stmtCount = 0;
             node->data.block.stmtCapacity = 8;
-            printf("[AST_DEBUG] NODE_BLOCK initialized with stmtCount = %zu and stmtCapacity = %zu\n", node->data.block.stmtCount, node->data.block.stmtCapacity);
             break;
             
         case NODE_UNARY_EXPR:
@@ -603,30 +601,20 @@ void addStatementToBlock(ASTNode* blockNode, ASTNode* statement) {
         return;
     }
 
+    // Debugging initial state
     if (blockNode->data.block.stmtCount >= blockNode->data.block.stmtCapacity) {
-        size_t newCapacity = blockNode->data.block.stmtCapacity == 0 ? 2 : blockNode->data.block.stmtCapacity * 2;
-        printf("[AST] Reallocating block statement memory: New capacity = %zu\n", newCapacity);
-        ASTNode** newStatements = (ASTNode**)realloc(blockNode->data.block.statements, sizeof(ASTNode*) * newCapacity);
-        if (!newStatements) {
-            fprintf(stderr, "[AST] Failed to reallocate memory for block statements\n");
-            return;
-        }
-        blockNode->data.block.statements = newStatements;
-        blockNode->data.block.stmtCapacity = newCapacity;
+        blockNode->data.block.stmtCapacity *= 2;
+        blockNode->data.block.statements = (ASTNode**)
         printf("[AST] Reallocated block statement memory: New capacity = %zu\n", blockNode->data.block.stmtCapacity);
     } else {
         printf("[AST] Block statement memory is sufficient\n");
     }
 
-    printf("[AST] Before adding statement: stmtCount = %zu, stmtCapacity = %zu\n", blockNode->data.block.stmtCount, blockNode->data.block.stmtCapacity);
-
-    if (blockNode->data.block.stmtCount < blockNode->data.block.stmtCapacity) {
-        blockNode->data.block.statements[blockNode->data.block.stmtCount++] = statement;
-        printf("[AST] Added statement to block: Total statements = %zu\n", blockNode->data.block.stmtCount);
-    } else {
-        fprintf(stderr, "[AST] Error: stmtCount >= stmtCapacity after reallocation\n");
-    }
+    blockNode->data.block.statements[blockNode->data.block.stmtCount++] = statement;
+    // Debugging final state
+    printf("[AST] Final state: stmtCount = %zu, stmtCapacity = %zu\n", blockNode->data.block.stmtCount, blockNode->data.block.stmtCapacity);
 }
+// </addStatementToBlock>
 
 
 // <addFunctionToProgram>
@@ -678,6 +666,7 @@ ASTNode* createProgramNode() {
     printf("[AST] Created Program Node\n");
     return node;
 }
+
 
 // <createLiteralExpr>
 ASTNode* createLiteralExpr(int value) {
@@ -894,6 +883,7 @@ ASTNode* createFunctionBlock(ASTNode* function) {
     }
 
     node->data.functionBlock.function = function;
+    node->data.functionBlock.block = createBlockNode();
 
     printf("\n[AST] Created Function Block Node\n");
     return node;

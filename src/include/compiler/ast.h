@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 /*---<custom_includes>---*/
 #include "compiler/token.h"
 #include "compiler/lexer.h"

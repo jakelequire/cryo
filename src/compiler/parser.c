@@ -219,20 +219,14 @@ void addStatementToProgram(ASTNode* programNode, ASTNode* statement) {
         return;
     }
 
-    printf("[AST] Before adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
+    printf("[AST] Before adding statement: stmtCount = %zu, stmtCapacity = %zu\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
     if (programNode->data.program.stmtCount >= programNode->data.program.stmtCapacity) {
-        int newCapacity = programNode->data.program.stmtCapacity == 0 ? 2 : programNode->data.program.stmtCapacity * 2;
-        printf("[AST] Increasing stmtCapacity to: %d\n", newCapacity);
-        programNode->data.program.statements = realloc(programNode->data.program.statements, newCapacity * sizeof(ASTNode*));
-        if (!programNode->data.program.statements) {
-            fprintf(stderr, "<!> [AST] Error: Failed to reallocate memory for program statements\n");
-            return;
-        }
-        programNode->data.program.stmtCapacity = newCapacity;
+        programNode->data.program.stmtCapacity = (programNode->data.program.stmtCapacity > 0) ? (programNode->data.program.stmtCapacity * 2) : 1;
+        programNode->data.program.statements = (ASTNode**)realloc(programNode->data.program.statements, programNode->data.program.stmtCapacity * sizeof(ASTNode*));
     }
 
     programNode->data.program.statements[programNode->data.program.stmtCount++] = statement;
-    printf("[AST] After adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
+    printf("[AST] After adding statement: stmtCount = %zu, stmtCapacity = %zu\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
 }
 // </addStatementToProgram>
 
@@ -451,7 +445,7 @@ ASTNode* parseFunctionBlock(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing function block...\n");
     context->scopeLevel++;
 
-    ASTNode* functionBlock = createASTNode(NODE_FUNCTION_BLOCK);
+    ASTNode* functionBlock = createBlockNode();
     if (!functionBlock) {
         fprintf(stderr, "[Parser] [ERROR] Failed to create function block node\n");
         return NULL;
