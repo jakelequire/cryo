@@ -1,8 +1,10 @@
 
-const foo: int = 34 + 35;
-const bar: int = &foo;
+extern function printInt(i: int) -> void;
 
+const foo: int = 34;
+const bar: int = 35;
 
 public function main() -> void {
-    return;
+    printInt(foo);
+    printInt(bar);
 }

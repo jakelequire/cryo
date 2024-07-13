@@ -247,7 +247,9 @@ void freeAST(ASTNode* node) {
         case NODE_VAR_DECLARATION:
             printf("[AST] Freeing Variable Declaration Node: %s\n", node->data.varDecl.name);
             free(node->data.varDecl.name);
-            freeAST(node->data.varDecl.initializer);
+            if (node->data.varDecl.initializer) {
+                free(node->data.varDecl.initializer);
+            }
             break;
         
         case NODE_STATEMENT:

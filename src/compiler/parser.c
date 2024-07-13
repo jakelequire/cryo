@@ -680,7 +680,6 @@ ASTNode* parseReturnStatement(Lexer *lexer, ParsingContext *context) {
     printf("[AST] Created Return Node: Type = %d\n", returnNode->type);
     return returnNode;
 }
-
 // </parseReturnStatement>
 
 

@@ -8,7 +8,6 @@
 public function main() -> void {
     const exampleVar: int = 34;
     const exampleTwoVar: int = 35;
-    const exampleThreeVar: int = exampleVar + exampleTwoVar;
     return;
 }
 
