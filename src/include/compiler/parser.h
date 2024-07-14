@@ -59,10 +59,11 @@ void printLine(const char* source, int line);
 ASTNode* parseProgram                       (Lexer* lexer);
 
 /* @Helper_Functions | Debugging, Errors, Walkers */
-void consume                                (Lexer *lexer, CryoTokenType type, const char* message);
+void consume                                (Lexer *lexer, CryoTokenType type, const char* message, const char* functionName);
 void getNextToken                           (Lexer *lexer);
-void error                                  (char *message);
+void error                                  (char* message, char* functionName);
 void debugCurrentToken                      (void);
+Token peekNextUnconsumedToken               (Lexer *lexer);
 
 /* @DataType_Management */
 CryoDataType getCryoDataType                (const char* typeStr);

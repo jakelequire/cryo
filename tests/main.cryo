@@ -1,10 +1,10 @@
 
 extern function printInt(i: int) -> void;
 
-const foo: int = 34;
+const qix: int = 34;
 const bar: int = 35;
 
 public function main() -> void {
-    printInt(foo);
+    printInt(qix);
     printInt(bar);
 }

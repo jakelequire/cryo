@@ -101,16 +101,17 @@ ASTNode* parseProgram(Lexer* lexer) {
 /* @Helper_Functions | Debugging, Errors, Walkers */
 
 // <consume>
-void consume(Lexer *lexer, CryoTokenType type, const char* message) {
-    printf("[Parser] Consuming token: %s (Expecting: %s)\n",
+void consume(Lexer *lexer, CryoTokenType type, const char* message, const char* functionName) {
+    printf("\n<*> [Parser] Consuming token: %s (Expecting: %s) ",
         CryoTokenToString(currentToken.type),
         CryoTokenToString(type)
     );
+    printf("@Fn <%s>\n\n", functionName);
 
     if (currentToken.type == type) {
         getNextToken(lexer);
     } else {
-        error(message);
+        error(message, functionName);
     }
 
     debugCurrentToken();
@@ -120,6 +121,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char* message) {
 
 // <getNextToken>
 void getNextToken(Lexer *lexer) {
+    printf("[Parser] @getNextToken | Current Token before: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
     if (isAtEnd(lexer)) {
         currentToken.type = TOKEN_EOF;
         currentToken.start = lexer->current;
@@ -129,19 +131,31 @@ void getNextToken(Lexer *lexer) {
         return;
     }
     currentToken = get_next_token(lexer);
-    printf("[Parser] @getNextToken | Next Token: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
+    printf("[Parser] @getNextToken | Next Token after: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
 }
 // </getNextToken>
 
+// <peekNextUnconsumedToken>
+Token peekNextUnconsumedToken(Lexer *lexer) {
+    if (isAtEnd(lexer)) {
+        return currentToken;
+    }
+    return get_next_token(lexer);
+}
+// </peekNextUnconsumedToken>
+
 
 // <error>
-void error(char *message) {
+void error(char* message, char* functionName) {
     int line = currentToken.line;
     int column = currentToken.column;
 
     printf("\n<!> [Parser] Error: %s at line %d, column %d\n", message, line, column);
+    printf("@Function: <%s>\n", functionName);
     printf("------------------------------------------------------------------------\n\n");
     // Print the line containing the error
+    printf("%d ", line - 1);
+    printLine(source, line - 1);
     printf("%d ", line);
     printLine(source, line);
 
@@ -188,19 +202,16 @@ CryoDataType parseType(Lexer* lexer, ParsingContext* context) {
         case TOKEN_KW_STRING:
         case TOKEN_KW_BOOL:
             type = getCryoDataType(strndup(currentToken.start, currentToken.length));
-            getNextToken(lexer);  // Consume the type keyword
             break;
 
         case TOKEN_IDENTIFIER:
             type = getCryoDataType(strndup(currentToken.start, currentToken.length));
-            getNextToken(lexer);  // Consume the type identifier
             break;
 
         default:
-            error("Expected a type identifier");
+            error("Expected a type identifier", "getNextToken");
             break;
     }
-
     return type;
 }
 // </parseType>
@@ -293,13 +304,18 @@ ASTNode* parseStatement(Lexer *lexer, ParsingContext *context) {
             return parseExtern(lexer, context);
 
         case TOKEN_IDENTIFIER:
+            if(peekNextUnconsumedToken(lexer).type == TOKEN_LPAREN) {
+                char* functionName = strndup(currentToken.start, currentToken.length);
+                getNextToken(lexer);
+                return parseFunctionCall(lexer, context, functionName);
+            }
             return parseExpressionStatement(lexer, context);
 
         case TOKEN_EOF:
             return NULL;
 
         default:
-            error("Expected a statement");
+            error("Expected a statement", "parseStatement");
             return NULL;
     }
 }
@@ -339,7 +355,7 @@ ASTNode* parsePrimaryExpression(Lexer *lexer, ParsingContext *context) {
             return node;
 
         default:
-            error("Expected an expression");
+            error("Expected an expression", "parsePrimaryExpression");
             return NULL;
     }
 }
@@ -351,7 +367,7 @@ ASTNode* parseExpression(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing expression...\n");
     ASTNode* left = parsePrimaryExpression(lexer, context);
     if (!left) {
-        error("Expected an expression");
+        error("Expected an expression.", "parseExpression");
     }
     return parseBinaryExpression(lexer, context, left, 1);
 }
@@ -363,7 +379,7 @@ ASTNode* parseExpressionStatement(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing expression statement...\n");
     ASTNode* expression = parseExpression(lexer, context);
     printf("[Parser] Expression parsed: %s\n", CryoNodeTypeToString(expression->type));
-    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon");
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseExpressionStatement");
     return createExpressionStatement(expression);
 }
 // </parseExpressionStatement>
@@ -381,7 +397,7 @@ ASTNode* parseBinaryExpression(Lexer *lexer, ParsingContext *context, ASTNode* l
         printf("[Parser] Operator type: %s\n", CryoTokenToString(operator));
         CryoOperatorType op = CryoTokenToOperator(operator);
         if (op == OPERATOR_NA) {
-            error("Invalid operator");
+            error("Invalid operator.", "parseBinaryExpression");
             return NULL;
         }
 
@@ -389,7 +405,7 @@ ASTNode* parseBinaryExpression(Lexer *lexer, ParsingContext *context, ASTNode* l
 
         ASTNode* right = parsePrimaryExpression(lexer, context);
         if (!right) {
-            error("Expected an expression on the right side of the binary operator");
+            error("Expected an expression on the right side of the binary operator.", "parseBinaryExpression");
         }
 
         int nextPrecedence = getOperatorPrecedence(currentToken.type);
@@ -424,21 +440,18 @@ ASTNode* parseUnaryExpression(Lexer *lexer, ParsingContext *context) {
 // <parsePublicDeclaration>
 ASTNode* parsePublicDeclaration(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing public declaration...\n");
-    consume(lexer, TOKEN_KW_PUBLIC, "Expected 'public' keyword");
+    consume(lexer, TOKEN_KW_PUBLIC, "Expected 'public' keyword.", "parsePublicDeclaration");
 
     switch(currentToken.type) {
         case TOKEN_KW_CONST:
         case TOKEN_KW_MUT:
             return parseVarDeclaration(lexer, context);
-
-        case TOKEN_KW_EXTERN:
-            return parseExternFunctionDeclaration(lexer, context);
-
         case TOKEN_KW_FN:
+
             return parseFunctionDeclaration(lexer, context, VISIBILITY_PUBLIC);
 
         default:
-            error("Expected a declaration");
+            error("Expected a declaration.", "parsePublicDeclaration");
             return NULL;
     }
 }
@@ -452,7 +465,7 @@ ASTNode* parsePublicDeclaration(Lexer *lexer, ParsingContext *context) {
 // <parseBlock>
 ASTNode* parseBlock(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing block...\n");
-    consume(lexer, TOKEN_LBRACE, "Expected `{` to start block");
+    consume(lexer, TOKEN_LBRACE, "Expected `{` to start block.", "parseBlock");
 
     context->scopeLevel++;
 
@@ -468,7 +481,7 @@ ASTNode* parseBlock(Lexer *lexer, ParsingContext *context) {
         }
     }
 
-    consume(lexer, TOKEN_RBRACE, "Expected `}` to end block");
+    consume(lexer, TOKEN_RBRACE, "Expected `}` to end block.", "parseBlock");
     context->scopeLevel--;
     return block;
 }
@@ -486,7 +499,7 @@ ASTNode* parseFunctionBlock(Lexer *lexer, ParsingContext *context) {
         return NULL;
     }
 
-    consume(lexer, TOKEN_LBRACE, "Expected `{` to start function block");
+    consume(lexer, TOKEN_LBRACE, "Expected `{` to start function block.", "parseFunctionBlock");
 
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
         ASTNode* statement = parseStatement(lexer, context);
@@ -500,7 +513,7 @@ ASTNode* parseFunctionBlock(Lexer *lexer, ParsingContext *context) {
         }
     }
 
-    consume(lexer, TOKEN_RBRACE, "Expected `}` to end function block");
+    consume(lexer, TOKEN_RBRACE, "Expected `}` to end function block.", "parseFunctionBlock");
     context->scopeLevel--;
     printf("[Parser] Exiting function block\n");
     return functionBlock;
@@ -526,7 +539,8 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
     }
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
-        error("[Parser] Expected variable name");
+        printf("<#> [Parser] DEBUG: Current Token: %s\n ", CryoTokenToString(currentToken.type));
+        error("[Parser] Expected variable name.", "parseVarDeclaration");
     }
     char* varName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer);
@@ -538,16 +552,16 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
         char* varType = strndup(currentToken.start, currentToken.length);
         dataType = getCryoDataType(varType);
         if(dataType == DATA_TYPE_UNKNOWN) {
-            error("[Parser] Unknown data type");
+            error("[Parser] Unknown data type." , "parseVarDeclaration");
         }
         free(varType);
         getNextToken(lexer);
     } else {
-        error("[Parser] Expected ':' after variable name");
+        error("[Parser] Expected ':' after variable name.", "parseVarDeclaration");
     }
 
     if (currentToken.type != TOKEN_EQUAL) {
-        error("[Parser] Expected '=' after type");
+        error("[Parser] Expected '=' after type.", "parseVarDeclaration");
     }
     getNextToken(lexer);
 
@@ -558,10 +572,10 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
 
     ASTNode* initializer = parseExpression(lexer, context);
     if (initializer == NULL) {
-        error("[Parser] Expected expression after '='");
+        error("[Parser] Expected expression after '='.", "parseVarDeclaration");
     }
 
-    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration");
+    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration");
 
     ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, isMutable, isConstant, isReference);
     printf("[Parser] Created Variable Declaration Node: %s\n", varName);
@@ -578,10 +592,10 @@ ASTNode* parseVarDeclaration(Lexer* lexer, ParsingContext* context) {
 // <parseFunctionDeclaration>
 ASTNode* parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVisibilityType visibility) {
     printf("[Parser] Parsing function declaration...\n");
-    consume(lexer, TOKEN_KW_FN, "Expected `function` keyword");
+    consume(lexer, TOKEN_KW_FN, "Expected `function` keyword.", "parseFunctionDeclaration");
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
-        error("Expected an identifier");
+        error("Expected an identifier", "parseFunctionDeclaration");
         return NULL;
     }
 
@@ -595,8 +609,9 @@ ASTNode* parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
         printf("[Parser] Found return type arrow\n");
         getNextToken(lexer);
         returnType = parseType(lexer, context);
+        getNextToken(lexer);
     } else {
-        error("Expected `->` for return type");
+        error("Expected `->` for return type.", "parseFunctionDeclaration");
     }
 
     printf("[Parser] Function return type: %s\n", CryoDataTypeToString(returnType));
@@ -604,14 +619,14 @@ ASTNode* parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     // Ensure the next token is `{` for the function block
     if (currentToken.type != TOKEN_LBRACE) {
         printf("<DEBUG> [Parser] Current Token: %s\n ", CryoTokenToString(currentToken.type));
-        error("Expected `{` to start function block");
+        error("Expected `{` to start function block.", "parseFunctionDeclaration");
         return NULL;
     }
 
     // Parse the function block
     ASTNode* functionBlock = parseFunctionBlock(lexer, context);
     if (!functionBlock) {
-        error("Failed to parse function block");
+        error("Failed to parse function block.", "parseFunctionDeclaration");
         return NULL;
     }
 
@@ -623,11 +638,10 @@ ASTNode* parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
 // <parseExternFunctionDeclaration>
 ASTNode* parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing extern function declaration...\n");
-    consume(lexer, TOKEN_KW_EXTERN, "Expected `extern` keyword");
-    consume(lexer, TOKEN_KW_FN, "Expected `function` keyword");
+    consume(lexer, TOKEN_KW_FN, "Expected `function` keyword", "parseExternFunctionDeclaration");
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
-        error("Expected an identifier");
+        error("Expected an identifier.", "parseExternFunctionDeclaration");
         return NULL;
     }
 
@@ -639,9 +653,10 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context) {
     if (currentToken.type == TOKEN_RESULT_ARROW) {
         getNextToken(lexer);
         returnType = parseType(lexer, context);
+        getNextToken(lexer);
     }
 
-    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon");
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration");
     return createExternDeclNode(functionName, params, returnType);
 }
 // </parseExternFunctionDeclaration>
@@ -650,15 +665,15 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context) {
 // <parseFunctionCall>
 ASTNode* parseFunctionCall(Lexer *lexer, ParsingContext *context, char* functionName) {
     printf("[Parser] Parsing function call...\n");
-    consume(lexer, TOKEN_LPAREN, "Expected `(` to start function call");
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseFunctionCall");
 
     ASTNode* args = parseArgumentList(lexer, context);
     int argCount = 0;
     if (args) {
         argCount = args->data.functionCall.argCount;
     }
-    consume(lexer, TOKEN_RPAREN, "Expected `)` to end function call");
-
+    consume(lexer, TOKEN_RPAREN, "Expected `)` to end argument list.", "parseFunctionCall");
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseFunctionCall");
     return createFunctionCallNode(functionName, args, argCount);
 }
 // </parseFunctionCall>
@@ -667,7 +682,7 @@ ASTNode* parseFunctionCall(Lexer *lexer, ParsingContext *context, char* function
 // <parseReturnStatement>
 ASTNode* parseReturnStatement(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing return statement...\n");
-    consume(lexer, TOKEN_KW_RETURN, "Expected `return` keyword");
+    consume(lexer, TOKEN_KW_RETURN, "Expected `return` keyword.", "parseReturnStatement");
 
     ASTNode* expression = NULL;
     if (currentToken.type != TOKEN_SEMICOLON) {
@@ -675,7 +690,7 @@ ASTNode* parseReturnStatement(Lexer *lexer, ParsingContext *context) {
         printf("[Parser] Parsed return expression\n");
     }
 
-    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon");
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseReturnStatement");
     ASTNode* returnNode = createReturnNode(expression);
     printf("[AST] Created Return Node: Type = %d\n", returnNode->type);
     return returnNode;
@@ -692,16 +707,18 @@ ASTNode* parseParameter(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing parameter...\n");
 
     if (currentToken.type != TOKEN_IDENTIFIER) {
-        error("Expected an identifier");
+        error("Expected an identifier.", "parseParameter");
         return NULL;
     }
 
     char* paramName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer);
 
-    consume(lexer, TOKEN_COLON, "Expected `:` after parameter name");
+    consume(lexer, TOKEN_COLON, "Expected `:` after parameter name.", "parseParameter");
 
     CryoDataType paramType = parseType(lexer, context);
+    // consume data type:
+    getNextToken(lexer);
     return createParamNode(paramName, paramType);
 }
 // </parseParameter>
@@ -710,7 +727,7 @@ ASTNode* parseParameter(Lexer *lexer, ParsingContext *context) {
 // <parseParameterList>
 ASTNode* parseParameterList(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing parameter list...\n");
-    consume(lexer, TOKEN_LPAREN, "Expected `(` to start parameter list");
+    consume(lexer, TOKEN_LPAREN, "Expected `(` to start parameter list.", "parseParameterList");
 
     ASTNode* paramListNode = createParamListNode();
     if(paramListNode == NULL) {
@@ -733,7 +750,7 @@ ASTNode* parseParameterList(Lexer *lexer, ParsingContext *context) {
         }
     }
 
-    consume(lexer, TOKEN_RPAREN, "Expected `)` to end parameter list");
+    consume(lexer, TOKEN_RPAREN, "Expected `)` to end parameter list.", "parseParameterList");
     return paramListNode;
 }
 // </parseParameterList>
@@ -809,17 +826,17 @@ void addArgumentToList(ASTNode* argListNode, ASTNode* arg) {
 // <parseImport>
 ASTNode* parseImport(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing import...\n");
-    consume(lexer, TOKEN_KW_IMPORT, "Expected `import` keyword");
+    consume(lexer, TOKEN_KW_IMPORT, "Expected `import` keyword.", "parseImport");
 
     if (currentToken.type != TOKEN_STRING_LITERAL) {
-        error("Expected a string literal");
+        error("Expected a string literal", "parseImport");
         return NULL;
     }
 
     char* moduleName = strndup(currentToken.start + 1, currentToken.length - 2);
     getNextToken(lexer);
 
-    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon");
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport");
     return createImportNode(moduleName);
 }
 // </parseImport>
@@ -828,14 +845,14 @@ ASTNode* parseImport(Lexer *lexer, ParsingContext *context) {
 // <parseExtern>
 ASTNode* parseExtern(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing extern...\n");
-    consume(lexer, TOKEN_KW_EXTERN, "Expected `extern` keyword");
+    consume(lexer, TOKEN_KW_EXTERN, "Expected `extern` keyword.", "parseExtern");
 
     switch(currentToken.type) {
         case TOKEN_KW_FN:
             return parseExternFunctionDeclaration(lexer, context);
 
         default:
-            error("Expected an extern declaration");
+            error("Expected an extern declaration.", "parseExtern");
             return NULL;
     }
 
@@ -851,7 +868,7 @@ ASTNode* parseExtern(Lexer *lexer, ParsingContext *context) {
 // <parseIfStatement>
 ASTNode* parseIfStatement(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing if statement...\n");
-    consume(lexer, TOKEN_KW_IF, "Expected `if` keyword");
+    consume(lexer, TOKEN_KW_IF, "Expected `if` keyword.", "parseIfStatement");
     context->isParsingIfCondition = true;
 
     ASTNode* condition = parseExpression(lexer, context);
@@ -876,16 +893,16 @@ ASTNode* parseIfStatement(Lexer *lexer, ParsingContext *context) {
 // <parseForLoop>
 ASTNode* parseForLoop(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing for loop...\n");
-    consume(lexer, TOKEN_KW_FOR, "Expected `for` keyword");
+    consume(lexer, TOKEN_KW_FOR, "Expected `for` keyword.", "parseForLoop");
 
-    consume(lexer, TOKEN_LPAREN, "Expected `(` to start for loop");
+    consume(lexer, TOKEN_LPAREN, "Expected `(` to start for loop.", "parseForLoop");
 
     ASTNode* init = parseStatement(lexer, context);
     ASTNode* condition = parseExpression(lexer, context);
-    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon");
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop");
 
     ASTNode* update = parseExpression(lexer, context);
-    consume(lexer, TOKEN_RPAREN, "Expected `)` to end for loop");
+    consume(lexer, TOKEN_RPAREN, "Expected `)` to end for loop.", "parseForLoop");
 
     ASTNode* body = parseBlock(lexer, context);
     return createForStatement(init, condition, update, body);
@@ -896,11 +913,11 @@ ASTNode* parseForLoop(Lexer *lexer, ParsingContext *context) {
 // <parseWhileStatement>
 ASTNode* parseWhileStatement(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing while statement...\n");
-    consume(lexer, TOKEN_KW_WHILE, "Expected `while` keyword");
-    consume(lexer, TOKEN_LPAREN, "Expected `(` to start while loop");
+    consume(lexer, TOKEN_KW_WHILE, "Expected `while` keyword.", "parseWhileStatement");
+    consume(lexer, TOKEN_LPAREN, "Expected `(` to start while loop.", "parseWhileStatement");
 
     ASTNode* condition = parseExpression(lexer, context);
-    consume(lexer, TOKEN_RPAREN, "Expected `)` to end while loop");
+    consume(lexer, TOKEN_RPAREN, "Expected `)` to end while loop.", "parseWhileStatement");
 
     ASTNode* body = parseBlock(lexer, context);
     return createWhileStatement(condition, body);
@@ -915,7 +932,7 @@ ASTNode* parseWhileStatement(Lexer *lexer, ParsingContext *context) {
 // <parseArrayLiteral>
 ASTNode* parseArrayLiteral(Lexer *lexer, ParsingContext *context) {
     printf("[Parser] Parsing array literal...\n");
-    consume(lexer, TOKEN_LBRACKET, "Expected `[` to start array literal");
+    consume(lexer, TOKEN_LBRACKET, "Expected `[` to start array literal.", "parseArrayLiteral");
 
     ASTNode* elements = createArrayLiteralNode();
     if (elements == NULL) {
@@ -938,7 +955,7 @@ ASTNode* parseArrayLiteral(Lexer *lexer, ParsingContext *context) {
         }
     }
 
-    consume(lexer, TOKEN_RBRACKET, "Expected `]` to end array literal");
+    consume(lexer, TOKEN_RBRACKET, "Expected `]` to end array literal.", "parseArrayLiteral");
     return elements;
 }
 // </parseArrayLiteral>
