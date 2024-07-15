@@ -1,5 +1,5 @@
 # ![Logo](./assets/cryo-logo.svg) Cryo 
-General Purpose, Strongly Typed, OOP, programming language witten in C.
+General Purpose, Strongly Typed, OOP, programming language witten in C & C++.
 
 <i>[Apache 2.0 License](#license)</i>
 
@@ -129,14 +129,18 @@ This will be a light overview of the language. There is additional resources tha
 
 
 #### Data Types
-There is a set of basic data types in Cryo, in the future, there will be more to be implemented in the core data types.
 
-- `int` -       /*TODO*/
-- `string` -    /*TODO*/
-- `boolean` -   /*TODO*/
-- `symbol` -    /*TODO*/
-- `void` -      /*TODO*/
-- `null` -      /*TODO*/
+Cryo provides a set of fundamental data types that serve as the building blocks for more complex structures. These core data types will be expanded in the future to enhance the language's capabilities.
+
+- **`int`**: Represents integer values. Used for arithmetic operations, counting, and other scenarios where whole numbers are required. Example: `42`.
+- **`string`**: Represents sequences of characters. Used for text manipulation, messages, and other scenarios requiring textual data. Example: `"Hello, World!"`.
+- **`boolean`**: Represents truth values, with only two possible values: `true` and `false`. Used for conditional statements and logic operations.
+- **`symbol`**: Represents unique identifiers. Useful for cases where a distinct and immutable identifier is required, such as keys in dictionaries or enums.
+- **`void`**: Represents the absence of a value. Typically used for functions that do not return a value.
+- **`null`**: Represents a null value or an absence of an object. Used to signify that a variable has not been initialized or that an object is missing.
+
+These data types provide a solid foundation for programming in Cryo. Future releases will introduce additional types and enhancements to support a wider range of programming paradigms and applications.
+
 
 
 #### Operators
