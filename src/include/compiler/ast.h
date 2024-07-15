@@ -121,7 +121,6 @@ typedef struct ASTNode {
         } varDecl;
 
         struct {
-            CryoDataType dataType;
             char* varName;
             bool isReference;
         } varName;

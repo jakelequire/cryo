@@ -94,7 +94,6 @@ void printAST(ASTNode* node, int indent) {
 
         case NODE_VAR_NAME:
             printf("Variable Name Node: %s\n", node->data.varName.varName);
-            //printf("Variable Name Node Type: %s\n", node->data.varName.dataType);
             break;
 
         case NODE_FUNCTION_CALL:
@@ -470,7 +469,6 @@ ASTNode* createASTNode(CryoNodeType type) {
         case NODE_VAR_NAME:
             node->data.varName.varName = NULL;
             node->data.varName.isReference = false;
-            node->data.varName.dataType = DATA_TYPE_UNKNOWN;
             break;
             
         case NODE_RETURN_STATEMENT:
@@ -1059,7 +1057,6 @@ ASTNode* createVariableExpr(char* name, bool isReference) {
 
     node->data.varName.varName = strdup(name);
     node->data.varName.isReference = isReference;
-    node->data.varName.dataType = DATA_TYPE_UNKNOWN;
 
     printf("[AST] Created Variable Expression Node: %s\n", name);
     return node;
