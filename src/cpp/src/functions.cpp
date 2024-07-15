@@ -89,19 +89,14 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
 
     for (int i = 0; i < node->data.functionCall.argCount; ++i) {
         llvm::Value* arg = generateExpression(node->data.functionCall.args[i]);
-        ASTNode* argNode = node->data.functionCall.args[i];
-        std::cout << "[CPP DEBUG] Argument value: " << arg << "\n";
-        std::cout << "[CPP DEBUG] Argument name: " << CryoNodeTypeToString(argNode->type) << "\n";
-        std::cout << "[CPP DEBUG] Argument data type: " << CryoDataTypeToString(argNode->data.varDecl.dataType) << "\n";
-
         if (!arg) {
             std::cerr << "[CPP] Error generating argument for function call\n";
             return;
         }
-
         args.push_back(arg);
     }
 
+    std::cout << "[CPP] Generating function call for " << functionName << "\n";
     llvm::Function* callee = module->getFunction(functionName);
     if (!callee) {
         std::cerr << "[CPP] Error: Unknown function referenced: " << functionName << "\n";
@@ -109,9 +104,9 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
     }
 
     builder.CreateCall(callee, args);
-
     std::cout << "[CPP] Created function call for " << functionName << "\n";
 }
+
 
 void CodeGen::generateFunction(ASTNode* node) {
     char* functionName;

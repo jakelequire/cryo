@@ -33,6 +33,7 @@
 /*---------<end>---------*/
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
+typedef struct Token Token;
 
 typedef struct {
     bool isParsingIfCondition;
@@ -99,9 +100,12 @@ ASTNode* parseReturnStatement               (Lexer *lexer, ParsingContext *conte
 /* @ASTNode_Parsing - Parameters */
 ASTNode* parseParameter                     (Lexer *lexer, ParsingContext *context);
 ASTNode* parseParameterList                 (Lexer *lexer, ParsingContext *context);
+ASTNode* parseArguments                     (Lexer *lexer, ParsingContext *context);
 ASTNode* parseArgumentList                  (Lexer *lexer, ParsingContext *context);
 void addParameterToList                     (ASTNode* paramListNode, ASTNode* param);
 void addArgumentToList                      (ASTNode* argListNode, ASTNode* arg);
+void addArgumentToFunctionCall              (ASTNode* functionCall, ASTNode* arg);
+void addParameterToExternDecl               (ASTNode* externDeclNode, ASTNode* param);
 
 /* @ASTNode_Parsing - Modules & Externals */
 ASTNode* parseImport                        (Lexer *lexer, ParsingContext *context);

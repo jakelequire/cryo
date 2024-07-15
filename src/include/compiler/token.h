@@ -291,7 +291,8 @@ typedef enum CryoVisibilityType {
     VISIBILITY_PUBLIC,      // `public`         0
     VISIBILITY_PRIVATE,     // `private`        1
     VISIBILITY_PROTECTED,   // `protected`      2
-    VISIBILITY_UNKNOWN,     // `<UNKNOWN>`      3
+    VISIBILITY_EXTERN,      // `extern`         3
+    VISIBILITY_UNKNOWN,     // `<UNKNOWN>`      4
 } CryoVisibilityType;
 
 

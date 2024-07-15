@@ -335,13 +335,13 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Name\": \"" << node->data.functionCall.name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Args\": [" << std::endl;
-            for (int i = 0; i < node->data.functionCall.argCount; ++i) {
-                logASTNode(node->data.functionCall.args[i], indentLevel + 1);
-                if (i < node->data.functionCall.argCount - 1) {
-                    printIndentation(indentLevel + 1);
-                    std::cout << "," << std::endl;
-                }
-            }
+            //for (int i = 1; i < node->data.functionCall.argCount; ++i) {
+            //    logASTNode(node->data.functionCall.args[i], indentLevel + 1);
+            //    if (i < node->data.functionCall.argCount - 1) {
+            //        printIndentation(indentLevel + 1);
+            //        std::cout << "," << std::endl;
+            //    }
+            //}
             std::cout << std::endl;
             printIndentation(indentLevel);
             std::cout << "]" << std::endl;
@@ -491,14 +491,13 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Capacity\": " << node->data.argList.argCapacity << "," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Arguments\": [" << std::endl;
-            std::cout << std::string(indentLevel, ' ') << "\"Arguments\": [" << std::endl;
             for (int i = 0; i < node->data.argList.argCount; ++i) {
                 logASTNode(node->data.argList.args[i], indentLevel + 1);
                 if (i < node->data.argList.argCount - 1) {
+                    printIndentation(indentLevel + 1);
                     std::cout << "," << std::endl;
                 }
             }
-                std::cout << std::string(indentLevel, ' ') << "]" << std::endl;
             std::cout << std::endl;
             printIndentation(indentLevel);
             std::cout << "]" << std::endl;
@@ -506,10 +505,34 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
-            
+        
+        case CryoNodeType::NODE_EXTERN_FUNCTION:
+            printIndentation(indentLevel);
+            std::cout << "\"ExternFunction\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Name\": \"" << node->data.externNode.decl.function->name << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"ReturnType\": \"" << CryoDataTypeToString(node->data.externNode.decl.function->returnType) << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Params\": [" << std::endl;
+            for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
+                logASTNode(node->data.externNode.decl.function->params[i], indentLevel + 1);
+                if (i < node->data.externNode.decl.function->paramCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
         default:
             printIndentation(indentLevel);
-            std::cerr << "\"<!UnknownNodeType!>\"" << std::endl;
+            std::cerr << "\"<!Defaulted: UnknownNodeType!>\"" << std::endl;
             break;
     }
 

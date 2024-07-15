@@ -34,6 +34,7 @@ typedef struct {
     char* name;
     struct ASTNode** params;
     int paramCount;
+    int paramCapacity;
     struct ASTNode* body;
 } FunctionDeclNode;
 
@@ -81,6 +82,7 @@ typedef struct ASTNode {
             char* name;
             struct ASTNode** args;
             int argCount;
+            int argCapacity;
         } functionCall;
 
         struct {
@@ -119,6 +121,7 @@ typedef struct ASTNode {
         } varDecl;
 
         struct {
+            CryoDataType dataType;
             char* varName;
             bool isReference;
         } varName;
@@ -246,8 +249,8 @@ ASTNode* createVariableExpr                 (char* name, bool isReference);
 
 /* @Node_Creation - Functions */
 ASTNode* createFunctionNode                 (CryoVisibilityType visibility, char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType);
-ASTNode* createExternDeclNode               (char* functionName, ASTNode* params, CryoDataType returnType);
-ASTNode* createFunctionCallNode             (char* name, ASTNode** args, int argCount);
+ASTNode* createExternFuncNode               (void);
+ASTNode* createFunctionCallNode             (void);
 ASTNode* createReturnNode                   (ASTNode* returnValue);
 ASTNode* createReturnExpression             (ASTNode* returnExpression, CryoDataType returnType);
 
@@ -255,6 +258,7 @@ ASTNode* createReturnExpression             (ASTNode* returnExpression, CryoData
 ASTNode* createParamListNode                (void);
 ASTNode* createArgumentListNode             (void);
 ASTNode* createParamNode                    (char* name, CryoDataType type);
+ASTNode* createArgsNode                     (char* name, CryoDataType type);
 
 
 /* @Node_Creation - Modules & Externals */

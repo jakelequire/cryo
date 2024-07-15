@@ -26,7 +26,7 @@ bool CodeGen::declareFunctions(ASTNode* node) {
         return mainFunctionExists;
     }
 
-    if (node->type == CryoNodeType::NODE_FUNCTION_DECLARATION) {
+    if (node->type == CryoNodeType::NODE_FUNCTION_DECLARATION || node->type == CryoNodeType::NODE_EXTERN_FUNCTION) {
         if (std::string(node->data.functionDecl.function->name) == "main") {
             mainFunctionExists = true;
         }

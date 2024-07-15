@@ -8,3 +8,4 @@ public function main() -> void {
     printInt(qix);
     printInt(bar);
 }
+
