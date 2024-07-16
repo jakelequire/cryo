@@ -164,7 +164,14 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
                     std::cerr << "[CPP] Error: Referenced variable not found: " << node->data.varDecl.initializer->data.varName.varName << "\n";
                     return;
                 }
-            } else {
+            } else if(node->data.varDecl.initializer->type == NODE_STRING_LITERAL) {
+                std::cout << "[CPP] Initializer is a string literal\n";
+                char* stringValue = node->data.varDecl.initializer->data.literalExpression.stringValue;
+                std::cout << "[CPP] String Value: " << stringValue << "\n";
+                initialValue = llvm::cast<llvm::Constant>(createString(node->data.varDecl.initializer->data.literalExpression.stringValue));
+                varType = builder.getInt8Ty()->getPointerTo();
+            }
+            else {
                 std::cerr << "[CPP] Unknown expression type for string variable initializer\n";
                 return;
             }
@@ -212,6 +219,7 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
         case DATA_TYPE_FLOAT_ARRAY:
         case DATA_TYPE_STRING_ARRAY:
         case DATA_TYPE_BOOLEAN_ARRAY:
+        case DATA_TYPE_VOID:
             std::cout << "[CPP] Generating code for array variable\n";
             varType = llvm::ArrayType::get(builder.getInt32Ty(), node->data.varDecl.initializer->data.arrayLiteral.elementCount);
             initialValue = llvm::ConstantArray::get(
@@ -221,8 +229,7 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
             break;
         
         case DATA_TYPE_UNKNOWN:
-        case DATA_TYPE_VOID:
-            std::cerr << "[CPP] Error: Cannot declare variable of type void\n";
+            std::cerr << "[CPP] Error: Cannot declare variable of type unknown\n";
             return;
         default:
             std::cerr << "[CPP - ERROR] Invalid data type for variable: " << varName << "\n";

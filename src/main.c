@@ -51,18 +51,24 @@ int main(int argc, char* argv[]) {
     // Parse the source code
     ASTNode* programNode = parseProgram(&lexer);
 
-    if(programNode != NULL) {
+    if (programNode != NULL) {
         printf("\n\n>===------- AST Tree -------===<\n\n");
         printAST(programNode, 0);
         printf("\n>===------- End Tree ------===<\n\n");
-    }
 
-    if (programNode) {
-        printf("[Main] Generating IR code...\n");
-        generateCodeWrapper(programNode); // <- The C++ wrapper function
-        printf(">===------------- CPP End Code Generation -------------===<\n");
-        printf("[Main] IR code generated, freeing AST.\n");
+        // Perform semantic analysis
+        if (analyzeNode(programNode)) {
+            printf("[Main] Generating IR code...\n");
+            generateCodeWrapper(programNode); // <- The C++ wrapper function
+            printf(">===------------- CPP End Code Generation -------------===<\n");
+            printf("[Main] IR code generated, freeing AST.\n");
+        } else {
+            fprintf(stderr, "[Main] Semantic analysis failed.\n");
+        }
+
         freeAST(programNode);
+    } else {
+        fprintf(stderr, "[Main] Failed to parse program.\n");
     }
 
     printf("[DEBUG] Program parsed\n");

@@ -64,7 +64,7 @@ void printAST(ASTNode* node, int indent) {
 
         case NODE_EXPRESSION:
             printf("Expression Node\n");
-            printAST(node->data.expr.expr, indent + 2);
+            printAST(node->data.expr.expression, indent + 2);
             break;
         
         case NODE_BINARY_EXPR:
@@ -144,7 +144,7 @@ void printAST(ASTNode* node, int indent) {
 
         case NODE_EXPRESSION_STATEMENT:
             printf("Expression Statement Node\n");
-            printAST(node->data.expr.expr, indent + 2);
+            printAST(node->data.expr.expression, indent + 2);
             break;
 
         case NODE_ASSIGN:
@@ -191,7 +191,7 @@ void printAST(ASTNode* node, int indent) {
             printf("Extern Statement Node\n");
             if(node->data.externNode.decl.function != NULL) {
                 printf("Extern Function Node name: %s\n", node->data.externNode.decl.function->name);
-                printf("Extern Function Node returnType: %s\n", node->data.externNode.decl.function->returnType);
+                printf("Extern Function Node returnType: %s\n", CryoDataTypeToString(node->data.externNode.decl.function->returnType));
                 printf("Extern Function Node visibility: %s\n", node->data.externNode.decl.function->visibility);
                 printf("Extern Function Node params:\n");
                 printAST(node->data.externNode.decl.function->params, indent + 2);
@@ -199,7 +199,12 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_EXTERN_FUNCTION:
+            printf("Extern Function Node\n");
             printf("Function Name: %s\n", node->data.externNode.decl.function->name);
+            printf("Function Return Type: %s\n", CryoDataTypeToString(node->data.externNode.decl.function->returnType));
+            printf("Function Visibility: %s\n", CryoVisibilityTypeToString(node->data.externNode.decl.function->visibility));
+            printf("Function Parameters:\n");
+            printAST(node->data.externNode.decl.function->params, indent + 2);
             break;
 
         case NODE_ARG_LIST:
@@ -258,7 +263,7 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_EXPRESSION:
-            freeAST(node->data.expr.expr);
+            freeAST(node->data.expr.expression);
             break;
         
         case NODE_BINARY_EXPR:
@@ -330,7 +335,7 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_EXPRESSION_STATEMENT:
-            freeAST(node->data.expr.expr);
+            freeAST(node->data.expr.expression);
             break;
 
         case NODE_ASSIGN:
@@ -349,7 +354,7 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_STRING_LITERAL:
-            free(node->data.literalExpression.stringValue);
+            free(node->data.str.str);
             break;
 
         case NODE_STRING_EXPRESSION:
@@ -528,11 +533,11 @@ ASTNode* createASTNode(CryoNodeType type) {
         case NODE_STRING_LITERAL:
             node->data.str.str = NULL;
             break;
-            
+
         case NODE_BOOLEAN_LITERAL:
             node->data.boolean.value = 0;
             break;
-            
+
         case NODE_ARRAY_LITERAL:
             node->data.arrayLiteral.elements = (ASTNode**)calloc(8, sizeof(ASTNode*));
             if (!node->data.arrayLiteral.elements) {
@@ -653,7 +658,7 @@ void addFunctionToProgram(ASTNode* program, ASTNode* function) {
 /* ====================================================================== */
 /* @Node_Creation - Expressions & Statements */
 
-
+// <createProgramNode>
 ASTNode* createProgramNode() {
     printf("[AST] Creating Program Node\n");
 
@@ -676,6 +681,7 @@ ASTNode* createProgramNode() {
     printf("[AST] Created Program Node\n");
     return node;
 }
+// </createProgramNode>
 
 
 // <createLiteralExpr>
@@ -707,7 +713,7 @@ ASTNode* createExpressionStatement(ASTNode* expression) {
         return NULL;
     }
 
-    node->data.expr.expr = expression;
+    node->data.expr.expression = expression;
 
     printf("[AST] Created Expression Statement Node\n");
     return node;
@@ -808,7 +814,7 @@ ASTNode* createStringLiteralNode(char* value) {
         return NULL;
     }
 
-    node->data.str.str = strdup(value);
+    node->data.literalExpression.stringValue = strdup(value);
 
     printf("[AST] Created String Literal Node: %s\n", value);
     return node;

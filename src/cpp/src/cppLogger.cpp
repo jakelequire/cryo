@@ -74,7 +74,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
         case CryoNodeType::NODE_EXPRESSION:
             printIndentation(indentLevel);
             std::cout << "\"Expression\": {" << std::endl;
-            logASTNode(node->data.expr.expr, indentLevel + 1);
+            logASTNode(node->data.expr.expression, indentLevel + 1);
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
@@ -335,13 +335,13 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Name\": \"" << node->data.functionCall.name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Args\": [" << std::endl;
-            //for (int i = 1; i < node->data.functionCall.argCount; ++i) {
-            //    logASTNode(node->data.functionCall.args[i], indentLevel + 1);
-            //    if (i < node->data.functionCall.argCount - 1) {
-            //        printIndentation(indentLevel + 1);
-            //        std::cout << "," << std::endl;
-            //    }
-            //}
+            for (int i = 1; i < node->data.functionCall.argCount; ++i) {
+                logASTNode(node->data.functionCall.args[i], indentLevel + 1);
+                if (i < node->data.functionCall.argCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
             std::cout << std::endl;
             printIndentation(indentLevel);
             std::cout << "]" << std::endl;
@@ -426,7 +426,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
 
         case CryoNodeType::NODE_STRING_LITERAL:
             printIndentation(indentLevel);
-            std::cout << "\"StringLiteral\": \"" << node->data.str.str << "\"" << std::endl;
+            std::cout << "\"StringLiteral\": \"" << node->data.literalExpression.stringValue << "\"" << std::endl;
             break;
 
         case CryoNodeType::NODE_BOOLEAN_LITERAL:

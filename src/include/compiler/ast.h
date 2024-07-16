@@ -152,7 +152,8 @@ typedef struct ASTNode {
         } stmt;
 
         struct {
-            struct ASTNode* expr;
+            CryoDataType dataType;
+            struct ASTNode* expression;
         } expr;
 
         struct {

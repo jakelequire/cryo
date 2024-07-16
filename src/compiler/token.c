@@ -108,6 +108,7 @@ char* CryoDataTypeToString(CryoDataType type) {
         case DATA_TYPE_BOOLEAN_ARRAY:       return "DATA_TYPE_BOOLEAN_ARRAY";
         case DATA_TYPE_VOID_ARRAY:          return "DATA_TYPE_VOID_ARRAY";
         case DATA_TYPE_UNKNOWN:             return "DATA_TYPE_UNKNOWN";
+        case INTERNAL_DATA_TYPE_EXPRESSION: return "INTERNAL_DATA_TYPE_EXPRESSION";
         default:                            return "<DATA TYPE UNKNOWN>";
     }
 }

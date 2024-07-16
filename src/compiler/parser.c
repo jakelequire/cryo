@@ -653,7 +653,7 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context) {
     char* functionName = strndup(currentToken.start, currentToken.length);
     externNode->data.externNode.decl.function->name = strdup(functionName);
     externNode->data.externNode.decl.function->paramCount = 0;
-    externNode->data.externNode.decl.function->paramCapacity = 4;  // Initial capacity for parameters
+    externNode->data.externNode.decl.function->paramCapacity = 4;
     externNode->data.externNode.decl.function->params = (ASTNode**)malloc(externNode->data.externNode.decl.function->paramCapacity * sizeof(ASTNode*));
     externNode->data.externNode.decl.function->visibility = VISIBILITY_EXTERN;
     printf("[Parser] Function name: %s\n", functionName);
@@ -692,6 +692,8 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context) {
         externNode->data.externNode.decl.function->returnType = DATA_TYPE_VOID;  // Default return type
     }
 
+
+    printf("\n\n<#!> [Parser] Extern Function Return Type: %s \n", CryoDataTypeToString(returnType));
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration");
     return externNode;
 }
@@ -712,7 +714,7 @@ ASTNode* parseFunctionCall(Lexer *lexer, ParsingContext *context, char* function
     if (currentToken.type != TOKEN_RPAREN) {
         // Parse arguments
         while (currentToken.type != TOKEN_RPAREN) {
-            ASTNode* arg = parseExpression(lexer, context);
+            ASTNode* arg = parseArguments(lexer, context);
             if (!arg) {
                 error("Expected argument expression.", "parseFunctionCall");
             }
@@ -823,9 +825,6 @@ ASTNode* parseArguments(Lexer *lexer, ParsingContext *context) {
     getNextToken(lexer);
 
     CryoDataType argType = DATA_TYPE_UNKNOWN;
-    //if(currentToken.type == TOKEN_IDENTIFIER) {
-    //    argType = DATA_TYPE_UNKNOWN
-    //}
 
     return createArgsNode(argName, argType);
 }
@@ -897,11 +896,17 @@ void addArgumentToList(ASTNode* argListNode, ASTNode* arg) {
 
 // <addArgumentToFunctionCall>
 void addArgumentToFunctionCall(ASTNode* functionCallNode, ASTNode* arg) {
-    if (functionCallNode->data.functionCall.argCount >= functionCallNode->data.functionCall.argCapacity) {
-        functionCallNode->data.functionCall.argCapacity *= 2;
-        functionCallNode->data.functionCall.args = (ASTNode**)realloc(functionCallNode->data.functionCall.args, functionCallNode->data.functionCall.argCapacity * sizeof(ASTNode*));
+    printf("[Parser] Adding argument to function call\n");
+    if (functionCallNode->type == NODE_FUNCTION_CALL) {
+        if (functionCallNode->data.functionCall.argCount >= functionCallNode->data.functionCall.argCapacity) {
+            functionCallNode->data.functionCall.argCapacity *= 2;
+            functionCallNode->data.functionCall.args = (ASTNode**)realloc(functionCallNode->data.functionCall.args, functionCallNode->data.functionCall.argCapacity * sizeof(ASTNode*));
+        }
+
+        functionCallNode->data.functionCall.args[functionCallNode->data.functionCall.argCount++] = arg;
+    } else {
+        fprintf(stderr, "[Parser] [ERROR] Expected function call node, got %s\n", CryoNodeTypeToString(functionCallNode->type));
     }
-    functionCallNode->data.functionCall.args[functionCallNode->data.functionCall.argCount++] = arg;
 }
 // </addArgumentToFunctionCall>
 

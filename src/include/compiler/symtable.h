@@ -37,6 +37,8 @@ typedef struct {
     int scopeLevel;
     bool isConstant;
     int argCount;
+    CryoDataType valueType;
+    CryoDataType* paramTypes;
 } CryoSymbol;
 
 typedef struct {
@@ -59,7 +61,7 @@ void jumpScope(CryoSymbolTable* table);
 void exitScope(CryoSymbolTable* table);
 void enterBlockScope(CryoSymbolTable* table);
 void exitBlockScope(CryoSymbolTable* table);
-void addSymbol(CryoSymbolTable* table, const char* name, CryoDataType type, bool isConstant);
+void addSymbol(CryoSymbolTable* table, const char* name, CryoDataType type, CryoDataType valueType, bool isConstant, int argCount, CryoDataType* paramTypes);
 CryoSymbol* findSymbol(CryoSymbolTable* table, const char* name);
 
 
