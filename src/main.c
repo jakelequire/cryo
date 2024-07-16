@@ -48,8 +48,11 @@ int main(int argc, char* argv[]) {
     initLexer(&lexer, source);
     printf("\n[DEBUG] Lexer initialized\n\n");
 
+    // Initialize the symbol table
+    CryoSymbolTable* table = createSymbolTable();
+
     // Parse the source code
-    ASTNode* programNode = parseProgram(&lexer);
+    ASTNode* programNode = parseProgram(&lexer, table);
 
     if (programNode != NULL) {
         printf("\n\n>===------- AST Tree -------===<\n\n");
@@ -57,7 +60,7 @@ int main(int argc, char* argv[]) {
         printf("\n>===------- End Tree ------===<\n\n");
 
         // Perform semantic analysis
-        if (analyzeNode(programNode)) {
+        if (analyzeNode(programNode, table)) {
             printf("[Main] Generating IR code...\n");
             generateCodeWrapper(programNode); // <- The C++ wrapper function
             printf(">===------------- CPP End Code Generation -------------===<\n");
@@ -70,6 +73,14 @@ int main(int argc, char* argv[]) {
     } else {
         fprintf(stderr, "[Main] Failed to parse program.\n");
     }
+
+    // Cleanup symbol table
+    // for (int i = 0; i < table->count; i++) {
+    //     free(table->symbols[i]->name);
+    //     free(table->symbols[i]);
+    // }
+    // free(table->symbols);
+    // free(table);
 
     printf("[DEBUG] Program parsed\n");
 

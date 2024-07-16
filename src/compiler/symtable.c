@@ -519,8 +519,7 @@ void traverseAST(ASTNode* node, CryoSymbolTable* table) {
 
 // Main Entry Point
 // <analyzeNode>
-bool analyzeNode(ASTNode* node) {
-    CryoSymbolTable* table = createSymbolTable();
+bool analyzeNode(ASTNode* node, CryoSymbolTable *table) {
     traverseAST(node, table);
 
     // Cleanup

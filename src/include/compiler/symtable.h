@@ -20,6 +20,7 @@
 #include "compiler/ast.h"
 #include "compiler/token.h"
 #include "compiler/lexer.h"
+#include "compiler/parser.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -41,7 +42,7 @@ typedef struct {
     CryoDataType* paramTypes;
 } CryoSymbol;
 
-typedef struct {
+typedef struct CryoSymbolTable {
     CryoSymbol** symbols;
     int count;
     int capacity;
@@ -66,7 +67,7 @@ CryoSymbol* findSymbol(CryoSymbolTable* table, const char* name);
 
 
 void traverseAST(ASTNode* node, CryoSymbolTable* table);
-bool analyzeNode(ASTNode* node);
+bool analyzeNode(ASTNode* node, CryoSymbolTable* table);
 
 
 #endif // SYMTABLE_H
