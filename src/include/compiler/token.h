@@ -276,15 +276,16 @@ typedef enum CryoDataType {
     DATA_TYPE_STRING,               // `string`            3
     DATA_TYPE_BOOLEAN,              // `boolean`           4
     DATA_TYPE_FUNCTION,             // `function`          5
-    DATA_TYPE_VOID,                 // `void`              6
-    DATA_TYPE_NULL,                 // `null`              7
-    DATA_TYPE_ARRAY,                // `[]`                8
-    DATA_TYPE_INT_ARRAY,            // `int[]`             9
-    DATA_TYPE_FLOAT_ARRAY,          // `float[]`           10
-    DATA_TYPE_STRING_ARRAY,         // `string[]`          11
-    DATA_TYPE_BOOLEAN_ARRAY,        // `boolean[]`         12
-    DATA_TYPE_VOID_ARRAY,           // `void[]`            13
-    INTERNAL_DATA_TYPE_EXPRESSION,  // `expression`        14
+    DATA_TYPE_EXTERN_FUNCTION,      // `extern function`   6
+    DATA_TYPE_VOID,                 // `void`              7
+    DATA_TYPE_NULL,                 // `null`              8
+    DATA_TYPE_ARRAY,                // `[]`                9
+    DATA_TYPE_INT_ARRAY,            // `int[]`             10
+    DATA_TYPE_FLOAT_ARRAY,          // `float[]`           11
+    DATA_TYPE_STRING_ARRAY,         // `string[]`          12
+    DATA_TYPE_BOOLEAN_ARRAY,        // `boolean[]`         13
+    DATA_TYPE_VOID_ARRAY,           // `void[]`            14
+    INTERNAL_DATA_TYPE_EXPRESSION,  // `expression`        15
 } CryoDataType;
 
 

@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -14,30 +14,42 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef SEMANTICS_H
-#define SEMANTICS_H
-/*------ <includes> ------*/
-#include <stdbool.h>
-#include <stdlib.h>
+#ifndef ERROR_H
+#define ERROR_H
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include "compiler/ast.h"
-#include "compiler/token.h"
-#include "compiler/symtable.h"
-/*---------<end>---------*/
-//
+#include <malloc.h>
+
+#define MAX_STACK_SIZE 10
 
 
-/*-----<function_prototypes>-----*/
+typedef struct {
+    char* functionName;
+    int lineNumber;
+} CryoStackFrame;
+
+typedef struct {
+    CryoStackFrame* stack;
+    int size;
+    int capacity;
+} CryoCallStack;
+
+typedef struct {
+    CryoCallStack callStack;
+} CryoInterpreter;
+
+extern CryoCallStack callStack;
 
 
-// Symbol Management
-void checkVariable(ASTNode* node, CryoSymbolTable* table);
-void checkAssignment(ASTNode* node, CryoSymbolTable* table);
-void checkFunctionCall(ASTNode* node, CryoSymbolTable* table);
-void traverseAST(ASTNode* node, CryoSymbolTable* table);
-/*-----<end_prototypes>-----*/
+/* @Call_Stack */
+void initCallStack              (CryoCallStack* callStack, int initialCapacity);
+void freeCallStack              (CryoCallStack* callStack);
+void resizeCallStack            (CryoCallStack *callStack);
+void pushCallStack              (CryoCallStack* callStack, const char* functionName, int lineNumber);
+void popCallStack               (CryoCallStack* callStack);
+void printStackTrace            (CryoCallStack* callStack);
 
-#endif // SEMANTICS_H
 
+
+#endif // ERROR_H

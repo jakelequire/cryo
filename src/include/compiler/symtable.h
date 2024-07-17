@@ -34,12 +34,12 @@ typedef struct ASTNode ASTNode;
 
 typedef struct {
     char* name;
-    CryoDataType type;
+    CryoNodeType nodeType;
+    CryoDataType valueType;
+    CryoDataType** paramTypes;
     int scopeLevel;
     bool isConstant;
     int argCount;
-    CryoDataType valueType;
-    CryoDataType* paramTypes;
 } CryoSymbol;
 
 typedef struct CryoSymbolTable {
@@ -50,20 +50,19 @@ typedef struct CryoSymbolTable {
 } CryoSymbolTable;
 
 
-
 char* logSymCryoDataType(CryoDataType type);
 
 
-CryoSymbolTable* createSymbolTable();
-void freeSymbolTable(CryoSymbolTable* table);
-void printSymbolTable(CryoSymbolTable* table);
-void enterScope(CryoSymbolTable* table);
-void jumpScope(CryoSymbolTable* table);
-void exitScope(CryoSymbolTable* table);
-void enterBlockScope(CryoSymbolTable* table);
-void exitBlockScope(CryoSymbolTable* table);
-void addSymbol(CryoSymbolTable* table, const char* name, CryoDataType type, CryoDataType valueType, bool isConstant, int argCount, CryoDataType* paramTypes);
-CryoSymbol* findSymbol(CryoSymbolTable* table, const char* name);
+CryoSymbolTable* createSymbolTable      (void);
+void freeSymbolTable                    (CryoSymbolTable* table);
+void printSymbolTable                   (CryoSymbolTable* table);
+void enterScope                         (CryoSymbolTable* table);
+void jumpScope                          (CryoSymbolTable* table);
+void exitScope                          (CryoSymbolTable* table);
+void enterBlockScope                    (CryoSymbolTable* table);
+void exitBlockScope                     (CryoSymbolTable* table);
+void addSymbol                          (CryoSymbolTable* table, const char* name, CryoNodeType nodeType, CryoDataType valueType, bool isConstant, int argCount, CryoDataType paramTypes);
+CryoSymbol* findSymbol                  (CryoSymbolTable* table, const char* name);
 
 
 void traverseAST(ASTNode* node, CryoSymbolTable* table);

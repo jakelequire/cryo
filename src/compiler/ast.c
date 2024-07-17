@@ -558,6 +558,7 @@ ASTNode* createASTNode(CryoNodeType type) {
             break;
             
         case NODE_EXTERN_FUNCTION:
+            node->data.externNode.type = DATA_TYPE_EXTERN_FUNCTION;
             node->data.externNode.decl.function = (FunctionDeclNode*)calloc(1, sizeof(FunctionDeclNode));
             if (!node->data.externNode.decl.function) {
                 fprintf(stderr, "[AST] Failed to allocate memory for extern function\n");

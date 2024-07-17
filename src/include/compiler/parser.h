@@ -28,6 +28,7 @@
 #include "compiler/ast.h"
 #include "compiler/token.h"
 #include "compiler/symtable.h"
+#include "compiler/error.h"
 #include "utils/fs.h"
 #include "utils/logger.h"
 /*---------<end>---------*/
@@ -61,9 +62,9 @@ void printLine(const char* source, int line);
 ASTNode* parseProgram                       (Lexer* lexer, CryoSymbolTable *table);
 
 /* @Helper_Functions | Debugging, Errors, Walkers */
-void consume                                (Lexer *lexer, CryoTokenType type, const char* message, const char* functionName);
+void consume                                (Lexer *lexer, CryoTokenType type, const char* message, const char* functionName, CryoSymbolTable *table);
 void getNextToken                           (Lexer *lexer);
-void error                                  (char* message, char* functionName);
+void error                                  (char* message, char* functionName, CryoSymbolTable *table);
 void debugCurrentToken                      (void);
 Token peekNextUnconsumedToken               (Lexer *lexer);
 
@@ -97,12 +98,12 @@ ASTNode* parseFunctionDeclaration           (Lexer *lexer, CryoSymbolTable *tabl
 ASTNode* parseExternFunctionDeclaration     (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 ASTNode* parseFunctionCall                  (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char* functionName);
 ASTNode* parseReturnStatement               (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-
 /* @ASTNode_Parsing - Parameters */
 ASTNode* parseParameter                     (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 ASTNode* parseParameterList                 (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 ASTNode* parseArguments                     (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 ASTNode* parseArgumentList                  (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode* parseArgumentsWithExpectedType     (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoDataType expectedType);
 void addParameterToList                     (CryoSymbolTable *table, ASTNode* paramListNode, ASTNode* param);
 void addArgumentToList                      (CryoSymbolTable *table, ASTNode* argListNode, ASTNode* arg);
 void addArgumentToFunctionCall              (CryoSymbolTable *table, ASTNode* functionCall, ASTNode* arg);

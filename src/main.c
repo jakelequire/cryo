@@ -44,6 +44,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    initCallStack(&callStack, 10);
+
     Lexer lexer;
     initLexer(&lexer, source);
     printf("\n[DEBUG] Lexer initialized\n\n");

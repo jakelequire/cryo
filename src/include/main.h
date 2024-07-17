@@ -23,6 +23,7 @@
 #include "parser.h"
 #include "ast.h"
 #include "compiler/symtable.h"
+#include "compiler/error.h"
 #include "utils/logger.h"
 
 
