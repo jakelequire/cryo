@@ -14,20 +14,32 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef COMPILER_H
-#define COMPILER_H
-/*------ <includes> ------*/
-#include <stdlib.h>
-#ifdef _WIN32
-#include <direct.h>
-#define popen _popen
-#define pclose _pclose
-#else
-#include <unistd.h>
-#endif
+#ifndef CLI_H
+#define CLI_H
 #include <stdio.h>
-#include <string.h>
-/*------ </includes> -----*/
-void run_compiler(const char *input_file);
+#include <stdlib.h>
+
+
+
+/* =========================================================== */
+// @Primary_Command
+
+typedef enum {
+    CMD_HELP,
+    CMD_VERSION,
+    CMD_BUILD,
+    CMD_INIT,
+    CMD_DEV_WATCH,
+    CMD_UNKNOWN
+} CommandType;
+
+
+
+/* =========================================================== */
+// @Prototypes
+
+CommandType getCommandType          (const char* command);
+void executeCommand                 (CommandType command, char argv[]);
+
 
 #endif

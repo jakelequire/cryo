@@ -1,6 +1,6 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         * 
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
@@ -14,30 +14,8 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef BUILD_H
-#define BUILD_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "cli/cli.h"
+#include "cli/devWatch.h"
 
 
-/* =========================================================== */
-// Build Args
-
-typedef enum {
-    BUILD_ARG,          // Single File Build
-    BUILD_ARG_DIR,      // Builds full Cryo Directory
-    BUILD_ARG_UNKNOWN
-} BuildArgs;
 
 
-/* =========================================================== */
-// @Prototypes
-
-BuildArgs getBuildArgs          (char* arg);
-void executeBuildCmd            (char* argv[]);
-
-
-#endif // BUILD_H

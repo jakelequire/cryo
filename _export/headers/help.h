@@ -14,56 +14,32 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef COMMANDS_H
-#define COMMANDS_H
-
+#ifndef HELP_H
+#define HELP_H
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include "main.h"
 
-// Command Types
-typedef enum {
-    CMD_HELP,       // help     (subcommands)
-    CMD_BUILD,      // build    (subcommands)
-    CMD_INIT,       // init     (subcommands)
-    CMD_VERSION,    // version  (no subcommands)
-    CMD_RUN,        // run      (subcommands)
-    CMD_ENV,        // env      (no subcommands)
-    CMD_UNKNOWN     // unknown  (no subcommands)
-} CommandType;
+#include "cli/cli.h"
 
+/* =========================================================== */
 // Help Args
+
 typedef enum {
-    HELP_HELP,      // help
-    HELP_VERSION,   // version
-    HELP_BUILD,     // build
-    HELP_INIT,      // init
-    HELP_RUN,       // run
-    HELP_UNKNOWN    // unknown
+    HELP_ARG_HELP,      // help
+    HELP_ARG_VERSION,   // version
+    HELP_ARG_BUILD,     // build
+    HELP_ARG_INIT,      // init
+    HELP_ARG_UNKNOWN    // unknown
 } HelpArgs;
 
-// Build Args
-typedef enum BuildArgs {
-    BUILD_SINGLE,   // -s
-    BUILD_DIR       // -d
-} BuildArgs;
 
-// Env Args
-typedef enum EnvArgs {
-    VERBOSE_DEBUGGING,   // -V
-} EnvArgs;
+
+/* =========================================================== */
+// @Prototypes
+
+HelpArgs getHelpArg             (char* arg)
+void executeHelpCmd             (char* argv[]);
 
 
 
-// Function prototypes
-CommandType get_command_type(const char* command);
-
-void execute_command(int argc, char* argv[]);
-void build_program_(int argc, char* argv[]);
-void help_command(void);
-void version_command(void);
-void help_with_command(char* help_args);
-
-
-#endif // COMMANDS_H
+#endif // HELP_H

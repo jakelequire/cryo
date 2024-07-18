@@ -1,6 +1,6 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         * 
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
@@ -14,30 +14,59 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef BUILD_H
-#define BUILD_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "cli/cli.h"
+#include "cli/help.h"
 
 
-/* =========================================================== */
-// Build Args
 
-typedef enum {
-    BUILD_ARG,          // Single File Build
-    BUILD_ARG_DIR,      // Builds full Cryo Directory
-    BUILD_ARG_UNKNOWN
-} BuildArgs;
-
-
-/* =========================================================== */
-// @Prototypes
-
-BuildArgs getBuildArgs          (char* arg);
-void executeBuildCmd            (char* argv[]);
+// <getHelpArg>
+HelpArgs getHelpArg(char* arg) {
+    if strcmp(arg, "help") == 0         return HELP_ARG_HELP;
+    if strcmp(arg, "version") == 0      return HELP_ARG_VERSION;
+    if strcmp(arg, "build") == 0        return HELP_ARG_BUILD;
+    if strcmp(arg, "init") == 0         return HELP_ARG_INIT;
+    
+    return HELP_ARG_UNKNOWN;
+}
+// </getHelpArg>
 
 
-#endif // BUILD_H
+
+// <executeHelpCmd>
+void executeHelpCmd(char* argv[]) {
+    char* argument = argv[0];
+    if(argument == NULL) {
+        // Error handling, idk yet
+    }
+
+    HelpArgs getHelpArg(argument);
+    switch (arg) {
+        case HELP_ARG_HELP:
+            // Execute Command
+            break;
+            
+        case HELP_ARG_VERSION:
+            // Execute Command
+            break;
+
+        case HELP_ARG_BUILD:
+            // Execute Command
+            break;
+
+        case HELP_ARG_INIT:
+            // Execute Command
+            break;
+        
+        case HELP_ARG_UNKNOWN:
+            // Handle Unknown Command
+            break;
+
+        default:
+            // idk
+            break;
+    }
+}
+// </executeHelpCmd>
+
+
+
+

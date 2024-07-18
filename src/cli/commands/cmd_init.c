@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -14,38 +14,52 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "init.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
+#include "cli/init.h"
 
-#ifdef _WIN32
-#include <direct.h>
-#define mkdir(name, mode) _mkdir(name)
-#endif
 
-#define CRYO_VERSION "0.1.0"
-/*
-# This is the cryo.init file that is created when a new project is initialized.
-# This file is used to store the project's name, version, and other information.
-# Most of the information in this file is used by the Cryo compiler to build the project.
-# The Cryo compiler will look for this file in the root directory of the project.
 
-# User defined variables
-PROJECT_NAME: "my_project";
-VERSION: "0.1.0";
-AUTHOR: "John Doe";
-DESCRIPTION: "This is a new Cryo project.";
+// <getInitArgs>
+InitArgs getInitArgs(char* arg) {
+    if (strcmp(arg, "-dir") == 0)         return INIT_ARG_DIR;
 
-# Compiler defined variables
-CRYO_VERSION: "0.1.0";
-ENTRY: "./src/main.cryo";
-CONFIG: "./cryo.config.json";
+    return INIT_ARG_UNKNOWN;
+}
+// </getInitArgs>
 
-*/
+
+// <executeInitCmd>
+void executeInitCmd(char* argv[]) {
+    char* argument = argv[2];
+    if(argument == NULL) {
+        printf("Initializing new Cryo project...\n");
+        executeInit();
+    }
+
+
+    InitArgs arg = getInitArgs(argument);
+    switch (arg) {
+        case INIT_ARG_DIR:
+            // Execute Command
+            break;
+        
+        case INIT_ARG_UNKNOWN:
+            // Handle Unknown Command
+            break;
+
+        default:
+            // Do something
+    }
+}
+// </executeInitCmd>
+
+
+
+
+
+void executeInit() {
+    open_root_dir();
+    printf("Cryo project initialized.\n");
+}
 
 
 char* cryo_init_data =
@@ -78,26 +92,22 @@ char* cryo_config_data =
 
 char* cryo_main_data =
 "\n"
-"public fn main() -> void {\n"
-"    println(\"Hello, World!\");\n"
+"public function main() -> void {\n"
+"    printStr(\"Hello, World!\");\n"
 "    return;\n"
 "}\n"
 "\n";
 
-void init_command(void) {
-    printf("Init command executed.\n");
-    open_root_dir();
-}
 
-void create_cryo_config(void) {
+void create_cryo_config() {
     create_file("cryo.config.json", cryo_config_data);
 }
 
-void create_cryo_main(void) {
+void create_cryo_main() {
     create_file("src/main.cryo", cryo_main_data);
 }
 
-void create_cryo_init(void) {
+void create_cryo_init() {
     create_file("cryo.init", cryo_init_data);
 }
 
@@ -110,7 +120,7 @@ void create_directory(const char* name) {
     }
 }
 
-void open_root_dir(void) {
+void open_root_dir() {
     DIR *dir;
     struct dirent *ent;
 
@@ -130,7 +140,6 @@ void open_root_dir(void) {
 }
 
 void create_file(char* filename, char* data) {
-    /*DEBUGGING*/ printf("Creating file: %s\n", filename);
     FILE *file;
 #ifdef _WIN32
     if (fopen_s(&file, filename, "w") != 0) {
@@ -147,5 +156,4 @@ void create_file(char* filename, char* data) {
 
     fprintf(file, "%s", data);
     fclose(file);
-    /*DEBUGGING*/ printf("File created: %s\n", filename);
 }

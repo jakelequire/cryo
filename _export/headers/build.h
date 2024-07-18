@@ -27,8 +27,8 @@
 // Build Args
 
 typedef enum {
-    BUILD_ARG,          // Single File Build
-    BUILD_ARG_DIR,      // Builds full Cryo Directory
+    BUILD_ARG          // Single File Build
+    BUILD_ARG_DIR      // Builds full Cryo Directory
     BUILD_ARG_UNKNOWN
 } BuildArgs;
 

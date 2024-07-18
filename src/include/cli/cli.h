@@ -17,7 +17,37 @@
 #ifndef CLI_H
 #define CLI_H
 #include <stdio.h>
-#include "commands.h"
+#include <stdlib.h>
+#include <string.h>
+
+#include "cli/help.h"
+#include "cli/init.h"
+#include "cli/build.h"
+#include "cli/devWatch.h"
+#include "cli/version.h"
+
+extern char* cryo_logo;
+
+
+/* =========================================================== */
+// @Primary_Command
+
+typedef enum {
+    CMD_HELP,
+    CMD_VERSION,
+    CMD_BUILD,
+    CMD_INIT,
+    CMD_DEV_WATCH,
+    CMD_UNKNOWN
+} CommandType;
+
+
+
+/* =========================================================== */
+// @Prototypes
+
+CommandType getCommandType          (const char* command);
+void executeCommand                 (CommandType command, char* argv);
 
 
 #endif

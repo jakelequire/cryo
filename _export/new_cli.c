@@ -1,6 +1,6 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         * 
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
@@ -14,30 +14,43 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef BUILD_H
-#define BUILD_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "cli/cli.h"
 
 
-/* =========================================================== */
-// Build Args
-
-typedef enum {
-    BUILD_ARG,          // Single File Build
-    BUILD_ARG_DIR,      // Builds full Cryo Directory
-    BUILD_ARG_UNKNOWN
-} BuildArgs;
 
 
-/* =========================================================== */
-// @Prototypes
+CommandType getCommandType(const char* command) {
+    if strcmp(command, "help") == 0     return CMD_HELP;
+    if strcmp(command, "version") == 0  return CMD_VERSION;
+    if strcmp(command, "-v") == 0       return CMD_VERSION;
+    if strcmp(command, "build") == 0    return CMD_BUILD;
+    if strcmp(command, "init") == 0     return CMD_INIT;
+    if strcmp(command, "wdev") == 0     return CMD_DEV_WATCH;
 
-BuildArgs getBuildArgs          (char* arg);
-void executeBuildCmd            (char* argv[]);
+    return CMD_UNKNOWN
+}
 
 
-#endif // BUILD_H
+void executeCommand(CommandType command, char argv[]) {
+    switch(command) {
+        case CMD_HELP:          executeHelpCmd      (char argv[]);
+        case CMD_VERSION:       executeVersionCmd   (char argv[]);
+        case CMD_BUILD:         executeBuildCmd    (char argv[]);
+        case CMD_INIT:          executeInitCmd      (char argv[]);
+        case CMD_DEV_WATCH:     executeDevWatchCmd  (char argv[]);
+
+        default:                executeUnknownCmd();
+    }
+}
+
+
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        help_command();
+        return 1;
+    }
+
+
+    return 0;
+}
+

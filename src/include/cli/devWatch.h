@@ -1,6 +1,6 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         * 
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
@@ -14,30 +14,51 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef BUILD_H
-#define BUILD_H
+#ifndef DEV_WATCH_H
+#define DEV_WATCH_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
+#include <time.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-#include "cli/cli.h"
+#ifdef _WIN32
+#include <direct.h>
+#include <windows.h>
+#define sleep(x) Sleep(x)
+#define mkdir(name, mode) _mkdir(name)
+#else
+#include <unistd.h>
+#include <sys/inotify.h>
+#endif
 
+#define MAX_PATH_LEN 1024
 
-/* =========================================================== */
-// Build Args
 
 typedef enum {
-    BUILD_ARG,          // Single File Build
-    BUILD_ARG_DIR,      // Builds full Cryo Directory
-    BUILD_ARG_UNKNOWN
-} BuildArgs;
+    DEV_WATCH_ARG_HELP,
+    DEV_WATCH_ARG_START,
+
+    DEV_WATCH_ARG_UNKNOWN
+} DevWatchArgs;
 
 
-/* =========================================================== */
-// @Prototypes
+typedef struct FileInfo {
+    char path[MAX_PATH_LEN];
+    time_t mtime;
+} FileInfo;
 
-BuildArgs getBuildArgs          (char* arg);
-void executeBuildCmd            (char* argv[]);
 
 
-#endif // BUILD_H
+DevWatchArgs getDevWatchArg     (char* arg);
+void executeDevWatchCmd         (char* argv[]);
+
+char* getBasePath               (void);
+void executeDevWatch            (const char* basePath);
+void checkDirectory             (const char* basePath, FileInfo** files, int* count, int* capacity);
+
+
+#endif // DEV_WATCH_H

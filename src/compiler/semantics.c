@@ -40,7 +40,7 @@ void checkAssignment(ASTNode* node, CryoSymbolTable* table) {
         fprintf(stderr, "[Sema] Error: Cannot assign to constant variable '%s'\n", node->data.varName.varName);
         exit(1);
     }
-    if (symbol->type != node->data.expr.expression->data.literalExpression.dataType) {
+    if (symbol->valueType != node->data.expr.expression->data.literalExpression.dataType) {
         fprintf(stderr, "[Sema] Error: Type mismatch in assignment to '%s'\n", node->data.varName.varName);
         exit(1);
     }
@@ -49,7 +49,7 @@ void checkAssignment(ASTNode* node, CryoSymbolTable* table) {
 // Check a function call
 void checkFunctionCall(ASTNode* node, CryoSymbolTable* table) {
     CryoSymbol* symbol = findSymbol(table, node->data.functionCall.name);
-    if (!symbol || symbol->type != DATA_TYPE_FUNCTION) {
+    if (!symbol || symbol->valueType != DATA_TYPE_FUNCTION) {
         fprintf(stderr, "[Sema] Error: Undefined function '%s'\n", node->data.functionCall.name);
         exit(1);
     }

@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -14,37 +14,33 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cli/runtime_cmd.h"
+#ifndef HELP_H
+#define HELP_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "cli/cli.h"
+
+/* =========================================================== */
+// Help Args
+
+typedef enum {
+    HELP_ARG_HELP,      // help
+    HELP_ARG_VERSION,   // version
+    HELP_ARG_BUILD,     // build
+    HELP_ARG_INIT,      // init
+    HELP_ARG_UNKNOWN    // unknown
+} HelpArgs;
 
 
-// <run_runtime>
-void run_runtime(void) {
-    char command[256];
-    snprintf(command, sizeof(command), "C:/Programming/apps/cryo/src/bin/runtime.exe %s");
 
-    FILE *fp;
-    char path[1035];
+/* =========================================================== */
+// @Prototypes
 
-    // Open the command for reading.
-    fp = popen(command, "r");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to run compiler command\n");
-        exit(EXIT_FAILURE);
-    }
+HelpArgs getHelpArg             (char* arg);
+void executeHelpCmd             (char* argv[]);
 
-    // Read the output a line at a time - output it.
-    while (fgets(path, sizeof(path), fp) != NULL) {
-        printf("%s", path);
-    }
+void executeHelpMenuCmd         (void);
 
-    // Close the process.
-    int status = pclose(fp);
-    if (status == -1) {
-        fprintf(stderr, "Error: Failed to close command stream.\n");
-        exit(EXIT_FAILURE);
-    } else if (status != 0) {
-        fprintf(stderr, "Error: Compiler returned a non-zero exit code: %d\n", status);
-        exit(EXIT_FAILURE);
-    }
-}
-// </run_runtime>
+#endif // HELP_H

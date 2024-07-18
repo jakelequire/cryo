@@ -14,30 +14,43 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef BUILD_H
-#define BUILD_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "cli/cli.h"
+#include "cli/build.h"
 
 
-/* =========================================================== */
-// Build Args
+// <getBuildArgs>
+BuildArgs getBuildArgs(char* arg) {
+    if (strcmp(arg, "-s")  == 0)           return BUILD_ARG;
+    if (strcmp(arg, "-dir") == 0)         return BUILD_ARG_DIR;
 
-typedef enum {
-    BUILD_ARG,          // Single File Build
-    BUILD_ARG_DIR,      // Builds full Cryo Directory
-    BUILD_ARG_UNKNOWN
-} BuildArgs;
-
-
-/* =========================================================== */
-// @Prototypes
-
-BuildArgs getBuildArgs          (char* arg);
-void executeBuildCmd            (char* argv[]);
+    return BUILD_ARG_UNKNOWN;
+}
+// </getBuildArgs>
 
 
-#endif // BUILD_H
+// <executeBuildCmd>
+void executeBuildCmd(char* argv[]) {
+    char* argument = argv[0];
+    if(argument == NULL) {
+        // Error handling, idk yet
+    }
+
+    BuildArgs arg = getBuildArgs(argument);
+    switch (arg) {
+        case BUILD_ARG:
+            // Execute Command
+            break;
+        case BUILD_ARG_DIR:
+            // Execute Command
+            break;
+        
+        case BUILD_ARG_UNKNOWN:
+            // Execute Command
+            break;
+
+        default:
+            // Do something
+    }
+}
+// </executeBuildCmd>
+
+

@@ -33,8 +33,11 @@ CPP_DIR = $(SRC_DIR)cpp/
 # Source files
 COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c \
 				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \ $(COMPILER_DIR)error.c
+
+CLI_SRC = $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
+			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c
+
 UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
-CLI_SRC = $(CLI_DIR)cli.c $(CLI_DIR)commands.c $(CLI_DIR)compiler.c $(CLI_COMMANDS_DIR)build.c $(CLI_COMMANDS_DIR)init.c $(CLI_COMMANDS_DIR)runtime_cmd.c
 MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
@@ -51,7 +54,10 @@ COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR
 				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o
 
 UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o
-CLI_OBJ = $(OBJ_DIR)cli.o $(OBJ_DIR)commands.o $(OBJ_DIR)compiler.o $(OBJ_DIR)build.o $(OBJ_DIR)init.o $(OBJ_DIR)runtime_cmd.o
+
+CLI_OBJ = $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o $(OBJ_DIR)cmd_devWatch.o \
+			$(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o
+
 MAIN_OBJ = $(OBJ_DIR)main.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
@@ -88,24 +94,6 @@ $(OBJ_DIR)logger.o: $(UTILS_DIR)logger.c | $(OBJ_DIR)
 $(OBJ_DIR)fs.o: $(UTILS_DIR)fs.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)cli.o: $(CLI_DIR)cli.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)commands.o: $(CLI_DIR)commands.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)init.o: $(CLI_COMMANDS_DIR)init.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)runtime_cmd.o: $(CLI_COMMANDS_DIR)runtime_cmd.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)compiler.o: $(CLI_DIR)compiler.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)build.o: $(CLI_COMMANDS_DIR)build.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
 $(OBJ_DIR)main.o: $(SRC_DIR)main.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -119,6 +107,26 @@ $(OBJ_DIR)symtable.o : $(COMPILER_DIR)symtable.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)error.o : $(COMPILER_DIR)error.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
+# CLI Compilation rules
+$(OBJ_DIR)cli.o: $(CLI_DIR)cli.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)cmd_init.o: $(CLI_COMMANDS_DIR)cmd_init.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)cmd_build.o: $(CLI_COMMANDS_DIR)cmd_build.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)cmd_devWatch.o : $(CLI_COMMANDS_DIR)cmd_devWatch.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)cmd_help.o : $(CLI_COMMANDS_DIR)cmd_help.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)cmd_version.o : $(CLI_COMMANDS_DIR)cmd_version.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # CPP Compilation rules
