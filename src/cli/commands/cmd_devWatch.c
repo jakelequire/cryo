@@ -16,6 +16,11 @@
  ********************************************************************************/
 #include "cli/devWatch.h"
 
+const char* ignorePatterns[] = {
+    ".git",
+    "./src/bin"
+};
+
 
 // <getHelpArg>
 DevWatchArgs getDevWatchArg(char* arg) {
@@ -27,7 +32,7 @@ DevWatchArgs getDevWatchArg(char* arg) {
 // </getHelpArg>
 
 
-// <executeHelpCmd>
+// <executeDevWatchCmd>
 void executeDevWatchCmd(char* argv[]) {
     char* argument = argv[2];
     if(argument == NULL) {
@@ -55,8 +60,22 @@ void executeDevWatchCmd(char* argv[]) {
             // Do something
     }
 }
+// <executeDevWatchCmd>
 
 
+// <shouldIgnore>
+int shouldIgnore(const char* path) {
+    for (int i = 0; i < sizeof(ignorePatterns) / sizeof(ignorePatterns[0]); i++) {
+        if (strstr(path, ignorePatterns[i]) != NULL) {
+            return 1;
+        }
+    }
+    return 0;
+}
+// </shouldIgnore>
+
+
+// <getBasePath>
 char* getBasePath() {
     char* cwd = malloc(MAX_PATH_LEN * sizeof(char));
     if (cwd == NULL) {
@@ -73,14 +92,18 @@ char* getBasePath() {
         exit(EXIT_FAILURE);
     }
 }
+// </getBasePath>
 
 
 // Function to check directory recursively
+// <checkDirectory>
 void checkDirectory(const char* basePath, FileInfo** files, int* count, int* capacity) {
     DIR* dir;
     struct dirent* ent;
     struct stat st;
     char path[MAX_PATH_LEN];
+
+    printf("Checking directory: %s\n", basePath);
 
     if ((dir = opendir(basePath)) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
@@ -88,6 +111,11 @@ void checkDirectory(const char* basePath, FileInfo** files, int* count, int* cap
                 continue;
 
             snprintf(path, sizeof(path), "%s/%s", basePath, ent->d_name);
+
+            if (shouldIgnore(path)) {
+                printf("Ignoring: %s\n", path);
+                continue;
+            }
 
             if (stat(path, &st) == 0) {
                 if (S_ISDIR(st.st_mode)) {
@@ -115,7 +143,10 @@ void checkDirectory(const char* basePath, FileInfo** files, int* count, int* cap
         exit(EXIT_FAILURE);
     }
 }
+// </checkDirectory>
 
+
+// <executeDevWatch>
 void executeDevWatch(const char* basePath) {
     int capacity = 10;
     int count = 0;
@@ -145,3 +176,4 @@ void executeDevWatch(const char* basePath) {
 
     free(files);
 }
+// </executeDevWatch>

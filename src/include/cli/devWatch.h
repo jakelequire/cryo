@@ -56,6 +56,7 @@ typedef struct FileInfo {
 DevWatchArgs getDevWatchArg     (char* arg);
 void executeDevWatchCmd         (char* argv[]);
 
+int shouldIgnore                (const char* path);
 char* getBasePath               (void);
 void executeDevWatch            (const char* basePath);
 void checkDirectory             (const char* basePath, FileInfo** files, int* count, int* capacity);
