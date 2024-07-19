@@ -26,11 +26,18 @@ typedef struct {
     int major;
     int minor;
     int patch;
-} Version;
+} CompilerVersion;
+
+typedef struct {
+    int major;
+    int minor;
+    int patch;
+} CLIVersion;
 
 
-Version getVersion();
-void executeVersionCmd();
+CompilerVersion getCompilerVersion      (void);
+CLIVersion getCLIVersion                (void);
+void executeVersionCmd                  (void);
 
 
 #endif // VERSION_H

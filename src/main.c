@@ -31,6 +31,7 @@ void generateCodeWrapper(ASTNode* node);
 #endif
 
 
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
@@ -89,3 +90,4 @@ int main(int argc, char* argv[]) {
     free(source);
     return 0;
 }
+

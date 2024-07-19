@@ -22,6 +22,9 @@
 
 #include "cli/cli.h"
 
+#define MAX_PATH_LENGTH 100
+
+extern int cryoCompiler(const char* source);
 
 /* =========================================================== */
 // Build Args
@@ -29,7 +32,7 @@
 typedef enum {
     BUILD_ARG,          // Single File Build
     BUILD_ARG_DIR,      // Builds full Cryo Directory
-    BUILD_ARG_UNKNOWN
+    BUILD_ARG_UNKNOWN,
 } BuildArgs;
 
 
@@ -39,5 +42,9 @@ typedef enum {
 BuildArgs getBuildArgs          (char* arg);
 void executeBuildCmd            (char* argv[]);
 
+void executeSingleFileBuild     (char* filePath);
+char* readSourceFile            (const char* filepath);
+const char* getFullPath         (const char* filePath);
+void compileSource              (const char* source);
 
 #endif // BUILD_H

@@ -42,26 +42,38 @@ char* cryo_logo =
 
 
 
-// <getVersion>
-Version getVersion() {
-    Version version;
+// <getCompilerVersion>
+CompilerVersion getCompilerVersion() {
+    CompilerVersion version;
     version.major = 0;
     version.minor = 1;
     version.patch = 0;
 
     return version;
 }
-// </getVersion>
+// </getCompilerVersion>
+
+// <getCLIVersion>
+CLIVersion getCLIVersion() {
+    CLIVersion version;
+    version.major = 0;
+    version.minor = 1;
+    version.patch = 0;
+
+    return version;
+}
+// </getCLIVersion>
 
 
 // <executeVersionCmd>
 void executeVersionCmd() {
-    Version version = getVersion();
+    CompilerVersion compilerVersion = getCompilerVersion();
+    CLIVersion cliVersion = getCLIVersion();
 
     printf("\n\n");
     printf("%s\n", cryo_logo);
-    printf("Cryo Programming Language v%d.%d.%d\n", version.major, version.minor, version.patch);
-    printf("Cryo CLI Tools v%d.%d.%d\n", version.major, version.minor, version.patch);
+    printf("Cryo Programming Language v%d.%d.%d\n", compilerVersion.major, compilerVersion.minor, compilerVersion.patch);
+    printf("Cryo CLI Tools v%d.%d.%d\n", cliVersion.major, cliVersion.minor, cliVersion.patch);
     printf("\n\n");
 
     exit(0);

@@ -14,32 +14,30 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CLI_H
-#define CLI_H
+#ifndef CLI_COMPILER_H
+#define CLI_COMPILER_H
+
 #include <stdio.h>
 #include <stdlib.h>
+#include "compiler/lexer.h"
+#include "compiler/parser.h"
+#include "compiler/ast.h"
+#include "compiler/symtable.h"
+#include "compiler/error.h"
+#include "utils/fs.h"
 
-
-
-/* =========================================================== */
-// @Primary_Command
-
-typedef enum {
-    CMD_HELP,
-    CMD_VERSION,
-    CMD_BUILD,
-    CMD_INIT,
-    CMD_DEV_WATCH,
-    CMD_UNKNOWN
-} CommandType;
-
-
-
-/* =========================================================== */
-// @Prototypes
-
-CommandType getCommandType          (const char* command);
-void executeCommand                 (CommandType command, char argv[]);
-
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+void generateCodeWrapper(ASTNode* node);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+int cryoCompiler(const char* source);
+
+
+#endif // CLI_COMPILER_H

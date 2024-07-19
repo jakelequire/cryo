@@ -25,6 +25,12 @@
 #include "cli/build.h"
 #include "cli/devWatch.h"
 #include "cli/version.h"
+#include "cli/compiler.h"
+
+#include "utils/fs.h"
+
+#define MAX_ARGS 10
+#define MAX_ARG_LENGTH 50
 
 extern char* cryo_logo;
 
@@ -42,6 +48,11 @@ typedef enum {
 } CommandType;
 
 
+typedef struct {
+    const char* command;
+    char* args[MAX_ARGS];
+    int argCount;
+} CommandArgs;
 
 /* =========================================================== */
 // @Prototypes
@@ -49,5 +60,6 @@ typedef enum {
 CommandType getCommandType          (const char* command);
 void executeCommand                 (CommandType command, char* argv);
 
-
+CommandArgs parseCommandLine        (int argc, char* argv[]);
+void freeCommandArgs                (CommandArgs* cmdArgs);
 #endif

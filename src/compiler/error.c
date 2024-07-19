@@ -48,7 +48,7 @@ void freeCallStack(CryoCallStack *callStack) {
 
 // <resizeCallStack>
 void resizeCallStack(CryoCallStack *callStack) {
-    callStack->capacity *= 2;
+    callStack->capacity *= 4;
     callStack->stack = (CryoStackFrame *)realloc(callStack->stack, callStack->capacity * sizeof(CryoStackFrame));
     if (callStack->stack == NULL) {
         fprintf(stderr, "Failed to reallocate memory for call stack\n");

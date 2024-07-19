@@ -34,9 +34,11 @@ CommandType getCommandType(const char* command) {
 
 // <executeCommand>
 void executeCommand(CommandType command, char* argv) {
+    //printf("Executing Command: %d\n", command);
+    // printf("Arguments: %s\n", argv);
     switch(command) {
         case CMD_HELP:          executeHelpCmd(argv);
-        case CMD_VERSION:       executeVersionCmd(argv);
+        case CMD_VERSION:       executeVersionCmd();
         case CMD_BUILD:         executeBuildCmd(argv);
         case CMD_INIT:          executeInitCmd(argv);
         case CMD_DEV_WATCH:     executeDevWatchCmd(argv);
@@ -45,6 +47,45 @@ void executeCommand(CommandType command, char* argv) {
     }
 }
 // </executeCommand>
+
+
+// <parseCommandLine>
+CommandArgs parseCommandLine(int argc, char* argv[]) {
+    CommandArgs cmdArgs;
+    memset(&cmdArgs, 0, sizeof(CommandArgs));
+
+    if(argc < 2) {
+        fprintf(stderr, "No Command Provided.\n");
+        exit(EXIT_FAILURE);
+    }
+    // printf("[DEBUG] Command: %s\n", argv[1]);
+    cmdArgs.command = argv[1];
+
+    for(int i = 2; i < argc && i - 2 < MAX_ARGS; i++) {
+        cmdArgs.args[i - 2] = malloc(MAX_ARG_LENGTH * sizeof(char));
+        // printf("[DEBUG] Malloc: %p\n", cmdArgs.args[i - 2]);
+        if(cmdArgs.args[i - 2] == NULL) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+        // printf("[DEBUG] Argument: %s\n", argv[i]);
+        strcpy(cmdArgs.args[i - 2], argv[i]);
+        cmdArgs.argCount++;
+    }
+
+    printf("[DEBUG] Argument Count: %d\n", cmdArgs.argCount);
+    return cmdArgs;
+}
+// </parseCommandLine>
+
+
+// <freeCommandArgs>
+void freeCommandArgs(CommandArgs* cmdArgs) {
+    for(int i = 0; i < cmdArgs->argCount; i++) {
+        free(cmdArgs->args[i]);
+    }
+}
+// </freeCommandArgs>
 
 
 
@@ -56,8 +97,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    CommandType command = getCommandType(argv[1]);
-    executeCommand(command, argv);
+    CommandArgs cmdArgs = parseCommandLine(argc, argv);
+    // printf("[DEBUG] Command Args: %s\n", cmdArgs.command);
+    CommandType primaryCommand = getCommandType(cmdArgs.command);
+    // printf("[DEBUG] Primary Command: %d\n", primaryCommand);
+    executeCommand(primaryCommand, cmdArgs.args);
 
     return 0;
 }

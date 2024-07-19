@@ -32,7 +32,7 @@ void executeInitCmd(char* argv[]) {
     char* argument = argv[2];
     if(argument == NULL) {
         printf("Initializing new Cryo project...\n");
-        executeInit();
+        // executeInit();
     }
 
 

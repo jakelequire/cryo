@@ -14,43 +14,57 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cli/cli.h"
+#include "cli/compiler.h"
 
 
 
 
-CommandType getCommandType(const char* command) {
-    if strcmp(command, "help") == 0     return CMD_HELP;
-    if strcmp(command, "version") == 0  return CMD_VERSION;
-    if strcmp(command, "-v") == 0       return CMD_VERSION;
-    if strcmp(command, "build") == 0    return CMD_BUILD;
-    if strcmp(command, "init") == 0     return CMD_INIT;
-    if strcmp(command, "wdev") == 0     return CMD_DEV_WATCH;
 
-    return CMD_UNKNOWN
-}
-
-
-void executeCommand(CommandType command, char argv[]) {
-    switch(command) {
-        case CMD_HELP:          executeHelpCmd      (char argv[]);
-        case CMD_VERSION:       executeVersionCmd   (char argv[]);
-        case CMD_BUILD:         executeBuildCmd    (char argv[]);
-        case CMD_INIT:          executeInitCmd      (char argv[]);
-        case CMD_DEV_WATCH:     executeDevWatchCmd  (char argv[]);
-
-        default:                executeUnknownCmd();
-    }
-}
-
-
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        help_command();
+// <cryoCompiler>
+int cryoCompiler(const char* source) {
+    if(!source) {
+        fprintf(stderr, "\n[Main] Error in reading source.\n");
         return 1;
     }
 
+    initCallStack(&callStack, 10);
+
+    Lexer lexer;
+    initLexer(&lexer, source);
+    printf("\n[DEBUG] Lexer initialized\n\n");
+
+
+    // Initialize the symbol table
+    CryoSymbolTable* table = createSymbolTable();
+
+    // Parse the source code
+    ASTNode* programNode = parseProgram(&lexer, table);
+
+        if (programNode != NULL) {
+        printf("\n\n>===------- AST Tree -------===<\n\n");
+        printAST(programNode, 0);
+        printf("\n>===------- End Tree ------===<\n\n");
+
+        // Perform semantic analysis
+        if (analyzeNode(programNode, table)) {
+            printf("[Main] Generating IR code...\n");
+            generateCodeWrapper(programNode); // <- The C++ wrapper function
+            printf(">===------------- CPP End Code Generation -------------===<\n");
+            printf("[Main] IR code generated, freeing AST.\n");
+        } else {
+            fprintf(stderr, "[Main] Semantic analysis failed.\n");
+            return 1;
+        }
+
+        freeAST(programNode);
+    } else {
+        fprintf(stderr, "[Main] Failed to parse program.\n");
+        freeCallStack(&callStack);
+        return 1;
+    }
+
+    printf("[DEBUG] Program parsed\n");
 
     return 0;
 }
-
+// <cryoCompiler>

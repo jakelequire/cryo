@@ -35,7 +35,7 @@ COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)le
 				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \ $(COMPILER_DIR)error.c
 
 CLI_SRC = $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
-			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c
+			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c $(CLI_DIR)compiler.c
 
 UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
 MAIN_SRC = $(SRC_DIR)main.c
@@ -56,7 +56,7 @@ COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR
 UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o
 
 CLI_OBJ = $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o $(OBJ_DIR)cmd_devWatch.o \
-			$(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o
+			$(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o $(OBJ_DIR)compiler.o
 
 MAIN_OBJ = $(OBJ_DIR)main.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
@@ -129,6 +129,9 @@ $(OBJ_DIR)cmd_help.o : $(CLI_COMMANDS_DIR)cmd_help.c | $(OBJ_DIR)
 $(OBJ_DIR)cmd_version.o : $(CLI_COMMANDS_DIR)cmd_version.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)compiler.o : $(CLI_DIR)compiler.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # CPP Compilation rules
 $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -166,7 +169,7 @@ $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
 $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(CLI_BIN_EXE): $(CLI_OBJ) $(UTILS_OBJ) | $(BIN_DIR)
+$(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_BIN_DIR)
