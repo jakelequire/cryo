@@ -57,7 +57,6 @@ void executeBuildCmd(char* argv[]) {
 // </executeBuildCmd>
 
 
-
 /* =========================================================== */
 
 // <executeSingleFileBuild>
@@ -82,6 +81,7 @@ char* readSourceFile(const char* filePath) {
 // </readSourceFile>
 
 
+// <getFullPath>
 const char* getFullPath(const char* filePath) {
     char* fullPath = malloc(sizeof(char) * MAX_PATH_LENGTH);
     if (fullPath == NULL) {
@@ -104,7 +104,7 @@ const char* getFullPath(const char* filePath) {
     // printf("[DEBUG] Full Path: %s\n", fullPath);
     return fullPath;
 }
-
+// </getFullPath>
 
 
 // <compileSource>

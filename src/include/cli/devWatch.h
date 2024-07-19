@@ -22,8 +22,10 @@
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -61,5 +63,10 @@ char* getBasePath               (void);
 void executeDevWatch            (const char* basePath);
 void checkDirectory             (const char* basePath, FileInfo** files, int* count, int* capacity);
 
-
+void dirChangeEvent             (const char* basePath);
+bool findObjectFile             (char* fileName);
+void rebuildProject             (void);
+void executeSysCommand          (const char* command);
+void renameExecutable           (const char* oldPath, const char* newPath);
+void replaceExecutable          (const char* oldPath, const char* newPath);
 #endif // DEV_WATCH_H
