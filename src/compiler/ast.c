@@ -1256,7 +1256,7 @@ ASTNode* createArgsNode(char* name, CryoDataType type) {
 /* @Node_Creation - Modules & Externals */
 
 // <createImportNode>
-ASTNode* createImportNode(ASTNode* importPath) {
+ASTNode* createImportNode(char* importPath) {
     printf("[AST] Creating Import Node\n");
 
     ASTNode* node = createASTNode(NODE_IMPORT_STATEMENT);
@@ -1265,7 +1265,7 @@ ASTNode* createImportNode(ASTNode* importPath) {
         return NULL;
     }
 
-    node->data.importStatementNode.modulePath = (char*)importPath;
+    node->data.importStatementNode.modulePath = importPath;
     
     return node;
 }

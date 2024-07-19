@@ -262,7 +262,7 @@ ASTNode* createArgsNode                     (char* name, CryoDataType type);
 
 
 /* @Node_Creation - Modules & Externals */
-ASTNode* createImportNode                   (ASTNode* importPath);
+ASTNode* createImportNode                   (char* importPath);
 ASTNode* createExternNode                   (ASTNode* externNode);
 
 
