@@ -231,6 +231,12 @@ Token nextToken(Lexer* lexer, Token* token) {
         return *token;
     }
 
+    if (c == '&') {
+        *token = makeToken(lexer, TOKEN_AMPERSAND);
+        printf("[Lexer] Ampersand token created: %.*s\n", token->length, token->start);
+        return *token;
+    }
+
     Token symToken = symbolChar(lexer, c);
     if (symToken.type != TOKEN_UNKNOWN) {
         *token = symToken;
@@ -238,16 +244,14 @@ Token nextToken(Lexer* lexer, Token* token) {
         return *token;
     }
 
-    printf("[Lexer] Created unknown token: %c\n", c);
-
-    return makeToken(lexer, TOKEN_ERROR);
+    return identifier(lexer);
 }
 // </nextToken>
 
 
 
 // <get_next_token>
-Token get_next_token(Lexer* lexer) {\
+Token get_next_token(Lexer* lexer) {
     printf("[Lexer] Getting next token...\n");
     nextToken(lexer, &lexer->currentToken);
     return lexer->currentToken;
@@ -274,6 +278,7 @@ Token peekToken(Lexer* lexer) {
         nextToken(lexer, &lexer->lookahead);
         lexer->hasPeeked = true;
     }
+    printf("[Lexer] Peeked token: Type=%d, Start=%.*s, Length=%d\n", lexer->lookahead.type, lexer->lookahead.length, lexer->lookahead.start, lexer->lookahead.length);
     return lexer->lookahead;
 }
 // </peekToken>
@@ -282,7 +287,7 @@ Token peekToken(Lexer* lexer) {
 // <peekNextToken>
 Token peekNextToken(Lexer* lexer) {
     Lexer tempLexer = *lexer;  // Copy the current lexer state
-    Token tempNextToken = nextToken(&tempLexer, &tempLexer.currentToken);  // Get the next token from the copied state
+    Token tempNextToken = peekToken(&tempLexer);  // Get the next token from the copied state
     return tempNextToken;
 }
 // </peekNextToken>
@@ -376,7 +381,6 @@ Token boolean(Lexer* lexer) {
 
 // <symbolChar>
 Token symbolChar(Lexer* lexer, char symbol) {
-    printf("[Lexer] Symbol token: %c\n", *lexer->current);
     switch (symbol) {
         case '(':
             return makeToken(lexer, TOKEN_LPAREN);
@@ -399,10 +403,8 @@ Token symbolChar(Lexer* lexer, char symbol) {
         case '-':
             if (peek(lexer) == '>') {
                 advance(lexer);
-                printf("[Lexer] Creating TOKEN_RESULT_ARROW for '->'\n");
                 return makeToken(lexer, TOKEN_RESULT_ARROW);
             }
-            printf("[Lexer] Creating TOKEN_MINUS for '-'\n");
             return makeToken(lexer, TOKEN_MINUS);
         case '+':
             return makeToken(lexer, TOKEN_PLUS);
@@ -422,8 +424,6 @@ Token symbolChar(Lexer* lexer, char symbol) {
             return makeToken(lexer, TOKEN_LESS);
         case '>':
             return makeToken(lexer, TOKEN_GREATER);
-        case '&':
-            return makeToken(lexer, TOKEN_AMPERSAND);
         case '|':
             return makeToken(lexer, TOKEN_PIPE);
         case '^':
@@ -432,7 +432,6 @@ Token symbolChar(Lexer* lexer, char symbol) {
             return makeToken(lexer, TOKEN_TILDE);
         case '?':
             return makeToken(lexer, TOKEN_QUESTION);
-
         default:
             return errorToken(lexer, "Unexpected character.");
     }
@@ -463,14 +462,14 @@ Token checkKeyword(Lexer* lexer) {
     int length = (int)(lexer->current - lexer->start);
     const char* keyword = my_strndup(lexer->start, length);
 
-    int i = 0;
-    while (keywords[i].keyword != NULL) {
+    for (int i = 0; keywords[i].keyword != NULL; i++) {
         if (strcmp(keywords[i].keyword, keyword) == 0) {
+            free((char*)keyword);  // Free allocated memory
             return makeToken(lexer, keywords[i].type);
         }
-        i++;
     }
 
+    free((char*)keyword);  // Free allocated memory
     return makeToken(lexer, TOKEN_IDENTIFIER);
 }
 // </checkKeyword>

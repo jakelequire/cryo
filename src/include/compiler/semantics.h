@@ -37,13 +37,7 @@ void checkVariable(ASTNode* node, CryoSymbolTable* table);
 void checkAssignment(ASTNode* node, CryoSymbolTable* table);
 void checkFunctionCall(ASTNode* node, CryoSymbolTable* table);
 void traverseAST(ASTNode* node, CryoSymbolTable* table);
-//Entry Point
-bool analyzeNode(ASTNode* node);
 /*-----<end_prototypes>-----*/
 
 #endif // SEMANTICS_H
-
-
-
-
 

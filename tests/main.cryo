@@ -1,8 +1,19 @@
 
-const foo: int = 34;
-const bar: int = foo;
+extern function printInt(i: int) -> void;
+
+const qix: int = 34;
+const bar: int = 35;
+const foo: string = "Hello, World!";
 
 
-public function main() -> void {
+public function bang(a: int) -> void {
     return;
 }
+
+public function main() -> void {
+    printInt(qix);
+    printInt(bar);
+}
+
+
+

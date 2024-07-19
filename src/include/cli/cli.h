@@ -17,7 +17,49 @@
 #ifndef CLI_H
 #define CLI_H
 #include <stdio.h>
-#include "commands.h"
+#include <stdlib.h>
+#include <string.h>
+
+#include "cli/help.h"
+#include "cli/init.h"
+#include "cli/build.h"
+#include "cli/devWatch.h"
+#include "cli/version.h"
+#include "cli/compiler.h"
+
+#include "utils/fs.h"
+
+#define MAX_ARGS 10
+#define MAX_ARG_LENGTH 50
+
+extern char* cryo_logo;
 
 
+/* =========================================================== */
+// @Primary_Command
+
+typedef enum {
+    CMD_HELP,
+    CMD_VERSION,
+    CMD_BUILD,
+    CMD_INIT,
+    CMD_DEV_WATCH,
+    CMD_UNKNOWN
+} CommandType;
+
+
+typedef struct {
+    const char* command;
+    char* args[MAX_ARGS];
+    int argCount;
+} CommandArgs;
+
+/* =========================================================== */
+// @Prototypes
+
+CommandType getCommandType          (const char* command);
+void executeCommand                 (CommandType command, char* argv);
+
+CommandArgs parseCommandLine        (int argc, char* argv[]);
+void freeCommandArgs                (CommandArgs* cmdArgs);
 #endif

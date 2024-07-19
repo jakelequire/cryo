@@ -56,34 +56,34 @@ char* operatorToString(CryoOperatorType op) {
 // <CryoNodeTypeToString>
 char* CryoNodeTypeToString(CryoNodeType node) {
     switch(node) {
-        case NODE_PROGRAM:                  return "NODE_PROGRAM";
-        case NODE_FUNCTION_DECLARATION:     return "NODE_FUNCTION_DECLARATION";
-        case NODE_VAR_DECLARATION:          return "NODE_VAR_DECLARATION";      
-        case NODE_STATEMENT:                return "NODE_STATEMENT";
-        case NODE_EXPRESSION:               return "NODE_EXPRESSION";
-        case NODE_BINARY_EXPR:              return "NODE_BINARY_EXPR";
-        case NODE_UNARY_EXPR:               return "NODE_UNARY_EXPR";
-        case NODE_LITERAL_EXPR:             return "NODE_LITERAL_EXPR";
-        case NODE_VAR_NAME:                 return "NODE_VAR_NAME";
-        case NODE_FUNCTION_CALL:            return "NODE_FUNCTION_CALL";
-        case NODE_IF_STATEMENT:             return "NODE_IF_STATEMENT";
-        case NODE_WHILE_STATEMENT:          return "NODE_WHILE_STATEMENT";
-        case NODE_FOR_STATEMENT:            return "NODE_FOR_STATEMENT";
-        case NODE_RETURN_STATEMENT:         return "NODE_RETURN_STATEMENT";
-        case NODE_BLOCK:                    return "NODE_BLOCK";
-        case NODE_FUNCTION_BLOCK:           return "NODE_FUNCTION_BLOCK";
-        case NODE_EXPRESSION_STATEMENT:     return "NODE_EXPRESSION_STATEMENT";
-        case NODE_ASSIGN:                   return "NODE_ASSIGN";
-        case NODE_PARAM_LIST:               return "NODE_PARAM_LIST";
-        case NODE_TYPE:                     return "NODE_TYPE";
-        case NODE_STRING_LITERAL:           return "NODE_STRING_LITERAL";
-        case NODE_BOOLEAN_LITERAL:          return "NODE_BOOLEAN_LITERAL";
-        case NODE_ARRAY_LITERAL:            return "NODE_ARRAY_LITERAL";
-        case NODE_IMPORT_STATEMENT:         return "NODE_IMPORT_STATEMENT";
-        case NODE_EXTERN_STATEMENT:         return "NODE_EXTERN_STATEMENT";
-        case NODE_EXTERN_FUNCTION:          return "NODE_EXTERN_FUNCTION";
-        case NODE_ARG_LIST:                 return "NODE_ARG_LIST";
-        case NODE_UNKNOWN:                  return "NODE_UNKNOWN";
+        case NODE_PROGRAM:                  return "PROGRAM";
+        case NODE_FUNCTION_DECLARATION:     return "FUNCTION_DECLARATION";
+        case NODE_VAR_DECLARATION:          return "VAR_DECLARATION";      
+        case NODE_STATEMENT:                return "STATEMENT";
+        case NODE_EXPRESSION:               return "EXPRESSION";
+        case NODE_BINARY_EXPR:              return "BINARY_EXPR";
+        case NODE_UNARY_EXPR:               return "UNARY_EXPR";
+        case NODE_LITERAL_EXPR:             return "LITERAL_EXPR";
+        case NODE_VAR_NAME:                 return "VAR_NAME";
+        case NODE_FUNCTION_CALL:            return "FUNCTION_CALL";
+        case NODE_IF_STATEMENT:             return "IF_STATEMENT";
+        case NODE_WHILE_STATEMENT:          return "WHILE_STATEMENT";
+        case NODE_FOR_STATEMENT:            return "FOR_STATEMENT";
+        case NODE_RETURN_STATEMENT:         return "RETURN_STATEMENT";
+        case NODE_BLOCK:                    return "BLOCK";
+        case NODE_FUNCTION_BLOCK:           return "FUNCTION_BLOCK";
+        case NODE_EXPRESSION_STATEMENT:     return "EXPRESSION_STATEMENT";
+        case NODE_ASSIGN:                   return "ASSIGN";
+        case NODE_PARAM_LIST:               return "PARAM_LIST";
+        case NODE_TYPE:                     return "TYPE";
+        case NODE_STRING_LITERAL:           return "STRING_LITERAL";
+        case NODE_BOOLEAN_LITERAL:          return "BOOLEAN_LITERAL";
+        case NODE_ARRAY_LITERAL:            return "ARRAY_LITERAL";
+        case NODE_IMPORT_STATEMENT:         return "IMPORT_STATEMENT";
+        case NODE_EXTERN_STATEMENT:         return "EXTERN_STATEMENT";
+        case NODE_EXTERN_FUNCTION:          return "EXTERN_FUNCTION";
+        case NODE_ARG_LIST:                 return "ARG_LIST";
+        case NODE_UNKNOWN:                  return "UNKNOWN";
         default:                            return "<NODE TYPE DEFAULTED>";
     }
 }
@@ -93,21 +93,22 @@ char* CryoNodeTypeToString(CryoNodeType node) {
 // <CryoDataTypeToString>
 char* CryoDataTypeToString(CryoDataType type) {
     switch(type) {
-        case DATA_TYPE_INT:                 return "DATA_TYPE_INT";
-        case NODE_LITERAL_INT:              return "NODE_LITERAL_INT";
-        case DATA_TYPE_FLOAT:               return "DATA_TYPE_FLOAT";
-        case DATA_TYPE_STRING:              return "DATA_TYPE_STRING";
-        case DATA_TYPE_BOOLEAN:             return "DATA_TYPE_BOOLEAN";
-        case DATA_TYPE_FUNCTION:            return "DATA_TYPE_FUNCTION";
-        case DATA_TYPE_VOID:                return "DATA_TYPE_VOID";
-        case DATA_TYPE_NULL:                return "DATA_TYPE_NULL";
-        case DATA_TYPE_ARRAY:               return "DATA_TYPE_ARRAY";
-        case DATA_TYPE_INT_ARRAY:           return "DATA_TYPE_INT_ARRAY";
-        case DATA_TYPE_FLOAT_ARRAY:         return "DATA_TYPE_FLOAT_ARRAY";
-        case DATA_TYPE_STRING_ARRAY:        return "DATA_TYPE_STRING_ARRAY";
-        case DATA_TYPE_BOOLEAN_ARRAY:       return "DATA_TYPE_BOOLEAN_ARRAY";
-        case DATA_TYPE_VOID_ARRAY:          return "DATA_TYPE_VOID_ARRAY";
-        case DATA_TYPE_UNKNOWN:             return "DATA_TYPE_UNKNOWN";
+        case DATA_TYPE_INT:                 return "TYPE_INT";
+        case NODE_LITERAL_INT:              return "LITERAL_INT";
+        case DATA_TYPE_FLOAT:               return "TYPE_FLOAT";
+        case DATA_TYPE_STRING:              return "TYPE_STRING";
+        case DATA_TYPE_BOOLEAN:             return "TYPE_BOOLEAN";
+        case DATA_TYPE_FUNCTION:            return "TYPE_FUNCTION";
+        case DATA_TYPE_VOID:                return "TYPE_VOID";
+        case DATA_TYPE_NULL:                return "TYPE_NULL";
+        case DATA_TYPE_ARRAY:               return "TYPE_ARRAY";
+        case DATA_TYPE_INT_ARRAY:           return "TYPE_INT_ARRAY";
+        case DATA_TYPE_FLOAT_ARRAY:         return "TYPE_FLOAT_ARRAY";
+        case DATA_TYPE_STRING_ARRAY:        return "TYPE_STRING_ARRAY";
+        case DATA_TYPE_BOOLEAN_ARRAY:       return "TYPE_BOOLEAN_ARRAY";
+        case DATA_TYPE_VOID_ARRAY:          return "TYPE_VOID_ARRAY";
+        case DATA_TYPE_UNKNOWN:             return "TYPE_UNKNOWN";
+        case INTERNAL_DATA_TYPE_EXPRESSION: return "INTERNAL_DATA_TYPE_EXPRESSION";
         default:                            return "<DATA TYPE UNKNOWN>";
     }
 }
@@ -333,6 +334,32 @@ char* CryoOperatorTypeToString(CryoOperatorType op) {
         case OPERATOR_AND_ASSIGN:           return "OPERATOR_AND_ASSIGN";
         case OPERATOR_OR_ASSIGN:            return "OPERATOR_OR_ASSIGN";
         case OPERATOR_XOR_ASSIGN:           return "OPERATOR_XOR_ASSIGN";
+        case TOKEN_PLUS:                    return "TOKEN_PLUS";
+        case TOKEN_MINUS:                   return "TOKEN_MINUS";
+        case TOKEN_STAR:                    return "TOKEN_STAR";
+        case TOKEN_SLASH:                   return "TOKEN_SLASH";
+        case TOKEN_OP_MOD:                  return "TOKEN_OP_MOD";
+        case TOKEN_OP_AND:                  return "TOKEN_OP_AND";
+        case TOKEN_OP_OR:                   return "TOKEN_OP_OR";
+        case TOKEN_OP_XOR:                  return "TOKEN_OP_XOR";
+        case TOKEN_OP_NOT:                  return "TOKEN_OP_NOT";
+        case TOKEN_OP_LSHIFT:               return "TOKEN_OP_LSHIFT";
+        case TOKEN_OP_RSHIFT:               return "TOKEN_OP_RSHIFT";
+        case TOKEN_OP_LT:                   return "TOKEN_OP_LT";
+        case TOKEN_OP_GT:                   return "TOKEN_OP_GT";
+        case TOKEN_OP_LTE:                  return "TOKEN_OP_LTE";
+        case TOKEN_OP_GTE:                  return "TOKEN_OP_GTE";
+        case TOKEN_OP_EQ:                   return "TOKEN_OP_EQ";
+        case TOKEN_OP_NEQ:                  return "TOKEN_OP_NEQ";
+        case TOKEN_OP_ASSIGN:               return "TOKEN_OP_ASSIGN";
+        case TOKEN_OP_ADD_ASSIGN:           return "TOKEN_OP_ADD_ASSIGN";
+        case TOKEN_OP_SUB_ASSIGN:           return "TOKEN_OP_SUB_ASSIGN";
+        case TOKEN_OP_MUL_ASSIGN:           return "TOKEN_OP_MUL_ASSIGN";
+        case TOKEN_OP_DIV_ASSIGN:           return "TOKEN_OP_DIV_ASSIGN";
+        case TOKEN_OP_MOD_ASSIGN:           return "TOKEN_OP_MOD_ASSIGN";
+        case TOKEN_OP_AND_ASSIGN:           return "TOKEN_OP_AND_ASSIGN";
+        case TOKEN_OP_OR_ASSIGN:            return "TOKEN_OP_OR_ASSIGN";
+        case TOKEN_OP_XOR_ASSIGN:           return "TOKEN_OP_XOR_ASSIGN";
         case OPERATOR_NA:                   return "OPERATOR_NA";
         default:                            return "<OPERATOR UNKNOWN>";
     }
@@ -343,10 +370,10 @@ char* CryoOperatorTypeToString(CryoOperatorType op) {
 // <CryoTokenToOperator>
 CryoOperatorType CryoTokenToOperator(CryoTokenType token) {
     switch(token) {
-        case TOKEN_OP_PLUS:                 return OPERATOR_ADD;
-        case TOKEN_OP_MINUS:                return OPERATOR_SUB;
-        case TOKEN_OP_STAR:                 return OPERATOR_MUL;
-        case TOKEN_OP_SLASH:                return OPERATOR_DIV;
+        case TOKEN_PLUS:                    return OPERATOR_ADD;
+        case TOKEN_MINUS:                   return OPERATOR_SUB;
+        case TOKEN_STAR:                    return OPERATOR_MUL;
+        case TOKEN_SLASH:                   return OPERATOR_DIV;
         case TOKEN_OP_MOD:                  return OPERATOR_MOD;
         case TOKEN_OP_AND:                  return OPERATOR_AND;
         case TOKEN_OP_OR:                   return OPERATOR_OR;

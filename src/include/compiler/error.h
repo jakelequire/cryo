@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -14,19 +14,42 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef RUNTIME_CMD_H
-#define RUNTIME_CMD_H
-/*------ <includes> ------*/
-#include <stdlib.h>
-#ifdef _WIN32
-#include <direct.h>
-#define popen _popen
-#define pclose _pclose
-#else
-#include <unistd.h>
-#endif
+#ifndef ERROR_H
+#define ERROR_H
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-/*------ </includes> -----*/
+#include <malloc.h>
 
-#endif // RUNTIME_CMD_H
+#define MAX_STACK_SIZE 10
+
+
+typedef struct {
+    char* functionName;
+    int lineNumber;
+} CryoStackFrame;
+
+typedef struct {
+    CryoStackFrame* stack;
+    int size;
+    int capacity;
+} CryoCallStack;
+
+typedef struct {
+    CryoCallStack callStack;
+} CryoInterpreter;
+
+extern CryoCallStack callStack;
+
+
+/* @Call_Stack */
+void initCallStack              (CryoCallStack* callStack, int initialCapacity);
+void freeCallStack              (CryoCallStack* callStack);
+void resizeCallStack            (CryoCallStack *callStack);
+void pushCallStack              (CryoCallStack* callStack, const char* functionName, int lineNumber);
+void popCallStack               (CryoCallStack* callStack);
+void printStackTrace            (CryoCallStack* callStack);
+
+
+
+#endif // ERROR_H

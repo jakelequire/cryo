@@ -53,7 +53,8 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_VAR_DECLARATION:
-            printf("Variable Declaration Node: %s\n", node->data.varDecl.name);
+            printf("Variable Declaration Node: %s",  node->data.varDecl.name);
+            //printf("Variable Name Node Type: %s",  CryoDataTypeToString(node->data.varDecl.dataType));
             break;
         
         case NODE_STATEMENT:
@@ -63,7 +64,7 @@ void printAST(ASTNode* node, int indent) {
 
         case NODE_EXPRESSION:
             printf("Expression Node\n");
-            printAST(node->data.expr.expr, indent + 2);
+            printAST(node->data.expr.expression, indent + 2);
             break;
         
         case NODE_BINARY_EXPR:
@@ -143,7 +144,7 @@ void printAST(ASTNode* node, int indent) {
 
         case NODE_EXPRESSION_STATEMENT:
             printf("Expression Statement Node\n");
-            printAST(node->data.expr.expr, indent + 2);
+            printAST(node->data.expr.expression, indent + 2);
             break;
 
         case NODE_ASSIGN:
@@ -190,7 +191,7 @@ void printAST(ASTNode* node, int indent) {
             printf("Extern Statement Node\n");
             if(node->data.externNode.decl.function != NULL) {
                 printf("Extern Function Node name: %s\n", node->data.externNode.decl.function->name);
-                printf("Extern Function Node returnType: %s\n", node->data.externNode.decl.function->returnType);
+                printf("Extern Function Node returnType: %s\n", CryoDataTypeToString(node->data.externNode.decl.function->returnType));
                 printf("Extern Function Node visibility: %s\n", node->data.externNode.decl.function->visibility);
                 printf("Extern Function Node params:\n");
                 printAST(node->data.externNode.decl.function->params, indent + 2);
@@ -198,7 +199,12 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_EXTERN_FUNCTION:
+            printf("Extern Function Node\n");
             printf("Function Name: %s\n", node->data.externNode.decl.function->name);
+            printf("Function Return Type: %s\n", CryoDataTypeToString(node->data.externNode.decl.function->returnType));
+            printf("Function Visibility: %s\n", CryoVisibilityTypeToString(node->data.externNode.decl.function->visibility));
+            printf("Function Parameters:\n");
+            printAST(node->data.externNode.decl.function->params, indent + 2);
             break;
 
         case NODE_ARG_LIST:
@@ -230,6 +236,8 @@ void freeAST(ASTNode* node) {
     switch (node->type) {
         case NODE_PROGRAM:
             for (int i = 0; i < node->data.program.stmtCount; i++) {
+                printf("[AST] attempting to free program statement %d\n", i);
+                printf("[AST] statement type: %s\n", CryoNodeTypeToString(node->data.program.statements[i]->type));
                 freeAST(node->data.program.statements[i]);
             }
             free(node->data.program.statements);
@@ -243,8 +251,11 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_VAR_DECLARATION:
+            printf("[AST] Freeing Variable Declaration Node: %s\n", node->data.varDecl.name);
             free(node->data.varDecl.name);
-            freeAST(node->data.varDecl.initializer);
+            if (node->data.varDecl.initializer) {
+                free(node->data.varDecl.initializer);
+            }
             break;
         
         case NODE_STATEMENT:
@@ -252,7 +263,7 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_EXPRESSION:
-            freeAST(node->data.expr.expr);
+            freeAST(node->data.expr.expression);
             break;
         
         case NODE_BINARY_EXPR:
@@ -324,7 +335,7 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_EXPRESSION_STATEMENT:
-            freeAST(node->data.expr.expr);
+            freeAST(node->data.expr.expression);
             break;
 
         case NODE_ASSIGN:
@@ -343,7 +354,7 @@ void freeAST(ASTNode* node) {
             break;
 
         case NODE_STRING_LITERAL:
-            free(node->data.literalExpression.stringValue);
+            free(node->data.str.str);
             break;
 
         case NODE_STRING_EXPRESSION:
@@ -386,6 +397,7 @@ void freeAST(ASTNode* node) {
             fprintf(stderr, "<!> [AST] Unknown Node\n");
             break;
     }
+    printf("[AST] Node of type %s successfully freed.\n", CryoNodeTypeToString(node->type));
 }
 // </freeAST>
 
@@ -456,10 +468,12 @@ ASTNode* createASTNode(CryoNodeType type) {
         case NODE_VAR_DECLARATION:
             node->data.varDecl.name = NULL;
             node->data.varDecl.initializer = NULL;
+            node->data.varDecl.dataType = DATA_TYPE_UNKNOWN;
             break;
             
         case NODE_VAR_NAME:
             node->data.varName.varName = NULL;
+            node->data.varName.isReference = false;
             break;
             
         case NODE_RETURN_STATEMENT:
@@ -497,6 +511,7 @@ ASTNode* createASTNode(CryoNodeType type) {
                 free(node);
                 return NULL;
             }
+            node->data.functionCall.argCapacity = 8;
             node->data.functionCall.argCount = 0;
             break;
             
@@ -518,11 +533,11 @@ ASTNode* createASTNode(CryoNodeType type) {
         case NODE_STRING_LITERAL:
             node->data.str.str = NULL;
             break;
-            
+
         case NODE_BOOLEAN_LITERAL:
             node->data.boolean.value = 0;
             break;
-            
+
         case NODE_ARRAY_LITERAL:
             node->data.arrayLiteral.elements = (ASTNode**)calloc(8, sizeof(ASTNode*));
             if (!node->data.arrayLiteral.elements) {
@@ -543,6 +558,7 @@ ASTNode* createASTNode(CryoNodeType type) {
             break;
             
         case NODE_EXTERN_FUNCTION:
+            node->data.externNode.type = DATA_TYPE_EXTERN_FUNCTION;
             node->data.externNode.decl.function = (FunctionDeclNode*)calloc(1, sizeof(FunctionDeclNode));
             if (!node->data.externNode.decl.function) {
                 fprintf(stderr, "[AST] Failed to allocate memory for extern function\n");
@@ -643,7 +659,7 @@ void addFunctionToProgram(ASTNode* program, ASTNode* function) {
 /* ====================================================================== */
 /* @Node_Creation - Expressions & Statements */
 
-
+// <createProgramNode>
 ASTNode* createProgramNode() {
     printf("[AST] Creating Program Node\n");
 
@@ -666,6 +682,7 @@ ASTNode* createProgramNode() {
     printf("[AST] Created Program Node\n");
     return node;
 }
+// </createProgramNode>
 
 
 // <createLiteralExpr>
@@ -697,7 +714,7 @@ ASTNode* createExpressionStatement(ASTNode* expression) {
         return NULL;
     }
 
-    node->data.expr.expr = expression;
+    node->data.expr.expression = expression;
 
     printf("[AST] Created Expression Statement Node\n");
     return node;
@@ -798,7 +815,7 @@ ASTNode* createStringLiteralNode(char* value) {
         return NULL;
     }
 
-    node->data.str.str = strdup(value);
+    node->data.literalExpression.stringValue = strdup(value);
 
     printf("[AST] Created String Literal Node: %s\n", value);
     return node;
@@ -1013,7 +1030,7 @@ ASTNode* createStringExpr(char* str) {
 /* @Node_Creation - Variables */
 
 // <createVarDeclarationNode>
-ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal) {
+ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode* initializer, int line, bool isGlobal, bool isReference) {
     printf("[AST] Creating Variable Declaration Node: %s\n", var_name);
 
     ASTNode* node = createASTNode(NODE_VAR_DECLARATION);
@@ -1026,7 +1043,7 @@ ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode
     node->data.varDecl.dataType = dataType;
     node->data.varDecl.initializer = initializer;
     node->data.varDecl.isGlobal = isGlobal;
-    node->data.varDecl.isReference = false;
+    node->data.varDecl.isReference = isReference;
     node->data.varDecl.scopeLevel = 0;
 
     printf("[AST] Created Variable Declaration Node: %s\n", var_name);
@@ -1081,40 +1098,26 @@ ASTNode* createFunctionNode(CryoVisibilityType visibility, char* function_name, 
 
 
 // <createExternDeclNode>
-ASTNode* createExternDeclNode(char* functionName, ASTNode* params, CryoDataType returnType) {
-    printf("[AST] Creating Extern Declaration Node: %s\n", functionName);
-
+ASTNode* createExternFuncNode() {
     ASTNode* node = createASTNode(NODE_EXTERN_FUNCTION);
     if (!node) {
         fprintf(stderr, "[AST] Failed to create extern declaration node\n");
         return NULL;
     }
 
-    node->data.externNode.decl.function->name = strdup(functionName);
-    node->data.externNode.decl.function->params = params;
-    node->data.externNode.decl.function->returnType = returnType;
-
-    printf("[AST] Created Extern Declaration Node: %s\n", functionName);
     return node;
 }
 // </createExternDeclNode>
 
 
 // <createFunctionCallNode>
-ASTNode* createFunctionCallNode(char* name, ASTNode** args, int argCount) {
-    printf("[AST] Creating Function Call Node: %s\n", name);
-
+ASTNode* createFunctionCallNode() {
     ASTNode* node = createASTNode(NODE_FUNCTION_CALL);
     if (!node) {
         fprintf(stderr, "[AST] Failed to create function call node\n");
         return NULL;
     }
 
-    node->data.functionCall.name = strdup(name);
-    node->data.functionCall.args = args;
-    node->data.functionCall.argCount = argCount;
-
-    printf("[AST] Created Function Call Node: %s\n", name);
     return node;
 }
 // </createFunctionCallNode>
@@ -1128,6 +1131,12 @@ ASTNode* createReturnNode(ASTNode* returnValue) {
     if (!node) {
         fprintf(stderr, "[AST] Failed to create return node\n");
         return NULL;
+    }
+
+    if(returnValue == NULL) {
+        node->data.returnStmt.returnType = DATA_TYPE_VOID;
+    } else {
+        node->data.returnStmt.returnType = returnValue->data.literalExpression.dataType;
     }
 
     node->data.returnStmt.returnValue = returnValue;
@@ -1209,6 +1218,7 @@ ASTNode* createParamNode(char* name, CryoDataType type) {
     }
 
     node->data.varDecl.name = strdup(name);
+    node->data.varDecl.dataType = type;
     node->data.varDecl.initializer = NULL;
     node->data.varDecl.isReference = false;
     node->data.varDecl.scopeLevel = 1;
@@ -1217,6 +1227,28 @@ ASTNode* createParamNode(char* name, CryoDataType type) {
     return node;
 }
 // </createParamNode>
+
+
+// <createArgsNode>
+ASTNode* createArgsNode(char* name, CryoDataType type) {
+    printf("[AST] Creating Arguments Node\n");
+
+    ASTNode* node = createASTNode(NODE_VAR_DECLARATION);
+    if (!node) {
+        fprintf(stderr, "[AST] Failed to create arguments node\n");
+        return NULL;
+    }
+
+    node->data.varDecl.name = strdup(name);
+    node->data.varDecl.dataType = type;
+    node->data.varDecl.initializer = NULL;
+    node->data.varDecl.isReference = false;
+    node->data.varDecl.scopeLevel = 1;
+
+    printf("[AST] Created Arguments Node\n");
+    return node;
+}
+// </createArgsNode>
 
 
 

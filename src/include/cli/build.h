@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         * 
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -16,21 +16,35 @@
  ********************************************************************************/
 #ifndef BUILD_H
 #define BUILD_H
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include "commands.h"
-#include "compiler.h"
-#include "utils/fs.h"
 
-BuildArgs get_build_args(const char* build_args);
+#include "cli/cli.h"
 
-void build_command(int argc, char* argv[]);
-void single_build(char* filename);
+#define MAX_PATH_LENGTH 100
+
+extern int cryoCompiler(const char* source);
+
+/* =========================================================== */
+// Build Args
+
+typedef enum {
+    BUILD_ARG,          // Single File Build
+    BUILD_ARG_DIR,      // Builds full Cryo Directory
+    BUILD_ARG_UNKNOWN,
+} BuildArgs;
 
 
-#endif
+/* =========================================================== */
+// @Prototypes
 
+BuildArgs getBuildArgs          (char* arg);
+void executeBuildCmd            (char* argv[]);
+
+void executeSingleFileBuild     (char* filePath);
+char* readSourceFile            (const char* filepath);
+const char* getFullPath         (const char* filePath);
+void compileSource              (const char* source);
+
+#endif // BUILD_H

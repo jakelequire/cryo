@@ -14,46 +14,30 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#ifndef VERSION_H
+#define VERSION_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-namespace Cryo {
 
-bool CodeGen::declareFunctions(ASTNode* node) {
-    bool mainFunctionExists = false;
 
-    if (!node) {
-        std::cerr << "[CPP] Error in declareFunctions: AST node is null\n";
-        return mainFunctionExists;
-    }
+typedef struct {
+    int major;
+    int minor;
+    int patch;
+} CompilerVersion;
 
-    if (node->type == CryoNodeType::NODE_FUNCTION_DECLARATION || node->type == CryoNodeType::NODE_EXTERN_FUNCTION) {
-        if (std::string(node->data.functionDecl.function->name) == "main") {
-            mainFunctionExists = true;
-        }
-        generateFunctionPrototype(node);
-    }
+typedef struct {
+    int major;
+    int minor;
+    int patch;
+} CLIVersion;
 
-    switch (node->type) {
-        case CryoNodeType::NODE_PROGRAM:
-            for (int i = 0; i < node->data.program.stmtCount; ++i) {
-                if (declareFunctions(node->data.program.statements[i])) {
-                    mainFunctionExists = true;
-                }
-            }
-            break;
 
-        case CryoNodeType::NODE_BLOCK:
-            for (int i = 0; i < node->data.block.stmtCount; ++i) {
-                if (declareFunctions(node->data.block.statements[i])) {
-                    mainFunctionExists = true;
-                }
-            }
-            break;
+CompilerVersion getCompilerVersion      (void);
+CLIVersion getCLIVersion                (void);
+void executeVersionCmd                  (void);
 
-        default:
-            break;
-    }
-    return mainFunctionExists;
-}
 
-} // namespace Cryo
+#endif // VERSION_H

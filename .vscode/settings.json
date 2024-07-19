@@ -207,7 +207,11 @@
     "stdarg.h": "c",
     "symtable.h": "c",
     "new_parser.h": "c",
-    "new_ast.h": "c"
+    "new_ast.h": "c",
+    "devwatch.h": "c",
+    "help.h": "c",
+    "version.h": "c",
+    "error.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true
 }

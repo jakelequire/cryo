@@ -31,6 +31,7 @@ void generateCodeWrapper(ASTNode* node);
 #endif
 
 
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
@@ -44,29 +45,49 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    initCallStack(&callStack, 10);
+
     Lexer lexer;
     initLexer(&lexer, source);
     printf("\n[DEBUG] Lexer initialized\n\n");
 
-    // Parse the source code
-    ASTNode* programNode = parseProgram(&lexer);
+    // Initialize the symbol table
+    CryoSymbolTable* table = createSymbolTable();
 
-    if(programNode != NULL) {
+    // Parse the source code
+    ASTNode* programNode = parseProgram(&lexer, table);
+
+    if (programNode != NULL) {
         printf("\n\n>===------- AST Tree -------===<\n\n");
         printAST(programNode, 0);
         printf("\n>===------- End Tree ------===<\n\n");
+
+        // Perform semantic analysis
+        if (analyzeNode(programNode, table)) {
+            printf("[Main] Generating IR code...\n");
+            generateCodeWrapper(programNode); // <- The C++ wrapper function
+            printf(">===------------- CPP End Code Generation -------------===<\n");
+            printf("[Main] IR code generated, freeing AST.\n");
+        } else {
+            fprintf(stderr, "[Main] Semantic analysis failed.\n");
+        }
+
+        freeAST(programNode);
+    } else {
+        fprintf(stderr, "[Main] Failed to parse program.\n");
     }
 
-    if (programNode) {
-        printf("[Main] Generating IR code...\n");
-        generateCodeWrapper(programNode); // <- The C++ wrapper function
-        printf(">===------------- CPP End Code Generation -------------===<\n");
-        printf("[Main] IR code generated, freeing AST.\n");
-        freeAST(programNode);
-    }
+    // Cleanup symbol table
+    // for (int i = 0; i < table->count; i++) {
+    //     free(table->symbols[i]->name);
+    //     free(table->symbols[i]);
+    // }
+    // free(table->symbols);
+    // free(table);
 
     printf("[DEBUG] Program parsed\n");
 
     free(source);
     return 0;
 }
+

@@ -14,56 +14,52 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef COMMANDS_H
-#define COMMANDS_H
-
+#ifndef DEV_WATCH_H
+#define DEV_WATCH_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "main.h"
+#include <dirent.h>
+#include <time.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-// Command Types
+#ifdef _WIN32
+#include <direct.h>
+#include <windows.h>
+#define sleep(x) Sleep(x)
+#define mkdir(name, mode) _mkdir(name)
+#else
+#include <unistd.h>
+#include <sys/inotify.h>
+#endif
+
+#define MAX_PATH_LEN 1024
+
+
 typedef enum {
-    CMD_HELP,       // help     (subcommands)
-    CMD_BUILD,      // build    (subcommands)
-    CMD_INIT,       // init     (subcommands)
-    CMD_VERSION,    // version  (no subcommands)
-    CMD_RUN,        // run      (subcommands)
-    CMD_ENV,        // env      (no subcommands)
-    CMD_UNKNOWN     // unknown  (no subcommands)
-} CommandType;
+    DEV_WATCH_ARG_HELP,
+    DEV_WATCH_ARG_START,
 
-// Help Args
-typedef enum {
-    HELP_HELP,      // help
-    HELP_VERSION,   // version
-    HELP_BUILD,     // build
-    HELP_INIT,      // init
-    HELP_RUN,       // run
-    HELP_UNKNOWN    // unknown
-} HelpArgs;
+    DEV_WATCH_ARG_UNKNOWN
+} DevWatchArgs;
 
-// Build Args
-typedef enum BuildArgs {
-    BUILD_SINGLE,   // -s
-    BUILD_DIR       // -d
-} BuildArgs;
 
-// Env Args
-typedef enum EnvArgs {
-    VERBOSE_DEBUGGING,   // -V
-} EnvArgs;
+typedef struct FileInfo {
+    char path[MAX_PATH_LEN];
+    time_t mtime;
+} FileInfo;
 
 
 
-// Function prototypes
-CommandType get_command_type(const char* command);
+DevWatchArgs getDevWatchArg     (char* arg);
+void executeDevWatchCmd         (char* argv[]);
 
-void execute_command(int argc, char* argv[]);
-void build_program_(int argc, char* argv[]);
-void help_command(void);
-void version_command(void);
-void help_with_command(char* help_args);
+int shouldIgnore                (const char* path);
+char* getBasePath               (void);
+void executeDevWatch            (const char* basePath);
+void checkDirectory             (const char* basePath, FileInfo** files, int* count, int* capacity);
 
 
-#endif // COMMANDS_H
+#endif // DEV_WATCH_H

@@ -35,7 +35,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
     indentLevel++;
 
     printIndentation(indentLevel);
-    std::cout << "\"Type\": \"" << nodeTypeToString(node->type) << "\"," << std::endl;
+    std::cout << "\"Type\": \"" << CryoNodeTypeToString(node->type) << "\"," << std::endl;
 
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
@@ -74,7 +74,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
         case CryoNodeType::NODE_EXPRESSION:
             printIndentation(indentLevel);
             std::cout << "\"Expression\": {" << std::endl;
-            logASTNode(node->data.expr.expr, indentLevel + 1);
+            logASTNode(node->data.expr.expression, indentLevel + 1);
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
@@ -109,7 +109,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Function\": {" << std::endl;
             indentLevel++;
             printIndentation(indentLevel);
-            std::cout << "\"Visibility\": \"" << visibilityToString(node->data.functionDecl.function->visibility) << "\"," << std::endl;
+            std::cout << "\"Visibility\": \"" << CryoVisibilityTypeToString(node->data.functionDecl.function->visibility) << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Name\": \"" << node->data.functionDecl.function->name << "\"," << std::endl;
             printIndentation(indentLevel);
@@ -120,8 +120,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
                     std::cout << "," << std::endl;
                 }
             }
-            printIndentation(indentLevel);
-            std::cout << "\"ReturnType\": \"" << dataTypeToString(node->data.functionDecl.function->returnType) << "\"," << std::endl;
+            std::cout << "\"ReturnType\": \"" << CryoDataTypeToString(node->data.functionDecl.function->returnType) << "\"," << std::endl;
             logASTNode(node->data.functionDecl.function->body, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
@@ -162,10 +161,29 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
         case CryoNodeType::NODE_RETURN_STATEMENT:
             printIndentation(indentLevel);
             std::cout << "\"ReturnStatement\": {" << std::endl;
-            logASTNode(node->data.returnStmt.returnValue, indentLevel + 1);
+        
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Expression\": {" << std::endl;
+        
+            indentLevel++;
+            logASTNode(node->data.returnStmt.expression, indentLevel);
+            indentLevel--;
+        
+            printIndentation(indentLevel);
+            std::cout << "}," << std::endl;
+        
+            printIndentation(indentLevel);
+            std::cout << "\"Return Value\": " << node->data.returnStmt.returnValue << "," << std::endl;
+        
+            printIndentation(indentLevel);
+            std::cout << "\"Return Type\": \"" << CryoDataTypeToString(node->data.returnStmt.returnType) << "\"" << std::endl;
+        
+            indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
+
 
         case CryoNodeType::NODE_VAR_DECLARATION:
             printIndentation(indentLevel);
@@ -174,7 +192,9 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "\"Name\": \"" << node->data.varDecl.name << "\"," << std::endl;
             printIndentation(indentLevel);
-            std::cout << "\"VarType\": \"" << dataTypeToString(node->data.varDecl.dataType) << "\"," << std::endl;
+            std::cout << (node->data.varDecl.isReference ? "\"Reference\": true" : "\"Reference\": false") << "," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"VarType\": \"" << CryoDataTypeToString(node->data.varDecl.dataType) << "\"," << std::endl;
             logASTNode(node->data.varDecl.initializer, indentLevel + 1);
             indentLevel--;
             printIndentation(indentLevel);
@@ -226,9 +246,57 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"BinaryOperation\": {" << std::endl;
             indentLevel++;
             printIndentation(indentLevel);
-            std::cout << "\"Left\": " << node->data.bin_op.left << "," << std::endl;
+            std::cout << "\"Left\": ";
+            switch (node->data.bin_op.left->type) {
+                case CryoNodeType::NODE_VAR_NAME:
+                    std::cout << "\"" << node->data.bin_op.left->data.varName.varName << "\"," << std::endl;
+                    break;
+                case CryoNodeType::NODE_LITERAL_EXPR:
+                    switch (node->data.bin_op.left->data.literalExpression.dataType) {
+                        case DATA_TYPE_INT:
+                            std::cout << node->data.bin_op.left->data.literalExpression.intValue << "," << std::endl;
+                            break;
+                        case DATA_TYPE_STRING:
+                            std::cout << "\"" << node->data.bin_op.left->data.literalExpression.stringValue << "\"," << std::endl;
+                            break;
+                        case DATA_TYPE_BOOLEAN:
+                            std::cout << (node->data.bin_op.left->data.literalExpression.booleanValue ? "true" : "false") << "," << std::endl;
+                            break;
+                        default:
+                            std::cerr << "\"<!UnknownDataType!>\"," << std::endl;
+                            break;
+                    }
+                    break;
+                default:
+                    std::cerr << "\"<!UnknownNodeType!>\"," << std::endl;
+                    break;
+            }
             printIndentation(indentLevel);
-            std::cout << "\"Right\": " << node->data.bin_op.right << "," << std::endl;
+            std::cout << "\"Right\": ";
+            switch (node->data.bin_op.right->type) {
+                case CryoNodeType::NODE_VAR_NAME:
+                    std::cout << "\"" << node->data.bin_op.right->data.varName.varName << "\"," << std::endl;
+                    break;
+                case CryoNodeType::NODE_LITERAL_EXPR:
+                    switch (node->data.bin_op.right->data.literalExpression.dataType) {
+                        case DATA_TYPE_INT:
+                            std::cout << node->data.bin_op.right->data.literalExpression.intValue << "," << std::endl;
+                            break;
+                        case DATA_TYPE_STRING:
+                            std::cout << "\"" << node->data.bin_op.right->data.literalExpression.stringValue << "\"," << std::endl;
+                            break;
+                        case DATA_TYPE_BOOLEAN:
+                            std::cout << (node->data.bin_op.right->data.literalExpression.booleanValue ? "true" : "false") << "," << std::endl;
+                            break;
+                        default:
+                            std::cerr << "\"<!UnknownDataType!>\"," << std::endl;
+                            break;
+                    }
+                    break;
+                default:
+                    std::cerr << "\"<!UnknownNodeType!>\"," << std::endl;
+                    break;
+            }
             printIndentation(indentLevel);
             std::cout << "\"Operator\": " << node->data.bin_op.op << "," << std::endl;
             printIndentation(indentLevel);
@@ -267,7 +335,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Name\": \"" << node->data.functionCall.name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Args\": [" << std::endl;
-            for (int i = 0; i < node->data.functionCall.argCount; ++i) {
+            for (int i = 1; i < node->data.functionCall.argCount; ++i) {
                 logASTNode(node->data.functionCall.args[i], indentLevel + 1);
                 if (i < node->data.functionCall.argCount - 1) {
                     printIndentation(indentLevel + 1);
@@ -358,7 +426,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
 
         case CryoNodeType::NODE_STRING_LITERAL:
             printIndentation(indentLevel);
-            std::cout << "\"StringLiteral\": \"" << node->data.str.str << "\"" << std::endl;
+            std::cout << "\"StringLiteral\": \"" << node->data.literalExpression.stringValue << "\"" << std::endl;
             break;
 
         case CryoNodeType::NODE_BOOLEAN_LITERAL:
@@ -407,7 +475,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
                 }
             }
             printIndentation(indentLevel);
-            std::cout << "\"ReturnType\": \"" << dataTypeToString(node->data.externNode.decl.function->returnType) << "\"" << std::endl;
+            std::cout << "\"ReturnType\": \"" << CryoDataTypeToString(node->data.externNode.decl.function->returnType) << "\"" << std::endl;
             indentLevel--;
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
@@ -423,14 +491,13 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Capacity\": " << node->data.argList.argCapacity << "," << std::endl;
             printIndentation(indentLevel);
             std::cout << "\"Arguments\": [" << std::endl;
-            std::cout << std::string(indentLevel, ' ') << "\"Arguments\": [" << std::endl;
             for (int i = 0; i < node->data.argList.argCount; ++i) {
                 logASTNode(node->data.argList.args[i], indentLevel + 1);
                 if (i < node->data.argList.argCount - 1) {
+                    printIndentation(indentLevel + 1);
                     std::cout << "," << std::endl;
                 }
             }
-                std::cout << std::string(indentLevel, ' ') << "]" << std::endl;
             std::cout << std::endl;
             printIndentation(indentLevel);
             std::cout << "]" << std::endl;
@@ -438,10 +505,34 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             printIndentation(indentLevel);
             std::cout << "}" << std::endl;
             break;
-            
+        
+        case CryoNodeType::NODE_EXTERN_FUNCTION:
+            printIndentation(indentLevel);
+            std::cout << "\"ExternFunction\": {" << std::endl;
+            indentLevel++;
+            printIndentation(indentLevel);
+            std::cout << "\"Name\": \"" << node->data.externNode.decl.function->name << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"ReturnType\": \"" << CryoDataTypeToString(node->data.externNode.decl.function->returnType) << "\"," << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "\"Params\": [" << std::endl;
+            for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
+                logASTNode(node->data.externNode.decl.function->params[i], indentLevel + 1);
+                if (i < node->data.externNode.decl.function->paramCount - 1) {
+                    printIndentation(indentLevel + 1);
+                    std::cout << "," << std::endl;
+                }
+            }
+            std::cout << std::endl;
+            printIndentation(indentLevel);
+            std::cout << "]" << std::endl;
+            indentLevel--;
+            printIndentation(indentLevel);
+            std::cout << "}" << std::endl;
+            break;
         default:
             printIndentation(indentLevel);
-            std::cerr << "\"<!UnknownNodeType!>\"" << std::endl;
+            std::cerr << "\"<!Defaulted: UnknownNodeType!>\"" << std::endl;
             break;
     }
 
@@ -451,113 +542,3 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
 }
 
 
-
-void logCryoDataType(CryoDataType dataType) {
-    switch (dataType) {
-        case DATA_TYPE_INT:
-            std::cout << "Data Type: {int}\n";
-            break;
-        case DATA_TYPE_FLOAT:
-            std::cout << "Data Type: {float}\n";
-            break;
-        case DATA_TYPE_STRING:
-            std::cout << "Data Type: {string}\n";
-            break;
-        case DATA_TYPE_BOOLEAN:
-            std::cout << "Data Type: {boolean}\n";
-            break;
-        case DATA_TYPE_VOID:
-            std::cout << "Data Type: {void}\n";
-            break;
-        case DATA_TYPE_ARRAY:
-            std::cout << "Data Type: {array}\n";
-            break;
-        case DATA_TYPE_INT_ARRAY:
-            std::cout << "Data Type: {int array}\n";
-            break;
-        case DATA_TYPE_FLOAT_ARRAY:
-            std::cout << "Data Type: {float array}\n";
-            break;
-        case DATA_TYPE_STRING_ARRAY:
-            std::cout << "Data Type: {string array}\n";
-            break;
-        case DATA_TYPE_BOOLEAN_ARRAY:
-            std::cout << "Data Type: {boolean array}\n";
-            break;
-        default:
-            std::cerr << "Data Type: Unknown data type";
-            break;
-    }
-}
-
-
-
-
-char* dataTypeToString(CryoDataType dataType) {
-    switch (dataType) {
-        case DATA_TYPE_INT:
-            return "<int>";
-        case DATA_TYPE_FLOAT:
-            return "<float>";
-        case DATA_TYPE_STRING:
-            return "<string>";
-        case DATA_TYPE_BOOLEAN:
-            return "<boolean>";
-        case DATA_TYPE_VOID:
-            return "<void>";
-        case DATA_TYPE_ARRAY:
-            return "<array>";
-        case DATA_TYPE_INT_ARRAY:
-            return "<int array>";
-        case DATA_TYPE_FLOAT_ARRAY:
-            return "<float array>";
-        case DATA_TYPE_STRING_ARRAY:
-            return "<string array>";
-        case DATA_TYPE_BOOLEAN_ARRAY:
-            return "<boolean array>";
-        default:
-            return "<unknown>";
-    }
-}
-
-
-char* visibilityToString(CryoVisibilityType visibility) {
-    switch (visibility) {
-        case VISIBILITY_PUBLIC:
-            return "public";
-        case VISIBILITY_PRIVATE:
-            return "private";
-        case VISIBILITY_PROTECTED:
-            return "protected";
-        default:
-            return "unknown";
-    }
-}
-
-
-char* nodeTypeToString(CryoNodeType type) {
-    switch (type) {
-        case NODE_PROGRAM: return "Program";
-        case NODE_FUNCTION_DECLARATION: return "Function Declaration";
-        case NODE_VAR_DECLARATION: return "Variable Declaration";
-        case NODE_VAR_NAME: return "Variable Name";
-        case NODE_STATEMENT: return "Statement";
-        case NODE_EXPRESSION: return "Expression";
-        case NODE_LITERAL_EXPR: return "Literal Expression";
-        case NODE_FUNCTION_BLOCK: return "Function Block";
-        case NODE_RETURN_STATEMENT: return "Return Statement";
-        case NODE_PARAM_LIST: return "Parameter List";
-        case NODE_BLOCK: return "Block";
-        case NODE_BINARY_EXPR: return "Binary Expression";
-        case NODE_UNARY_EXPR: return "Unary Expression";
-        case NODE_FUNCTION_CALL: return "Function Call";
-        case NODE_IF_STATEMENT: return "If Statement";
-        case NODE_WHILE_STATEMENT: return "While Statement";
-        case NODE_FOR_STATEMENT: return "For Statement";
-        case NODE_ARRAY_LITERAL: return "Array Literal";
-        case NODE_EXTERN_STATEMENT: return "Extern Statement";
-
-        // Add all other cases...
-        default: return "Unknown";
-    }
-}

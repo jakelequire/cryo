@@ -16,7 +16,6 @@
  ********************************************************************************/
 #ifndef INIT_H
 #define INIT_H
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,17 +31,24 @@
 #endif
 
 
+typedef enum {
+    INIT_ARG_DIR,
+    INIT_ARG_UNKNOWN
+} InitArgs;
 
 
-// Main functions
-void init_command(void);
-void create_cryo_config(void);
-void create_cryo_main(void);
-void create_cryo_init(void);
 
-// Helper functions
-void create_directory(const char* name);
-void create_file(char* filename, char* data);
-void open_root_dir(void);
+InitArgs getInitArgs        (char* arg);
+void executeInitCmd         (char* argv[]);
+
+void executeInit            (void);
+void create_cryo_config     (void);
+void create_cryo_main       (void);
+void create_cryo_init       (void);
+void create_directory       (const char* name);
+void open_root_dir          (void);
+void create_file            (char* filename, char* data);
+
+
 
 #endif // INIT_H

@@ -14,20 +14,30 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef COMPILER_H
-#define COMPILER_H
-/*------ <includes> ------*/
-#include <stdlib.h>
-#ifdef _WIN32
-#include <direct.h>
-#define popen _popen
-#define pclose _pclose
-#else
-#include <unistd.h>
-#endif
-#include <stdio.h>
-#include <string.h>
-/*------ </includes> -----*/
-void run_compiler(const char *input_file);
+#ifndef CLI_COMPILER_H
+#define CLI_COMPILER_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "compiler/lexer.h"
+#include "compiler/parser.h"
+#include "compiler/ast.h"
+#include "compiler/symtable.h"
+#include "compiler/error.h"
+#include "utils/fs.h"
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+void generateCodeWrapper(ASTNode* node);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+int cryoCompiler(const char* source);
+
+
+#endif // CLI_COMPILER_H
