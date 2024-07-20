@@ -17,10 +17,10 @@
 #ifndef SYMTABLE_H
 #define SYMTABLE_H
 
-#include "compiler/ast.h"
-#include "compiler/token.h"
-#include "compiler/lexer.h"
-#include "compiler/parser.h"
+#include "ast.h"
+#include "token.h"
+#include "lexer.h"
+#include "parser.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -33,10 +33,10 @@ typedef struct ASTNode ASTNode;
 
 
 typedef struct {
+    ASTNode* node;
     char* name;
     CryoNodeType nodeType;
     CryoDataType valueType;
-    CryoDataType** paramTypes;
     int scopeLevel;
     bool isConstant;
     int argCount;
@@ -61,9 +61,11 @@ void jumpScope                          (CryoSymbolTable* table);
 void exitScope                          (CryoSymbolTable* table);
 void enterBlockScope                    (CryoSymbolTable* table);
 void exitBlockScope                     (CryoSymbolTable* table);
-void addSymbol                          (CryoSymbolTable* table, const char* name, CryoNodeType nodeType, CryoDataType valueType, bool isConstant, int argCount, CryoDataType paramTypes);
+void addSymbol                          (CryoSymbolTable* table, CryoSymbol* symbol);
 CryoSymbol* findSymbol                  (CryoSymbolTable* table, const char* name);
 
+CryoSymbol* createCryoSymbol            (CryoSymbolTable* table, ASTNode* node);
+void addASTNodeSymbol                   (CryoSymbolTable* table, ASTNode* node);
 
 void traverseAST(ASTNode* node, CryoSymbolTable* table);
 bool analyzeNode(ASTNode* node, CryoSymbolTable* table);

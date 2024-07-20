@@ -87,22 +87,28 @@ void printSymbolTable(CryoSymbolTable* table) {
     printf("[SymTable - Debug] Symbol count: %d\n", table->count);
     printf("[SymTable - Debug] Scope depth: %d\n", table->scopeDepth);
     printf("[SymTable - Debug] Table capacity: %d\n", table->capacity);
-    printf("\n----------------------------------------------------------------------------------------------\n");
+    printf("\n-------------------------------------------------------------------------------------------------\n");
     printf("Symbol Table:\n\n");
-    printf("Name                   Type               Val/RetType        Scope            Const    ArgCount\n");
-    printf("\n----------------------------------------------------------------------------------------------\n");
+    printf("Name                 Type                 Val/RetType          Scope        Const       ArgCount\n");
+    printf("\n-------------------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++) {
-        CryoSymbol* symbol = table->symbols[i];
-        printf("%-20s %-20s %-20s %-15d %-10s %-10d\n",
-                symbol->name,
-                CryoNodeTypeToString(symbol->nodeType),
-                CryoDataTypeToString(symbol->valueType),
-                symbol->scopeLevel,
-                symbol->isConstant ? "true" : "false",
-                symbol->argCount
-            );
+        if (table->symbols[i] == NULL) {
+            printf("Error: symbol at index %d is null\n", i);
+            continue;
+        }
+        if (table->symbols[i]->node == NULL) {
+            printf("Error: node in symbol at index %d is null\n", i);
+            continue;
+        }
+        printf("%-20s %-24s %-18s %-10d %-14s %-10d\n",
+               table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
+               CryoNodeTypeToString(table->symbols[i]->nodeType),
+               logSymCryoDataType(table->symbols[i]->valueType),
+               table->symbols[i]->scopeLevel,
+               table->symbols[i]->isConstant ? "true" : "false",
+               table->symbols[i]->argCount);
     }
-    printf("----------------------------------------------------------------------------------------------\n");
+    printf("-------------------------------------------------------------------------------------------------\n");
 }
 // </printSymbolTable>
 
@@ -150,29 +156,101 @@ void exitBlockScope(CryoSymbolTable* table) {
 // </exitBlockScope>
 
 
-// <addSymbol>
-void addSymbol(CryoSymbolTable* table, const char* name, CryoNodeType nodeType, CryoDataType valueType, bool isConstant, int argCount, CryoDataType paramTypes) {
+// <addASTNodeSymbol>
+void addASTNodeSymbol(CryoSymbolTable* table, ASTNode* node) {
+    if (!node) {
+        fprintf(stderr, "Error: node is null in addASTNodeSymbol\n");
+        return;
+    }
+
+    CryoSymbol* symbolNode = createCryoSymbol(table, node);
+    if (!symbolNode) {
+        fprintf(stderr, "Error: Failed to create symbolNode in addASTNodeSymbol\n");
+        return;
+    }
+
     if (table->count >= table->capacity) {
         table->capacity *= 2;
         table->symbols = (CryoSymbol**)realloc(table->symbols, table->capacity * sizeof(CryoSymbol*));
+        if (!table->symbols) {
+            fprintf(stderr, "Error: Failed to reallocate memory for symbols table\n");
+            return;
+        }
     }
-    CryoSymbol* symbol = (CryoSymbol*)malloc(sizeof(CryoSymbol));
-    symbol->name = strdup(name);
-    symbol->nodeType = nodeType;
-    symbol->valueType = valueType;
-    symbol->isConstant = isConstant;
-    symbol->scopeLevel = table->scopeDepth;
-    symbol->argCount = argCount;
-    symbol->paramTypes = (CryoDataType*)malloc(argCount * sizeof(CryoDataType));
-    for (int i = 0; i < argCount; ++i) {
-        symbol->paramTypes[i] = &paramTypes;
-    }
-    table->symbols[table->count++] = symbol;
 
-    printf("\n[SymTable] Added symbol '%s' of type '%s' and val/returnType of '%s' to scope %d with %d args\n\n",
-        name, CryoNodeTypeToString(nodeType), CryoDataTypeToString(valueType), table->scopeDepth, argCount);
+    table->symbols[table->count++] = symbolNode;
+    fprintf(stdout, "Symbol added: %s\n", symbolNode->name ? symbolNode->name : "Unnamed Symbol");
 }
-// </addSymbol>
+// </addASTNodeSymbol>
+
+
+// <resolveNodeSymbol>
+CryoSymbol* createCryoSymbol(CryoSymbolTable* table, ASTNode* node) {
+    if (!node) {
+        fprintf(stderr, "Error: node is null in createCryoSymbol\n");
+        return NULL;
+    }
+
+    CryoSymbol* symbolNode = (CryoSymbol*)malloc(sizeof(CryoSymbol));
+    if (!symbolNode) {
+        fprintf(stderr, "Error: Failed to allocate memory for symbolNode\n");
+        return NULL;
+    }
+
+    symbolNode->node = node;
+    symbolNode->name = NULL;
+    symbolNode->nodeType = DATA_TYPE_UNKNOWN;
+    symbolNode->valueType = DATA_TYPE_UNKNOWN;
+    symbolNode->scopeLevel = table->scopeDepth;
+    symbolNode->isConstant = false;
+    symbolNode->argCount = 0;
+
+    switch (node->type) {
+        case NODE_VAR_DECLARATION:
+            symbolNode->name = node->data.varDecl.name;
+            symbolNode->nodeType = node->type;
+            symbolNode->valueType = node->data.varDecl.dataType;
+            break;
+
+        case NODE_FUNCTION_DECLARATION:
+            symbolNode->name = node->data.functionDecl.function->name;
+            symbolNode->nodeType = node->type;
+            symbolNode->valueType = node->data.functionDecl.function->returnType;
+            symbolNode->argCount = node->data.functionDecl.function->paramCount;
+            break;
+
+        case NODE_EXTERN_FUNCTION:
+            symbolNode->name = node->data.externNode.decl.function->name;
+            symbolNode->nodeType = node->type;
+            symbolNode->valueType = node->data.externNode.decl.function->returnType;
+            symbolNode->argCount = node->data.externNode.decl.function->paramCount;
+            break;
+
+        case NODE_PARAM_LIST:
+            symbolNode->name = node->data.varDecl.name;
+            symbolNode->nodeType = node->type;
+            symbolNode->valueType = node->data.varDecl.dataType;
+            break;
+
+        case NODE_VAR_NAME:
+            symbolNode->name = node->data.varName.varName;
+            symbolNode->nodeType = node->type;
+            break;
+
+        case NODE_FUNCTION_CALL:
+            symbolNode->name = node->data.functionCall.name;
+            symbolNode->nodeType = node->type;
+            symbolNode->argCount = node->data.functionCall.argCount;
+            break;
+
+        default:
+            fprintf(stderr, "Error: Unsupported node type %d\n", node->type);
+            free(symbolNode);
+            return NULL;
+    }
+
+    return symbolNode;
+}
 
 
 // <findSymbol>
@@ -188,335 +266,13 @@ CryoSymbol* findSymbol(CryoSymbolTable* table, const char* name) {
 
 
 
-// <resolveType>
-CryoDataType resolveType(CryoSymbolTable* table, ASTNode* node) {
-    switch (node->type) {
-        case NODE_LITERAL_EXPR:
-            return node->data.literalExpression.dataType;
 
-        case NODE_VAR_NAME: {
-            CryoSymbol* symbol = findSymbol(table, node->data.varName.varName);
-            return symbol ? symbol->nodeType : DATA_TYPE_UNKNOWN;
-        }
-
-        case NODE_BINARY_EXPR: {
-            CryoDataType leftType = resolveType(table, node->data.bin_op.left);
-            CryoDataType rightType = resolveType(table, node->data.bin_op.right);
-            if (leftType == rightType) {
-                return leftType;
-            } else {
-                // Add logic to handle type coercion if needed
-                return DATA_TYPE_UNKNOWN;
-            }
-        }
-
-        case NODE_UNARY_EXPR:
-            return resolveType(table, node->data.unary_op.operand);
-
-        case NODE_FUNCTION_CALL: {
-            CryoSymbol* funcSymbol = findSymbol(table, node->data.functionCall.name);
-            if (!funcSymbol || funcSymbol->nodeType != NODE_FUNCTION_CALL) {
-                return DATA_TYPE_UNKNOWN;
-            }
-            // Resolve types of arguments
-            for (int i = 0; i < node->data.functionCall.argCount; ++i) {
-                CryoDataType argType = resolveType(table, node->data.functionCall.args[i]);
-                if (argType == DATA_TYPE_UNKNOWN) {
-                    return DATA_TYPE_UNKNOWN;
-                }
-            }
-            return funcSymbol->valueType; // or return function return type if available
-        }
-
-        case NODE_ASSIGN:
-            // Assignment statements do not have a direct data type
-
-        case NODE_STRING_LITERAL:
-            return DATA_TYPE_STRING;
-
-        case NODE_BOOLEAN_LITERAL:
-            return DATA_TYPE_BOOLEAN;
-
-        case NODE_ARRAY_LITERAL:
-            if (node->data.arrayLiteral.elementCount > 0) {
-                return resolveType(table, node->data.arrayLiteral.elements[0]); // Assuming all elements are of the same type
-            } else {
-                return DATA_TYPE_UNKNOWN;
-            }
-
-        case NODE_IF_STATEMENT:
-        case NODE_WHILE_STATEMENT:
-        case NODE_FOR_STATEMENT:
-        case NODE_RETURN_STATEMENT:
-            // These nodes do not have a direct data type
-            return DATA_TYPE_VOID;
-
-        case NODE_FUNCTION_DECLARATION:
-            return node->data.functionDecl.function->returnType;
-
-        case NODE_IMPORT_STATEMENT:
-            // Import statements typically do not have a type
-            return DATA_TYPE_UNKNOWN;
-
-        case NODE_EXTERN_STATEMENT:
-            // Handle extern statements by resolving the type of the extern declaration
-            if (node->data.externNode.decl.function) {
-                return node->data.externNode.decl.function->returnType;
-            }
-            return DATA_TYPE_UNKNOWN;
-
-        case NODE_EXTERN_FUNCTION:
-            // Extern function declarations should resolve to the function's return type
-            return node->data.externNode.decl.function->returnType;
-
-        case NODE_ARG_LIST:
-            // Argument lists do not have a single data type
-            return DATA_TYPE_UNKNOWN;
-
-        case NODE_PARAM_LIST:
-            // Parameter lists do not have a single data type
-            return DATA_TYPE_UNKNOWN;
-
-        default:
-            return DATA_TYPE_UNKNOWN;
-    }
-}
-// </resolveType>
-
-
-
-// Recursive traversal of AST
-// <traverseAST>
-void traverseAST(ASTNode* node, CryoSymbolTable* table) {
-    while (node) {
-        switch (node->type) {
-            case NODE_PROGRAM:
-                for (int i = 0; i < node->data.program.stmtCount; i++) {
-                    traverseAST(node->data.program.statements[i], table);
-                }
-                printf("\n#------- Symbol Table -------#\n");
-                printSymbolTable(table);
-                printf("\n#--------- End Table --------#\n");
-                //exitScope(table);
-                break;
-
-            case NODE_VAR_DECLARATION:
-                addSymbol(
-                    table, 
-                    node->data.varDecl.name, 
-                    node->type, 
-                    resolveType(table, node->data.varDecl.initializer),
-                    false, 
-                    0, 
-                    node->data.varDecl.dataType
-                );
-                break;
-
-            case NODE_ASSIGN:
-                printf("[SymTable] Checking assignment to '%s'\n", node->data.varName.varName);
-                if (!findSymbol(table, node->data.varName.varName)) {
-                    printf("[Error] Variable '%s' not declared\n", node->data.varName.varName);
-                    break;
-                }
-                break;
-
-            case NODE_VAR_NAME:
-                printf("[SymTable] Checking variable '%s'\n", node->data.varName.varName);
-                if (!findSymbol(table, node->data.varName.varName)) {
-                    printf("[SymTable - Error] Variable '%s' not declared\n", node->data.varName.varName);
-                }
-                break;
-
-            case NODE_FUNCTION_CALL:
-                CryoSymbol* funcSymbol = findSymbol(table, node->data.functionCall.name);
-                if (!funcSymbol) {
-                    printf("[SymTable - Error] Function '%s' not declared\n", node->data.functionCall.name);
-                    break;
-                }
-
-                // Check argument types
-                for (int i = 0; i < node->data.functionCall.argCount; i++) {
-                    CryoDataType* expectedType = funcSymbol->paramTypes[i];
-                    CryoDataType actualType = resolveType(table, node->data.functionCall.args[i]);
-                    if (expectedType != actualType) {
-                        printf("[SymTable - Error] Argument %d to function '%s' expected type '%s', got '%s'\n",
-                               i + 1, node->data.functionCall.name, CryoDataTypeToString((CryoDataType)expectedType), CryoDataTypeToString(actualType));
-                    }
-                }
-                break;
-
-            case NODE_FUNCTION_DECLARATION:
-                printf("[SymTable] Adding function '%s'\n", node->data.functionDecl.function->name);
-                addSymbol(
-                    table, 
-                    node->data.functionDecl.function->name, 
-                    NODE_FUNCTION_DECLARATION,
-                    node->data.functionDecl.function->returnType,
-                    false, 
-                    node->data.functionDecl.function->paramCount, 
-                    DATA_TYPE_UNKNOWN
-                );
-
-                // Enter function scope and add parameters
-                enterScope(table);
-                for (int i = 0; i < node->data.functionDecl.function->paramCount; ++i) {
-                    ASTNode* param = node->data.functionDecl.function->params[i];
-                    printf("[SymTable] Adding parameter '%s'\n", param->data.varDecl.name);
-                    addSymbol(
-                        table, 
-                        param->data.varDecl.name, 
-                        NODE_PARAM_LIST,
-                        param->data.varDecl.dataType,
-                        false, 
-                        0, 
-                        DATA_TYPE_UNKNOWN
-                    );
-                }
-
-                // Traverse function body
-                traverseAST(node->data.functionDecl.function->body, table);
-                exitScope(table);
-                break;
-
-            case NODE_FUNCTION_BLOCK:
-                printf("[SymTable] Entering function block scope\n");
-                enterScope(table);
-                for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; i++) {
-                    traverseAST(node->data.functionBlock.block->data.block.statements[i], table);
-                }
-                //exitScope(table);
-                break;
-
-            case NODE_BLOCK:
-                printf("[SymTable] Entering block scope\n");
-                enterScope(table);
-                for (int i = 0; i < node->data.block.stmtCount; i++) {
-                    traverseAST(node->data.block.statements[i], table);
-                }
-                //exitScope(table);
-                break;
-
-            case NODE_IF_STATEMENT:
-                printf("[SymTable] Checking if statement\n");
-                traverseAST(node->data.ifStmt.condition, table);
-                traverseAST(node->data.ifStmt.thenBranch, table);
-                if (node->data.ifStmt.elseBranch) {
-                    traverseAST(node->data.ifStmt.elseBranch, table);
-                }
-                break;
-
-            case NODE_WHILE_STATEMENT:
-                printf("[SymTable] Checking while statement\n");
-                traverseAST(node->data.whileStmt.condition, table);
-                traverseAST(node->data.whileStmt.body, table);
-                break;
-
-            case NODE_FOR_STATEMENT:
-                printf("[SymTable] Checking for statement\n");
-                traverseAST(node->data.forStmt.initializer, table);
-                traverseAST(node->data.forStmt.condition, table);
-                traverseAST(node->data.forStmt.increment, table);
-                traverseAST(node->data.forStmt.body, table);
-                break;
-
-            case NODE_RETURN_STATEMENT:
-                printf("[SymTable] Checking return statement\n");
-                traverseAST(node->data.returnStmt.expression, table);
-                break;
-
-            case NODE_LITERAL_EXPR:
-                // No action needed for literals
-                break;
-
-            case NODE_BINARY_EXPR:
-                traverseAST(node->data.bin_op.left, table);
-                traverseAST(node->data.bin_op.right, table);
-                break;
-
-            case NODE_UNARY_EXPR:
-                traverseAST(node->data.unary_op.operand, table);
-                break;
-
-            case NODE_STRING_LITERAL:
-                // No action needed for string literals
-                break;
-
-            case NODE_BOOLEAN_LITERAL:
-                // No action needed for boolean literals
-                break;
-
-            case NODE_ARRAY_LITERAL:
-                for (int i = 0; i < node->data.arrayLiteral.elementCount; i++) {
-                    traverseAST(node->data.arrayLiteral.elements[i], table);
-                }
-                break;
-
-            case NODE_IMPORT_STATEMENT:
-                printf("[SymTable] Handling import statement for module '%s'\n", node->data.importStatementNode.modulePath);
-                // Add logic to handle the import statement if necessary
-                break;
-
-            case NODE_EXTERN_STATEMENT:
-                printf("[SymTable] Handling extern statement\n");
-                // Traverse the extern node's declaration if it's a function
-                if (node->data.externNode.decl.function) {
-                    traverseAST((ASTNode*)node->data.externNode.decl.function, table);
-                }
-                break;
-
-        case NODE_EXTERN_FUNCTION:
-            printf("[SymTable] Adding extern function '%s'\n", node->data.externNode.decl.function->name);
-            addSymbol(
-                table, 
-                node->data.externNode.decl.function->name, 
-                NODE_EXTERN_FUNCTION,
-                node->data.externNode.decl.function->returnType,
-                false, 
-                node->data.externNode.decl.function->paramCount, 
-                DATA_TYPE_UNKNOWN
-            );
-
-            // Add parameters to the symbol table
-            for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
-                ASTNode* param = node->data.externNode.decl.function->params[i];
-                printf("[SymTable] Adding parameter '%s'\n", param->data.varDecl.name);
-                addSymbol(
-                    table, 
-                    param->data.varDecl.name, 
-                    NODE_PARAM_LIST,
-                    param->data.varDecl.dataType,
-                    false, 
-                    0, 
-                    DATA_TYPE_UNKNOWN
-                );
-            }
-            break;
-
-            case NODE_ARG_LIST:
-                for (int i = 0; i < node->data.argList.argCount; i++) {
-                    traverseAST(node->data.argList.args[i], table);
-                }
-                break;
-
-            case NODE_UNKNOWN:
-                printf("[SymTable] Unknown node type\n");
-                break;
-
-            default:
-                printf("[SymTable] Skipping node type %d\n", node->type);
-                break;
-        }
-
-        node = node->nextSibling;
-    }
-}
-// </traverseAST>
 
 
 // Main Entry Point
 // <analyzeNode>
 bool analyzeNode(ASTNode* node, CryoSymbolTable *table) {
-    traverseAST(node, table);
+    // traverseAST(node, table);
 
     // Cleanup
     for (int i = 0; i < table->count; i++) {

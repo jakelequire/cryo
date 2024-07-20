@@ -199,7 +199,10 @@ void dirChangeEvent(const char* basePath) {
 
     // Check if the file changed is a .c file
     char* dot = strrchr(fileName, '.');
-    if (dot && strcmp(dot, ".c") == 0) {
+    if (dot && strcmp(dot, ".c") == 0 || 
+        dot && strcmp(dot, ".h") == 0 || 
+        dot && strcmp(dot, ".cpp") == 0)
+    {
         // Rebuild the project
         printf("Rebuilding project...\n");
         rebuildProject();

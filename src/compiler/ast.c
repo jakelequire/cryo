@@ -1076,7 +1076,7 @@ ASTNode* createVariableExpr(char* name, bool isReference) {
 /* @Node_Creation - Functions */
 
 // <createFunctionNode>
-ASTNode* createFunctionNode(CryoVisibilityType visibility, char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType) {
+ASTNode* createFunctionNode(CryoVisibilityType visibility, char* function_name, ASTNode** params, ASTNode* function_body, CryoDataType returnType) {
     printf("[AST] Creating Function Node: %s\n", function_name);
 
     ASTNode* node = createASTNode(NODE_FUNCTION_DECLARATION);

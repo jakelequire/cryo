@@ -248,7 +248,7 @@ ASTNode* createVarDeclarationNode           (char* var_name, CryoDataType dataTy
 ASTNode* createVariableExpr                 (char* name, bool isReference);
 
 /* @Node_Creation - Functions */
-ASTNode* createFunctionNode                 (CryoVisibilityType visibility, char* function_name, ASTNode* params, ASTNode* function_body, CryoDataType returnType);
+ASTNode* createFunctionNode                 (CryoVisibilityType visibility, char* function_name, ASTNode** params, ASTNode* function_body, CryoDataType returnType);
 ASTNode* createExternFuncNode               (void);
 ASTNode* createFunctionCallNode             (void);
 ASTNode* createReturnNode                   (ASTNode* returnValue);

@@ -82,9 +82,10 @@ ASTNode* parseProgram(Lexer* lexer, CryoSymbolTable *table) {
     while (currentToken.type != TOKEN_EOF) {
         ASTNode* statement = parseStatement(lexer, table, &context);
         if (statement) {
-            traverseAST(statement, table);
+            // traverseAST(statement, table);
             addStatementToProgram(program, table, statement);
-
+            addASTNodeSymbol(table, statement);
+            printSymbolTable(table);
         } else {
             fprintf(stderr, "[Parser] [ERROR] Failed to parse statement\n");
             freeAST(program);
@@ -137,6 +138,7 @@ void getNextToken(Lexer *lexer) {
     printf("[Parser] @getNextToken | Next Token after: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
 }
 // </getNextToken>
+
 
 // <peekNextUnconsumedToken>
 Token peekNextUnconsumedToken(Lexer *lexer) {
@@ -280,6 +282,7 @@ void addStatementToProgram(ASTNode* programNode, CryoSymbolTable *table, ASTNode
 
     programNode->data.program.statements[programNode->data.program.stmtCount++] = statement;
     printf("[AST] After adding statement: stmtCount = %zu, stmtCapacity = %zu\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
+
 }
 // </addStatementToProgram>
 
@@ -588,6 +591,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer, CryoSymbolTable *table, ParsingContex
     ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, isMutable, isConstant, isReference);
     printf("[Parser] Created Variable Declaration Node: %s\n", varName);
     printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->type);
+
     return varDeclNode;
 }
 // </parseVarDeclaration>
@@ -668,37 +672,23 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     printf("[Parser] Function name: %s\n", functionName);
 
     getNextToken(lexer);
-    consume(lexer, TOKEN_LPAREN, "Expected '(' after function name.", "parseExternFunctionDeclaration", table);
 
-    if (currentToken.type != TOKEN_RPAREN) {
-        printf("[Parser] Parsing function arguments...\n");
-        while (currentToken.type != TOKEN_RPAREN) {
-            ASTNode* param = parseParameter(lexer, table, context);
-            if (!param) {
-                error("Expected parameter.", "parseExternFunctionDeclaration", table);
-                return NULL;
-            }
-            addParameterToExternDecl(table, externNode, param);
+    ASTNode** params = parseParameterList(lexer, table, context);
+    externNode->data.externNode.decl.function->params = params;
 
-            if (currentToken.type == TOKEN_COMMA) {
-                getNextToken(lexer);
-            } else if (currentToken.type != TOKEN_RPAREN) {
-                error("Expected ',' or ')'.", "parseExternFunctionDeclaration", table);
-                return NULL;
-            }
-        }
+    // get length of params
+    for (int i = 0; params[i] != NULL; i++) {
+        externNode->data.externNode.decl.function->paramCount++;
     }
 
-    getNextToken(lexer);  // Consume the closing ')'
-
-    CryoDataType returnType;
+    CryoDataType returnType = DATA_TYPE_VOID;  // Default return type
     if (currentToken.type == TOKEN_RESULT_ARROW) {
+        printf("[Parser] Found return type arrow\n");
         getNextToken(lexer);
         returnType = parseType(lexer, context, table);
-        externNode->data.externNode.decl.function->returnType = returnType;
         getNextToken(lexer);
     } else {
-        externNode->data.externNode.decl.function->returnType = DATA_TYPE_VOID;  // Default return type
+        error("Expected `->` for return type.", "parseFunctionDeclaration", table);
     }
 
 
@@ -707,7 +697,6 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
 
     return externNode;
 }
-
 // </parseExternFunctionDeclaration>
 
 
@@ -730,16 +719,15 @@ ASTNode* parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         return NULL;
     }
 
+    getNextToken(lexer);  // Consume the function name
+
     if (currentToken.type != TOKEN_RPAREN) {
+        printf("\n<!> \t[Parser] DEBUG: Current Token Type: %s\n", CryoTokenToString(currentToken.type));
         // Parse arguments with expected types
         for (int i = 0; currentToken.type != TOKEN_RPAREN; ++i) {
-            if (i >= funcSymbol->argCount) {
-                error("Too many arguments provided to function.", "parseFunctionCall", table);
-                freeAST(functionCallNode);
-                return NULL;
-            }
+            if(funcSymbol->node->type == NODE_EXTERN_FUNCTION) {
 
-            CryoDataType* expectedType = funcSymbol->paramTypes[i];
+            }
             CryoDataType type = parseType(lexer, context, table);
             ASTNode* arg = parseArgumentsWithExpectedType(lexer, table, context, type);
             if (!arg) {
@@ -757,6 +745,7 @@ ASTNode* parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 
     // Ensure argument count matches
     if (functionCallNode->data.functionCall.argCount != funcSymbol->argCount) {
+        printf("[Parser] Expected %d arguments, but got %d\n", funcSymbol->argCount, functionCallNode->data.functionCall.argCount);
         error("Argument count mismatch for function call.", "parseFunctionCall", table);
         freeAST(functionCallNode);
         return NULL;
@@ -816,7 +805,7 @@ ASTNode* parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 
 
 // <parseParameterList>
-ASTNode* parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context) {
+ASTNode** parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context) {
     printf("[Parser] Parsing parameter list...\n");
     consume(lexer, TOKEN_LPAREN, "Expected `(` to start parameter list.", "parseParameterList", table);
 
@@ -896,6 +885,7 @@ ASTNode* parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 }
 // </parseArgumentList>
 
+
 // <parseArgumentsWithExpectedType>
 ASTNode* parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoDataType expectedType) {
     printf("[Parser] Parsing arguments...\n");
@@ -907,6 +897,10 @@ ASTNode* parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
 
     char* argName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer);
+
+    printf("\n\n<#> [Parser] Creating argument node with expected type: %s\n", CryoDataTypeToString(expectedType));
+    printf("<#> [Parser] Argument name: %s\n", argName);
+
 
     return createArgsNode(argName, expectedType);
 }

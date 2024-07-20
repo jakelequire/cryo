@@ -65,11 +65,10 @@ void checkFunctionDeclaration(ASTNode* node, CryoSymbolTable* table) {
     // Add function parameters to the symbol table
     for (int i = 0; i < node->data.functionDecl.function->paramCount; i++) {
         ASTNode* param = node->data.functionDecl.function->params[i];
-        addSymbol(table, param->data.varDecl.name, param->data.varDecl.dataType, false, false, i, param->data.varDecl.dataType);
     }
 
     // Traverse the function body
-    traverseAST(node->data.functionDecl.function->body, table);
+    //traverseAST(node->data.functionDecl.function->body, table);
 
     // Ensure return type matches
     // (Assuming a function body can only have one return type, extend if necessary)
@@ -89,8 +88,8 @@ void checkBinaryExpression(ASTNode* node, CryoSymbolTable* table) {
     ASTNode* right = node->data.bin_op.right;
 
     // Recursively check both operands
-    traverseAST(left, table);
-    traverseAST(right, table);
+    // traverseAST(left, table);
+    // traverseAST(right, table);
 
     // Check if types of left and right operands are compatible
     if (left->data.expr.expression->type != right->data.expr.expression->type) {

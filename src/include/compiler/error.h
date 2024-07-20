@@ -21,6 +21,8 @@
 #include <string.h>
 #include <malloc.h>
 
+#include "ast.h"
+
 #define MAX_STACK_SIZE 10
 
 

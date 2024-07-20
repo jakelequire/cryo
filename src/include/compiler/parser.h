@@ -100,7 +100,7 @@ ASTNode* parseFunctionCall                  (Lexer *lexer, CryoSymbolTable *tabl
 ASTNode* parseReturnStatement               (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 /* @ASTNode_Parsing - Parameters */
 ASTNode* parseParameter                     (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode* parseParameterList                 (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode** parseParameterList                (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 ASTNode* parseArguments                     (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 ASTNode* parseArgumentList                  (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
 ASTNode* parseArgumentsWithExpectedType     (Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoDataType expectedType);
