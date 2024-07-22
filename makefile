@@ -85,9 +85,9 @@ $(OBJ_DIR)functions.o $(OBJ_DIR)structs.o $(OBJ_DIR)lib.o $(OBJ_DIR)conditionals
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
 
-# Binaries
-MAIN_BIN = $(BIN_DIR)main.exe
-CLI_BIN_EXE = $(BIN_DIR)cryo.exe
+# Define the target binaries
+MAIN_BIN = $(BIN_DIR)main$(BIN_SUFFIX)
+CLI_BIN_EXE = $(BIN_DIR)cryo$(BIN_SUFFIX)
 
 # Default target
 all: $(MAIN_BIN) $(CLI_BIN_EXE)

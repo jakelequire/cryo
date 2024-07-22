@@ -28,13 +28,17 @@ bool CodeGen::declareFunctions(ASTNode* node) {
 
     if (node->type == CryoNodeType::NODE_FUNCTION_DECLARATION || node->type == CryoNodeType::NODE_EXTERN_FUNCTION) {
         if (std::string(node->data.functionDecl.function->name) == "main") {
+            std::cout<< "[CPP] Found main function\n";
             mainFunctionExists = true;
         }
+        std::cout << "[CPP] Found function declaration node\n";
+        std::cout << "<!> [CPP] Function Node Type: " << CryoNodeTypeToString(node->type) << std::endl;
         generateFunctionPrototype(node);
     }
 
     switch (node->type) {
         case CryoNodeType::NODE_PROGRAM:
+            std::cout << "[CPP] Found program node\n";
             for (int i = 0; i < node->data.program.stmtCount; ++i) {
                 if (declareFunctions(node->data.program.statements[i])) {
                     mainFunctionExists = true;
@@ -43,6 +47,7 @@ bool CodeGen::declareFunctions(ASTNode* node) {
             break;
 
         case CryoNodeType::NODE_BLOCK:
+            std::cout << "[CPP] Found block node\n";
             for (int i = 0; i < node->data.block.stmtCount; ++i) {
                 if (declareFunctions(node->data.block.statements[i])) {
                     mainFunctionExists = true;

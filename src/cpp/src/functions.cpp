@@ -50,13 +50,31 @@ llvm::Type* CodeGen::getLLVMType(CryoDataType type) {
 
 void CodeGen::generateFunctionPrototype(ASTNode* node) {
     std::cout << "[CPP] Generating function prototype: " << node->data.functionDecl.function->name << "\n";
+    std::cout << "[CPP] Function return type: " << node->data.functionDecl.function->returnType << "\n";
+    std::cout << "[CPP] Function Type: " << CryoNodeTypeToString(node->data.functionDecl.type) << "\n";
 
     llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType);
 
     std::vector<llvm::Type*> paramTypes;
+    if(node->type == NODE_EXTERN_FUNCTION) {
+        std::cout << "[CPP] Generating external function prototype\n";
+        for (int i = 0; node->data.externNode.decl.function->paramCount; ++i) {
+            ASTNode* parameter = node->data.externNode.decl.function->params[i];
+            std::cout << "[CPP] Generating parameter: " << node->data.externNode.decl.function->params[i]->type << "\n";
+            std::cout << "[CPP] Generating parameter type: " << parameter->data.varDecl.dataType << "\n";
+            std::cout << "[CPP] Parameter type: " << parameter->data.varDecl.dataType << "\n";
+            llvm::Type* paramType = getLLVMType(parameter->data.varDecl.dataType);
+            if (!paramType) {
+                std::cerr << "[CPP] Error: Unknown parameter type\n";
+                return;
+            }
+            paramTypes.push_back(paramType);
+        }
+    }
     if (node->data.functionDecl.function->params) {
         for (int i = 0; i < node->data.functionDecl.function->paramCount; ++i) {
-            llvm::Type* paramType = getLLVMType(node->data.functionDecl.function->params[i]->data.varDecl.dataType);
+            std::cout << "[CPP] Generating parameter type: " << node->data.functionDecl.function->params[i] << "\n";
+            llvm::Type* paramType = getLLVMType(node->data.functionDecl.function->params[i]->data.paramList.params[i]->data.varDecl.dataType);
             if (!paramType) {
                 std::cerr << "[CPP] Error: Unknown parameter type\n";
                 return;

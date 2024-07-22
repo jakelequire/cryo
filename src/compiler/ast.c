@@ -53,7 +53,7 @@ void printAST(ASTNode* node, int indent) {
             break;
 
         case NODE_VAR_DECLARATION:
-            printf("Variable Declaration Node: %s",  node->data.varDecl.name);
+            printf("Variable Declaration Node: %s\n",  node->data.varDecl.name);
             //printf("Variable Name Node Type: %s",  CryoDataTypeToString(node->data.varDecl.dataType));
             break;
         
@@ -1062,7 +1062,7 @@ ASTNode* createVariableExpr(char* name, bool isReference) {
         return NULL;
     }
 
-    node->data.varName.varName = strdup(name);
+    node->data.varName.varName = name;
     node->data.varName.isReference = isReference;
 
     printf("[AST] Created Variable Expression Node: %s\n", name);
@@ -1086,7 +1086,7 @@ ASTNode* createFunctionNode(CryoVisibilityType visibility, char* function_name, 
     }
 
     node->data.functionDecl.function->visibility = visibility;
-    node->data.functionDecl.function->name = strdup(function_name);
+    node->data.functionDecl.function->name = function_name;
     node->data.functionDecl.function->params = params;
     node->data.functionDecl.function->body = function_body;
     node->data.functionDecl.function->returnType = returnType;
@@ -1164,6 +1164,7 @@ ASTNode* createReturnExpression(ASTNode* returnExpression, CryoDataType returnTy
 
 
 
+
 /* ====================================================================== */
 /* @Node_Creation - Parameters */
 
@@ -1176,10 +1177,6 @@ ASTNode* createParamListNode(void) {
         fprintf(stderr, "[AST] Failed to create parameter list node\n");
         return NULL;
     }
-
-    node->data.paramList.params = NULL;
-    node->data.paramList.paramCount = 0;
-    node->data.paramList.paramCapacity = 0;
 
     printf("[AST] Created Parameter List Node\n");
     return node;    
@@ -1217,7 +1214,7 @@ ASTNode* createParamNode(char* name, CryoDataType type) {
         return NULL;
     }
 
-    node->data.varDecl.name = strdup(name);
+    node->data.varDecl.name = name;
     node->data.varDecl.dataType = type;
     node->data.varDecl.initializer = NULL;
     node->data.varDecl.isReference = false;

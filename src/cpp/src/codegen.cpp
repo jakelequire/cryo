@@ -30,6 +30,7 @@ void CodeGen::codegen(ASTNode* root) {
     // First Pass: Declare all functions
     std::cout << "\nFirst Pass: Declare all functions\n";
     bool mainFunctionExists = declareFunctions(root);
+    std::cout << "[CPP] Main function exists: " << mainFunctionExists << "\n";
 
     // Create main function if it doesn't exist
     if (!mainFunctionExists) {

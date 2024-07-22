@@ -664,10 +664,9 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     }
 
     char* functionName = strndup(currentToken.start, currentToken.length);
-    externNode->data.externNode.decl.function->name = strdup(functionName);
+    externNode->data.externNode.decl.function->name = functionName;
     externNode->data.externNode.decl.function->paramCount = 0;
     externNode->data.externNode.decl.function->paramCapacity = 4;
-    externNode->data.externNode.decl.function->params = (ASTNode**)malloc(externNode->data.externNode.decl.function->paramCapacity * sizeof(ASTNode*));
     externNode->data.externNode.decl.function->visibility = VISIBILITY_EXTERN;
     printf("[Parser] Function name: %s\n", functionName);
 
@@ -686,6 +685,7 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
         printf("[Parser] Found return type arrow\n");
         getNextToken(lexer);
         returnType = parseType(lexer, context, table);
+        externNode->data.externNode.decl.function->returnType = returnType;
         getNextToken(lexer);
     } else {
         error("Expected `->` for return type.", "parseFunctionDeclaration", table);
@@ -809,19 +809,21 @@ ASTNode** parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     printf("[Parser] Parsing parameter list...\n");
     consume(lexer, TOKEN_LPAREN, "Expected `(` to start parameter list.", "parseParameterList", table);
 
-    ASTNode* paramListNode = createParamListNode();
-    if(paramListNode == NULL) {
-        fprintf(stderr, "[Parser] [ERROR] Failed to create parameter list node\n");
+    ASTNode** paramListNode = (ASTNode**)malloc(8 * sizeof(ASTNode*));
+    if (!paramListNode) {
+        fprintf(stderr, "[Parser] [ERROR] Failed to allocate memory for parameter list\n");
         return NULL;
     }
 
+    int paramCount = 0;
     while (currentToken.type != TOKEN_RPAREN) {
         ASTNode* param = parseParameter(lexer, table, context);
         if (param) {
-            addParameterToList(table, paramListNode, param);
+            paramListNode[paramCount] = param;
+            paramCount++;
         } else {
             fprintf(stderr, "[Parser] [ERROR] Failed to parse parameter\n");
-            freeAST(paramListNode);
+            free(paramListNode);
             return NULL;
         }
 
@@ -831,6 +833,7 @@ ASTNode** parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     }
 
     consume(lexer, TOKEN_RPAREN, "Expected `)` to end parameter list.", "parseParameterList", table);
+
     return paramListNode;
 }
 // </parseParameterList>

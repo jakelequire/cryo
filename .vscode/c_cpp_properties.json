@@ -68,10 +68,12 @@
         {
             "name": "Linux Clang",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/usr/include/**",
+                "/usr/local/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang++"
+            "compilerPath": "/usr/local/bin/clang++"
         }
     ],
     "version": 4
