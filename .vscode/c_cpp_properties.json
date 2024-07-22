@@ -64,6 +64,14 @@
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-clang-x86"
+        },
+        {
+            "name": "Linux Clang",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang++"
         }
     ],
     "version": 4

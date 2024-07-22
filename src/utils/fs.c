@@ -19,9 +19,8 @@
 
 // <readFile> *might rename to fsreadFile*
 char* readFile(const char* path) {
-    FILE* file;
-    errno_t err = fopen_s(&file, path, "rb");  // Open the file in binary mode to avoid transformations
-    if (err != 0) {
+    FILE* file = fopen(path, "rb");  // Open the file in binary mode to avoid transformations
+    if (file == NULL) {
         perror("{lexer} Could not open file");
         return NULL;
     }

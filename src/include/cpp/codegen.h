@@ -51,11 +51,12 @@ extern "C" {
 }
 
 namespace Cryo {
+    
 class CodeGen {
 public:
     CodeGen(ASTNode* root);
 
-private:
+private: 
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
     std::unique_ptr<llvm::Module> module;
