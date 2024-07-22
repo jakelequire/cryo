@@ -215,9 +215,11 @@ CryoDataType resolveType(CryoSymbolTable* table, ASTNode* node) {
 
         case NODE_FUNCTION_CALL: {
             CryoSymbol* funcSymbol = findSymbol(table, node->data.functionCall.name);
+            
             if (!funcSymbol || funcSymbol->nodeType != NODE_FUNCTION_CALL) {
                 return DATA_TYPE_UNKNOWN;
             }
+
             // Resolve types of arguments
             for (int i = 0; i < node->data.functionCall.argCount; ++i) {
                 CryoDataType argType = resolveType(table, node->data.functionCall.args[i]);
@@ -327,16 +329,18 @@ void traverseAST(ASTNode* node, CryoSymbolTable* table) {
                 }
                 break;
 
-            case NODE_FUNCTION_CALL:
-                CryoSymbol* funcSymbol = findSymbol(table, node->data.functionCall.name);
-                if (!funcSymbol) {
+            case NODE_FUNCTION_CALL: {
+                CryoSymbol* symbol;
+                symbol = findSymbol(table, node->data.functionCall.name);
+
+                if (!symbol) {
                     printf("[SymTable - Error] Function '%s' not declared\n", node->data.functionCall.name);
                     break;
                 }
 
                 // Check argument types
                 for (int i = 0; i < node->data.functionCall.argCount; i++) {
-                    CryoDataType* expectedType = funcSymbol->paramTypes[i];
+                    CryoDataType* expectedType = symbol->paramTypes[i];
                     CryoDataType actualType = resolveType(table, node->data.functionCall.args[i]);
                     if (expectedType != actualType) {
                         printf("[SymTable - Error] Argument %d to function '%s' expected type '%s', got '%s'\n",
@@ -344,7 +348,7 @@ void traverseAST(ASTNode* node, CryoSymbolTable* table) {
                     }
                 }
                 break;
-
+            }
             case NODE_FUNCTION_DECLARATION:
                 printf("[SymTable] Adding function '%s'\n", node->data.functionDecl.function->name);
                 addSymbol(

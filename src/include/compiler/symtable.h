@@ -32,7 +32,7 @@ typedef struct ASTNode ASTNode;
 
 
 
-typedef struct {
+typedef struct CryoSymbol {
     char* name;
     CryoNodeType nodeType;
     CryoDataType valueType;

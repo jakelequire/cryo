@@ -1,18 +1,34 @@
-# Compiler and Flags
-CC = clang -g -v -D_CRT_SECURE_NO_WARNINGS 
-CXX = clang++ -std=c++17 -g -v -D_CRT_SECURE_NO_WARNINGS 
-CFLAGS = -I"C:/msys64/mingw64/include" \
-         -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
-CXXFLAGS = -I"C:/msys64/mingw64/include" \
-           -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
-
-# LLVM Libraries
-LLVM_LIBS := -lLLVM-18
-
-# Standard C++ Libraries for Windows
-STDLIBS := -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32 -Wl,-subsystem,console
-
-LDFLAGS = -L"C:/msys64/mingw64/lib" $(LLVM_LIBS) $(STDLIBS) -v
+# OS-specific settings
+ifeq ($(OS), Windows_NT)
+    # Windows settings
+    CC = clang -g -v -D_CRT_SECURE_NO_WARNINGS 
+    CXX = clang++ -std=c++17 -g -v -D_CRT_SECURE_NO_WARNINGS 
+    CFLAGS = -I"C:/msys64/mingw64/include" \
+             -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+    CXXFLAGS = -I"C:/msys64/mingw64/include" \
+               -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+    LDFLAGS = -L"C:/msys64/mingw64/lib" $(LLVM_LIBS) $(STDLIBS) -v
+    LLVM_LIBS := -lLLVM-18
+    STDLIBS := -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32 -Wl,-subsystem,console
+    MKDIR = if not exist
+    RMDIR = rmdir /S /Q
+    DEL = del /Q
+    BIN_SUFFIX = .exe
+else
+    # Linux settings
+    CC = clang -g -v
+    CXX = clang++ -std=c++17 -g -v
+    CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+    CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+    LLVM_CONFIG = llvm-config
+    LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
+    LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
+    LDFLAGS = $(LLVM_LDFLAGS) -lpthread -v
+    MKDIR = mkdir -p
+    RMDIR = rm -rf
+    DEL = rm -f
+    BIN_SUFFIX =
+endif
 
 # Define paths
 BIN_DIR = ./src/bin/
@@ -78,11 +94,11 @@ all: $(MAIN_BIN) $(CLI_BIN_EXE)
 
 # Ensure the object directory exists
 $(OBJ_DIR):
-	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+	$(MKDIR) $(OBJ_DIR)
 
 # Ensure the bin directory exists
 $(BIN_DIR):
-	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
+	$(MKDIR) $(BIN_DIR)
 
 # Compilation rules
 $(OBJ_DIR)%.o: $(COMPILER_DIR)%.c | $(OBJ_DIR)
@@ -187,6 +203,6 @@ runtest: $(TEST_BIN)
 
 # Clean up - remove object files and executables
 clean:
-	python ./scripts/clean.py
+	python3 ./scripts/clean.py
 
 .PHONY: all clean runlexer runparser runmain runcli runtest
