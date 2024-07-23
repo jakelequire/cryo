@@ -190,7 +190,7 @@ void logASTNode(ASTNode* node, int indentLevel = 0) {
             std::cout << "\"Variable\": {" << std::endl;
             indentLevel++;
             printIndentation(indentLevel);
-            std::cout << "\"Name\": \"" << node->data.varDecl.name << "\"," << std::endl;
+            std::cout << "\"Name\": \"" << (char*)node->data.varDecl.name << "\"," << std::endl;
             printIndentation(indentLevel);
             std::cout << (node->data.varDecl.isReference ? "\"Reference\": true" : "\"Reference\": false") << "," << std::endl;
             printIndentation(indentLevel);

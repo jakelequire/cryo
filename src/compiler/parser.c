@@ -591,6 +591,7 @@ ASTNode* parseVarDeclaration(Lexer* lexer, CryoSymbolTable *table, ParsingContex
     ASTNode* varDeclNode = createVarDeclarationNode(varName, dataType, initializer, isMutable, isConstant, isReference);
     printf("[Parser] Created Variable Declaration Node: %s\n", varName);
     printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->type);
+    printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->data.varDecl.dataType);
 
     return varDeclNode;
 }
@@ -664,9 +665,7 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     }
 
     char* functionName = strndup(currentToken.start, currentToken.length);
-    externNode->data.externNode.decl.function->name = functionName;
-    externNode->data.externNode.decl.function->paramCount = 0;
-    externNode->data.externNode.decl.function->paramCapacity = 4;
+    externNode->data.externNode.decl.function->name = (char*)functionName;
     externNode->data.externNode.decl.function->visibility = VISIBILITY_EXTERN;
     printf("[Parser] Function name: %s\n", functionName);
 
@@ -676,9 +675,13 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     externNode->data.externNode.decl.function->params = params;
 
     // get length of params
-    for (int i = 0; params[i] != NULL; i++) {
-        externNode->data.externNode.decl.function->paramCount++;
+    int paramCount = 0;
+    while (params[paramCount] != NULL) {
+        paramCount++;
     }
+    externNode->data.externNode.decl.function->paramCount = paramCount;
+
+    printf("[Parser] Function parameter count: %d\n", paramCount);
 
     CryoDataType returnType = DATA_TYPE_VOID;  // Default return type
     if (currentToken.type == TOKEN_RESULT_ARROW) {
@@ -690,7 +693,6 @@ ASTNode* parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     } else {
         error("Expected `->` for return type.", "parseFunctionDeclaration", table);
     }
-
 
     printf("\n\n<#!> [Parser] Extern Function Return Type: %s \n", CryoDataTypeToString(returnType));
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", table);
@@ -819,8 +821,11 @@ ASTNode** parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     while (currentToken.type != TOKEN_RPAREN) {
         ASTNode* param = parseParameter(lexer, table, context);
         if (param) {
-            paramListNode[paramCount] = param;
-            paramCount++;
+            if(param->type == NODE_VAR_DECLARATION) {
+                printf("[Parser] Adding parameter to list: %s\n", param->data.varDecl.name);
+                paramListNode[paramCount] = param;
+                paramCount++;
+            }
         } else {
             fprintf(stderr, "[Parser] [ERROR] Failed to parse parameter\n");
             free(paramListNode);
@@ -831,6 +836,11 @@ ASTNode** parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
             getNextToken(lexer);
         }
     }
+
+    paramListNode[paramCount] = NULL; // Null terminate the parameter array
+
+    // DEBUG
+    printf("\n<!> [Parser] Parameter count: %d\n", paramCount);
 
     consume(lexer, TOKEN_RPAREN, "Expected `)` to end parameter list.", "parseParameterList", table);
 

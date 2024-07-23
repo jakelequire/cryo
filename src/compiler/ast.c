@@ -381,6 +381,7 @@ void freeAST(ASTNode* node) {
 
         case NODE_EXTERN_FUNCTION:
             free(node->data.externNode.decl.function->name);
+            freeAST(node->data.externNode.decl.function->params);
             break;
 
         case NODE_ARG_LIST:
@@ -559,7 +560,7 @@ ASTNode* createASTNode(CryoNodeType type) {
             
         case NODE_EXTERN_FUNCTION:
             node->data.externNode.type = DATA_TYPE_EXTERN_FUNCTION;
-            node->data.externNode.decl.function = (FunctionDeclNode*)calloc(1, sizeof(FunctionDeclNode));
+            node->data.externNode.decl.function = (FunctionDeclNode*)calloc(8, sizeof(FunctionDeclNode));
             if (!node->data.externNode.decl.function) {
                 fprintf(stderr, "[AST] Failed to allocate memory for extern function\n");
                 free(node);
@@ -1039,7 +1040,7 @@ ASTNode* createVarDeclarationNode(char* var_name, CryoDataType dataType, ASTNode
         return NULL;
     }
 
-    node->data.varDecl.name = strdup(var_name);
+    node->data.varDecl.name = var_name;
     node->data.varDecl.dataType = dataType;
     node->data.varDecl.initializer = initializer;
     node->data.varDecl.isGlobal = isGlobal;

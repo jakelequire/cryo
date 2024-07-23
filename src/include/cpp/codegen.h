@@ -23,6 +23,7 @@
 #include <vector>
 #include <memory>
 #include <assert.h>
+#include <any>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -78,7 +79,7 @@ private:
     void generateFunctionBlock(ASTNode* node);
     void generateReturnStatement(ASTNode* node);
     void generateExternalDeclaration(ASTNode* node);
-    llvm::Function* getCryoFunction(const std::string& name, llvm::ArrayRef<llvm::Type*> argTypes);
+    llvm::Function* getCryoFunction(char* name, llvm::ArrayRef<llvm::Type*> argTypes);
     bool declareFunctions(ASTNode* node);
     llvm::StructType *createStringStruct();
     llvm::StructType *createStringType();
@@ -86,11 +87,11 @@ private:
     llvm::Value* createNumber(int num);
     llvm::Constant* createConstantInt(int value);
     llvm::Value* createReferenceInt(int value);
-    llvm::Value* getVariable(const std::string& name);
-    llvm::GlobalVariable* createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, const std::string& varName);
-    llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, const std::string& name);
-    llvm::Value* loadPointerVariable(llvm::Value* var, const std::string& name);
-    llvm::Value* getVariableValue(const std::string& name);
+    llvm::Value* getVariable(char* name);
+    llvm::GlobalVariable* createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName);
+    llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name);
+    llvm::Value* loadPointerVariable(llvm::Value* var, char* name);
+    llvm::Value* getVariableValue(char* name);
     void generateVarDeclaration(ASTNode* node);
     std::vector<llvm::Constant*> generateArrayElements(ASTNode* arrayLiteral);
     void generateCodeForArrayLiteral(ASTNode* node);

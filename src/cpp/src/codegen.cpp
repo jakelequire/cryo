@@ -280,6 +280,9 @@ llvm::Value* CodeGen::generateExpression(ASTNode* node) {
             return namedValues[node->data.varName.varName];
 
         case CryoNodeType::NODE_VAR_DECLARATION:
+            std::cout << "[CPP] Generating code for variable declaration\n";
+            std::cout << "[CPP] VarName: " << node->data.varDecl.name << "\n";
+            std::cout << "[CPP] VarType: " << node->data.varDecl.dataType << "\n";
             generateVarDeclaration(node);
             return nullptr;
         

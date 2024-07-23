@@ -20,7 +20,7 @@ namespace Cryo {
 
 
 // <getVariable>
-llvm::Value* CodeGen::getVariable(const std::string& name) {
+llvm::Value* CodeGen::getVariable(char* name) {
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
         llvm::Value* var = it->second;
@@ -38,7 +38,7 @@ llvm::Value* CodeGen::getVariable(const std::string& name) {
 
 
 // <createGlobalVariable>
-llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, const std::string& varName) {
+llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName) {
     std::cout << "[CPP] Creating global variable\n";
     llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
         *module,
@@ -46,7 +46,7 @@ llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::C
         false,
         llvm::GlobalValue::ExternalLinkage,
         initialValue,
-        varName
+        llvm::Twine(varName)
     );
 
     if (!globalVar) {
@@ -61,7 +61,7 @@ llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::C
 
 
 // <loadGlobalVariable>
-llvm::Value* CodeGen::loadGlobalVariable(llvm::GlobalVariable* globalVar, const std::string& name) {
+llvm::Value* CodeGen::loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name) {
     std::cout << "[CPP] Loading global variable value\n";
     llvm::Type* globalVarType = globalVar->getValueType();
     std::cout << "[CPP] Global Variable Type: " << globalVarType << "\n";
@@ -87,7 +87,7 @@ llvm::Value* CodeGen::loadGlobalVariable(llvm::GlobalVariable* globalVar, const 
 
 
 // <loadPointerVariable>
-llvm::Value* CodeGen::loadPointerVariable(llvm::Value* var, const std::string& name) {
+llvm::Value* CodeGen::loadPointerVariable(llvm::Value* var, char* name) {
     std::cout << "[CPP] Loading pointer variable value\n";
     llvm::Type* pointedType = var->getType();
     std::cout << "[CPP] Variable pointer type: " << pointedType << "\n";
@@ -103,7 +103,7 @@ llvm::Value* CodeGen::loadPointerVariable(llvm::Value* var, const std::string& n
 
 
 // <getVariableValue>
-llvm::Value* CodeGen::getVariableValue(const std::string& name) {
+llvm::Value* CodeGen::getVariableValue(char* name) {
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
         llvm::Value* var = it->second;
@@ -145,7 +145,9 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     llvm::Type* varType = nullptr;
     llvm::Constant* initialValue = nullptr;
     llvm::Value* computedValue = nullptr; // For non-literal initializers
-    std::string varName = node->data.varDecl.name;
+    char* varName = node->data.varDecl.name;
+    std::cout << "[CPP]! Variable Name: " << (char*)varName << "\n";
+    std::cout << "[CPP]! Variable Type: " << node->data.varDecl.dataType << "\n";
 
     switch (node->data.varDecl.dataType) {
         case DATA_TYPE_STRING:
@@ -243,15 +245,15 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
         return;
     }
 
+    std::cout << "[CPP] Varname is: " << varName << "\n";
     if (node->data.varDecl.isGlobal) {
         std::cout << "[CPP] Creating global variable\n";
         llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-            *module,
             varType,
             false,
             llvm::GlobalValue::ExternalLinkage,
             llvm::cast<llvm::Constant>(finalValue),
-            varName
+            llvm::Twine(varName)
         );
         if (globalVar) {
             std::cout << "[CPP] Created global variable: " << varName << "\n";
