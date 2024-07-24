@@ -158,18 +158,19 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
             return;
         }
         llvm::Type* paramType = callee->getFunctionType()->getParamType(i);
-
+        
         // Convert argument to match parameter type if necessary
         if (arg->getType() != paramType) {
-            if (paramType->isPointerTy() && arg->getType()->isIntegerTy()) {
+            if (paramType->isIntegerTy() && arg->getType()->isPointerTy()) {
+                arg = builder.CreateLoad(paramType, arg);
+            } else if (paramType->isPointerTy() && arg->getType()->isIntegerTy()) {
                 arg = builder.CreateIntToPtr(arg, paramType);
-            } else if (paramType->isIntegerTy() && arg->getType()->isPointerTy()) {
-                arg = builder.CreatePtrToInt(arg, paramType);
+            } else if (paramType->isPointerTy() && arg->getType()->isPointerTy()) {
+                arg = builder.CreateLoad(arg->getType(), arg);
             } else {
                 arg = builder.CreateBitCast(arg, paramType);
             }
         }
-
         args.push_back(arg);
     }
 
@@ -180,10 +181,7 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
     }
 
     builder.CreateCall(callee, args);
-    std::cout << "[CPP] Created function call for " << functionName << "\n";
 }
-
-
 void CodeGen::generateFunction(ASTNode* node) {
     char* functionName;
     if (node->type == NODE_EXTERN_STATEMENT) {
@@ -228,6 +226,16 @@ void CodeGen::generateFunction(ASTNode* node) {
 
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(module->getContext(), "entry", function);
     builder.SetInsertPoint(BB);
+
+    // Initialize local variables with global values
+    for (auto& varPair : namedValues) {
+        if (llvm::GlobalVariable* globalVar = llvm::dyn_cast<llvm::GlobalVariable>(varPair.second)) {
+            llvm::AllocaInst* localVar = builder.CreateAlloca(globalVar->getValueType(), nullptr, varPair.first);
+            llvm::Value* globalValue = builder.CreateLoad(globalVar->getValueType(), globalVar);
+            builder.CreateStore(globalValue, localVar);
+            namedValues[varPair.first] = localVar;
+        }
+    }
 
     // Generate code for the function body
     if (node->data.functionDecl.function->body) {

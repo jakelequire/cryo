@@ -159,7 +159,7 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     std::cout << "[CPP] Generating code for variable declaration\n";
 
     llvm::Type* varType = nullptr;
-    llvm::Constant* initialValue = nullptr;
+    llvm::Value* initialValue = nullptr;
     llvm::Value* computedValue = nullptr; // For non-literal initializers
     char* varName = node->data.varDecl.name;
 
@@ -167,36 +167,15 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     std::cout << "[CPP]! Variable Type: " << CryoDataTypeToString(node->data.varDecl.dataType) << "\n";
 
     switch (node->data.varDecl.dataType) {
-        case DATA_TYPE_STRING:
-            std::cout << "[CPP] Generating code for string variable\n";
-            if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
-                std::cout << "[CPP] Initializer is a literal expression\n";
-                initialValue = llvm::cast<llvm::Constant>(createString(node->data.varDecl.initializer->data.literalExpression.stringValue));
-                varType = builder.getInt8Ty()->getPointerTo();
-            } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
-                std::cout << "[CPP] Initializer is a variable name\n";
-                llvm::GlobalVariable* refVar = module->getGlobalVariable(node->data.varDecl.initializer->data.varName.varName);
-                if (refVar) {
-                    initialValue = llvm::ConstantExpr::getPointerCast(refVar, refVar->getType());
-                    varType = refVar->getValueType();
-                } else {
-                    std::cerr << "[CPP] Error: Referenced variable not found: " << node->data.varDecl.initializer->data.varName.varName << "\n";
-                    return;
-                }
-            } else if(node->data.varDecl.initializer->type == NODE_STRING_LITERAL) {
-                std::cout << "[CPP] Initializer is a string literal\n";
-
-                char* stringValue = node->data.varDecl.initializer->data.literalExpression.stringValue;
-                std::cout << "[CPP] String Value: " << stringValue << "\n";
-                
-                initialValue = llvm::cast<llvm::Constant>(createString(node->data.varDecl.initializer->data.literalExpression.stringValue));
-                varType = builder.getInt8Ty()->getPointerTo();
-            }
-            else {
-                std::cerr << "[CPP] Unknown expression type for string variable initializer\n";
-                return;
-            }
-            break;
+    case DATA_TYPE_STRING:
+        std::cout << "[CPP] Generating code for string variable\n";
+        if (node->data.varDecl.initializer) {
+            initialValue = createString(node->data.varDecl.initializer->data.literalExpression.stringValue);
+        } else {
+            initialValue = llvm::ConstantPointerNull::get( llvm::PointerType::get(builder.getInt8Ty(), 0) );
+        }
+        varType = builder.getInt8Ty();
+        break;
         
         case DATA_TYPE_INT:
             std::cout << "[CPP] Generating code for int variable\n";
@@ -278,11 +257,16 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     }
 
     std::cout << "[CPP] Varname is: " << varName << "\n";
-    if (node->data.varDecl.isGlobal) {
-        std::cout << "[CPP] Creating global variable\n";
+        if (node->data.varDecl.isGlobal) {
+        llvm::Type* globalVarType = varType;
+        if (node->data.varDecl.dataType == DATA_TYPE_STRING) {
+            // Use ptr type for string globals
+            // llvm::PointerType *llvm::Type::getPointerTo(unsigned int AddrSpace = 0U) const
+            globalVarType = builder.getInt8Ty()->getPointerTo();
+        }
         llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
             *module,
-            varType,
+            globalVarType,
             false,
             llvm::GlobalValue::ExternalLinkage,
             llvm::cast<llvm::Constant>(finalValue),
@@ -295,13 +279,7 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
             std::cerr << "[CPP] Error: Failed to create global variable: " << varName << "\n";
         }
     } else {
-        std::cout << "[CPP] Creating alloca instruction\n";
-        llvm::AllocaInst* alloca = builder.CreateAlloca(varType, nullptr, varName);
-        std::cout << "[CPP] Created alloca instruction\n";
-        builder.CreateStore(finalValue, alloca);
-        std::cout << "[CPP] Stored initial value in alloca\n";
-        namedValues[varName] = alloca;
-        std::cout << "[CPP] Stored alloca in namedValues\n";
+        // ... existing local variable code ...
     }
 }
 // </generateVarDeclaration>

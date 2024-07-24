@@ -277,8 +277,18 @@ llvm::Value* CodeGen::generateExpression(ASTNode* node) {
             return generateBinaryOperation(node);
         }
 
-        case CryoNodeType::NODE_VAR_NAME:
-            return namedValues[node->data.varName.varName];
+        case NODE_VAR_NAME: {
+            llvm::Value* var = namedValues[node->data.varName.varName];
+            if (!var) {
+                std::cerr << "[CPP] Error: Unknown variable name\n";
+                return nullptr;
+            }
+            // If it's a pointer (e.g., alloca), load the value
+            if (var->getType()->isPointerTy()) {
+                return builder.CreateLoad(var->getType(), var, "loadtmp");
+            }
+            return var;
+        }
 
         case CryoNodeType::NODE_VAR_DECLARATION:
             std::cout << "[CPP] Generating code for variable declaration\n";
