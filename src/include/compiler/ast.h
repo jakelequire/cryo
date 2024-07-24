@@ -111,7 +111,7 @@ typedef struct ASTNode {
 
         
         // >=------<Variable Declaration>------=<
-        struct {
+        struct varDecl {
             CryoDataType dataType;   // Data type of the variable
             char* name;
             struct ASTNode* initializer;
@@ -120,7 +120,7 @@ typedef struct ASTNode {
             int scopeLevel;
         } varDecl;
 
-        struct {
+        struct varName {
             char* varName;
             bool isReference;
         } varName;

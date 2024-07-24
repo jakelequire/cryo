@@ -49,6 +49,7 @@
 
 extern "C" {
     #include "compiler/ast.h"
+    #include "compiler/symtable.h"
 }
 
 namespace Cryo {
@@ -88,6 +89,7 @@ private:
     llvm::Constant* createConstantInt(int value);
     llvm::Value* createReferenceInt(int value);
     llvm::Value* getVariable(char* name);
+    llvm::Value* lookupVariable(char* name);
     llvm::GlobalVariable* createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName);
     llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name);
     llvm::Value* loadPointerVariable(llvm::Value* var, char* name);

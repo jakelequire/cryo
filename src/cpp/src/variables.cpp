@@ -21,6 +21,7 @@ namespace Cryo {
 
 // <getVariable>
 llvm::Value* CodeGen::getVariable(char* name) {
+    std::cout << "[CPP] Getting variable: " << name << "\n";
     auto it = namedValues.find(name);
     if (it != namedValues.end()) {
         llvm::Value* var = it->second;
@@ -30,16 +31,30 @@ llvm::Value* CodeGen::getVariable(char* name) {
         }
         return var;
     } else {
-        std::cerr << "[CPP] Error: Variable not found\n";
+        std::cerr << "[CPP] <getVariable> Error: Variable not found\n";
         return nullptr;
     }
 }
 // </getVariable>
 
 
+
+// <lookupVariable>
+llvm::Value* CodeGen::lookupVariable(char* name) {
+    llvm::Value* var = getVariable(name);
+    if (!var) {
+        std::cerr << "[CPP] <lookupVariable> Error: Variable not found: " << name << "\n";
+        return nullptr;
+    }
+    return var;
+}
+// </lookupVariable>
+
+
 // <createGlobalVariable>
 llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName) {
     std::cout << "[CPP] Creating global variable\n";
+    std::cout << "[CPP] Variable Name: " << varName << "\n";
     llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
         *module,
         varType,
@@ -132,7 +147,7 @@ llvm::Value* CodeGen::getVariableValue(char* name) {
             return nullptr;
         }
     } else {
-        std::cerr << "[CPP] Error: Variable not found\n";
+        std::cerr << "[CPP] Error <getVariableValue>: Variable not found\n";
         return nullptr;
     }
 }
@@ -142,18 +157,21 @@ llvm::Value* CodeGen::getVariableValue(char* name) {
 // <generateVarDeclaration>
 void CodeGen::generateVarDeclaration(ASTNode* node) {
     std::cout << "[CPP] Generating code for variable declaration\n";
+
     llvm::Type* varType = nullptr;
     llvm::Constant* initialValue = nullptr;
     llvm::Value* computedValue = nullptr; // For non-literal initializers
     char* varName = node->data.varDecl.name;
-    std::cout << "[CPP]! Variable Name: " << (char*)varName << "\n";
-    std::cout << "[CPP]! Variable Type: " << node->data.varDecl.dataType << "\n";
+
+    std::cout << "[CPP]! Variable Name: " << node->data.varDecl.name << "\n";
+    std::cout << "[CPP]! Variable Type: " << CryoDataTypeToString(node->data.varDecl.dataType) << "\n";
 
     switch (node->data.varDecl.dataType) {
         case DATA_TYPE_STRING:
             std::cout << "[CPP] Generating code for string variable\n";
             if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
                 std::cout << "[CPP] Initializer is a literal expression\n";
+                
                 initialValue = llvm::cast<llvm::Constant>(createString(node->data.varDecl.initializer->data.literalExpression.stringValue));
                 varType = builder.getInt8Ty()->getPointerTo();
             } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
@@ -168,8 +186,10 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
                 }
             } else if(node->data.varDecl.initializer->type == NODE_STRING_LITERAL) {
                 std::cout << "[CPP] Initializer is a string literal\n";
+
                 char* stringValue = node->data.varDecl.initializer->data.literalExpression.stringValue;
                 std::cout << "[CPP] String Value: " << stringValue << "\n";
+                
                 initialValue = llvm::cast<llvm::Constant>(createString(node->data.varDecl.initializer->data.literalExpression.stringValue));
                 varType = builder.getInt8Ty()->getPointerTo();
             }
@@ -182,7 +202,20 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
         case DATA_TYPE_INT:
             std::cout << "[CPP] Generating code for int variable\n";
             varType = builder.getInt32Ty();
-            if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
+            if(node->data.varDecl.isReference) {
+                std::cout << "[CPP] Generating code for reference variable\n";
+                llvm::Value * refVar = lookupVariable(node->data.varDecl.name);
+                if (!refVar) {
+                    std::cerr << "[CPP] Error: Referenced variable not found: " << node->data.varDecl.name << "\n";
+                    // try to find from symbol table
+                    refVar = getVariableValue(node->data.varDecl.name);
+                    if (!refVar) {
+                        std::cerr << "[CPP] Error: Referenced variable not found in symbol table: " << node->data.varDecl.name << "\n";
+                        return;
+                    }
+                    return;
+                }
+            } else if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
                 std::cout << "[CPP] Initializer is a literal expression\n";
                 initialValue = createConstantInt(node->data.varDecl.initializer->data.literalExpression.intValue);
             } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
@@ -249,6 +282,7 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     if (node->data.varDecl.isGlobal) {
         std::cout << "[CPP] Creating global variable\n";
         llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
+            *module,
             varType,
             false,
             llvm::GlobalValue::ExternalLinkage,

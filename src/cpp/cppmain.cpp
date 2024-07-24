@@ -23,7 +23,10 @@ int generateCodeWrapper(ASTNode* node) {
     std::cout << ">===------------- CPP Code Generation -------------===<\n" << std::endl;
     std::cout << "[CPP] Starting Code Generation..." << std::endl;
 
-    Cryo::CodeGen codegen(node); 
+    // Recast the ASTNode to ASTNode
+    ASTNode* root = (ASTNode*)node;
+
+    CodeGen codegen(root);
 
     return 1;
 }

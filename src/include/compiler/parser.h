@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <assert.h>
 /*---<custom_includes>---*/
 #include "compiler/lexer.h"
@@ -37,6 +38,7 @@ typedef struct ASTNode ASTNode;
 typedef struct Token Token;
 typedef struct CryoSymbolTable CryoSymbolTable;
 
+
 typedef struct {
     bool isParsingIfCondition;
     int scopeLevel;
@@ -49,9 +51,9 @@ typedef struct {
 #define MAX_ARGUMENTS 255
 
 
-#ifndef HAVE_STRNDUP
-char* strndup(const char* s, size_t n);
-#endif
+//#ifndef HAVE_STRNDUP
+//char* strndup(const char* s, size_t n);
+//#endif
 
 /* =========================================================== */
 /* @Function_Prototypes                                        */

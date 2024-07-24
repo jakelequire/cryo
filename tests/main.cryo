@@ -8,5 +8,4 @@ const foo: string = "Hello, World!";
 
 public function main() -> void {
     printInt(qix);
-    printInt(bar);
 }

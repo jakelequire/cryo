@@ -50,15 +50,21 @@ llvm::Type* CodeGen::getLLVMType(CryoDataType type) {
 }
 
 void CodeGen::generateFunctionPrototype(ASTNode* node) {
+    if (node->type != NODE_EXTERN_FUNCTION && node->type != NODE_FUNCTION_DECLARATION) {
+        std::cerr << "[CPP] Error: Invalid function node\n";
+        return;
+    }
     std::cout << "[CPP] Generating function prototype: " << node->data.functionDecl.function->name << "\n";
     std::cout << "[CPP] Function return type: " << node->data.functionDecl.function->returnType << "\n";
     std::cout << "[CPP] Function Type: " << CryoNodeTypeToString(node->data.functionDecl.type) << "\n";
 
     char* functionName;
-    if(node->type == NODE_EXTERN_STATEMENT) {
+    if(node->type == NODE_EXTERN_FUNCTION) {
         functionName = node->data.externNode.decl.function->name;
+        std::cout << "[CPP] Extern Function Name: " << strdup(functionName) << "\n";
     } else if (node->type == NODE_FUNCTION_DECLARATION) {
         functionName = node->data.functionDecl.function->name;
+        std::cout << "[CPP] Function Name: " << strdup(functionName)  << "\n";
     } else {
         std::cerr << "[CPP] Error: Invalid function node\n";
         return;
@@ -131,7 +137,7 @@ void CodeGen::createDefaultMainFunction() {
 }
 
 void CodeGen::generateFunctionCall(ASTNode* node) {
-    std::string functionName = node->data.functionCall.name;
+    std::string functionName = node->data.functionCall.name ? node->data.functionCall.name : "unnamed_function";
     std::vector<llvm::Value*> args;
 
     for (int i = 0; i < node->data.functionCall.argCount; ++i) {

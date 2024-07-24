@@ -207,38 +207,38 @@ CryoSymbol* createCryoSymbol(CryoSymbolTable* table, ASTNode* node) {
 
     switch (node->type) {
         case NODE_VAR_DECLARATION:
-            symbolNode->name = node->data.varDecl.name;
+            symbolNode->name = strdup(node->data.varDecl.name);
             symbolNode->nodeType = node->type;
             symbolNode->valueType = node->data.varDecl.dataType;
             break;
 
         case NODE_FUNCTION_DECLARATION:
-            symbolNode->name = node->data.functionDecl.function->name;
+            symbolNode->name = strdup(node->data.functionDecl.function->name);
             symbolNode->nodeType = node->type;
             symbolNode->valueType = node->data.functionDecl.function->returnType;
             symbolNode->argCount = node->data.functionDecl.function->paramCount;
             break;
 
         case NODE_EXTERN_FUNCTION:
-            symbolNode->name = node->data.externNode.decl.function->name;
+            symbolNode->name = strdup(node->data.externNode.decl.function->name);
             symbolNode->nodeType = node->type;
             symbolNode->valueType = node->data.externNode.decl.function->returnType;
             symbolNode->argCount = node->data.externNode.decl.function->paramCount;
             break;
 
         case NODE_PARAM_LIST:
-            symbolNode->name = node->data.varDecl.name;
+            symbolNode->name = strdup(node->data.varDecl.name);
             symbolNode->nodeType = node->type;
             symbolNode->valueType = node->data.varDecl.dataType;
             break;
 
         case NODE_VAR_NAME:
-            symbolNode->name = node->data.varName.varName;
+            symbolNode->name = strdup(node->data.varName.varName);
             symbolNode->nodeType = node->type;
             break;
 
         case NODE_FUNCTION_CALL:
-            symbolNode->name = node->data.functionCall.name;
+            symbolNode->name = strdup(node->data.functionCall.name);
             symbolNode->nodeType = node->type;
             symbolNode->argCount = node->data.functionCall.argCount;
             break;

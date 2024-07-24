@@ -237,6 +237,7 @@ llvm::Value* CodeGen::generateExpression(ASTNode* node) {
     std::cout << "[CPP - DEBUG] Expression type: " << node->type << "\n";
     std::cout << "[CPP - DEBUG] Expression data type: " << node->data.literalExpression.dataType << "\n";
 
+
     switch (node->type) {
         case CryoNodeType::NODE_LITERAL_EXPR:
             std::cout << "[CPP] Generating code for literal expression\n";
