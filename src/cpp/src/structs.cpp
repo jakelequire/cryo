@@ -35,11 +35,17 @@ llvm::StructType* CodeGen::createStringType() {
 }
 
 llvm::Value* CodeGen::createString(const std::string& str) {
-    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(context, str);
-    llvm::GlobalVariable* globalStr = new llvm::GlobalVariable(
-        *module, strConstant->getType(), true,
-        llvm::GlobalValue::PrivateLinkage, strConstant, ".str");
-    return builder.CreateBitCast(globalStr, llvm::Type::getInt8Ty(context)->getPointerTo());
+    llvm::Constant* strConstant = llvm::ConstantDataArray::getString(module->getContext(), str);
+    llvm::GlobalVariable* strVar = new llvm::GlobalVariable(
+        *module,
+        strConstant->getType(),
+        true,
+        llvm::GlobalValue::PrivateLinkage,
+        strConstant,
+        ".str"
+    );
+    strVar->setAlignment(llvm::MaybeAlign(1));
+    return builder.CreatePointerCast(strVar, llvm::Type::getInt8Ty(module->getContext())->getPointerTo());
 }
 
 llvm::Value* CodeGen::createNumber(int num) {

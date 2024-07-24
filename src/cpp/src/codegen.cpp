@@ -283,9 +283,9 @@ llvm::Value* CodeGen::generateExpression(ASTNode* node) {
         case CryoNodeType::NODE_VAR_DECLARATION:
             std::cout << "[CPP] Generating code for variable declaration\n";
             std::cout << "[CPP] VarName: " << node->data.varDecl.name << "\n";
-            std::cout << "[CPP] VarType: " << node->data.varDecl.dataType << "\n";
-            generateVarDeclaration(node);
-            return nullptr;
+            std::cout << "[CPP] VarType: " << CryoDataTypeToString(node->data.varDecl.dataType) << "\n";
+
+            return createVariableDeclaration(node);
         
         default:
             std::cout << "[CPP - Error] Unknown expression type: " << node->type << "\n";

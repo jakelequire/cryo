@@ -171,7 +171,6 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
             std::cout << "[CPP] Generating code for string variable\n";
             if (node->data.varDecl.initializer->type == NODE_LITERAL_EXPR) {
                 std::cout << "[CPP] Initializer is a literal expression\n";
-                
                 initialValue = llvm::cast<llvm::Constant>(createString(node->data.varDecl.initializer->data.literalExpression.stringValue));
                 varType = builder.getInt8Ty()->getPointerTo();
             } else if (node->data.varDecl.initializer->type == NODE_VAR_NAME) {
@@ -275,7 +274,7 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
 
     if (!finalValue) {
         std::cerr << "[CPP] Error: Initial value is null for variable: " << varName << "\n";
-        return;
+        finalValue = llvm::Constant::getNullValue(varType);
     }
 
     std::cout << "[CPP] Varname is: " << varName << "\n";
@@ -306,6 +305,37 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     }
 }
 // </generateVarDeclaration>
+
+
+// <createVariableDeclaration>
+llvm::Value* CodeGen::createVariableDeclaration(ASTNode* node) {
+    std::cout << "[CPP] Creating variable declaration\n";
+    llvm::Type* varType = getLLVMType(node->data.varDecl.dataType, false);
+    llvm::Value* varAlloca = builder.CreateAlloca(varType, nullptr, node->data.varDecl.name);
+    llvm::Value* initValue = nullptr;
+
+    if (node->data.varDecl.initializer) {
+        switch (node->data.varDecl.dataType) {
+            case DATA_TYPE_INT:
+                std::cout << "[CPP] Creating int variable\n";
+                initValue = createNumber(node->data.varDecl.initializer->data.literalExpression.intValue);
+                builder.CreateStore(initValue, varAlloca);
+                break;
+            case DATA_TYPE_STRING:
+                std::cout << "[CPP] Creating string variable\n";
+                initValue = createString(node->data.varDecl.initializer->data.literalExpression.stringValue);
+                builder.CreateStore(initValue, varAlloca);
+                break;
+            default:
+                std::cerr << "[CPP] Error: Unsupported data type for variable declaration\n";
+                return nullptr;
+        }
+        builder.CreateStore(initValue, varAlloca);
+    }
+
+    namedValues[node->data.varDecl.name] = varAlloca;
+    return varAlloca;
+}
 
 
 

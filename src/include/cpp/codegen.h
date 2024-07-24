@@ -72,7 +72,7 @@ private:
     llvm::Value* generateExpression(ASTNode* node);
     std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, bool checkStringLiteral);
     llvm::Value* generateBinaryOperation(ASTNode* node);
-    llvm::Type* getLLVMType(CryoDataType type);
+    llvm::Type* getLLVMType(CryoDataType type, bool isReference);
     void generateFunctionPrototype(ASTNode* node);
     void createDefaultMainFunction();
     void generateFunctionCall(ASTNode* node);
@@ -89,6 +89,7 @@ private:
     llvm::Constant* createConstantInt(int value);
     llvm::Value* createReferenceInt(int value);
     llvm::Value* getVariable(char* name);
+    llvm::Value* createVariableDeclaration(ASTNode* node);
     llvm::Value* lookupVariable(char* name);
     llvm::GlobalVariable* createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName);
     llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name);

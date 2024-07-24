@@ -18,11 +18,15 @@
 
 namespace Cryo {
 
-llvm::Type* CodeGen::getLLVMType(CryoDataType type) {
+llvm::Type* CodeGen::getLLVMType(CryoDataType type, bool isReference) {
     std::cout << "[CPP] Getting LLVM type for: " << CryoDataTypeToString(type) << "\n";
     switch (type) {
-        case DATA_TYPE_INT:
+        case DATA_TYPE_INT: {
+            if(isReference) {
+                return llvm::Type::getInt32Ty(module->getContext())->getPointerTo();
+            }
             return llvm::Type::getInt32Ty(module->getContext());
+        }
         case DATA_TYPE_FLOAT:
             return llvm::Type::getFloatTy(module->getContext());
         case DATA_TYPE_STRING:
@@ -70,7 +74,7 @@ void CodeGen::generateFunctionPrototype(ASTNode* node) {
         return;
     }
 
-    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType);
+    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType, false);
 
     std::vector<llvm::Type*> paramTypes;
     if(node->type == NODE_EXTERN_FUNCTION) {
@@ -84,7 +88,7 @@ void CodeGen::generateFunctionPrototype(ASTNode* node) {
             std::cout << "[CPP] Generating parameter: " << CryoNodeTypeToString(parameter->type) << "\n";
             std::cout << "[CPP] Generating parameter type: " << CryoDataTypeToString(parameter->data.varDecl.dataType) << "\n";
 
-            llvm::Type* paramType = getLLVMType(parameter->data.varDecl.dataType);
+            llvm::Type* paramType = getLLVMType(parameter->data.varDecl.dataType, false);
             if (!paramType) {
                 std::cerr << "[CPP] Error: Unknown parameter type\n";
                 return;
@@ -102,7 +106,7 @@ void CodeGen::generateFunctionPrototype(ASTNode* node) {
                 std::cerr << "[CPP] Error: Null parameter node\n";
                 return;
             }
-            llvm::Type* paramType = getLLVMType(parameter->data.varDecl.dataType);
+            llvm::Type* paramType = getLLVMType(parameter->data.varDecl.dataType, false);
             if (!paramType) {
                 std::cerr << "[CPP] Error: Unknown parameter type\n";
                 return;
@@ -137,7 +141,7 @@ void CodeGen::createDefaultMainFunction() {
 }
 
 void CodeGen::generateFunctionCall(ASTNode* node) {
-    std::string functionName = node->data.functionCall.name ? node->data.functionCall.name : "unnamed_function";
+    std::string functionName = node->data.functionCall.name;
     std::vector<llvm::Value*> args;
 
     for (int i = 0; i < node->data.functionCall.argCount; ++i) {
@@ -146,10 +150,29 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
             std::cerr << "[CPP] Error generating argument for function call\n";
             return;
         }
+
+        // Get the parameter type from the function declaration
+        llvm::Function* callee = module->getFunction(functionName);
+        if (!callee) {
+            std::cerr << "[CPP] Error: Unknown function referenced: " << functionName << "\n";
+            return;
+        }
+        llvm::Type* paramType = callee->getFunctionType()->getParamType(i);
+
+        // Convert argument to match parameter type if necessary
+        if (arg->getType() != paramType) {
+            if (paramType->isPointerTy() && arg->getType()->isIntegerTy()) {
+                arg = builder.CreateIntToPtr(arg, paramType);
+            } else if (paramType->isIntegerTy() && arg->getType()->isPointerTy()) {
+                arg = builder.CreatePtrToInt(arg, paramType);
+            } else {
+                arg = builder.CreateBitCast(arg, paramType);
+            }
+        }
+
         args.push_back(arg);
     }
 
-    std::cout << "[CPP] Generating function call for " << functionName << "\n";
     llvm::Function* callee = module->getFunction(functionName);
     if (!callee) {
         std::cerr << "[CPP] Error: Unknown function referenced: " << functionName << "\n";
@@ -163,7 +186,7 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
 
 void CodeGen::generateFunction(ASTNode* node) {
     char* functionName;
-    if(node->type == NODE_EXTERN_STATEMENT) {
+    if (node->type == NODE_EXTERN_STATEMENT) {
         functionName = node->data.externNode.decl.function->name;
     } else if (node->type == NODE_FUNCTION_DECLARATION) {
         functionName = node->data.functionDecl.function->name;
@@ -173,21 +196,18 @@ void CodeGen::generateFunction(ASTNode* node) {
     }
     std::cout << "[CPP] Generating code for function NAME: " << functionName << "\n";
 
-    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType);
+    llvm::Type* returnType = getLLVMType(node->data.functionDecl.function->returnType, false);
 
     std::cout << "[CPP] Function return type: " << returnType << "\n";
 
     std::vector<llvm::Type*> paramTypes;
     if (node->data.functionDecl.function->params) {
         for (int i = 0; i < node->data.functionDecl.function->paramCount; ++i) {
-            if(i % 2 == 0) {
-                return;
-            }
             ASTNode* parameterType = node->data.functionDecl.function->params[i];
             std::cout << "[CPP - DEBUG] Parameter type: " << parameterType->data.varDecl.dataType << "\n";
             CryoDataType parameterTypeData = parameterType->data.varDecl.dataType;
-            std:: cout << "[CPP - DEBUG] Parameter type data: " << parameterTypeData << "\n";
-            llvm::Type* paramType = getLLVMType(parameterTypeData);
+            std::cout << "[CPP - DEBUG] Parameter type data: " << parameterTypeData << "\n";
+            llvm::Type* paramType = getLLVMType(parameterTypeData, false);
             if (!paramType) {
                 std::cerr << "[CPP] Error: Unknown parameter type\n";
                 return;
@@ -275,7 +295,7 @@ void CodeGen::generateReturnStatement(ASTNode* node) {
                 retValue = builder.CreateBitCast(retValue, returnType);
             }
         }
-        builder.CreateRet(retValue);    // <--- This is the line that causes the error
+        builder.CreateRet(retValue); 
     } else {
         std::cerr << "Error: Return value expected but not provided\n";
         builder.CreateRet(llvm::UndefValue::get(returnType));
@@ -294,7 +314,7 @@ void CodeGen::generateExternalDeclaration(ASTNode* node) {
     CryoDataType returnTypeData = node->data.externNode.decl.function->returnType;
     std::cout << "[CPP] Extern Function return type: " << returnTypeData << "\n";
 
-    llvm::Type* returnType = getLLVMType(returnTypeData);
+    llvm::Type* returnType = getLLVMType(returnTypeData, false);
     std::cout << "[CPP] LLVM Extern Function return type: " << returnType << "\n";
     std::vector<llvm::Type*> paramTypes;
     std::cout << "[CPP] Extern Function parameter count: " << node->data.externNode.decl.function->paramCount << "\n";
@@ -308,13 +328,13 @@ void CodeGen::generateExternalDeclaration(ASTNode* node) {
         }
         if(parameter->data.varDecl.dataType == DATA_TYPE_INT) {
             std::cout << "[CPP] Extern <INT> Parameter: " << i << " type: " << parameter->data.varDecl.dataType << "\n";
-            paramType = llvm::Type::getInt32Ty(module->getContext());
+            paramType = getLLVMType(DATA_TYPE_INT, true);
             paramTypes.push_back(paramType);
             break;
         }
         if(parameter->data.varDecl.dataType == DATA_TYPE_STRING) {
             std::cout << "[CPP] Extern <STRING> Parameter: " << i << " type: " << parameter->data.varDecl.dataType << "\n";
-            paramType = getLLVMType(DATA_TYPE_STRING);
+            paramType = getLLVMType(DATA_TYPE_STRING, true);
             paramTypes.push_back(paramType);
             break;
         }
