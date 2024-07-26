@@ -69,7 +69,7 @@ llvm::GlobalVariable* CodeGen::createGlobalVariable(llvm::Type* varType, llvm::C
         return nullptr;
     }
 
-    std::cout << "[CPP] Created global variable: " << varName << "\n";
+    std::cout << "[CPP]! Created global variable: " << varName << "\n";
     return globalVar;
 }
 // </createGlobalVariable>
@@ -167,15 +167,15 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     std::cout << "[CPP]! Variable Type: " << CryoDataTypeToString(node->data.varDecl.dataType) << "\n";
 
     switch (node->data.varDecl.dataType) {
-    case DATA_TYPE_STRING:
-        std::cout << "[CPP] Generating code for string variable\n";
-        if (node->data.varDecl.initializer) {
-            initialValue = createString(node->data.varDecl.initializer->data.literalExpression.stringValue);
-        } else {
-            initialValue = llvm::ConstantPointerNull::get( llvm::PointerType::get(builder.getInt8Ty(), 0) );
-        }
-        varType = builder.getInt8Ty();
-        break;
+        case DATA_TYPE_STRING:
+            std::cout << "[CPP] Generating code for string variable\n";
+            if (node->data.varDecl.initializer) {
+                initialValue = createString(node->data.varDecl.initializer->data.literalExpression.stringValue);
+            } else {
+                initialValue = llvm::ConstantPointerNull::get(llvm::PointerType::get(builder.getInt8Ty(), 0));
+            }
+            varType = llvm::PointerType::get(builder.getInt8Ty(), 0);
+            break;
         
         case DATA_TYPE_INT:
             std::cout << "[CPP] Generating code for int variable\n";
@@ -257,30 +257,46 @@ void CodeGen::generateVarDeclaration(ASTNode* node) {
     }
 
     std::cout << "[CPP] Varname is: " << varName << "\n";
-        if (node->data.varDecl.isGlobal) {
-        llvm::Type* globalVarType = varType;
-        if (node->data.varDecl.dataType == DATA_TYPE_STRING) {
-            // Use ptr type for string globals
-            // llvm::PointerType *llvm::Type::getPointerTo(unsigned int AddrSpace = 0U) const
-            globalVarType = builder.getInt8Ty()->getPointerTo();
-        }
-        llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
-            *module,
-            globalVarType,
-            false,
-            llvm::GlobalValue::ExternalLinkage,
-            llvm::cast<llvm::Constant>(finalValue),
-            llvm::Twine(varName)
-        );
-        if (globalVar) {
-            std::cout << "[CPP] Created global variable: " << varName << "\n";
-            namedValues[varName] = globalVar;
-        } else {
-            std::cerr << "[CPP] Error: Failed to create global variable: " << varName << "\n";
+if (node->data.varDecl.isGlobal) {
+    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(
+        *module,
+        varType,
+        false,
+        llvm::GlobalValue::ExternalLinkage,
+        llvm::Constant::getNullValue(varType),  // Initialize with null value
+        llvm::Twine(varName)
+    );
+    if (globalVar) {
+        std::cout << "[CPP] Created global variable: " << varName << "\n";
+        namedValues[varName] = globalVar;
+
+        std::cout << "[CPP] Loading global variable value\n";
+
+        // If there's an initial value, store it
+        if (finalValue) {
+            std::cout << "[CPP] Storing initial value for global variable: " << varName << "\n";
+            std::cout << "[CPP] <LLVM VALUE> Final value type: " << LLVMTypeToString(finalValue->getType()) << "\n";
+            std::cout << "[CPP] <LLVM VALUE> Global variable type: " << LLVMTypeToString(globalVar->getValueType()) << "\n";
+            
+            if (finalValue->getType() != globalVar->getValueType()) {
+                std::cout << "[CPP] Type mismatch, attempting to cast\n";
+                finalValue = builder.CreateBitCast(finalValue, globalVar->getValueType());
+            }
+            
+            if (llvm::isa<llvm::Constant>(finalValue)) {
+                globalVar->setInitializer(llvm::cast<llvm::Constant>(finalValue));
+            } else {
+                builder.CreateStore(finalValue, globalVar);
+            }
         }
     } else {
-        // ... existing local variable code ...
+        std::cerr << "[CPP] Error: Failed to create global variable: " << varName << "\n";
     }
+} else {
+    // ... existing local variable code ...
+}
+
+    std::cout << "[CPP] Completed code generation for variable declaration\n";
 }
 // </generateVarDeclaration>
 

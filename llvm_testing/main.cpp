@@ -14,33 +14,18 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_LIB_H
-#define CRYO_LIB_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-void printInt(int value);
-void printFloat(float value);
-void printStr(char* value);
-
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef __cplusplus
+#include "cpp/cppmain.h"
 #include <iostream>
 
-template <typename T>
-void print(T msg) {
-    std::cout << "Attempting to execute print function: " << std::endl;
-    std::cout << msg << std::endl;
-}
-#endif
+using namespace Cryo;
 
-#endif // CRYO_LIB_H
+int generateCodeWrapper(ASTNode* node) {
+    std::cout << ">===------------- CPP Code Generation -------------===<\n" << std::endl;
+    std::cout << "[CPP] Starting Code Generation..." << std::endl;
+
+    Cryo::CodeGen codegen(node); 
+
+    return 1;
+}
+
+

@@ -63,7 +63,7 @@ $(CPP_DIR)src/structs.cpp $(CPP_DIR)src/lib.cpp $(CPP_DIR)src/conditionals.cpp $
 
 
 # Cryo Lib Files
-CRYO_SRC = $(CRYO_DIR)cryolib.c
+CRYO_SRC = $(CRYO_DIR)cryolib.cpp
 
 # Object files
 COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
@@ -177,8 +177,8 @@ $(OBJ_DIR)codegen.o: $(CPP_DIR)src/codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Cryo Lib Compilation rules
-$(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@ 
+$(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.cpp | $(OBJ_DIR)
+	$(CXX) $(CFLAGS) -c $< -o $@ -lstdc++ -lstdc++fs
 
 
 # Linking binaries

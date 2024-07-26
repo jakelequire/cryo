@@ -120,7 +120,22 @@ void CodeGen::generateFunctionPrototype(ASTNode* node) {
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
     std::cout << "[CPP] Function type generated\n";
 
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
+    llvm::Function* function;
+    if(node->type == NODE_EXTERN_FUNCTION) {
+        function = module->getFunction(functionName);
+        if (!function) {
+            function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
+        } else {
+            std::cerr << "[CPP] Warning: Function " << functionName << " already exists in the module\n";
+        }
+    } else if(node->type == NODE_FUNCTION_DECLARATION) {
+        function = module->getFunction(functionName);
+        if (!function) {
+            function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
+        } else {
+            std::cerr << "[CPP] Warning: Function " << functionName << " already exists in the module\n";
+        }
+    }
     std::cout << "[CPP] Function created\n";
 
     std::cout << "[CPP] Function prototype generated: " << functionName << "\n";
@@ -144,6 +159,12 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
     std::string functionName = node->data.functionCall.name;
     std::vector<llvm::Value*> args;
 
+    llvm::Function* callee = module->getFunction(functionName);
+    if (!callee) {
+        std::cerr << "[CPP] Error: Unknown function referenced: " << functionName << "\n";
+        return;
+    }
+
     for (int i = 0; i < node->data.functionCall.argCount; ++i) {
         llvm::Value* arg = generateExpression(node->data.functionCall.args[i]);
         if (!arg) {
@@ -151,37 +172,30 @@ void CodeGen::generateFunctionCall(ASTNode* node) {
             return;
         }
 
-        // Get the parameter type from the function declaration
-        llvm::Function* callee = module->getFunction(functionName);
-        if (!callee) {
-            std::cerr << "[CPP] Error: Unknown function referenced: " << functionName << "\n";
-            return;
-        }
         llvm::Type* paramType = callee->getFunctionType()->getParamType(i);
         
-        // Convert argument to match parameter type if necessary
-        if (arg->getType() != paramType) {
-            if (paramType->isIntegerTy() && arg->getType()->isPointerTy()) {
-                arg = builder.CreateLoad(paramType, arg);
-            } else if (paramType->isPointerTy() && arg->getType()->isIntegerTy()) {
-                arg = builder.CreateIntToPtr(arg, paramType);
-            } else if (paramType->isPointerTy() && arg->getType()->isPointerTy()) {
-                arg = builder.CreateLoad(arg->getType(), arg);
+        // If the argument is a global variable
+        if (llvm::GlobalVariable* globalVar = llvm::dyn_cast<llvm::GlobalVariable>(arg)) {
+            if (globalVar->getValueType()->isPointerTy() && paramType->isPointerTy()) {
+                // For string globals, pass the pointer directly
+                arg = globalVar;
             } else {
-                arg = builder.CreateBitCast(arg, paramType);
+                // For other globals, load the value
+                arg = builder.CreateLoad(globalVar->getValueType(), globalVar);
             }
         }
-        args.push_back(arg);
-    }
+        // If the argument is a pointer but the parameter expects a value, load it
+        else if (arg->getType()->isPointerTy() && !paramType->isPointerTy()) {
+            arg = builder.CreateLoad(paramType, arg);
+        }
 
-    llvm::Function* callee = module->getFunction(functionName);
-    if (!callee) {
-        std::cerr << "[CPP] Error: Unknown function referenced: " << functionName << "\n";
-        return;
+        args.push_back(arg);
     }
 
     builder.CreateCall(callee, args);
 }
+
+
 void CodeGen::generateFunction(ASTNode* node) {
     char* functionName;
     if (node->type == NODE_EXTERN_STATEMENT) {
@@ -227,19 +241,19 @@ void CodeGen::generateFunction(ASTNode* node) {
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(module->getContext(), "entry", function);
     builder.SetInsertPoint(BB);
 
-    // Initialize local variables with global values
-    for (auto& varPair : namedValues) {
-        if (llvm::GlobalVariable* globalVar = llvm::dyn_cast<llvm::GlobalVariable>(varPair.second)) {
-            llvm::AllocaInst* localVar = builder.CreateAlloca(globalVar->getValueType(), nullptr, varPair.first);
-            llvm::Value* globalValue = builder.CreateLoad(globalVar->getValueType(), globalVar);
-            builder.CreateStore(globalValue, localVar);
-            namedValues[varPair.first] = localVar;
+    if (strcmp(functionName, "main") == 0) {
+        // Special handling for main function
+        for (int i = 0; i < node->data.functionDecl.function->body->data.block.stmtCount; ++i) {
+            ASTNode* stmt = node->data.functionDecl.function->body->data.block.statements[i];
+            if (stmt->type == NODE_FUNCTION_CALL) {
+                generateFunctionCall(stmt);
+            }
         }
-    }
-
-    // Generate code for the function body
-    if (node->data.functionDecl.function->body) {
-        generateCode(node->data.functionDecl.function->body);
+    } else {
+        // Generate code for the function body (for non-main functions)
+        if (node->data.functionDecl.function->body) {
+            generateCode(node->data.functionDecl.function->body);
+        }
     }
 
     // Ensure the function has a return statement or terminator
@@ -354,7 +368,7 @@ void CodeGen::generateExternalDeclaration(ASTNode* node) {
 
     std::cout << "[CPP] Extern Function parameter types generated\n";
 
-    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes[0], false);
+    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
     std::cout << "[CPP] Extern Function type generated\n";
     llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
     std::cout << "[CPP] Extern Function created\n";

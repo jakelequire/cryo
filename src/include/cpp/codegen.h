@@ -63,7 +63,7 @@ private:
     llvm::IRBuilder<> builder;
     std::unique_ptr<llvm::Module> module;
     std::unordered_map<std::string, llvm::Value*> namedValues;
-
+    std::string LLVMTypeToString(llvm::Type* type);
     void codegen(ASTNode* root);
     void generateCode(ASTNode* node);
     void generateProgram(ASTNode* node);

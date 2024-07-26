@@ -278,14 +278,23 @@ llvm::Value* CodeGen::generateExpression(ASTNode* node) {
         }
 
         case NODE_VAR_NAME: {
-            llvm::Value* var = namedValues[node->data.varName.varName];
+            std::string varName = node->data.varName.varName;
+            llvm::Value* var = namedValues[varName];
             if (!var) {
-                std::cerr << "[CPP] Error: Unknown variable name\n";
+                // Check if it's a global variable
+                var = module->getGlobalVariable(varName);
+            }
+            if (!var) {
+                std::cerr << "[CPP] Error: Unknown variable name: " << varName << "\n";
                 return nullptr;
             }
-            // If it's a pointer (e.g., alloca), load the value
+            // If it's a global variable, return it directly
+            if (llvm::GlobalVariable* globalVar = llvm::dyn_cast<llvm::GlobalVariable>(var)) {
+                return globalVar;
+            }
+            // For local variables, load the value if it's a pointer
             if (var->getType()->isPointerTy()) {
-                return builder.CreateLoad(var->getType(), var, "loadtmp");
+                return builder.CreateLoad(var->getType(), var, varName + "_load");
             }
             return var;
         }
@@ -375,6 +384,15 @@ llvm::Value* CodeGen::generateBinaryOperation(ASTNode* node) {
     }
 
     std::cout << "[CPP] DEBUG Binary operation generated.\n";
+}
+
+
+
+std::string CodeGen::LLVMTypeToString(llvm::Type* type) {
+    std::string typeStr;
+    llvm::raw_string_ostream rso(typeStr);
+    type->print(rso);
+    return rso.str();
 }
 
 } // namespace Cryo

@@ -14,33 +14,21 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_LIB_H
-#define CRYO_LIB_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "cryo/cryolib.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-void printInt(int value);
-void printFloat(float value);
-void printStr(char* value);
-
-#ifdef __cplusplus
+void printInt(int value) {
+    printf("Attempting to execute printInt function: \n");
+    printf("%d\n", value);
 }
-#endif
 
-#ifdef __cplusplus
-#include <iostream>
-
-template <typename T>
-void print(T msg) {
-    std::cout << "Attempting to execute print function: " << std::endl;
-    std::cout << msg << std::endl;
+void printFloat(float value) {
+    printf("Attempting to execute printFloat function: \n");
+    printf("%f\n", value);
 }
-#endif
 
-#endif // CRYO_LIB_H
+void printStr(char* value) {
+    printf("Attempting to execute printStr function: \n");
+    printf("%s\n", value);
+}
+

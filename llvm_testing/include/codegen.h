@@ -14,17 +14,52 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#ifndef CODEGEN_H
+#define CODEGEN_H
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <memory>
+#include <assert.h>
 
-#include "cryo/cryolib.h"
 
-void printInt(int value) {
-    printf("%d\n", value);
+
+extern "C" {
+    #include "compiler/ast.h"
 }
 
-void printFloat(float value) {
-    printf("%f\n", value);
-}
+namespace Cryo {
+    
+    class CodeGen {
+    public:
+        /**
+         * The Constructor for the CodeGen class (public)
+         */
+        CodeGen(ASTNode* root);
+    
+    private: 
+        llvm::LLVMContext context;
+        llvm::IRBuilder<> builder;
+        std::unique_ptr<llvm::Module> module;
+        /**
+         * This is (I think) where global variables are being loaded 
+         */
+        std::unordered_map<std::string, llvm::Value*> namedValues;
 
-void printStr(char* value) {
-    printf("%s\n", value);
-}
+        /**
+         * The main entry point for code generation. (private)
+         */    
+        void codegen(ASTNode* root);
+    };
+
+} // namespace Cryo
+
+
+
+
+
+
+
+#endif
