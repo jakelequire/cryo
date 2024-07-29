@@ -29,9 +29,6 @@ context(), builder(context), module(std::make_unique<llvm::Module>("CryoModule",
     executeCodeGeneration(root);
 }
 
-/// 
-/// Private Methods
-///
 
 /**
  * The Entry Point to the generation process. 
