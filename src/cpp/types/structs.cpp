@@ -77,7 +77,7 @@ llvm::StructType* CryoTypes::createFunctionType(llvm::Type* returnType, const st
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
     std::vector<llvm::Type*> elements = {
         funcType->getPointerTo(),  // function pointer
-        builder.getInt8PtrTy()     // void* context (for closures)
+        builder.getInt8Ty()->getPointerTo()    // void* context (for closures)
     };
     return llvm::StructType::create(context, elements, "Function");
 }

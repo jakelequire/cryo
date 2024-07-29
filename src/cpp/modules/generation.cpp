@@ -14,7 +14,7 @@ void CryoModules::generateProgram(ASTNode* node) {
     }
     for (int i = 0; i < node->data.program.stmtCount; ++i) {
         std::cout << "[Generation] Generating code for program statement " << i << "\n";
-        generateCode(node->data.program.statements[i]);
+        identifyNodeExpression(node->data.program.statements[i]);
         std::cout << "[Generation] Moving to next statement\n";
     }
     return;
@@ -68,9 +68,9 @@ void CryoModules::generateExternalDeclaration(ASTNode* node) {
     }
 
     char* functionName = node->data.externNode.decl.function->name;
-    CryoDataType returnDataType = node->data.externNode.decl.function->returnType;
+    CryoDataType returnTypeData = node->data.externNode.decl.function->returnType;
 
-    llvm::Value* returnType = getLLVMType(returnTypeData);
+    llvm::Type *returnType = CryoTypes::getLLVMType(returnTypeData);
     std::vector<llvm::Type*> paramTypes;
 
     for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
@@ -94,8 +94,8 @@ void CryoModules::generateExternalDeclaration(ASTNode* node) {
             std::cerr << "[Generation] Error: Extern Unknown parameter type\n";
             return;
         }
-        llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes[0], false);
     }
+    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes[0], false);
 
     llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
 }

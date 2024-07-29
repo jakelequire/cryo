@@ -18,6 +18,15 @@
 
 namespace Cryo {
 
+void CryoSyntax::generateVarDeclaration(ASTNode* node) {}
+llvm::Value* CryoSyntax::lookupVariable(char* name) {}
+llvm::Value* CryoSyntax::createVariableDeclaration(ASTNode* node) {}
+llvm::Value* CryoSyntax::getVariableValue(char* name) {}
+llvm::GlobalVariable* CryoSyntax::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName) {}
+llvm::Value* CryoSyntax::loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name) {}
 
+void CryoSyntax::generateArrayLiteral(ASTNode* node) {}
+std::vector<llvm::Constant*> CryoSyntax::generateArrayElements(ASTNode* arrayLiteral) {}
 
 }
+

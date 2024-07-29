@@ -59,9 +59,9 @@ RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
 CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp \
-		$(CPP_DIR)modules/blocks.cpp $(CPP_DIR)modules/generation.cpp $(CPP_DIR)modules/modules.cpp \
-		$(CPP_DIR)syntax/classes.cpp $(CPP_DIR)syntax/conditionals.cpp $(CPP_DIR)syntax/functions.cpp $(CPP_DIR)syntax/schema.cpp $(CPP_DIR)syntax/variables.cpp \
-		$(CPP_DIR)types/structs.cpp $(CPP_DIR)types/types.cpp\
+		$(CPP_DIR)modules/blocks.cpp $(CPP_DIR)modules/generation.cpp $(CPP_DIR)modules/modules.cpp $(CPP_DIR)modules/schema.cpp \
+		$(CPP_DIR)syntax/classes.cpp $(CPP_DIR)syntax/conditionals.cpp $(CPP_DIR)syntax/functions.cpp $(CPP_DIR)syntax/variables.cpp \
+		$(CPP_DIR)types/structs.cpp $(CPP_DIR)types/types.cpp $(CPP_DIR)syntax/expressions.cpp $(CPP_DIR)syntax/operations.cpp
 
 
 # Cryo Lib Files
@@ -83,7 +83,8 @@ TEST_OBJ = $(OBJ_DIR)test.o
 # CPP Object files
 CPPOBJ = $(OBJ_DIR)blocks.o $(OBJ_DIR)generation.o $(OBJ_DIR)modules.o \
 $(OBJ_DIR)classes.o $(OBJ_DIR)conditionals.o $(OBJ_DIR)functions.o $(OBJ_DIR)schema.o $(OBJ_DIR)variables.o \
-$(OBJ_DIR)structs.o $(OBJ_DIR)types.o
+$(OBJ_DIR)structs.o $(OBJ_DIR)types.o $(OBJ_DIR)expressions.o $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o \
+$(OBJ_DIR)operations.o
 
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
@@ -176,7 +177,7 @@ $(OBJ_DIR)conditionals.o: $(CPP_DIR)syntax/conditionals.cpp | $(OBJ_DIR)
 $(OBJ_DIR)functions.o: $(CPP_DIR)syntax/functions.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)schema.o: $(CPP_DIR)syntax/schema.cpp | $(OBJ_DIR)
+$(OBJ_DIR)schema.o: $(CPP_DIR)modules/schema.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)variables.o: $(CPP_DIR)syntax/variables.cpp | $(OBJ_DIR)
@@ -188,7 +189,12 @@ $(OBJ_DIR)structs.o: $(CPP_DIR)types/structs.cpp | $(OBJ_DIR)
 $(OBJ_DIR)types.o: $(CPP_DIR)types/types.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+$(OBJ_DIR)expressions.o : $(CPP_DIR)syntax/expressions.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+$(OBJ_DIR)operations.o : $(CPP_DIR)syntax/operations.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+	
 # Cryo Lib Compilation rules
 $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.cpp | $(OBJ_DIR)
 	$(CXX) $(CFLAGS) -c $< -o $@ -lstdc++ -lstdc++fs

@@ -25,7 +25,7 @@ std::string CryoTypes::LLVMTypeToString(llvm::Type* type) {
     return rso.str();
 }
 
-llvmType* CryoTypes::getLLVMType(CryoDataType type) {
+llvm::Type* CryoTypes::getLLVMType(CryoDataType type) {
     switch(type) {
         case DATA_TYPE_INT:
             return llvm::Type::getInt32Ty(context);
@@ -82,7 +82,7 @@ llvm::ArrayType* CryoTypes::createLLVMArrayType(CryoDataType elementType, unsign
     return llvm::ArrayType::get(baseType, size);
 }
 
-llvm::StructType* CryoTypes::createLLVMStructType(const std::vector<CryoDataType>& memberTypes, const std::string& name = "") {
+llvm::StructType* CryoTypes::createLLVMStructType(const std::vector<CryoDataType>& memberTypes, const std::string& name) {
     std::vector<llvm::Type*> llvmTypes;
     for (const auto& type : memberTypes) {
         llvm::Type* memberType = createLLVMConstantType(type);
@@ -100,7 +100,7 @@ llvm::StructType* CryoTypes::createLLVMStructType(const std::vector<CryoDataType
 }
 
 
-llvm::FunctionType* CryoTypes::createLLVMFunctionType(CryoDataType returnType, const std::vector<CryoDataType>& paramTypes, bool isVarArg = false) {
+llvm::FunctionType* CryoTypes::createLLVMFunctionType(CryoDataType returnType, const std::vector<CryoDataType>& paramTypes, bool isVarArg) {
     llvm::Type* llvmReturnType = createLLVMConstantType(returnType);
     if (!llvmReturnType) {
         return nullptr;

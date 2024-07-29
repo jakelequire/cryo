@@ -18,7 +18,7 @@
 
 namespace Cryo {
 
-bool CodeGen::declareFunctions(ASTNode* node) {
+bool CryoModules::declareFunctions(ASTNode* node) {
     bool mainFunctionExists = false;
 
     if (!node) {
@@ -33,7 +33,7 @@ bool CodeGen::declareFunctions(ASTNode* node) {
         }
         std::cout << "[CPP] Found function declaration node\n";
         std::cout << "<!> [CPP] Function Node Type: " << CryoNodeTypeToString(node->type) << std::endl;
-        generateFunctionPrototype(node);
+        CryoSyntax->generateFunctionPrototype(node);
     }
 
     switch (node->type) {

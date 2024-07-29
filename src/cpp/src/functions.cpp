@@ -18,40 +18,6 @@
 
 namespace Cryo {
 
-llvm::Type* CodeGen::getLLVMType(CryoDataType type, bool isReference) {
-    std::cout << "[CPP] Getting LLVM type for: " << CryoDataTypeToString(type) << "\n";
-    switch (type) {
-        case DATA_TYPE_INT: {
-            if(isReference) {
-                return llvm::Type::getInt32Ty(module->getContext())->getPointerTo();
-            }
-            return llvm::Type::getInt32Ty(module->getContext());
-        }
-        case DATA_TYPE_FLOAT:
-            return llvm::Type::getFloatTy(module->getContext());
-        case DATA_TYPE_STRING:
-            return llvm::Type::getInt8Ty(module->getContext())->getPointerTo();
-        case DATA_TYPE_BOOLEAN:
-            return llvm::Type::getInt1Ty(module->getContext());
-        case DATA_TYPE_VOID:
-            return llvm::Type::getVoidTy(module->getContext());
-        case DATA_TYPE_NULL:
-            return llvm::Type::getInt8Ty(module->getContext())->getPointerTo();
-        case DATA_TYPE_INT_ARRAY:
-            return llvm::ArrayType::get(llvm::Type::getInt32Ty(module->getContext()), 0);
-        case DATA_TYPE_FLOAT_ARRAY:
-            return llvm::ArrayType::get(llvm::Type::getFloatTy(module->getContext()), 0);
-        case DATA_TYPE_STRING_ARRAY:
-            return llvm::ArrayType::get(llvm::Type::getInt8Ty(module->getContext())->getPointerTo(), 0);
-        case DATA_TYPE_BOOLEAN_ARRAY:
-            return llvm::ArrayType::get(llvm::Type::getInt1Ty(module->getContext()), 0);
-        case DATA_TYPE_VOID_ARRAY:
-            return llvm::ArrayType::get(llvm::Type::getVoidTy(module->getContext()), 0);
-        default:
-            std::cerr << "[CPP] Error: Unknown data type\n";
-            return nullptr;
-    }
-}
 
 void CodeGen::generateFunctionPrototype(ASTNode* node) {
     if (node->type != NODE_EXTERN_FUNCTION && node->type != NODE_FUNCTION_DECLARATION) {
@@ -142,18 +108,6 @@ void CodeGen::generateFunctionPrototype(ASTNode* node) {
 }
 
 
-void CodeGen::createDefaultMainFunction() {
-    llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(module->getContext()), false);
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "_defaulted", module.get());
-    llvm::BasicBlock* entry = llvm::BasicBlock::Create(module->getContext(), "entry", function);
-    
-    std::cout << "[CPP] Created basic block for default main function\n";
-
-    builder.SetInsertPoint(entry);
-    builder.CreateRetVoid();
-    
-    std::cout << "[CPP] Added return statement to default main function\n";
-}
 
 void CodeGen::generateFunctionCall(ASTNode* node) {
     std::string functionName = node->data.functionCall.name;

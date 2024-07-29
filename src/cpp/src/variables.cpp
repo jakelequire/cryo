@@ -345,23 +345,3 @@ std::vector<llvm::Constant*> CodeGen::generateArrayElements(ASTNode* arrayLitera
     return elements;
 }
 // </generateArrayElements>
-
-
-// <generateCodeForArrayLiteral>
-void CodeGen::generateCodeForArrayLiteral(ASTNode* node) {
-    if (node->type != NODE_ARRAY_LITERAL) {
-        std::cerr << "[CodeGen] [ERROR] Expected array literal node, got " << node->type << "\n";
-        return;
-    }
-
-    std::cout << "[CodeGen] Generating code for array literal\n";
-
-    for (int i = 0; i < node->data.arrayLiteral.elementCount; i++) {
-        generateCode(node->data.arrayLiteral.elements[i]);
-    }
-
-    std::cout << "[CodeGen] Completed code generation for array literal\n";
-}
-// </generateCodeForArrayLiteral>
-
-} // namespace Cryo

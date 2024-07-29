@@ -41,11 +41,11 @@ void CodeGen::executeCodeGeneration(ASTNode* root) {
 
     // First Pass: Declare all functions
     std::cout << "\nFirst Pass: Declaring all functions\n";
-    bool mainFunctionExists = declareFunctions(root);
+    bool mainFunctionExists = CryoModules->declareFunctions(root);
     
     if (!mainFunctionExists) {
         std::cout << "[CPP] Main function not found, creating default main function\n";
-        createDefaultMainFunction();
+        CryoSyntax->createDefaultMainFunction();
     }
 
     // Second Pass: Generate code for the entire program
@@ -93,7 +93,7 @@ void CodeGen::executeCodeGeneration(ASTNode* root) {
  */
 void CodeGen::identifyNodeExpression(ASTNode* node) {
     if(!node) {
-        std::cerr << "[CodeGen] Error: Code Generation Failed, ASTNode is null. @<identifyExpression>"
+        std::cerr << "[CodeGen] Error: Code Generation Failed, ASTNode is null. @<identifyExpression>";
         exit(0);
         return;
     }
@@ -102,32 +102,32 @@ void CodeGen::identifyNodeExpression(ASTNode* node) {
     switch(node->type) {
         case NODE_PROGRAM: {
             std::cout << "[CodeGen] Identified NODE_PROGRAM.\n";
-            generateProgram(node);
+            CryoModules->generateProgram(node);
         }
         
         case NODE_FUNCTION_DECLARATION: {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_DECLARATION.\n";
-            generateFunction(node);
+            CryoSyntax->generateFunction(node);
         }
         
         case NODE_VAR_DECLARATION: {
             std::cout << "[CodeGen] Identified NODE_VAR_DECLARATION.\n";
-            generateVarDeclaration(node);
+            CryoSyntax->generateVarDeclaration(node);
         }
         
         case NODE_STATEMENT: {
             std::cout << "[CodeGen] Identified NODE_STATEMENT.\n";
-            generateStatement(node);
+            CryoSyntax->generateStatement(node);
         }
         
         case NODE_EXPRESSION: {
             std::cout << "[CodeGen] Identified NODE_EXPRESSION.\n";
-            generateExpression(node);
+            CryoSyntax->generateExpression(node);
         }
         
         case NODE_BINARY_EXPR: {
             std::cout << "[CodeGen] Identified NODE_BINARY_EXPR.\n";
-            generateBinaryOperation(node);
+            CryoSyntax->generateBinaryOperation(node);
         }
         
         case NODE_UNARY_EXPR: {
@@ -147,7 +147,7 @@ void CodeGen::identifyNodeExpression(ASTNode* node) {
         
         case NODE_FUNCTION_CALL: {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_CALL.\n";
-            generateFunctionCall(node);
+            CryoSyntax->generateFunctionCall(node);
         }
         
         case NODE_IF_STATEMENT: {
@@ -167,22 +167,22 @@ void CodeGen::identifyNodeExpression(ASTNode* node) {
         
         case NODE_RETURN_STATEMENT: {
             std::cout << "[CodeGen] Identified NODE_RETURN_STATEMENT.\n";
-            generateReturnStatement(node);
+            CryoSyntax->generateReturnStatement(node);
         }
         
         case NODE_BLOCK: {
             std::cout << "[CodeGen] Identified NODE_BLOCK.\n";
-            generateBlock(node);
+            CryoModules->generateBlock(node);
         }
         
         case NODE_FUNCTION_BLOCK: {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_BLOCK.\n";
-            generateFunctionBlock(node);
+            CryoSyntax->generateFunctionBlock(node);
         }
         
         case NODE_EXPRESSION_STATEMENT: {
             std::cout << "[CodeGen] Identified NODE_EXPRESSION_STATEMENT.\n";
-            generateExpression(node->data.stmt.stmt);
+            CryoSyntax->generateExpression(node->data.stmt.stmt);
         }
         
         case NODE_ASSIGN: {
@@ -217,7 +217,7 @@ void CodeGen::identifyNodeExpression(ASTNode* node) {
         
         case NODE_ARRAY_LITERAL: {
             std::cout << "[CodeGen] Identified NODE_ARRAY_LITERAL.\n";
-            generateCodeForArrayLiteral(node);
+            CryoSyntax->generateArrayLiteral(node);
         }
         
         case NODE_IMPORT_STATEMENT: {
