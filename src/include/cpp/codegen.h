@@ -16,6 +16,7 @@
  ********************************************************************************/
 #ifndef CODEGEN_H
 #define CODEGEN_H
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -47,60 +48,268 @@
 
 #include "cpp/cppLogger.h"
 
-extern "C" {
-    #include "compiler/ast.h"
-    #include "compiler/symtable.h"
+extern "C"
+{
+#include "compiler/ast.h"
+#include "compiler/symtable.h"
 }
 
-namespace Cryo {
-    
-class CodeGen {
-public:
-    CodeGen(ASTNode* root);
+namespace Cryo
+{
 
-private: 
-    llvm::LLVMContext context;
-    llvm::IRBuilder<> builder;
-    std::unique_ptr<llvm::Module> module;
-    std::unordered_map<std::string, llvm::Value*> namedValues;
-    std::string LLVMTypeToString(llvm::Type* type);
-    void codegen(ASTNode* root);
-    void generateCode(ASTNode* node);
-    void generateProgram(ASTNode* node);
-    void generateStatement(ASTNode* node);
-    void generateBlock(ASTNode* blockNode);
-    llvm::Value* generateExpression(ASTNode* node);
-    std::pair<llvm::Value*, bool> generateExpression(ASTNode* node, bool checkStringLiteral);
-    llvm::Value* generateBinaryOperation(ASTNode* node);
-    llvm::Type* getLLVMType(CryoDataType type, bool isReference);
-    void generateFunctionPrototype(ASTNode* node);
-    void createDefaultMainFunction();
-    void generateFunctionCall(ASTNode* node);
-    void generateFunction(ASTNode* node);
-    void generateFunctionBlock(ASTNode* node);
-    void generateReturnStatement(ASTNode* node);
-    void generateExternalDeclaration(ASTNode* node);
-    llvm::Function* getCryoFunction(char* name, llvm::ArrayRef<llvm::Type*> argTypes);
-    bool declareFunctions(ASTNode* node);
-    llvm::StructType *createStringStruct();
-    llvm::StructType *createStringType();
-    llvm::Value *createString(const std::string &str);
-    llvm::Value* createNumber(int num);
-    llvm::Constant* createConstantInt(int value);
-    llvm::Value* createReferenceInt(int value);
-    llvm::Value* getVariable(char* name);
-    llvm::Value* createVariableDeclaration(ASTNode* node);
-    llvm::Value* lookupVariable(char* name);
-    llvm::GlobalVariable* createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName);
-    llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name);
-    llvm::Value* loadPointerVariable(llvm::Value* var, char* name);
-    llvm::Value* getVariableValue(char* name);
-    void generateVarDeclaration(ASTNode* node);
-    std::vector<llvm::Constant*> generateArrayElements(ASTNode* arrayLiteral);
-    void generateCodeForArrayLiteral(ASTNode* node);
-    void generateIfStatement(ASTNode* node);
-    void generateForLoop(ASTNode* node);
-};
+    /**
+     * @class CodeGen
+     * @brief Responsible for generating LLVM Intermediate Representation (IR) from the abstract syntax tree (AST).
+     */
+    class CodeGen
+    {
+    public:
+        /**
+         * @brief Constructs a CodeGen object and initializes the code generation process.
+         * @param root The root of the abstract syntax tree (AST) to be processed.
+         */
+        CodeGen(ASTNode *root);
+
+    protected:
+        /**
+         * @brief The LLVM Context is the main entry point for the LLVM API.
+         */
+        llvm::LLVMContext context;
+
+        /**
+         * @brief The IRBuilder is used to create new instructions in the LLVM IR.
+         */
+        llvm::IRBuilder<> builder;
+
+        /**
+         * @brief The Module is the top-level container for all other LLVM IR objects.
+         */
+        std::unique_ptr<llvm::Module> module;
+
+        /**
+         * @brief A map for storing global variables with their corresponding LLVM values.
+         */
+        std::unordered_map<std::string, llvm::Value *> namedValues;
+
+        /**
+         * @brief Identifies and processes the expressions in the AST nodes.
+         * @param root The root of the abstract syntax tree (AST) to be processed.
+         */
+        void identifyNodeExpression(ASTNode *root);
+
+    private:
+    };
+
+
+    /**
+     * @class CryoSyntax
+     * @brief Extends CodeGen to provide additional syntax-specific code generation features.
+     */
+    class CryoSyntax : public CodeGen
+    {
+    public:
+        /**
+         * @brief Constructs a CryoSyntax object and initializes the syntax-specific code generation process.
+         * @param root The root of the abstract syntax tree (AST) to be processed.
+         */
+        CryoSyntax(ASTNode *root);
+
+    protected:
+    };
+
+
+    /**
+     * @class CryoTypes
+     * @brief Extends CodeGen to handle the generation and management of LLVM types.
+     */
+    class CryoTypes : public CodeGen
+    {
+    public:
+        /**
+         * @brief Constructs a CryoTypes object and initializes the type management process.
+         * @param root The root of the abstract syntax tree (AST) to be processed.
+         */
+        CryoTypes(ASTNode *root);
+
+    protected:
+        /**
+         * @brief Converts an LLVM type to a string for debugging purposes.
+         * @param type The LLVM type to be converted.
+         * @return A string representation of the LLVM type.
+         */
+        std::string LLVMTypeToString(llvm::Type *type);
+
+        /**
+         * @brief Converts a CryoDataType to an LLVM type.
+         * @param type The CryoDataType to be converted.
+         * @return The converted LLVM type.
+         */
+        llvmType* getLLVMType(CryoDataType type);
+
+        /**
+         * @brief Creates a new LLVM constant type based on the given CryoDataType.
+         * @param type The CryoDataType to be converted.
+         * @return The created LLVM type.
+         */
+        llvm::Type *createLLVMConstantType(CryoDataType type);
+
+        /**
+         * @brief Creates a new LLVM pointer type based on the given CryoDataType.
+         * @param type The CryoDataType to be converted.
+         * @return The created LLVM pointer type.
+         */
+        llvm::PointerType *createLLVMPointerType(CryoDataType type);
+
+        /**
+         * @brief Creates a new LLVM array type based on the given CryoDataType and size.
+         * @param elementType The CryoDataType of the array elements.
+         * @param size The size of the array.
+         * @return The created LLVM array type.
+         */
+        llvm::ArrayType *createLLVMArrayType(CryoDataType elementType, unsigned int size);
+
+        /**
+         * @brief Creates a new LLVM struct type based on the given member types and optional name.
+         * @param memberTypes The vector of CryoDataType representing the struct members.
+         * @param name Optional name for the struct type.
+         * @return The created LLVM struct type.
+         */
+        llvm::StructType *createLLVMStructType(const std::vector<CryoDataType> &memberTypes, const std::string &name = "");
+
+        /**
+         * @brief Creates a new LLVM function type based on the given return type, parameter types, and variadic flag.
+         * @param returnType The CryoDataType of the function's return type.
+         * @param paramTypes The vector of CryoDataType representing the function's parameters.
+         * @param isVarArg Flag indicating if the function is variadic.
+         * @return The created LLVM function type.
+         */
+        llvm::FunctionType *createLLVMFunctionType(CryoDataType returnType, const std::vector<CryoDataType> &paramTypes, bool isVarArg = false);
+
+        /**
+         * @brief Creates a new LLVM struct type for the String struct.
+         * @return The created LLVM struct type for the String struct.
+         */
+        llvm::StructType *createStringStruct();
+
+        /**
+         * @brief Creates a new LLVM struct type for the String type.
+         * @return The created LLVM struct type for the String type.
+         */
+        llvm::StructType *createStringType();
+
+        /**
+         * @brief Creates a new LLVM struct type for the Array type.
+         * @param elementType The LLVM type of the array elements.
+         * @return The created LLVM struct type for the Array type.
+         */
+        llvm::StructType *createArrayType(llvm::Type *elementType);
+
+        /**
+         * @brief Creates a new LLVM struct type for the Pair type.
+         * @param firstType The LLVM type of the first element.
+         * @param secondType The LLVM type of the second element.
+         * @return The created LLVM struct type for the Pair type.
+         */
+        llvm::StructType *createPairType(llvm::Type *firstType, llvm::Type *secondType);
+
+        /**
+         * @brief Creates a new LLVM struct type for the Tuple type.
+         * @param types The vector of LLVM types representing the tuple elements.
+         * @return The created LLVM struct type for the Tuple type.
+         */
+        llvm::StructType *createTupleType(const std::vector<llvm::Type *> &types);
+
+        /**
+         * @brief Creates a new LLVM struct type for the Optional type.
+         * @param valueType The LLVM type of the optional value.
+         * @return The created LLVM struct type for the Optional type.
+         */
+        llvm::StructType *createOptionalType(llvm::Type *valueType);
+
+        /**
+         * @brief Creates a new LLVM struct type for the Variant type.
+         * @param types The vector of LLVM types representing the variant possibilities.
+         * @return The created LLVM struct type for the Variant type.
+         */
+        llvm::StructType *createVariantType(const std::vector<llvm::Type *> &types);
+
+        /**
+         * @brief Creates a new LLVM struct type for the Function type.
+         * @param returnType The LLVM type of the function's return value.
+         * @param paramTypes The vector of LLVM types representing the function's parameters.
+         * @return The created LLVM struct type for the Function type.
+         */
+        llvm::StructType *createFunctionType(llvm::Type *returnType, const std::vector<llvm::Type *> &paramTypes);
+
+        /**
+         * @brief Creates a new LLVM value for a string.
+         * @param str The string to be converted.
+         * @return The created LLVM value for the string.
+         */
+        llvm::Value *createString(const std::string &str);
+
+        /**
+         * @brief Creates a new LLVM value for a number.
+         * @param num The number to be converted.
+         * @return The created LLVM value for the number.
+         */
+        llvm::Value *createNumber(int num);
+
+        /**
+         * @brief Creates a new LLVM constant integer value.
+         * @param value The integer value to be converted.
+         * @return The created LLVM constant integer.
+         */
+        llvm::Constant *createConstantInt(int value);
+
+        /**
+         * @brief Creates a new LLVM reference integer value.
+         * @param value The integer value to be converted.
+         * @return The created LLVM reference integer.
+         */
+        llvm::Value *createReferenceInt(int value);
+    };
+
+
+    /**
+     * @class CryoModules
+     * @brief Extends CodeGen to manage and generate LLVM code for modules.
+     */
+    class CryoModules : public CodeGen
+    {
+    public:
+        /**
+         * @brief Constructs a CryoModules object and initializes the module management process.
+         * @param root The root of the abstract syntax tree (AST) to be processed.
+         */
+        CryoModules(ASTNode *root);
+
+    protected:
+        /**
+         * @brief Generates the LLVM code for the program.
+         * @param node The ASTNode representing the program.
+         */
+        void generateProgram(ASTNode* node);
+
+        /**
+         * @brief Generates the LLVM code for a block.
+         * @param node The ASTNode representing the block.
+         */
+        void generateBlock(ASTNode* node);
+
+        /**
+         * @brief Generates the LLVM code for a function block.
+         * @param node The ASTNode representing the function block.
+         */
+        void generateFunctionBlock(ASTNode* node);
+
+        /**
+         * @brief Generates the LLVM code for a function declaration.
+         * @param node The ASTNode representing the function declaration.
+         */
+        void generateExternalDeclaration(ASTNode* node);
+    };
+
 
 } // namespace Cryo
 
