@@ -19,46 +19,28 @@
 namespace Cryo {
 
 bool CryoModules::declareFunctions(ASTNode* node) {
-    bool mainFunctionExists = false;
-
-    if (!node) {
-        std::cerr << "[CPP] Error in declareFunctions: AST node is null\n";
-        return mainFunctionExists;
+    if (node == nullptr) {
+        std::cerr << "Error: node is null." << std::endl;
+        return false;
     }
 
-    if (node->type == CryoNodeType::NODE_FUNCTION_DECLARATION || node->type == CryoNodeType::NODE_EXTERN_FUNCTION) {
-        if (std::string(node->data.functionDecl.function->name) == "main") {
-            std::cout<< "[CPP] Found main function\n";
-            mainFunctionExists = true;
+    if (node->type == NODE_PROGRAM) {
+        ASTNode* child = node->firstChild;
+        while (child != nullptr) {
+            if (child == nullptr) {
+                std::cerr << "Error: child node is null." << std::endl;
+                continue;
+            }
+
+            std::cerr << "Processing node of type: " << child->type << std::endl;
+
+            if (child->type == NODE_FUNCTION_DECLARATION) {
+                // Call to generateFunctionPrototype
+                cryoSyntaxInstance->generateFunctionPrototype(child);
+            }
         }
-        std::cout << "[CPP] Found function declaration node\n";
-        std::cout << "<!> [CPP] Function Node Type: " << CryoNodeTypeToString(node->type) << std::endl;
-        CryoSyntax->generateFunctionPrototype(node);
     }
-
-    switch (node->type) {
-        case CryoNodeType::NODE_PROGRAM:
-            std::cout << "[CPP] Found program node\n";
-            for (int i = 0; i < node->data.program.stmtCount; ++i) {
-                if (declareFunctions(node->data.program.statements[i])) {
-                    mainFunctionExists = true;
-                }
-            }
-            break;
-
-        case CryoNodeType::NODE_BLOCK:
-            std::cout << "[CPP] Found block node\n";
-            for (int i = 0; i < node->data.block.stmtCount; ++i) {
-                if (declareFunctions(node->data.block.statements[i])) {
-                    mainFunctionExists = true;
-                }
-            }
-            break;
-
-        default:
-            break;
-    }
-    return mainFunctionExists;
+    return true;
 }
 
 } // namespace Cryo

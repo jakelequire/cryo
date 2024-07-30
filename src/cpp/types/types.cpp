@@ -18,6 +18,7 @@
 
 namespace Cryo {
 
+
 std::string CryoTypes::LLVMTypeToString(llvm::Type* type) {
     std::string typeStr;
     llvm::raw_string_ostream rso(typeStr);
@@ -26,18 +27,39 @@ std::string CryoTypes::LLVMTypeToString(llvm::Type* type) {
 }
 
 llvm::Type* CryoTypes::getLLVMType(CryoDataType type) {
+    std::cout << "[Types] Getting LLVM Type for " << CryoDataTypeToString(type) << std::endl;
+    // Test if the context exists at all:
+
+    // Check if the context is valid
+    if (&context == nullptr) {
+        std::cerr << "[Types] Error: Failed to initialize context\n";
+    }
+
     switch(type) {
         case DATA_TYPE_INT:
+            std::cout << "[Types] Returning int type\n";
             return llvm::Type::getInt32Ty(context);
         case DATA_TYPE_FLOAT:
+            std::cout << "[Types] Returning float type\n";
             return llvm::Type::getFloatTy(context);
         case DATA_TYPE_STRING:
+            std::cout << "[Types] Returning string type\n";
             return llvm::Type::getInt8Ty(context);
         case DATA_TYPE_BOOLEAN:
+            std::cout << "[Types] Returning boolean type\n";
             return llvm::Type::getInt1Ty(context);
         case DATA_TYPE_VOID:
+            std::cout << "[Types] Returning void type\n";
             return llvm::Type::getVoidTy(context);
+        case DATA_TYPE_ARRAY:
+            std::cout << "[Types] Returning array type\n";
+            return llvm::ArrayType::get(llvm::Type::getInt32Ty(context), 0);
+        case DATA_TYPE_UNKNOWN:
+            std::cerr << "[Types] Error: Unknown type\n";
+            return nullptr;
+
         default:
+            std::cerr << "[Types] Error: Unsupported type\n";
             return nullptr;
     }
 }

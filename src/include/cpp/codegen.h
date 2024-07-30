@@ -24,6 +24,7 @@
 #include <vector>
 #include <memory>
 #include <assert.h>
+#include <malloc.h>
 #include <any>
 
 #include "llvm/IR/LLVMContext.h"
@@ -57,30 +58,37 @@ extern "C"
 namespace Cryo
 {
     // Forward declarations
-    class CryoSyntax;
-    class CryoTypes;
-    class CryoModules;
+
 
     /**
      * @class CodeGen
      * @brief Responsible for generating LLVM Intermediate Representation (IR) from the abstract syntax tree (AST).
      */
     class CodeGen
-    
     {
     public:
         /**
          * @brief Constructs a CodeGen object and initializes the code generation process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CodeGen(ASTNode *root);
+        CodeGen(ASTNode *root) 
+        : context(), builder(context), module(nullptr)
+        {
+            module = std::make_unique<llvm::Module>("main", context);
+            cryoSyntaxInstance = new class CryoSyntax(context, builder, module, root);
+            cryoTypesInstance = new class CryoTypes(context, builder, module, root);
+            cryoModulesInstance = new class CryoModules(context, builder, module, root);
+        }
 
         /**
-         * @brief Instances of the subclasses to handle specific code generation tasks.
+         * @brief Destructs the CodeGen object and cleans up the code generation process.
          */
-        CryoSyntax* CryoSyntax;
-        CryoTypes* CryoTypes;
-        CryoModules* CryoModules;
+        ~CodeGen();
+
+        /**
+         * @brief The Entry Point to the generation process.
+         */
+        void executeCodeGeneration(ASTNode *root);
 
     protected:
         /**
@@ -104,16 +112,20 @@ namespace Cryo
         std::unordered_map<std::string, llvm::Value *> namedValues;
 
         /**
-         * @brief The Entry Point to the generation process.
+         * @brief Instances of the subclasses to handle specific code generation tasks.
          */
-        void executeCodeGeneration(ASTNode *root);
+
+        CryoSyntax* cryoSyntaxInstance;
+        CryoTypes* cryoTypesInstance;
+        CryoModules* cryoModulesInstance;
+
+
 
         /**
          * @brief Identifies and processes the expressions in the AST nodes.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
         void identifyNodeExpression(ASTNode *root);
-
 
 
     private:
@@ -131,7 +143,7 @@ namespace Cryo
          * @brief Constructs a CryoSyntax object and initializes the syntax-specific code generation process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoSyntax(ASTNode *root);
+        CryoSyntax(llvm::LLVMContext& context, llvm::IRBuilder<>& builder, std::unique_ptr<llvm::Module>& module, ASTNode *root);
 
         ///
         /// Function Syntax @ syntax/functions.cpp
@@ -280,7 +292,7 @@ namespace Cryo
          * @brief Constructs a CryoTypes object and initializes the type management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoTypes(ASTNode *root);
+        CryoTypes(llvm::LLVMContext& context, llvm::IRBuilder<>& builder, std::unique_ptr<llvm::Module>& module, ASTNode *root);
 
         /**
          * @brief Converts an LLVM type to a string for debugging purposes.
@@ -418,6 +430,8 @@ namespace Cryo
          * @return The created LLVM value for the reference.
          */
         llvm::Value* createReferenceInt(int value);
+
+    private:
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -432,7 +446,7 @@ namespace Cryo
          * @brief Constructs a CryoModules object and initializes the module management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoModules(ASTNode *root);
+        CryoModules(llvm::LLVMContext& context, llvm::IRBuilder<>& builder, std::unique_ptr<llvm::Module>& module, ASTNode *root);
 
         /**
          * @brief Declares all functions in the program.

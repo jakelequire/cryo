@@ -28,48 +28,81 @@ void CryoSyntax::createDefaultMainFunction() {
     builder.SetInsertPoint(entry);
     builder.CreateRetVoid();
 
-    std::cout << "[CPP] Created basic block for default main function\n";
+    std::cout << "[Functions] Created basic block for default main function\n";
 }
 
+
 void CryoSyntax::generateFunctionPrototype(ASTNode* node) {
+    if (node == nullptr) {
+        std::cerr << "Error: node is null in generateFunctionPrototype." << std::endl;
+        return;
+    }
     char* functionName;
     FunctionDeclNode* functionNode = nullptr;
-
     if(node->type == NODE_EXTERN_FUNCTION) {
         functionName = node->data.externNode.decl.function->name;
-        functionNode = node->data.externNode.decl.function;
+        functionNode = (FunctionDeclNode*)node->data.externNode.decl.function;
     } else if (node->type == NODE_FUNCTION_DECLARATION) {
         functionName = node->data.functionDecl.function->name;
-        functionNode = node->data.functionDecl.function;
+        functionNode = (FunctionDeclNode*)node->data.functionDecl.function;
     } else {
-        std::cerr << "[CPP] Error: Invalid function node\n";
+        std::cerr << "[Functions] Error: Invalid function node\n";
         return;
     }
 
-    std::cout << "[CPP] Generating function prototype for " << functionName << std::endl;
+    if (!functionName || !functionNode) {
+        std::cerr << "[Functions] Error: Function name or function node is null\n";
+        return;
+    }
 
+    std::cout << "[Functions] Generating function prototype for " << functionName << std::endl;
     CryoDataType ASTDataType = functionNode->returnType;
-    std::cout << "[CPP] Function return type: " << CryoDataTypeToString(ASTDataType) << std::endl;
-    llvm::Type* returnType = CryoTypes->getLLVMType(ASTDataType);
-    std::cout << "[CPP] LLVM return type: " << returnType->getTypeID() << std::endl;
+    std::cout << "[Functions] Function return type: " << CryoDataTypeToString(ASTDataType) << std::endl;
+    llvm::Type* returnType = cryoTypesInstance->getLLVMType(ASTDataType);
+    if (!returnType) {
+        std::cerr << "[Functions] Error: Failed to get LLVM return type\n";
+        return;
+    }
+    if (!returnType) {
+        std::cerr << "[Functions] Error: returnType is null\n";
+        return;
+    }
+    std::cout << "[Functions] LLVM return type: " << returnType << std::endl;
+
     std::vector<llvm::Type*> paramTypes;
-
-    std::cout << "[CPP] Function has " << functionNode->paramCount << " parameters\n";
-
+    if (!functionNode || !functionNode->params) {
+        std::cerr << "[Functions] Error: functionNode or functionNode->params is null\n";
+        return;
+    }
     for (int i = 0; i < functionNode->paramCount; i++) {
-        CryoDataType paramType = functionNode->params[i]->data.varDecl.dataType;
-        llvm::Type* llvmType = CryoTypes->getLLVMType(paramType);
-        paramTypes.push_back(llvmType);
+        std::cout << "[Functions] Getting param " << i << std::endl;
+        if(functionNode->params[i]->data.varDecl.dataType) {
+            std::cout << "[Functions] Getting params...\n";
+            CryoDataType paramType = functionNode->params[i]->data.varDecl.dataType;
+            llvm::Type* llvmType = cryoTypesInstance->getLLVMType(paramType);
+            if (!llvmType) {
+                std::cerr << "[Functions] Error: Failed to get LLVM type for parameter " << i << std::endl;
+                return;
+            }
+            paramTypes.push_back(llvmType);
+        } else {
+            std::cerr << "[Functions] Error: Parameter data type is null for parameter " << i << std::endl;
+            return;
+        }
     }
 
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
-
-    if (node->type == NODE_EXTERN_FUNCTION) {
-        namedValues[functionName] = function;
+    if (!funcType) {
+        std::cerr << "[Functions] Error: Failed to create LLVM function type\n";
+        return;
     }
 
-    std::cout << "[CPP] Created function prototype for " << functionName << std::endl;
+    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
+    if (!function) {
+        std::cerr << "[Functions] Error: Failed to create LLVM function\n";
+        return;
+    }
+    std::cout << "[Functions] Successfully generated function prototype for " << functionName << std::endl;
 }
 
 void CryoSyntax::generateFunction(ASTNode* node) {
@@ -83,13 +116,13 @@ void CryoSyntax::generateFunction(ASTNode* node) {
         functionName = node->data.functionDecl.function->name;
         functionNode = node->data.functionDecl.function;
     } else {
-        std::cerr << "[CPP] Error: Invalid function node\n";
+        std::cerr << "[Functions] Error: Invalid function node\n";
         return;
     }
 
     llvm::Function* function = module->getFunction(functionName);
     if (!function) {
-        std::cerr << "[CPP] Error: Function not found in module\n";
+        std::cerr << "[Functions] Error: Function not found in module\n";
         return;
     }
 
@@ -108,7 +141,7 @@ void CryoSyntax::generateFunction(ASTNode* node) {
     generateFunctionBlock(functionNode->body);
 
     llvm::verifyFunction(*function);
-    std::cout << "[CPP] Generated function " << functionName << std::endl;
+    std::cout << "[Functions] Generated function " << functionName << std::endl;
 
     if (node->type == NODE_EXTERN_STATEMENT) {
         namedValues.erase(functionName);
@@ -121,7 +154,7 @@ void CryoSyntax::generateExternalDeclaration(ASTNode* node) {
     if (node->type == NODE_EXTERN_FUNCTION) {
         generateFunctionPrototype(node);
     } else {
-        std::cerr << "[CPP] Error: Invalid external declaration node\n";
+        std::cerr << "[Functions] Error: Invalid external declaration node\n";
     }
 
     return;
@@ -142,7 +175,7 @@ void CryoSyntax::generateReturnStatement(ASTNode* node) {
 void CryoSyntax::generateFunctionCall(ASTNode* node) {
     llvm::Function* function = module->getFunction(node->data.functionCall.name);
     if (!function) {
-        std::cerr << "[CPP] Error: Function not found in module\n";
+        std::cerr << "[Functions] Error: Function not found in module\n";
         return;
     }
 
@@ -152,7 +185,7 @@ void CryoSyntax::generateFunctionCall(ASTNode* node) {
     }
 
     llvm::Value* call = builder.CreateCall(function, args);
-    std::cout << "[CPP] Generated function call to " << node->data.functionCall.name << std::endl;
+    std::cout << "[Functions] Generated function call to " << node->data.functionCall.name << std::endl;
 
     return;
 }

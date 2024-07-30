@@ -70,7 +70,7 @@ void CryoModules::generateExternalDeclaration(ASTNode* node) {
     char* functionName = node->data.externNode.decl.function->name;
     CryoDataType returnTypeData = node->data.externNode.decl.function->returnType;
 
-    llvm::Type *returnType = CryoTypes::getLLVMType(returnTypeData);
+    llvm::Type *returnType = cryoTypesInstance->getLLVMType(returnTypeData);
     std::vector<llvm::Type*> paramTypes;
 
     for (int i = 0; i < node->data.externNode.decl.function->paramCount; ++i) {
@@ -86,7 +86,7 @@ void CryoModules::generateExternalDeclaration(ASTNode* node) {
             break;
         }
         if(parameter->data.varDecl.dataType == DATA_TYPE_STRING) {
-            paramType = CryoTypes::getLLVMType(DATA_TYPE_STRING);
+            paramType = cryoTypesInstance->getLLVMType(DATA_TYPE_STRING);
             paramTypes.push_back(paramType);
             break;
         }

@@ -19,9 +19,14 @@
 namespace Cryo {
 
 void CryoSyntax::generateVarDeclaration(ASTNode* node) {
+    std::cout << "[Variables] Generating variable declaration\n";
+    if (node == nullptr) {
+        std::cerr << "Error: node is null in generateVarDeclaration." << std::endl;
+        return;
+    }
     char* varName = node->data.varDecl.name;
     CryoDataType varType = node->data.varDecl.dataType;
-    llvm::Type* llvmType = CryoTypes->getLLVMType(varType);
+    llvm::Type* llvmType = cryoTypesInstance->getLLVMType(varType);
 
     llvm::Value* initialValue = nullptr;
     if (node->data.varDecl.initializer) {
@@ -51,7 +56,7 @@ llvm::Value* CryoSyntax::lookupVariable(char* name) {
 llvm::Value* CryoSyntax::createVariableDeclaration(ASTNode* node) {
     char* varName = node->data.varDecl.name;
     CryoDataType varType = node->data.varDecl.dataType;
-    llvm::Type* llvmType = CryoTypes->getLLVMType(varType);
+    llvm::Type* llvmType = cryoTypesInstance->getLLVMType(varType);
 
     llvm::Value* var = nullptr;
     if (node->data.varDecl.isGlobal) {
@@ -93,7 +98,7 @@ llvm::Value* CryoSyntax::loadGlobalVariable(llvm::GlobalVariable* globalVar, cha
 void CryoSyntax::generateArrayLiteral(ASTNode* node) {
     char* varName = node->data.varDecl.name;
     CryoDataType varType = node->data.varDecl.dataType;
-    llvm::Type* llvmType = CryoTypes->getLLVMType(varType);
+    llvm::Type* llvmType = cryoTypesInstance->getLLVMType(varType);
 
     llvm::Value* var = nullptr;
     if (node->data.varDecl.isGlobal) {
