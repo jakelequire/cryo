@@ -19,11 +19,6 @@
 
 namespace Cryo
 {
-
-    void CryoContext::initializeContext()
-    {
-    }
-
     /**
      * The Entry Point to the generation process.
      */
