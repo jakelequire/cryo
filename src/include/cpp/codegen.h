@@ -69,18 +69,22 @@ namespace Cryo
     class CodeGen
     {
     public:
-        CryoContext &cryoContext;
 
         /**
          * @brief Constructs a CodeGen object and initializes the code generation process.
          * @param context The context to be used during code generation.
          */
-        CodeGen(void) : cryoContext(cryoContext) {};
+        CodeGen(void) : cryoContext(cryoContext) {
+            cryoSyntaxInstance = std::make_unique<CryoSyntax>(cryoContext);
+            cryoTypesInstance = std::make_unique<CryoTypes>(cryoContext);
+            cryoModulesInstance = std::make_unique<CryoModules>(cryoContext);
+            std::cout << "[CPP.h] CodeGen Initialized" << std::endl;
+        };
 
         /**
          * @brief Destructs the CodeGen object and cleans up the code generation process.
          */
-        virtual ~CodeGen() = default;
+        // virtual ~CodeGen() = default;
 
         /**
          * @brief The Entry Point to the generation process.
@@ -88,6 +92,7 @@ namespace Cryo
         void executeCodeGeneration(ASTNode *root);
 
     protected:
+        CryoContext& cryoContext;
         std::unique_ptr<CryoSyntax> cryoSyntaxInstance;
         std::unique_ptr<CryoTypes> cryoTypesInstance;
         std::unique_ptr<CryoModules> cryoModulesInstance;
@@ -113,7 +118,7 @@ namespace Cryo
                 std::cout << "[CPP.h] CryoContext Initialized" << std::endl;
             }
 
-        ~CryoContext() = default;
+        // ~CryoContext() = default;
 
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;

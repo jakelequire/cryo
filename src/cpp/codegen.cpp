@@ -17,6 +17,7 @@
 #include "cpp/codegen.h"
 
 
+
 namespace Cryo
 {
     /**
@@ -94,7 +95,7 @@ namespace Cryo
      */
     void CodeGen::identifyNodeExpression(ASTNode *node)
     {
-        if (!node || node == nullptr)
+        if (!node)
         {
             std::cerr << "[CodeGen] Error: Code Generation Failed, ASTNode is null. @<identifyExpression>";
             exit(0);
@@ -108,168 +109,196 @@ namespace Cryo
         {
             std::cout << "[CodeGen] Identified NODE_PROGRAM.\n";
             cryoModulesInstance->generateProgram(node);
+            break;
         }
 
         case NODE_FUNCTION_DECLARATION:
         {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_DECLARATION.\n";
             cryoSyntaxInstance->generateFunction(node);
+            break;
         }
 
         case NODE_VAR_DECLARATION:
         {
             std::cout << "[CodeGen] Identified NODE_VAR_DECLARATION.\n";
             cryoSyntaxInstance->generateVarDeclaration(node);
+            break;
         }
 
         case NODE_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_STATEMENT.\n";
             cryoSyntaxInstance->generateStatement(node);
+            break;
         }
 
         case NODE_EXPRESSION:
         {
             std::cout << "[CodeGen] Identified NODE_EXPRESSION.\n";
             cryoSyntaxInstance->generateExpression(node);
+            break;
         }
 
         case NODE_BINARY_EXPR:
         {
             std::cout << "[CodeGen] Identified NODE_BINARY_EXPR.\n";
             cryoSyntaxInstance->generateBinaryOperation(node);
+            break;
         }
 
         case NODE_UNARY_EXPR:
         {
             std::cout << "[CodeGen] Identified NODE_UNARY_EXPR.\n";
             // Todo
+            break;
         }
 
         case NODE_LITERAL_EXPR:
         {
             std::cout << "[CodeGen] Identified NODE_LITERAL_EXPR.\n";
             // Todo
+            break;
         }
 
         case NODE_VAR_NAME:
         {
             std::cout << "[CodeGen] Identified NODE_VAR_NAME.\n";
             // Todo
+            break;
         }
 
         case NODE_FUNCTION_CALL:
         {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_CALL.\n";
             cryoSyntaxInstance->generateFunctionCall(node);
+            break;
         }
 
         case NODE_IF_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_IF_STATEMENT.\n";
             // Todo
+            break;
         }
 
         case NODE_WHILE_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_WHILE_STATEMENT.\n";
             // Todo
+            break;
         }
 
         case NODE_FOR_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_FOR_STATEMENT.\n";
             // Todo
+            break;
         }
 
         case NODE_RETURN_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_RETURN_STATEMENT.\n";
             cryoSyntaxInstance->generateReturnStatement(node);
+            break;
         }
 
         case NODE_BLOCK:
         {
             std::cout << "[CodeGen] Identified NODE_BLOCK.\n";
             cryoModulesInstance->generateBlock(node);
+            break;
         }
 
         case NODE_FUNCTION_BLOCK:
         {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_BLOCK.\n";
             cryoSyntaxInstance->generateFunctionBlock(node);
+            break;
         }
 
         case NODE_EXPRESSION_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_EXPRESSION_STATEMENT.\n";
             cryoSyntaxInstance->generateExpression(node->data.stmt.stmt);
+            break;
         }
 
         case NODE_ASSIGN:
         {
             std::cout << "[CodeGen] Identified NODE_ASSIGN.\n";
             // Todo
+            break;
         }
 
         case NODE_PARAM_LIST:
         {
             std::cout << "[CodeGen] Identified NODE_PARAM_LIST.\n";
             // Todo
+            break;
         }
 
         case NODE_TYPE:
         {
             std::cout << "[CodeGen] Identified NODE_TYPE.\n";
             // Todo
+            break;
         }
 
         case NODE_STRING_LITERAL:
         {
             std::cout << "[CodeGen] Identified NODE_STRING_LITERAL.\n";
             // Todo
+            break;
         }
 
         case NODE_STRING_EXPRESSION:
         {
             std::cout << "[CodeGen] Identified NODE_STRING_EXPRESSION.\n";
             // Todo
+            break;
         }
 
         case NODE_BOOLEAN_LITERAL:
         {
             std::cout << "[CodeGen] Identified NODE_BOOLEAN_LITERAL.\n";
             // Todo
+            break;
         }
 
         case NODE_ARRAY_LITERAL:
         {
             std::cout << "[CodeGen] Identified NODE_ARRAY_LITERAL.\n";
             cryoSyntaxInstance->generateArrayLiteral(node);
+            break;
         }
 
         case NODE_IMPORT_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_IMPORT_STATEMENT.\n";
             // Todo
+            break;
         }
 
         case NODE_EXTERN_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_EXTERN_STATEMENT.\n";
             // Todo
+            break;
         }
 
         case NODE_EXTERN_FUNCTION:
         {
             std::cout << "[CodeGen] Identified NODE_EXTERN_FUNCTION.\n";
             // Todo
+            break;
         }
 
         case NODE_ARG_LIST:
         {
             std::cout << "[CodeGen] Identified NODE_ARG_LIST.\n";
             // Todo
+            break;
         }
 
         case NODE_UNKNOWN:
