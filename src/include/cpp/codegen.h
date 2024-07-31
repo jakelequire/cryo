@@ -57,8 +57,33 @@ extern "C"
 
 namespace Cryo
 {
-    // Forward declarations
+    class CryoSyntax;
+    class CryoTypes;
+    class CryoModules;
+    
+    // Note: Using composition versus inheritance for shared state & context
+    class CryoContext
+    {
+    public:
+        llvm::LLVMContext context;
+        llvm::IRBuilder<> builder;
+        std::unique_ptr<llvm::Module> module;
+        std::unordered_map<std::string, llvm::Value*> namedValues;
 
+        CryoContext() 
+        : builder(context), module(std::make_unique<llvm::Module>("main", context))
+        {}
+
+        ~CryoContext() = default;
+
+        void initializeContext()
+        {
+            module = std::make_unique<llvm::Module>("main", context);
+        }
+
+    private:
+    protected:
+    };
 
     /**
      * @class CodeGen
@@ -71,19 +96,17 @@ namespace Cryo
          * @brief Constructs a CodeGen object and initializes the code generation process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CodeGen(ASTNode *root) 
-        : context(), builder(context), module(nullptr)
-        {
-            module = std::make_unique<llvm::Module>("main", context);
-            cryoSyntaxInstance = new class CryoSyntax(context, builder, module, root);
-            cryoTypesInstance = new class CryoTypes(context, builder, module, root);
-            cryoModulesInstance = new class CryoModules(context, builder, module, root);
-        }
+        CodeGen(CryoContext& context)
+            : cryoContext(),
+              cryoSyntaxInstance(std::make_unique<CryoSyntax>(cryoContext)),
+              cryoTypesInstance(std::make_unique<CryoTypes>(cryoContext)),
+              cryoModulesInstance(std::make_unique<CryoModules>(cryoContext))
+        {}
 
         /**
          * @brief Destructs the CodeGen object and cleans up the code generation process.
          */
-        ~CodeGen();
+        ~CodeGen() = default;
 
         /**
          * @brief The Entry Point to the generation process.
@@ -91,35 +114,10 @@ namespace Cryo
         void executeCodeGeneration(ASTNode *root);
 
     protected:
-        /**
-         * @brief The LLVM Context is the main entry point for the LLVM API.
-         */
-        llvm::LLVMContext context;
-
-        /**
-         * @brief The IRBuilder is used to create new instructions in the LLVM IR.
-         */
-        llvm::IRBuilder<> builder;
-
-        /**
-         * @brief The Module is the top-level container for all other LLVM IR objects.
-         */
-        std::unique_ptr<llvm::Module> module;
-
-        /**
-         * @brief A map for storing global variables with their corresponding LLVM values.
-         */
-        std::unordered_map<std::string, llvm::Value *> namedValues;
-
-        /**
-         * @brief Instances of the subclasses to handle specific code generation tasks.
-         */
-
-        CryoSyntax* cryoSyntaxInstance;
-        CryoTypes* cryoTypesInstance;
-        CryoModules* cryoModulesInstance;
-
-
+        CryoContext cryoContext;
+        std::unique_ptr<CryoSyntax> cryoSyntaxInstance;
+        std::unique_ptr<CryoTypes> cryoTypesInstance;
+        std::unique_ptr<CryoModules> cryoModulesInstance;
 
         /**
          * @brief Identifies and processes the expressions in the AST nodes.
@@ -129,6 +127,7 @@ namespace Cryo
 
 
     private:
+        CryoContext& cryoContext;
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -143,7 +142,7 @@ namespace Cryo
          * @brief Constructs a CryoSyntax object and initializes the syntax-specific code generation process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoSyntax(llvm::LLVMContext& context, llvm::IRBuilder<>& builder, std::unique_ptr<llvm::Module>& module, ASTNode *root);
+        CryoSyntax(CryoContext &context) : CodeGen(context) {}
 
         ///
         /// Function Syntax @ syntax/functions.cpp
@@ -277,6 +276,9 @@ namespace Cryo
          * @return The generated LLVM value.
          */
         llvm::Value* generateBinaryOperation(ASTNode* node);
+
+    private:
+        CryoContext &cryoContext;
     };
 
 
@@ -292,7 +294,7 @@ namespace Cryo
          * @brief Constructs a CryoTypes object and initializes the type management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoTypes(llvm::LLVMContext& context, llvm::IRBuilder<>& builder, std::unique_ptr<llvm::Module>& module, ASTNode *root);
+        CryoTypes(CryoContext &context) : cryoContext(context) {}
 
         /**
          * @brief Converts an LLVM type to a string for debugging purposes.
@@ -432,6 +434,7 @@ namespace Cryo
         llvm::Value* createReferenceInt(int value);
 
     private:
+        CryoContext &cryoContext;
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -446,7 +449,7 @@ namespace Cryo
          * @brief Constructs a CryoModules object and initializes the module management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoModules(llvm::LLVMContext& context, llvm::IRBuilder<>& builder, std::unique_ptr<llvm::Module>& module, ASTNode *root);
+        CryoModules(CryoContext &context) : cryoContext(context) {}
 
         /**
          * @brief Declares all functions in the program.
@@ -478,6 +481,9 @@ namespace Cryo
          * @param node The ASTNode representing the function declaration.
          */
         void generateExternalDeclaration(ASTNode* node);
+
+    private:
+        CryoContext &cryoContext;
     };
 
 }

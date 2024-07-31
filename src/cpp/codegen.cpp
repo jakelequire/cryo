@@ -16,31 +16,12 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
+
 namespace Cryo
 {
 
-    /**
-     * The public constructor for the CodeGen class. This is the main entry point to the program.
-     * The frontend passes the parsed AST Tree and starts the process for code generation.
-     */
-    CodeGen::CodeGen(ASTNode *root) 
-    : module(std::make_unique<llvm::Module>("CryoModule", context)),
-      builder(context)
+    void CryoContext::initializeContext()
     {
-        
-    }
-
-    /**
-     * The public destructor for the CodeGen class.
-     */
-    CodeGen::~CodeGen()
-    {
-        delete cryoSyntaxInstance;
-        delete cryoTypesInstance;
-        delete cryoModulesInstance;
-
-        namedValues.clear();
-        module.reset();
     }
 
     /**
@@ -69,22 +50,22 @@ namespace Cryo
         std::cout << "\nSecond Pass: Generate code for the entire program\n";
         identifyNodeExpression(root);
 
-        llvm::Function *defaultMain = module->getFunction("_defaulted");
+        llvm::Function *defaultMain = cryoContext.module->getFunction("_defaulted");
         if (defaultMain)
         {
             llvm::BasicBlock &entryBlock = defaultMain->getEntryBlock();
             if (!entryBlock.getTerminator())
             {
-                builder.SetInsertPoint(&entryBlock);
-                builder.CreateRetVoid();
+                cryoContext.builder.SetInsertPoint(&entryBlock);
+                cryoContext.builder.CreateRetVoid();
                 std::cout << "[CPP] Added return statement to default main function in entry block\n";
             }
         }
 
-        if (llvm::verifyModule(*module, &llvm::errs()))
+        if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {
             std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
-            module->print(llvm::errs(), nullptr);
+            cryoContext.module->print(llvm::errs(), nullptr);
             std::cout << "\n>===----------------- End Error -----------------===<\n";
             std::cerr << "Error: LLVM module verification failed\n";
             exit(1);
@@ -102,8 +83,8 @@ namespace Cryo
             {
                 std::cout << "\n>===------- LLVM IR Code -------===<\n"
                           << std::endl;
-                module->print(dest, nullptr);
-                module->print(llvm::outs(), nullptr);
+                cryoContext.module->print(dest, nullptr);
+                cryoContext.module->print(llvm::outs(), nullptr);
                 std::cout << "\n>===------- End IR Code ------===<\n"
                           << std::endl;
                 std::cout << "LLVM IR written to output.ll" << std::endl;

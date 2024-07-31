@@ -51,9 +51,9 @@ void CryoModules::generateFunctionBlock(ASTNode* node) {
         std::cout << "[Generation] Moving to next statement...\n";
     }
 
-    llvm::BasicBlock* BB = builder.GetInsertBlock();
+    llvm::BasicBlock* BB = cryoContext.builder.GetInsertBlock();
     if(!BB->getTerminator()) {
-        builder.CreateRetVoid();
+        cryoContext.builder.CreateRetVoid();
     }
 
     std::cout << "[Generation] Function Block code generation complete!\n";
@@ -81,7 +81,7 @@ void CryoModules::generateExternalDeclaration(ASTNode* node) {
             break;
         }
         if(parameter->data.varDecl.dataType == DATA_TYPE_INT) {
-            paramType = llvm::Type::getInt32Ty(module->getContext());
+            paramType = llvm::Type::getInt32Ty(cryoContext.module->getContext());
             paramTypes.push_back(paramType);
             break;
         }
@@ -97,7 +97,7 @@ void CryoModules::generateExternalDeclaration(ASTNode* node) {
     }
     llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes[0], false);
 
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
+    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
 }
 
 

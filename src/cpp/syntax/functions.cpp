@@ -21,12 +21,12 @@ namespace Cryo {
 
 
 void CryoSyntax::createDefaultMainFunction() {
-    llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(module->getContext()), false);
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "_defaulted", module.get());
-    llvm::BasicBlock* entry = llvm::BasicBlock::Create(module->getContext(), "entry", function);
+    llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(cryoContext.module->getContext()), false);
+    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "_defaulted", cryoContext.module.get());
+    llvm::BasicBlock* entry = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
 
-    builder.SetInsertPoint(entry);
-    builder.CreateRetVoid();
+    cryoContext.builder.SetInsertPoint(entry);
+    cryoContext.builder.CreateRetVoid();
 
     std::cout << "[Functions] Created basic block for default main function\n";
 }
@@ -97,7 +97,7 @@ void CryoSyntax::generateFunctionPrototype(ASTNode* node) {
         return;
     }
 
-    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, module.get());
+    llvm::Function* function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
     if (!function) {
         std::cerr << "[Functions] Error: Failed to create LLVM function\n";
         return;
@@ -120,22 +120,22 @@ void CryoSyntax::generateFunction(ASTNode* node) {
         return;
     }
 
-    llvm::Function* function = module->getFunction(functionName);
+    llvm::Function* function = cryoContext.module->getFunction(functionName);
     if (!function) {
         std::cerr << "[Functions] Error: Function not found in module\n";
         return;
     }
 
-    llvm::BasicBlock* entry = llvm::BasicBlock::Create(module->getContext(), "entry", function);
-    builder.SetInsertPoint(entry);
+    llvm::BasicBlock* entry = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
+    cryoContext.builder.SetInsertPoint(entry);
 
     // Create a new scope for the function
-    namedValues.clear();
+    cryoContext.namedValues.clear();
 
     for (int i = 0; i < functionNode->paramCount; i++) {
         llvm::Argument* arg = function->arg_begin() + i;
         arg->setName(functionNode->params[i]->data.varDecl.name);
-        namedValues[functionNode->params[i]->data.varDecl.name] = arg;
+        cryoContext.namedValues[functionNode->params[i]->data.varDecl.name] = arg;
     }
 
     generateFunctionBlock(functionNode->body);
@@ -144,7 +144,7 @@ void CryoSyntax::generateFunction(ASTNode* node) {
     std::cout << "[Functions] Generated function " << functionName << std::endl;
 
     if (node->type == NODE_EXTERN_STATEMENT) {
-        namedValues.erase(functionName);
+        cryoContext.namedValues.erase(functionName);
     }
 
     return;
@@ -162,18 +162,18 @@ void CryoSyntax::generateExternalDeclaration(ASTNode* node) {
 
 void CryoSyntax::generateReturnStatement(ASTNode* node) {
     if (!node->data.returnStmt.expression) {
-        builder.CreateRetVoid();
+        cryoContext.builder.CreateRetVoid();
         return;
     }
 
     llvm::Value* returnValue = generateExpression(node->data.returnStmt.expression);
-    builder.CreateRet(returnValue);
+    cryoContext.builder.CreateRet(returnValue);
 
     return;
 }
 
 void CryoSyntax::generateFunctionCall(ASTNode* node) {
-    llvm::Function* function = module->getFunction(node->data.functionCall.name);
+    llvm::Function* function = cryoContext.module->getFunction(node->data.functionCall.name);
     if (!function) {
         std::cerr << "[Functions] Error: Function not found in module\n";
         return;
@@ -184,7 +184,7 @@ void CryoSyntax::generateFunctionCall(ASTNode* node) {
         args.push_back(generateExpression(node->data.functionCall.args[i]));
     }
 
-    llvm::Value* call = builder.CreateCall(function, args);
+    llvm::Value* call = cryoContext.builder.CreateCall(function, args);
     std::cout << "[Functions] Generated function call to " << node->data.functionCall.name << std::endl;
 
     return;

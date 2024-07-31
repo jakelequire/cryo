@@ -34,10 +34,10 @@ void CryoSyntax::generateVarDeclaration(ASTNode* node) {
     }
 
     llvm::Value* var = createVariableDeclaration(node);
-    namedValues[varName] = var;
+    cryoContext.namedValues[varName] = var;
 
     if (initialValue) {
-        builder.CreateStore(initialValue, var);
+        cryoContext.builder.CreateStore(initialValue, var);
     }
 
     std::cout << "[CPP] Generated variable declaration for " << varName << std::endl;
@@ -45,7 +45,7 @@ void CryoSyntax::generateVarDeclaration(ASTNode* node) {
 
 
 llvm::Value* CryoSyntax::lookupVariable(char* name) {
-    llvm::Value* var = namedValues[name];
+    llvm::Value* var = cryoContext.namedValues[name];
     if (!var) {
         std::cerr << "[CPP] Error: Variable " << name << " not found\n";
     }
@@ -66,7 +66,7 @@ llvm::Value* CryoSyntax::createVariableDeclaration(ASTNode* node) {
         }
         var = createGlobalVariable(llvmType, initialValue, varName);
     } else {
-        var = builder.CreateAlloca(llvmType, nullptr, varName);
+        var = cryoContext.builder.CreateAlloca(llvmType, nullptr, varName);
     }
 
     return var;
@@ -79,19 +79,19 @@ llvm::Value* CryoSyntax::getVariableValue(char* name) {
         return nullptr;
     }
     llvm::Type* varType = var->getType();
-    return builder.CreateLoad(varType, var, name);
+    return cryoContext.builder.CreateLoad(varType, var, name);
 }
 
 
 llvm::GlobalVariable* CryoSyntax::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName) {
-    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(*module, varType, false, llvm::GlobalValue::ExternalLinkage, initialValue, varName);
+    llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(*cryoContext.module, varType, false, llvm::GlobalValue::ExternalLinkage, initialValue, varName);
     return globalVar;
 }
 
 
 llvm::Value* CryoSyntax::loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name) {
     llvm::Type* varType = globalVar->getType();
-    return builder.CreateLoad(varType, globalVar, name);
+    return cryoContext.builder.CreateLoad(varType, globalVar, name);
 }
 
 
@@ -108,10 +108,10 @@ void CryoSyntax::generateArrayLiteral(ASTNode* node) {
         }
         var = createGlobalVariable(llvmType, initialValue, varName);
     } else {
-        var = builder.CreateAlloca(llvmType, nullptr, varName);
+        var = cryoContext.builder.CreateAlloca(llvmType, nullptr, varName);
     }
 
-    namedValues[varName] = var;
+    cryoContext.namedValues[varName] = var;
 }
 
 

@@ -26,11 +26,13 @@ int generateCodeWrapper(ASTNode* node) {
     // Recast the ASTNode to ASTNode
     ASTNode* root = (ASTNode*)node;
 
+    std::cout << "[CPP] Root Node Initialized" << std::endl;
+
     // Initialize CodeGen
-    Cryo::CodeGen codegen(root);
+    Cryo::CodeGen CodeGen(root);
 
     // Execute code generation
-    codegen.executeCodeGeneration(root);
+    CodeGen.executeCodeGeneration(root);
 
     return 1;
 }
