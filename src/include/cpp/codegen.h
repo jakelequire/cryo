@@ -58,51 +58,11 @@ extern "C"
 namespace Cryo
 {
     class CryoContext;
+    class CryoCompiler;
     class CryoSyntax;
     class CryoTypes;
     class CryoModules;
-
-    /**
-     * @class CodeGen
-     * @brief Responsible for generating LLVM Intermediate Representation (IR) from the abstract syntax tree (AST).
-     */
-    class CodeGen
-    {
-    public:
-
-        /**
-         * @brief Constructs a CodeGen object and initializes the code generation process.
-         * @param context The context to be used during code generation.
-         */
-        CodeGen(void) : cryoContext(cryoContext) {
-            cryoSyntaxInstance = std::make_unique<CryoSyntax>(cryoContext);
-            cryoTypesInstance = std::make_unique<CryoTypes>(cryoContext);
-            cryoModulesInstance = std::make_unique<CryoModules>(cryoContext);
-            std::cout << "[CPP.h] CodeGen Initialized" << std::endl;
-        };
-
-        /**
-         * @brief Destructs the CodeGen object and cleans up the code generation process.
-         */
-        // virtual ~CodeGen() = default;
-
-        /**
-         * @brief The Entry Point to the generation process.
-         */
-        void executeCodeGeneration(ASTNode *root);
-
-    protected:
-        CryoContext& cryoContext;
-        std::unique_ptr<CryoSyntax> cryoSyntaxInstance;
-        std::unique_ptr<CryoTypes> cryoTypesInstance;
-        std::unique_ptr<CryoModules> cryoModulesInstance;
-
-        /**
-         * @brief Identifies and processes the expressions in the AST nodes.
-         * @param root The root of the abstract syntax tree (AST) to be processed.
-         */
-        void identifyNodeExpression(ASTNode *root);
-    };
+    class CodeGen;
 
     /// -----------------------------------------------------------------------------------------------
     /**
@@ -112,13 +72,14 @@ namespace Cryo
     class CryoContext
     {
     public:
-        CryoContext()
-            : builder(context), module(std::make_unique<llvm::Module>("main", context)) 
-            {
-                std::cout << "[CPP.h] CryoContext Initialized" << std::endl;
-            }
+        static CryoContext &getInstance()
+        {
+            static CryoContext instance;
+            return instance;
+        }
 
-        // ~CryoContext() = default;
+        CryoContext(CryoContext const &);
+        void operator=(CryoContext const &) = delete;
 
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
@@ -130,6 +91,68 @@ namespace Cryo
             module = std::make_unique<llvm::Module>("main", context);
             std::cout << "[CPP.h] Module Initialized" << std::endl;
         }
+
+    private:
+        CryoContext() : builder(context) {}
+    };
+
+    class CryoCompiler {
+    public:
+        CryoCompiler();
+        ~CryoCompiler() = default;
+    
+        CryoContext& getContext() { return CryoContext::getInstance(); }
+        CryoSyntax& getSyntax() { return *syntax; }
+        CryoTypes& getTypes() { return *types; }
+        CryoModules& getModules() { return *modules; }
+        CodeGen& getCodeGen() { return *codeGen; }
+    
+        void compile(ASTNode* root);
+    
+    private:
+        CryoContext& context;
+        std::unique_ptr<CryoSyntax> syntax;
+        std::unique_ptr<CryoTypes> types;
+        std::unique_ptr<CryoModules> modules;
+        std::unique_ptr<CodeGen> codeGen;
+    };
+
+
+    /**
+     * @class CodeGen
+     * @brief Responsible for generating LLVM Intermediate Representation (IR) from the abstract syntax tree (AST).
+     */
+    class CodeGen
+    {
+    public:
+        /**
+         * @brief Constructs a CodeGen object and initializes the code generation process.
+         * @param context The context to be used during code generation.
+         */
+        CodeGen(CryoCompiler& compiler) : compiler(compiler)
+        {
+            std::cout << "[CPP.h] CodeGen constructor start" << std::endl;
+            std::cout << "[CPP.h] CodeGen Initialized" << std::endl;
+        }
+
+        /**
+         * @brief Destructs the CodeGen object and cleans up the code generation process.
+         */
+        //~CodeGen() = default;
+
+        /**
+         * @brief The Entry Point to the generation process.
+         */
+        void executeCodeGeneration(ASTNode *root);
+
+        /**
+         * @brief Identifies and processes the expressions in the AST nodes.
+         * @param root The root of the abstract syntax tree (AST) to be processed.
+         */
+        void identifyNodeExpression(ASTNode *root);
+
+    private:
+        CryoCompiler& compiler;
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -137,18 +160,17 @@ namespace Cryo
      * @class CryoSyntax
      * @brief Extends CodeGen to provide additional syntax-specific code generation features.
      */
-    class CryoSyntax : public CodeGen
+    class CryoSyntax
     {
     public:
         /**
          * @brief Constructs a CryoSyntax object and initializes the syntax-specific code generation process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoSyntax(CryoContext &context)
-            : CodeGen()
-            {
+        CryoSyntax(CryoCompiler& compiler) : compiler(compiler)
+        {
             std::cout << "[CPP.h] CryoSyntax Initialized" << std::endl;
-            }
+        }
 
         ///
         /// Function Syntax @ syntax/functions.cpp
@@ -157,44 +179,43 @@ namespace Cryo
          * @brief Creates a default main function if one is not found in the program.
          */
         void createDefaultMainFunction();
-        
+
         /**
          * @brief Generates the function prototype for the given ASTNode.
          * @param node The ASTNode representing the function.
          */
-        void generateFunctionPrototype(ASTNode* node);
-        
+        void generateFunctionPrototype(ASTNode *node);
+
         /**
          * @brief Generates the LLVM code for a function.
          * @param node The ASTNode representing the function.
          */
-        void generateFunction(ASTNode* node);
+        void generateFunction(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for an external declaration.
          * @param node The ASTNode representing the external declaration.
          */
-        void generateExternalDeclaration(ASTNode* node);
+        void generateExternalDeclaration(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for a return statement.
          * @param node The ASTNode representing the return statement.
          */
-        void generateReturnStatement(ASTNode* node);
+        void generateReturnStatement(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for a function call.
          * @param node The ASTNode representing the function call.
          */
-        void generateFunctionCall(ASTNode* node);
+        void generateFunctionCall(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for a function block.
          * @param node The ASTNode representing the function block.
          */
-        void generateFunctionBlock(ASTNode* node);
+        void generateFunctionBlock(ASTNode *node);
 
-        
         ///
         /// Expression Syntax @ syntax/expressions.cpp
         ///
@@ -203,13 +224,13 @@ namespace Cryo
          * @param node The ASTNode representing the expression.
          * @return The generated LLVM value.
          */
-        llvm::Value* generateExpression(ASTNode* node);
+        llvm::Value *generateExpression(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for a statement.
          * @param node The ASTNode representing the statement.
          */
-        void generateStatement(ASTNode* node);
+        void generateStatement(ASTNode *node);
 
         ///
         /// Variable Syntax @ syntax/variables.cpp
@@ -218,29 +239,29 @@ namespace Cryo
          * @brief Generates the LLVM code for a variable declaration.
          * @param node The ASTNode representing the variable declaration.
          */
-        void generateVarDeclaration(ASTNode* node);
-        
+        void generateVarDeclaration(ASTNode *node);
+
         /**
          * @brief Looks up a variable by name.
          * @param name The name of the variable to look up.
          * @return The LLVM value of the variable.
          */
-        llvm::Value* lookupVariable(char* name);
+        llvm::Value *lookupVariable(char *name);
 
         /**
          * @brief Creates a variable declaration in the LLVM IR.
          * @param node The ASTNode representing the variable declaration.
          * @return The LLVM value of the variable.
          */
-        llvm::Value* createVariableDeclaration(ASTNode* node);
-        
+        llvm::Value *createVariableDeclaration(ASTNode *node);
+
         /**
          * @brief Gets the value of a variable by name.
          * @param name The name of the variable.
          * @return The LLVM value of the variable.
          */
-        llvm::Value* getVariableValue(char* name);
-        
+        llvm::Value *getVariableValue(char *name);
+
         /**
          * @brief Creates a global variable in the LLVM IR.
          * @param varType The LLVM type of the variable.
@@ -248,30 +269,29 @@ namespace Cryo
          * @param varName The name of the variable.
          * @return The created global variable.
          */
-        llvm::GlobalVariable* createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName);
-        
+        llvm::GlobalVariable *createGlobalVariable(llvm::Type *varType, llvm::Constant *initialValue, char *varName);
+
         /**
          * @brief Loads a global variable from the LLVM IR.
          * @param globalVar The global variable to load.
          * @param name The name of the variable.
          * @return The loaded global variable.
          */
-        llvm::Value* loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name);
-
+        llvm::Value *loadGlobalVariable(llvm::GlobalVariable *globalVar, char *name);
 
         /**
          * @brief Generates the LLVM code for an array literal.
          * @param node The ASTNode representing the array literal.
          * @return The generated LLVM value.
          */
-        void generateArrayLiteral(ASTNode* node);
+        void generateArrayLiteral(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for the elements of an array literal.
          * @param arrayLiteral The ASTNode representing the array literal.
          * @return The generated LLVM values.
          */
-        std::vector<llvm::Constant*> generateArrayElements(ASTNode* arrayLiteral);
+        std::vector<llvm::Constant *> generateArrayElements(ASTNode *arrayLiteral);
 
         ///
         /// Binary Expression Syntax @ syntax/operations.cpp
@@ -281,29 +301,28 @@ namespace Cryo
          * @param node The ASTNode representing the binary operation.
          * @return The generated LLVM value.
          */
-        llvm::Value* generateBinaryOperation(ASTNode* node);
+        llvm::Value *generateBinaryOperation(ASTNode *node);
 
     private:
+        CryoCompiler& compiler;
     };
-
 
     /// -----------------------------------------------------------------------------------------------
     /**
      * @class CryoTypes
      * @brief Extends CodeGen to handle the generation and management of LLVM types.
      */
-    class CryoTypes : public CodeGen
+    class CryoTypes
     {
     public:
         /**
          * @brief Constructs a CryoTypes object and initializes the type management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoTypes(CryoContext &context)
-            : CodeGen()
-            {
+        CryoTypes(CryoCompiler& compiler) : compiler(compiler)
+        {
             std::cout << "[CPP.h] CryoTypes Initialized" << std::endl;
-            }
+        }
 
         /**
          * @brief Converts an LLVM type to a string for debugging purposes.
@@ -317,7 +336,7 @@ namespace Cryo
          * @param type The CryoDataType to be converted.
          * @return The converted LLVM type.
          */
-        llvm::Type* getLLVMType(CryoDataType type);
+        llvm::Type *getLLVMType(CryoDataType type);
 
         /**
          * @brief Creates a new LLVM constant type based on the given CryoDataType.
@@ -425,7 +444,7 @@ namespace Cryo
          * @brief Creates a new LLVM value for a number.
          * @param num The number to be converted.
          * @return The created LLVM value for the number.
-        */
+         */
         llvm::Value *createNumber(int num);
 
         /**
@@ -433,16 +452,17 @@ namespace Cryo
          * @param value The boolean value to be converted.
          * @return The created LLVM value for the boolean.
          */
-        llvm::Constant* createConstantInt(int value);
+        llvm::Constant *createConstantInt(int value);
 
         /**
          * @brief Creates a new LLVM value for a reference to an integer.
          * @param value The integer value to be referenced.
          * @return The created LLVM value for the reference.
          */
-        llvm::Value* createReferenceInt(int value);
+        llvm::Value *createReferenceInt(int value);
 
     private:
+        CryoCompiler& compiler;
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -450,53 +470,67 @@ namespace Cryo
      * @class CryoModules
      * @brief Extends CodeGen to manage and generate LLVM code for modules.
      */
-    class CryoModules : public CodeGen
+    class CryoModules
     {
     public:
         /**
          * @brief Constructs a CryoModules object and initializes the module management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoModules(CryoContext &context)
-            : CodeGen() 
-            {
+        CryoModules(CryoCompiler& compiler) : compiler(compiler)
+        {
             std::cout << "[CPP.h] CryoModules Initialized" << std::endl;
-            }
+        }
 
         /**
          * @brief Declares all functions in the program.
          * @param node The ASTNode representing the program.
          * @return True if the main function exists, false otherwise.
          */
-        bool declareFunctions(ASTNode* node);
+        bool declareFunctions(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for the program.
          * @param node The ASTNode representing the program.
          */
-        void generateProgram(ASTNode* node);
+        void generateProgram(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for a block.
          * @param node The ASTNode representing the block.
          */
-        void generateBlock(ASTNode* node);
+        void generateBlock(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for a function block.
          * @param node The ASTNode representing the function block.
          */
-        void generateFunctionBlock(ASTNode* node);
+        void generateFunctionBlock(ASTNode *node);
 
         /**
          * @brief Generates the LLVM code for a function declaration.
          * @param node The ASTNode representing the function declaration.
          */
-        void generateExternalDeclaration(ASTNode* node);
+        void generateExternalDeclaration(ASTNode *node);
 
     private:
+        CryoCompiler& compiler;
     };
 
+
+    inline CryoCompiler::CryoCompiler()
+        : context(CryoContext::getInstance()),
+          syntax(std::make_unique<CryoSyntax>(*this)),
+          types(std::make_unique<CryoTypes>(*this)),
+          modules(std::make_unique<CryoModules>(*this)),
+          codeGen(std::make_unique<CodeGen>(*this))
+    {
+        context.initializeContext();
+    }
+
+    inline void CryoCompiler::compile(ASTNode* root) {
+        codeGen->executeCodeGeneration(root);
+    }
 }
 
 #endif // CODEGEN_H

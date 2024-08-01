@@ -17,7 +17,6 @@
 #include "cpp/codegen.h"
 
 
-
 namespace Cryo
 {
     /**
@@ -32,14 +31,18 @@ namespace Cryo
             return;
         }
 
+        CryoModules cryoModulesInstance = compiler.getModules();
+        CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
+        CryoContext cryoContext = compiler.getContext();
+
         // First Pass: Declare all functions
         std::cout << "\nFirst Pass: Declaring all functions\n";
-        bool mainFunctionExists = cryoModulesInstance->declareFunctions(root);
+        bool mainFunctionExists = cryoModulesInstance.declareFunctions(root);
 
         if (!mainFunctionExists)
         {
             std::cout << "[CPP] Main function not found, creating default main function\n";
-            cryoSyntaxInstance->createDefaultMainFunction();
+            cryoSyntaxInstance.createDefaultMainFunction();
         }
 
         // Second Pass: Generate code for the entire program
@@ -103,47 +106,51 @@ namespace Cryo
         }
         std::cout << "[CodeGen] Starting Code Generation...\n";
 
+        CryoModules cryoModulesInstance = compiler.getModules();
+        CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
+
+
         switch (node->type)
         {
         case NODE_PROGRAM:
         {
             std::cout << "[CodeGen] Identified NODE_PROGRAM.\n";
-            cryoModulesInstance->generateProgram(node);
+            cryoModulesInstance.generateProgram(node);
             break;
         }
 
         case NODE_FUNCTION_DECLARATION:
         {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_DECLARATION.\n";
-            cryoSyntaxInstance->generateFunction(node);
+            cryoSyntaxInstance.generateFunction(node);
             break;
         }
 
         case NODE_VAR_DECLARATION:
         {
             std::cout << "[CodeGen] Identified NODE_VAR_DECLARATION.\n";
-            cryoSyntaxInstance->generateVarDeclaration(node);
-            break;
+            cryoSyntaxInstance.generateVarDeclaration(node);
+        break;
         }
 
         case NODE_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_STATEMENT.\n";
-            cryoSyntaxInstance->generateStatement(node);
+            cryoSyntaxInstance.generateStatement(node);
             break;
         }
 
         case NODE_EXPRESSION:
         {
             std::cout << "[CodeGen] Identified NODE_EXPRESSION.\n";
-            cryoSyntaxInstance->generateExpression(node);
+            cryoSyntaxInstance.generateExpression(node);
             break;
         }
 
         case NODE_BINARY_EXPR:
         {
             std::cout << "[CodeGen] Identified NODE_BINARY_EXPR.\n";
-            cryoSyntaxInstance->generateBinaryOperation(node);
+            cryoSyntaxInstance.generateBinaryOperation(node);
             break;
         }
 
@@ -171,7 +178,7 @@ namespace Cryo
         case NODE_FUNCTION_CALL:
         {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_CALL.\n";
-            cryoSyntaxInstance->generateFunctionCall(node);
+            cryoSyntaxInstance.generateFunctionCall(node);
             break;
         }
 
@@ -199,28 +206,28 @@ namespace Cryo
         case NODE_RETURN_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_RETURN_STATEMENT.\n";
-            cryoSyntaxInstance->generateReturnStatement(node);
+            cryoSyntaxInstance.generateReturnStatement(node);
             break;
         }
 
         case NODE_BLOCK:
         {
             std::cout << "[CodeGen] Identified NODE_BLOCK.\n";
-            cryoModulesInstance->generateBlock(node);
+            cryoModulesInstance.generateBlock(node);
             break;
         }
 
         case NODE_FUNCTION_BLOCK:
         {
             std::cout << "[CodeGen] Identified NODE_FUNCTION_BLOCK.\n";
-            cryoSyntaxInstance->generateFunctionBlock(node);
+            cryoSyntaxInstance.generateFunctionBlock(node);
             break;
         }
 
         case NODE_EXPRESSION_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_EXPRESSION_STATEMENT.\n";
-            cryoSyntaxInstance->generateExpression(node->data.stmt.stmt);
+            cryoSyntaxInstance.generateExpression(node->data.stmt.stmt);
             break;
         }
 
@@ -269,7 +276,7 @@ namespace Cryo
         case NODE_ARRAY_LITERAL:
         {
             std::cout << "[CodeGen] Identified NODE_ARRAY_LITERAL.\n";
-            cryoSyntaxInstance->generateArrayLiteral(node);
+            cryoSyntaxInstance.generateArrayLiteral(node);
             break;
         }
 
@@ -317,3 +324,4 @@ namespace Cryo
     } // <identifyNodeExpression>
 
 } // namespace Cryo
+

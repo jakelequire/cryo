@@ -62,7 +62,7 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp \
 		$(CPP_DIR)modules/blocks.cpp $(CPP_DIR)modules/generation.cpp $(CPP_DIR)modules/modules.cpp $(CPP_DIR)modules/schema.cpp \
 		$(CPP_DIR)syntax/classes.cpp $(CPP_DIR)syntax/conditionals.cpp $(CPP_DIR)syntax/functions.cpp $(CPP_DIR)syntax/variables.cpp \
 		$(CPP_DIR)types/structs.cpp $(CPP_DIR)types/types.cpp $(CPP_DIR)syntax/expressions.cpp $(CPP_DIR)syntax/operations.cpp \
-		$(CPP_DIR)context/cryoContext.cpp
+		$(CPP_DIR)context/cryoContext.cpp $(CPP_DIR)compiler.cpp
 
 
 # Cryo Lib Files
@@ -85,7 +85,7 @@ TEST_OBJ = $(OBJ_DIR)test.o
 CPPOBJ = $(OBJ_DIR)blocks.o $(OBJ_DIR)generation.o $(OBJ_DIR)modules.o \
 $(OBJ_DIR)classes.o $(OBJ_DIR)conditionals.o $(OBJ_DIR)functions.o $(OBJ_DIR)schema.o $(OBJ_DIR)variables.o \
 $(OBJ_DIR)structs.o $(OBJ_DIR)types.o $(OBJ_DIR)expressions.o $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o \
-$(OBJ_DIR)operations.o $(OBJ_DIR)cryoContext.o
+$(OBJ_DIR)operations.o $(OBJ_DIR)cryoContext.o $(OBJ_DIR)compiler.o
 
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
@@ -197,6 +197,9 @@ $(OBJ_DIR)operations.o : $(CPP_DIR)syntax/operations.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)cryoContext.o : $(CPP_DIR)context/cryoContext.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)compiler.o : $(CPP_DIR)compiler.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 	
 # Cryo Lib Compilation rules

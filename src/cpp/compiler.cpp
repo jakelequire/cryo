@@ -14,21 +14,15 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/cppmain.h"
-#include <iostream>
+#include "cpp/codegen.h"
 
-using namespace Cryo;
 
-int generateCodeWrapper(ASTNode* node) {
-    std::cout << ">===------------- CPP Code Generation -------------===<\n" << std::endl;
-    std::cout << "[CPP] Starting Code Generation..." << std::endl;
+namespace Cryo {
 
-    // Recast the ASTNode to ASTNode
-    ASTNode* root = (ASTNode*)node;
-    std::cout << "[CPP] Root Node Initialized" << std::endl;
 
-    Cryo::CryoCompiler compiler;
-    compiler.compile(root);
 
-    return 1;
-}
+
+
+
+
+} // namespace Cryo

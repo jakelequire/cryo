@@ -18,7 +18,6 @@
 
 namespace Cryo {
 
-
 std::string CryoTypes::LLVMTypeToString(llvm::Type* type) {
     std::string typeStr;
     llvm::raw_string_ostream rso(typeStr);
@@ -30,10 +29,7 @@ llvm::Type* CryoTypes::getLLVMType(CryoDataType type) {
     std::cout << "[Types] Getting LLVM Type for " << CryoDataTypeToString(type) << std::endl;
     // Test if the context exists at all:
 
-    // Check if the context is valid
-    if (&cryoContext.context == nullptr) {
-        std::cerr << "[Types] Error: Failed to initialize context\n";
-    }
+    CryoContext& cryoContext = compiler.getContext();
 
     switch(type) {
         case DATA_TYPE_INT:
@@ -71,6 +67,8 @@ llvm::Type* CryoTypes::createLLVMConstantType(CryoDataType type) {
         return nullptr;
     }
 
+    CryoContext& cryoContext = compiler.getContext();
+
     switch(type) {
         case DATA_TYPE_INT:
             return llvm::Type::getInt32Ty(cryoContext.context);
@@ -105,6 +103,8 @@ llvm::ArrayType* CryoTypes::createLLVMArrayType(CryoDataType elementType, unsign
 }
 
 llvm::StructType* CryoTypes::createLLVMStructType(const std::vector<CryoDataType>& memberTypes, const std::string& name) {
+    CryoContext& cryoContext = compiler.getContext();
+    
     std::vector<llvm::Type*> llvmTypes;
     for (const auto& type : memberTypes) {
         llvm::Type* memberType = createLLVMConstantType(type);

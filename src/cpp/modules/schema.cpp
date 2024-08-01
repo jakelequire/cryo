@@ -24,6 +24,8 @@ bool CryoModules::declareFunctions(ASTNode* node) {
         return false;
     }
 
+    CryoSyntax& cryoSyntaxInstance = compiler.getSyntax();
+
     if (node->type == NODE_PROGRAM) {
         ASTNode* child = node->firstChild;
         while (child != nullptr) {
@@ -36,7 +38,7 @@ bool CryoModules::declareFunctions(ASTNode* node) {
 
             if (child->type == NODE_FUNCTION_DECLARATION) {
                 // Call to generateFunctionPrototype
-                cryoSyntaxInstance->generateFunctionPrototype(child);
+                cryoSyntaxInstance.generateFunctionPrototype(child);
             }
         }
     }
