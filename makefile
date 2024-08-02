@@ -50,8 +50,8 @@ CPP_DIR = $(SRC_DIR)cpp/
 COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c \
 				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \ $(COMPILER_DIR)error.c
 
-CLI_SRC = $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
-			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c $(CLI_DIR)compiler.c
+CLI_SRC = $(CLI_DIR)compiler.c $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
+			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c 
 
 UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
 MAIN_SRC = $(SRC_DIR)main.c
@@ -74,8 +74,8 @@ COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR
 
 UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o
 
-CLI_OBJ = $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o $(OBJ_DIR)cmd_devWatch.o \
-			$(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o $(OBJ_DIR)compiler.o
+CLI_OBJ = $(OBJ_DIR)compiler.o $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o \
+			$(OBJ_DIR)cmd_devWatch.o $(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o 
 
 MAIN_OBJ = $(OBJ_DIR)main.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
@@ -132,6 +132,9 @@ $(OBJ_DIR)error.o : $(COMPILER_DIR)error.c | $(OBJ_DIR)
 
 
 # CLI Compilation rules
+$(OBJ_DIR)compiler.o : $(CLI_DIR)compiler.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 $(OBJ_DIR)cli.o: $(CLI_DIR)cli.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -150,8 +153,6 @@ $(OBJ_DIR)cmd_help.o : $(CLI_COMMANDS_DIR)cmd_help.c | $(OBJ_DIR)
 $(OBJ_DIR)cmd_version.o : $(CLI_COMMANDS_DIR)cmd_version.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)compiler.o : $(CLI_DIR)compiler.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
 
 # CPP Compilation rules
 $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
@@ -199,7 +200,7 @@ $(OBJ_DIR)operations.o : $(CPP_DIR)syntax/operations.cpp | $(OBJ_DIR)
 $(OBJ_DIR)cryoContext.o : $(CPP_DIR)context/cryoContext.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)compiler.o : $(CPP_DIR)compiler.cpp | $(OBJ_DIR)
+$(OBJ_DIR)compiler_cpp.o : $(CPP_DIR)compiler.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 	
 # Cryo Lib Compilation rules

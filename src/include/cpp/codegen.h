@@ -57,7 +57,6 @@ extern "C"
 
 namespace Cryo
 {
-    class CryoContext;
     class CryoCompiler;
     class CryoSyntax;
     class CryoTypes;
@@ -78,7 +77,8 @@ namespace Cryo
             return instance;
         }
 
-        CryoContext(CryoContext const &);
+        CryoContext(CryoContext const &) = delete;
+        
         void operator=(CryoContext const &) = delete;
 
         llvm::LLVMContext context;
@@ -90,6 +90,7 @@ namespace Cryo
         {
             module = std::make_unique<llvm::Module>("main", context);
             std::cout << "[CPP.h] Module Initialized" << std::endl;
+            // namedValues = std::unordered_map<std::string, llvm::Value *>();
         }
 
     private:
@@ -323,6 +324,13 @@ namespace Cryo
         {
             std::cout << "[CPP.h] CryoTypes Initialized" << std::endl;
         }
+
+        /**
+         * @brief Converts a CryoDataType to a string for debugging purposes.
+         * @param type The CryoDataType to be converted.
+         * @return A string representation of the CryoDataType.
+         */
+        std::string LLVMTypeIdToString(llvm::Type::TypeID type);
 
         /**
          * @brief Converts an LLVM type to a string for debugging purposes.

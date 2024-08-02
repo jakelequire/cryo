@@ -21,10 +21,12 @@
 #include <string.h>
 
 #include "cli/cli.h"
+#include "cli/compiler.h"
 
 #define MAX_PATH_LENGTH 100
 
-extern int cryoCompiler(const char* source);
+// extern int cryoCompiler(const char* source);
+int cryoCompiler(const char* source);
 
 /* =========================================================== */
 // Build Args
@@ -44,7 +46,7 @@ void executeBuildCmd            (char* argv[]);
 
 void executeSingleFileBuild     (char* filePath);
 char* readSourceFile            (const char* filepath);
-const char* getFullPath         (const char* filePath);
 void compileSource              (const char* source);
+const char* getFullPath         (const char* filePath);
 
 #endif // BUILD_H

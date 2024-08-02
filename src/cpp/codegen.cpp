@@ -31,9 +31,9 @@ namespace Cryo
             return;
         }
 
-        CryoModules cryoModulesInstance = compiler.getModules();
-        CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
-        CryoContext cryoContext = compiler.getContext();
+        CryoContext& cryoContext = compiler.getContext();
+        CryoModules& cryoModulesInstance = compiler.getModules();
+        CryoSyntax& cryoSyntaxInstance = compiler.getSyntax();
 
         // First Pass: Declare all functions
         std::cout << "\nFirst Pass: Declaring all functions\n";

@@ -22,11 +22,71 @@ namespace Cryo {
 
 
 llvm::Value* CryoSyntax::generateExpression(ASTNode* node) {
-    // TODO
+    CryoTypes& cryoTypesInstance = compiler.getTypes();
+    CryoModules& cryoModulesInstance = compiler.getModules();
+    CryoContext& cryoContext = compiler.getContext();
+
+    switch (node->type) {
+        case CryoNodeType::NODE_LITERAL_EXPR: {
+            std::cout << "[Expressions] Generating code for literal expression\n";
+            switch (node->data.literalExpression.dataType) {
+                case DATA_TYPE_INT:
+                    std::cout << "[Expressions] Generating integer literal\n";
+                    return llvm::ConstantInt::get(
+                        cryoTypesInstance.getLLVMType(DATA_TYPE_INT), node->data.literalExpression.intValue
+                    );
+                case DATA_TYPE_FLOAT:
+                    std::cout << "[Expressions] Generating float literal\n";
+                    return llvm::ConstantFP::get(
+                        llvm::Type::getFloatTy(cryoContext.context), node->data.literalExpression.floatValue
+                    );
+                case DATA_TYPE_BOOLEAN:
+                    std::cout << "[Expressions] Generating boolean literal\n";
+                    return llvm::ConstantInt::get(
+                        cryoTypesInstance.getLLVMType(DATA_TYPE_BOOLEAN), node->data.literalExpression.booleanValue
+                    );
+                case DATA_TYPE_STRING: {
+                    std::cout << "[Expressions] Generating string literal\n";
+                    return cryoTypesInstance.createString(node->data.literalExpression.stringValue);
+                }
+                case DATA_TYPE_VOID:
+                case DATA_TYPE_UNKNOWN:
+                    std::cerr << "[CPP] Error: Unknown data type in generateExpression\n";
+                    return nullptr;
+                default:
+                    std::cerr << "[CPP] Error: Unknown data type in generateExpression\n";
+                    return nullptr;
+            }
+        }
+
+        case CryoNodeType::NODE_BINARY_EXPR: {
+            std::cout << "[CPP] Generating code for binary expression!\n";
+            return generateBinaryOperation(node);
+        }
+
+        case CryoNodeType::NODE_VAR_NAME: {
+            std::cout << "[CPP] Generating code for variable\n";
+            return lookupVariable(node->data.varName.varName);
+        }
+
+        case CryoNodeType::NODE_VAR_DECLARATION: {
+            std::cout << "[CPP] Generating code for variable declaration\n";
+            generateVarDeclaration(node);
+            return nullptr;
+        }
+
+        default: {
+            std::cout << "[CPP - Error] Unknown expression type: " << node->type << "\n";
+            std::cerr << "[CPP] Unknown expression type\n";
+            return nullptr;
+        }
+    }
+
 }
 
+
 void CryoSyntax::generateStatement(ASTNode* node) {
-    // TODO
+
 }
 
 

@@ -18,6 +18,58 @@
 
 namespace Cryo {
 
+
+std::string CryoTypes::LLVMTypeIdToString(llvm::Type::TypeID type) {
+    switch(type) {
+        case llvm::Type::TypeID::HalfTyID:
+            return "HalfTyID";
+        case llvm::Type::TypeID::BFloatTyID:
+            return "BFloatTyID";
+        case llvm::Type::TypeID::FloatTyID:
+            return "FloatTyID";
+        case llvm::Type::TypeID::DoubleTyID:
+            return "DoubleTyID";
+        case llvm::Type::TypeID::X86_FP80TyID:
+            return "X86_FP80TyID";
+        case llvm::Type::TypeID::FP128TyID:
+            return "FP128TyID";
+        case llvm::Type::TypeID::PPC_FP128TyID:
+            return "PPC_FP128TyID";
+        case llvm::Type::TypeID::VoidTyID:
+            return "VoidTyID";
+        case llvm::Type::TypeID::LabelTyID:
+            return "LabelTyID";
+        case llvm::Type::TypeID::MetadataTyID:
+            return "MetadataTyID";
+        case llvm::Type::TypeID::X86_MMXTyID:
+            return "X86_MMXTyID";
+        case llvm::Type::TypeID::X86_AMXTyID:
+            return "X86_AMXTyID";
+        case llvm::Type::TypeID::TokenTyID:
+            return "TokenTyID";
+        case llvm::Type::TypeID::IntegerTyID:
+            return "IntegerTyID";
+        case llvm::Type::TypeID::FunctionTyID:
+            return "FunctionTyID";
+        case llvm::Type::TypeID::PointerTyID:
+            return "PointerTyID";
+        case llvm::Type::TypeID::StructTyID:
+            return "StructTyID";
+        case llvm::Type::TypeID::ArrayTyID:
+            return "ArrayTyID";
+        case llvm::Type::TypeID::FixedVectorTyID:
+            return "FixedVectorTyID";
+        case llvm::Type::TypeID::ScalableVectorTyID:
+            return "ScalableVectorTyID";
+        case llvm::Type::TypeID::TypedPointerTyID:
+            return "TypedPointerTyID";
+        case llvm::Type::TypeID::TargetExtTyID:
+            return "TargetExtTyID";
+        default:
+            return "Unknown";
+    }
+}
+
 std::string CryoTypes::LLVMTypeToString(llvm::Type* type) {
     std::string typeStr;
     llvm::raw_string_ostream rso(typeStr);

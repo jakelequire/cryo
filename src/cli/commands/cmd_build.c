@@ -106,7 +106,6 @@ const char* getFullPath(const char* filePath) {
 }
 // </getFullPath>
 
-
 // <compileSource>
 void compileSource(const char* source) {
     int compile = cryoCompiler(source);

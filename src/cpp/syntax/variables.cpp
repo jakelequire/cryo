@@ -25,28 +25,68 @@ void CryoSyntax::generateVarDeclaration(ASTNode* node) {
         return;
     }
 
+    if (node->type != NODE_VAR_DECLARATION) {
+        std::cerr << "Error: node is not a variable declaration in generateVarDeclaration." << std::endl;
+        return;
+    }
+
     CryoTypes& cryoTypesInstance = compiler.getTypes();
+    CryoModules& cryoModulesInstance = compiler.getModules();
     CryoContext& cryoContext = compiler.getContext();
 
-    
     char* varName = node->data.varDecl.name;
+    if (varName == nullptr) {
+        std::cerr << "Error: variable name is null in generateVarDeclaration." << std::endl;
+        return;
+    }
+
     CryoDataType varType = node->data.varDecl.dataType;
     llvm::Type* llvmType = cryoTypesInstance.getLLVMType(varType);
+    if (llvmType == nullptr) {
+        std::cerr << "Error: failed to get LLVM type for variable " << varName << std::endl;
+        return;
+    }
 
     llvm::Value* initialValue = nullptr;
     if (node->data.varDecl.initializer) {
         initialValue = generateExpression(node->data.varDecl.initializer);
+        if (initialValue == nullptr) {
+            std::cerr << "Error: failed to generate initial value for variable " << varName << std::endl;
+            return;
+        }
     }
 
     llvm::Value* var = createVariableDeclaration(node);
+    if (var == nullptr) {
+        std::cerr << "Error: failed to create variable declaration for " << varName << std::endl;
+        return;
+    }
+
     cryoContext.namedValues[varName] = var;
 
     if (initialValue) {
-        cryoContext.builder.CreateStore(initialValue, var);
+        std::cout << "[DEBUG] Initial Value: "
+                  << cryoTypesInstance.LLVMTypeIdToString(initialValue->getType()->getTypeID())
+                  << "\t\nVariable: "
+                  << cryoTypesInstance.LLVMTypeIdToString(var->getType()->getTypeID())
+                  << "\t\nLLVM Type: "
+                  << cryoTypesInstance.LLVMTypeIdToString(llvmType->getTypeID())
+                  << std::endl;
+
+        if (auto *ptrType = llvm::dyn_cast<llvm::PointerType>(var->getType())) {
+            if (ptrType == initialValue->getType()) {
+                cryoContext.builder.CreateStore(initialValue, var);
+            } else {
+                std::cerr << "Error: Type mismatch between variable and initial value.\n";
+            }
+        } else {
+            std::cerr << "Error: var is not a pointer type as expected.\n";
+        }
     }
 
     std::cout << "[CPP] Generated variable declaration for " << varName << std::endl;
 }
+
 
 
 llvm::Value* CryoSyntax::lookupVariable(char* name) {
@@ -58,7 +98,6 @@ llvm::Value* CryoSyntax::lookupVariable(char* name) {
     }
     return var;
 }
-
 
 llvm::Value* CryoSyntax::createVariableDeclaration(ASTNode* node) {
     CryoTypes& cryoTypesInstance = compiler.getTypes();
@@ -82,7 +121,6 @@ llvm::Value* CryoSyntax::createVariableDeclaration(ASTNode* node) {
     return var;
 }
 
-
 llvm::Value* CryoSyntax::getVariableValue(char* name) {
     CryoContext& cryoContext = compiler.getContext();
 
@@ -94,7 +132,6 @@ llvm::Value* CryoSyntax::getVariableValue(char* name) {
     return cryoContext.builder.CreateLoad(varType, var, name);
 }
 
-
 llvm::GlobalVariable* CryoSyntax::createGlobalVariable(llvm::Type* varType, llvm::Constant* initialValue, char* varName) {
     CryoContext& cryoContext = compiler.getContext();
 
@@ -102,14 +139,12 @@ llvm::GlobalVariable* CryoSyntax::createGlobalVariable(llvm::Type* varType, llvm
     return globalVar;
 }
 
-
 llvm::Value* CryoSyntax::loadGlobalVariable(llvm::GlobalVariable* globalVar, char* name) {
     CryoContext& cryoContext = compiler.getContext();
 
     llvm::Type* varType = globalVar->getType();
     return cryoContext.builder.CreateLoad(varType, globalVar, name);
 }
-
 
 void CryoSyntax::generateArrayLiteral(ASTNode* node) {
     CryoTypes& cryoTypesInstance = compiler.getTypes();
@@ -132,7 +167,6 @@ void CryoSyntax::generateArrayLiteral(ASTNode* node) {
 
     cryoContext.namedValues[varName] = var;
 }
-
 
 std::vector<llvm::Constant*> CryoSyntax::generateArrayElements(ASTNode* arrayLiteral) {
     std::vector<llvm::Constant*> elements;
