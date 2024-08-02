@@ -47,7 +47,7 @@ namespace Cryo
 
         // Second Pass: Generate code for the entire program
         std::cout << "\nSecond Pass: Generate code for the entire program\n";
-        identifyNodeExpression(root);
+        cryoSyntaxInstance.identifyNodeExpression(root);
 
         llvm::Function *defaultMain = cryoContext.module->getFunction("_defaulted");
         if (defaultMain)
@@ -96,7 +96,7 @@ namespace Cryo
     /**
      * Identify the type of node and call the appropriate function to generate code.
      */
-    void CodeGen::identifyNodeExpression(ASTNode *node)
+    void CryoSyntax::identifyNodeExpression(ASTNode *node)
     {
         if (!node)
         {
@@ -297,7 +297,7 @@ namespace Cryo
         case NODE_EXTERN_FUNCTION:
         {
             std::cout << "[CodeGen] Identified NODE_EXTERN_FUNCTION.\n";
-            // Todo
+            cryoSyntaxInstance.generateExternalDeclaration(node);
             break;
         }
 

@@ -22,6 +22,7 @@ namespace Cryo {
 
 void CryoModules::generateProgram(ASTNode* node) {
     CodeGen& codeGenInstance = compiler.getCodeGen();
+    CryoSyntax& cryoSyntaxInstance = compiler.getSyntax();
 
     std::cout << "[Generation] Generating code for program\n";
     if (node->data.program.stmtCount == 0) {
@@ -30,7 +31,7 @@ void CryoModules::generateProgram(ASTNode* node) {
     }
     for (int i = 0; i < node->data.program.stmtCount; ++i) {
         std::cout << "[Generation] Generating code for program statement " << i << "\n";
-        codeGenInstance.identifyNodeExpression(node->data.program.statements[i]);
+        cryoSyntaxInstance.identifyNodeExpression(node->data.program.statements[i]);
         std::cout << "[Generation] Moving to next statement\n";
     }
     return;
@@ -44,11 +45,12 @@ void CryoModules::generateBlock(ASTNode* node) {
     }
     std::cout << "[Generation] Generating code for Block Node.\n";
     CodeGen& codeGenInstance = compiler.getCodeGen();
+    CryoSyntax& cryoSyntaxInstance = compiler.getSyntax();
 
 
     for(int i = 0; i < node->data.block.stmtCount; i++) {
         std::cout << "[Generation] Generating Code for Block Statement...\n";
-        codeGenInstance.identifyNodeExpression(node->data.block.statements[i]);
+        cryoSyntaxInstance.identifyNodeExpression(node->data.block.statements[i]);
     }
 
     return;
@@ -64,11 +66,13 @@ void CryoModules::generateFunctionBlock(ASTNode* node) {
     std::cout << "[Generation] Generating code for Function Block Node.\n";
     CodeGen& codeGenInstance = compiler.getCodeGen();
     CryoContext& cryoContext = compiler.getContext();
+    CryoTypes& cryoTypesInstance = compiler.getTypes();
+    CryoSyntax& cryoSyntaxInstance = compiler.getSyntax();
 
     
     for(int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; ++i) {
         std::cout << "[Generation] Generating code for Block Statement. Count: " << i << "\n";
-        codeGenInstance.identifyNodeExpression(node->data.functionBlock.block->data.block.statements[i]);
+        cryoSyntaxInstance.identifyNodeExpression(node->data.functionBlock.block->data.block.statements[i]);
         std::cout << "[Generation] Moving to next statement...\n";
     }
 
@@ -105,7 +109,7 @@ void CryoModules::generateExternalDeclaration(ASTNode* node) {
             break;
         }
         if(parameter->data.varDecl.dataType == DATA_TYPE_INT) {
-            paramType = llvm::Type::getInt32Ty(cryoContext.module->getContext());
+            paramType = cryoTypesInstance.getLLVMType(DATA_TYPE_INT);
             paramTypes.push_back(paramType);
             break;
         }

@@ -146,11 +146,7 @@ namespace Cryo
          */
         void executeCodeGeneration(ASTNode *root);
 
-        /**
-         * @brief Identifies and processes the expressions in the AST nodes.
-         * @param root The root of the abstract syntax tree (AST) to be processed.
-         */
-        void identifyNodeExpression(ASTNode *root);
+
 
     private:
         CryoCompiler& compiler;
@@ -172,6 +168,12 @@ namespace Cryo
         {
             std::cout << "[CPP.h] CryoSyntax Initialized" << std::endl;
         }
+
+        /**
+         * @brief Identifies and processes the expressions in the AST nodes.
+         * @param root The root of the abstract syntax tree (AST) to be processed.
+         */
+        void identifyNodeExpression(ASTNode *root);
 
         ///
         /// Function Syntax @ syntax/functions.cpp

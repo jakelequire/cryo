@@ -112,6 +112,7 @@ void CryoSyntax::generateFunctionPrototype(ASTNode* node) {
 
 void CryoSyntax::generateFunction(ASTNode* node) {
     CryoContext& cryoContext = compiler.getContext();
+    CryoTypes& cryoTypesInstance = compiler.getTypes();
 
     char* functionName;
     FunctionDeclNode* functionNode = nullptr;
@@ -129,31 +130,54 @@ void CryoSyntax::generateFunction(ASTNode* node) {
 
     llvm::Function* function = cryoContext.module->getFunction(functionName);
     if (!function) {
-        std::cerr << "[Functions] Error: Function not found in module\n";
-        return;
+        // Generate the function prototype if it doesn't exist
+        generateFunctionPrototype(node);
+        auto function = cryoContext.module->getFunction(functionName);
+        if (!function) {
+            std::cerr << "[Functions] Error: Failed to generate function prototype\n";
+            return;
+        }
     }
 
     llvm::BasicBlock* entry = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
+    std::cout << "[Functions] Generating function " << functionName << std::endl;
     cryoContext.builder.SetInsertPoint(entry);
+    std::cout << "[Functions] Set insert point for function " << functionName << std::endl;
 
     // Create a new scope for the function
-    cryoContext.namedValues.clear();
-
+    // cryoContext.namedValues.clear();
+    std::vector<llvm::Type*> paramTypes;
     for (int i = 0; i < functionNode->paramCount; i++) {
         llvm::Argument* arg = function->arg_begin() + i;
         arg->setName(functionNode->params[i]->data.varDecl.name);
         cryoContext.namedValues[functionNode->params[i]->data.varDecl.name] = arg;
+        paramTypes.push_back(arg->getType());
     }
 
-    generateFunctionBlock(functionNode->body);
-
-    llvm::verifyFunction(*function);
-    std::cout << "[Functions] Generated function " << functionName << std::endl;
-
-    if (node->type == NODE_EXTERN_STATEMENT) {
-        cryoContext.namedValues.erase(functionName);
+    llvm::Type* returnType = cryoTypesInstance.getLLVMType(node->data.functionDecl.function->returnType);
+    llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, paramTypes, false);
+    if (!function) {
+        function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
+    } else {
+        std::cerr << "[CPP] Warning: Function " << functionName << " already exists in the module\n";
     }
 
+    llvm::BasicBlock* BB = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
+    cryoContext.builder.SetInsertPoint(BB);
+
+    // Generate code for the function body
+    if (node->data.functionDecl.function->body) {
+        generateFunctionBlock(node->data.functionDecl.function->body);
+    }
+
+    // Ensure the function has a return statement or terminator
+    if (!BB->getTerminator()) {
+        if (returnType->isVoidTy()) {
+            cryoContext.builder.CreateRetVoid();
+        } else {
+            cryoContext.builder.CreateRet(llvm::Constant::getNullValue(returnType));
+        }
+    }
     return;
 }
 
@@ -163,6 +187,8 @@ void CryoSyntax::generateExternalDeclaration(ASTNode* node) {
     } else {
         std::cerr << "[Functions] Error: Invalid external declaration node\n";
     }
+
+    generateFunctionPrototype(node);
 
     return;
 }
@@ -185,7 +211,7 @@ void CryoSyntax::generateFunctionCall(ASTNode* node) {
     
     llvm::Function* function = cryoContext.module->getFunction(node->data.functionCall.name);
     if (!function) {
-        std::cerr << "[Functions] Error: Function not found in module\n";
+        std::cerr << "[Functions] Error: Function not found in module @generateFunctionCall\n";
         return;
     }
 
@@ -201,8 +227,16 @@ void CryoSyntax::generateFunctionCall(ASTNode* node) {
 }
 
 void CryoSyntax::generateFunctionBlock(ASTNode* node) {
-    for (int i = 0; i < node->data.functionBlock.block->data.block.stmtCount; i++) {
-        generateStatement(node->data.functionBlock.block->data.block.statements[i]);
+    if (!node) {
+        std::cerr << "[Functions] Error: Node is null in generateFunctionBlock\n";
+        return;
+    }
+
+    CryoContext& cryoContext = compiler.getContext();
+
+    ASTNode** statements = node->data.block.statements;
+    for (int i = 0; i < node->data.block.stmtCount; i++) {
+        identifyNodeExpression(statements[i]);
     }
 
     return;
