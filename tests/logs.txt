@@ -1,0 +1,748 @@
+[DEBUG] Argument Count: 1
+Command: build
+Building Cryo project...
+Unknown Build Args, Building Single File...
+Starting Lexer Initialization...
+{lexer} -------------- <Input Source Code> --------------
+
+
+{lexer} Lexer initialized. 
+Start: 0x5a621437e8c0 
+Current: 0x5a621437e8c0 
+
+Source:
+-------
+
+extern function printInt(i: string) -> void;
+extern function printStr(s: string) -> void;
+
+const qix: int = 34;
+//const foo: string = "Hello, World!";
+
+
+public function main() -> void {
+    //printInt(qix);
+    const foo: int = 34;
+    //printStr(foo);
+}
+
+
+
+{lexer} -------------------- <END> ----------------------
+
+
+[DEBUG] Lexer initialized
+
+
+[Parser] Parsing program...
+[AST] Creating Program Node
+[AST_DEBUG] Creating node: 0
+[AST] Created node of type: 0
+[AST] Created Program Node
+[Parser] @getNextToken | Current Token before: Type=0, Start=, Length=0
+[Lexer] Getting next token...
+[Lexer] Created token: extern (Type: 115, Line: 2, Column: 7)
+[Lexer] Identifier token created: extern
+[Parser] @getNextToken | Next Token after: Type=115, Start=extern, Length=6
+[Parser] Starting to parse statements...
+[Parser] Parsing statement...
+[Parser] Parsing extern...
+
+<*> [Parser] Consuming token: TOKEN_KW_EXTERN (Expecting: TOKEN_KW_EXTERN) @Fn <parseExtern>
+
+[Parser] @getNextToken | Current Token before: Type=115, Start=extern, Length=6
+[Lexer] Getting next token...
+[Lexer] Created token: function (Type: 62, Line: 2, Column: 16)
+[Lexer] Identifier token created: function
+[Parser] @getNextToken | Next Token after: Type=62, Start=function, Length=8
+[Parser DEBUG] Current Token: TOKEN_KW_FN, Lexeme: function
+[Parser] Parsing extern function declaration...
+
+<*> [Parser] Consuming token: TOKEN_KW_FN (Expecting: TOKEN_KW_FN) @Fn <parseExternFunctionDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=62, Start=function, Length=8
+[Lexer] Getting next token...
+[Lexer] Created token: printInt (Type: 1, Line: 2, Column: 25)
+[Lexer] Identifier token created: printInt
+[Parser] @getNextToken | Next Token after: Type=1, Start=printInt, Length=8
+[Parser DEBUG] Current Token: TOKEN_IDENTIFIER, Lexeme: printInt
+[AST_DEBUG] Creating node: 26
+[AST] Created node of type: 26
+[Parser] Function name: printInt
+[Parser] @getNextToken | Current Token before: Type=1, Start=printInt, Length=8
+[Lexer] Getting next token...
+[Lexer] Created token: ( (Type: 143, Line: 2, Column: 26)
+[Lexer] Symbol token created: (
+[Parser] @getNextToken | Next Token after: Type=143, Start=(, Length=1
+[Parser] Parsing parameter list...
+
+<*> [Parser] Consuming token: TOKEN_LPAREN (Expecting: TOKEN_LPAREN) @Fn <parseParameterList>
+
+[Parser] @getNextToken | Current Token before: Type=143, Start=(, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: i (Type: 1, Line: 2, Column: 27)
+[Lexer] Identifier token created: i
+[Parser] @getNextToken | Next Token after: Type=1, Start=i, Length=1
+[Parser DEBUG] Current Token: TOKEN_IDENTIFIER, Lexeme: i
+[Parser] Parsing parameter...
+[Parser] @getNextToken | Current Token before: Type=1, Start=i, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: : (Type: 124, Line: 2, Column: 28)
+[Lexer] Symbol token created: :
+[Parser] @getNextToken | Next Token after: Type=124, Start=:, Length=1
+
+<*> [Parser] Consuming token: TOKEN_COLON (Expecting: TOKEN_COLON) @Fn <parseParameter>
+
+[Parser] @getNextToken | Current Token before: Type=124, Start=:, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: string (Type: 102, Line: 2, Column: 35)
+[Lexer] Identifier token created: string
+[Parser] @getNextToken | Next Token after: Type=102, Start=string, Length=6
+[Parser DEBUG] Current Token: TOKEN_KW_STRING, Lexeme: string
+[Parser] Parsing type...
+[Parser] Getting data type for input: string
+[Parser] @getNextToken | Current Token before: Type=102, Start=string, Length=6
+[Lexer] Getting next token...
+[Lexer] Created token: ) (Type: 144, Line: 2, Column: 36)
+[Lexer] Symbol token created: )
+[Parser] @getNextToken | Next Token after: Type=144, Start=), Length=1
+[AST] Creating Parameter Node: i
+[AST_DEBUG] Creating node: 2
+[AST] Created node of type: 2
+[AST] Created Parameter Node: i
+[Parser] Adding parameter to list: i
+
+<!> [Parser] Parameter count: 1
+
+<*> [Parser] Consuming token: TOKEN_RPAREN (Expecting: TOKEN_RPAREN) @Fn <parseParameterList>
+
+[Parser] @getNextToken | Current Token before: Type=144, Start=), Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: -> (Type: 21, Line: 2, Column: 39)
+[Lexer] Symbol token created: ->
+[Parser] @getNextToken | Next Token after: Type=21, Start=->, Length=2
+[Parser DEBUG] Current Token: TOKEN_RESULT_ARROW, Lexeme: ->
+[Parser] Function parameter count: 1
+[Parser] Found return type arrow
+[Parser] @getNextToken | Current Token before: Type=21, Start=->, Length=2
+[Lexer] Getting next token...
+[Lexer] Created token: void (Type: 100, Line: 2, Column: 44)
+[Lexer] Identifier token created: void
+[Parser] @getNextToken | Next Token after: Type=100, Start=void, Length=4
+[Parser] Parsing type...
+[Parser] Getting data type for input: void
+[Parser] @getNextToken | Current Token before: Type=100, Start=void, Length=4
+[Lexer] Getting next token...
+[Lexer] Created token: ; (Type: 138, Line: 2, Column: 45)
+[Lexer] Symbol token created: ;
+[Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
+
+
+<#!> [Parser] Extern Function Return Type: TYPE_VOID 
+
+<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseExternFunctionDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: extern (Type: 115, Line: 3, Column: 7)
+[Lexer] Identifier token created: extern
+[Parser] @getNextToken | Next Token after: Type=115, Start=extern, Length=6
+[Parser DEBUG] Current Token: TOKEN_KW_EXTERN, Lexeme: extern
+[Parser] Adding statement to program...
+[AST] Before adding statement: stmtCount = 0, stmtCapacity = 8
+[AST] After adding statement: stmtCount = 1, stmtCapacity = 8
+Symbol added: printInt
+[SymTable - Debug] Symbol count: 1
+[SymTable - Debug] Scope depth: 0
+[SymTable - Debug] Table capacity: 10
+
+-------------------------------------------------------------------------------------------------
+Symbol Table:
+
+Name                 Type                 Val/RetType          Scope        Const       ArgCount
+
+-------------------------------------------------------------------------------------------------
+printInt             EXTERN_FUNCTION          void               0          false          1         
+-------------------------------------------------------------------------------------------------
+[Parser] Parsing statement...
+[Parser] Parsing extern...
+
+<*> [Parser] Consuming token: TOKEN_KW_EXTERN (Expecting: TOKEN_KW_EXTERN) @Fn <parseExtern>
+
+[Parser] @getNextToken | Current Token before: Type=115, Start=extern, Length=6
+[Lexer] Getting next token...
+[Lexer] Created token: function (Type: 62, Line: 3, Column: 16)
+[Lexer] Identifier token created: function
+[Parser] @getNextToken | Next Token after: Type=62, Start=function, Length=8
+[Parser DEBUG] Current Token: TOKEN_KW_FN, Lexeme: function
+[Parser] Parsing extern function declaration...
+
+<*> [Parser] Consuming token: TOKEN_KW_FN (Expecting: TOKEN_KW_FN) @Fn <parseExternFunctionDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=62, Start=function, Length=8
+[Lexer] Getting next token...
+[Lexer] Created token: printStr (Type: 1, Line: 3, Column: 25)
+[Lexer] Identifier token created: printStr
+[Parser] @getNextToken | Next Token after: Type=1, Start=printStr, Length=8
+[Parser DEBUG] Current Token: TOKEN_IDENTIFIER, Lexeme: printStr
+[AST_DEBUG] Creating node: 26
+[AST] Created node of type: 26
+[Parser] Function name: printStr
+[Parser] @getNextToken | Current Token before: Type=1, Start=printStr, Length=8
+[Lexer] Getting next token...
+[Lexer] Created token: ( (Type: 143, Line: 3, Column: 26)
+[Lexer] Symbol token created: (
+[Parser] @getNextToken | Next Token after: Type=143, Start=(, Length=1
+[Parser] Parsing parameter list...
+
+<*> [Parser] Consuming token: TOKEN_LPAREN (Expecting: TOKEN_LPAREN) @Fn <parseParameterList>
+
+[Parser] @getNextToken | Current Token before: Type=143, Start=(, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: s (Type: 1, Line: 3, Column: 27)
+[Lexer] Identifier token created: s
+[Parser] @getNextToken | Next Token after: Type=1, Start=s, Length=1
+[Parser DEBUG] Current Token: TOKEN_IDENTIFIER, Lexeme: s
+[Parser] Parsing parameter...
+[Parser] @getNextToken | Current Token before: Type=1, Start=s, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: : (Type: 124, Line: 3, Column: 28)
+[Lexer] Symbol token created: :
+[Parser] @getNextToken | Next Token after: Type=124, Start=:, Length=1
+
+<*> [Parser] Consuming token: TOKEN_COLON (Expecting: TOKEN_COLON) @Fn <parseParameter>
+
+[Parser] @getNextToken | Current Token before: Type=124, Start=:, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: string (Type: 102, Line: 3, Column: 35)
+[Lexer] Identifier token created: string
+[Parser] @getNextToken | Next Token after: Type=102, Start=string, Length=6
+[Parser DEBUG] Current Token: TOKEN_KW_STRING, Lexeme: string
+[Parser] Parsing type...
+[Parser] Getting data type for input: string
+[Parser] @getNextToken | Current Token before: Type=102, Start=string, Length=6
+[Lexer] Getting next token...
+[Lexer] Created token: ) (Type: 144, Line: 3, Column: 36)
+[Lexer] Symbol token created: )
+[Parser] @getNextToken | Next Token after: Type=144, Start=), Length=1
+[AST] Creating Parameter Node: s
+[AST_DEBUG] Creating node: 2
+[AST] Created node of type: 2
+[AST] Created Parameter Node: s
+[Parser] Adding parameter to list: s
+
+<!> [Parser] Parameter count: 1
+
+<*> [Parser] Consuming token: TOKEN_RPAREN (Expecting: TOKEN_RPAREN) @Fn <parseParameterList>
+
+[Parser] @getNextToken | Current Token before: Type=144, Start=), Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: -> (Type: 21, Line: 3, Column: 39)
+[Lexer] Symbol token created: ->
+[Parser] @getNextToken | Next Token after: Type=21, Start=->, Length=2
+[Parser DEBUG] Current Token: TOKEN_RESULT_ARROW, Lexeme: ->
+[Parser] Function parameter count: 1
+[Parser] Found return type arrow
+[Parser] @getNextToken | Current Token before: Type=21, Start=->, Length=2
+[Lexer] Getting next token...
+[Lexer] Created token: void (Type: 100, Line: 3, Column: 44)
+[Lexer] Identifier token created: void
+[Parser] @getNextToken | Next Token after: Type=100, Start=void, Length=4
+[Parser] Parsing type...
+[Parser] Getting data type for input: void
+[Parser] @getNextToken | Current Token before: Type=100, Start=void, Length=4
+[Lexer] Getting next token...
+[Lexer] Created token: ; (Type: 138, Line: 3, Column: 45)
+[Lexer] Symbol token created: ;
+[Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
+
+
+<#!> [Parser] Extern Function Return Type: TYPE_VOID 
+
+<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseExternFunctionDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: const (Type: 63, Line: 5, Column: 6)
+[Lexer] Identifier token created: const
+[Parser] @getNextToken | Next Token after: Type=63, Start=const, Length=5
+[Parser DEBUG] Current Token: TOKEN_KW_CONST, Lexeme: const
+[Parser] Adding statement to program...
+[AST] Before adding statement: stmtCount = 1, stmtCapacity = 8
+[AST] After adding statement: stmtCount = 2, stmtCapacity = 8
+Symbol added: printStr
+[SymTable - Debug] Symbol count: 2
+[SymTable - Debug] Scope depth: 0
+[SymTable - Debug] Table capacity: 10
+
+-------------------------------------------------------------------------------------------------
+Symbol Table:
+
+Name                 Type                 Val/RetType          Scope        Const       ArgCount
+
+-------------------------------------------------------------------------------------------------
+printInt             EXTERN_FUNCTION          void               0          false          1         
+printStr             EXTERN_FUNCTION          void               0          false          1         
+-------------------------------------------------------------------------------------------------
+[Parser] Parsing statement...
+[Parser] Entering parseVarDeclaration
+[Parser] @getNextToken | Current Token before: Type=63, Start=const, Length=5
+[Lexer] Getting next token...
+[Lexer] Created token: qix (Type: 1, Line: 5, Column: 10)
+[Lexer] Identifier token created: qix
+[Parser] @getNextToken | Next Token after: Type=1, Start=qix, Length=3
+[Parser] @getNextToken | Current Token before: Type=1, Start=qix, Length=3
+[Lexer] Getting next token...
+[Lexer] Created token: : (Type: 124, Line: 5, Column: 11)
+[Lexer] Symbol token created: :
+[Parser] @getNextToken | Next Token after: Type=124, Start=:, Length=1
+[Parser] @getNextToken | Current Token before: Type=124, Start=:, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: int (Type: 94, Line: 5, Column: 15)
+[Lexer] Identifier token created: int
+[Parser] @getNextToken | Next Token after: Type=94, Start=int, Length=3
+[Parser] Getting data type for input: int
+[Parser] @getNextToken | Current Token before: Type=94, Start=int, Length=3
+[Lexer] Getting next token...
+[Lexer] Created token: = (Type: 127, Line: 5, Column: 17)
+[Lexer] Symbol token created: =
+[Parser] @getNextToken | Next Token after: Type=127, Start==, Length=1
+[Parser] @getNextToken | Current Token before: Type=127, Start==, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: 34 (Type: 22, Line: 5, Column: 20)
+[Lexer] Number token: 34
+[Lexer] Number token created: 34
+[Parser] @getNextToken | Next Token after: Type=22, Start=34, Length=2
+[Parser] Parsing expression...
+[Parser] Parsing primary expression...
+[Parser] Parsing integer literal
+[AST] Creating Integer Literal Node: 34
+[AST_DEBUG] Creating node: 7
+[AST] Created node of type: 7
+[AST] Created Integer Literal Node: 34
+[Parser] @getNextToken | Current Token before: Type=22, Start=34, Length=2
+[Lexer] Getting next token...
+[Lexer] Created token: ; (Type: 138, Line: 5, Column: 21)
+[Lexer] Symbol token created: ;
+[Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
+
+<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseVarDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
+[Lexer] Getting next token...
+[Lexer] Peeking next character: /
+[Lexer] Created token: public (Type: 64, Line: 9, Column: 7)
+[Lexer] Identifier token created: public
+[Parser] @getNextToken | Next Token after: Type=64, Start=public, Length=6
+[Parser DEBUG] Current Token: TOKEN_KW_PUBLIC, Lexeme: public
+[AST] Creating Variable Declaration Node: qix
+[AST_DEBUG] Creating node: 2
+[AST] Created node of type: 2
+[AST] Created Variable Declaration Node: qix
+[Parser] Created Variable Declaration Node: qix
+[Parser] Variable Declaration Node Type: 2
+[Parser] Variable Declaration Node Type: 0
+[Parser] Adding statement to program...
+[AST] Before adding statement: stmtCount = 2, stmtCapacity = 8
+[AST] After adding statement: stmtCount = 3, stmtCapacity = 8
+Symbol added: qix
+[SymTable - Debug] Symbol count: 3
+[SymTable - Debug] Scope depth: 0
+[SymTable - Debug] Table capacity: 10
+
+-------------------------------------------------------------------------------------------------
+Symbol Table:
+
+Name                 Type                 Val/RetType          Scope        Const       ArgCount
+
+-------------------------------------------------------------------------------------------------
+printInt             EXTERN_FUNCTION          void               0          false          1         
+printStr             EXTERN_FUNCTION          void               0          false          1         
+qix                  VAR_DECLARATION          int                0          false          0         
+-------------------------------------------------------------------------------------------------
+[Parser] Parsing statement...
+[Parser] Parsing public declaration...
+
+<*> [Parser] Consuming token: TOKEN_KW_PUBLIC (Expecting: TOKEN_KW_PUBLIC) @Fn <parsePublicDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=64, Start=public, Length=6
+[Lexer] Getting next token...
+[Lexer] Created token: function (Type: 62, Line: 9, Column: 16)
+[Lexer] Identifier token created: function
+[Parser] @getNextToken | Next Token after: Type=62, Start=function, Length=8
+[Parser DEBUG] Current Token: TOKEN_KW_FN, Lexeme: function
+[Parser] Parsing function declaration...
+
+<*> [Parser] Consuming token: TOKEN_KW_FN (Expecting: TOKEN_KW_FN) @Fn <parseFunctionDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=62, Start=function, Length=8
+[Lexer] Getting next token...
+[Lexer] Created token: main (Type: 1, Line: 9, Column: 21)
+[Lexer] Identifier token created: main
+[Parser] @getNextToken | Next Token after: Type=1, Start=main, Length=4
+[Parser DEBUG] Current Token: TOKEN_IDENTIFIER, Lexeme: main
+[Parser] Function name: main
+[Parser] @getNextToken | Current Token before: Type=1, Start=main, Length=4
+[Lexer] Getting next token...
+[Lexer] Created token: ( (Type: 143, Line: 9, Column: 22)
+[Lexer] Symbol token created: (
+[Parser] @getNextToken | Next Token after: Type=143, Start=(, Length=1
+[Parser] Parsing parameter list...
+
+<*> [Parser] Consuming token: TOKEN_LPAREN (Expecting: TOKEN_LPAREN) @Fn <parseParameterList>
+
+[Parser] @getNextToken | Current Token before: Type=143, Start=(, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: ) (Type: 144, Line: 9, Column: 23)
+[Lexer] Symbol token created: )
+[Parser] @getNextToken | Next Token after: Type=144, Start=), Length=1
+[Parser DEBUG] Current Token: TOKEN_RPAREN, Lexeme: )
+
+<!> [Parser] Parameter count: 0
+
+<*> [Parser] Consuming token: TOKEN_RPAREN (Expecting: TOKEN_RPAREN) @Fn <parseParameterList>
+
+[Parser] @getNextToken | Current Token before: Type=144, Start=), Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: -> (Type: 21, Line: 9, Column: 26)
+[Lexer] Symbol token created: ->
+[Parser] @getNextToken | Next Token after: Type=21, Start=->, Length=2
+[Parser DEBUG] Current Token: TOKEN_RESULT_ARROW, Lexeme: ->
+[Parser] Found return type arrow
+[Parser] @getNextToken | Current Token before: Type=21, Start=->, Length=2
+[Lexer] Getting next token...
+[Lexer] Created token: void (Type: 100, Line: 9, Column: 31)
+[Lexer] Identifier token created: void
+[Parser] @getNextToken | Next Token after: Type=100, Start=void, Length=4
+[Parser] Parsing type...
+[Parser] Getting data type for input: void
+[Parser] @getNextToken | Current Token before: Type=100, Start=void, Length=4
+[Lexer] Getting next token...
+[Lexer] Created token: { (Type: 147, Line: 9, Column: 33)
+[Lexer] Symbol token created: {
+[Parser] @getNextToken | Next Token after: Type=147, Start={, Length=1
+[Parser] Function return type: TYPE_VOID
+[Parser] Parsing function block...
+[AST] Creating Block Node
+[AST_DEBUG] Creating node: 14
+[AST] Created node of type: 14
+
+[AST] Created Block Node
+
+<*> [Parser] Consuming token: TOKEN_LBRACE (Expecting: TOKEN_LBRACE) @Fn <parseFunctionBlock>
+
+[Parser] @getNextToken | Current Token before: Type=147, Start={, Length=1
+[Lexer] Getting next token...
+[Lexer] Peeking next character: /
+[Lexer] Created token: const (Type: 63, Line: 11, Column: 10)
+[Lexer] Identifier token created: const
+[Parser] @getNextToken | Next Token after: Type=63, Start=const, Length=5
+[Parser DEBUG] Current Token: TOKEN_KW_CONST, Lexeme: const
+[Parser] Parsing statement...
+[Parser] Entering parseVarDeclaration
+[Parser] @getNextToken | Current Token before: Type=63, Start=const, Length=5
+[Lexer] Getting next token...
+[Lexer] Created token: foo (Type: 1, Line: 11, Column: 14)
+[Lexer] Identifier token created: foo
+[Parser] @getNextToken | Next Token after: Type=1, Start=foo, Length=3
+[Parser] @getNextToken | Current Token before: Type=1, Start=foo, Length=3
+[Lexer] Getting next token...
+[Lexer] Created token: : (Type: 124, Line: 11, Column: 15)
+[Lexer] Symbol token created: :
+[Parser] @getNextToken | Next Token after: Type=124, Start=:, Length=1
+[Parser] @getNextToken | Current Token before: Type=124, Start=:, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: int (Type: 94, Line: 11, Column: 19)
+[Lexer] Identifier token created: int
+[Parser] @getNextToken | Next Token after: Type=94, Start=int, Length=3
+[Parser] Getting data type for input: int
+[Parser] @getNextToken | Current Token before: Type=94, Start=int, Length=3
+[Lexer] Getting next token...
+[Lexer] Created token: = (Type: 127, Line: 11, Column: 21)
+[Lexer] Symbol token created: =
+[Parser] @getNextToken | Next Token after: Type=127, Start==, Length=1
+[Parser] @getNextToken | Current Token before: Type=127, Start==, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: 34 (Type: 22, Line: 11, Column: 24)
+[Lexer] Number token: 34
+[Lexer] Number token created: 34
+[Parser] @getNextToken | Next Token after: Type=22, Start=34, Length=2
+[Parser] Parsing expression...
+[Parser] Parsing primary expression...
+[Parser] Parsing integer literal
+[AST] Creating Integer Literal Node: 34
+[AST_DEBUG] Creating node: 7
+[AST] Created node of type: 7
+[AST] Created Integer Literal Node: 34
+[Parser] @getNextToken | Current Token before: Type=22, Start=34, Length=2
+[Lexer] Getting next token...
+[Lexer] Created token: ; (Type: 138, Line: 11, Column: 25)
+[Lexer] Symbol token created: ;
+[Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
+
+<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseVarDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
+[Lexer] Getting next token...
+[Lexer] Peeking next character: /
+[Lexer] Created token: } (Type: 148, Line: 13, Column: 2)
+[Lexer] Symbol token created: }
+[Parser] @getNextToken | Next Token after: Type=148, Start=}, Length=1
+[Parser DEBUG] Current Token: TOKEN_RBRACE, Lexeme: }
+[AST] Creating Variable Declaration Node: foo
+[AST_DEBUG] Creating node: 2
+[AST] Created node of type: 2
+[AST] Created Variable Declaration Node: foo
+[Parser] Created Variable Declaration Node: foo
+[Parser] Variable Declaration Node Type: 2
+[Parser] Variable Declaration Node Type: 0
+[Parser] Adding statement to function block
+[AST] Block statement memory is sufficient
+[AST] Final state: stmtCount = 1, stmtCapacity = 8
+
+<*> [Parser] Consuming token: TOKEN_RBRACE (Expecting: TOKEN_RBRACE) @Fn <parseFunctionBlock>
+
+[Parser] @getNextToken | Current Token before: Type=148, Start=}, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token:  (Type: 0, Line: 14, Column: 1)
+[Parser] @getNextToken | Next Token after: Type=0, Start=, Length=0
+[Parser DEBUG] Current Token: TOKEN_EOF, Lexeme: 
+[Parser] Exiting function block
+[AST] Creating Function Node: main
+[AST_DEBUG] Creating node: 1
+[AST] Created node of type: 1
+[AST] Created Function Node: main
+[Parser] Adding statement to program...
+[AST] Before adding statement: stmtCount = 3, stmtCapacity = 8
+[AST] After adding statement: stmtCount = 4, stmtCapacity = 8
+Symbol added: main
+[SymTable - Debug] Symbol count: 4
+[SymTable - Debug] Scope depth: 0
+[SymTable - Debug] Table capacity: 10
+
+-------------------------------------------------------------------------------------------------
+Symbol Table:
+
+Name                 Type                 Val/RetType          Scope        Const       ArgCount
+
+-------------------------------------------------------------------------------------------------
+printInt             EXTERN_FUNCTION          void               0          false          1         
+printStr             EXTERN_FUNCTION          void               0          false          1         
+qix                  VAR_DECLARATION          int                0          false          0         
+main                 FUNCTION_DECLARATION     void               0          false          0         
+-------------------------------------------------------------------------------------------------
+
+
+>===------- AST Tree -------===<
+
+Program Node with 4 statements (capacity: 8)
+  Extern Function Node
+Function Name: printInt
+Function Return Type: TYPE_VOID
+Function Visibility: <VISIBILITY UNKNOWN>
+Function Parameters:
+    Variable Declaration Node: i
+Variable Name Node Type: TYPE_STRING
+Variable Reference: false
+  Extern Function Node
+Function Name: printStr
+Function Return Type: TYPE_VOID
+Function Visibility: <VISIBILITY UNKNOWN>
+Function Parameters:
+    Variable Declaration Node: s
+Variable Name Node Type: TYPE_STRING
+Variable Reference: false
+  Variable Declaration Node: qix
+Variable Name Node Type: TYPE_INT
+Variable Reference: false
+    Integer Literal Node: 34
+  Function Declaration Node name: main
+Function Declaration Node returnType: TYPE_VOID
+Function Declaration Node visibility: VISIBILITY_PUBLIC
+Function Declaration Node params:
+Function Declaration Node body:
+    Block Node with 1 statements (capacity: 8)
+      Variable Declaration Node: foo
+Variable Name Node Type: TYPE_INT
+Variable Reference: false
+        Integer Literal Node: 34
+
+>===------- End Tree ------===<
+
+[Main] Generating IR code...
+>===------------- CPP Code Generation -------------===<
+
+[CPP] Starting Code Generation...
+[CPP] Root Node Initialized
+[CPP.h] CryoSyntax Initialized
+[CPP.h] CryoTypes Initialized
+[CPP.h] CryoModules Initialized
+[CPP.h] CodeGen constructor start
+[CPP.h] CodeGen Initialized
+[CPP.h] Module Initialized
+
+Starting Code Generation...
+
+First Pass: Declaring all functions
+
+Second Pass: Generate code for the entire program
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_PROGRAM.
+[Generation] Generating code for program
+[Generation] Generating code for program statement 0
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_EXTERN_FUNCTION.
+[Functions] Generating function prototype for printInt
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x5a621437f178
+[Functions] Getting param 0
+[Functions] Getting params...
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Functions] Successfully generated function prototype for printInt
+[Functions] Generating function prototype for printInt
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x5a621437f178
+[Functions] Getting param 0
+[Functions] Getting params...
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Functions] Successfully generated function prototype for printInt
+[Generation] Moving to next statement
+[Generation] Generating code for program statement 1
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_EXTERN_FUNCTION.
+[Functions] Generating function prototype for printStr
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x5a621437f178
+[Functions] Getting param 0
+[Functions] Getting params...
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Functions] Successfully generated function prototype for printStr
+[Functions] Generating function prototype for printStr
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x5a621437f178
+[Functions] Getting param 0
+[Functions] Getting params...
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Functions] Successfully generated function prototype for printStr
+[Generation] Moving to next statement
+[Generation] Generating code for program statement 2
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_VAR_DECLARATION.
+[Variables] Generating variable declaration
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Expressions] Generating code for literal expression
+[Expressions] Generating integer literal
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Expressions] Generating code for literal expression
+[Expressions] Generating integer literal
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[DEBUG] Initial Value: IntegerTyID	
+Variable: PointerTyID	
+LLVM Type: IntegerTyID
+Error: Type mismatch between variable and initial value.
+[CPP] Generated variable declaration for qix
+[Generation] Moving to next statement
+[Generation] Generating code for program statement 3
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_FUNCTION_DECLARATION.
+[Functions] Generating function prototype for main
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x5a621437f178
+[Functions] Successfully generated function prototype for main
+[Functions] Generating function main
+[Functions] Set insert point for function main
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_VAR_DECLARATION.
+[Variables] Generating variable declaration
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Expressions] Generating code for literal expression
+[Expressions] Generating integer literal
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Expressions] Generating code for literal expression
+[Expressions] Generating integer literal
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[DEBUG] Initial Value: IntegerTyID	
+Variable: PointerTyID	
+LLVM Type: IntegerTyID
+Error: Type mismatch between variable and initial value.
+[CPP] Generated variable declaration for foo
+[Generation] Moving to next statement
+
+>===------- LLVM IR Code -------===<
+
+; ModuleID = 'main'
+source_filename = "main"
+
+@qix = global i32 34
+@foo = global i32 34
+
+declare void @printInt(i8)
+
+declare void @printInt.1(i8)
+
+declare void @printStr(i8)
+
+declare void @printStr.2(i8)
+
+declare void @main()
+
+define void @main.3() {
+entry:
+  ret void
+}
+
+>===------- End IR Code ------===<
+
+LLVM IR written to output.ll
+
+Code generation complete
+>===------------- CPP End Code Generation -------------===<
+[Main] IR code generated, freeing AST.
+[AST] attempting to free program statement 0
+[AST] statement type: EXTERN_FUNCTION
+[AST] Freeing Variable Declaration Node: i
+[AST] Node of type VAR_DECLARATION successfully freed.
+[AST] Node of type EXTERN_FUNCTION successfully freed.
+[AST] attempting to free program statement 1
+[AST] statement type: EXTERN_FUNCTION
+[AST] Freeing Variable Declaration Node: s
+[AST] Node of type VAR_DECLARATION successfully freed.
+[AST] Node of type EXTERN_FUNCTION successfully freed.
+[AST] attempting to free program statement 2
+[AST] statement type: VAR_DECLARATION
+[AST] Freeing Variable Declaration Node: qix
+[AST] Node of type VAR_DECLARATION successfully freed.
+[AST] attempting to free program statement 3
+[AST] statement type: FUNCTION_DECLARATION
+[AST] Freeing Variable Declaration Node: foo
+[AST] Node of type VAR_DECLARATION successfully freed.
+[AST] Node of type BLOCK successfully freed.
+[AST] Node of type FUNCTION_DECLARATION successfully freed.
+[AST] Node of type PROGRAM successfully freed.
+[DEBUG] Program parsed
