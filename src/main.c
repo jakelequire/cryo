@@ -21,25 +21,28 @@
 #include "main.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void generateCodeWrapper(ASTNode* node);
+    void generateCodeWrapper(ASTNode *node);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
+int main(int argc, char *argv[])
+{
+    if (argc < 2)
+    {
         fprintf(stderr, "Usage: %s <path_to_file>\n", argv[0]);
         return 1;
     }
 
-    const char* filePath = argv[1];
-    char* source = readFile(filePath);
-    if (source == NULL) {
+    const char *filePath = argv[1];
+    char *source = readFile(filePath);
+    if (source == NULL)
+    {
         fprintf(stderr, "Failed to read source file.\n");
         return 1;
     }
@@ -51,28 +54,34 @@ int main(int argc, char* argv[]) {
     printf("\n[DEBUG] Lexer initialized\n\n");
 
     // Initialize the symbol table
-    CryoSymbolTable* table = createSymbolTable();
+    CryoSymbolTable *table = createSymbolTable();
 
     // Parse the source code
-    ASTNode* programNode = parseProgram(&lexer, table);
+    ASTNode *programNode = parseProgram(&lexer, table);
 
-    if (programNode != NULL) {
+    if (programNode != NULL)
+    {
         printf("\n\n>===------- AST Tree -------===<\n\n");
         printAST(programNode, 0);
         printf("\n>===------- End Tree ------===<\n\n");
 
         // Perform semantic analysis
-        if (analyzeNode(programNode, table)) {
+        if (analyzeNode(programNode, table))
+        {
             printf("[Main] Generating IR code...\n");
             generateCodeWrapper(programNode); // <- The C++ wrapper function
             printf(">===------------- CPP End Code Generation -------------===<\n");
             printf("[Main] IR code generated, freeing AST.\n");
-        } else {
+        }
+        else
+        {
             fprintf(stderr, "[Main] Semantic analysis failed.\n");
         }
 
         freeAST(programNode);
-    } else {
+    }
+    else
+    {
         fprintf(stderr, "[Main] Failed to parse program.\n");
     }
 
@@ -89,4 +98,3 @@ int main(int argc, char* argv[]) {
     free(source);
     return 0;
 }
-

@@ -72,7 +72,11 @@
                 "/usr/include/**",
                 "/usr/local/include/**"
             ],
-            "defines": [],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
             "compilerPath": "/usr/local/bin/clang++"
         }
     ],

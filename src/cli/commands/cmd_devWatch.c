@@ -16,58 +16,63 @@
  ********************************************************************************/
 #include "cli/devWatch.h"
 
-const char* ignorePatterns[] = {
+const char *ignorePatterns[] = {
     ".git",
     // "/bin",
-    "/tests"
-};
-
+    "/tests"};
 
 // <getHelpArg>
-DevWatchArgs getDevWatchArg(char* arg) {
-    if (strcmp(arg, "-help") == 0)      return DEV_WATCH_ARG_HELP;
-    if (strcmp(arg, "version") == 0)    return DEV_WATCH_ARG_START;
-    
+DevWatchArgs getDevWatchArg(char *arg)
+{
+    if (strcmp(arg, "-help") == 0)
+        return DEV_WATCH_ARG_HELP;
+    if (strcmp(arg, "version") == 0)
+        return DEV_WATCH_ARG_START;
+
     return DEV_WATCH_ARG_UNKNOWN;
 }
 // </getHelpArg>
 
-
 // <executeDevWatchCmd>
-void executeDevWatchCmd(char* argv[]) {
-    char* argument = argv[2];
-    if(argument == NULL) {
+void executeDevWatchCmd(char *argv[])
+{
+    char *argument = argv[2];
+    if (argument == NULL)
+    {
         printf("Watching for changes...\n");
-        char* basePath = getBasePath();
+        char *basePath = getBasePath();
         executeDevWatch(basePath);
         free(basePath);
     }
 
     DevWatchArgs arg = getDevWatchArg(argument);
-    switch (arg) {
-        case DEV_WATCH_ARG_HELP:
-            // Execute Command
-            break;
-            
+    switch (arg)
+    {
+    case DEV_WATCH_ARG_HELP:
+        // Execute Command
+        break;
+
         // case DEV_WATCH_ARG_START:
         //     // Execute Command
         //     break;
 
-        case DEV_WATCH_ARG_UNKNOWN:
-            // Handle Unknown Command
-            break;
+    case DEV_WATCH_ARG_UNKNOWN:
+        // Handle Unknown Command
+        break;
 
-        default:
-            // Do something
+    default:
+        // Do something
     }
 }
 // <executeDevWatchCmd>
 
-
 // <shouldIgnore>
-int shouldIgnore(const char* path) {
-    for (int i = 0; i < sizeof(ignorePatterns) / sizeof(ignorePatterns[0]); i++) {
-        if (strstr(path, ignorePatterns[i]) != NULL) {
+int shouldIgnore(const char *path)
+{
+    for (int i = 0; i < sizeof(ignorePatterns) / sizeof(ignorePatterns[0]); i++)
+    {
+        if (strstr(path, ignorePatterns[i]) != NULL)
+        {
             return 1;
         }
     }
@@ -75,19 +80,23 @@ int shouldIgnore(const char* path) {
 }
 // </shouldIgnore>
 
-
 // <getBasePath>
-char* getBasePath() {
-    char* cwd = malloc(MAX_PATH_LEN * sizeof(char));
-    if (cwd == NULL) {
+char *getBasePath()
+{
+    char *cwd = malloc(MAX_PATH_LEN * sizeof(char));
+    if (cwd == NULL)
+    {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
 
-    if (getcwd(cwd, MAX_PATH_LEN) != NULL) {
+    if (getcwd(cwd, MAX_PATH_LEN) != NULL)
+    {
         printf("Current working dir: %s\n", cwd);
         return cwd;
-    } else {
+    }
+    else
+    {
         perror("getcwd");
         free(cwd);
         exit(EXIT_FAILURE);
@@ -95,38 +104,47 @@ char* getBasePath() {
 }
 // </getBasePath>
 
-
 // Function to check directory recursively
 // <checkDirectory>
-void checkDirectory(const char* basePath, FileInfo** files, int* count, int* capacity) {
-    DIR* dir;
-    struct dirent* ent;
+void checkDirectory(const char *basePath, FileInfo **files, int *count, int *capacity)
+{
+    DIR *dir;
+    struct dirent *ent;
     struct stat st;
     char path[MAX_PATH_LEN];
 
     printf("Checking directory: %s\n", basePath);
 
-    if ((dir = opendir(basePath)) != NULL) {
-        while ((ent = readdir(dir)) != NULL) {
+    if ((dir = opendir(basePath)) != NULL)
+    {
+        while ((ent = readdir(dir)) != NULL)
+        {
             sleep(1);
             if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
                 continue;
 
             snprintf(path, sizeof(path), "%s/%s", basePath, ent->d_name);
 
-            if (shouldIgnore(path)) {
+            if (shouldIgnore(path))
+            {
                 printf("\nIgnoring: %s\n\n", path);
                 continue;
             }
 
-            if (stat(path, &st) == 0) {
-                if (S_ISDIR(st.st_mode)) {
+            if (stat(path, &st) == 0)
+            {
+                if (S_ISDIR(st.st_mode))
+                {
                     checkDirectory(path, files, count, capacity);
-                } else {
-                    if (*count >= *capacity) {
+                }
+                else
+                {
+                    if (*count >= *capacity)
+                    {
                         *capacity *= 2;
                         *files = realloc(*files, *capacity * sizeof(FileInfo));
-                        if (*files == NULL) {
+                        if (*files == NULL)
+                        {
                             perror("realloc");
                             exit(EXIT_FAILURE);
                         }
@@ -135,42 +153,53 @@ void checkDirectory(const char* basePath, FileInfo** files, int* count, int* cap
                     (*files)[*count].mtime = st.st_mtime;
                     (*count)++;
                 }
-            } else {
+            }
+            else
+            {
                 perror("stat");
             }
         }
         closedir(dir);
-    } else {
+    }
+    else
+    {
         perror("Could not open directory");
         exit(EXIT_FAILURE);
     }
 }
 // </checkDirectory>
 
-
 // <executeDevWatch>
-void executeDevWatch(const char* basePath) {
+void executeDevWatch(const char *basePath)
+{
     int capacity = 10;
     int count = 0;
-    FileInfo* files = malloc(capacity * sizeof(FileInfo));
-    if (files == NULL) {
+    FileInfo *files = malloc(capacity * sizeof(FileInfo));
+    if (files == NULL)
+    {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
 
     checkDirectory(basePath, &files, &count, &capacity);
 
-    while (1) {
-        for (int i = 0; i < count; i++) {
+    while (1)
+    {
+        for (int i = 0; i < count; i++)
+        {
             struct stat st;
-            if (stat(files[i].path, &st) == 0) {
-                if (files[i].mtime != st.st_mtime) {
+            if (stat(files[i].path, &st) == 0)
+            {
+                if (files[i].mtime != st.st_mtime)
+                {
                     files[i].mtime = st.st_mtime;
                     printf("File has changed: %s\n", files[i].path);
                     // Rebuild the project here
                     dirChangeEvent(files[i].path);
                 }
-            } else {
+            }
+            else
+            {
                 perror("stat");
                 exit(EXIT_FAILURE);
             }
@@ -181,54 +210,63 @@ void executeDevWatch(const char* basePath) {
 }
 // </executeDevWatch>
 
-
 // <dirChangeEvent>
-void dirChangeEvent(const char* basePath) {
-    char* fileName = strrchr(basePath, '/');
-    if (!fileName) {
+void dirChangeEvent(const char *basePath)
+{
+    char *fileName = strrchr(basePath, '/');
+    if (!fileName)
+    {
         fileName = strrchr(basePath, '\\');
     }
 
-    if (fileName) {
+    if (fileName)
+    {
         fileName++;
-    } else {
-        fileName = (char*)basePath;
+    }
+    else
+    {
+        fileName = (char *)basePath;
     }
 
     printf("File Changed: %s\n", fileName);
 
     // Check if the file changed is a .c file
-    char* dot = strrchr(fileName, '.');
-    if (dot && strcmp(dot, ".c") == 0 || 
-        dot && strcmp(dot, ".h") == 0 || 
+    char *dot = strrchr(fileName, '.');
+    if (dot && strcmp(dot, ".c") == 0 ||
+        dot && strcmp(dot, ".h") == 0 ||
         dot && strcmp(dot, ".cpp") == 0)
     {
         // Rebuild the project
         printf("Rebuilding project...\n");
         rebuildProject();
-    } else {
+    }
+    else
+    {
         printf("Ignoring non-source file change.\n");
     }
 }
 // </dirChangeEvent>
 
-
 // <findObjectFile>
-bool findObjectFile(char* fileName) {
-    char* objectPath = malloc(MAX_PATH_LEN * sizeof(char));
-    if (objectPath == NULL) {
+bool findObjectFile(char *fileName)
+{
+    char *objectPath = malloc(MAX_PATH_LEN * sizeof(char));
+    if (objectPath == NULL)
+    {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
 
     // Find the last occurrence of '.'
-    char* dot = strrchr(fileName, '.');
-    if (dot && strcmp(dot, ".c") == 0) {
-        *dot = '\0';  // Remove the extension
+    char *dot = strrchr(fileName, '.');
+    if (dot && strcmp(dot, ".c") == 0)
+    {
+        *dot = '\0'; // Remove the extension
     }
 
-    char* cryoSourceDir = getenv("CRYO_PATH");
-    if (cryoSourceDir == NULL) {
+    char *cryoSourceDir = getenv("CRYO_PATH");
+    if (cryoSourceDir == NULL)
+    {
         fprintf(stderr, "CRYO_PATH not set.\n");
         free(objectPath);
         return false;
@@ -244,12 +282,15 @@ bool findObjectFile(char* fileName) {
 
     printf("Object Path: %s\n", objectPath);
 
-    if (access(objectPath, F_OK) != -1) {
+    if (access(objectPath, F_OK) != -1)
+    {
         printf("<!> Object file found.\n");
         // free(objectPath);
         // removeObjectFile(objectPath);
         return true;
-    } else {
+    }
+    else
+    {
         printf("<!> Object file not found.\n");
         free(objectPath);
         return false;
@@ -257,27 +298,27 @@ bool findObjectFile(char* fileName) {
 }
 // </findObjectFile>
 
-
-
-
-
 // <rebuildProject>
-void rebuildProject() {
+void rebuildProject()
+{
     char originalCwd[MAX_PATH_LEN];
-    char* cryoSourceDir = getenv("CRYO_PATH");
-    if (cryoSourceDir == NULL) {
+    char *cryoSourceDir = getenv("CRYO_PATH");
+    if (cryoSourceDir == NULL)
+    {
         fprintf(stderr, "CRYO_PATH not set.\n");
         return;
     }
 
     // Get current working directory
-    if (getcwd(originalCwd, sizeof(originalCwd)) == NULL) {
+    if (getcwd(originalCwd, sizeof(originalCwd)) == NULL)
+    {
         perror("getcwd");
         return;
     }
 
     // Change to the directory where the Makefile is located
-    if (chdir(cryoSourceDir) != 0) {
+    if (chdir(cryoSourceDir) != 0)
+    {
         perror("chdir");
         return;
     }
@@ -296,10 +337,11 @@ void rebuildProject() {
     replaceExecutable(backupExecutablePath, oldExecutablePath);
 
     // Change back to the original working directory
-    if (chdir(originalCwd) != 0) {
+    if (chdir(originalCwd) != 0)
+    {
         perror("chdir");
     }
-    
+
     printf("Project rebuilt.\n");
 
     // Execute the new executable
@@ -312,8 +354,10 @@ void rebuildProject() {
 // </rebuildProject>
 
 // <renameExecutable>
-void renameExecutable(const char* oldPath, const char* newPath) {
-    if (rename(oldPath, newPath) != 0) {
+void renameExecutable(const char *oldPath, const char *newPath)
+{
+    if (rename(oldPath, newPath) != 0)
+    {
         perror("rename");
         exit(EXIT_FAILURE);
     }
@@ -322,12 +366,15 @@ void renameExecutable(const char* oldPath, const char* newPath) {
 // </renameExecutable>
 
 // <replaceExecutable>
-void replaceExecutable(const char* oldPath, const char* newPath) {
-    if (remove(newPath) != 0) {
+void replaceExecutable(const char *oldPath, const char *newPath)
+{
+    if (remove(newPath) != 0)
+    {
         perror("remove");
         exit(EXIT_FAILURE);
     }
-    if (rename(oldPath, newPath) != 0) {
+    if (rename(oldPath, newPath) != 0)
+    {
         perror("rename");
         exit(EXIT_FAILURE);
     }
@@ -335,26 +382,29 @@ void replaceExecutable(const char* oldPath, const char* newPath) {
 }
 // </replaceExecutable>
 
-
 // <executeCommand>
-void executeSysCommand(const char* command) {
+void executeSysCommand(const char *command)
+{
     printf("Executing command: %s\n", command);
     char buffer[128];
-    FILE* pipe = popen(command, "r");
-    if (!pipe) {
+    FILE *pipe = popen(command, "r");
+    if (!pipe)
+    {
         perror("popen");
         exit(EXIT_FAILURE);
     }
-    while (fgets(buffer, sizeof(buffer), pipe) != NULL) {
+    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+    {
         printf("%s", buffer);
     }
     int status = pclose(pipe);
-    if (status == -1) {
+    if (status == -1)
+    {
         perror("pclose");
-    } else {
+    }
+    else
+    {
         printf("Command exited with status: %d\n", status);
     }
 }
 // </executeCommand>
-
-

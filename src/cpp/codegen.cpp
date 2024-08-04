@@ -16,7 +16,6 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
-
 namespace Cryo
 {
     /**
@@ -31,9 +30,9 @@ namespace Cryo
             return;
         }
 
-        CryoContext& cryoContext = compiler.getContext();
-        CryoModules& cryoModulesInstance = compiler.getModules();
-        CryoSyntax& cryoSyntaxInstance = compiler.getSyntax();
+        CryoContext &cryoContext = compiler.getContext();
+        CryoModules &cryoModulesInstance = compiler.getModules();
+        CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
 
         // First Pass: Declare all functions
         std::cout << "\nFirst Pass: Declaring all functions\n";
@@ -109,7 +108,6 @@ namespace Cryo
         CryoModules cryoModulesInstance = compiler.getModules();
         CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
 
-
         switch (node->type)
         {
         case NODE_PROGRAM:
@@ -130,7 +128,7 @@ namespace Cryo
         {
             std::cout << "[CodeGen] Identified NODE_VAR_DECLARATION.\n";
             cryoSyntaxInstance.generateVarDeclaration(node);
-        break;
+            break;
         }
 
         case NODE_STATEMENT:
@@ -324,4 +322,3 @@ namespace Cryo
     } // <identifyNodeExpression>
 
 } // namespace Cryo
-

@@ -19,12 +19,14 @@
 
 using namespace Cryo;
 
-int generateCodeWrapper(ASTNode* node) {
-    std::cout << ">===------------- CPP Code Generation -------------===<\n" << std::endl;
+int generateCodeWrapper(ASTNode *node)
+{
+    std::cout << ">===------------- CPP Code Generation -------------===<\n"
+              << std::endl;
     std::cout << "[CPP] Starting Code Generation..." << std::endl;
 
     // Recast the ASTNode to ASTNode
-    ASTNode* root = (ASTNode*)node;
+    ASTNode *root = (ASTNode *)node;
     std::cout << "[CPP] Root Node Initialized" << std::endl;
 
     Cryo::CryoCompiler compiler;

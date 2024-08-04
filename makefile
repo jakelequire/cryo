@@ -58,7 +58,7 @@ MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
-CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp \
+CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp $(CPP_DIR)utils/debugger.cpp \
 		$(CPP_DIR)modules/blocks.cpp $(CPP_DIR)modules/generation.cpp $(CPP_DIR)modules/modules.cpp $(CPP_DIR)modules/schema.cpp \
 		$(CPP_DIR)syntax/classes.cpp $(CPP_DIR)syntax/conditionals.cpp $(CPP_DIR)syntax/functions.cpp $(CPP_DIR)syntax/variables.cpp \
 		$(CPP_DIR)types/structs.cpp $(CPP_DIR)types/types.cpp $(CPP_DIR)syntax/expressions.cpp $(CPP_DIR)syntax/operations.cpp \
@@ -82,7 +82,7 @@ RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
-CPPOBJ = $(OBJ_DIR)blocks.o $(OBJ_DIR)generation.o $(OBJ_DIR)modules.o \
+CPPOBJ = $(OBJ_DIR)blocks.o $(OBJ_DIR)generation.o $(OBJ_DIR)modules.o $(OBJ_DIR)debugger.o \
 $(OBJ_DIR)classes.o $(OBJ_DIR)conditionals.o $(OBJ_DIR)functions.o $(OBJ_DIR)schema.o $(OBJ_DIR)variables.o \
 $(OBJ_DIR)structs.o $(OBJ_DIR)types.o $(OBJ_DIR)expressions.o $(OBJ_DIR)cppmain.o $(OBJ_DIR)codegen.o \
 $(OBJ_DIR)operations.o $(OBJ_DIR)cryoContext.o $(OBJ_DIR)compiler.o
@@ -161,6 +161,9 @@ $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
 $(OBJ_DIR)codegen.o: $(CPP_DIR)codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+$(OBJ_DIR)debugger.o: $(CPP_DIR)utils/debugger.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+	
 $(OBJ_DIR)blocks.o: $(CPP_DIR)modules/blocks.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

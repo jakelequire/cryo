@@ -48,6 +48,7 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include "cpp/cppLogger.h"
+#include "cpp/debugger.h"
 
 extern "C"
 {
@@ -62,6 +63,7 @@ namespace Cryo
     class CryoTypes;
     class CryoModules;
     class CodeGen;
+    class CryoDebugger;
 
     /// -----------------------------------------------------------------------------------------------
     /**
@@ -78,7 +80,7 @@ namespace Cryo
         }
 
         CryoContext(CryoContext const &) = delete;
-        
+
         void operator=(CryoContext const &) = delete;
 
         llvm::LLVMContext context;
@@ -97,27 +99,29 @@ namespace Cryo
         CryoContext() : builder(context) {}
     };
 
-    class CryoCompiler {
+    class CryoCompiler
+    {
     public:
         CryoCompiler();
         ~CryoCompiler() = default;
-    
-        CryoContext& getContext() { return CryoContext::getInstance(); }
-        CryoSyntax& getSyntax() { return *syntax; }
-        CryoTypes& getTypes() { return *types; }
-        CryoModules& getModules() { return *modules; }
-        CodeGen& getCodeGen() { return *codeGen; }
-    
-        void compile(ASTNode* root);
-    
+
+        CryoContext &getContext() { return CryoContext::getInstance(); }
+        CryoSyntax &getSyntax() { return *syntax; }
+        CryoTypes &getTypes() { return *types; }
+        CryoModules &getModules() { return *modules; }
+        CodeGen &getCodeGen() { return *codeGen; }
+        CryoDebugger &getDebugger() { return *debugger; }
+
+        void compile(ASTNode *root);
+
     private:
-        CryoContext& context;
+        CryoContext &context;
         std::unique_ptr<CryoSyntax> syntax;
         std::unique_ptr<CryoTypes> types;
         std::unique_ptr<CryoModules> modules;
         std::unique_ptr<CodeGen> codeGen;
+        std::unique_ptr<CryoDebugger> debugger;
     };
-
 
     /**
      * @class CodeGen
@@ -130,7 +134,7 @@ namespace Cryo
          * @brief Constructs a CodeGen object and initializes the code generation process.
          * @param context The context to be used during code generation.
          */
-        CodeGen(CryoCompiler& compiler) : compiler(compiler)
+        CodeGen(CryoCompiler &compiler) : compiler(compiler)
         {
             std::cout << "[CPP.h] CodeGen constructor start" << std::endl;
             std::cout << "[CPP.h] CodeGen Initialized" << std::endl;
@@ -146,10 +150,8 @@ namespace Cryo
          */
         void executeCodeGeneration(ASTNode *root);
 
-
-
     private:
-        CryoCompiler& compiler;
+        CryoCompiler &compiler;
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -164,7 +166,7 @@ namespace Cryo
          * @brief Constructs a CryoSyntax object and initializes the syntax-specific code generation process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoSyntax(CryoCompiler& compiler) : compiler(compiler)
+        CryoSyntax(CryoCompiler &compiler) : compiler(compiler)
         {
             std::cout << "[CPP.h] CryoSyntax Initialized" << std::endl;
         }
@@ -307,7 +309,7 @@ namespace Cryo
         llvm::Value *generateBinaryOperation(ASTNode *node);
 
     private:
-        CryoCompiler& compiler;
+        CryoCompiler &compiler;
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -322,7 +324,7 @@ namespace Cryo
          * @brief Constructs a CryoTypes object and initializes the type management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoTypes(CryoCompiler& compiler) : compiler(compiler)
+        CryoTypes(CryoCompiler &compiler) : compiler(compiler)
         {
             std::cout << "[CPP.h] CryoTypes Initialized" << std::endl;
         }
@@ -472,7 +474,7 @@ namespace Cryo
         llvm::Value *createReferenceInt(int value);
 
     private:
-        CryoCompiler& compiler;
+        CryoCompiler &compiler;
     };
 
     /// -----------------------------------------------------------------------------------------------
@@ -487,7 +489,7 @@ namespace Cryo
          * @brief Constructs a CryoModules object and initializes the module management process.
          * @param root The root of the abstract syntax tree (AST) to be processed.
          */
-        CryoModules(CryoCompiler& compiler) : compiler(compiler)
+        CryoModules(CryoCompiler &compiler) : compiler(compiler)
         {
             std::cout << "[CPP.h] CryoModules Initialized" << std::endl;
         }
@@ -524,9 +526,8 @@ namespace Cryo
         void generateExternalDeclaration(ASTNode *node);
 
     private:
-        CryoCompiler& compiler;
+        CryoCompiler &compiler;
     };
-
 
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
@@ -538,7 +539,8 @@ namespace Cryo
         context.initializeContext();
     }
 
-    inline void CryoCompiler::compile(ASTNode* root) {
+    inline void CryoCompiler::compile(ASTNode *root)
+    {
         codeGen->executeCodeGeneration(root);
     }
 }

@@ -14,58 +14,35 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef DEV_WATCH_H
-#define DEV_WATCH_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <time.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <stdbool.h>
+#ifndef CRYO_DEBUGGER
+#define CRYO_DEBUGGER
+#include "codegen.h"
 
-#ifdef _WIN32
-#include <direct.h>
-#include <windows.h>
-#define sleep(x) Sleep(x)
-#define mkdir(name, mode) _mkdir(name)
-#else
-#include <unistd.h>
-#include <sys/inotify.h>
-#endif
-
-#define MAX_PATH_LEN 1024
-
-typedef enum
+namespace Cryo
 {
-    DEV_WATCH_ARG_HELP,
-    DEV_WATCH_ARG_START,
+    class CryoContext;
 
-    DEV_WATCH_ARG_UNKNOWN
-} DevWatchArgs;
+#define VALIDATE_ASTNODE(node) checkNode(node)
+#define DEBUG_PANIC debugPanic()
+#define DEBUG_ASSERT nullptr // Temp value
 
-typedef struct FileInfo
-{
-    char path[MAX_PATH_LEN];
-    time_t mtime;
-} FileInfo;
+    class CryoDebugger
+    {
+    public:
+        CryoDebugger(CryoContext &context) : context(context) {}
 
-DevWatchArgs getDevWatchArg(char *arg);
-void executeDevWatchCmd(char *argv[]);
+        void logNode(ASTNode *node);
+        // Macro Implementations
+        void checkNode(ASTNode *node);
+        void debugPanic(std::string funcName);
 
-int shouldIgnore(const char *path);
-char *getBasePath(void);
-void executeDevWatch(const char *basePath);
-void checkDirectory(const char *basePath, FileInfo **files, int *count, int *capacity);
+    private:
+        CryoContext &context;
+        bool isNodeTypeValid(ASTNode *node);
 
-void dirChangeEvent(const char *basePath);
-bool findObjectFile(char *fileName);
-void rebuildProject(void);
-void executeSysCommand(const char *command);
-void renameExecutable(const char *oldPath, const char *newPath);
-void replaceExecutable(const char *oldPath, const char *newPath);
-#endif // DEV_WATCH_H
+    protected:
+    };
+
+}
+
+#endif // CRYO_DEBUGGER
