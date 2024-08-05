@@ -16,11 +16,13 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
-namespace Cryo {
+namespace Cryo
+{
 
-
-std::string CryoTypes::LLVMTypeIdToString(llvm::Type::TypeID type) {
-    switch(type) {
+    std::string CryoTypes::LLVMTypeIdToString(llvm::Type::TypeID type)
+    {
+        switch (type)
+        {
         case llvm::Type::TypeID::HalfTyID:
             return "HalfTyID";
         case llvm::Type::TypeID::BFloatTyID:
@@ -67,23 +69,26 @@ std::string CryoTypes::LLVMTypeIdToString(llvm::Type::TypeID type) {
             return "TargetExtTyID";
         default:
             return "Unknown";
+        }
     }
-}
 
-std::string CryoTypes::LLVMTypeToString(llvm::Type* type) {
-    std::string typeStr;
-    llvm::raw_string_ostream rso(typeStr);
-    type->print(rso);
-    return rso.str();
-}
+    std::string CryoTypes::LLVMTypeToString(llvm::Type *type)
+    {
+        std::string typeStr;
+        llvm::raw_string_ostream rso(typeStr);
+        type->print(rso);
+        return rso.str();
+    }
 
-llvm::Type* CryoTypes::getLLVMType(CryoDataType type) {
-    std::cout << "[Types] Getting LLVM Type for " << CryoDataTypeToString(type) << std::endl;
-    // Test if the context exists at all:
+    llvm::Type *CryoTypes::getLLVMType(CryoDataType type)
+    {
+        std::cout << "[Types] Getting LLVM Type for " << CryoDataTypeToString(type) << std::endl;
+        // Test if the context exists at all:
 
-    CryoContext& cryoContext = compiler.getContext();
+        CryoContext &cryoContext = compiler.getContext();
 
-    switch(type) {
+        switch (type)
+        {
         case DATA_TYPE_INT:
             std::cout << "[Types] Returning int type\n";
             return llvm::Type::getInt32Ty(cryoContext.context);
@@ -109,19 +114,21 @@ llvm::Type* CryoTypes::getLLVMType(CryoDataType type) {
         default:
             std::cerr << "[Types] Error: Unsupported type\n";
             return nullptr;
-    }
-}
-
-
-llvm::Type* CryoTypes::createLLVMConstantType(CryoDataType type) {
-    if (type == DATA_TYPE_UNKNOWN) {
-        std::cerr << "[Types] Error: Unknown type\n";
-        return nullptr;
+        }
     }
 
-    CryoContext& cryoContext = compiler.getContext();
+    llvm::Type *CryoTypes::createLLVMConstantType(CryoDataType type)
+    {
+        if (type == DATA_TYPE_UNKNOWN)
+        {
+            std::cerr << "[Types] Error: Unknown type\n";
+            return nullptr;
+        }
 
-    switch(type) {
+        CryoContext &cryoContext = compiler.getContext();
+
+        switch (type)
+        {
         case DATA_TYPE_INT:
             return llvm::Type::getInt32Ty(cryoContext.context);
         case DATA_TYPE_FLOAT:
@@ -135,62 +142,74 @@ llvm::Type* CryoTypes::createLLVMConstantType(CryoDataType type) {
         default:
             std::cerr << "[Types] Error: Unsupported type\n";
             return nullptr;
+        }
     }
-}
 
-llvm::PointerType* CryoTypes::createLLVMPointerType(CryoDataType type) {
-    llvm::Type* baseType = createLLVMConstantType(type);
-    if (!baseType) {
-        return nullptr;
-    }
-    return llvm::PointerType::getUnqual(baseType);
-}
-
-llvm::ArrayType* CryoTypes::createLLVMArrayType(CryoDataType elementType, unsigned int size) {
-    llvm::Type* baseType = createLLVMConstantType(elementType);
-    if (!baseType) {
-        return nullptr;
-    }
-    return llvm::ArrayType::get(baseType, size);
-}
-
-llvm::StructType* CryoTypes::createLLVMStructType(const std::vector<CryoDataType>& memberTypes, const std::string& name) {
-    CryoContext& cryoContext = compiler.getContext();
-    
-    std::vector<llvm::Type*> llvmTypes;
-    for (const auto& type : memberTypes) {
-        llvm::Type* memberType = createLLVMConstantType(type);
-        if (!memberType) {
+    llvm::PointerType *CryoTypes::createLLVMPointerType(CryoDataType type)
+    {
+        llvm::Type *baseType = createLLVMConstantType(type);
+        if (!baseType)
+        {
             return nullptr;
         }
-        llvmTypes.push_back(memberType);
-    }
-    
-    if (name.empty()) {
-        return llvm::StructType::get(cryoContext.context, llvmTypes);
-    } else {
-        return llvm::StructType::create(cryoContext.context, llvmTypes, name);
-    }
-}
-
-
-llvm::FunctionType* CryoTypes::createLLVMFunctionType(CryoDataType returnType, const std::vector<CryoDataType>& paramTypes, bool isVarArg) {
-    llvm::Type* llvmReturnType = createLLVMConstantType(returnType);
-    if (!llvmReturnType) {
-        return nullptr;
+        return llvm::PointerType::getUnqual(baseType);
     }
 
-    std::vector<llvm::Type*> llvmParamTypes;
-    for (const auto& type : paramTypes) {
-        llvm::Type* paramType = createLLVMConstantType(type);
-        if (!paramType) {
+    llvm::ArrayType *CryoTypes::createLLVMArrayType(CryoDataType elementType, unsigned int size)
+    {
+        llvm::Type *baseType = createLLVMConstantType(elementType);
+        if (!baseType)
+        {
             return nullptr;
         }
-        llvmParamTypes.push_back(paramType);
+        return llvm::ArrayType::get(baseType, size);
     }
 
-    return llvm::FunctionType::get(llvmReturnType, llvmParamTypes, isVarArg);
-}
+    llvm::StructType *CryoTypes::createLLVMStructType(const std::vector<CryoDataType> &memberTypes, const std::string &name)
+    {
+        CryoContext &cryoContext = compiler.getContext();
+
+        std::vector<llvm::Type *> llvmTypes;
+        for (const auto &type : memberTypes)
+        {
+            llvm::Type *memberType = createLLVMConstantType(type);
+            if (!memberType)
+            {
+                return nullptr;
+            }
+            llvmTypes.push_back(memberType);
+        }
+
+        if (name.empty())
+        {
+            return llvm::StructType::get(cryoContext.context, llvmTypes);
+        }
+        else
+        {
+            return llvm::StructType::create(cryoContext.context, llvmTypes, name);
+        }
+    }
+
+    llvm::FunctionType *CryoTypes::createLLVMFunctionType(CryoDataType returnType, const std::vector<CryoDataType> &paramTypes, bool isVarArg)
+    {
+        llvm::Type *llvmReturnType = createLLVMConstantType(returnType);
+        if (!llvmReturnType)
+        {
+            return nullptr;
+        }
+
+        std::vector<llvm::Type *> llvmParamTypes;
+        for (const auto &type : paramTypes)
+        {
+            llvm::Type *paramType = createLLVMConstantType(type);
+            if (!paramType)
+            {
+                return nullptr;
+            }
+            llvmParamTypes.push_back(paramType);
+        }
+
+        return llvm::FunctionType::get(llvmReturnType, llvmParamTypes, isVarArg);
+    }
 
 } // namespace Cryo
-

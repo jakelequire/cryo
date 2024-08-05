@@ -27,6 +27,7 @@
 #include <malloc.h>
 #include <any>
 #include <cstdint>
+#include <unordered_set>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -451,7 +452,7 @@ namespace Cryo
          * @param str The string to be converted.
          * @return The created LLVM value for the string.
          */
-        llvm::Value *createString(const std::string &str);
+        llvm::Constant *createString(const std::string &str);
 
         /**
          * @brief Creates a new LLVM value for a number.

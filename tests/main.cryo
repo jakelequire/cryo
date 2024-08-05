@@ -1,13 +1,12 @@
 
-extern function printInt(i: string) -> void;
+extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
 
 const qix: int = 34;
-//const foo: string = "Hello, World!";
+const foo: string = "Hello, World!";
 
 
 public function main() -> void {
-    //printInt(qix);
-    const foo: int = 34;
-    //printStr(foo);
+    printInt(qix);
+    return;
 }

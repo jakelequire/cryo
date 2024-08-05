@@ -23,6 +23,18 @@ namespace Cryo
     {
         CryoContext &cryoContext = compiler.getContext();
 
+        // Check if _defaulted function already exists
+        if (cryoContext.module->getFunction("main"))
+        {
+            std::cout << "[Functions] Main function already exists. Not creating default.\n";
+            return;
+        }
+        if (cryoContext.module->getFunction("_defaulted"))
+        {
+            std::cout << "[Functions] _defaulted function already exists. Skipping creation.\n";
+            return;
+        }
+
         llvm::FunctionType *funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(cryoContext.module->getContext()), false);
         llvm::Function *function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "_defaulted", cryoContext.module.get());
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
@@ -68,6 +80,13 @@ namespace Cryo
             return;
         }
 
+        // Check if function already exists in the module
+        if (cryoContext.module->getFunction(functionName))
+        {
+            std::cout << "[Functions] Function " << functionName << " already declared. Skipping." << std::endl;
+            return;
+        }
+
         std::cout << "[Functions] Generating function prototype for " << functionName << std::endl;
         CryoDataType ASTDataType = functionNode->returnType;
         std::cout << "[Functions] Function return type: " << CryoDataTypeToString(ASTDataType) << std::endl;
@@ -90,26 +109,26 @@ namespace Cryo
             std::cerr << "[Functions] Error: functionNode or functionNode->params is null\n";
             return;
         }
+        std::cout << "[Functions] Function " << functionName << " has " << functionNode->paramCount << " parameters." << std::endl;
+
         for (int i = 0; i < functionNode->paramCount; i++)
         {
-            std::cout << "[Functions] Getting param " << i << std::endl;
-            if (functionNode->params[i]->data.varDecl.dataType)
+            if (!functionNode->params[i])
             {
-                std::cout << "[Functions] Getting params...\n";
-                CryoDataType paramType = functionNode->params[i]->data.varDecl.dataType;
-                llvm::Type *llvmType = cryoTypesInstance.getLLVMType(paramType);
-                if (!llvmType)
-                {
-                    std::cerr << "[Functions] Error: Failed to get LLVM type for parameter " << i << std::endl;
-                    return;
-                }
-                paramTypes.push_back(llvmType);
-            }
-            else
-            {
-                std::cerr << "[Functions] Error: Parameter data type is null for parameter " << i << std::endl;
+                std::cerr << "[Functions] Error: Parameter " << i << " is null for function " << functionName << std::endl;
                 return;
             }
+
+            CryoDataType paramType = functionNode->params[i]->data.varDecl.dataType;
+            std::cout << "[Functions] Parameter " << i << " type: " << CryoDataTypeToString(paramType) << std::endl;
+
+            llvm::Type *llvmType = cryoTypesInstance.getLLVMType(paramType);
+            if (!llvmType)
+            {
+                std::cerr << "[Functions] Error: Failed to get LLVM type for parameter " << i << " in function " << functionName << std::endl;
+                return;
+            }
+            paramTypes.push_back(llvmType);
         }
 
         llvm::FunctionType *funcType = llvm::FunctionType::get(returnType, paramTypes, false);
@@ -192,8 +211,7 @@ namespace Cryo
             std::cerr << "[CPP] Warning: Function " << functionName << " already exists in the module\n";
         }
 
-        llvm::BasicBlock *BB = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
-        cryoContext.builder.SetInsertPoint(BB);
+        cryoContext.builder.SetInsertPoint(entry);
 
         // Generate code for the function body
         if (node->data.functionDecl.function->body)
@@ -202,7 +220,7 @@ namespace Cryo
         }
 
         // Ensure the function has a return statement or terminator
-        if (!BB->getTerminator())
+        if (!entry->getTerminator())
         {
             if (returnType->isVoidTy())
             {
@@ -251,23 +269,35 @@ namespace Cryo
     {
         CryoContext &cryoContext = compiler.getContext();
 
+        std::cout << "[Functions] Generating call to function: " << node->data.functionCall.name << std::endl;
+
         llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall.name);
         if (!function)
         {
-            std::cerr << "[Functions] Error: Function not found in module @generateFunctionCall\n";
+            std::cerr << "[Functions] Error: Function " << node->data.functionCall.name << " not found in module" << std::endl;
             return;
         }
 
         std::vector<llvm::Value *> args;
         for (int i = 0; i < node->data.functionCall.argCount; i++)
         {
-            args.push_back(generateExpression(node->data.functionCall.args[i]));
+            llvm::Value *arg = generateExpression(node->data.functionCall.args[i]);
+            if (!arg)
+            {
+                std::cerr << "[Functions] Error: Failed to generate argument " << i << " for function " << node->data.functionCall.name << std::endl;
+                return;
+            }
+            args.push_back(arg);
+        }
+
+        if (args.size() != function->arg_size())
+        {
+            std::cerr << "[Functions] Error: Argument count mismatch for function " << node->data.functionCall.name << std::endl;
+            return;
         }
 
         llvm::Value *call = cryoContext.builder.CreateCall(function, args);
         std::cout << "[Functions] Generated function call to " << node->data.functionCall.name << std::endl;
-
-        return;
     }
 
     void CryoSyntax::generateFunctionBlock(ASTNode *node)

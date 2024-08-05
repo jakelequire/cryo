@@ -16,33 +16,83 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
-namespace Cryo {
+namespace Cryo
+{
 
-bool CryoModules::declareFunctions(ASTNode* node) {
-    if (node == nullptr) {
-        std::cerr << "Error: node is null." << std::endl;
-        return false;
-    }
+    /*
+    Refactor for this file, notes:
+    In the logs, it seems to be defining function declarations more than once.
+    There seems to be an overlap or multiple calls somehow to prototyping.
 
-    CryoSyntax& cryoSyntaxInstance = compiler.getSyntax();
+    The idea for the refactor, loop over the AST Tree and find the function nodes (extern or normal).
+    */
 
-    if (node->type == NODE_PROGRAM) {
-        ASTNode* child = node->firstChild;
-        while (child != nullptr) {
-            if (child == nullptr) {
-                std::cerr << "Error: child node is null." << std::endl;
+    bool CryoModules::declareFunctions(ASTNode *node)
+    {
+        if (!node)
+        {
+            std::cerr << "Error: node is null." << std::endl;
+            return false;
+        }
+
+        CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
+        bool mainFunctionExists = false;
+        std::unordered_set<std::string> declaredFunctions;
+
+        for (int i = 0; i < node->data.program.stmtCount; ++i)
+        {
+            ASTNode *statement = node->data.program.statements[i];
+            if (!statement)
+            {
+                std::cerr << "Error: statement is null at index " << i << "." << std::endl;
                 continue;
             }
 
-            std::cerr << "Processing node of type: " << child->type << std::endl;
+            switch (statement->type)
+            {
+            case NODE_FUNCTION_DECLARATION:
+            {
+                FunctionDeclNode *functionNode = statement->data.functionDecl.function;
+                if (functionNode)
+                {
+                    if (functionNode->name == "main")
+                    {
+                        std::cout << "[Schema] `main` Function Found, not generating prototype." << std::endl;
+                        mainFunctionExists = true;
+                        continue;
+                    }
+                    else if (declaredFunctions.find(functionNode->name) == declaredFunctions.end())
+                    {
+                        cryoSyntaxInstance.generateFunctionPrototype(statement);
+                        declaredFunctions.insert(functionNode->name);
+                    }
+                }
+                break;
+            }
 
-            if (child->type == NODE_FUNCTION_DECLARATION) {
-                // Call to generateFunctionPrototype
-                cryoSyntaxInstance.generateFunctionPrototype(child);
+            case NODE_EXTERN_FUNCTION:
+            {
+                FunctionDeclNode *externFunctionNode = statement->data.externNode.decl.function;
+                if (externFunctionNode && declaredFunctions.find(externFunctionNode->name) == declaredFunctions.end())
+                {
+                    cryoSyntaxInstance.generateFunctionPrototype(statement);
+                    declaredFunctions.insert(externFunctionNode->name);
+                }
+                else
+                {
+                    std::cerr << "Error: extern function node is null or already declared." << std::endl;
+                }
+                break;
+            }
+
+            default:
+                std::cout << "[Schema] Non-Function Declaration in @declareFunctions. Skipping..." << std::endl;
+                break;
             }
         }
+
+        std::cout << "[Schema] Function Declarations Complete." << std::endl;
+        return mainFunctionExists;
     }
-    return true;
-}
 
 } // namespace Cryo
