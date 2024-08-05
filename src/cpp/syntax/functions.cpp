@@ -138,7 +138,12 @@ namespace Cryo
             return;
         }
 
-        llvm::Function *function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
+        llvm::Function *function = llvm::Function::Create(
+            funcType,
+            llvm::Function::ExternalLinkage,
+            functionName,
+            cryoContext.module.get());
+
         if (!function)
         {
             std::cerr << "[Functions] Error: Failed to create LLVM function\n";

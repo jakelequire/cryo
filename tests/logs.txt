@@ -1,3 +1,4 @@
+phock@phock-MS-7C02:~/Programming/apps/cryo-env$ cryo build ./main.cryo 
 [DEBUG] Argument Count: 1
 Command: build
 Building Cryo project...
@@ -7,23 +8,22 @@ Starting Lexer Initialization...
 
 
 {lexer} Lexer initialized. 
-Start: 0x5a621437e8c0 
-Current: 0x5a621437e8c0 
+Start: 0x6326913df180 
+Current: 0x6326913df180 
 
 Source:
 -------
 
-extern function printInt(i: string) -> void;
+extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
 
 const qix: int = 34;
-//const foo: string = "Hello, World!";
+const foo: string = "Hello, World!";
 
 
 public function main() -> void {
-    //printInt(qix);
-    const foo: int = 34;
-    //printStr(foo);
+    printInt(32);
+    return;
 }
 
 
@@ -95,15 +95,15 @@ public function main() -> void {
 
 [Parser] @getNextToken | Current Token before: Type=124, Start=:, Length=1
 [Lexer] Getting next token...
-[Lexer] Created token: string (Type: 102, Line: 2, Column: 35)
-[Lexer] Identifier token created: string
-[Parser] @getNextToken | Next Token after: Type=102, Start=string, Length=6
-[Parser DEBUG] Current Token: TOKEN_KW_STRING, Lexeme: string
+[Lexer] Created token: int (Type: 94, Line: 2, Column: 32)
+[Lexer] Identifier token created: int
+[Parser] @getNextToken | Next Token after: Type=94, Start=int, Length=3
+[Parser DEBUG] Current Token: TOKEN_KW_INT, Lexeme: int
 [Parser] Parsing type...
-[Parser] Getting data type for input: string
-[Parser] @getNextToken | Current Token before: Type=102, Start=string, Length=6
+[Parser] Getting data type for input: int
+[Parser] @getNextToken | Current Token before: Type=94, Start=int, Length=3
 [Lexer] Getting next token...
-[Lexer] Created token: ) (Type: 144, Line: 2, Column: 36)
+[Lexer] Created token: ) (Type: 144, Line: 2, Column: 33)
 [Lexer] Symbol token created: )
 [Parser] @getNextToken | Next Token after: Type=144, Start=), Length=1
 [AST] Creating Parameter Node: i
@@ -118,7 +118,7 @@ public function main() -> void {
 
 [Parser] @getNextToken | Current Token before: Type=144, Start=), Length=1
 [Lexer] Getting next token...
-[Lexer] Created token: -> (Type: 21, Line: 2, Column: 39)
+[Lexer] Created token: -> (Type: 21, Line: 2, Column: 36)
 [Lexer] Symbol token created: ->
 [Parser] @getNextToken | Next Token after: Type=21, Start=->, Length=2
 [Parser DEBUG] Current Token: TOKEN_RESULT_ARROW, Lexeme: ->
@@ -126,14 +126,14 @@ public function main() -> void {
 [Parser] Found return type arrow
 [Parser] @getNextToken | Current Token before: Type=21, Start=->, Length=2
 [Lexer] Getting next token...
-[Lexer] Created token: void (Type: 100, Line: 2, Column: 44)
+[Lexer] Created token: void (Type: 100, Line: 2, Column: 41)
 [Lexer] Identifier token created: void
 [Parser] @getNextToken | Next Token after: Type=100, Start=void, Length=4
 [Parser] Parsing type...
 [Parser] Getting data type for input: void
 [Parser] @getNextToken | Current Token before: Type=100, Start=void, Length=4
 [Lexer] Getting next token...
-[Lexer] Created token: ; (Type: 138, Line: 2, Column: 45)
+[Lexer] Created token: ; (Type: 138, Line: 2, Column: 42)
 [Lexer] Symbol token created: ;
 [Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
 
@@ -330,11 +330,10 @@ printStr             EXTERN_FUNCTION          void               0          fals
 
 [Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
 [Lexer] Getting next token...
-[Lexer] Peeking next character: /
-[Lexer] Created token: public (Type: 64, Line: 9, Column: 7)
-[Lexer] Identifier token created: public
-[Parser] @getNextToken | Next Token after: Type=64, Start=public, Length=6
-[Parser DEBUG] Current Token: TOKEN_KW_PUBLIC, Lexeme: public
+[Lexer] Created token: const (Type: 63, Line: 6, Column: 6)
+[Lexer] Identifier token created: const
+[Parser] @getNextToken | Next Token after: Type=63, Start=const, Length=5
+[Parser DEBUG] Current Token: TOKEN_KW_CONST, Lexeme: const
 [AST] Creating Variable Declaration Node: qix
 [AST_DEBUG] Creating node: 2
 [AST] Created node of type: 2
@@ -359,6 +358,82 @@ Name                 Type                 Val/RetType          Scope        Cons
 printInt             EXTERN_FUNCTION          void               0          false          1         
 printStr             EXTERN_FUNCTION          void               0          false          1         
 qix                  VAR_DECLARATION          int                0          false          0         
+-------------------------------------------------------------------------------------------------
+[Parser] Parsing statement...
+[Parser] Entering parseVarDeclaration
+[Parser] @getNextToken | Current Token before: Type=63, Start=const, Length=5
+[Lexer] Getting next token...
+[Lexer] Created token: foo (Type: 1, Line: 6, Column: 10)
+[Lexer] Identifier token created: foo
+[Parser] @getNextToken | Next Token after: Type=1, Start=foo, Length=3
+[Parser] @getNextToken | Current Token before: Type=1, Start=foo, Length=3
+[Lexer] Getting next token...
+[Lexer] Created token: : (Type: 124, Line: 6, Column: 11)
+[Lexer] Symbol token created: :
+[Parser] @getNextToken | Next Token after: Type=124, Start=:, Length=1
+[Parser] @getNextToken | Current Token before: Type=124, Start=:, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: string (Type: 102, Line: 6, Column: 18)
+[Lexer] Identifier token created: string
+[Parser] @getNextToken | Next Token after: Type=102, Start=string, Length=6
+[Parser] Getting data type for input: string
+[Parser] @getNextToken | Current Token before: Type=102, Start=string, Length=6
+[Lexer] Getting next token...
+[Lexer] Created token: = (Type: 127, Line: 6, Column: 20)
+[Lexer] Symbol token created: =
+[Parser] @getNextToken | Next Token after: Type=127, Start==, Length=1
+[Parser] @getNextToken | Current Token before: Type=127, Start==, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: "Hello, World!" (Type: 24, Line: 6, Column: 36)
+[Lexer] String token: "Hello, World!"
+[Lexer] String token created: "Hello, World!"
+[Parser] @getNextToken | Next Token after: Type=24, Start="Hello, World!", Length=15
+[Parser] Parsing expression...
+[Parser] Parsing primary expression...
+[Parser] Parsing string literal
+[AST] Creating String Literal Node: Hello, World!
+[AST_DEBUG] Creating node: 20
+[AST] Created node of type: 20
+[AST] Created String Literal Node: Hello, World!
+[Parser] @getNextToken | Current Token before: Type=24, Start="Hello, World!", Length=15
+[Lexer] Getting next token...
+[Lexer] Created token: ; (Type: 138, Line: 6, Column: 37)
+[Lexer] Symbol token created: ;
+[Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
+
+<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseVarDeclaration>
+
+[Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: public (Type: 64, Line: 9, Column: 7)
+[Lexer] Identifier token created: public
+[Parser] @getNextToken | Next Token after: Type=64, Start=public, Length=6
+[Parser DEBUG] Current Token: TOKEN_KW_PUBLIC, Lexeme: public
+[AST] Creating Variable Declaration Node: foo
+[AST_DEBUG] Creating node: 2
+[AST] Created node of type: 2
+[AST] Created Variable Declaration Node: foo
+[Parser] Created Variable Declaration Node: foo
+[Parser] Variable Declaration Node Type: 2
+[Parser] Variable Declaration Node Type: 3
+[Parser] Adding statement to program...
+[AST] Before adding statement: stmtCount = 3, stmtCapacity = 8
+[AST] After adding statement: stmtCount = 4, stmtCapacity = 8
+Symbol added: foo
+[SymTable - Debug] Symbol count: 4
+[SymTable - Debug] Scope depth: 0
+[SymTable - Debug] Table capacity: 10
+
+-------------------------------------------------------------------------------------------------
+Symbol Table:
+
+Name                 Type                 Val/RetType          Scope        Const       ArgCount
+
+-------------------------------------------------------------------------------------------------
+printInt             EXTERN_FUNCTION          void               0          false          1         
+printStr             EXTERN_FUNCTION          void               0          false          1         
+qix                  VAR_DECLARATION          int                0          false          0         
+foo                  VAR_DECLARATION          string             0          false          0         
 -------------------------------------------------------------------------------------------------
 [Parser] Parsing statement...
 [Parser] Parsing public declaration...
@@ -433,78 +508,96 @@ qix                  VAR_DECLARATION          int                0          fals
 
 [Parser] @getNextToken | Current Token before: Type=147, Start={, Length=1
 [Lexer] Getting next token...
-[Lexer] Peeking next character: /
-[Lexer] Created token: const (Type: 63, Line: 11, Column: 10)
-[Lexer] Identifier token created: const
-[Parser] @getNextToken | Next Token after: Type=63, Start=const, Length=5
-[Parser DEBUG] Current Token: TOKEN_KW_CONST, Lexeme: const
+[Lexer] Created token: printInt (Type: 1, Line: 10, Column: 13)
+[Lexer] Identifier token created: printInt
+[Parser] @getNextToken | Next Token after: Type=1, Start=printInt, Length=8
+[Parser DEBUG] Current Token: TOKEN_IDENTIFIER, Lexeme: printInt
 [Parser] Parsing statement...
-[Parser] Entering parseVarDeclaration
-[Parser] @getNextToken | Current Token before: Type=63, Start=const, Length=5
 [Lexer] Getting next token...
-[Lexer] Created token: foo (Type: 1, Line: 11, Column: 14)
-[Lexer] Identifier token created: foo
-[Parser] @getNextToken | Next Token after: Type=1, Start=foo, Length=3
-[Parser] @getNextToken | Current Token before: Type=1, Start=foo, Length=3
+[Lexer] Created token: ( (Type: 143, Line: 10, Column: 14)
+[Lexer] Symbol token created: (
+[Parser] Parsing function call...
+[AST_DEBUG] Creating node: 9
+[AST] Created node of type: 9
+[Parser] @getNextToken | Current Token before: Type=1, Start=printInt, Length=8
 [Lexer] Getting next token...
-[Lexer] Created token: : (Type: 124, Line: 11, Column: 15)
-[Lexer] Symbol token created: :
-[Parser] @getNextToken | Next Token after: Type=124, Start=:, Length=1
-[Parser] @getNextToken | Current Token before: Type=124, Start=:, Length=1
+[Lexer] Created token: 32 (Type: 22, Line: 10, Column: 16)
+[Lexer] Number token: 32
+[Lexer] Number token created: 32
+[Parser] @getNextToken | Next Token after: Type=22, Start=32, Length=2
+
+<!> 	[Parser] DEBUG: Current Token Type: TOKEN_INT_LITERAL
+[Parser] Parsing arguments...
+[Parser] @getNextToken | Current Token before: Type=22, Start=32, Length=2
 [Lexer] Getting next token...
-[Lexer] Created token: int (Type: 94, Line: 11, Column: 19)
-[Lexer] Identifier token created: int
-[Parser] @getNextToken | Next Token after: Type=94, Start=int, Length=3
-[Parser] Getting data type for input: int
-[Parser] @getNextToken | Current Token before: Type=94, Start=int, Length=3
+[Lexer] Created token: ) (Type: 144, Line: 10, Column: 17)
+[Lexer] Symbol token created: )
+[Parser] @getNextToken | Next Token after: Type=144, Start=), Length=1
+
+
+<#> [Parser] Creating argument node with expected type: TYPE_INT
+<#> [Parser] Argument name: 32
+[AST] Creating Arguments Node
+[AST_DEBUG] Creating node: 2
+[AST] Created node of type: 2
+[AST] Created Arguments Node
+[Parser] Adding argument to function call
+
+<*> [Parser] Consuming token: TOKEN_RPAREN (Expecting: TOKEN_RPAREN) @Fn <parseFunctionCall>
+
+[Parser] @getNextToken | Current Token before: Type=144, Start=), Length=1
 [Lexer] Getting next token...
-[Lexer] Created token: = (Type: 127, Line: 11, Column: 21)
-[Lexer] Symbol token created: =
-[Parser] @getNextToken | Next Token after: Type=127, Start==, Length=1
-[Parser] @getNextToken | Current Token before: Type=127, Start==, Length=1
-[Lexer] Getting next token...
-[Lexer] Created token: 34 (Type: 22, Line: 11, Column: 24)
-[Lexer] Number token: 34
-[Lexer] Number token created: 34
-[Parser] @getNextToken | Next Token after: Type=22, Start=34, Length=2
-[Parser] Parsing expression...
-[Parser] Parsing primary expression...
-[Parser] Parsing integer literal
-[AST] Creating Integer Literal Node: 34
-[AST_DEBUG] Creating node: 7
-[AST] Created node of type: 7
-[AST] Created Integer Literal Node: 34
-[Parser] @getNextToken | Current Token before: Type=22, Start=34, Length=2
-[Lexer] Getting next token...
-[Lexer] Created token: ; (Type: 138, Line: 11, Column: 25)
+[Lexer] Created token: ; (Type: 138, Line: 10, Column: 18)
 [Lexer] Symbol token created: ;
 [Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
+[Parser DEBUG] Current Token: TOKEN_SEMICOLON, Lexeme: ;
 
-<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseVarDeclaration>
+<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseFunctionCall>
 
 [Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
 [Lexer] Getting next token...
-[Lexer] Peeking next character: /
-[Lexer] Created token: } (Type: 148, Line: 13, Column: 2)
-[Lexer] Symbol token created: }
-[Parser] @getNextToken | Next Token after: Type=148, Start=}, Length=1
-[Parser DEBUG] Current Token: TOKEN_RBRACE, Lexeme: }
-[AST] Creating Variable Declaration Node: foo
-[AST_DEBUG] Creating node: 2
-[AST] Created node of type: 2
-[AST] Created Variable Declaration Node: foo
-[Parser] Created Variable Declaration Node: foo
-[Parser] Variable Declaration Node Type: 2
-[Parser] Variable Declaration Node Type: 0
+[Lexer] Created token: return (Type: 61, Line: 11, Column: 11)
+[Lexer] Identifier token created: return
+[Parser] @getNextToken | Next Token after: Type=61, Start=return, Length=6
+[Parser DEBUG] Current Token: TOKEN_KW_RETURN, Lexeme: return
 [Parser] Adding statement to function block
 [AST] Block statement memory is sufficient
 [AST] Final state: stmtCount = 1, stmtCapacity = 8
+[Parser] Parsing statement...
+[Parser] Parsing return statement
+[Parser] Parsing return statement...
+
+<*> [Parser] Consuming token: TOKEN_KW_RETURN (Expecting: TOKEN_KW_RETURN) @Fn <parseReturnStatement>
+
+[Parser] @getNextToken | Current Token before: Type=61, Start=return, Length=6
+[Lexer] Getting next token...
+[Lexer] Created token: ; (Type: 138, Line: 11, Column: 12)
+[Lexer] Symbol token created: ;
+[Parser] @getNextToken | Next Token after: Type=138, Start=;, Length=1
+[Parser DEBUG] Current Token: TOKEN_SEMICOLON, Lexeme: ;
+
+<*> [Parser] Consuming token: TOKEN_SEMICOLON (Expecting: TOKEN_SEMICOLON) @Fn <parseReturnStatement>
+
+[Parser] @getNextToken | Current Token before: Type=138, Start=;, Length=1
+[Lexer] Getting next token...
+[Lexer] Created token: } (Type: 148, Line: 12, Column: 2)
+[Lexer] Symbol token created: }
+[Parser] @getNextToken | Next Token after: Type=148, Start=}, Length=1
+[Parser DEBUG] Current Token: TOKEN_RBRACE, Lexeme: }
+[AST] Creating Return Node
+[AST_DEBUG] Creating node: 13
+[AST] Created node of type: 13
+[AST] Created Return Node
+[AST] Created Return Node: Type = 13
+[Parser] Adding statement to function block
+[AST] Block statement memory is sufficient
+[AST] Final state: stmtCount = 2, stmtCapacity = 8
 
 <*> [Parser] Consuming token: TOKEN_RBRACE (Expecting: TOKEN_RBRACE) @Fn <parseFunctionBlock>
 
 [Parser] @getNextToken | Current Token before: Type=148, Start=}, Length=1
 [Lexer] Getting next token...
-[Lexer] Created token:  (Type: 0, Line: 14, Column: 1)
+[Lexer] Created token:  (Type: 0, Line: 13, Column: 1)
 [Parser] @getNextToken | Next Token after: Type=0, Start=, Length=0
 [Parser DEBUG] Current Token: TOKEN_EOF, Lexeme: 
 [Parser] Exiting function block
@@ -513,10 +606,10 @@ qix                  VAR_DECLARATION          int                0          fals
 [AST] Created node of type: 1
 [AST] Created Function Node: main
 [Parser] Adding statement to program...
-[AST] Before adding statement: stmtCount = 3, stmtCapacity = 8
-[AST] After adding statement: stmtCount = 4, stmtCapacity = 8
+[AST] Before adding statement: stmtCount = 4, stmtCapacity = 8
+[AST] After adding statement: stmtCount = 5, stmtCapacity = 8
 Symbol added: main
-[SymTable - Debug] Symbol count: 4
+[SymTable - Debug] Symbol count: 5
 [SymTable - Debug] Scope depth: 0
 [SymTable - Debug] Table capacity: 10
 
@@ -529,20 +622,21 @@ Name                 Type                 Val/RetType          Scope        Cons
 printInt             EXTERN_FUNCTION          void               0          false          1         
 printStr             EXTERN_FUNCTION          void               0          false          1         
 qix                  VAR_DECLARATION          int                0          false          0         
+foo                  VAR_DECLARATION          string             0          false          0         
 main                 FUNCTION_DECLARATION     void               0          false          0         
 -------------------------------------------------------------------------------------------------
 
 
 >===------- AST Tree -------===<
 
-Program Node with 4 statements (capacity: 8)
+Program Node with 5 statements (capacity: 8)
   Extern Function Node
 Function Name: printInt
 Function Return Type: TYPE_VOID
 Function Visibility: <VISIBILITY UNKNOWN>
 Function Parameters:
     Variable Declaration Node: i
-Variable Name Node Type: TYPE_STRING
+Variable Name Node Type: TYPE_INT
 Variable Reference: false
   Extern Function Node
 Function Name: printStr
@@ -556,16 +650,21 @@ Variable Reference: false
 Variable Name Node Type: TYPE_INT
 Variable Reference: false
     Integer Literal Node: 34
+  Variable Declaration Node: foo
+Variable Name Node Type: TYPE_STRING
+Variable Reference: false
+    String Literal Node: Hello, World!
   Function Declaration Node name: main
 Function Declaration Node returnType: TYPE_VOID
 Function Declaration Node visibility: VISIBILITY_PUBLIC
 Function Declaration Node params:
 Function Declaration Node body:
-    Block Node with 1 statements (capacity: 8)
-      Variable Declaration Node: foo
+    Block Node with 2 statements (capacity: 8)
+      Function Call Node: printInt
+        Variable Declaration Node: 32
 Variable Name Node Type: TYPE_INT
-Variable Reference: false
-        Integer Literal Node: 34
+Variable Reference: true
+      Return Statement Node
 
 >===------- End Tree ------===<
 
@@ -582,8 +681,84 @@ Variable Reference: false
 [CPP.h] Module Initialized
 
 Starting Code Generation...
+Node Type: PROGRAM
+Line: 0
+Program Node
+Statements Count: 5
+Node Type: EXTERN_FUNCTION
+Line: 0
+Unknown Node Type
+Node Type: EXTERN_FUNCTION
+Line: 0
+Unknown Node Type
+Node Type: VAR_DECLARATION
+Line: 0
+Variable Declaration Node
+Variable Name: qix
+Data Type: TYPE_INT
+Is Global: Yes
+Is Reference: No
+Scope Level: 0
+Node Type: LITERAL_EXPR
+Line: 0
+Literal Expression Node
+Data Type: TYPE_INT
+Value: 34
+Node Type: VAR_DECLARATION
+Line: 0
+Variable Declaration Node
+Variable Name: foo
+Data Type: TYPE_STRING
+Is Global: Yes
+Is Reference: No
+Scope Level: 0
+Node Type: STRING_LITERAL
+Line: 0
+String Literal Node
+Value: Hello, World!
+Node Type: FUNCTION_DECLARATION
+Line: 0
+Function Declaration Node
+Function Name: main
+Return Type: TYPE_VOID
+Parameter Count: 0
+Node Type: BLOCK
+Line: 0
+Unknown Node Type
 
 First Pass: Declaring all functions
+[Functions] Generating function prototype for printInt
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x6326913e2338
+[Functions] Function printInt has 1 parameters.
+[Functions] Parameter 0 type: TYPE_INT
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Functions] Successfully generated function prototype for printInt
+[Functions] Generating function prototype for printStr
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x6326913e2338
+[Functions] Function printStr has 1 parameters.
+[Functions] Parameter 0 type: TYPE_STRING
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Functions] Successfully generated function prototype for printStr
+[Schema] Non-Function Declaration in @declareFunctions. Skipping...
+[Schema] Non-Function Declaration in @declareFunctions. Skipping...
+[Functions] Generating function prototype for main
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x6326913e2338
+[Functions] Function main has 0 parameters.
+[Functions] Successfully generated function prototype for main
+[Schema] Function Declarations Complete.
+[CPP] Main function not found, creating default main function
+[Functions] Main function already exists. Not creating default.
 
 Second Pass: Generate code for the entire program
 [CodeGen] Starting Code Generation...
@@ -592,50 +767,14 @@ Second Pass: Generate code for the entire program
 [Generation] Generating code for program statement 0
 [CodeGen] Starting Code Generation...
 [CodeGen] Identified NODE_EXTERN_FUNCTION.
-[Functions] Generating function prototype for printInt
-[Functions] Function return type: TYPE_VOID
-[Types] Getting LLVM Type for TYPE_VOID
-[Types] Returning void type
-[Functions] LLVM return type: 0x5a621437f178
-[Functions] Getting param 0
-[Functions] Getting params...
-[Types] Getting LLVM Type for TYPE_STRING
-[Types] Returning string type
-[Functions] Successfully generated function prototype for printInt
-[Functions] Generating function prototype for printInt
-[Functions] Function return type: TYPE_VOID
-[Types] Getting LLVM Type for TYPE_VOID
-[Types] Returning void type
-[Functions] LLVM return type: 0x5a621437f178
-[Functions] Getting param 0
-[Functions] Getting params...
-[Types] Getting LLVM Type for TYPE_STRING
-[Types] Returning string type
-[Functions] Successfully generated function prototype for printInt
+[Functions] Function printInt already declared. Skipping.
+[Functions] Function printInt already declared. Skipping.
 [Generation] Moving to next statement
 [Generation] Generating code for program statement 1
 [CodeGen] Starting Code Generation...
 [CodeGen] Identified NODE_EXTERN_FUNCTION.
-[Functions] Generating function prototype for printStr
-[Functions] Function return type: TYPE_VOID
-[Types] Getting LLVM Type for TYPE_VOID
-[Types] Returning void type
-[Functions] LLVM return type: 0x5a621437f178
-[Functions] Getting param 0
-[Functions] Getting params...
-[Types] Getting LLVM Type for TYPE_STRING
-[Types] Returning string type
-[Functions] Successfully generated function prototype for printStr
-[Functions] Generating function prototype for printStr
-[Functions] Function return type: TYPE_VOID
-[Types] Getting LLVM Type for TYPE_VOID
-[Types] Returning void type
-[Functions] LLVM return type: 0x5a621437f178
-[Functions] Getting param 0
-[Functions] Getting params...
-[Types] Getting LLVM Type for TYPE_STRING
-[Types] Returning string type
-[Functions] Successfully generated function prototype for printStr
+[Functions] Function printStr already declared. Skipping.
+[Functions] Function printStr already declared. Skipping.
 [Generation] Moving to next statement
 [Generation] Generating code for program statement 2
 [CodeGen] Starting Code Generation...
@@ -643,106 +782,318 @@ Second Pass: Generate code for the entire program
 [Variables] Generating variable declaration
 [Types] Getting LLVM Type for TYPE_INT
 [Types] Returning int type
+[Expressions] Generating code for expression
+Type: LITERAL_EXPR
 [Expressions] Generating code for literal expression
 [Expressions] Generating integer literal
 [Types] Getting LLVM Type for TYPE_INT
 [Types] Returning int type
 [Types] Getting LLVM Type for TYPE_INT
 [Types] Returning int type
-[Expressions] Generating code for literal expression
-[Expressions] Generating integer literal
-[Types] Getting LLVM Type for TYPE_INT
-[Types] Returning int type
-[DEBUG] Initial Value: IntegerTyID	
-Variable: PointerTyID	
-LLVM Type: IntegerTyID
-Error: Type mismatch between variable and initial value.
+[Variables] Created variable declaration for qix
 [CPP] Generated variable declaration for qix
 [Generation] Moving to next statement
 [Generation] Generating code for program statement 3
 [CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_VAR_DECLARATION.
+[Variables] Generating variable declaration
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Expressions] Generating code for expression
+Type: STRING_LITERAL
+[CPP] Generating code for string literal
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Variables] Error: Invalid string initializer
+[Variables] Created variable declaration for foo
+[CPP] Generated variable declaration for foo
+[Generation] Moving to next statement
+[Generation] Generating code for program statement 4
+[CodeGen] Starting Code Generation...
 [CodeGen] Identified NODE_FUNCTION_DECLARATION.
-[Functions] Generating function prototype for main
-[Functions] Function return type: TYPE_VOID
-[Types] Getting LLVM Type for TYPE_VOID
-[Types] Returning void type
-[Functions] LLVM return type: 0x5a621437f178
-[Functions] Successfully generated function prototype for main
 [Functions] Generating function main
 [Functions] Set insert point for function main
 [Types] Getting LLVM Type for TYPE_VOID
 [Types] Returning void type
+[CPP] Warning: Function main already exists in the module
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_FUNCTION_CALL.
+[Functions] Generating call to function: printInt
+[Expressions] Generating code for expression
+Type: VAR_DECLARATION
+[CPP] Generating code for variable declaration
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Functions] Generated function call to printInt
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_RETURN_STATEMENT.
+[Generation] Moving to next statement
+Call parameter type does not match function signature!
+  %"32" = alloca i32, align 4
+ i32  call void @printInt(ptr %"32")
+
+>===------- Error: LLVM module verification failed -------===<
+; ModuleID = 'main'
+source_filename = "main"
+
+@qix = global i32 34
+@.str = private constant [14 x i8] c"Hello, World!\00", align 1
+@foo = global i8 0
+
+declare void @printInt(i32)
+
+declare void @printStr(i8)
+
+define void @main() {
+entry:
+  %"32" = alloca i32, align 4
+  call void @printInt(ptr %"32")
+  ret void
+}
+
+>===----------------- End Error -----------------===<
+Error: LLVM module verification failed
+
+
+// ----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+Symbol Table:
+
+Name                 Type                 Val/RetType          Scope        Const       ArgCount
+
+-------------------------------------------------------------------------------------------------
+printInt             EXTERN_FUNCTION          void               0          false          1         
+printStr             EXTERN_FUNCTION          void               0          false          1         
+qix                  VAR_DECLARATION          int                0          false          0         
+foo                  VAR_DECLARATION          string             0          false          0         
+main                 FUNCTION_DECLARATION     void               0          false          0         
+-------------------------------------------------------------------------------------------------
+
+
+>===------- AST Tree -------===<
+
+Program Node with 5 statements (capacity: 8)
+  Extern Function Node
+Function Name: printInt
+Function Return Type: TYPE_VOID
+Function Visibility: <VISIBILITY UNKNOWN>
+Function Parameters:
+    Variable Declaration Node: i
+Variable Name Node Type: TYPE_INT
+Variable Reference: false
+  Extern Function Node
+Function Name: printStr
+Function Return Type: TYPE_VOID
+Function Visibility: <VISIBILITY UNKNOWN>
+Function Parameters:
+    Variable Declaration Node: s
+Variable Name Node Type: TYPE_STRING
+Variable Reference: false
+  Variable Declaration Node: qix
+Variable Name Node Type: TYPE_INT
+Variable Reference: false
+    Integer Literal Node: 34
+  Variable Declaration Node: foo
+Variable Name Node Type: TYPE_STRING
+Variable Reference: false
+    String Literal Node: Hello, World!
+  Function Declaration Node name: main
+Function Declaration Node returnType: TYPE_VOID
+Function Declaration Node visibility: VISIBILITY_PUBLIC
+Function Declaration Node params:
+Function Declaration Node body:
+    Block Node with 2 statements (capacity: 8)
+      Function Call Node: printInt
+        Variable Declaration Node: qix
+Variable Name Node Type: TYPE_INT
+Variable Reference: true
+      Return Statement Node
+
+>===------- End Tree ------===<
+
+[Main] Generating IR code...
+>===------------- CPP Code Generation -------------===<
+
+[CPP] Starting Code Generation...
+[CPP] Root Node Initialized
+[CPP.h] CryoSyntax Initialized
+[CPP.h] CryoTypes Initialized
+[CPP.h] CryoModules Initialized
+[CPP.h] CodeGen constructor start
+[CPP.h] CodeGen Initialized
+[CPP.h] Module Initialized
+
+Starting Code Generation...
+Node Type: PROGRAM
+Line: 0
+Program Node
+Statements Count: 5
+Node Type: EXTERN_FUNCTION
+Line: 0
+Unknown Node Type
+Node Type: EXTERN_FUNCTION
+Line: 0
+Unknown Node Type
+Node Type: VAR_DECLARATION
+Line: 0
+Variable Declaration Node
+Variable Name: qix
+Data Type: TYPE_INT
+Is Global: Yes
+Is Reference: No
+Scope Level: 0
+Node Type: LITERAL_EXPR
+Line: 0
+Literal Expression Node
+Data Type: TYPE_INT
+Value: 34
+Node Type: VAR_DECLARATION
+Line: 0
+Variable Declaration Node
+Variable Name: foo
+Data Type: TYPE_STRING
+Is Global: Yes
+Is Reference: No
+Scope Level: 0
+Node Type: STRING_LITERAL
+Line: 0
+String Literal Node
+Value: Hello, World!
+Node Type: FUNCTION_DECLARATION
+Line: 0
+Function Declaration Node
+Function Name: main
+Return Type: TYPE_VOID
+Parameter Count: 0
+Node Type: BLOCK
+Line: 0
+Unknown Node Type
+
+First Pass: Declaring all functions
+[Functions] Generating function prototype for printInt
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x61a9efc9a338
+[Functions] Function printInt has 1 parameters.
+[Functions] Parameter 0 type: TYPE_INT
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Functions] Successfully generated function prototype for printInt
+[Functions] Generating function prototype for printStr
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x61a9efc9a338
+[Functions] Function printStr has 1 parameters.
+[Functions] Parameter 0 type: TYPE_STRING
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Functions] Successfully generated function prototype for printStr
+[Schema] Non-Function Declaration in @declareFunctions. Skipping...
+[Schema] Non-Function Declaration in @declareFunctions. Skipping...
+[Functions] Generating function prototype for main
+[Functions] Function return type: TYPE_VOID
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[Functions] LLVM return type: 0x61a9efc9a338
+[Functions] Function main has 0 parameters.
+[Functions] Successfully generated function prototype for main
+[Schema] Function Declarations Complete.
+[CPP] Main function not found, creating default main function
+[Functions] Main function already exists. Not creating default.
+
+Second Pass: Generate code for the entire program
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_PROGRAM.
+[Generation] Generating code for program
+[Generation] Generating code for program statement 0
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_EXTERN_FUNCTION.
+[Functions] Function printInt already declared. Skipping.
+[Functions] Function printInt already declared. Skipping.
+[Generation] Moving to next statement
+[Generation] Generating code for program statement 1
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_EXTERN_FUNCTION.
+[Functions] Function printStr already declared. Skipping.
+[Functions] Function printStr already declared. Skipping.
+[Generation] Moving to next statement
+[Generation] Generating code for program statement 2
 [CodeGen] Starting Code Generation...
 [CodeGen] Identified NODE_VAR_DECLARATION.
 [Variables] Generating variable declaration
 [Types] Getting LLVM Type for TYPE_INT
 [Types] Returning int type
+[Expressions] Generating code for expression
+Type: LITERAL_EXPR
 [Expressions] Generating code for literal expression
 [Expressions] Generating integer literal
 [Types] Getting LLVM Type for TYPE_INT
 [Types] Returning int type
 [Types] Getting LLVM Type for TYPE_INT
 [Types] Returning int type
-[Expressions] Generating code for literal expression
-[Expressions] Generating integer literal
-[Types] Getting LLVM Type for TYPE_INT
-[Types] Returning int type
-[DEBUG] Initial Value: IntegerTyID	
-Variable: PointerTyID	
-LLVM Type: IntegerTyID
-Error: Type mismatch between variable and initial value.
+[Variables] Created variable declaration for qix
+[CPP] Generated variable declaration for qix
+[Generation] Moving to next statement
+[Generation] Generating code for program statement 3
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_VAR_DECLARATION.
+[Variables] Generating variable declaration
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Expressions] Generating code for expression
+Type: STRING_LITERAL
+[CPP] Generating code for string literal
+[Types] Getting LLVM Type for TYPE_STRING
+[Types] Returning string type
+[Variables] Error: Invalid string initializer
+[Variables] Created variable declaration for foo
 [CPP] Generated variable declaration for foo
 [Generation] Moving to next statement
+[Generation] Generating code for program statement 4
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_FUNCTION_DECLARATION.
+[Functions] Generating function main
+[Functions] Set insert point for function main
+[Types] Getting LLVM Type for TYPE_VOID
+[Types] Returning void type
+[CPP] Warning: Function main already exists in the module
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_FUNCTION_CALL.
+[Functions] Generating call to function: printInt
+[Expressions] Generating code for expression
+Type: VAR_DECLARATION
+[CPP] Generating code for variable declaration
+[Types] Getting LLVM Type for TYPE_INT
+[Types] Returning int type
+[Functions] Generated function call to printInt
+[CodeGen] Starting Code Generation...
+[CodeGen] Identified NODE_RETURN_STATEMENT.
+[Generation] Moving to next statement
+Call parameter type does not match function signature!
+  %qix = alloca i32, align 4
+ i32  call void @printInt(ptr %qix)
 
->===------- LLVM IR Code -------===<
-
+>===------- Error: LLVM module verification failed -------===<
 ; ModuleID = 'main'
 source_filename = "main"
 
 @qix = global i32 34
-@foo = global i32 34
+@.str = private constant [14 x i8] c"Hello, World!\00", align 1
+@foo = global i8 0
 
-declare void @printInt(i8)
-
-declare void @printInt.1(i8)
+declare void @printInt(i32)
 
 declare void @printStr(i8)
 
-declare void @printStr.2(i8)
-
-declare void @main()
-
-define void @main.3() {
+define void @main() {
 entry:
+  %qix = alloca i32, align 4
+  call void @printInt(ptr %qix)
   ret void
 }
 
->===------- End IR Code ------===<
-
-LLVM IR written to output.ll
-
-Code generation complete
->===------------- CPP End Code Generation -------------===<
-[Main] IR code generated, freeing AST.
-[AST] attempting to free program statement 0
-[AST] statement type: EXTERN_FUNCTION
-[AST] Freeing Variable Declaration Node: i
-[AST] Node of type VAR_DECLARATION successfully freed.
-[AST] Node of type EXTERN_FUNCTION successfully freed.
-[AST] attempting to free program statement 1
-[AST] statement type: EXTERN_FUNCTION
-[AST] Freeing Variable Declaration Node: s
-[AST] Node of type VAR_DECLARATION successfully freed.
-[AST] Node of type EXTERN_FUNCTION successfully freed.
-[AST] attempting to free program statement 2
-[AST] statement type: VAR_DECLARATION
-[AST] Freeing Variable Declaration Node: qix
-[AST] Node of type VAR_DECLARATION successfully freed.
-[AST] attempting to free program statement 3
-[AST] statement type: FUNCTION_DECLARATION
-[AST] Freeing Variable Declaration Node: foo
-[AST] Node of type VAR_DECLARATION successfully freed.
-[AST] Node of type BLOCK successfully freed.
-[AST] Node of type FUNCTION_DECLARATION successfully freed.
-[AST] Node of type PROGRAM successfully freed.
-[DEBUG] Program parsed
+>===----------------- End Error -----------------===<
+Error: LLVM module verification failed
+phock@phock-MS-7C02:~/Programming/apps/cryo$ 
