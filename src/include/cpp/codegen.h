@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <malloc.h>
 #include <any>
+#include <cstdint>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"

@@ -68,15 +68,36 @@
         {
             "name": "Linux Clang",
             "includePath": [
-                "${workspaceFolder}/**",
+                "/home/phock/Programming/apps/cryo/**",
                 "/usr/include/**",
                 "/usr/local/include/**"
             ],
             "defines": [
-                "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
+            "compilerPath": "/usr/local/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "/home/phock/Programming/apps/cryo/**",
+                    "/usr/include/**",
+                    "/usr/local/include/**",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": false
+            }
+        },
+        {
+            "name": "Linux Clang++",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include/**",
+                "/usr/local/include/**"
+            ],
+            "defines": [],
             "compilerPath": "/usr/local/bin/clang++"
         }
     ],
