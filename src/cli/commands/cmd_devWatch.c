@@ -16,24 +16,24 @@
  ********************************************************************************/
 #include "cli/devWatch.h"
 
-const char *ignorePatterns[] = {
+#define IGNORE_PATTERNS_COUNT 3
+#define MAX_CAPACITY 10
+#define SLEEP_DURATION 1
+
+const char *ignorePatterns[IGNORE_PATTERNS_COUNT] = {
     ".git",
     // "/bin",
     "/tests"};
 
-// <getHelpArg>
 DevWatchArgs getDevWatchArg(char *arg)
 {
     if (strcmp(arg, "-help") == 0)
         return DEV_WATCH_ARG_HELP;
     if (strcmp(arg, "version") == 0)
         return DEV_WATCH_ARG_START;
-
     return DEV_WATCH_ARG_UNKNOWN;
 }
-// </getHelpArg>
 
-// <executeDevWatchCmd>
 void executeDevWatchCmd(char *argv[])
 {
     char *argument = argv[2];
@@ -51,36 +51,31 @@ void executeDevWatchCmd(char *argv[])
     case DEV_WATCH_ARG_HELP:
         // Execute Command
         break;
-
-        // case DEV_WATCH_ARG_START:
-        //     // Execute Command
-        //     break;
-
     case DEV_WATCH_ARG_UNKNOWN:
         // Handle Unknown Command
         break;
-
     default:
         // Do something
+        break;
     }
 }
-// <executeDevWatchCmd>
 
-// <shouldIgnore>
 int shouldIgnore(const char *path)
 {
-    for (int i = 0; i < sizeof(ignorePatterns) / sizeof(ignorePatterns[0]); i++)
+    for (int i = 0; i < IGNORE_PATTERNS_COUNT; i++)
     {
         if (strstr(path, ignorePatterns[i]) != NULL)
         {
             return 1;
         }
+        else
+        {
+            return 0;
+        }
     }
     return 0;
 }
-// </shouldIgnore>
 
-// <getBasePath>
 char *getBasePath()
 {
     char *cwd = malloc(MAX_PATH_LEN * sizeof(char));
@@ -102,10 +97,7 @@ char *getBasePath()
         exit(EXIT_FAILURE);
     }
 }
-// </getBasePath>
 
-// Function to check directory recursively
-// <checkDirectory>
 void checkDirectory(const char *basePath, FileInfo **files, int *count, int *capacity)
 {
     DIR *dir;
@@ -119,7 +111,6 @@ void checkDirectory(const char *basePath, FileInfo **files, int *count, int *cap
     {
         while ((ent = readdir(dir)) != NULL)
         {
-            sleep(1);
             if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
                 continue;
 
@@ -167,12 +158,43 @@ void checkDirectory(const char *basePath, FileInfo **files, int *count, int *cap
         exit(EXIT_FAILURE);
     }
 }
-// </checkDirectory>
 
-// <executeDevWatch>
+void clearLine()
+{
+    printf("\33[2K\r"); // Clear the entire line and reset cursor
+}
+
+void *commandListener(void *arg)
+{
+    char command[256];
+    while (1)
+    {
+        printf("Cryo$: ");
+        fflush(stdout); // Flush immediately after printing the prompt
+        if (fgets(command, sizeof(command), stdin) != NULL)
+        {
+            clearLine();
+            command[strcspn(command, "\n")] = '\0'; // Remove newline character
+            if (strcmp(command, "exit") == 0)
+            {
+                printf("Exiting...\n");
+                exit(EXIT_SUCCESS);
+            }
+            else
+            {
+                clearLine();
+                executeSysCommand(command);
+                // printf("\nEnter command: ");
+                fflush(stdout); // Flush immediately after printing the prompt
+            }
+        }
+    }
+    return NULL;
+}
+
 void executeDevWatch(const char *basePath)
 {
-    int capacity = 10;
+    int capacity = MAX_CAPACITY;
     int count = 0;
     FileInfo *files = malloc(capacity * sizeof(FileInfo));
     if (files == NULL)
@@ -182,6 +204,13 @@ void executeDevWatch(const char *basePath)
     }
 
     checkDirectory(basePath, &files, &count, &capacity);
+
+    pthread_t commandThread;
+    if (pthread_create(&commandThread, NULL, commandListener, NULL) != 0)
+    {
+        perror("pthread_create");
+        exit(EXIT_FAILURE);
+    }
 
     while (1)
     {
@@ -193,9 +222,13 @@ void executeDevWatch(const char *basePath)
                 if (files[i].mtime != st.st_mtime)
                 {
                     files[i].mtime = st.st_mtime;
+                    clearLine();
                     printf("File has changed: %s\n", files[i].path);
+                    fflush(stdout); // Flush immediately after printing the change notice
                     // Rebuild the project here
                     dirChangeEvent(files[i].path);
+                    printf("Cryo$: ");
+                    fflush(stdout); // Re-print command prompt after event
                 }
             }
             else
@@ -204,13 +237,12 @@ void executeDevWatch(const char *basePath)
                 exit(EXIT_FAILURE);
             }
         }
+        sleep(SLEEP_DURATION);
     }
 
     free(files);
 }
-// </executeDevWatch>
 
-// <dirChangeEvent>
 void dirChangeEvent(const char *basePath)
 {
     char *fileName = strrchr(basePath, '/');
@@ -230,13 +262,9 @@ void dirChangeEvent(const char *basePath)
 
     printf("File Changed: %s\n", fileName);
 
-    // Check if the file changed is a .c file
     char *dot = strrchr(fileName, '.');
-    if (dot && strcmp(dot, ".c") == 0 ||
-        dot && strcmp(dot, ".h") == 0 ||
-        dot && strcmp(dot, ".cpp") == 0)
+    if (dot && (strcmp(dot, ".c") == 0 || strcmp(dot, ".h") == 0 || strcmp(dot, ".cpp") == 0))
     {
-        // Rebuild the project
         printf("Rebuilding project...\n");
         rebuildProject();
     }
@@ -244,10 +272,12 @@ void dirChangeEvent(const char *basePath)
     {
         printf("Ignoring non-source file change.\n");
     }
-}
-// </dirChangeEvent>
 
-// <findObjectFile>
+    // Ensure prompt is reprinted after handling the file change
+    // printf("Enter command: ");
+    fflush(stdout);
+}
+
 bool findObjectFile(char *fileName)
 {
     char *objectPath = malloc(MAX_PATH_LEN * sizeof(char));
@@ -257,11 +287,10 @@ bool findObjectFile(char *fileName)
         exit(EXIT_FAILURE);
     }
 
-    // Find the last occurrence of '.'
     char *dot = strrchr(fileName, '.');
     if (dot && strcmp(dot, ".c") == 0)
     {
-        *dot = '\0'; // Remove the extension
+        *dot = '\0';
     }
 
     char *cryoSourceDir = getenv("CRYO_PATH");
@@ -275,18 +304,14 @@ bool findObjectFile(char *fileName)
     printf("CRYO_PATH: %s\n", cryoSourceDir);
     printf("Filename after removing extension: %s\n", fileName);
 
-    strcpy(objectPath, cryoSourceDir);
-    strcat(objectPath, "/src/bin/.o/");
-    strcat(objectPath, fileName);
-    strcat(objectPath, ".o");
+    snprintf(objectPath, MAX_PATH_LEN, "%s/src/bin/.o/%s.o", cryoSourceDir, fileName);
 
     printf("Object Path: %s\n", objectPath);
 
     if (access(objectPath, F_OK) != -1)
     {
         printf("<!> Object file found.\n");
-        // free(objectPath);
-        // removeObjectFile(objectPath);
+        free(objectPath);
         return true;
     }
     else
@@ -296,9 +321,7 @@ bool findObjectFile(char *fileName)
         return false;
     }
 }
-// </findObjectFile>
 
-// <rebuildProject>
 void rebuildProject()
 {
     char originalCwd[MAX_PATH_LEN];
@@ -309,33 +332,20 @@ void rebuildProject()
         return;
     }
 
-    // Get current working directory
     if (getcwd(originalCwd, sizeof(originalCwd)) == NULL)
     {
         perror("getcwd");
         return;
     }
 
-    // Change to the directory where the Makefile is located
     if (chdir(cryoSourceDir) != 0)
     {
         perror("chdir");
         return;
     }
-
-    // Rename the current executable
-    char oldExecutablePath[MAX_PATH_LEN];
-    char backupExecutablePath[MAX_PATH_LEN];
-    snprintf(oldExecutablePath, sizeof(oldExecutablePath), "%s/src/bin/cryo.exe", cryoSourceDir);
-    snprintf(backupExecutablePath, sizeof(backupExecutablePath), "%s/src/bin/cryo_backup.exe", cryoSourceDir);
-    renameExecutable(oldExecutablePath, backupExecutablePath);
-
+    printf("<!> Rebuilding project...\n");
     // Execute the makefile in a new process and capture output
-    executeSysCommand("mingw32-make all");
-
-    // Replace the old executable with the new one
-    replaceExecutable(backupExecutablePath, oldExecutablePath);
-
+    executeSysCommand("make all");
     // Change back to the original working directory
     if (chdir(originalCwd) != 0)
     {
@@ -346,14 +356,18 @@ void rebuildProject()
 
     // Execute the new executable
     char rebuildCommand[MAX_PATH_LEN];
-    strcpy(rebuildCommand, oldExecutablePath);
-    strcat(rebuildCommand, " wdev");
-
+#ifdef _WIN32
+    snprintf(rebuildCommand, sizeof(rebuildCommand), "%s/src/bin/cryo wdev.exe", cryoSourceDir);
+#else
+    snprintf(rebuildCommand, sizeof(rebuildCommand), "%s/src/bin/cryo wdev", cryoSourceDir);
+#endif
     executeSysCommand(rebuildCommand);
-}
-// </rebuildProject>
 
-// <renameExecutable>
+    // Ensure prompt is reprinted after rebuilding the project
+    // printf("Enter command: ");
+    fflush(stdout);
+}
+
 void renameExecutable(const char *oldPath, const char *newPath)
 {
     if (rename(oldPath, newPath) != 0)
@@ -363,9 +377,7 @@ void renameExecutable(const char *oldPath, const char *newPath)
     }
     printf("Renamed %s to %s\n", oldPath, newPath);
 }
-// </renameExecutable>
 
-// <replaceExecutable>
 void replaceExecutable(const char *oldPath, const char *newPath)
 {
     if (remove(newPath) != 0)
@@ -380,23 +392,56 @@ void replaceExecutable(const char *oldPath, const char *newPath)
     }
     printf("Replaced %s with %s\n", newPath, oldPath);
 }
-// </replaceExecutable>
 
-// <executeCommand>
 void executeSysCommand(const char *command)
 {
+    clearLine();
     printf("Executing command: %s\n", command);
-    char buffer[128];
+    fflush(stdout); // Flush immediately after printing the command
+
     FILE *pipe = popen(command, "r");
     if (!pipe)
     {
         perror("popen");
         exit(EXIT_FAILURE);
     }
-    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+
+    size_t bufferSize = 4096;
+    size_t bytesRead = 0;
+    size_t totalBytesRead = 0;
+    char *buffer = malloc(bufferSize);
+    if (!buffer)
     {
-        printf("%s", buffer);
+        perror("malloc");
+        pclose(pipe);
+        exit(EXIT_FAILURE);
     }
+
+    while ((bytesRead = fread(buffer + totalBytesRead, 1, bufferSize - totalBytesRead, pipe)) > 0)
+    {
+        totalBytesRead += bytesRead;
+        if (totalBytesRead == bufferSize)
+        {
+            bufferSize *= 2;
+            char *newBuffer = realloc(buffer, bufferSize);
+            if (!newBuffer)
+            {
+                perror("realloc");
+                free(buffer);
+                pclose(pipe);
+                exit(EXIT_FAILURE);
+            }
+            buffer = newBuffer;
+        }
+    }
+
+    if (totalBytesRead > 0)
+    {
+        buffer[totalBytesRead] = '\0';
+        printf("%s", buffer);
+        fflush(stdout); // Flush after printing the buffer content
+    }
+
     int status = pclose(pipe);
     if (status == -1)
     {
@@ -404,7 +449,10 @@ void executeSysCommand(const char *command)
     }
     else
     {
-        printf("Command exited with status: %d\n", status);
+        printf("Command exited with status: %d\n", WEXITSTATUS(status));
     }
+
+    printf("Finished executing command.\n");
+    fflush(stdout); // Ensure the final print is flushed
+    free(buffer);
 }
-// </executeCommand>

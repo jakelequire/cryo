@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -56,16 +57,16 @@ typedef struct FileInfo
 
 DevWatchArgs getDevWatchArg(char *arg);
 void executeDevWatchCmd(char *argv[]);
-
 int shouldIgnore(const char *path);
-char *getBasePath(void);
-void executeDevWatch(const char *basePath);
+char *getBasePath();
 void checkDirectory(const char *basePath, FileInfo **files, int *count, int *capacity);
-
+void clearLine();
+void *commandListener(void *arg);
+void executeDevWatch(const char *basePath);
 void dirChangeEvent(const char *basePath);
 bool findObjectFile(char *fileName);
-void rebuildProject(void);
-void executeSysCommand(const char *command);
+void rebuildProject();
 void renameExecutable(const char *oldPath, const char *newPath);
 void replaceExecutable(const char *oldPath, const char *newPath);
+void executeSysCommand(const char *command);
 #endif // DEV_WATCH_H
