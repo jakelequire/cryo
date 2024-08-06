@@ -106,16 +106,29 @@ namespace Cryo
     llvm::Constant *CryoTypes::createString(const std::string &str)
     {
         CryoContext &cryoContext = compiler.getContext();
-        llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.module->getContext(), str);
-        llvm::GlobalVariable *strVar = new llvm::GlobalVariable(
+
+        llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.context, str);
+        if (!strConstant)
+        {
+            std::cerr << "Error: Failed to create string constant" << std::endl;
+            return nullptr;
+        }
+
+        llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(
             *cryoContext.module,
             strConstant->getType(),
             true,
             llvm::GlobalValue::PrivateLinkage,
             strConstant,
             ".str");
-        strVar->setAlignment(llvm::MaybeAlign(1));
-        return llvm::ConstantExpr::getBitCast(strVar, llvm::Type::getInt8Ty(cryoContext.module->getContext())->getPointerTo());
+
+        if (!globalStr)
+        {
+            std::cerr << "Error: Failed to create global string variable" << std::endl;
+            return nullptr;
+        }
+
+        return llvm::ConstantExpr::getBitCast(globalStr, llvm::Type::getInt8Ty(cryoContext.context)->getPointerTo());
     }
 
     llvm::Value *CryoTypes::createNumber(int num)

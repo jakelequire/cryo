@@ -18,6 +18,22 @@
 
 namespace Cryo
 {
+
+    void CryoDebugger::logError(const std::string &message, const std::string &detail)
+    {
+        std::cerr << "Error: " << message << (detail.empty() ? "" : ": " + detail) << std::endl;
+    }
+
+    void CryoDebugger::logError(const std::string &message)
+    {
+        std::cerr << "Error: " << message << std::endl;
+    }
+
+    void CryoDebugger::logSuccess(const std::string &message, const std::string &detail)
+    {
+        std::cout << "[CPP] " << message << (detail.empty() ? "" : ": " + detail) << std::endl;
+    }
+
     /**
      * @public
      * @brief Used to log a specific node.

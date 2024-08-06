@@ -147,12 +147,26 @@ namespace Cryo
 
     llvm::PointerType *CryoTypes::createLLVMPointerType(CryoDataType type)
     {
-        llvm::Type *baseType = createLLVMConstantType(type);
-        if (!baseType)
-        {
+        if(!type) {
+            std::cerr << "[Types] Error: Unknown type\n";
             return nullptr;
         }
-        return llvm::PointerType::getUnqual(baseType);
+
+        switch(type) {
+            case DATA_TYPE_INT:
+                return llvm::Type::getInt32PtrTy(compiler.getContext().context);
+            case DATA_TYPE_FLOAT:
+                return llvm::Type::getFloatPtrTy(compiler.getContext().context);
+            case DATA_TYPE_STRING:
+                return llvm::Type::getInt8PtrTy(compiler.getContext().context);
+            case DATA_TYPE_BOOLEAN:
+                return llvm::Type::getInt1PtrTy(compiler.getContext().context);
+            case DATA_TYPE_VOID:
+                return llvm::Type::getVoidPtrTy(compiler.getContext().context);
+            default:
+                std::cerr << "[Types] Error: Unsupported type\n";
+                return nullptr;
+        }
     }
 
     llvm::ArrayType *CryoTypes::createLLVMArrayType(CryoDataType elementType, unsigned int size)

@@ -32,6 +32,9 @@ namespace Cryo
         CryoDebugger(CryoContext &context) : context(context) {}
 
         void logNode(ASTNode *node);
+        void logError(const std::string &message, const std::string &detail);
+        void logError(const std::string &message);
+        void logSuccess(const std::string &message, const std::string &detail);
         // Macro Implementations
         void checkNode(ASTNode *node);
         void debugPanic(std::string funcName);

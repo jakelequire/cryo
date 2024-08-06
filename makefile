@@ -66,7 +66,7 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp $(CPP_DIR)utils/debugger.cp
 
 
 # Cryo Lib Files
-CRYO_SRC = $(CRYO_DIR)cryolib.cpp
+CRYO_SRC = $(CRYO_DIR)cryolib.c
 
 # Object files
 COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
@@ -207,8 +207,8 @@ $(OBJ_DIR)compiler_cpp.o : $(CPP_DIR)compiler.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 	
 # Cryo Lib Compilation rules
-$(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.cpp | $(OBJ_DIR)
-	$(CXX) $(CFLAGS) -c $< -o $@ -lstdc++ -lstdc++fs
+$(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
+	$(CXX) $(CFLAGS) -c $< -o $@ 
 
 
 # Linking binaries

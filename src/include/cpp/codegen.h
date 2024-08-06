@@ -243,6 +243,17 @@ namespace Cryo
         /// Variable Syntax @ syntax/variables.cpp
         ///
         /**
+         * @brief Initializes a variable with the given value.
+         * @param context The CryoContext to be used during code generation.
+         * @param var The LLVM value of the variable.
+         * @param initializer The ASTNode representing the initializer.
+         * @param varName The name of the variable.
+         */
+        void initializeVariable(CryoContext &context, llvm::Value *var, ASTNode *initializer, const char *varName);
+
+        llvm::Value *allocateVariable(CryoContext &context, llvm::Type *type, const char *name);
+        bool validateVarDeclarationNode(const ASTNode *node);
+        /**
          * @brief Generates the LLVM code for a variable declaration.
          * @param node The ASTNode representing the variable declaration.
          */

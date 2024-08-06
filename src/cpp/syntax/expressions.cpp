@@ -36,21 +36,22 @@ namespace Cryo
             switch (node->data.literalExpression.dataType)
             {
             case DATA_TYPE_INT:
-                std::cout << "[Expressions] Generating integer literal\n";
-                return llvm::ConstantInt::get(
-                    cryoTypesInstance.getLLVMType(DATA_TYPE_INT), node->data.literalExpression.intValue);
+                return llvm::ConstantInt::get(llvm::Type::getInt32Ty(cryoContext.context),
+                                              node->data.literalExpression.intValue);
             case DATA_TYPE_FLOAT:
-                std::cout << "[Expressions] Generating float literal\n";
-                return llvm::ConstantFP::get(
-                    llvm::Type::getFloatTy(cryoContext.context), node->data.literalExpression.floatValue);
-            case DATA_TYPE_BOOLEAN:
-                std::cout << "[Expressions] Generating boolean literal\n";
-                return llvm::ConstantInt::get(
-                    cryoTypesInstance.getLLVMType(DATA_TYPE_BOOLEAN), node->data.literalExpression.booleanValue);
+                return llvm::ConstantFP::get(llvm::Type::getFloatTy(cryoContext.context),
+                                             node->data.literalExpression.floatValue);
             case DATA_TYPE_STRING:
             {
-                std::cout << "[Expressions] Generating string literal\n";
-                return cryoTypesInstance.createString(node->data.literalExpression.stringValue);
+                llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.context, node->data.literalExpression.stringValue);
+                llvm::GlobalVariable *strGlobal = new llvm::GlobalVariable(
+                    *cryoContext.module,
+                    strConstant->getType(),
+                    true,
+                    llvm::GlobalValue::PrivateLinkage,
+                    strConstant,
+                    ".str");
+                return llvm::ConstantExpr::getBitCast(strGlobal, llvm::Type::getInt8Ty(cryoContext.context));
             }
             case DATA_TYPE_VOID:
             case DATA_TYPE_UNKNOWN:

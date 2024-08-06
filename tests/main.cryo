@@ -1,6 +1,7 @@
 
 extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
+extern function printf(s: string) -> void;
 
 const qix: int = 34;
 const foo: string = "Hello, World!";
@@ -8,5 +9,6 @@ const foo: string = "Hello, World!";
 
 public function main() -> void {
     printInt(qix);
+    printf(qix);
     return;
 }

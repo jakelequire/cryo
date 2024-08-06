@@ -61,95 +61,24 @@ namespace Cryo
         if (node->type == NODE_EXTERN_FUNCTION)
         {
             functionName = node->data.externNode.decl.function->name;
-            functionNode = (FunctionDeclNode *)node->data.externNode.decl.function;
+            functionNode = (node->data.externNode.decl.function);
         }
         else if (node->type == NODE_FUNCTION_DECLARATION)
         {
             functionName = node->data.functionDecl.function->name;
-            functionNode = (FunctionDeclNode *)node->data.functionDecl.function;
+            functionNode = (node->data.functionDecl.function);
         }
-        else
-        {
-            std::cerr << "[Functions] Error: Invalid function node\n";
-            return;
-        }
-
-        if (!functionName || !functionNode)
-        {
-            std::cerr << "[Functions] Error: Function name or function node is null\n";
-            return;
-        }
-
-        // Check if function already exists in the module
-        if (cryoContext.module->getFunction(functionName))
-        {
-            std::cout << "[Functions] Function " << functionName << " already declared. Skipping." << std::endl;
-            return;
-        }
-
-        std::cout << "[Functions] Generating function prototype for " << functionName << std::endl;
-        CryoDataType ASTDataType = functionNode->returnType;
-        std::cout << "[Functions] Function return type: " << CryoDataTypeToString(ASTDataType) << std::endl;
-        llvm::Type *returnType = cryoTypesInstance.getLLVMType(ASTDataType);
-        if (!returnType)
-        {
-            std::cerr << "[Functions] Error: Failed to get LLVM return type\n";
-            return;
-        }
-        if (!returnType)
-        {
-            std::cerr << "[Functions] Error: returnType is null\n";
-            return;
-        }
-        std::cout << "[Functions] LLVM return type: " << returnType << std::endl;
 
         std::vector<llvm::Type *> paramTypes;
-        if (!functionNode || !functionNode->params)
-        {
-            std::cerr << "[Functions] Error: functionNode or functionNode->params is null\n";
-            return;
-        }
-        std::cout << "[Functions] Function " << functionName << " has " << functionNode->paramCount << " parameters." << std::endl;
-
         for (int i = 0; i < functionNode->paramCount; i++)
         {
-            if (!functionNode->params[i])
-            {
-                std::cerr << "[Functions] Error: Parameter " << i << " is null for function " << functionName << std::endl;
-                return;
-            }
-
-            CryoDataType paramType = functionNode->params[i]->data.varDecl.dataType;
-            std::cout << "[Functions] Parameter " << i << " type: " << CryoDataTypeToString(paramType) << std::endl;
-
-            llvm::Type *llvmType = cryoTypesInstance.getLLVMType(paramType);
-            if (!llvmType)
-            {
-                std::cerr << "[Functions] Error: Failed to get LLVM type for parameter " << i << " in function " << functionName << std::endl;
-                return;
-            }
+            auto param = functionNode->params[i];
+            llvm::Type *llvmType = cryoTypesInstance.getLLVMType(param->data.varDecl.dataType);
             paramTypes.push_back(llvmType);
         }
 
-        llvm::FunctionType *funcType = llvm::FunctionType::get(returnType, paramTypes, false);
-        if (!funcType)
-        {
-            std::cerr << "[Functions] Error: Failed to create LLVM function type\n";
-            return;
-        }
-
-        llvm::Function *function = llvm::Function::Create(
-            funcType,
-            llvm::Function::ExternalLinkage,
-            functionName,
-            cryoContext.module.get());
-
-        if (!function)
-        {
-            std::cerr << "[Functions] Error: Failed to create LLVM function\n";
-            return;
-        }
-        std::cout << "[Functions] Successfully generated function prototype for " << functionName << std::endl;
+        llvm::FunctionType *funcType = llvm::FunctionType::get(cryoTypesInstance.getLLVMType(functionNode->returnType), paramTypes, false);
+        llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
     }
 
     void CryoSyntax::generateFunction(ASTNode *node)
@@ -243,6 +172,7 @@ namespace Cryo
     {
         if (node->type == NODE_EXTERN_FUNCTION)
         {
+            // Placeholder for external function declarations
             generateFunctionPrototype(node);
         }
         else
@@ -287,11 +217,18 @@ namespace Cryo
         for (int i = 0; i < node->data.functionCall.argCount; i++)
         {
             llvm::Value *arg = generateExpression(node->data.functionCall.args[i]);
-            if (!arg)
+            if (arg == nullptr)
             {
-                std::cerr << "[Functions] Error: Failed to generate argument " << i << " for function " << node->data.functionCall.name << std::endl;
+                std::cerr << "Error: Failed to generate argument " << i << " for function call" << std::endl;
                 return;
             }
+
+            // If the argument is a string variable, load the pointer
+            if (arg->getType()->isPointerTy() && arg->getType()->isPointerTy())
+            {
+                arg = cryoContext.builder.CreateLoad(arg->getType()->getPointerTo(), arg);
+            }
+
             args.push_back(arg);
         }
 
