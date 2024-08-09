@@ -75,7 +75,7 @@ namespace Cryo
                 FunctionDeclNode *externFunctionNode = statement->data.externNode.decl.function;
                 if (externFunctionNode && declaredFunctions.find(externFunctionNode->name) == declaredFunctions.end())
                 {
-                    cryoSyntaxInstance.generateFunctionPrototype(statement);
+                    cryoSyntaxInstance.generateExternalPrototype(statement);
                     declaredFunctions.insert(externFunctionNode->name);
                 }
                 else

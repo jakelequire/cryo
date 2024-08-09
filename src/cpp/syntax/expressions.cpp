@@ -36,13 +36,24 @@ namespace Cryo
             switch (node->data.literalExpression.dataType)
             {
             case DATA_TYPE_INT:
-                return llvm::ConstantInt::get(llvm::Type::getInt32Ty(cryoContext.context),
-                                              node->data.literalExpression.intValue);
+            {
+                std::cout << "[Expressions] Generating code for integer literal\n";
+                llvm::ConstantInt *intVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(cryoContext.context),
+                                                                   node->data.literalExpression.intValue);
+                if (!intVal || intVal->getType() == nullptr)
+                {
+                    std::cerr << "[CPP] Error: Failed to create integer literal\n";
+                    return nullptr;
+                }
+                return intVal;
+            }
             case DATA_TYPE_FLOAT:
+                std::cout << "[Expressions] Generating code for float literal\n";
                 return llvm::ConstantFP::get(llvm::Type::getFloatTy(cryoContext.context),
                                              node->data.literalExpression.floatValue);
             case DATA_TYPE_STRING:
             {
+                std::cout << "[Expressions] Generating code for string literal\n";
                 llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.context, node->data.literalExpression.stringValue);
                 llvm::GlobalVariable *strGlobal = new llvm::GlobalVariable(
                     *cryoContext.module,
@@ -53,6 +64,11 @@ namespace Cryo
                     ".str");
                 return llvm::ConstantExpr::getBitCast(strGlobal, llvm::Type::getInt8Ty(cryoContext.context));
             }
+            case DATA_TYPE_BOOLEAN:
+                std::cout << "[Expressions] Generating code for boolean literal\n";
+                return llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context),
+                                              node->data.boolean.value);
+
             case DATA_TYPE_VOID:
             case DATA_TYPE_UNKNOWN:
                 std::cerr << "[CPP] Error: Unknown data type in generateExpression\n";
@@ -72,7 +88,23 @@ namespace Cryo
         case CryoNodeType::NODE_VAR_NAME:
         {
             std::cout << "[CPP] Generating code for variable\n";
-            return lookupVariable(node->data.varName.varName);
+            llvm::Value *var = lookupVariable(node->data.varName.varName);
+            if (!var)
+            {
+                std::cerr << "[CPP] Error: Variable not found: " << node->data.varName.varName << "\n";
+                return nullptr;
+            }
+
+            if (llvm::isa<llvm::GlobalVariable>(var))
+            {
+                llvm::GlobalVariable *global = llvm::cast<llvm::GlobalVariable>(var);
+                return cryoContext.builder.CreateLoad(global->getValueType(), global, node->data.varName.varName);
+            }
+            else if (var->getType()->isPointerTy())
+            {
+                return cryoContext.builder.CreateLoad(var->getType(), var, node->data.varName.varName);
+            }
+            return var;
         }
 
         case CryoNodeType::NODE_VAR_DECLARATION:

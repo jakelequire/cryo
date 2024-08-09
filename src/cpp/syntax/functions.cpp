@@ -69,6 +69,13 @@ namespace Cryo
             functionNode = (node->data.functionDecl.function);
         }
 
+        // Check if the function already exists in the module
+        if (cryoContext.module->getFunction(functionName))
+        {
+            std::cerr << "[Functions] Warning: Function " << functionName << " already exists in the module\n";
+            return;
+        }
+
         std::vector<llvm::Type *> paramTypes;
         for (int i = 0; i < functionNode->paramCount; i++)
         {
@@ -168,19 +175,101 @@ namespace Cryo
         return;
     }
 
-    void CryoSyntax::generateExternalDeclaration(ASTNode *node)
+    void CryoSyntax::generateExternalPrototype(ASTNode *node)
     {
-        if (node->type == NODE_EXTERN_FUNCTION)
+        if (node == nullptr)
         {
-            // Placeholder for external function declarations
-            generateFunctionPrototype(node);
-        }
-        else
-        {
-            std::cerr << "[Functions] Error: Invalid external declaration node\n";
+            std::cerr << "[Functions] Error: Node is null in generateExternalPrototype\n";
+            return;
         }
 
-        generateFunctionPrototype(node);
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
+        CryoContext &cryoContext = compiler.getContext();
+
+        char *functionName = node->data.externNode.decl.function->name;
+        FunctionDeclNode *functionNode = node->data.externNode.decl.function;
+
+        // Check if the function already exists in the module
+        if (cryoContext.module->getFunction(functionName))
+        {
+            std::cerr << "[Functions] Warning: Function " << functionName << " already exists in the module\n";
+            return;
+        }
+
+        std::vector<llvm::Type *> paramTypes;
+
+        for (int i = 0; i < functionNode->paramCount; i++)
+        {
+            llvm::Type *paramType;
+            switch (functionNode->params[i]->data.varDecl.dataType)
+            {
+            case DATA_TYPE_INT:
+                if (strstr(functionNode->name, "Ptr") != NULL)
+                    paramType = llvm::Type::getInt32Ty(cryoContext.context)->getPointerTo();
+                else
+                    paramType = llvm::Type::getInt32Ty(cryoContext.context);
+                break;
+            case DATA_TYPE_STRING:
+            {
+                paramType = llvm::Type::getInt8Ty(cryoContext.context)->getPointerTo();
+                break;
+            }
+            // Add other types as needed
+            default:
+                std::cerr << "Unsupported parameter type in function " << functionNode->name << std::endl;
+                return;
+            }
+            paramTypes.push_back(paramType);
+        }
+
+        llvm::FunctionType *funcType = llvm::FunctionType::get(cryoTypesInstance.getLLVMType(functionNode->returnType), paramTypes, false);
+        llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
+    }
+
+    void CryoSyntax::generateExternalDeclaration(ASTNode *node)
+    {
+        if (node == nullptr)
+        {
+            std::cerr << "[Functions] Error: Node is null in generateExternalDeclaration\n";
+            return;
+        }
+
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
+        CryoContext &cryoContext = compiler.getContext();
+
+        char *functionName = node->data.externNode.decl.function->name;
+        FunctionDeclNode *functionNode = node->data.externNode.decl.function;
+
+        // Check if the function already exists in the module
+        if (cryoContext.module->getFunction(functionName))
+        {
+            std::cerr << "[Functions] Warning: Function " << functionName << " already exists in the module\n";
+            return;
+        }
+
+        std::vector<llvm::Type *> paramTypes;
+
+        for (int i = 0; i < functionNode->paramCount; i++)
+        {
+            llvm::Type *paramType;
+            switch (functionNode->params[i]->data.varDecl.dataType)
+            {
+            case DATA_TYPE_INT:
+                if (strstr(functionNode->name, "Ptr") != NULL)
+                    paramType = llvm::Type::getInt32Ty(cryoContext.context)->getPointerTo();
+                else
+                    paramType = llvm::Type::getInt32Ty(cryoContext.context);
+                break;
+            case DATA_TYPE_STRING:
+                paramType = llvm::Type::getInt8Ty(cryoContext.context)->getPointerTo();
+                break;
+            // Add other types as needed
+            default:
+                std::cerr << "Unsupported parameter type in function " << functionNode->name << std::endl;
+                return;
+            }
+            paramTypes.push_back(paramType);
+        }
 
         return;
     }
@@ -203,6 +292,7 @@ namespace Cryo
     void CryoSyntax::generateFunctionCall(ASTNode *node)
     {
         CryoContext &cryoContext = compiler.getContext();
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
 
         std::cout << "[Functions] Generating call to function: " << node->data.functionCall.name << std::endl;
 
@@ -223,23 +313,75 @@ namespace Cryo
                 return;
             }
 
-            // If the argument is a string variable, load the pointer
-            if (arg->getType()->isPointerTy() && arg->getType()->isPointerTy())
+            llvm::Type *paramType = function->getArg(i)->getType();
+            if (arg->getType() != paramType)
             {
-                arg = cryoContext.builder.CreateLoad(arg->getType()->getPointerTo(), arg);
+                if (paramType->isPointerTy() && !arg->getType()->isPointerTy())
+                {
+                    // If the function expects a pointer but we have a value, pass the address
+                    llvm::AllocaInst *temp = cryoContext.builder.CreateAlloca(arg->getType());
+                    cryoContext.builder.CreateStore(arg, temp);
+                    arg = temp;
+                }
+                else if (!paramType->isPointerTy() && arg->getType()->isPointerTy())
+                {
+                    // If the function expects a value but we have a pointer, load it
+                    arg = cryoContext.builder.CreateLoad(paramType, arg);
+                }
             }
 
             args.push_back(arg);
         }
-
-        if (args.size() != function->arg_size())
-        {
-            std::cerr << "[Functions] Error: Argument count mismatch for function " << node->data.functionCall.name << std::endl;
-            return;
-        }
-
         llvm::Value *call = cryoContext.builder.CreateCall(function, args);
         std::cout << "[Functions] Generated function call to " << node->data.functionCall.name << std::endl;
+    }
+
+    llvm::Value *CryoSyntax::createFunctionCall(ASTNode *node)
+    {
+        CryoContext &cryoContext = compiler.getContext();
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
+
+        std::cout << "[Functions] Generating call to function: " << node->data.functionCall.name << std::endl;
+
+        llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall.name);
+        if (!function)
+        {
+            std::cerr << "[Functions] Error: Function " << node->data.functionCall.name << " not found in module" << std::endl;
+            return nullptr;
+        }
+
+        std::vector<llvm::Value *> args;
+        for (int i = 0; i < node->data.functionCall.argCount; i++)
+        {
+            llvm::Value *arg = generateExpression(node->data.functionCall.args[i]);
+            if (arg == nullptr)
+            {
+                std::cerr << "Error: Failed to generate argument " << i << " for function call" << std::endl;
+                return nullptr;
+            }
+
+            llvm::Type *paramType = function->getArg(i)->getType();
+            if (arg->getType() != paramType)
+            {
+                if (paramType->isPointerTy() && !arg->getType()->isPointerTy())
+                {
+                    // If the function expects a pointer but we have a value, pass the address
+                    llvm::AllocaInst *temp = cryoContext.builder.CreateAlloca(arg->getType());
+                    cryoContext.builder.CreateStore(arg, temp);
+                    arg = temp;
+                }
+                else if (!paramType->isPointerTy() && arg->getType()->isPointerTy())
+                {
+                    // If the function expects a value but we have a pointer, load it
+                    arg = cryoContext.builder.CreateLoad(paramType, arg);
+                }
+            }
+
+            args.push_back(arg);
+        }
+        llvm::Value *call = cryoContext.builder.CreateCall(function, args);
+        std::cout << "[Functions] Generated function call to " << node->data.functionCall.name << std::endl;
+        return call;
     }
 
     void CryoSyntax::generateFunctionBlock(ASTNode *node)

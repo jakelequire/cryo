@@ -200,6 +200,12 @@ namespace Cryo
         void generateFunction(ASTNode *node);
 
         /**
+         * @brief Generates the LLVM code for an external prototype.
+         * @param node The ASTNode representing the external prototype.
+         */
+        void generateExternalPrototype(ASTNode *node);
+
+        /**
          * @brief Generates the LLVM code for an external declaration.
          * @param node The ASTNode representing the external declaration.
          */
@@ -222,6 +228,12 @@ namespace Cryo
          * @param node The ASTNode representing the function block.
          */
         void generateFunctionBlock(ASTNode *node);
+
+        /**
+         * @brief Generates the LLVM code for a function declaration.
+         * @param node The ASTNode representing the function declaration.
+         */
+        llvm::Value *createFunctionCall(ASTNode *node);
 
         ///
         /// Expression Syntax @ syntax/expressions.cpp
@@ -249,9 +261,10 @@ namespace Cryo
          * @param initializer The ASTNode representing the initializer.
          * @param varName The name of the variable.
          */
-        void initializeVariable(CryoContext &context, llvm::Value *var, ASTNode *initializer, const char *varName);
+        void initializeVariable(CryoContext &context, llvm::Value *var, ASTNode *initializer);
 
         llvm::Value *allocateVariable(CryoContext &context, llvm::Type *type, const char *name);
+        llvm::Value *createLocalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name);
         bool validateVarDeclarationNode(const ASTNode *node);
         /**
          * @brief Generates the LLVM code for a variable declaration.
@@ -287,7 +300,7 @@ namespace Cryo
          * @param varName The name of the variable.
          * @return The created global variable.
          */
-        llvm::GlobalVariable *createGlobalVariable(llvm::Type *varType, llvm::Constant *initialValue, char *varName);
+        llvm::Value *createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant);
 
         /**
          * @brief Loads a global variable from the LLVM IR.
@@ -485,6 +498,9 @@ namespace Cryo
          * @return The created LLVM value for the reference.
          */
         llvm::Value *createReferenceInt(int value);
+
+        llvm::Constant *convertLLVMPtrToConstant(llvm::Value *ptr);
+        llvm::Constant *createLLVMConstant(CryoDataType type, const std::string &value);
 
     private:
         CryoCompiler &compiler;

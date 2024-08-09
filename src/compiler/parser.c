@@ -348,6 +348,7 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context)
 {
     printf("[Parser] Parsing primary expression...\n");
+    printf("[Parser] Current Token: %s\n", CryoTokenToString(currentToken.type));
 
     ASTNode *node = NULL;
 
@@ -371,6 +372,10 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         node = createBooleanLiteralNode(strcmp(currentToken.start, "true") == 0);
         getNextToken(lexer);
         return node;
+
+    case TOKEN_LBRACKET:
+        printf("[Parser] Parsing array literal\n");
+        return parseArrayLiteral(lexer, table, context);
 
     case TOKEN_IDENTIFIER:
         printf("[Parser] Parsing identifier\n");

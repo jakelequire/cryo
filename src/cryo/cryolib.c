@@ -16,12 +16,33 @@
  ********************************************************************************/
 
 #include "cryo/cryolib.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-void printInt(int *value)
+// Testing the compatibility of the C and Cryo code
+
+// Integers
+
+void printIntPtr(int *value)
+{
+    printf("Attempting to execute printIntPtr function: \n");
+    printf("%d\n", value);
+}
+
+void printConstIntPtr(const int *value)
+{
+    printf("Attempting to execute printConstIntPtr function: \n");
+    printf("%d\n", value);
+}
+
+void printInt(int value)
 {
     printf("Attempting to execute printInt function: \n");
     printf("%d\n", value);
 }
+
+// Floats
 
 void printFloat(float value)
 {
@@ -29,8 +50,22 @@ void printFloat(float value)
     printf("%f\n", value);
 }
 
+// Strings
+
 void printStr(char *value)
 {
     printf("Attempting to execute printStr function: \n");
     printf("%s\n", value);
+}
+
+void printConstStr(const char *value)
+{
+    printf("Attempting to execute printConstStr function: \n");
+    printf("%s\n", value);
+}
+
+void printStrU(char value)
+{
+    printf("Attempting to execute printStrPtr function: \n");
+    printf("%c\n", value);
 }

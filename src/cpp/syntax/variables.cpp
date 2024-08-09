@@ -18,18 +18,32 @@
 
 namespace Cryo
 {
-
-    void CryoSyntax::initializeVariable(CryoContext &context, llvm::Value *var, ASTNode *initializer, const char *varName)
+    void CryoSyntax::initializeVariable(CryoContext &context, llvm::Value *var, ASTNode *initializer)
     {
-        CryoDebugger &debugger = compiler.getDebugger();
         llvm::Value *initValue = generateExpression(initializer);
         if (!initValue)
         {
-            debugger.logError("Failed to generate initializer for variable", varName);
+            compiler.getDebugger().logError("Failed to generate initializer");
             return;
         }
 
-        context.builder.CreateStore(initValue, var);
+        if (var->getType()->isPointerTy() && !initValue->getType()->isPointerTy())
+        {
+            initValue = context.builder.CreateBitCast(initValue, var->getType());
+        }
+        else if (llvm::isa<llvm::GlobalVariable>(var))
+        {
+            llvm::cast<llvm::GlobalVariable>(var)->setInitializer(llvm::cast<llvm::Constant>(initValue));
+        }
+        else
+        {
+            context.builder.CreateStore(initValue, var);
+        }
+    }
+
+    llvm::Value *CryoSyntax::createLocalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name)
+    {
+        return context.builder.CreateAlloca(type, nullptr, name);
     }
 
     llvm::Value *CryoSyntax::allocateVariable(CryoContext &context, llvm::Type *type, const char *name)
@@ -61,12 +75,12 @@ namespace Cryo
 
         if (!node || node->type != NODE_VAR_DECLARATION)
         {
-            debugger.logError("Invalid node in generateVarDeclaration");
+            debugger.logError("Invalid node in validateVarDeclarationNode");
             return false;
         }
         if (!node->data.varDecl.name)
         {
-            debugger.logError("Variable name is null in generateVarDeclaration");
+            debugger.logError("Variable name is null in validateVarDeclarationNode");
             return false;
         }
         return true;
@@ -77,89 +91,64 @@ namespace Cryo
         if (!validateVarDeclarationNode(node))
             return;
 
-        CryoTypes &cryoTypesInstance = compiler.getTypes();
         CryoContext &cryoContext = compiler.getContext();
+        CryoTypes &cryoTypes = compiler.getTypes();
         CryoDebugger &debugger = compiler.getDebugger();
 
-        const char *varName = node->data.varDecl.name;
-        CryoDataType varType = node->data.varDecl.dataType;
-
-        llvm::Type *llvmType = cryoTypesInstance.getLLVMType(varType);
+        llvm::StringRef varName(node->data.varDecl.name);
+        llvm::Type *llvmType = cryoTypes.getLLVMType(node->data.varDecl.dataType);
         if (!llvmType)
         {
-            debugger.logError("Failed to get LLVM type for variable", varName);
+            debugger.logError("Unsupported variable type", CryoDataTypeToString(node->data.varDecl.dataType));
             return;
         }
 
-        // For global variables
+        llvm::Value *var = nullptr;
         if (node->data.varDecl.isGlobal)
         {
-            llvm::Constant *initialValue = nullptr;
-            if (node->data.varDecl.initializer)
-            {
-                initialValue = llvm::dyn_cast<llvm::Constant>(generateExpression(node->data.varDecl.initializer));
-                if (!initialValue)
-                {
-                    debugger.logError("Failed to generate constant initializer for global variable", varName);
-                    return;
-                }
-
-                // Check if types match
-                if (initialValue->getType() != llvmType)
-                {
-                    debugger.logError("Initializer type does not match variable type for global variable", varName);
-                    return;
-                }
-            }
-            else
-            {
-                initialValue = llvm::Constant::getNullValue(llvmType);
-            }
-
-            llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(
-                *cryoContext.module,
-                llvmType,
-                false, // Not constant
-                llvm::GlobalValue::ExternalLinkage,
-                initialValue,
-                varName);
-
-            cryoContext.namedValues[varName] = globalVar;
+            var = createGlobalVariable(cryoContext, llvmType, varName, node->data.varDecl.isReference);
         }
-        // For local variables
         else
         {
-            llvm::Value *var = allocateVariable(cryoContext, llvmType, varName);
-            if (!var)
-                return;
-
-            cryoContext.namedValues[varName] = var;
-
-            if (node->data.varDecl.initializer)
-            {
-                llvm::Value *initValue = generateExpression(node->data.varDecl.initializer);
-                if (!initValue)
-                {
-                    debugger.logError("Failed to generate initializer for variable", varName);
-                    return;
-                }
-                cryoContext.builder.CreateStore(initValue, var);
-            }
+            var = createLocalVariable(cryoContext, llvmType, varName);
         }
 
-        debugger.logSuccess("Generated variable declaration for", varName);
+        if (!var)
+        {
+            debugger.logError("Failed to create variable", varName.str());
+            return;
+        }
+
+        cryoContext.namedValues[varName.str()] = var;
+
+        if (node->data.varDecl.initializer)
+        {
+            initializeVariable(cryoContext, var, node->data.varDecl.initializer);
+        }
+
+        debugger.logSuccess("Generated variable declaration for", varName.str());
     }
 
     llvm::Value *CryoSyntax::lookupVariable(char *name)
     {
         CryoContext &cryoContext = compiler.getContext();
 
-        llvm::Value *var = cryoContext.namedValues[name];
-        if (!var)
+        // First, check if it's a global variable
+        llvm::GlobalVariable *global = cryoContext.module->getGlobalVariable(name);
+        if (global)
         {
-            std::cerr << "[CPP] Error: Variable " << name << " not found\n";
+            return global;
         }
-        return var;
+
+        // Then check local variables
+        auto it = cryoContext.namedValues.find(name);
+        if (it != cryoContext.namedValues.end())
+        {
+            return it->second;
+        }
+
+        std::cerr << "[CPP] Error: Unknown variable name: " << name << "\n";
+        return nullptr;
     }
 
     llvm::Value *CryoSyntax::createVariableDeclaration(ASTNode *node)
@@ -281,20 +270,14 @@ namespace Cryo
         return var;
     }
 
-    llvm::GlobalVariable *CryoSyntax::createGlobalVariable(llvm::Type *varType, llvm::Constant *initialValue, char *varName)
+    llvm::Value *CryoSyntax::createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant)
     {
         CryoContext &cryoContext = compiler.getContext();
-
-        // Check if global variable already exists
-        if (cryoContext.module->getGlobalVariable(varName))
-        {
-            std::cout << "[Variables] Global variable " << varName << " already declared. Skipping." << std::endl;
-            return nullptr;
-        }
-
-        // Create global variable
-        llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*cryoContext.module, varType, false, llvm::GlobalValue::ExternalLinkage, initialValue, varName);
-        return globalVar;
+        llvm::GlobalVariable *global = new llvm::GlobalVariable(
+            *compiler.getContext().module, type, isConstant,
+            llvm::GlobalValue::ExternalLinkage,
+            llvm::Constant::getNullValue(type), name);
+        return global;
     }
 
     llvm::Value *CryoSyntax::loadGlobalVariable(llvm::GlobalVariable *globalVar, char *name)
@@ -324,7 +307,9 @@ namespace Cryo
             {
                 initialValue = (llvm::Constant *)generateExpression(node->data.varDecl.initializer);
             }
-            var = createGlobalVariable(llvmType, initialValue, varName);
+            var = new llvm::GlobalVariable(*cryoContext.module, llvmType, false,
+                                           llvm::GlobalValue::ExternalLinkage,
+                                           initialValue, varName);
         }
         else
         {

@@ -21,8 +21,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void printInt(int *value);
+// Integers
+void printIntPtr(int *value);
+void printConstIntPtr(const int *value);
+void printInt(int value);
+// Floats
 void printFloat(float value);
+// Strings
 void printStr(char *value);
+void printConstStr(const char *value);
+void printStrU(char value);
 
 #endif // CRYO_LIB_H

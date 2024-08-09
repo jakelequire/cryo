@@ -212,4 +212,37 @@ namespace Cryo
         return llvm::FunctionType::get(llvmReturnType, llvmParamTypes, isVarArg);
     }
 
+    llvm::Constant *CryoTypes::convertLLVMPtrToConstant(llvm::Value *ptr)
+    {
+        llvm::Constant *constant = llvm::dyn_cast<llvm::Constant>(ptr);
+        if (!constant)
+        {
+            std::cerr << "[Types] Error: Value is not a constant\n";
+            return nullptr;
+        }
+        return constant;
+    }
+
+    llvm::Constant *CryoTypes::createLLVMConstant(CryoDataType type, const std::string &value)
+    {
+        CryoContext &cryoContext = compiler.getContext();
+
+        switch (type)
+        {
+        case DATA_TYPE_INT:
+            return llvm::ConstantInt::get(cryoContext.context, llvm::APInt(32, value, 10));
+        case DATA_TYPE_FLOAT:
+            return llvm::ConstantFP::get(cryoContext.context, llvm::APFloat(std::stof(value)));
+        case DATA_TYPE_STRING:
+            return llvm::ConstantDataArray::getString(cryoContext.context, value);
+        case DATA_TYPE_BOOLEAN:
+            return llvm::ConstantInt::get(cryoContext.context, llvm::APInt(1, value, 10));
+        case DATA_TYPE_VOID:
+            return nullptr;
+        default:
+            std::cerr << "[Types] Error: Unsupported type\n";
+            return nullptr;
+        }
+    }
+
 } // namespace Cryo
