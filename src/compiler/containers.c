@@ -7,7 +7,7 @@
 //     ASTNode **astTable;
 // } CryoModule;
 
-static inline CryoModule *createCryoModuleContainer()
+CryoModule *createCryoModuleContainer()
 {
     CryoModule *node = (CryoModule *)calloc(1, sizeof(CryoModule));
     if (!node)
@@ -32,7 +32,7 @@ static inline CryoModule *createCryoModuleContainer()
 //     char *moduleName;            // Current Module
 // } CryoMetaData;
 
-static inline CryoMetaData *createMetaDataContainer()
+CryoMetaData *createMetaDataContainer()
 {
     CryoMetaData *node = (CryoMetaData *)calloc(1, sizeof(CryoMetaData));
     if (!node)
@@ -60,7 +60,7 @@ static inline CryoMetaData *createMetaDataContainer()
 //     bool isGlobal;
 // }
 
-static inline CryoScope *createCryoScopeContainer()
+CryoScope *createCryoScopeContainer()
 {
     CryoScope *node = (CryoScope *)calloc(1, sizeof(CryoScope));
     if (!node)
@@ -88,7 +88,7 @@ static inline CryoScope *createCryoScopeContainer()
 //     struct ASTNode *body;
 // } FunctionDeclNode;
 
-static inline FunctionDeclNode *createFunctionNodeContainer()
+FunctionDeclNode *createFunctionNodeContainer()
 {
     FunctionDeclNode *node = (FunctionDeclNode *)calloc(1, sizeof(FunctionDeclNode));
     if (!node)
@@ -119,7 +119,7 @@ static inline FunctionDeclNode *createFunctionNodeContainer()
 //     };
 // } LiteralNode;
 
-static inline LiteralNode *createLiteralNodeContainer()
+LiteralNode *createLiteralNodeContainer()
 {
     LiteralNode *node = (LiteralNode *)calloc(1, sizeof(LiteralNode));
     if (!node)
@@ -147,7 +147,7 @@ static inline LiteralNode *createLiteralNodeContainer()
 // } IfStatementNode;
 //
 
-static inline IfStatementNode *createIfStatementContainer()
+IfStatementNode *createIfStatementContainer()
 {
     IfStatementNode *node = (IfStatementNode *)calloc(1, sizeof(IfStatementNode));
     if (!node)
@@ -172,7 +172,7 @@ static inline IfStatementNode *createIfStatementContainer()
 //     struct ASTNode *body;
 // } ForStatementNode;
 //
-static inline ForStatementNode *createForStatementNodeContainer()
+ForStatementNode *createForStatementNodeContainer()
 {
     ForStatementNode *node = (ForStatementNode *)calloc(1, sizeof(ForStatementNode));
     if (!node)
@@ -196,7 +196,7 @@ static inline ForStatementNode *createForStatementNodeContainer()
 //     struct ASTNode *body;
 // } WhileStatementNode;
 //
-static inline WhileStatementNode *createWhileStatementNodeContainer()
+WhileStatementNode *createWhileStatementNodeContainer()
 {
     WhileStatementNode *node = (WhileStatementNode *)calloc(1, sizeof(WhileStatementNode));
     if (!node)
@@ -226,7 +226,7 @@ static inline WhileStatementNode *createWhileStatementNodeContainer()
 // } ExpressionNode;
 //
 
-static inline CryoExpressionNode *createExpressionNodeContainer()
+CryoExpressionNode *createExpressionNodeContainer()
 {
     CryoExpressionNode *node = (CryoExpressionNode *)calloc(1, sizeof(CryoExpressionNode));
     if (!node)
@@ -260,7 +260,7 @@ static inline CryoExpressionNode *createExpressionNodeContainer()
 // } VariableNode;
 //
 
-static inline CryoVariableNode *createVariableNodeContainer()
+CryoVariableNode *createVariableNodeContainer()
 {
     CryoVariableNode *node = (CryoVariableNode *)calloc(1, sizeof(CryoVariableNode));
     if (!node)
@@ -290,7 +290,7 @@ static inline CryoVariableNode *createVariableNodeContainer()
 // } VariableNameNode;
 //
 
-static inline VariableNameNode *createVariableNameNodeContainer()
+VariableNameNode *createVariableNameNodeContainer()
 {
     VariableNameNode *node = (VariableNameNode *)calloc(1, sizeof(VariableNameNode));
     if (!node)
@@ -316,7 +316,7 @@ static inline VariableNameNode *createVariableNameNodeContainer()
 // } ParamNode;
 //
 
-static inline ParamNode *createParamNodeContainer()
+ParamNode *createParamNodeContainer()
 {
     ParamNode *node = (ParamNode *)calloc(1, sizeof(ParamNode));
     if (!node)
@@ -344,7 +344,7 @@ static inline ParamNode *createParamNodeContainer()
 // } ArgNode;
 //
 
-static inline ArgNode *createArgNodeContainer()
+ArgNode *createArgNodeContainer()
 {
     ArgNode *node = (ArgNode *)calloc(1, sizeof(ArgNode));
     if (!node)
@@ -370,7 +370,7 @@ static inline ArgNode *createArgNodeContainer()
 // } ReturnNode;
 //
 
-static inline CryoReturnNode *createReturnNodeContainer()
+CryoReturnNode *createReturnNodeContainer()
 {
     CryoReturnNode *node = (CryoReturnNode *)calloc(1, sizeof(CryoReturnNode));
     if (!node)
@@ -393,7 +393,7 @@ static inline CryoReturnNode *createReturnNodeContainer()
 //     int elementCapacity;
 // }
 
-static inline CryoArrayNode *createArrayNodeContainer()
+CryoArrayNode *createArrayNodeContainer()
 {
     CryoArrayNode *node = (CryoArrayNode *)calloc(1, sizeof(CryoArrayNode));
     if (!node)
@@ -402,9 +402,17 @@ static inline CryoArrayNode *createArrayNodeContainer()
         return NULL;
     }
 
-    node->elements = NULL;
+    const int initialCapacity = 0; // Or any other small, non-zero value
+    node->elements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    if (!node->elements)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate elements array.");
+        free(node);
+        return NULL;
+    }
+
     node->elementCount = 0;
-    node->elementCapacity = 0;
+    node->elementCapacity = initialCapacity;
 
     return node;
 }

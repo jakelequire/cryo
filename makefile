@@ -47,7 +47,7 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_DIR = $(SRC_DIR)cpp/
 
 # Source files
-COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)containers.c \
+COMPILER_SRC = $(COMPILER_DIR)containers.c $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c  \
 				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \
 				$(COMPILER_DIR)error.c
 

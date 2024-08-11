@@ -317,14 +317,7 @@ typedef struct ASTNode
 
         struct
         {
-            CryoDataType dataType; // Data type of the literal
-            union
-            {
-                int intValue;
-                float floatValue;
-                char *stringValue;
-                int booleanValue;
-            };
+            struct LiteralNode *literal;
         } literalExpression;
 
         struct
@@ -362,21 +355,21 @@ typedef struct ASTNode
 
 #define INITIAL_CAPACITY 8
 
-static inline CryoModule *createCryoModuleContainer();
-static inline CryoMetaData *createMetaDataContainer();
-static inline CryoScope *createCryoScopeContainer();
-static inline FunctionDeclNode *createFunctionNodeContainer();
-static inline LiteralNode *createLiteralNodeContainer();
-static inline IfStatementNode *createIfStatementContainer();
-static inline ForStatementNode *createForStatementNodeContainer();
-static inline WhileStatementNode *createWhileStatementNodeContainer();
-static inline CryoExpressionNode *createExpressionNodeContainer();
-static inline CryoVariableNode *createVariableNodeContainer();
-static inline VariableNameNode *createVariableNameNodeContainer();
-static inline ParamNode *createParamNodeContainer();
-static inline ArgNode *createArgNodeContainer();
-static inline CryoReturnNode *createReturnNodeContainer();
-static inline CryoArrayNode *createArrayNodeContainer();
+CryoModule *createCryoModuleContainer();
+CryoMetaData *createMetaDataContainer();
+CryoScope *createCryoScopeContainer();
+FunctionDeclNode *createFunctionNodeContainer();
+LiteralNode *createLiteralNodeContainer();
+IfStatementNode *createIfStatementContainer();
+ForStatementNode *createForStatementNodeContainer();
+WhileStatementNode *createWhileStatementNodeContainer();
+CryoExpressionNode *createExpressionNodeContainer();
+CryoVariableNode *createVariableNodeContainer();
+VariableNameNode *createVariableNameNodeContainer();
+ParamNode *createParamNodeContainer();
+ArgNode *createArgNodeContainer();
+CryoReturnNode *createReturnNodeContainer();
+CryoArrayNode *createArrayNodeContainer();
 
 #ifdef __cplusplus
 extern "C"

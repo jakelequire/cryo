@@ -1241,8 +1241,19 @@ void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, AST
     {
         if (arrayLiteral->data.arrayLiteral.array->elementCount >= arrayLiteral->data.arrayLiteral.array->elementCapacity)
         {
-            arrayLiteral->data.arrayLiteral.array->elementCapacity *= 2;
-            arrayLiteral->data.arrayLiteral.array->elements = (ASTNode **)realloc(arrayLiteral->data.arrayLiteral.array->elements, arrayLiteral->data.arrayLiteral.array->elementCapacity * sizeof(ASTNode *));
+            int newCapacity = arrayLiteral->data.arrayLiteral.array->elementCapacity * 2;
+            if (newCapacity == 0)
+                newCapacity = 6; // Handle the case when capacity is 0
+
+            ASTNode **newElements = (ASTNode **)realloc(arrayLiteral->data.arrayLiteral.array->elements, newCapacity * sizeof(ASTNode *));
+            if (!newElements)
+            {
+                fprintf(stderr, "[Parser] [ERROR] Failed to reallocate memory for array elements\n");
+                return;
+            }
+
+            arrayLiteral->data.arrayLiteral.array->elements = newElements;
+            arrayLiteral->data.arrayLiteral.array->elementCapacity = newCapacity;
         }
 
         arrayLiteral->data.arrayLiteral.array->elements[arrayLiteral->data.arrayLiteral.array->elementCount++] = element;
