@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -28,16 +28,15 @@
 /*---------<end>---------*/
 //
 
-
 /*-----<function_prototypes>-----*/
 
-
 // Symbol Management
-void checkVariable(ASTNode* node, CryoSymbolTable* table);
-void checkAssignment(ASTNode* node, CryoSymbolTable* table);
-void checkFunctionCall(ASTNode* node, CryoSymbolTable* table);
-void traverseAST(ASTNode* node, CryoSymbolTable* table);
+
+void checkVariable(ASTNode *node, CryoSymbolTable *table);
+void checkAssignment(ASTNode *node, CryoSymbolTable *table);
+void checkFunctionCall(ASTNode *node, CryoSymbolTable *table);
+void traverseAST(ASTNode *node, CryoSymbolTable *table);
+CryoDataType getExpressionType(ASTNode *node);
 /*-----<end_prototypes>-----*/
 
 #endif // SEMANTICS_H
-

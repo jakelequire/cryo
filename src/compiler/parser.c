@@ -93,6 +93,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table)
         else
         {
             fprintf(stderr, "[Parser] [ERROR] Failed to parse statement\n");
+            error("Failed to parse statement.", "parseProgram", table);
             freeAST(program);
             return NULL;
         }
@@ -278,21 +279,33 @@ int getOperatorPrecedence(CryoTokenType type)
 void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode *statement)
 {
     printf("[Parser] Adding statement to program...\n");
-    if (!programNode || programNode->type != NODE_PROGRAM)
+    if (!programNode || programNode->metaData->type != NODE_PROGRAM)
     {
         fprintf(stderr, "[AST_ERROR] Invalid program node\n");
         return;
     }
 
-    printf("[AST] Before adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
-    if (programNode->data.program.stmtCount >= programNode->data.program.stmtCapacity)
+    CryoProgram *program = programNode->data.program;
+
+    printf("[AST] Before adding statement: statementCount = %zu, statementCapacity = %zu\n",
+           program->statementCount, program->statementCapacity);
+
+    if (program->statementCount >= program->statementCapacity)
     {
-        programNode->data.program.stmtCapacity = (programNode->data.program.stmtCapacity > 0) ? (programNode->data.program.stmtCapacity * 2) : 1;
-        programNode->data.program.statements = (ASTNode **)realloc(programNode->data.program.statements, programNode->data.program.stmtCapacity * sizeof(ASTNode *));
+        program->statementCapacity = (program->statementCapacity > 0) ? (program->statementCapacity * 2) : 1;
+        program->statements = (ASTNode **)realloc(program->statements,
+                                                  program->statementCapacity * sizeof(ASTNode *));
+        if (!program->statements)
+        {
+            fprintf(stderr, "[AST_ERROR] Failed to reallocate memory for program statements\n");
+            return;
+        }
     }
 
-    programNode->data.program.statements[programNode->data.program.stmtCount++] = statement;
-    printf("[AST] After adding statement: stmtCount = %d, stmtCapacity = %d\n", programNode->data.program.stmtCount, programNode->data.program.stmtCapacity);
+    program->statements[program->statementCount++] = statement;
+
+    printf("[AST] After adding statement: statementCount = %zu, statementCapacity = %zu\n",
+           program->statementCount, program->statementCapacity);
 }
 // </addStatementToProgram>
 
@@ -408,7 +421,7 @@ ASTNode *parseExpressionStatement(Lexer *lexer, CryoSymbolTable *table, ParsingC
 {
     printf("[Parser] Parsing expression statement...\n");
     ASTNode *expression = parseExpression(lexer, table, context);
-    printf("[Parser] Expression parsed: %s\n", CryoNodeTypeToString(expression->type));
+    printf("[Parser] Expression parsed: %s\n", CryoNodeTypeToString(expression->metaData->type));
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseExpressionStatement", table);
     return createExpressionStatement(expression);
 }
@@ -514,7 +527,7 @@ ASTNode *parseBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext *contex
         }
         else
         {
-            fprintf(stderr, "[Parser] [ERROR] Failed to parse statement\n");
+            fprintf(stderr, "[Parser] [ERROR] Failed to parse Block\n");
             freeAST(block);
             return NULL;
         }
@@ -551,7 +564,7 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
         }
         else
         {
-            fprintf(stderr, "[Parser] [ERROR] Failed to parse statement\n");
+            fprintf(stderr, "[Parser] [ERROR] Failed to parse Function Block\n");
             freeAST(functionBlock);
             return NULL;
         }
@@ -630,8 +643,8 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 
     ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference);
     printf("[Parser] Created Variable Declaration Node: %s\n", var_name);
-    printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->type);
-    printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->data.varDecl.dataType);
+    // printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->metaData->type);
+    // printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->data.varDecl->type);
 
     return varDeclNode;
 }
@@ -714,14 +727,14 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     }
 
     char *functionName = strndup(currentToken.start, currentToken.length);
-    externNode->data.externNode.decl.function->name = functionName;
-    externNode->data.externNode.decl.function->visibility = VISIBILITY_EXTERN;
+    externNode->data.externNode->externNode->data.functionDecl->name = functionName;
+    externNode->data.externNode->externNode->data.functionDecl->visibility = VISIBILITY_EXTERN;
     printf("[Parser] Function name: %s\n", functionName);
 
     getNextToken(lexer);
 
     ASTNode **params = parseParameterList(lexer, table, context);
-    externNode->data.externNode.decl.function->params = params;
+    externNode->data.externNode->externNode->data.functionDecl->params = params;
 
     // get length of params
     int paramCount = 0;
@@ -729,7 +742,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     {
         paramCount++;
     }
-    externNode->data.externNode.decl.function->paramCount = paramCount;
+    externNode->data.externNode->externNode->data.functionDecl->paramCount = paramCount;
 
     printf("[Parser] Function parameter count: %d\n", paramCount);
 
@@ -739,7 +752,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
         printf("[Parser] Found return type arrow\n");
         getNextToken(lexer);
         returnType = parseType(lexer, context, table);
-        externNode->data.externNode.decl.function->returnType = returnType;
+        externNode->data.externNode->externNode->data.functionDecl->returnType = returnType;
         getNextToken(lexer);
     }
     else
@@ -760,10 +773,10 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     printf("[Parser] Parsing function call...\n");
 
     ASTNode *functionCallNode = createFunctionCallNode();
-    functionCallNode->data.functionCall.name = functionName;
-    functionCallNode->data.functionCall.argCount = 0;
-    functionCallNode->data.functionCall.argCapacity = 8;
-    functionCallNode->data.functionCall.args = (ASTNode **)malloc(functionCallNode->data.functionCall.argCapacity * sizeof(ASTNode *));
+    functionCallNode->data.functionCall->name = functionName;
+    functionCallNode->data.functionCall->argCount = 0;
+    functionCallNode->data.functionCall->argCapacity = 8;
+    functionCallNode->data.functionCall->args = (ASTNode **)malloc(functionCallNode->data.functionCall->argCapacity * sizeof(ASTNode *));
 
     CryoSymbol *funcSymbol = findSymbol(table, functionName);
     if (!funcSymbol)
@@ -783,11 +796,11 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         // Parse arguments with expected types
         for (int i = 0; currentToken.type != TOKEN_RPAREN; ++i)
         {
-            if (funcSymbol->node->type == NODE_EXTERN_FUNCTION)
+            if (funcSymbol->node->metaData->type == NODE_EXTERN_FUNCTION)
             {
             }
             // Look up the expected type from the symbol table
-            CryoDataType type = funcSymbol->node->data.functionDecl.function->params[i]->data.varDecl.dataType;
+            CryoDataType type = funcSymbol->node->data.functionDecl->params[i]->data.varDecl->type;
             ASTNode *arg = parseArgumentsWithExpectedType(lexer, table, context, type);
             if (!arg)
             {
@@ -805,9 +818,9 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     }
 
     // Ensure argument count matches
-    if (functionCallNode->data.functionCall.argCount != funcSymbol->argCount)
+    if (functionCallNode->data.functionCall->argCount != funcSymbol->argCount)
     {
-        printf("[Parser] Expected %d arguments, but got %d\n", funcSymbol->argCount, functionCallNode->data.functionCall.argCount);
+        printf("[Parser] Argument count mismatch for function call, expected %d but got %d\n", funcSymbol->argCount, functionCallNode->data.functionCall->argCount);
         error("Argument count mismatch for function call.", "parseFunctionCall", table);
         freeAST(functionCallNode);
         return NULL;
@@ -835,7 +848,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseReturnStatement", table);
     ASTNode *returnNode = createReturnNode(expression);
-    printf("[AST] Created Return Node: Type = %d\n", returnNode->type);
+    printf("[AST] Created Return Node: Type = %d\n", returnNode->metaData->type);
     return returnNode;
 }
 // </parseReturnStatement>
@@ -888,9 +901,9 @@ ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
         ASTNode *param = parseParameter(lexer, table, context);
         if (param)
         {
-            if (param->type == NODE_VAR_DECLARATION)
+            if (param->metaData->type == NODE_VAR_DECLARATION)
             {
-                printf("[Parser] Adding parameter to list: %s\n", param->data.varDecl.name);
+                printf("[Parser] Adding parameter to list: %s\n", param->data.varDecl->name);
                 paramListNode[paramCount] = param;
                 paramCount++;
             }
@@ -1002,19 +1015,25 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
 void addParameterToList(CryoSymbolTable *table, ASTNode *paramListNode, ASTNode *param)
 {
     printf("[Parser] Adding parameter to list\n");
-    if (paramListNode->type == NODE_PARAM_LIST)
+    if (paramListNode->metaData->type == NODE_PARAM_LIST)
     {
-        if (paramListNode->data.paramList.paramCount >= paramListNode->data.paramList.paramCapacity)
+        ParamNode *paramList = paramListNode->data.paramList;
+        if (paramList->paramCount >= paramList->paramCapacity)
         {
-            paramListNode->data.paramList.paramCapacity *= 2;
-            paramListNode->data.paramList.params = (ASTNode **)realloc(paramListNode->data.paramList.params, paramListNode->data.paramList.paramCapacity * sizeof(ASTNode *));
+            paramList->paramCapacity *= 2;
+            paramList->params = (CryoVariableNode **)realloc(paramList->params, paramList->paramCapacity * sizeof(CryoVariableNode *));
+            if (!paramList->params)
+            {
+                fprintf(stderr, "[Parser] [ERROR] Failed to reallocate memory for parameters\n");
+                return;
+            }
         }
 
-        paramListNode->data.paramList.params[paramListNode->data.paramList.paramCount++] = param;
+        paramList->params[paramList->paramCount++] = param->data.varDecl;
     }
     else
     {
-        fprintf(stderr, "[Parser] [ERROR] Expected parameter list node, got %s\n", CryoNodeTypeToString(paramListNode->type));
+        fprintf(stderr, "[Parser] [ERROR] Expected parameter list node, got %s\n", CryoNodeTypeToString(paramListNode->metaData->type));
     }
 }
 // </addParameterToList>
@@ -1023,19 +1042,25 @@ void addParameterToList(CryoSymbolTable *table, ASTNode *paramListNode, ASTNode 
 void addArgumentToList(CryoSymbolTable *table, ASTNode *argListNode, ASTNode *arg)
 {
     printf("[Parser] Adding argument to list\n");
-    if (argListNode->type == NODE_ARG_LIST)
+    if (argListNode->metaData->type == NODE_ARG_LIST)
     {
-        if (argListNode->data.argList.argCount >= argListNode->data.argList.argCapacity)
+        ArgNode *argList = argListNode->data.argList;
+        if (argList->argCount >= argList->argCapacity)
         {
-            argListNode->data.argList.argCapacity *= 2;
-            argListNode->data.argList.args = (ASTNode **)realloc(argListNode->data.argList.args, argListNode->data.argList.argCapacity * sizeof(ASTNode *));
+            argList->argCapacity *= 2;
+            argList->args = (CryoVariableNode **)realloc(argList->args, argList->argCapacity * sizeof(CryoVariableNode *));
+            if (!argList->args)
+            {
+                fprintf(stderr, "[Parser] [ERROR] Failed to reallocate memory for arguments\n");
+                return;
+            }
         }
 
-        argListNode->data.argList.args[argListNode->data.argList.argCount++] = arg;
+        argList->args[argList->argCount++] = arg->data.varDecl;
     }
     else
     {
-        fprintf(stderr, "[Parser] [ERROR] Expected argument list node, got %s\n", CryoNodeTypeToString(argListNode->type));
+        fprintf(stderr, "[Parser] [ERROR] Expected argument list node, got %s\n", CryoNodeTypeToString(argListNode->metaData->type));
     }
 }
 // </addArgumentToList>
@@ -1044,19 +1069,25 @@ void addArgumentToList(CryoSymbolTable *table, ASTNode *argListNode, ASTNode *ar
 void addArgumentToFunctionCall(CryoSymbolTable *table, ASTNode *functionCallNode, ASTNode *arg)
 {
     printf("[Parser] Adding argument to function call\n");
-    if (functionCallNode->type == NODE_FUNCTION_CALL)
+    if (functionCallNode->metaData->type == NODE_FUNCTION_CALL)
     {
-        if (functionCallNode->data.functionCall.argCount >= functionCallNode->data.functionCall.argCapacity)
+        FunctionCallNode *funcCall = functionCallNode->data.functionCall;
+        if (funcCall->argCount >= funcCall->argCapacity)
         {
-            functionCallNode->data.functionCall.argCapacity *= 2;
-            functionCallNode->data.functionCall.args = (ASTNode **)realloc(functionCallNode->data.functionCall.args, functionCallNode->data.functionCall.argCapacity * sizeof(ASTNode *));
+            funcCall->argCapacity *= 2;
+            funcCall->args = (ASTNode **)realloc(funcCall->args, funcCall->argCapacity * sizeof(ASTNode *));
+            if (!funcCall->args)
+            {
+                fprintf(stderr, "[Parser] [ERROR] Failed to reallocate memory for function call arguments\n");
+                return;
+            }
         }
 
-        functionCallNode->data.functionCall.args[functionCallNode->data.functionCall.argCount++] = arg;
+        funcCall->args[funcCall->argCount++] = arg;
     }
     else
     {
-        fprintf(stderr, "[Parser] [ERROR] Expected function call node, got %s\n", CryoNodeTypeToString(functionCallNode->type));
+        fprintf(stderr, "[Parser] [ERROR] Expected function call node, got %s\n", CryoNodeTypeToString(functionCallNode->metaData->type));
     }
 }
 // </addArgumentToFunctionCall>
@@ -1065,19 +1096,27 @@ void addArgumentToFunctionCall(CryoSymbolTable *table, ASTNode *functionCallNode
 void addParameterToExternDecl(CryoSymbolTable *table, ASTNode *externDeclNode, ASTNode *param)
 {
     printf("[Parser] Adding parameter to extern declaration\n");
-    if (externDeclNode->type == NODE_EXTERN_FUNCTION)
+    if (externDeclNode->metaData->type == NODE_EXTERN_FUNCTION)
     {
-        if (externDeclNode->data.externNode.decl.function->paramCount >= externDeclNode->data.externNode.decl.function->paramCapacity)
+        ExternNode *externDecl = externDeclNode->data.externNode;
+        if (externDecl->externNode->data.functionDecl->paramCount >= externDecl->externNode->data.functionDecl->paramCapacity)
         {
-            externDeclNode->data.externNode.decl.function->paramCapacity *= 2;
-            externDeclNode->data.externNode.decl.function->params = (ASTNode **)realloc(externDeclNode->data.externNode.decl.function->params, externDeclNode->data.externNode.decl.function->paramCapacity * sizeof(ASTNode *));
-        }
+            externDecl->externNode->data.functionDecl->paramCapacity *= 2;
+            externDecl->externNode->data.functionDecl->params = (CryoVariableNode **)realloc(externDecl->externNode->data.functionDecl->params, externDecl->externNode->data.functionDecl->paramCapacity * sizeof(CryoVariableNode *));
+            if (!externDecl->externNode->data.functionDecl->params)
+            {
+                fprintf(stderr, "[Parser] [ERROR] Failed to reallocate memory for parameters\n");
+                return;
+            }
 
-        externDeclNode->data.externNode.decl.function->params[externDeclNode->data.externNode.decl.function->paramCount++] = param;
-    }
-    else
-    {
-        fprintf(stderr, "[Parser] [ERROR] Expected extern function node, got %s\n", CryoNodeTypeToString(externDeclNode->type));
+            externDecl->externNode->data.functionDecl->params[externDecl->externNode->data.functionDecl->paramCount++] = param->data.varDecl;
+
+            printf("[Parser] Added parameter to extern declaration\n");
+        }
+        else
+        {
+            fprintf(stderr, "[Parser] [ERROR] Expected extern function node, got %s\n", CryoNodeTypeToString(externDeclNode->metaData->type));
+        }
     }
 }
 // </addParameterToExternDecl>
@@ -1237,30 +1276,30 @@ ASTNode *parseArrayLiteral(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, ASTNode *element)
 {
     printf("[Parser] Adding element to array literal\n");
-    if (arrayLiteral->type == NODE_ARRAY_LITERAL)
+    if (arrayLiteral->metaData->type == NODE_ARRAY_LITERAL)
     {
-        if (arrayLiteral->data.arrayLiteral.array->elementCount >= arrayLiteral->data.arrayLiteral.array->elementCapacity)
+        if (arrayLiteral->data.array->elementCount >= arrayLiteral->data.array->elementCapacity)
         {
-            int newCapacity = arrayLiteral->data.arrayLiteral.array->elementCapacity * 2;
+            int newCapacity = arrayLiteral->data.array->elementCapacity * 2;
             if (newCapacity == 0)
                 newCapacity = 6; // Handle the case when capacity is 0
 
-            ASTNode **newElements = (ASTNode **)realloc(arrayLiteral->data.arrayLiteral.array->elements, newCapacity * sizeof(ASTNode *));
+            ASTNode **newElements = (ASTNode **)realloc(arrayLiteral->data.array->elements, newCapacity * sizeof(ASTNode *));
             if (!newElements)
             {
                 fprintf(stderr, "[Parser] [ERROR] Failed to reallocate memory for array elements\n");
                 return;
             }
 
-            arrayLiteral->data.arrayLiteral.array->elements = newElements;
-            arrayLiteral->data.arrayLiteral.array->elementCapacity = newCapacity;
+            arrayLiteral->data.array->elements = newElements;
+            arrayLiteral->data.array->elementCapacity = newCapacity;
         }
 
-        arrayLiteral->data.arrayLiteral.array->elements[arrayLiteral->data.arrayLiteral.array->elementCount++] = element;
+        arrayLiteral->data.array->elements[arrayLiteral->data.array->elementCount++] = element;
     }
     else
     {
-        fprintf(stderr, "[Parser] [ERROR] Expected array literal node, got %s\n", CryoNodeTypeToString(arrayLiteral->type));
+        fprintf(stderr, "[Parser] [ERROR] Expected array literal node, got %s\n", CryoNodeTypeToString(arrayLiteral->metaData->type));
     }
 }
 // <addElementToArrayLiteral>

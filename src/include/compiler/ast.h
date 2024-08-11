@@ -33,7 +33,13 @@ typedef struct CryoModule
     ASTNode **astTable;
 } CryoModule;
 
-// *NEW* Untested & Unimplemnted
+typedef struct CryoProgram
+{
+    struct ASTNode **statements;
+    size_t statementCount;
+    size_t statementCapacity;
+} CryoProgram;
+
 typedef struct CryoMetaData
 {
     enum CryoNodeType type;      // Node Type
@@ -44,13 +50,30 @@ typedef struct CryoMetaData
     char *moduleName;            // Current Module
 } CryoMetaData;
 
-// *NEW* Untested & Unimplemnted
 typedef struct CryoScope
 {
     int scopeLevel;
     char *scopeName;
     CryoNodeType scopeType;
 } CryoScope;
+
+typedef struct CryoBlockNode
+{
+    struct ASTNode **statements;
+    int statementCount;
+    int statementCapacity;
+} CryoBlockNode;
+
+typedef struct CryoFunctionBlock
+{
+    struct ASTNode *function;
+    struct CryoBlockNode *block;
+} CryoFunctionBlock;
+
+typedef struct ExternNode
+{
+    struct ASTNode *externNode;
+} ExternNode;
 
 typedef struct FunctionDeclNode
 {
@@ -64,7 +87,14 @@ typedef struct FunctionDeclNode
     struct ASTNode *body;
 } FunctionDeclNode;
 
-// *NEW* Untested & Unimplemnted
+typedef struct FunctionCallNode
+{
+    char *name;
+    struct ASTNode **args;
+    int argCount;
+    int argCapacity;
+} FunctionCallNode;
+
 typedef struct LiteralNode
 {
     enum CryoDataType dataType; // Data type of the literal
@@ -77,7 +107,6 @@ typedef struct LiteralNode
     };
 } LiteralNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct IfStatementNode
 {
     struct ASTNode *condition;
@@ -85,7 +114,6 @@ typedef struct IfStatementNode
     struct ASTNode *elseBranch;
 } IfStatementNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct ForStatementNode
 {
     struct ASTNode *initializer;
@@ -94,14 +122,12 @@ typedef struct ForStatementNode
     struct ASTNode *body;
 } ForStatementNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct WhileStatementNode
 {
     struct ASTNode *condition;
     struct ASTNode *body;
 } WhileStatementNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct VariableNameNode
 {
     enum CryoDataType refType;
@@ -109,7 +135,6 @@ typedef struct VariableNameNode
     char *varName;
 } VariableNameNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct CryoExpressionNode
 {
     CryoNodeType nodeType;
@@ -119,11 +144,10 @@ typedef struct CryoExpressionNode
         VariableNameNode *varNameNode;
         LiteralNode *literalNode;
         // Unsure what else to put here but I'll figure it out later
-    };
+    } data;
 
 } CryoExpressionNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct CryoVariableNode
 {
     enum CryoDataType type;
@@ -137,10 +161,9 @@ typedef struct CryoVariableNode
     {
         LiteralNode *literalNode;
         CryoExpressionNode *expressionNode;
-    };
+    } initilizer;
 } CryoVariableNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct ParamNode
 {
     enum CryoNodeType nodeType;
@@ -150,7 +173,6 @@ typedef struct ParamNode
     char *funcRefName;
 } ParamNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct ArgNode
 {
     enum CryoNodeType nodeType;
@@ -160,7 +182,6 @@ typedef struct ArgNode
     char *funcRefName;
 } ArgNode;
 
-// *NEW* Untested & Unimplemnted
 typedef struct CryoReturnNode
 {
     struct ASTNode *returnValue;
@@ -168,7 +189,19 @@ typedef struct CryoReturnNode
     CryoDataType returnType;
 } CryoReturnNode;
 
-// *NEW* Untested & Unimplemnted
+typedef struct CryoBinaryOpNode
+{
+    struct ASTNode *left;
+    struct ASTNode *right;
+    CryoOperatorType op;
+} CryoBinaryOpNode;
+
+typedef struct CryoUnaryOpNode
+{
+    CryoTokenType op;
+    struct ASTNode *operand;
+} CryoUnaryOpNode;
+
 typedef struct CryoArrayNode
 {
     struct ASTNode **elements;
@@ -178,187 +211,61 @@ typedef struct CryoArrayNode
 
 typedef struct ASTNode
 {
-    enum CryoNodeType type;
-    int line;                    // Line number for error reporting
-    struct ASTNode *firstChild;  // First child node (for linked list structure)
-    struct ASTNode *nextSibling; // Next sibling node (for linked list structure)
-    // *NEW* Untested & Unimplemnted
-    char *moduleName;
-    // *NEW* Untested & Unimplemnted
-    int column;
+    CryoMetaData *metaData;
 
     union
     {
-        int value; // For literal number nodes
-
-        struct
-        {
-            char *modulePath;
-        } importStatementNode;
-
-        struct externNode
-        {
-            CryoNodeType type;
-            union decl
-            {
-                FunctionDeclNode *function;
-                // Will add more types here
-            } decl;
-        } externNode;
-
-        struct
-        {
-            struct ASTNode **statements;
-            int stmtCount;
-            int stmtCapacity;
-        } program;
-
-        struct
-        {
-            struct ASTNode **statements;
-            size_t stmtCount;
-            size_t stmtCapacity;
-        } block;
-
-        // >=------<Function Declaration>------=<
-        struct
-        {
-            CryoNodeType type;
-            FunctionDeclNode *function;
-        } functionDecl;
-
-        struct
-        {
-            char *name;
-            struct ASTNode **args;
-            int argCount;
-            int argCapacity;
-        } functionCall;
-
-        struct
-        {
-            struct ASTNode *function;
-            struct ASTNode *block;
-        } functionBlock;
-
-        struct
-        {
-            struct ASTNode **params;
-            int paramCount;
-            int paramCapacity;
-        } paramList;
-
-        struct
-        {
-            struct ASTNode **args;
-            int argCount;
-            int argCapacity;
-        } argList;
-
-        struct
-        {
-            struct ASTNode *returnValue;
-            struct ASTNode *expression;
-            CryoDataType returnType;
-        } returnStmt;
-        // >=--------------<End>--------------=<
-
-        // >=------<Variable Declaration>------=<
-        struct varDecl
-        {
-            CryoDataType dataType; // Data type of the variable
-            char *name;
-            struct ASTNode *initializer;
-            bool isGlobal;
-            bool isReference;
-            int scopeLevel;
-        } varDecl;
-
-        struct varName
-        {
-            char *varName;
-            bool isReference;
-        } varName;
-        // >=--------------<End>--------------=<
-
-        // >=------<Control Flow>------=<
-        struct
-        {
-            struct ASTNode *condition;
-            struct ASTNode *thenBranch;
-            struct ASTNode *elseBranch;
-        } ifStmt;
-
-        struct
-        {
-            struct ASTNode *condition;
-            struct ASTNode *body;
-        } whileStmt;
-
-        struct
-        {
-            struct ASTNode *initializer;
-            struct ASTNode *condition;
-            struct ASTNode *increment;
-            struct ASTNode *body;
-        } forStmt;
-        // >=--------------<End>--------------=<
-
-        struct
-        {
-            struct ASTNode *stmt;
-        } stmt;
-
-        struct
-        {
-            CryoDataType dataType;
-            struct ASTNode *expression;
-        } expr;
-
-        struct
-        {
-            struct LiteralNode *literal;
-        } literalExpression;
-
-        struct
-        {
-            struct ASTNode *left;
-            struct ASTNode *right;
-            CryoOperatorType op;
-            char *operatorText;
-        } bin_op;
-
-        struct
-        {
-            CryoTokenType op;
-            struct ASTNode *operand;
-        } unary_op; // For unary operators, e.g (-5, !true, etc.)
-
-        struct
-        {
-            char *str;
-        } str;
-
-        struct
-        {
-            CryoDataType dataType;
-            int value;
-        } boolean;
-
-        struct
-        {
-            CryoArrayNode *array;
-        } arrayLiteral; // Add this for array literals
-
+        // For the main program
+        CryoProgram *program;
+        // For Blocks
+        CryoBlockNode *block;
+        // For Functions
+        CryoFunctionBlock *functionBlock;
+        // For Externs
+        ExternNode *externNode;
+        // For Return Statements
+        CryoReturnNode *returnStatement;
+        // For Literals
+        LiteralNode *literal;
+        // For Variable Declarations
+        CryoVariableNode *varDecl;
+        // For Variable Names
+        VariableNameNode *varName;
+        // For Expressions
+        CryoExpressionNode *expression;
+        // For Function Declarations
+        FunctionDeclNode *functionDecl;
+        // For Function Calls
+        FunctionCallNode *functionCall;
+        // For If Statements
+        IfStatementNode *ifStatement;
+        // For For Statements
+        ForStatementNode *forStatement;
+        // For While Statements
+        WhileStatementNode *whileStatement;
+        // For Binary Operations
+        CryoBinaryOpNode *bin_op;
+        // For Unary Operations
+        CryoUnaryOpNode *unary_op;
+        // For Parameters
+        ParamNode *paramList;
+        // For Arguments
+        ArgNode *argList;
+        // For Arrays
+        CryoArrayNode *array;
     } data;
 } ASTNode;
 
 #define INITIAL_CAPACITY 8
 
+CryoProgram *createCryoProgramContainer();
+CryoBlockNode *createCryoBlockNodeContainer();
+CryoFunctionBlock *createCryoFunctionBlockContainer();
 CryoModule *createCryoModuleContainer();
 CryoMetaData *createMetaDataContainer();
 CryoScope *createCryoScopeContainer();
 FunctionDeclNode *createFunctionNodeContainer();
+FunctionCallNode *createFunctionCallNodeContainer();
 LiteralNode *createLiteralNodeContainer();
 IfStatementNode *createIfStatementContainer();
 ForStatementNode *createForStatementNodeContainer();
@@ -369,6 +276,8 @@ VariableNameNode *createVariableNameNodeContainer();
 ParamNode *createParamNodeContainer();
 ArgNode *createArgNodeContainer();
 CryoReturnNode *createReturnNodeContainer();
+CryoBinaryOpNode *createBinaryOpNodeContainer();
+CryoUnaryOpNode *createUnaryOpNodeContainer();
 CryoArrayNode *createArrayNodeContainer();
 
 #ifdef __cplusplus

@@ -30,213 +30,178 @@ void printAST(ASTNode *node, int indent)
         return;
 
     for (int i = 0; i < indent; i++)
-    {
         printf(" ");
-    }
 
-    switch (node->type)
+    switch (node->metaData->type)
     {
     case NODE_PROGRAM:
-        printf("Program Node with %d statements (capacity: %d)\n", node->data.program.stmtCount, node->data.program.stmtCapacity);
-        for (int i = 0; i < node->data.program.stmtCount; i++)
+        printf("Program Node with %zu statements (capacity: %zu)\n",
+               node->data.program->statementCount,
+               node->data.program->statementCapacity);
+        for (size_t i = 0; i < node->data.program->statementCount; i++)
         {
-            printAST(node->data.program.statements[i], indent + 2);
+            printAST(node->data.program->statements[i], indent + 2);
         }
         break;
 
     case NODE_FUNCTION_DECLARATION:
-        printf("Function Declaration Node name: %s\n", node->data.functionDecl.function->name);
-        printf("Function Declaration Node returnType: %s\n", CryoDataTypeToString(node->data.functionDecl.function->returnType));
-        printf("Function Declaration Node visibility: %s\n", CryoVisibilityTypeToString(node->data.functionDecl.function->visibility));
+        printf("Function Declaration Node name: %s\n", node->data.functionDecl->name);
+        printf("Function Declaration Node returnType: %s\n",
+               CryoDataTypeToString(node->data.functionDecl->returnType));
+        printf("Function Declaration Node visibility: %s\n",
+               CryoVisibilityTypeToString(node->data.functionDecl->visibility));
         printf("Function Declaration Node params:\n");
-        for (int i = 0; i < node->data.functionDecl.function->paramCount; i++)
+        for (int i = 0; i < node->data.functionDecl->paramCount; i++)
         {
-            printAST(node->data.functionDecl.function->params[i], indent + 2);
+            printAST(node->data.functionDecl->params[i], indent + 2);
         }
         printf("Function Declaration Node body:\n");
-        printAST(node->data.functionDecl.function->body, indent + 2);
+        printAST(node->data.functionDecl->body, indent + 2);
         break;
 
     case NODE_VAR_DECLARATION:
-        printf("Variable Declaration Node: %s\n", node->data.varDecl.name);
-        printf("Variable Name Node Type: %s\n", CryoDataTypeToString(node->data.varDecl.dataType));
-        printf("Variable Reference: %s\n", node->data.varDecl.isReference ? "true" : "false");
-        if (node->data.varDecl.initializer)
-        {
-            printAST(node->data.varDecl.initializer, indent + 2);
-        }
-        break;
-
-    case NODE_STATEMENT:
-        printf("Statement Node\n");
-        printAST(node->data.stmt.stmt, indent + 2);
+        printf("Variable Declaration Node: %s\n", node->data.varDecl->name);
+        printf("Variable Type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
+        printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
+        printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
+        free(node->data.varDecl->name);
+        free(node->data.varDecl);
         break;
 
     case NODE_EXPRESSION:
         printf("Expression Node\n");
-        printAST(node->data.expr.expression, indent + 2);
+        free(node->data.expression);
         break;
 
     case NODE_BINARY_EXPR:
-        printf("Binary Expression Node: %s\n", node->data.bin_op.operatorText);
-        printAST(node->data.bin_op.left, indent + 2);
-        printAST(node->data.bin_op.right, indent + 2);
+        printf("Binary Expression Node: %s\n", CryoOperatorTypeToString(node->data.bin_op->op));
+        printAST(node->data.bin_op->left, indent + 2);
+        printAST(node->data.bin_op->right, indent + 2);
         break;
 
     case NODE_UNARY_EXPR:
-        printf("Unary Expression Node: %d\n", node->data.unary_op.operand);
-        printAST(node->data.unary_op.operand, indent + 2);
+        printAST(node->data.unary_op->operand, indent + 2);
         break;
 
     case NODE_LITERAL_EXPR:
-        switch (node->data.literalExpression.dataType)
+        switch (node->data.literal->dataType)
         {
         case DATA_TYPE_INT:
-            printf("Integer Literal Node: %d\n", node->data.literalExpression.intValue);
+            printf("Integer Literal Node: %d\n", node->data.literal->intValue);
             break;
         case DATA_TYPE_FLOAT:
-            printf("Float Literal Node: %f\n", node->data.literalExpression.floatValue);
+            printf("Float Literal Node: %f\n", node->data.literal->floatValue);
             break;
         case DATA_TYPE_STRING:
-            printf("Float Literal Node: %f\n", node->data.literalExpression.floatValue);
+            printf("String Literal Node: %s\n", node->data.literal->stringValue);
             break;
         case DATA_TYPE_BOOLEAN:
-            printf("String Literal Node: %s\n", node->data.literalExpression.stringValue);
+            printf("Boolean Literal Node: %s\n", node->data.literal->booleanValue ? "true" : "false");
             break;
+        default:
+            printf("Unknown Literal Type\n");
         }
         break;
 
     case NODE_VAR_NAME:
-        printf("Variable Name Node: %s\n", node->data.varName.varName);
+        printf("Variable Name Node: %s\n", node->data.varName->varName);
+        printf("Is Reference: %s\n", node->data.varName->isRef ? "true" : "false");
         break;
 
     case NODE_FUNCTION_CALL:
-        printf("Function Call Node: %s\n", node->data.functionCall.name);
-        for (int i = 0; i < node->data.functionCall.argCount; i++)
+        printf("Function Call Node: %s\n", node->data.functionCall->name);
+        for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            printAST(node->data.functionCall.args[i], indent + 2);
+            printAST(node->data.functionCall->args[i], indent + 2);
         }
         break;
 
     case NODE_IF_STATEMENT:
         printf("If Statement Node\n");
-        printAST(node->data.ifStmt.condition, indent + 2);
-        printAST(node->data.ifStmt.thenBranch, indent + 2);
-        printAST(node->data.ifStmt.elseBranch, indent + 2);
+        printf("Condition:\n");
+        printAST(node->data.ifStatement->condition, indent + 2);
+        printf("Then Branch:\n");
+        printAST(node->data.ifStatement->thenBranch, indent + 2);
+        if (node->data.ifStatement->elseBranch)
+        {
+            printf("Else Branch:\n");
+            printAST(node->data.ifStatement->elseBranch, indent + 2);
+        }
         break;
 
     case NODE_WHILE_STATEMENT:
         printf("While Statement Node\n");
-        printAST(node->data.whileStmt.condition, indent + 2);
-        printAST(node->data.whileStmt.body, indent + 2);
+        printf("Condition:\n");
+        printAST(node->data.whileStatement->condition, indent + 2);
+        printf("Body:\n");
+        printAST(node->data.whileStatement->body, indent + 2);
         break;
 
     case NODE_FOR_STATEMENT:
         printf("For Statement Node\n");
-        printAST(node->data.forStmt.initializer, indent + 2);
-        printAST(node->data.forStmt.condition, indent + 2);
-        printAST(node->data.forStmt.increment, indent + 2);
-        printAST(node->data.forStmt.body, indent + 2);
+        printf("Initializer:\n");
+        printAST(node->data.forStatement->initializer, indent + 2);
+        printf("Condition:\n");
+        printAST(node->data.forStatement->condition, indent + 2);
+        printf("Increment:\n");
+        printAST(node->data.forStatement->increment, indent + 2);
+        printf("Body:\n");
+        printAST(node->data.forStatement->body, indent + 2);
         break;
 
     case NODE_RETURN_STATEMENT:
         printf("Return Statement Node\n");
-        printAST(node->data.returnStmt.returnValue, indent + 2);
+        if (node->data.returnStatement->returnValue)
+        {
+            printAST(node->data.returnStatement->returnValue, indent + 2);
+        }
         break;
 
     case NODE_BLOCK:
-        printf("Block Node with %zu statements (capacity: %zu)\n", node->data.block.stmtCount, node->data.block.stmtCapacity);
-        for (int i = 0; i < node->data.block.stmtCount; i++)
+        printf("Block Node with %d statements (capacity: %d)\n",
+               node->data.block->statementCount,
+               node->data.block->statementCapacity);
+        for (int i = 0; i < node->data.block->statementCount; i++)
         {
-            printAST(node->data.block.statements[i], indent + 2);
+            printAST(node->data.block->statements[i], indent + 2);
         }
         break;
 
     case NODE_FUNCTION_BLOCK:
         printf("Function Block Node\n");
-        printAST(node->data.functionBlock.function, indent + 2);
-        printAST(node->data.functionBlock.block, indent + 2);
-        break;
-
-    case NODE_EXPRESSION_STATEMENT:
-        printf("Expression Statement Node\n");
-        printAST(node->data.expr.expression, indent + 2);
-        break;
-
-    case NODE_ASSIGN:
-        printf("Assignment Node\n");
-        printf("UNIMPLEMENTED\n");
+        printf("Function:\n");
+        printAST(node->data.functionBlock->function, indent + 2);
+        printf("Block:\n");
+        printAST((ASTNode *)node->data.functionBlock->block, indent + 2);
         break;
 
     case NODE_PARAM_LIST:
-        printf("Parameter List Node with %d parameters (capacity: %d)\n", node->data.paramList.paramCount, node->data.paramList.paramCapacity);
-        for (int i = 0; i < node->data.paramList.paramCount; i++)
+        printf("Parameter List Node with %d parameters (capacity: %d)\n",
+               node->data.paramList->paramCount,
+               node->data.paramList->paramCapacity);
+        for (int i = 0; i < node->data.paramList->paramCount; i++)
         {
-            printAST(node->data.paramList.params[i], indent + 2);
-        }
-        break;
-
-    case NODE_TYPE:
-        printf("Type Node\n");
-        printf("UNIMPLEMENTED\n");
-        break;
-
-    case NODE_STRING_LITERAL:
-        printf("String Literal Node: %s\n", node->data.literalExpression.stringValue);
-        break;
-
-    case NODE_STRING_EXPRESSION:
-        printf("String Expression Node: %s\n", node->data.str.str);
-        break;
-
-    case NODE_BOOLEAN_LITERAL:
-        printf("Boolean Literal Node: %d\n", node->data.literalExpression.booleanValue);
-        break;
-
-    case NODE_ARRAY_LITERAL:
-        printf("Array Literal Node with %d elements (capacity: %d)\n", node->data.arrayLiteral.array->elementCount, node->data.arrayLiteral.array->elementCapacity);
-        for (int i = 0; i < node->data.arrayLiteral.array->elementCount; i++)
-        {
-            printAST(node->data.arrayLiteral.array->elements[i], indent + 2);
-        }
-        break;
-
-    case NODE_IMPORT_STATEMENT:
-        printf("Import Statement Node: %s\n", node->data.importStatementNode.modulePath);
-        break;
-
-    case NODE_EXTERN_STATEMENT:
-        printf("Extern Statement Node\n");
-        if (node->data.externNode.decl.function != NULL)
-        {
-            printf("Extern Function Node name: %s\n", strdup(node->data.externNode.decl.function->name));
-            printf("Extern Function Node returnType: %s\n", CryoDataTypeToString(node->data.externNode.decl.function->returnType));
-            printf("Extern Function Node visibility: %s\n", CryoVisibilityTypeToString(node->data.externNode.decl.function->visibility));
-            printf("Extern Function Node params:\n");
-            for (int i = 0; i < node->data.externNode.decl.function->paramCount; i++)
-            {
-                printAST(node->data.externNode.decl.function->params[i], indent + 2);
-            }
-        }
-        break;
-
-    case NODE_EXTERN_FUNCTION:
-        printf("Extern Function Node\n");
-        printf("Function Name: %s\n", node->data.externNode.decl.function->name);
-        printf("Function Return Type: %s\n", CryoDataTypeToString(node->data.externNode.decl.function->returnType));
-        printf("Function Visibility: %s\n", CryoVisibilityTypeToString(node->data.externNode.decl.function->visibility));
-        printf("Function Parameters:\n");
-        for (int i = 0; i < node->data.externNode.decl.function->paramCount; i++)
-        {
-            printAST(node->data.externNode.decl.function->params[i], indent + 2);
+            printAST((ASTNode *)node->data.paramList->params[i], indent + 2);
         }
         break;
 
     case NODE_ARG_LIST:
-        printf("Argument List Node with %d arguments (capacity: %d)\n", node->data.argList.argCount, node->data.argList.argCapacity);
-        for (int i = 0; i < node->data.argList.argCount; i++)
+        printf("Argument List Node with %d arguments (capacity: %d)\n",
+               node->data.argList->argCount,
+               node->data.argList->argCapacity);
+        for (int i = 0; i < node->data.argList->argCount; i++)
         {
-            printAST(node->data.argList.args[i], indent + 2);
+            printAST((ASTNode *)node->data.argList->args[i], indent + 2);
+        }
+        break;
+
+    case NODE_ARRAY_LITERAL:
+        printf("Array Literal Node with %d elements (capacity: %d)\n",
+               node->data.array->elementCount,
+               node->data.array->elementCapacity);
+        for (int i = 0; i < node->data.array->elementCount; i++)
+        {
+            printAST(node->data.array->elements[i], indent + 2);
         }
         break;
 
@@ -245,7 +210,7 @@ void printAST(ASTNode *node, int indent)
         break;
 
     default:
-        printf("Unknown Node\n");
+        printf("Unhandled Node Type: %d\n", node->metaData->type);
         break;
     }
 }
@@ -260,187 +225,156 @@ void freeAST(ASTNode *node)
         return;
     }
 
-    switch (node->type)
+    switch (node->metaData->type)
     {
     case NODE_PROGRAM:
-        for (int i = 0; i < node->data.program.stmtCount; i++)
+        for (size_t i = 0; i < node->data.program->statementCount; i++)
         {
-            printf("[AST] attempting to free program statement %d\n", i);
-            printf("[AST] statement type: %s\n", CryoNodeTypeToString(node->data.program.statements[i]->type));
-            freeAST(node->data.program.statements[i]);
+            freeAST(node->data.program->statements[i]);
         }
-        free(node->data.program.statements);
+        free(node->data.program->statements);
+        free(node->data.program);
         break;
 
     case NODE_FUNCTION_DECLARATION:
-        freeAST(node->data.functionDecl.function->body);
-        free(node->data.functionDecl.function->name);
-        for (int i = 0; i < node->data.functionDecl.function->paramCount; i++)
+        freeAST(node->data.functionDecl->body);
+        free(node->data.functionDecl->name);
+        for (int i = 0; i < node->data.functionDecl->paramCount; i++)
         {
-            freeAST(node->data.functionDecl.function->params[i]);
+            freeAST(node->data.functionDecl->params[i]);
         }
-        // free(node->data.functionDecl.function);
+        free(node->data.functionDecl->params);
+        free(node->data.functionDecl);
         break;
 
     case NODE_VAR_DECLARATION:
-        printf("[AST] Freeing Variable Declaration Node: %s\n", node->data.varDecl.name);
-        free(node->data.varDecl.name);
-        if (node->data.varDecl.initializer)
-        {
-            free(node->data.varDecl.initializer);
-        }
-        break;
-
-    case NODE_STATEMENT:
-        freeAST(node->data.stmt.stmt);
+        free(node->data.varDecl->name);
+        free(node->data.varDecl);
         break;
 
     case NODE_EXPRESSION:
-        freeAST(node->data.expr.expression);
+        free(node->data.expression);
         break;
 
     case NODE_BINARY_EXPR:
-        freeAST(node->data.bin_op.left);
-        freeAST(node->data.bin_op.right);
-        free(node->data.bin_op.operatorText);
+        freeAST(node->data.bin_op->left);
+        freeAST(node->data.bin_op->right);
+        free(node->data.bin_op);
         break;
 
     case NODE_UNARY_EXPR:
-        freeAST(node->data.unary_op.operand);
+        freeAST(node->data.unary_op->operand);
+        free(node->data.unary_op);
         break;
 
     case NODE_LITERAL_EXPR:
-        switch (node->data.literalExpression.dataType)
+        if (node->data.literal->dataType == DATA_TYPE_STRING)
         {
-        case DATA_TYPE_INT:
-            break;
-        case DATA_TYPE_STRING:
-            free(node->data.literalExpression.stringValue);
-            break;
-        case DATA_TYPE_BOOLEAN:
-            break;
+            free(node->data.literal->stringValue);
         }
+        free(node->data.literal);
         break;
 
     case NODE_VAR_NAME:
-        free(node->data.varName.varName);
+        free(node->data.varName->varName);
+        free(node->data.varName);
         break;
 
     case NODE_FUNCTION_CALL:
-        free(node->data.functionCall.name);
-        for (int i = 0; i < node->data.functionCall.argCount; i++)
+        free(node->data.functionCall->name);
+        for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            freeAST(node->data.functionCall.args[i]);
+            freeAST(node->data.functionCall->args[i]);
         }
-        free(node->data.functionCall.args);
+        free(node->data.functionCall->args);
+        free(node->data.functionCall);
         break;
 
     case NODE_IF_STATEMENT:
-        freeAST(node->data.ifStmt.condition);
-        freeAST(node->data.ifStmt.thenBranch);
-        freeAST(node->data.ifStmt.elseBranch);
+        freeAST(node->data.ifStatement->condition);
+        freeAST(node->data.ifStatement->thenBranch);
+        if (node->data.ifStatement->elseBranch)
+        {
+            freeAST(node->data.ifStatement->elseBranch);
+        }
+        free(node->data.ifStatement);
         break;
 
     case NODE_WHILE_STATEMENT:
-        freeAST(node->data.whileStmt.condition);
-        freeAST(node->data.whileStmt.body);
+        freeAST(node->data.whileStatement->condition);
+        freeAST(node->data.whileStatement->body);
+        free(node->data.whileStatement);
         break;
 
     case NODE_FOR_STATEMENT:
-        freeAST(node->data.forStmt.initializer);
-        freeAST(node->data.forStmt.condition);
-        freeAST(node->data.forStmt.increment);
-        freeAST(node->data.forStmt.body);
+        freeAST(node->data.forStatement->initializer);
+        freeAST(node->data.forStatement->condition);
+        freeAST(node->data.forStatement->increment);
+        freeAST(node->data.forStatement->body);
+        free(node->data.forStatement);
         break;
 
     case NODE_RETURN_STATEMENT:
-        freeAST(node->data.returnStmt.returnValue);
+        if (node->data.returnStatement->returnValue)
+        {
+            freeAST(node->data.returnStatement->returnValue);
+        }
+        free(node->data.returnStatement);
         break;
 
     case NODE_BLOCK:
-        for (int i = 0; i < node->data.block.stmtCount; i++)
+        for (int i = 0; i < node->data.block->statementCount; i++)
         {
-            freeAST(node->data.block.statements[i]);
+            freeAST(node->data.block->statements[i]);
         }
-        free(node->data.block.statements);
+        free(node->data.block->statements);
+        free(node->data.block);
         break;
 
     case NODE_FUNCTION_BLOCK:
-        freeAST(node->data.functionBlock.function);
-        freeAST(node->data.functionBlock.block);
-        break;
-
-    case NODE_EXPRESSION_STATEMENT:
-        freeAST(node->data.expr.expression);
-        break;
-
-    case NODE_ASSIGN:
-        printf("[AST] Assignment Node\n");
-        printf("[AST] UNIMPLEMENTED\n");
+        freeAST(node->data.functionBlock->function);
+        freeAST((ASTNode *)node->data.functionBlock->block);
+        free(node->data.functionBlock);
         break;
 
     case NODE_PARAM_LIST:
-        for (int i = 0; i < node->data.paramList.paramCount; i++)
+        for (int i = 0; i < node->data.paramList->paramCount; i++)
         {
-            freeAST(node->data.paramList.params[i]);
+            freeAST((ASTNode *)node->data.paramList->params[i]);
         }
-        free(node->data.paramList.params);
-        break;
-
-    case NODE_TYPE:
-        break;
-
-    case NODE_STRING_LITERAL:
-        free(node->data.str.str);
-        break;
-
-    case NODE_STRING_EXPRESSION:
-        free(node->data.str.str);
-        break;
-
-    case NODE_BOOLEAN_LITERAL:
-        break;
-
-    case NODE_ARRAY_LITERAL:
-        for (int i = 0; i < node->data.arrayLiteral.array->elementCount; i++)
-        {
-            freeAST(node->data.arrayLiteral.array->elements[i]);
-        }
-        free(node->data.arrayLiteral.array->elements);
-        break;
-
-    case NODE_IMPORT_STATEMENT:
-        free(node->data.importStatementNode.modulePath);
-        break;
-
-    case NODE_EXTERN_STATEMENT:
-        // freeAST(node->data.externNode.decl.function);
-        break;
-
-    case NODE_EXTERN_FUNCTION:
-        free(node->data.externNode.decl.function->name);
-        for (int i = 0; i < node->data.externNode.decl.function->paramCount; i++)
-        {
-            freeAST(node->data.externNode.decl.function->params[i]);
-        }
+        free(node->data.paramList->params);
+        free(node->data.paramList);
         break;
 
     case NODE_ARG_LIST:
-        for (int i = 0; i < node->data.argList.argCount; i++)
+        for (int i = 0; i < node->data.argList->argCount; i++)
         {
-            freeAST(node->data.argList.args[i]);
+            freeAST((ASTNode *)node->data.argList->args[i]);
         }
-        free(node->data.argList.args);
+        free(node->data.argList->args);
+        free(node->data.argList);
+        break;
+
+    case NODE_ARRAY_LITERAL:
+        for (int i = 0; i < node->data.array->elementCount; i++)
+        {
+            freeAST(node->data.array->elements[i]);
+        }
+        free(node->data.array->elements);
+        free(node->data.array);
         break;
 
     case NODE_UNKNOWN:
         break;
 
     default:
-        fprintf(stderr, "<!> [AST] Unknown Node\n");
+        fprintf(stderr, "<!> [AST] Unknown Node Type: %d\n", node->metaData->type);
         break;
     }
-    printf("[AST] Node of type %s successfully freed.\n", CryoNodeTypeToString(node->type));
+
+    free(node->metaData);
+    free(node);
+    // printf("[AST] Node of type %s successfully freed.\n", CryoNodeTypeToString(node->metaData->type));
 }
 // </freeAST>
 
@@ -450,187 +384,94 @@ void freeAST(ASTNode *node)
 // <createASTNode>
 ASTNode *createASTNode(CryoNodeType type)
 {
-    printf("[AST_DEBUG] Creating node: %d\n", type);
     ASTNode *node = (ASTNode *)calloc(1, sizeof(ASTNode));
     if (!node)
     {
-        fprintf(stderr, "<!> [AST] Error: Failed to allocate memory for AST node\n");
+        fprintf(stderr, "[AST] Error: Failed to allocate ASTNode.\n");
         return NULL;
     }
-    node->type = type;
-    node->firstChild = NULL;
-    node->nextSibling = NULL;
 
-    // Initialize based on node type
+    node->metaData = createMetaDataContainer();
+    if (!node->metaData)
+    {
+        fprintf(stderr, "[AST] Error: Failed to create metadata container.\n");
+        free(node);
+        return NULL;
+    }
+    node->metaData->type = type;
+
     switch (type)
     {
     case NODE_PROGRAM:
-        node->data.program.statements = (ASTNode **)calloc(8, sizeof(ASTNode *));
-        if (!node->data.program.statements)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for program statements\n");
-            free(node);
-            return NULL;
-        }
-        node->data.program.stmtCount = 0;
-        node->data.program.stmtCapacity = 8;
+        node->data.program = createCryoProgramContainer();
         break;
-
-    case NODE_FUNCTION_DECLARATION:
-        node->data.functionDecl.function = (FunctionDeclNode *)calloc(1, sizeof(FunctionDeclNode));
-        if (!node->data.functionDecl.function)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for function declaration\n");
-            free(node);
-            return NULL;
-        }
-        node->data.functionDecl.function->name = NULL;
-        node->data.functionDecl.function->params = NULL;
-        node->data.functionDecl.function->body = NULL;
-        node->data.functionDecl.function->returnType = DATA_TYPE_VOID;
-        node->data.functionDecl.function->visibility = VISIBILITY_PUBLIC;
-        break;
-
-    case NODE_FUNCTION_BLOCK:
-        node->data.functionBlock.function = NULL;
-        node->data.functionBlock.block = createASTNode(NODE_BLOCK);
-        if (!node->data.functionBlock.block)
-        {
-            fprintf(stderr, "[AST] Failed to create block for function block\n");
-            free(node);
-            return NULL;
-        }
-        break;
-
-    case NODE_PARAM_LIST:
-        node->data.paramList.params = (ASTNode **)calloc(8, sizeof(ASTNode *));
-        if (!node->data.paramList.params)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for parameter list\n");
-            free(node);
-            return NULL;
-        }
-        node->data.paramList.paramCount = 0;
-        node->data.paramList.paramCapacity = 8;
-        break;
-
-    case NODE_VAR_DECLARATION:
-        node->data.varDecl.name = NULL;
-        node->data.varDecl.initializer = NULL;
-        node->data.varDecl.dataType = DATA_TYPE_UNKNOWN;
-        break;
-
-    case NODE_VAR_NAME:
-        node->data.varName.varName = NULL;
-        node->data.varName.isReference = false;
-        break;
-
-    case NODE_RETURN_STATEMENT:
-        node->data.returnStmt.returnValue = NULL;
-        break;
-
-    case NODE_IF_STATEMENT:
-        node->data.ifStmt.condition = NULL;
-        node->data.ifStmt.thenBranch = NULL;
-        node->data.ifStmt.elseBranch = NULL;
-        break;
-
-    case NODE_FOR_STATEMENT:
-        node->data.forStmt.initializer = NULL;
-        node->data.forStmt.condition = NULL;
-        node->data.forStmt.increment = NULL;
-        node->data.forStmt.body = NULL;
-        break;
-
-    case NODE_BINARY_EXPR:
-        node->data.bin_op.left = NULL;
-        node->data.bin_op.right = NULL;
-        node->data.bin_op.op = OPERATOR_NA;
-        break;
-
-    case NODE_LITERAL_EXPR:
-        node->data.literalExpression.dataType = DATA_TYPE_UNKNOWN;
-        break;
-
-    case NODE_FUNCTION_CALL:
-        node->data.functionCall.name = NULL;
-        node->data.functionCall.args = (ASTNode **)calloc(8, sizeof(ASTNode *));
-        if (!node->data.functionCall.args)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for function call arguments\n");
-            free(node);
-            return NULL;
-        }
-        node->data.functionCall.argCapacity = 8;
-        node->data.functionCall.argCount = 0;
-        break;
-
     case NODE_BLOCK:
-        node->data.block.statements = (ASTNode **)calloc(8, sizeof(ASTNode *));
-        if (!node->data.block.statements)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for block statements\n");
-            free(node);
-            return NULL;
-        }
-        node->data.block.stmtCount = 0;
-        node->data.block.stmtCapacity = 8;
+        node->data.block = createCryoBlockNodeContainer();
         break;
-
+    case NODE_FUNCTION_BLOCK:
+        node->data.functionBlock = createCryoFunctionBlockContainer();
+        break;
+    case NODE_RETURN_STATEMENT:
+        node->data.returnStatement = createReturnNodeContainer();
+        break;
+    case NODE_LITERAL_EXPR:
+        node->data.literal = createLiteralNodeContainer();
+        break;
+    case NODE_VAR_DECLARATION:
+        node->data.varDecl = createVariableNodeContainer();
+        break;
+    case NODE_VAR_NAME:
+        node->data.varName = createVariableNameNodeContainer();
+        break;
+    case NODE_EXPRESSION:
+        node->data.expression = createExpressionNodeContainer();
+        break;
+    case NODE_FUNCTION_DECLARATION:
+        node->data.functionDecl = createFunctionNodeContainer();
+        break;
+    case NODE_FUNCTION_CALL:
+        node->data.functionCall = createFunctionCallNodeContainer();
+        break;
+    case NODE_IF_STATEMENT:
+        node->data.ifStatement = createIfStatementContainer();
+        break;
+    case NODE_FOR_STATEMENT:
+        node->data.forStatement = createForStatementNodeContainer();
+        break;
+    case NODE_WHILE_STATEMENT:
+        node->data.whileStatement = createWhileStatementNodeContainer();
+        break;
+    case NODE_BINARY_EXPR:
+        node->data.bin_op = createBinaryOpNodeContainer();
+        break;
     case NODE_UNARY_EXPR:
-        node->data.unary_op.operand = NULL;
+        node->data.unary_op = createUnaryOpNodeContainer();
         break;
-
-    case NODE_STRING_LITERAL:
-        node->data.str.str = NULL;
+    case NODE_PARAM_LIST:
+        node->data.paramList = createParamNodeContainer();
         break;
-
-    case NODE_BOOLEAN_LITERAL:
-        node->data.boolean.value = 0;
-        break;
-
-    case NODE_ARRAY_LITERAL:
-        node->data.arrayLiteral.array = createArrayNodeContainer();
-        break;
-
-    case NODE_IMPORT_STATEMENT:
-        node->data.importStatementNode.modulePath = NULL;
-        break;
-
-    case NODE_EXTERN_STATEMENT:
-        node->data.externNode.decl.function = NULL;
-        break;
-
-    case NODE_EXTERN_FUNCTION:
-        node->data.externNode.type = NODE_EXTERN_FUNCTION;
-        node->data.externNode.decl.function = (FunctionDeclNode *)calloc(8, sizeof(FunctionDeclNode));
-        if (!node->data.externNode.decl.function)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for extern function\n");
-            free(node);
-            return NULL;
-        }
-        break;
-
     case NODE_ARG_LIST:
-        node->data.argList.args = (ASTNode **)calloc(8, sizeof(ASTNode *));
-        if (!node->data.argList.args)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for argument list\n");
-            free(node);
-            return NULL;
-        }
-        node->data.argList.argCount = 0;
-        node->data.argList.argCapacity = 8;
+        node->data.argList = createArgNodeContainer();
         break;
-
+    case NODE_ARRAY_LITERAL:
+        node->data.array = createArrayNodeContainer();
+        break;
     default:
         fprintf(stderr, "<!> [AST] Error: Unknown node type during creation: %d\n", type);
-        break;
+        free(node->metaData);
+        free(node);
+        return NULL;
+    }
+
+    if (!node->data.program) // Assuming 'program' is the first member of the union
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate memory for node type %d\n", type);
+        free(node->metaData);
+        free(node);
+        return NULL;
     }
 
     printf("[AST] Created node of type: %d\n", type);
-
     return node;
 }
 // </createASTNode>
@@ -644,18 +485,18 @@ void addChildNode(ASTNode *parent, ASTNode *child)
         return;
     }
 
-    if (!parent->firstChild)
+    if (!parent->metaData->firstChild)
     {
-        parent->firstChild = child;
+        parent->metaData->firstChild = child;
     }
     else
     {
-        ASTNode *current = parent->firstChild;
-        while (current->nextSibling)
+        ASTNode *current = parent->metaData->firstChild;
+        while (current->metaData->nextSibling)
         {
-            current = current->nextSibling;
+            current = current->metaData->nextSibling;
         }
-        current->nextSibling = child;
+        current->metaData->nextSibling = child;
     }
 }
 // </addChildNode>
@@ -663,27 +504,34 @@ void addChildNode(ASTNode *parent, ASTNode *child)
 // <addStatementToBlock>
 void addStatementToBlock(ASTNode *blockNode, ASTNode *statement)
 {
-    if (blockNode->type != NODE_BLOCK && blockNode->type != NODE_FUNCTION_BLOCK)
+    if (blockNode->metaData->type != NODE_BLOCK && blockNode->metaData->type != NODE_FUNCTION_BLOCK)
     {
         printf("[AST] Error: addStatementToBlock called on non-block node\n");
         return;
     }
 
+    CryoBlockNode *block = (blockNode->metaData->type == NODE_BLOCK) ? blockNode->data.block : blockNode->data.functionBlock->block;
+
     // Debugging initial state
-    if (blockNode->data.block.stmtCount >= blockNode->data.block.stmtCapacity)
+    if (block->statementCount >= block->statementCapacity)
     {
-        blockNode->data.block.stmtCapacity *= 2;
-        blockNode->data.block.statements = (ASTNode **)
-            printf("[AST] Reallocated block statement memory: New capacity = %zu\n", blockNode->data.block.stmtCapacity);
+        block->statementCapacity *= 2;
+        block->statements = (ASTNode **)realloc(block->statements, sizeof(ASTNode *) * block->statementCapacity);
+        if (!block->statements)
+        {
+            fprintf(stderr, "[AST] Failed to reallocate memory for block statements\n");
+            return;
+        }
+        printf("[AST] Reallocated block statement memory: New capacity = %d\n", block->statementCapacity);
     }
     else
     {
         printf("[AST] Block statement memory is sufficient\n");
     }
 
-    blockNode->data.block.statements[blockNode->data.block.stmtCount++] = statement;
+    block->statements[block->statementCount++] = statement;
     // Debugging final state
-    printf("[AST] Final state: stmtCount = %zu, stmtCapacity = %zu\n", blockNode->data.block.stmtCount, blockNode->data.block.stmtCapacity);
+    printf("[AST] Final state: stmtCount = %d, stmtCapacity = %d\n", block->statementCount, block->statementCapacity);
 }
 // </addStatementToBlock>
 
@@ -696,765 +544,442 @@ void addFunctionToProgram(ASTNode *program, ASTNode *function)
         return;
     }
 
-    if (program->data.program.stmtCount >= program->data.program.stmtCapacity)
+    if (program->metaData->type != NODE_PROGRAM)
     {
-        program->data.program.stmtCapacity *= 2;
-        program->data.program.statements = (ASTNode **)realloc(program->data.program.statements, sizeof(ASTNode *) * program->data.program.stmtCapacity);
-        if (!program->data.program.statements)
+        fprintf(stderr, "[AST] Error: First argument is not a program node\n");
+        return;
+    }
+
+    CryoProgram *prog = program->data.program;
+
+    if (prog->statementCount >= prog->statementCapacity)
+    {
+        prog->statementCapacity *= 2;
+        prog->statements = (ASTNode **)realloc(prog->statements, sizeof(ASTNode *) * prog->statementCapacity);
+        if (!prog->statements)
         {
             fprintf(stderr, "[AST] Failed to reallocate memory for program statements\n");
             return;
         }
     }
 
-    program->data.program.statements[program->data.program.stmtCount++] = function;
+    prog->statements[prog->statementCount++] = function;
     addChildNode(program, function);
 }
 // </addFunctionToProgram>
 
-/* ====================================================================== */
-/* @Node_Creation - Expressions & Statements */
-
-// <createProgramNode>
-ASTNode *createProgramNode()
+// -------------------------------------------------------------------
+// Create a program node
+ASTNode *createProgramNode(void)
 {
-    printf("[AST] Creating Program Node\n");
-
     ASTNode *node = createASTNode(NODE_PROGRAM);
     if (!node)
-    {
-        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program node\n");
         return NULL;
-    }
 
-    node->data.program.statements = (ASTNode **)calloc(8, sizeof(ASTNode *));
-    if (!node->data.program.statements)
+    node->data.program = (CryoProgram *)malloc(sizeof(CryoProgram));
+    if (!node->data.program)
     {
-        fprintf(stderr, "[AST] [ERROR] Failed to allocate memory for program statements\n");
         free(node);
         return NULL;
     }
 
-    node->data.program.stmtCount = 0;
-    node->data.program.stmtCapacity = 8;
+    node->data.program->statements = NULL;
+    node->data.program->statementCount = 0;
+    node->data.program->statementCapacity = 0;
 
-    printf("[AST] Created Program Node\n");
     return node;
 }
-// </createProgramNode>
 
-// <createLiteralExpr>
+// Create a literal expression node
 ASTNode *createLiteralExpr(int value)
 {
-    printf("[AST] Creating Literal Expression Node: %d\n", value);
-
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create literal expression node\n");
         return NULL;
-    }
 
-    node->data.literalExpression.dataType = DATA_TYPE_INT;
-    node->data.literalExpression.intValue = value;
-
-    printf("[AST] Created Literal Expression Node: %d\n", value);
-    return node;
-}
-// </createLiteralExpr>
-
-// <createExpressionStatement>
-ASTNode *createExpressionStatement(ASTNode *expression)
-{
-    printf("[AST] Creating Expression Statement Node\n");
-
-    ASTNode *node = createASTNode(NODE_EXPRESSION_STATEMENT);
-    if (!node)
+    node->data.literal = (LiteralNode *)malloc(sizeof(LiteralNode));
+    if (!node->data.literal)
     {
-        fprintf(stderr, "[AST] Failed to create expression statement node\n");
-        return NULL;
-    }
-
-    node->data.expr.expression = expression;
-
-    printf("[AST] Created Expression Statement Node\n");
-    return node;
-}
-// </createExpressionStatement>
-
-// <createBinaryExpr>
-ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op)
-{
-    printf("[AST] Creating Binary Expression Node\n");
-
-    ASTNode *node = createASTNode(NODE_BINARY_EXPR);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create binary expression node\n");
-        return NULL;
-    }
-
-    node->data.bin_op.left = left;
-    node->data.bin_op.right = right;
-    node->data.bin_op.op = op;
-    node->data.bin_op.operatorText = CryoOperatorTypeToString(op);
-
-    printf("[AST] Created Binary Expression Node\n");
-    return node;
-}
-// </createBinaryExpr>
-
-// <createUnaryExpr>
-ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand)
-{
-    printf("[AST] Creating Unary Expression Node\n");
-
-    ASTNode *node = createASTNode(NODE_UNARY_EXPR);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create unary expression node\n");
-        return NULL;
-    }
-
-    node->data.unary_op.op = op;
-    node->data.unary_op.operand = operand;
-
-    printf("[AST] Created Unary Expression Node\n");
-    return node;
-}
-// </createUnaryExpr>
-
-/* ====================================================================== */
-/* @Node_Creation - Literals */
-
-// <createIntLiteralNode>
-ASTNode *createIntLiteralNode(int value)
-{
-    printf("[AST] Creating Integer Literal Node: %d\n", value);
-
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create integer literal node\n");
-        return NULL;
-    }
-
-    node->data.literalExpression.dataType = DATA_TYPE_INT;
-    node->data.literalExpression.intValue = value;
-
-    printf("[AST] Created Integer Literal Node: %d\n", value);
-    return node;
-}
-// </createIntLiteralNode>
-
-// <createFloatLiteralNode>
-ASTNode *createFloatLiteralNode(float value)
-{
-    printf("[AST] Creating Float Literal Node: %f\n", value);
-
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create float literal node\n");
-        return NULL;
-    }
-
-    node->data.literalExpression.dataType = DATA_TYPE_FLOAT;
-    node->data.literalExpression.floatValue = value;
-
-    printf("[AST] Created Float Literal Node: %f\n", value);
-    return node;
-}
-// </createFloatLiteralNode>
-
-// <createStringLiteralNode>
-ASTNode *createStringLiteralNode(char *value)
-{
-    printf("[AST] Creating String Literal Node: %s\n", value);
-
-    ASTNode *node = createASTNode(NODE_STRING_LITERAL);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create string literal node\n");
-        return NULL;
-    }
-
-    node->data.literalExpression.stringValue = strdup(value);
-
-    printf("[AST] Created String Literal Node: %s\n", value);
-    return node;
-}
-// </createStringLiteralNode>
-
-// <createBooleanLiteralNode>
-ASTNode *createBooleanLiteralNode(int value)
-{
-    printf("[AST] Creating Boolean Literal Node: %d\n", value);
-
-    ASTNode *node = createASTNode(NODE_BOOLEAN_LITERAL);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create boolean literal node\n");
-        return NULL;
-    }
-
-    node->data.boolean.value = value;
-
-    printf("[AST] Created Boolean Literal Node: %d\n", value);
-    return node;
-}
-// </createBooleanLiteralNode>
-
-// <createIdentifierNode>
-ASTNode *createIdentifierNode(char *name)
-{
-    printf("[AST] Creating Identifier Node: %s\n", name);
-
-    ASTNode *node = createASTNode(NODE_VAR_NAME);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create identifier node\n");
-        return NULL;
-    }
-
-    node->data.varName.varName = strdup(name);
-
-    printf("[AST] Created Identifier Node: %s\n", name);
-    return node;
-}
-// </createIdentifierNode>
-
-/* ====================================================================== */
-/* @Node_Blocks - Blocks */
-
-// <createBlockNode>
-ASTNode *createBlockNode()
-{
-    printf("[AST] Creating Block Node\n");
-
-    ASTNode *node = createASTNode(NODE_BLOCK);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create block node\n");
-        return NULL;
-    }
-
-    node->data.block.statements = (ASTNode **)calloc(8, sizeof(ASTNode *));
-    if (!node->data.block.statements)
-    {
-        fprintf(stderr, "[AST] Failed to allocate memory for block statements\n");
         free(node);
         return NULL;
     }
 
-    node->data.block.stmtCount = 0;
-    node->data.block.stmtCapacity = 8;
-
-    printf("\n[AST] Created Block Node\n");
-    return node;
-}
-// </createBlockNode>
-
-// <createFunctionBlock>
-ASTNode *createFunctionBlock(ASTNode *function)
-{
-    printf("[AST] Creating Function Block Node\n");
-
-    ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create function block node\n");
-        return NULL;
-    }
-
-    node->data.functionBlock.function = function;
-    node->data.functionBlock.block = createBlockNode();
-
-    printf("\n[AST] Created Function Block Node\n");
-    return node;
-}
-// </createFunctionBlock>
-
-// <createIfBlock>
-ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch)
-{
-    printf("[AST] Creating If Block Node\n");
-
-    ASTNode *node = createASTNode(NODE_IF_STATEMENT);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create if block node\n");
-        return NULL;
-    }
-
-    node->data.ifStmt.condition = condition;
-    node->data.ifStmt.thenBranch = then_branch;
-    node->data.ifStmt.elseBranch = else_branch;
-
-    printf("[AST] Created If Block Node\n");
-    return node;
-}
-// </createIfBlock>
-
-// <createForBlock>
-ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body)
-{
-    printf("[AST] Creating For Block Node\n");
-
-    ASTNode *node = createASTNode(NODE_FOR_STATEMENT);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create for block node\n");
-        return NULL;
-    }
-
-    node->data.forStmt.initializer = initializer;
-    node->data.forStmt.condition = condition;
-    node->data.forStmt.increment = increment;
-    node->data.forStmt.body = body;
-
-    printf("[AST] Created For Block Node\n");
-    return node;
-}
-// </createForBlock>
-
-// <createWhileBlock>
-ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body)
-{
-    printf("[AST] Creating While Block Node\n");
-
-    ASTNode *node = createASTNode(NODE_WHILE_STATEMENT);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create while block node\n");
-        return NULL;
-    }
-
-    node->data.whileStmt.condition = condition;
-    node->data.whileStmt.body = body;
-
-    printf("[AST] Created While Block Node\n");
-    return node;
-}
-// </createWhileBlock>
-
-/* ====================================================================== */
-/* @Node_Blocks - Literals */
-
-// <createBooleanLiteralExpr>
-ASTNode *createBooleanLiteralExpr(int value)
-{
-    printf("[AST] Creating Boolean Literal Expression Node: %d\n", value);
-
-    ASTNode *node = createASTNode(NODE_BOOLEAN_LITERAL);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create boolean literal expression node\n");
-        return NULL;
-    }
-
-    node->data.literalExpression.dataType = DATA_TYPE_BOOLEAN;
-    node->data.literalExpression.booleanValue = value;
+    node->data.literal->dataType = DATA_TYPE_INT;
+    node->data.literal->intValue = value;
 
     return node;
 }
-// </createBooleanLiteralExpr>
 
-// <createStringLiteralExpr>
-ASTNode *createStringLiteralExpr(char *str)
+// Create an expression statement node
+ASTNode *createExpressionStatement(ASTNode *expression)
 {
-    printf("[AST] Creating String Literal Expression Node: %s\n", str);
-
-    ASTNode *node = createASTNode(NODE_STRING_LITERAL);
+    ASTNode *node = createASTNode(NODE_EXPRESSION);
     if (!node)
+        return NULL;
+
+    node->data.expression = (CryoExpressionNode *)malloc(sizeof(CryoExpressionNode));
+    if (!node->data.expression)
     {
-        fprintf(stderr, "[AST] Failed to create string literal expression node\n");
+        free(node);
         return NULL;
     }
 
-    node->data.literalExpression.dataType = DATA_TYPE_STRING;
-    node->data.literalExpression.stringValue = strdup(str);
+    node->data.expression->nodeType = expression->metaData->type;
 
-    return node;
-}
-// </createStringLiteralExpr>
-
-// <createStringExpr>
-ASTNode *createStringExpr(char *str)
-{
-    printf("[AST] Creating String Expression Node: %s\n", str);
-
-    ASTNode *node = createASTNode(NODE_STRING_EXPRESSION);
-    if (!node)
+    if (expression->metaData->type == NODE_VAR_NAME)
     {
-        fprintf(stderr, "[AST] Failed to create string expression node\n");
-        return NULL;
+        node->data.expression->data.varNameNode = expression->data.varName;
     }
-
-    node->data.str.str = strdup(str);
-
-    return node;
-}
-// </createStringExpr>
-
-/* ====================================================================== */
-/* @Node_Creation - Variables */
-
-// <createVarDeclarationNode>
-ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference)
-{
-    printf("[AST] Creating Variable Declaration Node: %s\n", var_name);
-
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
-    if (!node)
+    else if (expression->metaData->type == NODE_LITERAL_EXPR)
     {
-        fprintf(stderr, "[AST] Failed to create variable declaration node\n");
-        return NULL;
-    }
-
-    node->data.varDecl.name = strdup(var_name);
-    node->data.varDecl.dataType = dataType;
-    node->data.varDecl.initializer = initializer;
-    node->data.varDecl.isGlobal = isGlobal;
-    node->data.varDecl.isReference = isReference;
-    node->data.varDecl.scopeLevel = 0;
-
-    printf("[AST] Created Variable Declaration Node: %s\n", var_name);
-    return node;
-}
-// </createVarDeclarationNode>
-
-// <createVariableExpr>
-ASTNode *createVariableExpr(char *name, bool isReference)
-{
-    printf("[AST] Creating Variable Expression Node: %s\n", name);
-
-    ASTNode *node = createASTNode(NODE_VAR_NAME);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create variable expression node\n");
-        return NULL;
-    }
-
-    node->data.varName.varName = strdup(name);
-    node->data.varName.isReference = isReference;
-
-    printf("[AST] Created Variable Expression Node: %s\n", name);
-    return node;
-}
-// </createVariableExpr>
-
-/* ====================================================================== */
-/* @Node_Creation - Functions */
-
-// <createFunctionNode>
-ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType)
-{
-    printf("[AST] Creating Function Node: %s\n", function_name);
-
-    ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create function node\n");
-        return NULL;
-    }
-
-    node->data.functionDecl.function->visibility = visibility;
-    node->data.functionDecl.function->name = strdup(function_name);
-    node->data.functionDecl.function->params = params;
-    node->data.functionDecl.function->body = function_body;
-    node->data.functionDecl.function->returnType = returnType;
-
-    printf("[AST] Created Function Node: %s\n", function_name);
-    return node;
-}
-// </createFunctionNode>
-
-// <createExternDeclNode>
-ASTNode *createExternFuncNode()
-{
-    ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create extern declaration node\n");
-        return NULL;
-    }
-
-    return node;
-}
-// </createExternDeclNode>
-
-// <createFunctionCallNode>
-ASTNode *createFunctionCallNode()
-{
-    ASTNode *node = createASTNode(NODE_FUNCTION_CALL);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create function call node\n");
-        return NULL;
-    }
-
-    return node;
-}
-// </createFunctionCallNode>
-
-// <createReturnNode>
-ASTNode *createReturnNode(ASTNode *returnValue)
-{
-    printf("[AST] Creating Return Node\n");
-
-    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create return node\n");
-        return NULL;
-    }
-
-    if (returnValue == NULL)
-    {
-        node->data.returnStmt.returnType = DATA_TYPE_VOID;
+        node->data.expression->data.literalNode = expression->data.literal;
     }
     else
     {
-        node->data.returnStmt.returnType = returnValue->data.literalExpression.dataType;
-    }
-
-    node->data.returnStmt.returnValue = returnValue;
-
-    printf("[AST] Created Return Node\n");
-    return node;
-}
-// </createReturnNode>
-
-// <createReturnStatement>
-ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType)
-{
-    printf("[AST] Creating Return Expression Node\n");
-
-    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT);
-    if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create return expression node\n");
+        // Handle other types of expressions if needed
+        free(node->data.expression);
+        free(node);
         return NULL;
     }
 
-    node->data.returnStmt.returnType = returnType;
-    node->data.returnStmt.expression = returnExpression;
-
-    printf("[AST] Created Return Expression Node\n");
     return node;
 }
-// </createReturnStatement>
 
-/* ====================================================================== */
-/* @Node_Creation - Parameters */
-
-// <createParamListNode>
-ASTNode *createParamListNode(void)
+// Create a binary expression node
+ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op)
 {
-    printf("[AST] Creating Parameter List Node\n");
-
-    ASTNode *node = createASTNode(NODE_PARAM_LIST);
+    ASTNode *node = createASTNode(NODE_BINARY_EXPR);
     if (!node)
+        return NULL;
+
+    node->data.bin_op = (CryoBinaryOpNode *)malloc(sizeof(CryoBinaryOpNode));
+    if (!node->data.bin_op)
     {
-        fprintf(stderr, "[AST] Failed to create parameter list node\n");
+        free(node);
         return NULL;
     }
 
-    printf("[AST] Created Parameter List Node\n");
+    node->data.bin_op->left = left;
+    node->data.bin_op->right = right;
+    node->data.bin_op->op = op;
+
     return node;
 }
-// </createParamListNode>
 
-// </createArgumentListNode>
-ASTNode *createArgumentListNode(void)
+// Create a unary expression node
+ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand)
 {
-    printf("[AST] Creating Argument List Node\n");
-
-    ASTNode *node = createASTNode(NODE_ARG_LIST);
+    ASTNode *node = createASTNode(NODE_UNARY_EXPR);
     if (!node)
+        return NULL;
+
+    node->data.unary_op = (CryoUnaryOpNode *)malloc(sizeof(CryoUnaryOpNode));
+    if (!node->data.unary_op)
     {
-        fprintf(stderr, "[AST] Failed to create argument list node\n");
+        free(node);
         return NULL;
     }
 
-    node->data.argList.args = NULL;
-    node->data.argList.argCount = 0;
-    node->data.argList.argCapacity = 0;
+    node->data.unary_op->op = op;
+    node->data.unary_op->operand = operand;
 
-    printf("[AST] Created Argument List Node\n");
     return node;
 }
-// </createArgumentListNode>
 
-// <createParamNode>
-ASTNode *createParamNode(char *name, CryoDataType type)
+/* @Node_Creation - Literals */
+ASTNode *createIntLiteralNode(int value)
 {
-    printf("[AST] Creating Parameter Node: %s\n", name);
-
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create parameter node\n");
         return NULL;
-    }
-
-    node->data.varDecl.name = strdup(name);
-    node->data.varDecl.dataType = type;
-    node->data.varDecl.initializer = NULL;
-    node->data.varDecl.isReference = false;
-    node->data.varDecl.scopeLevel = 1;
-
-    printf("[AST] Created Parameter Node: %s\n", name);
+    node->data.literal->dataType = DATA_TYPE_INT;
+    node->data.literal->intValue = value;
     return node;
 }
-// </createParamNode>
 
-// <createArgsNode>
-ASTNode *createArgsNode(char *name, CryoDataType type)
+ASTNode *createFloatLiteralNode(float value)
 {
-    printf("[AST] Creating Arguments Node\n");
-
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create arguments node\n");
         return NULL;
-    }
-
-    node->data.varDecl.name = strdup(name);
-    node->data.varDecl.dataType = type;
-    node->data.varDecl.initializer = NULL;
-    node->data.varDecl.isReference = true;
-    node->data.varDecl.scopeLevel = 1;
-
-    printf("[AST] Created Arguments Node\n");
+    node->data.literal->dataType = DATA_TYPE_FLOAT;
+    node->data.literal->floatValue = value;
     return node;
 }
-// </createArgsNode>
 
-/* ====================================================================== */
-/* @Node_Creation - Modules & Externals */
-
-// <createImportNode>
-ASTNode *createImportNode(char *importPath)
+ASTNode *createStringLiteralNode(char *value)
 {
-    printf("[AST] Creating Import Node\n");
-
-    ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create import node\n");
         return NULL;
-    }
-
-    node->data.importStatementNode.modulePath = strdup(importPath);
-
+    node->data.literal->dataType = DATA_TYPE_STRING;
+    node->data.literal->stringValue = strdup(value);
     return node;
 }
-// </createImportNode>
 
-// <createExternNode>
-ASTNode *createExternNode(ASTNode *externNode)
+ASTNode *createBooleanLiteralNode(int value)
 {
-    printf("[AST] Creating Extern Node\n");
-
-    ASTNode *node = createASTNode(NODE_EXTERN_STATEMENT);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create extern node\n");
         return NULL;
-    }
-
-    node->data.externNode.type = NODE_UNKNOWN;
-    node->data.externNode.decl.function = (FunctionDeclNode *)externNode;
-
+    node->data.literal->dataType = DATA_TYPE_BOOLEAN;
+    node->data.literal->booleanValue = value;
     return node;
 }
-// </createExternNode>
 
-/* ====================================================================== */
-/* @Node_Creation - Conditionals */
-
-// <createIfStatement>
-ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch)
+ASTNode *createIdentifierNode(char *name)
 {
-    printf("[AST] Creating If Statement Node\n");
+    ASTNode *node = createASTNode(NODE_VAR_NAME);
+    if (!node)
+        return NULL;
+    node->data.varName->varName = strdup(name);
+    return node;
+}
 
+/* @Node_Blocks - Blocks */
+ASTNode *createBlockNode(void)
+{
+    ASTNode *node = createASTNode(NODE_BLOCK);
+    if (!node)
+        return NULL;
+    node->data.block->statements = NULL;
+    node->data.block->statementCount = 0;
+    node->data.block->statementCapacity = 0;
+    return node;
+}
+
+ASTNode *createFunctionBlock(ASTNode *function)
+{
+    ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK);
+    if (!node)
+        return NULL;
+    node->data.functionBlock->function = function;
+    node->data.functionBlock->block = createBlockNode();
+    return node;
+}
+
+ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch)
+{
     ASTNode *node = createASTNode(NODE_IF_STATEMENT);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create if statement node\n");
         return NULL;
-    }
-
-    node->data.ifStmt.condition = condition;
-    node->data.ifStmt.thenBranch = then_branch;
-    node->data.ifStmt.elseBranch = else_branch;
-
-    printf("[AST] Created If Statement Node\n");
+    node->data.ifStatement->condition = condition;
+    node->data.ifStatement->thenBranch = then_branch;
+    node->data.ifStatement->elseBranch = else_branch;
     return node;
 }
-// </createIfStatement>
 
-// <createForStatement>
-ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body)
+ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body)
 {
-    printf("[AST] Creating For Statement Node\n");
-
     ASTNode *node = createASTNode(NODE_FOR_STATEMENT);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create for statement node\n");
         return NULL;
-    }
-
-    node->data.forStmt.initializer = initializer;
-    node->data.forStmt.condition = condition;
-    node->data.forStmt.increment = increment;
-    node->data.forStmt.body = body;
-
-    printf("[AST] Created For Statement Node\n");
+    node->data.forStatement->initializer = initializer;
+    node->data.forStatement->condition = condition;
+    node->data.forStatement->increment = increment;
+    node->data.forStatement->body = body;
     return node;
 }
-// </createForStatement>
 
-// <createWhileStatement>
-ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body)
+ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body)
 {
-    printf("[AST] Creating While Statement Node\n");
-
     ASTNode *node = createASTNode(NODE_WHILE_STATEMENT);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create while statement node\n");
         return NULL;
-    }
-
-    node->data.whileStmt.condition = condition;
-    node->data.whileStmt.body = body;
-
-    printf("[AST] Created While Statement Node\n");
+    node->data.whileStatement->condition = condition;
+    node->data.whileStatement->body = body;
     return node;
 }
-// </createWhileStatement>
 
-/* ====================================================================== */
-/* @Node_Creation - Arrays */
-
-// <createArrayLiteralNode>
-ASTNode *createArrayLiteralNode()
+/* @Node_Blocks - Literals */
+ASTNode *createBooleanLiteralExpr(int value)
 {
-    printf("[AST] Creating Array Literal Node\n");
+    return createBooleanLiteralNode(value);
+}
 
-    ASTNode *node = createASTNode(NODE_ARRAY_LITERAL);
+ASTNode *createStringLiteralExpr(char *str)
+{
+    return createStringLiteralNode(str);
+}
+
+ASTNode *createStringExpr(char *str)
+{
+    ASTNode *node = createASTNode(NODE_STRING_EXPRESSION);
     if (!node)
-    {
-        fprintf(stderr, "[AST] Failed to create array literal node\n");
         return NULL;
-    }
-
-    printf("[AST] Created Array Literal Node\n");
+    node->data.literal->dataType = DATA_TYPE_STRING;
+    node->data.literal->stringValue = strdup(str);
     return node;
 }
-// </createArrayLiteralNode>
+
+/* @Node_Creation - Variables */
+ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference)
+{
+    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    if (!node)
+        return NULL;
+
+    node->data.varDecl->name = strdup(var_name);
+    node->data.varDecl->type = dataType;
+    node->data.varDecl->varNameNode = NULL; // Initialize this if needed
+    node->metaData->line = line;
+    node->data.varDecl->isGlobal = isGlobal;
+    node->data.varDecl->isLocal = !isGlobal; // Assuming a variable is local if it's not global
+    node->data.varDecl->isReference = isReference;
+
+    // Handle the initializer
+    if (initializer)
+    {
+        switch (initializer->metaData->type)
+        {
+        case NODE_LITERAL_EXPR:
+            node->data.varDecl->initilizer.literalNode = initializer->data.literal;
+            break;
+        case NODE_EXPRESSION:
+            node->data.varDecl->initilizer.expressionNode = initializer->data.expression;
+            break;
+        default:
+            // Handle error or unexpected initializer type
+            fprintf(stderr, "Unexpected initializer type for variable %s\n", var_name);
+            free(node->data.varDecl->name);
+            free(node);
+            return NULL;
+        }
+    }
+    else
+    {
+        // No initializer
+        node->data.varDecl->initilizer.literalNode = NULL;
+    }
+
+    return node;
+}
+
+ASTNode *createVariableExpr(char *name, bool isReference)
+{
+    ASTNode *node = createASTNode(NODE_VAR_NAME);
+    if (!node)
+        return NULL;
+    node->data.varName->varName = strdup(name);
+    node->data.varName->isRef = isReference;
+    return node;
+}
+
+/* @Node_Creation - Functions */
+ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType)
+{
+    ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION);
+    if (!node)
+        return NULL;
+    node->data.functionDecl->visibility = visibility;
+    node->data.functionDecl->name = strdup(function_name);
+    node->data.functionDecl->params = params;
+    node->data.functionDecl->body = function_body;
+    node->data.functionDecl->returnType = returnType;
+    return node;
+}
+
+ASTNode *createExternFuncNode(void)
+{
+    return createASTNode(NODE_EXTERN_FUNCTION);
+}
+
+ASTNode *createFunctionCallNode(void)
+{
+    return createASTNode(NODE_FUNCTION_CALL);
+}
+
+ASTNode *createReturnNode(ASTNode *returnValue)
+{
+    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT);
+    if (!node)
+        return NULL;
+    node->data.returnStatement->returnValue = returnValue;
+    return node;
+}
+
+ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType)
+{
+    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT);
+    if (!node)
+        return NULL;
+    node->data.returnStatement->expression = returnExpression;
+    node->data.returnStatement->returnType = returnType;
+    return node;
+}
+
+/* @Node_Creation - Parameters */
+ASTNode *createParamListNode(void)
+{
+    return createASTNode(NODE_PARAM_LIST);
+}
+
+ASTNode *createArgumentListNode(void)
+{
+    return createASTNode(NODE_ARG_LIST);
+}
+
+ASTNode *createParamNode(char *name, CryoDataType type)
+{
+    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    if (!node)
+        return NULL;
+    node->data.varDecl->name = strdup(name);
+    node->data.varDecl->type = type;
+    node->data.varDecl->isGlobal = false;
+    node->data.varDecl->isReference = false;
+    return node;
+}
+
+ASTNode *createArgsNode(char *name, CryoDataType type)
+{
+    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    if (!node)
+        return NULL;
+    node->data.varDecl->name = strdup(name);
+    node->data.varDecl->type = type;
+    node->data.varDecl->isGlobal = false;
+    node->data.varDecl->isReference = true;
+    return node;
+}
+
+/* @Node_Creation - Modules & Externals */
+ASTNode *createImportNode(char *importPath)
+{
+    ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT);
+    if (!node)
+        return NULL;
+    // node->data.importStatement->modulePath = strdup(importPath);
+    return node;
+}
+
+ASTNode *createExternNode(ASTNode *externNode)
+{
+    ASTNode *node = createASTNode(NODE_EXTERN_STATEMENT);
+    if (!node)
+        return NULL;
+    node->data.externNode->externNode = externNode;
+    return node;
+}
+
+/* @Node_Creation - Conditionals */
+ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch)
+{
+    return createIfBlock(condition, then_branch, else_branch);
+}
+
+ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body)
+{
+    return createForBlock(initializer, condition, increment, body);
+}
+
+ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body)
+{
+    return createWhileBlock(condition, body);
+}
+
+/* @Node_Creation - Arrays */
+ASTNode *createArrayLiteralNode(void)
+{
+    return createASTNode(NODE_ARRAY_LITERAL);
+}

@@ -1,6 +1,90 @@
 // Just a temp file to do work on the AST w/o needing to work in the main code.
 #include "compiler/ast.h"
 
+// typedef struct CryoProgram
+// {
+//     struct ASTNode **statements;
+//     size_t statementCount;
+//     size_t statementCapacity;
+// } CryoProgram;
+
+CryoProgram *createCryoProgramContainer()
+{
+    CryoProgram *node = (CryoProgram *)calloc(1, sizeof(CryoProgram));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate CryoProgram node.");
+        return NULL;
+    }
+
+    const int initialCapacity = 4; // Or any other small, non-zero value
+    node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    if (!node->statements)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
+        free(node);
+        return NULL;
+    }
+
+    node->statementCount = 0;
+    node->statementCapacity = initialCapacity;
+
+    return node;
+}
+
+// typedef struct CryoBlockNode
+// {
+//     struct ASTNode **statements;
+//     int statementCount;
+//     int statementCapacity;
+// } CryoBlockNode;
+//
+
+CryoBlockNode *createCryoBlockNodeContainer()
+{
+    CryoBlockNode *node = (CryoBlockNode *)calloc(1, sizeof(CryoBlockNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate CryoBlockNode node.");
+        return NULL;
+    }
+
+    const int initialCapacity = 4; // Or any other small, non-zero value
+    node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    if (!node->statements)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
+        free(node);
+        return NULL;
+    }
+
+    node->statementCount = 0;
+    node->statementCapacity = initialCapacity;
+
+    return node;
+}
+
+// typedef struct CryoFunctionBlock
+// {
+//     struct ASTNode *function;
+//     struct CryoBlockNode *block;
+// } CryoFunctionBlock;
+
+CryoFunctionBlock *createCryoFunctionBlockContainer()
+{
+    CryoFunctionBlock *node = (CryoFunctionBlock *)calloc(1, sizeof(CryoFunctionBlock));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate CryoFunctionBlock node.");
+        return NULL;
+    }
+
+    node->function = NULL;
+    node->block = NULL;
+
+    return node;
+}
+
 // // *NEW* Untested & Unimplemnted
 // typedef struct CryoModule
 // {
@@ -102,6 +186,31 @@ FunctionDeclNode *createFunctionNodeContainer()
     node->body = NULL;
     node->returnType = DATA_TYPE_VOID;
     node->visibility = VISIBILITY_PUBLIC;
+
+    return node;
+}
+
+// typedef struct FunctionCallNode
+// {
+//     char *name;
+//     struct ASTNode **args;
+//     int argCount;
+//     int argCapacity;
+// } FunctionCallNode;
+
+FunctionCallNode *createFunctionCallNodeContainer()
+{
+    FunctionCallNode *node = (FunctionCallNode *)calloc(1, sizeof(FunctionCallNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate FunctionCallNode node.");
+        return NULL;
+    }
+
+    node->name = NULL;
+    node->args = NULL;
+    node->argCount = 0;
+    node->argCapacity = 0;
 
     return node;
 }
@@ -236,8 +345,8 @@ CryoExpressionNode *createExpressionNodeContainer()
     }
 
     node->nodeType = NODE_UNKNOWN;
-    node->varNameNode = NULL;
-    node->literalNode = NULL;
+    node->data.varNameNode = NULL;
+    node->data.literalNode = NULL;
 
     return node;
 }
@@ -275,8 +384,8 @@ CryoVariableNode *createVariableNodeContainer()
     node->isGlobal = false;
     node->isLocal = false;
     node->isReference = false;
-    node->literalNode = NULL;
-    node->expressionNode = NULL;
+    node->initilizer.literalNode = NULL;
+    node->initilizer.expressionNode = NULL;
 
     return node;
 }
@@ -333,6 +442,7 @@ ParamNode *createParamNodeContainer()
 
     return node;
 }
+
 // // *NEW* Untested & Unimplemnted
 // typedef struct ArgNode
 // {
@@ -361,6 +471,7 @@ ArgNode *createArgNodeContainer()
 
     return node;
 }
+
 // // *NEW* Untested & Unimplemnted
 // typedef struct ReturnNode
 // {
@@ -385,6 +496,51 @@ CryoReturnNode *createReturnNodeContainer()
 
     return node;
 }
+
+// typedef struct CryoBinaryOpNode
+// {
+//     struct ASTNode *left;
+//     struct ASTNode *right;
+//     CryoOperatorType op;
+// } CryoBinaryOpNode;
+//
+
+CryoBinaryOpNode *createBinaryOpNodeContainer()
+{
+    CryoBinaryOpNode *node = (CryoBinaryOpNode *)calloc(1, sizeof(CryoBinaryOpNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate BinaryOpNode node.");
+        return NULL;
+    }
+
+    node->left = NULL;
+    node->right = NULL;
+    node->op = OPERATOR_UNKNOWN;
+
+    return node;
+}
+// typedef struct CryoUnaryOpNode
+// {
+//     CryoTokenType op;
+//     struct ASTNode *operand;
+// } CryoUnaryOpNode;
+
+CryoUnaryOpNode *createUnaryOpNodeContainer()
+{
+    CryoUnaryOpNode *node = (CryoUnaryOpNode *)calloc(1, sizeof(CryoUnaryOpNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate UnaryOpNode node.");
+        return NULL;
+    }
+
+    node->op = TOKEN_UNKNOWN;
+    node->operand = NULL;
+
+    return node;
+}
+
 // // *NEW* Untested & Unimplemnted
 // typedef struct ArrayNode
 // {

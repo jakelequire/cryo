@@ -1,25 +1,12 @@
-extern function printInt(value: int) -> void;
-extern function printConstIntPtr(value: int) -> void;
-extern function printIntPtr(value: int) -> void;
-
-extern function printStr(value: string) -> void;
-extern function printConstStr(value: string) -> void;
-extern function printStrU(value: string) -> void;
 
 const qix: int = 34;
 const foo: string = "Hello, World!";
-const arr: int[] = [1, 2, 3, 4, 5];
-const strArr: string[] = ["Hello", "World", "!"];
+// const arr: int[] = [1, 2, 3, 4, 5];
+//const strArr: string[] = ["Hello", "World", "!"];
 
 
-public function main() -> void {
-    printInt(qix);
-    printConstIntPtr(qix);
-    printIntPtr(qix);
-
-    printStr(foo);
-    printConstStr(foo);
-    printStrU(foo);
-
-    return;
-}
+// public function main() -> void {
+// 
+// 
+//     return;
+// }
