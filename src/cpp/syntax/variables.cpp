@@ -199,6 +199,8 @@ namespace Cryo
                 if (initNode->type == NODE_LITERAL_EXPR && initNode->data.literalExpression.dataType == DATA_TYPE_STRING)
                 {
                     char *strValue = initNode->data.literalExpression.stringValue;
+                    char *strValueCopy = initNode->data.literalExpression.stringValue;
+
                     std::cout << "[Variables] Creating string constant: " << strValue << std::endl;
 
                     llvm::Constant *stringConstant = llvm::ConstantDataArray::getString(cryoContext.context, strValue);
@@ -322,9 +324,9 @@ namespace Cryo
     std::vector<llvm::Constant *> CryoSyntax::generateArrayElements(ASTNode *arrayLiteral)
     {
         std::vector<llvm::Constant *> elements;
-        for (int i = 0; i < arrayLiteral->data.arrayLiteral.elementCount; i++)
+        for (int i = 0; i < arrayLiteral->data.arrayLiteral.array->elementCount; i++)
         {
-            ASTNode *element = arrayLiteral->data.arrayLiteral.elements[i];
+            ASTNode *element = arrayLiteral->data.arrayLiteral.array->elements[i];
             llvm::Constant *llvmElement = (llvm::Constant *)generateExpression(element);
             elements.push_back(llvmElement);
         }

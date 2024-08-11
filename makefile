@@ -47,8 +47,9 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_DIR = $(SRC_DIR)cpp/
 
 # Source files
-COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c \
-				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \ $(COMPILER_DIR)error.c
+COMPILER_SRC = $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c $(COMPILER_DIR)containers.c \
+				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \
+				$(COMPILER_DIR)error.c
 
 CLI_SRC = $(CLI_DIR)compiler.c $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
 			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c 
@@ -69,7 +70,7 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp $(CPP_DIR)utils/debugger.cp
 CRYO_SRC = $(CRYO_DIR)cryolib.c
 
 # Object files
-COMPILER_OBJ = $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
+COMPILER_OBJ =  $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
 				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o
 
 UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o

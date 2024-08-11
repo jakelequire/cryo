@@ -1239,13 +1239,13 @@ void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, AST
     printf("[Parser] Adding element to array literal\n");
     if (arrayLiteral->type == NODE_ARRAY_LITERAL)
     {
-        if (arrayLiteral->data.arrayLiteral.elementCount >= arrayLiteral->data.arrayLiteral.elementCapacity)
+        if (arrayLiteral->data.arrayLiteral.array->elementCount >= arrayLiteral->data.arrayLiteral.array->elementCapacity)
         {
-            arrayLiteral->data.arrayLiteral.elementCapacity *= 2;
-            arrayLiteral->data.arrayLiteral.elements = (ASTNode **)realloc(arrayLiteral->data.arrayLiteral.elements, arrayLiteral->data.arrayLiteral.elementCapacity * sizeof(ASTNode *));
+            arrayLiteral->data.arrayLiteral.array->elementCapacity *= 2;
+            arrayLiteral->data.arrayLiteral.array->elements = (ASTNode **)realloc(arrayLiteral->data.arrayLiteral.array->elements, arrayLiteral->data.arrayLiteral.array->elementCapacity * sizeof(ASTNode *));
         }
 
-        arrayLiteral->data.arrayLiteral.elements[arrayLiteral->data.arrayLiteral.elementCount++] = element;
+        arrayLiteral->data.arrayLiteral.array->elements[arrayLiteral->data.arrayLiteral.array->elementCount++] = element;
     }
     else
     {

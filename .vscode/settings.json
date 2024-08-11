@@ -213,7 +213,8 @@
       "version.h": "c",
       "error.h": "c",
       "any": "cpp",
-      "unistd.h": "c"
+      "unistd.h": "c",
+      "containers.h": "c"
     },
     "cmake.ignoreCMakeListsMissing": true,
     "C_Cpp.errorSquiggles": "enabled"

@@ -184,10 +184,10 @@ namespace Cryo
 
         case NODE_ARRAY_LITERAL:
             std::cout << "Array Literal Node" << std::endl;
-            std::cout << "Element Count: " << node->data.arrayLiteral.elementCount << std::endl;
-            for (int i = 0; i < node->data.arrayLiteral.elementCount; ++i)
+            std::cout << "Element Count: " << node->data.arrayLiteral.array->elementCount << std::endl;
+            for (int i = 0; i < node->data.arrayLiteral.array->elementCount; ++i)
             {
-                logNode(node->data.arrayLiteral.elements[i]);
+                logNode(node->data.arrayLiteral.array->elements[i]);
             }
             break;
 

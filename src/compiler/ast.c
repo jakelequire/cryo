@@ -194,10 +194,10 @@ void printAST(ASTNode *node, int indent)
         break;
 
     case NODE_ARRAY_LITERAL:
-        printf("Array Literal Node with %d elements (capacity: %d)\n", node->data.arrayLiteral.elementCount, node->data.arrayLiteral.elementCapacity);
-        for (int i = 0; i < node->data.arrayLiteral.elementCount; i++)
+        printf("Array Literal Node with %d elements (capacity: %d)\n", node->data.arrayLiteral.array->elementCount, node->data.arrayLiteral.array->elementCapacity);
+        for (int i = 0; i < node->data.arrayLiteral.array->elementCount; i++)
         {
-            printAST(node->data.arrayLiteral.elements[i], indent + 2);
+            printAST(node->data.arrayLiteral.array->elements[i], indent + 2);
         }
         break;
 
@@ -402,11 +402,11 @@ void freeAST(ASTNode *node)
         break;
 
     case NODE_ARRAY_LITERAL:
-        for (int i = 0; i < node->data.arrayLiteral.elementCount; i++)
+        for (int i = 0; i < node->data.arrayLiteral.array->elementCount; i++)
         {
-            freeAST(node->data.arrayLiteral.elements[i]);
+            freeAST(node->data.arrayLiteral.array->elements[i]);
         }
-        free(node->data.arrayLiteral.elements);
+        free(node->data.arrayLiteral.array->elements);
         break;
 
     case NODE_IMPORT_STATEMENT:
@@ -590,15 +590,7 @@ ASTNode *createASTNode(CryoNodeType type)
         break;
 
     case NODE_ARRAY_LITERAL:
-        node->data.arrayLiteral.elements = (ASTNode **)calloc(8, sizeof(ASTNode *));
-        if (!node->data.arrayLiteral.elements)
-        {
-            fprintf(stderr, "[AST] Failed to allocate memory for array literal elements\n");
-            free(node);
-            return NULL;
-        }
-        node->data.arrayLiteral.elementCount = 0;
-        node->data.arrayLiteral.elementCapacity = 8;
+        node->data.arrayLiteral.array = createArrayNodeContainer();
         break;
 
     case NODE_IMPORT_STATEMENT:
