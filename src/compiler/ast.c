@@ -524,11 +524,38 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement)
         printf("[AST] Block statement memory is sufficient\n");
     }
 
+    // THIS IS THROWING :)
     block->statements[block->statementCount++] = statement;
     // Debugging final state
     printf("[AST] Final state: stmtCount = %d, stmtCapacity = %d\n", block->statementCount, block->statementCapacity);
 }
 // </addStatementToBlock>
+
+void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement)
+{
+    if (functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
+    {
+        fprintf(stderr, "[AST] Error: addStatementToFunctionBlock called on non-function block node\n");
+        return;
+    }
+
+    CryoFunctionBlock *block = functionBlock->data.functionBlock;
+
+    if (block->block->statementCount >= block->block->statementCapacity)
+    {
+        block->block->statementCapacity *= 2;
+        block->block->statements = (ASTNode **)realloc(block->block->statements, sizeof(ASTNode *) * block->block->statementCapacity);
+        if (!block->block->statements)
+        {
+            fprintf(stderr, "[AST] Failed to reallocate memory for function block statements\n");
+            return;
+        }
+    }
+
+    block->block->statements[block->block->statementCount++] = statement;
+
+    addChildNode(functionBlock, statement);
+}
 
 // <addFunctionToProgram>
 void addFunctionToProgram(ASTNode *program, ASTNode *function)

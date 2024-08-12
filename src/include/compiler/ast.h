@@ -293,6 +293,7 @@ extern "C"
     ASTNode *createASTNode(CryoNodeType type);
     void addChildNode(ASTNode *parent, ASTNode *child);
     void addStatementToBlock(ASTNode *block, ASTNode *statement);
+    void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement);
     void addFunctionToProgram(ASTNode *program, ASTNode *function);
 
     /* @Node_Creation - Expressions & Statements */

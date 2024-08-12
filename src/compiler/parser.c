@@ -83,6 +83,10 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table)
     while (currentToken.type != TOKEN_EOF)
     {
         ASTNode *statement = parseStatement(lexer, table, &context);
+        if (statement->metaData->type == NODE_NAMESPACE)
+        {
+            addStatementToProgram(program, table, statement);
+        }
         if (statement)
         {
             // traverseAST(statement, table);
@@ -198,6 +202,7 @@ void debugCurrentToken()
 }
 // </debugCurrentToken>
 
+// <getNamespaceName>
 char *getNamespaceName(Lexer *lexer)
 {
     char *namespaceName = NULL;
@@ -212,6 +217,7 @@ char *getNamespaceName(Lexer *lexer)
     }
     return namespaceName;
 }
+// </getNamespaceName>
 
 /* ====================================================================== */
 /* @DataType_Management                                                   */
@@ -600,7 +606,7 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
         if (statement)
         {
             printf("[Parser] Adding statement to function block\n");
-            addStatementToBlock(functionBlock, statement);
+            addStatementToFunctionBlock(functionBlock, statement);
         }
         else
         {

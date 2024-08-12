@@ -53,7 +53,7 @@ KeywordToken keywords[] = {
 DataTypeToken dataTypes[] = {
     {"int", TOKEN_TYPE_INT},
     {"string", TOKEN_TYPE_STRING},
-    {"bool", TOKEN_TYPE_BOOLEAN},
+    {"boolean", TOKEN_TYPE_BOOLEAN},
     {"void", TOKEN_TYPE_VOID},
     {"int[]", TOKEN_TYPE_INT_ARRAY},
     {"string[]", TOKEN_TYPE_STRING_ARRAY},
