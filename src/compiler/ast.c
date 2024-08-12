@@ -398,6 +398,7 @@ ASTNode *createASTNode(CryoNodeType type)
         free(node);
         return NULL;
     }
+
     node->metaData->type = type;
 
     switch (type)
@@ -471,12 +472,12 @@ ASTNode *createASTNode(CryoNodeType type)
         return NULL;
     }
 
-    printf("[AST] Created node of type: %d\n", type);
+    printf("[AST] Created node of type: %s\n", CryoNodeTypeToString(type));
     return node;
 }
 // </createASTNode>
 
-// <addChildNode>
+// <addChildNode>e
 void addChildNode(ASTNode *parent, ASTNode *child)
 {
     if (!parent || !child)
@@ -838,9 +839,13 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
         case NODE_EXPRESSION:
             node->data.varDecl->initilizer.expressionNode = initializer->data.expression;
             break;
+        case NODE_ARRAY_LITERAL:
+            node->data.array = initializer->data.array;
+            break;
         default:
             // Handle error or unexpected initializer type
             fprintf(stderr, "Unexpected initializer type for variable %s\n", var_name);
+            printf("Type Received: %s\n", CryoNodeTypeToString(initializer->metaData->type));
             free(node->data.varDecl->name);
             free(node);
             return NULL;
@@ -848,7 +853,7 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
     }
     else
     {
-        // No initializer
+        // No initialize
         node->data.varDecl->initilizer.literalNode = NULL;
     }
 

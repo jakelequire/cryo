@@ -608,6 +608,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     {
         getNextToken(lexer);
         char *varType = strndup(currentToken.start, currentToken.length);
+
         dataType = getCryoDataType(varType);
         if (dataType == DATA_TYPE_UNKNOWN)
         {
@@ -643,8 +644,8 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 
     ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference);
     printf("[Parser] Created Variable Declaration Node: %s\n", var_name);
-    // printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->metaData->type);
-    // printf("[Parser] Variable Declaration Node Type: %d\n", varDeclNode->data.varDecl->type);
+    printf("[Parser] Variable Declaration Node Type: %s\n", CryoNodeTypeToString(varDeclNode->metaData->type));
+    printf("[Parser] Variable Declaration Node Type: %s\n", CryoDataTypeToString(varDeclNode->data.varDecl->type));
 
     return varDeclNode;
 }

@@ -111,7 +111,7 @@ namespace Cryo
         CryoModules cryoModulesInstance = compiler.getModules();
         CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
 
-        switch (node->type)
+        switch (node->metaData->type)
         {
         case NODE_PROGRAM:
         {
@@ -228,7 +228,7 @@ namespace Cryo
         case NODE_EXPRESSION_STATEMENT:
         {
             std::cout << "[CodeGen] Identified NODE_EXPRESSION_STATEMENT.\n";
-            cryoSyntaxInstance.generateExpression(node->data.stmt.stmt);
+            // cryoSyntaxInstance.generateExpression(node->data.stmt.stmt);
             break;
         }
 

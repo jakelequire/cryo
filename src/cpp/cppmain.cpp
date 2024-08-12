@@ -30,7 +30,7 @@ int generateCodeWrapper(ASTNode *node)
     std::cout << "[CPP] Root Node Initialized" << std::endl;
 
     Cryo::CryoCompiler compiler;
-    compiler.compile(root);
+    compiler.compile(node);
 
     return 1;
 }
