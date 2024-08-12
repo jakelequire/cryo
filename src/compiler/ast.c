@@ -403,6 +403,8 @@ ASTNode *createASTNode(CryoNodeType type)
 
     switch (type)
     {
+    case NODE_NAMESPACE:
+        break;
     case NODE_PROGRAM:
         node->data.program = createCryoProgramContainer();
         break;
@@ -464,20 +466,12 @@ ASTNode *createASTNode(CryoNodeType type)
         return NULL;
     }
 
-    if (!node->data.program) // Assuming 'program' is the first member of the union
-    {
-        fprintf(stderr, "[AST] Error: Failed to allocate memory for node type %d\n", type);
-        free(node->metaData);
-        free(node);
-        return NULL;
-    }
-
     printf("[AST] Created node of type: %s\n", CryoNodeTypeToString(type));
     return node;
 }
 // </createASTNode>
 
-// <addChildNode>e
+// <addChildNode>
 void addChildNode(ASTNode *parent, ASTNode *child)
 {
     if (!parent || !child)
@@ -570,23 +564,23 @@ void addFunctionToProgram(ASTNode *program, ASTNode *function)
 // </addFunctionToProgram>
 
 // -------------------------------------------------------------------
+
+ASTNode *createNamespaceNode(char *name)
+{
+    ASTNode *node = createASTNode(NODE_NAMESPACE);
+    if (!node)
+        return NULL;
+    node->metaData->moduleName = strdup(name);
+
+    return node;
+}
+
 // Create a program node
 ASTNode *createProgramNode(void)
 {
     ASTNode *node = createASTNode(NODE_PROGRAM);
     if (!node)
         return NULL;
-
-    node->data.program = (CryoProgram *)malloc(sizeof(CryoProgram));
-    if (!node->data.program)
-    {
-        free(node);
-        return NULL;
-    }
-
-    node->data.program->statements = NULL;
-    node->data.program->statementCount = 0;
-    node->data.program->statementCapacity = 0;
 
     return node;
 }
@@ -749,12 +743,12 @@ ASTNode *createBlockNode(void)
     return node;
 }
 
-ASTNode *createFunctionBlock(ASTNode *function)
+ASTNode *createFunctionBlock()
 {
     ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK);
     if (!node)
         return NULL;
-    node->data.functionBlock->function = function;
+    node->data.functionBlock->function = NULL;
     node->data.functionBlock->block = createBlockNode();
     return node;
 }

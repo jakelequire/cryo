@@ -297,6 +297,7 @@ extern "C"
 
     /* @Node_Creation - Expressions & Statements */
     ASTNode *createProgramNode(void);
+    ASTNode *createNamespaceNode(char *name);
     ASTNode *createLiteralExpr(int value);
     ASTNode *createExpressionStatement(ASTNode *expression);
     ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op);
@@ -311,7 +312,7 @@ extern "C"
 
     /* @Node_Blocks - Blocks */
     ASTNode *createBlockNode(void);
-    ASTNode *createFunctionBlock(ASTNode *function);
+    ASTNode *createFunctionBlock(void);
     ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch);
     ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body);
     ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body);

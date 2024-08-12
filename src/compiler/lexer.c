@@ -43,6 +43,7 @@ KeywordToken keywords[] = {
     {"extern", TOKEN_KW_EXTERN},
     {"continue", TOKEN_KW_CONTINUE},
     {"import", TOKEN_KW_IMPORT},
+    {"namespace", TOKEN_KW_NAMESPACE},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

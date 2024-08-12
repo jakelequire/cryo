@@ -17,7 +17,7 @@ CryoProgram *createCryoProgramContainer()
         return NULL;
     }
 
-    const int initialCapacity = 4; // Or any other small, non-zero value
+    const int initialCapacity = 6; // Or any other small, non-zero value
     node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -49,7 +49,7 @@ CryoBlockNode *createCryoBlockNodeContainer()
         return NULL;
     }
 
-    const int initialCapacity = 4; // Or any other small, non-zero value
+    const int initialCapacity = 6; // Or any other small, non-zero value
     node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -210,7 +210,7 @@ FunctionCallNode *createFunctionCallNodeContainer()
     node->name = NULL;
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 0;
+    node->argCapacity = 6;
 
     return node;
 }
@@ -437,7 +437,7 @@ ParamNode *createParamNodeContainer()
     node->nodeType = NODE_UNKNOWN;
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 0;
+    node->paramCapacity = 6;
     node->funcRefName = NULL;
 
     return node;
@@ -466,7 +466,7 @@ ArgNode *createArgNodeContainer()
     node->nodeType = NODE_UNKNOWN;
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 0;
+    node->argCapacity = 6;
     node->funcRefName = NULL;
 
     return node;
@@ -558,7 +558,7 @@ CryoArrayNode *createArrayNodeContainer()
         return NULL;
     }
 
-    const int initialCapacity = 0; // Or any other small, non-zero value
+    const int initialCapacity = 6; // Or any other small, non-zero value
     node->elements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
     if (!node->elements)
     {

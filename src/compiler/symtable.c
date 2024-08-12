@@ -221,7 +221,11 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
 
     switch (node->metaData->type)
     {
+    case NODE_NAMESPACE:
+        break;
+
     case NODE_VAR_DECLARATION:
+        printf("[Symtable] Variable Name: %s\n", node->data.varDecl->name);
         symbolNode->name = strdup(node->data.varDecl->name);
         symbolNode->nodeType = node->data.varDecl->type;
         symbolNode->valueType = node->data.varDecl->type;
@@ -257,13 +261,16 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
         symbolNode->nodeType = DATA_TYPE_FUNCTION;
         symbolNode->argCount = node->data.functionCall->argCount;
         break;
+
     case NODE_ARRAY_LITERAL:
         symbolNode->name = strdup(CryoNodeTypeToString(node->metaData->type));
         symbolNode->nodeType = NODE_ARRAY_LITERAL;
         symbolNode->valueType = DATA_TYPE_UNKNOWN;
         break;
+
     default:
         fprintf(stderr, "Error: Unsupported node type %d\n", node->metaData->type);
+        error("Unsupported node type", "createCryoSymbol", table);
         free(symbolNode);
         return NULL;
     }

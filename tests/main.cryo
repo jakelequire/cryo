@@ -1,16 +1,11 @@
-namespace main;
+namespace main
 
 const qix: int = 34;
-const bar: int = 42;
-const baz: int = 51;
 const foo: string = "Hello, World!";
-const arr: int[] = [1, 2, 3, 4, 5];
-//const strArr: string[] = ["Hello", "World", "!"];
+// const arr: int[] = [1, 2, 3, 4, 5];
 
-
-// public function main() -> void {
-// 
-// 
-//     return;
-// }
+public function main() -> void {
+    const bar: int = 42;
+    return;
+}
 

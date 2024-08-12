@@ -198,6 +198,21 @@ void debugCurrentToken()
 }
 // </debugCurrentToken>
 
+char *getNamespaceName(Lexer *lexer)
+{
+    char *namespaceName = NULL;
+    if (currentToken.type == TOKEN_IDENTIFIER)
+    {
+        namespaceName = strndup(currentToken.start, currentToken.length);
+        getNextToken(lexer);
+    }
+    else
+    {
+        error("Expected a namespace name", "getNamespaceName", NULL);
+    }
+    return namespaceName;
+}
+
 /* ====================================================================== */
 /* @DataType_Management                                                   */
 
@@ -347,6 +362,9 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         }
         return parseExpressionStatement(lexer, table, context);
 
+    case TOKEN_KW_NAMESPACE:
+        return parseNamespace(lexer, table, context);
+
     case TOKEN_EOF:
         return NULL;
 
@@ -356,6 +374,28 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
 }
 // </parseStatement>
+
+ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context)
+{
+    // Equivalent to `package <name>` like in Go.
+    consume(lexer, TOKEN_KW_NAMESPACE, "Expected 'namespace' keyword.", "parseNamespace", table);
+
+    ASTNode *node = NULL;
+
+    char *namespaceName = NULL;
+    if (currentToken.type == TOKEN_IDENTIFIER)
+    {
+        namespaceName = strndup(currentToken.start, currentToken.length);
+        node = createNamespaceNode(namespaceName);
+        getNextToken(lexer);
+    }
+    else
+    {
+        error("Expected a namespace name", "parseNamespace", table);
+    }
+
+    return node;
+}
 
 // <parsePrimaryExpression>
 ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context)
@@ -545,7 +585,7 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     printf("[Parser] Parsing function block...\n");
     context->scopeLevel++;
 
-    ASTNode *functionBlock = createBlockNode();
+    ASTNode *functionBlock = createFunctionBlock();
     if (!functionBlock)
     {
         fprintf(stderr, "[Parser] [ERROR] Failed to create function block node\n");
