@@ -382,8 +382,7 @@ CryoVariableNode *createVariableNodeContainer()
     node->isGlobal = false;
     node->isLocal = false;
     node->isReference = false;
-    node->initilizer.literalNode = NULL;
-    node->initilizer.expressionNode = NULL;
+    node->initializer = NULL;
 
     return node;
 }

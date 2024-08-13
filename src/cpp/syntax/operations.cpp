@@ -16,26 +16,28 @@
  ********************************************************************************/
 #include "cpp/codegen.h"
 
+namespace Cryo
+{
 
-namespace Cryo {
+    llvm::Value *CryoSyntax::generateBinaryOperation(ASTNode *node)
+    {
+        std::cout << "[CPP] Generating code for binary operation\n";
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
+        CryoContext &cryoContext = compiler.getContext();
 
+        llvm::Value *left = generateExpression(node->data.bin_op->left);
+        llvm::Value *right = generateExpression(node->data.bin_op->right);
 
-llvm::Value* CryoSyntax::generateBinaryOperation(ASTNode* node) {
-    std::cout << "[CPP] Generating code for binary operation\n";
-    CryoTypes& cryoTypesInstance = compiler.getTypes();
-    CryoContext& cryoContext = compiler.getContext();
+        if (!left || !right)
+        {
+            std::cerr << "[CPP] Error generating binary operation: operands are null\n";
+            return nullptr;
+        }
 
-    llvm::Value* left = generateExpression(node->data.bin_op.left);
-    llvm::Value* right = generateExpression(node->data.bin_op.right);
+        std::cout << "[CPP] Binary operation operands generated\n";
 
-    if (!left || !right) {
-        std::cerr << "[CPP] Error generating binary operation: operands are null\n";
-        return nullptr;
-    }
-
-    std::cout << "[CPP] Binary operation operands generated\n";
-
-    switch (node->data.bin_op.op) {
+        switch (node->data.bin_op->op)
+        {
         case OPERATOR_ADD:
             return cryoContext.builder.CreateAdd(left, right, "addtmp");
         case OPERATOR_SUB:
@@ -59,13 +61,9 @@ llvm::Value* CryoSyntax::generateBinaryOperation(ASTNode* node) {
         default:
             std::cerr << "[CPP] Unknown binary operator\n";
             return nullptr;
+        }
+
+        std::cout << "[CPP] DEBUG Binary operation generated.\n";
     }
-
-    std::cout << "[CPP] DEBUG Binary operation generated.\n";
-}
-
-
-
-
 
 } // namespace Cryo

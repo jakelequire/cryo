@@ -6,7 +6,7 @@ const buz: int[] = [1, 2, 3, 4, 5];
 const baz: string[] = ["foo", "bar", "baz"];
 
 public function main() -> void {
-    const bar: int = 42;
+    const what: int = 42;
     return;
 }
 

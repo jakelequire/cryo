@@ -39,20 +39,20 @@ namespace Cryo
         bool mainFunctionExists = false;
         std::unordered_set<std::string> declaredFunctions;
 
-        for (int i = 0; i < node->data.program.stmtCount; ++i)
+        for (int i = 0; i < node->data.program->statementCount; ++i)
         {
-            ASTNode *statement = node->data.program.statements[i];
+            ASTNode *statement = node->data.program->statements[i];
             if (!statement)
             {
                 std::cerr << "Error: statement is null at index " << i << "." << std::endl;
                 continue;
             }
 
-            switch (statement->type)
+            switch (statement->metaData->type)
             {
             case NODE_FUNCTION_DECLARATION:
             {
-                FunctionDeclNode *functionNode = statement->data.functionDecl.function;
+                FunctionDeclNode *functionNode = statement->data.functionDecl;
                 if (functionNode)
                 {
                     if (functionNode->name == "main")
@@ -72,7 +72,7 @@ namespace Cryo
 
             case NODE_EXTERN_FUNCTION:
             {
-                FunctionDeclNode *externFunctionNode = statement->data.externNode.decl.function;
+                FunctionDeclNode *externFunctionNode = statement->data.externNode->externNode->data.functionDecl;
                 if (externFunctionNode && declaredFunctions.find(externFunctionNode->name) == declaredFunctions.end())
                 {
                     cryoSyntaxInstance.generateExternalPrototype(statement);

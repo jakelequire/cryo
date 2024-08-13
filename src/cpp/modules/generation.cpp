@@ -60,7 +60,7 @@ namespace Cryo
 
     void CryoModules::generateFunctionBlock(ASTNode *node)
     {
-        if (!node || !node->data.functionBlock->block)
+        if (!node)
         {
             std::cerr << "[Generation] Error: Failed to generate Function Block. @<generateFunctionBlock>\n";
             return;
@@ -71,10 +71,10 @@ namespace Cryo
         CryoTypes &cryoTypesInstance = compiler.getTypes();
         CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
 
-        for (int i = 0; i < node->data.functionBlock->block->statementCount; ++i)
+        for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
         {
             std::cout << "[Generation] Generating code for Block Statement. Count: " << i << "\n";
-            cryoSyntaxInstance.identifyNodeExpression(node->data.functionBlock->block->statements[i]);
+            cryoSyntaxInstance.identifyNodeExpression(node->data.functionBlock->statements[i]);
             std::cout << "[Generation] Moving to next statement...\n";
         }
 

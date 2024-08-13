@@ -58,15 +58,15 @@ namespace Cryo
 
         char *functionName;
         FunctionDeclNode *functionNode = nullptr;
-        if (node->type == NODE_EXTERN_FUNCTION)
+        if (node->metaData->type == NODE_EXTERN_FUNCTION)
         {
-            functionName = node->data.externNode.decl.function->name;
-            functionNode = (node->data.externNode.decl.function);
+            functionName = node->data.externNode->externNode->data.functionDecl->name;
+            functionNode = (node->data.externNode->externNode->data.functionDecl);
         }
-        else if (node->type == NODE_FUNCTION_DECLARATION)
+        else if (node->metaData->type == NODE_FUNCTION_DECLARATION)
         {
-            functionName = node->data.functionDecl.function->name;
-            functionNode = (node->data.functionDecl.function);
+            functionName = node->data.functionDecl->name;
+            functionNode = (node->data.functionDecl);
         }
 
         // Check if the function already exists in the module
@@ -80,7 +80,7 @@ namespace Cryo
         for (int i = 0; i < functionNode->paramCount; i++)
         {
             auto param = functionNode->params[i];
-            llvm::Type *llvmType = cryoTypesInstance.getLLVMType(param->data.varDecl.dataType);
+            llvm::Type *llvmType = cryoTypesInstance.getLLVMType(param->data.varDecl->type);
             paramTypes.push_back(llvmType);
         }
 
@@ -96,15 +96,15 @@ namespace Cryo
         char *functionName;
         FunctionDeclNode *functionNode = nullptr;
 
-        if (node->type == NODE_EXTERN_STATEMENT)
+        if (node->metaData->type == NODE_EXTERN_STATEMENT)
         {
-            functionName = node->data.externNode.decl.function->name;
-            functionNode = node->data.externNode.decl.function;
+            functionName = node->data.externNode->externNode->data.functionDecl->name;
+            functionNode = node->data.externNode->externNode->data.functionDecl;
         }
-        else if (node->type == NODE_FUNCTION_DECLARATION)
+        else if (node->metaData->type == NODE_FUNCTION_DECLARATION)
         {
-            functionName = node->data.functionDecl.function->name;
-            functionNode = node->data.functionDecl.function;
+            functionName = node->data.functionDecl->name;
+            functionNode = node->data.functionDecl;
         }
         else
         {
@@ -136,12 +136,12 @@ namespace Cryo
         for (int i = 0; i < functionNode->paramCount; i++)
         {
             llvm::Argument *arg = function->arg_begin() + i;
-            arg->setName(functionNode->params[i]->data.varDecl.name);
-            cryoContext.namedValues[functionNode->params[i]->data.varDecl.name] = arg;
+            arg->setName(functionNode->params[i]->data.varDecl->name);
+            cryoContext.namedValues[functionNode->params[i]->data.varDecl->name] = arg;
             paramTypes.push_back(arg->getType());
         }
 
-        llvm::Type *returnType = cryoTypesInstance.getLLVMType(node->data.functionDecl.function->returnType);
+        llvm::Type *returnType = cryoTypesInstance.getLLVMType(node->data.functionDecl->returnType);
         llvm::FunctionType *funcType = llvm::FunctionType::get(returnType, paramTypes, false);
         if (!function)
         {
@@ -155,9 +155,9 @@ namespace Cryo
         cryoContext.builder.SetInsertPoint(entry);
 
         // Generate code for the function body
-        if (node->data.functionDecl.function->body)
+        if (node->data.functionDecl->body)
         {
-            generateFunctionBlock(node->data.functionDecl.function->body);
+            generateFunctionBlock(node->data.functionDecl->body);
         }
 
         // Ensure the function has a return statement or terminator
@@ -186,8 +186,8 @@ namespace Cryo
         CryoTypes &cryoTypesInstance = compiler.getTypes();
         CryoContext &cryoContext = compiler.getContext();
 
-        char *functionName = node->data.externNode.decl.function->name;
-        FunctionDeclNode *functionNode = node->data.externNode.decl.function;
+        char *functionName = node->data.externNode->externNode->data.functionDecl->name;
+        FunctionDeclNode *functionNode = node->data.externNode->externNode->data.functionDecl;
 
         // Check if the function already exists in the module
         if (cryoContext.module->getFunction(functionName))
@@ -201,7 +201,7 @@ namespace Cryo
         for (int i = 0; i < functionNode->paramCount; i++)
         {
             llvm::Type *paramType;
-            switch (functionNode->params[i]->data.varDecl.dataType)
+            switch (functionNode->params[i]->data.varDecl->type)
             {
             case DATA_TYPE_INT:
                 if (strstr(functionNode->name, "Ptr") != NULL)
@@ -237,8 +237,8 @@ namespace Cryo
         CryoTypes &cryoTypesInstance = compiler.getTypes();
         CryoContext &cryoContext = compiler.getContext();
 
-        char *functionName = node->data.externNode.decl.function->name;
-        FunctionDeclNode *functionNode = node->data.externNode.decl.function;
+        char *functionName = node->data.externNode->externNode->data.functionDecl->name;
+        FunctionDeclNode *functionNode = node->data.externNode->externNode->data.functionDecl;
 
         // Check if the function already exists in the module
         if (cryoContext.module->getFunction(functionName))
@@ -252,7 +252,7 @@ namespace Cryo
         for (int i = 0; i < functionNode->paramCount; i++)
         {
             llvm::Type *paramType;
-            switch (functionNode->params[i]->data.varDecl.dataType)
+            switch (functionNode->params[i]->data.varDecl->type)
             {
             case DATA_TYPE_INT:
                 if (strstr(functionNode->name, "Ptr") != NULL)
@@ -277,13 +277,13 @@ namespace Cryo
     void CryoSyntax::generateReturnStatement(ASTNode *node)
     {
         CryoContext &cryoContext = compiler.getContext();
-        if (!node->data.returnStmt.expression)
+        if (!node->data.returnStatement->expression)
         {
             cryoContext.builder.CreateRetVoid();
             return;
         }
 
-        llvm::Value *returnValue = generateExpression(node->data.returnStmt.expression);
+        llvm::Value *returnValue = generateExpression(node->data.returnStatement->expression);
         cryoContext.builder.CreateRet(returnValue);
 
         return;
@@ -294,19 +294,19 @@ namespace Cryo
         CryoContext &cryoContext = compiler.getContext();
         CryoTypes &cryoTypesInstance = compiler.getTypes();
 
-        std::cout << "[Functions] Generating call to function: " << node->data.functionCall.name << std::endl;
+        std::cout << "[Functions] Generating call to function: " << node->data.functionCall->name << std::endl;
 
-        llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall.name);
+        llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall->name);
         if (!function)
         {
-            std::cerr << "[Functions] Error: Function " << node->data.functionCall.name << " not found in module" << std::endl;
+            std::cerr << "[Functions] Error: Function " << node->data.functionCall->name << " not found in module" << std::endl;
             return;
         }
 
         std::vector<llvm::Value *> args;
-        for (int i = 0; i < node->data.functionCall.argCount; i++)
+        for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            llvm::Value *arg = generateExpression(node->data.functionCall.args[i]);
+            llvm::Value *arg = generateExpression(node->data.functionCall->args[i]);
             if (arg == nullptr)
             {
                 std::cerr << "Error: Failed to generate argument " << i << " for function call" << std::endl;
@@ -333,7 +333,7 @@ namespace Cryo
             args.push_back(arg);
         }
         llvm::Value *call = cryoContext.builder.CreateCall(function, args);
-        std::cout << "[Functions] Generated function call to " << node->data.functionCall.name << std::endl;
+        std::cout << "[Functions] Generated function call to " << node->data.functionCall->name << std::endl;
     }
 
     llvm::Value *CryoSyntax::createFunctionCall(ASTNode *node)
@@ -341,19 +341,19 @@ namespace Cryo
         CryoContext &cryoContext = compiler.getContext();
         CryoTypes &cryoTypesInstance = compiler.getTypes();
 
-        std::cout << "[Functions] Generating call to function: " << node->data.functionCall.name << std::endl;
+        std::cout << "[Functions] Generating call to function: " << node->data.functionCall->name << std::endl;
 
-        llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall.name);
+        llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall->name);
         if (!function)
         {
-            std::cerr << "[Functions] Error: Function " << node->data.functionCall.name << " not found in module" << std::endl;
+            std::cerr << "[Functions] Error: Function " << node->data.functionCall->name << " not found in module" << std::endl;
             return nullptr;
         }
 
         std::vector<llvm::Value *> args;
-        for (int i = 0; i < node->data.functionCall.argCount; i++)
+        for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            llvm::Value *arg = generateExpression(node->data.functionCall.args[i]);
+            llvm::Value *arg = generateExpression(node->data.functionCall->args[i]);
             if (arg == nullptr)
             {
                 std::cerr << "Error: Failed to generate argument " << i << " for function call" << std::endl;
@@ -380,7 +380,7 @@ namespace Cryo
             args.push_back(arg);
         }
         llvm::Value *call = cryoContext.builder.CreateCall(function, args);
-        std::cout << "[Functions] Generated function call to " << node->data.functionCall.name << std::endl;
+        std::cout << "[Functions] Generated function call to " << node->data.functionCall->name << std::endl;
         return call;
     }
 
@@ -394,8 +394,8 @@ namespace Cryo
 
         CryoContext &cryoContext = compiler.getContext();
 
-        ASTNode **statements = node->data.block.statements;
-        for (int i = 0; i < node->data.block.stmtCount; i++)
+        ASTNode **statements = node->data.block->statements;
+        for (int i = 0; i < node->data.block->statementCount; i++)
         {
             identifyNodeExpression(statements[i]);
         }

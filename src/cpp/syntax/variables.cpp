@@ -121,7 +121,7 @@ namespace Cryo
 
         cryoContext.namedValues[varName.str()] = var;
 
-        if (node->data.varDecl->initilizer.literalNode)
+        if (node->data.varDecl->initializer->data.literal)
         {
             initializeVariable(cryoContext, var, node);
         }
@@ -169,9 +169,9 @@ namespace Cryo
         llvm::Value *var = nullptr;
         llvm::Constant *initialValue = nullptr;
 
-        if (node->data.varDecl->initilizer.literalNode)
+        if (node->data.varDecl->initializer->data.literal)
         {
-            LiteralNode *initNode = node->data.varDecl->initilizer.literalNode;
+            LiteralNode *initNode = node->data.varDecl->initializer->data.literal;
             switch (varType)
             {
             case DATA_TYPE_INT:
@@ -298,7 +298,7 @@ namespace Cryo
         if (node->data.varDecl->isGlobal)
         {
             llvm::Constant *initialValue = nullptr;
-            if (node->data.varDecl->initilizer.literalNode)
+            if (node->data.varDecl->initializer->data.literal)
             {
                 initialValue = (llvm::Constant *)generateExpression(node);
             }

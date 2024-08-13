@@ -26,20 +26,20 @@ namespace Cryo
         CryoContext &cryoContext = compiler.getContext();
 
         std::cout << "[Expressions] Generating code for expression\n"
-                  << "Type: " << CryoNodeTypeToString(node->type) << "\n";
+                  << "Type: " << CryoNodeTypeToString(node->metaData->type) << "\n";
 
-        switch (node->type)
+        switch (node->metaData->type)
         {
         case CryoNodeType::NODE_LITERAL_EXPR:
         {
             std::cout << "[Expressions] Generating code for literal expression\n";
-            switch (node->data.literalExpression.dataType)
+            switch (node->data.literal->dataType)
             {
             case DATA_TYPE_INT:
             {
                 std::cout << "[Expressions] Generating code for integer literal\n";
                 llvm::ConstantInt *intVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(cryoContext.context),
-                                                                   node->data.literalExpression.intValue);
+                                                                   node->data.literal->intValue);
                 if (!intVal || intVal->getType() == nullptr)
                 {
                     std::cerr << "[CPP] Error: Failed to create integer literal\n";
@@ -50,11 +50,11 @@ namespace Cryo
             case DATA_TYPE_FLOAT:
                 std::cout << "[Expressions] Generating code for float literal\n";
                 return llvm::ConstantFP::get(llvm::Type::getFloatTy(cryoContext.context),
-                                             node->data.literalExpression.floatValue);
+                                             node->data.literal->floatValue);
             case DATA_TYPE_STRING:
             {
                 std::cout << "[Expressions] Generating code for string literal\n";
-                llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.context, node->data.literalExpression.stringValue);
+                llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.context, node->data.literal->stringValue);
                 llvm::GlobalVariable *strGlobal = new llvm::GlobalVariable(
                     *cryoContext.module,
                     strConstant->getType(),
@@ -67,7 +67,7 @@ namespace Cryo
             case DATA_TYPE_BOOLEAN:
                 std::cout << "[Expressions] Generating code for boolean literal\n";
                 return llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context),
-                                              node->data.boolean.value);
+                                              node->data.literal->booleanValue);
 
             case DATA_TYPE_VOID:
             case DATA_TYPE_UNKNOWN:
@@ -88,21 +88,21 @@ namespace Cryo
         case CryoNodeType::NODE_VAR_NAME:
         {
             std::cout << "[CPP] Generating code for variable\n";
-            llvm::Value *var = lookupVariable(node->data.varName.varName);
+            llvm::Value *var = lookupVariable(node->data.varName->varName);
             if (!var)
             {
-                std::cerr << "[CPP] Error: Variable not found: " << node->data.varName.varName << "\n";
+                std::cerr << "[CPP] Error: Variable not found: " << node->data.varName->varName << "\n";
                 return nullptr;
             }
 
             if (llvm::isa<llvm::GlobalVariable>(var))
             {
                 llvm::GlobalVariable *global = llvm::cast<llvm::GlobalVariable>(var);
-                return cryoContext.builder.CreateLoad(global->getValueType(), global, node->data.varName.varName);
+                return cryoContext.builder.CreateLoad(global->getValueType(), global, node->data.varName->varName);
             }
             else if (var->getType()->isPointerTy())
             {
-                return cryoContext.builder.CreateLoad(var->getType(), var, node->data.varName.varName);
+                return cryoContext.builder.CreateLoad(var->getType(), var, node->data.varName->varName);
             }
             return var;
         }
@@ -116,12 +116,12 @@ namespace Cryo
         case CryoNodeType::NODE_STRING_LITERAL:
         {
             std::cout << "[CPP] Generating code for string literal\n";
-            return cryoTypesInstance.createString(node->data.literalExpression.stringValue);
+            return cryoTypesInstance.createString(node->data.literal->stringValue);
         }
 
         default:
         {
-            std::cout << "[CPP - Error] Unknown expression type: " << node->type << "\n";
+            std::cout << "[CPP - Error] Unknown expression type: " << node->metaData->type << "\n";
             std::cerr << "[CPP] Unknown expression type\n";
             return nullptr;
         }
