@@ -84,8 +84,13 @@ namespace Cryo
             break;
 
         case NODE_VAR_DECLARATION:
+            if (node == nullptr)
+            {
+                std::cerr << "Error: varDecl is null." << std::endl;
+                break;
+            }
             std::cout << "Variable Declaration Node" << std::endl;
-            std::cout << "Variable Name: " << (node->data.varDecl->name ? node->data.varDecl->name : "null") << std::endl;
+            std::cout << "Variable Name: " << node->data.varDecl->name << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.varDecl->type) << std::endl;
             std::cout << "Is Global: " << (node->data.varDecl->isGlobal ? 0 : 1) << std::endl;
             std::cout << "Is Reference: " << (node->data.varDecl->isReference ? "Yes" : "No") << std::endl;

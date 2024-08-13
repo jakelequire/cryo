@@ -79,9 +79,9 @@ typedef struct ExternNode
 
 typedef struct FunctionDeclNode
 {
-    enum CryoNodeType type;
-    enum CryoVisibilityType visibility;
-    enum CryoDataType returnType;
+    CryoNodeType type;
+    CryoVisibilityType visibility;
+    CryoDataType returnType;
     char *name;
     struct ASTNode **params;
     int paramCount;
@@ -99,7 +99,7 @@ typedef struct FunctionCallNode
 
 typedef struct LiteralNode
 {
-    enum CryoDataType dataType; // Data type of the literal
+    CryoDataType dataType; // Data type of the literal
     union
     {
         int intValue;
@@ -132,7 +132,7 @@ typedef struct WhileStatementNode
 
 typedef struct VariableNameNode
 {
-    enum CryoDataType refType;
+    CryoDataType refType;
     bool isRef;
     char *varName;
 } VariableNameNode;
