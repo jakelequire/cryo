@@ -85,7 +85,7 @@ namespace Cryo
 
         case NODE_VAR_DECLARATION:
             std::cout << "Variable Declaration Node" << std::endl;
-            std::cout << "Variable Name: " << node->data.varDecl->name << std::endl;
+            std::cout << "Variable Name: " << (node->data.varDecl->name ? node->data.varDecl->name : "null") << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.varDecl->type) << std::endl;
             std::cout << "Is Global: " << (node->data.varDecl->isGlobal ? 0 : 1) << std::endl;
             std::cout << "Is Reference: " << (node->data.varDecl->isReference ? "Yes" : "No") << std::endl;
@@ -232,8 +232,14 @@ namespace Cryo
             std::cout << "Value: " << (node->data.literal->booleanValue ? "True" : "False") << std::endl;
             break;
 
+        case NODE_NAMESPACE:
+            std::cout << "Namespace Node" << std::endl;
+            std::cout << "Namespace Name: " << node->metaData->moduleName << std::endl;
+            break;
+
         default:
             std::cout << "Unknown Node Type" << std::endl;
+            std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
             break;
         }
     }
@@ -305,6 +311,7 @@ namespace Cryo
         case NODE_EXTERN_STATEMENT:
         case NODE_EXTERN_FUNCTION:
         case NODE_ARG_LIST:
+        case NODE_NAMESPACE:
         {
             return true;
         }
@@ -316,6 +323,8 @@ namespace Cryo
             return false;
         }
         default:
+            std::cerr << "[Debugger] Node is Invalid!\n"
+                      << std::endl;
             return false;
         }
     }

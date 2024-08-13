@@ -230,7 +230,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
     case NODE_VAR_DECLARATION:
     {
         printf("[Symtable] Variable Name: %s\n", node->data.varDecl->name);
-        char *var_name = strdup(node->data.varDecl->name ? node->data.varDecl->name : "Unnamed");
+        char *var_name = strdup(&node->data.varDecl->name ? node->data.varDecl->name : "Unnamed");
         symbolNode->name = var_name;
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;

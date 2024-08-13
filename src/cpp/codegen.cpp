@@ -23,7 +23,7 @@ namespace Cryo
      */
     void CodeGen::executeCodeGeneration(ASTNode *root)
     {
-        std::cout << "\nStarting Code Generation...\n";
+        std::cout << "\nStarting Code Generation... @executeCodeGeneration\n";
         if (root == nullptr)
         {
             std::cerr << "Error: root is null." << std::endl;
@@ -106,7 +106,7 @@ namespace Cryo
             exit(0);
             return;
         }
-        std::cout << "[CodeGen] Starting Code Generation...\n";
+        std::cout << "[CodeGen] @identifyNodeExpression Starting Code Generation...\n";
 
         CryoModules cryoModulesInstance = compiler.getModules();
         CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
