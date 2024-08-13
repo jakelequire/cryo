@@ -72,17 +72,15 @@ CryoBlockNode *createCryoBlockNodeContainer()
 
 CryoFunctionBlock *createCryoFunctionBlockContainer()
 {
-    CryoFunctionBlock *node = (CryoFunctionBlock *)calloc(1, sizeof(CryoFunctionBlock));
-    if (!node)
+    CryoFunctionBlock *block = (CryoFunctionBlock *)malloc(sizeof(CryoFunctionBlock));
+    if (block)
     {
-        fprintf(stderr, "[AST] Error: Failed to allocate CryoFunctionBlock node.");
-        return NULL;
+        block->function = NULL;
+        block->statements = NULL;
+        block->statementCount = 0;
+        block->statementCapacity = 0;
     }
-
-    node->function = NULL;
-    node->block = NULL;
-
-    return node;
+    return block;
 }
 
 // // *NEW* Untested & Unimplemnted

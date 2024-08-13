@@ -102,7 +102,9 @@ void printAST(ASTNode *node, int indent)
             printf("Unknown Literal Type\n");
         }
         break;
-
+    case NODE_STRING_EXPRESSION:
+        printf("String Expression Node: %s\n", node->data.literal->stringValue);
+        break;
     case NODE_VAR_NAME:
         printf("Variable Name Node: %s\n", node->data.varName->varName);
         printf("Is Reference: %s\n", node->data.varName->isRef ? "true" : "false");
@@ -172,7 +174,7 @@ void printAST(ASTNode *node, int indent)
         printf("Function:\n");
         printAST(node->data.functionBlock->function, indent + 2);
         printf("Block:\n");
-        printAST((ASTNode *)node->data.functionBlock->block, indent + 2);
+        printAST((ASTNode *)node->data.functionBlock->statements, indent + 2);
         break;
 
     case NODE_PARAM_LIST:
@@ -205,12 +207,16 @@ void printAST(ASTNode *node, int indent)
         }
         break;
 
+    case NODE_NAMESPACE:
+        printf("Namespace Node: %s\n", node->metaData->moduleName);
+        break;
+
     case NODE_UNKNOWN:
         printf("<Unknown Node>\n");
         break;
 
     default:
-        printf("Unhandled Node Type: %d\n", node->metaData->type);
+        printf("Unhandled Node Type: %s\n", CryoNodeTypeToString(node->metaData->type));
         break;
     }
 }
@@ -333,7 +339,7 @@ void freeAST(ASTNode *node)
 
     case NODE_FUNCTION_BLOCK:
         freeAST(node->data.functionBlock->function);
-        freeAST((ASTNode *)node->data.functionBlock->block);
+        freeAST((ASTNode *)node->data.functionBlock->statements);
         free(node->data.functionBlock);
         break;
 
@@ -505,7 +511,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement)
         return;
     }
 
-    CryoBlockNode *block = (blockNode->metaData->type == NODE_BLOCK) ? blockNode->data.block : blockNode->data.functionBlock->block;
+    CryoBlockNode *block = (blockNode->metaData->type == NODE_BLOCK ? blockNode->data.block : blockNode->data.functionBlock);
 
     // Debugging initial state
     if (block->statementCount >= block->statementCapacity)
@@ -533,26 +539,51 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement)
 
 void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement)
 {
-    if (functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
+    if (!functionBlock || !statement || !functionBlock->metaData || functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
     {
-        fprintf(stderr, "[AST] Error: addStatementToFunctionBlock called on non-function block node\n");
+        fprintf(stderr, "[AST] Error: Invalid function block or statement\n");
         return;
     }
 
     CryoFunctionBlock *block = functionBlock->data.functionBlock;
-
-    if (block->block->statementCount >= block->block->statementCapacity)
+    if (!block)
     {
-        block->block->statementCapacity *= 2;
-        block->block->statements = (ASTNode **)realloc(block->block->statements, sizeof(ASTNode *) * block->block->statementCapacity);
-        if (!block->block->statements)
+        fprintf(stderr, "[AST] Error: Function block is NULL\n");
+        return;
+    }
+
+    // Initialize statements array if it doesn't exist
+    if (!block->statements)
+    {
+        block->statementCapacity = 8; // Start with a reasonable capacity
+        block->statementCount = 0;
+        block->statements = (ASTNode **)malloc(sizeof(ASTNode *) * block->statementCapacity);
+        if (!block->statements)
+        {
+            fprintf(stderr, "[AST] Failed to allocate memory for function block statements\n");
+            return;
+        }
+    }
+    // Resize if necessary
+    else if (block->statementCount >= block->statementCapacity)
+    {
+        size_t newCapacity = block->statementCapacity * 2;
+        ASTNode **newStatements = (ASTNode **)realloc(block->statements, sizeof(ASTNode *) * newCapacity);
+        if (!newStatements)
         {
             fprintf(stderr, "[AST] Failed to reallocate memory for function block statements\n");
             return;
         }
+        block->statements = newStatements;
+        block->statementCapacity = newCapacity;
     }
 
-    block->block->statements[block->block->statementCount++] = statement;
+    // Add the new statement
+    block->statements[block->statementCount++] = statement;
+
+    // Debug output
+    printf("[AST] Debug: block=%p, statementCount=%d, statementCapacity=%d\n",
+           (void *)block, block->statementCount, block->statementCapacity);
 
     addChildNode(functionBlock, statement);
 }
@@ -775,8 +806,7 @@ ASTNode *createFunctionBlock()
     ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK);
     if (!node)
         return NULL;
-    node->data.functionBlock->function = NULL;
-    node->data.functionBlock->block = createBlockNode();
+
     return node;
 }
 
@@ -839,45 +869,28 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
 {
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
     if (!node)
+    {
+        printf("DEBUG: Failed to create AST node\n");
         return NULL;
+    }
 
-    node->data.varDecl->name = strdup(var_name);
+    if (!node->data.varDecl)
+    {
+        printf("DEBUG: varDecl is NULL\n");
+        free(node);
+        return NULL;
+    }
+
     node->data.varDecl->type = dataType;
-    node->data.varDecl->varNameNode = NULL; // Initialize this if needed
+    node->data.varDecl->name = strdup(var_name);
+    node->data.varDecl->varNameNode = createIdentifierNode(var_name);
     node->metaData->line = line;
     node->data.varDecl->isGlobal = isGlobal;
-    node->data.varDecl->isLocal = !isGlobal; // Assuming a variable is local if it's not global
+    node->data.varDecl->isLocal = !isGlobal;
     node->data.varDecl->isReference = isReference;
+    node->data.varDecl->initializer = initializer;
 
-    // Handle the initializer
-    if (initializer)
-    {
-        switch (initializer->metaData->type)
-        {
-        case NODE_LITERAL_EXPR:
-            node->data.varDecl->initilizer.literalNode = initializer->data.literal;
-            break;
-        case NODE_EXPRESSION:
-            node->data.varDecl->initilizer.expressionNode = initializer->data.expression;
-            break;
-        case NODE_ARRAY_LITERAL:
-            node->data.array = initializer->data.array;
-            break;
-        default:
-            // Handle error or unexpected initializer type
-            fprintf(stderr, "Unexpected initializer type for variable %s\n", var_name);
-            printf("Type Received: %s\n", CryoNodeTypeToString(initializer->metaData->type));
-            free(node->data.varDecl->name);
-            free(node);
-            return NULL;
-        }
-    }
-    else
-    {
-        // No initialize
-        node->data.varDecl->initilizer.literalNode = NULL;
-    }
-
+    printf("DEBUG [AST] Final node type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
     return node;
 }
 

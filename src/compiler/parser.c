@@ -227,6 +227,7 @@ CryoDataType getCryoDataType(const char *typeStr)
 {
     printf("[Parser] Getting data type for input: %s\n", typeStr);
     CryoDataType type = CryoDataTypeStringToType((char *)typeStr);
+    printf("\n<!> [Parser] Data Type: %s\n", CryoDataTypeToString(type));
     return type;
 }
 // </getCryoDataType>
@@ -399,6 +400,8 @@ ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     {
         error("Expected a namespace name", "parseNamespace", table);
     }
+
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseNamespace", table);
 
     return node;
 }
@@ -688,10 +691,13 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", table);
 
+    printf("\n\nDEBUG [Parser] Variable Data Type Being Passed: %s\n\n", CryoDataTypeToString(dataType));
+
     ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference);
+    printf("DEBUG [Parser] Node type after creation: %s\n", CryoDataTypeToString(varDeclNode->data.varDecl->type));
     printf("[Parser] Created Variable Declaration Node: %s\n", var_name);
     printf("[Parser] Variable Declaration Node Type: %s\n", CryoNodeTypeToString(varDeclNode->metaData->type));
-    printf("[Parser] Variable Declaration Node Type: %s\n", CryoDataTypeToString(varDeclNode->data.varDecl->type));
+    printf("[Parser] Variable Declaration Data Type: %s\n", CryoDataTypeToString(varDeclNode->data.varDecl->type));
 
     return varDeclNode;
 }

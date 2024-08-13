@@ -1,8 +1,9 @@
-namespace main
+namespace main;
 
 const qix: int = 34;
 const foo: string = "Hello, World!";
-// const arr: int[] = [1, 2, 3, 4, 5];
+const buz: int[] = [1, 2, 3, 4, 5];
+const baz: string[] = ["foo", "bar", "baz"];
 
 public function main() -> void {
     const bar: int = 42;

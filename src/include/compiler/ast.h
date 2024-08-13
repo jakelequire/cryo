@@ -67,7 +67,9 @@ typedef struct CryoBlockNode
 typedef struct CryoFunctionBlock
 {
     struct ASTNode *function;
-    struct CryoBlockNode *block;
+    struct ASTNode **statements;
+    int statementCount;
+    int statementCapacity;
 } CryoFunctionBlock;
 
 typedef struct ExternNode
@@ -150,18 +152,14 @@ typedef struct CryoExpressionNode
 
 typedef struct CryoVariableNode
 {
-    enum CryoDataType type;
-    struct VarNameNode *varNameNode;
+    CryoDataType type;
+    struct VariableNameNode *varNameNode;
     char *name;
     bool isGlobal;
     bool isLocal;
     bool isReference;
     // This is the data attached to the variable
-    union
-    {
-        LiteralNode *literalNode;
-        CryoExpressionNode *expressionNode;
-    } initilizer;
+    struct ASTNode *initializer;
 } CryoVariableNode;
 
 typedef struct ParamNode

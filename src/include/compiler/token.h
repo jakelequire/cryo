@@ -152,7 +152,7 @@ extern "C"
         TOKEN_KW_ASYNC,        // `async`
         TOKEN_KW_EXPRESSION,   // `expression`
         TOKEN_KW_EXTERN,       // `extern`
-        // Add more keywords as needed
+                         // Add more keywords as needed
 
         // Operators and punctuations
         TOKEN_BANG,           // `!`

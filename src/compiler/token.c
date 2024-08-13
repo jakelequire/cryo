@@ -128,6 +128,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "TYPE";
     case NODE_STRING_LITERAL:
         return "STRING_LITERAL";
+    case NODE_STRING_EXPRESSION:
+        return "STRING_EXPRESSION";
     case NODE_BOOLEAN_LITERAL:
         return "BOOLEAN_LITERAL";
     case NODE_ARRAY_LITERAL:
@@ -140,6 +142,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "EXTERN_FUNCTION";
     case NODE_ARG_LIST:
         return "ARG_LIST";
+    case NODE_NAMESPACE:
+        return "NAMESPACE";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -186,7 +190,7 @@ char *CryoDataTypeToString(CryoDataType type)
     case INTERNAL_DATA_TYPE_EXPRESSION:
         return "INTERNAL_DATA_TYPE_EXPRESSION";
     default:
-        return "<DATA TYPE UNKNOWN>";
+        return "<TYPE UNKNOWN>";
     }
 }
 // </CryoDataTypeToString>

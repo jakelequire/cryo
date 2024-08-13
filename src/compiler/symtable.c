@@ -109,7 +109,7 @@ void printSymbolTable(CryoSymbolTable *table)
         printf("%-20s %-24s %-18s %-10d %-14s %-10d\n",
                table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                CryoNodeTypeToString(table->symbols[i]->nodeType),
-               logSymCryoDataType(table->symbols[i]->valueType),
+               CryoDataTypeToString(table->symbols[i]->valueType),
                table->symbols[i]->scopeLevel,
                table->symbols[i]->isConstant ? "true" : "false",
                table->symbols[i]->argCount);
@@ -171,6 +171,7 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node)
         fprintf(stderr, "Error: node is null in addASTNodeSymbol\n");
         return;
     }
+    printf("DEBUG [SymTable] Adding symbol Type: %s\n", CryoNodeTypeToString(node->metaData->type));
 
     CryoSymbol *symbolNode = createCryoSymbol(table, node);
     if (!symbolNode)
@@ -222,50 +223,55 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
     switch (node->metaData->type)
     {
     case NODE_NAMESPACE:
+        symbolNode->name = strdup(node->metaData->moduleName);
+        symbolNode->nodeType = node->metaData->type;
         break;
 
     case NODE_VAR_DECLARATION:
+    {
         printf("[Symtable] Variable Name: %s\n", node->data.varDecl->name);
-        symbolNode->name = strdup(node->data.varDecl->name);
-        symbolNode->nodeType = node->data.varDecl->type;
+        char *var_name = strdup(node->data.varDecl->name ? node->data.varDecl->name : "Unnamed");
+        symbolNode->name = var_name;
+        symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
         break;
-
+    }
     case NODE_FUNCTION_DECLARATION:
         symbolNode->name = strdup(node->data.functionDecl->name);
-        symbolNode->nodeType = node->data.functionDecl->returnType;
+        symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.functionDecl->returnType;
         symbolNode->argCount = node->data.functionDecl->paramCount;
         break;
 
     case NODE_EXTERN_FUNCTION:
         symbolNode->name = strdup(node->data.externNode->externNode->data.functionDecl->name);
-        symbolNode->nodeType = node->data.externNode->externNode->data.functionDecl->returnType;
+        symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.externNode->externNode->data.functionDecl->returnType;
         symbolNode->argCount = node->data.externNode->externNode->data.functionDecl->paramCount;
         break;
 
     case NODE_PARAM_LIST:
         symbolNode->name = strdup(node->data.varDecl->name);
-        symbolNode->nodeType = node->data.varDecl->type;
+        symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
         break;
 
     case NODE_VAR_NAME:
         symbolNode->name = strdup(node->data.varName->varName);
-        symbolNode->nodeType = node->data.varName->refType;
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->valueType = node->data.varName->refType;
         break;
 
     case NODE_FUNCTION_CALL:
         symbolNode->name = strdup(node->data.functionCall->name);
-        symbolNode->nodeType = DATA_TYPE_FUNCTION;
+        symbolNode->nodeType = node->metaData->type;
         symbolNode->argCount = node->data.functionCall->argCount;
         break;
 
     case NODE_ARRAY_LITERAL:
-        symbolNode->name = strdup(CryoNodeTypeToString(node->metaData->type));
-        symbolNode->nodeType = NODE_ARRAY_LITERAL;
-        symbolNode->valueType = DATA_TYPE_UNKNOWN;
+        symbolNode->name = strdup(node->data.varDecl->name);
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->valueType = node->data.varDecl->type;
         break;
 
     default:
