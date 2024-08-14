@@ -28,6 +28,8 @@ files_to_delete = [
     "./src/cli/*.o",
     "./src/cli/commands/*.o",
     # Compiled files within bin directory
+    "./src/bin/main",
+    "./src/bin/cryo",
     "./src/bin/*.exe",
     "./src/bin/*.ilk",
     "./src/bin/*.pdb",

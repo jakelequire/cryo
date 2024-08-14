@@ -679,6 +679,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 
     if (currentToken.type == TOKEN_AMPERSAND)
     {
+
         isReference = true;
         getNextToken(lexer);
     }
@@ -1155,17 +1156,18 @@ void addParameterToExternDecl(CryoSymbolTable *table, ASTNode *externDeclNode, A
         if (externDecl->externNode->data.functionDecl->paramCount >= externDecl->externNode->data.functionDecl->paramCapacity)
         {
             externDecl->externNode->data.functionDecl->paramCapacity *= 2;
-            externDecl->externNode->data.functionDecl->params = (CryoVariableNode **)realloc(externDecl->externNode->data.functionDecl->params, externDecl->externNode->data.functionDecl->paramCapacity * sizeof(CryoVariableNode *));
+            externDecl->externNode->data.functionDecl->params = (ASTNode **)realloc(externDecl->externNode->data.functionDecl->params, externDecl->externNode->data.functionDecl->paramCapacity * sizeof(ASTNode **));
             if (!externDecl->externNode->data.functionDecl->params)
             {
                 fprintf(stderr, "[Parser] [ERROR] Failed to reallocate memory for parameters\n");
                 return;
             }
 
-            externDecl->externNode->data.functionDecl->params[externDecl->externNode->data.functionDecl->paramCount++] = param->data.varDecl;
+            externDecl->externNode->data.functionDecl->params[externDecl->externNode->data.functionDecl->paramCount++] = param;
 
             printf("[Parser] Added parameter to extern declaration\n");
         }
+
         else
         {
             fprintf(stderr, "[Parser] [ERROR] Expected extern function node, got %s\n", CryoNodeTypeToString(externDeclNode->metaData->type));

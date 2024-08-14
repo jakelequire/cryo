@@ -26,11 +26,18 @@ int generateCodeWrapper(ASTNode *node)
     std::cout << "[CPP] Starting Code Generation..." << std::endl;
 
     // Recast the ASTNode to ASTNode
-    ASTNode *root = static_cast<ASTNode *>(node);
+    ASTNode *root;
+    memcpy(&root, &node, sizeof(ASTNode *) * node->data.program->statementCount);
     std::cout << "[CPP] Root Node Initialized" << std::endl;
 
+    std::cout << "\n\n [ DEBUG ]"
+              // << CryoDataTypeToString(node->data.program->statements[2]->data.varDecl->type)
+              << strdup(root->data.program->statements[2]->data.varDecl->name)
+              << " \n\n"
+              << std::endl;
+
     Cryo::CryoCompiler compiler;
-    compiler.compile(root);
+    compiler.compile(node);
 
     return 1;
 }

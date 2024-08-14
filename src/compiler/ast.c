@@ -60,7 +60,7 @@ void printAST(ASTNode *node, int indent)
         break;
 
     case NODE_VAR_DECLARATION:
-        printf("Variable Declaration Node: %s\n", node->data.varDecl->name);
+        printf("Variable Declaration Node: %s\n", strdup(node->data.varDecl->name));
         printf("Variable Type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
         printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
         printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
@@ -430,7 +430,7 @@ ASTNode *createASTNode(CryoNodeType type)
         node->data.varDecl = createVariableNodeContainer();
         break;
     case NODE_VAR_NAME:
-        node->data.varName = createVariableNameNodeContainer();
+        node->data.varName = createVariableNameNodeContainer("");
         break;
     case NODE_EXPRESSION:
         node->data.expression = createExpressionNodeContainer();
@@ -511,7 +511,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement)
         return;
     }
 
-    CryoBlockNode *block = (blockNode->metaData->type == NODE_BLOCK ? blockNode->data.block : blockNode->data.functionBlock);
+    CryoBlockNode *block = blockNode->data.block;
 
     // Debugging initial state
     if (block->statementCount >= block->statementCapacity)
@@ -883,7 +883,7 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
 
     node->data.varDecl->type = dataType;
     node->data.varDecl->name = strdup(var_name);
-    node->data.varDecl->varNameNode = createIdentifierNode(var_name);
+    node->data.varDecl->varNameNode = createVariableNameNodeContainer(var_name);
     node->metaData->line = line;
     node->data.varDecl->isGlobal = isGlobal;
     node->data.varDecl->isLocal = !isGlobal;

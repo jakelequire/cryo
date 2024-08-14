@@ -270,7 +270,7 @@ ForStatementNode *createForStatementNodeContainer();
 WhileStatementNode *createWhileStatementNodeContainer();
 CryoExpressionNode *createExpressionNodeContainer();
 CryoVariableNode *createVariableNodeContainer();
-VariableNameNode *createVariableNameNodeContainer();
+VariableNameNode *createVariableNameNodeContainer(char *varName);
 ParamNode *createParamNodeContainer();
 ArgNode *createArgNodeContainer();
 CryoReturnNode *createReturnNodeContainer();

@@ -378,7 +378,7 @@ CryoVariableNode *createVariableNodeContainer()
 
     node->type = DATA_TYPE_UNKNOWN;
     node->varNameNode = NULL;
-    node->name = NULL;
+    node->name = (char *)calloc(1, sizeof(char));
     node->isGlobal = false;
     node->isLocal = false;
     node->isReference = false;
@@ -396,7 +396,7 @@ CryoVariableNode *createVariableNodeContainer()
 // } VariableNameNode;
 //
 
-VariableNameNode *createVariableNameNodeContainer()
+VariableNameNode *createVariableNameNodeContainer(char *varName)
 {
     VariableNameNode *node = (VariableNameNode *)calloc(1, sizeof(VariableNameNode));
     if (!node)
@@ -407,7 +407,7 @@ VariableNameNode *createVariableNameNodeContainer()
 
     node->refType = DATA_TYPE_UNKNOWN;
     node->isRef = false;
-    node->varName = NULL;
+    node->varName = strdup(varName);
 
     return node;
 }
