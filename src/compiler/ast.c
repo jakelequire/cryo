@@ -64,13 +64,10 @@ void printAST(ASTNode *node, int indent)
         printf("Variable Type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
         printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
         printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
-        free(node->data.varDecl->name);
-        free(node->data.varDecl);
         break;
 
     case NODE_EXPRESSION:
         printf("Expression Node\n");
-        free(node->data.expression);
         break;
 
     case NODE_BINARY_EXPR:
@@ -174,7 +171,10 @@ void printAST(ASTNode *node, int indent)
         printf("Function:\n");
         printAST(node->data.functionBlock->function, indent + 2);
         printf("Block:\n");
-        printAST((ASTNode *)node->data.functionBlock->statements, indent + 2);
+        for (int i = 0; i < node->data.functionBlock->statementCount; i++)
+        {
+            printAST(node->data.functionBlock->statements[i], indent + 2);
+        }
         break;
 
     case NODE_PARAM_LIST:
@@ -401,7 +401,6 @@ ASTNode *createASTNode(CryoNodeType type)
     if (!node->metaData)
     {
         fprintf(stderr, "[AST] Error: Failed to create metadata container.\n");
-        free(node);
         return NULL;
     }
 
@@ -467,8 +466,6 @@ ASTNode *createASTNode(CryoNodeType type)
         break;
     default:
         fprintf(stderr, "<!> [AST] Error: Unknown node type during creation: %d\n", type);
-        free(node->metaData);
-        free(node);
         return NULL;
     }
 
@@ -653,7 +650,6 @@ ASTNode *createLiteralExpr(int value)
     node->data.literal = (LiteralNode *)malloc(sizeof(LiteralNode));
     if (!node->data.literal)
     {
-        free(node);
         return NULL;
     }
 
@@ -673,7 +669,6 @@ ASTNode *createExpressionStatement(ASTNode *expression)
     node->data.expression = (CryoExpressionNode *)malloc(sizeof(CryoExpressionNode));
     if (!node->data.expression)
     {
-        free(node);
         return NULL;
     }
 
@@ -690,8 +685,6 @@ ASTNode *createExpressionStatement(ASTNode *expression)
     else
     {
         // Handle other types of expressions if needed
-        free(node->data.expression);
-        free(node);
         return NULL;
     }
 
@@ -708,7 +701,6 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op)
     node->data.bin_op = (CryoBinaryOpNode *)malloc(sizeof(CryoBinaryOpNode));
     if (!node->data.bin_op)
     {
-        free(node);
         return NULL;
     }
 
@@ -729,7 +721,6 @@ ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand)
     node->data.unary_op = (CryoUnaryOpNode *)malloc(sizeof(CryoUnaryOpNode));
     if (!node->data.unary_op)
     {
-        free(node);
         return NULL;
     }
 
@@ -877,7 +868,6 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
     if (!node->data.varDecl)
     {
         printf("DEBUG: varDecl is NULL\n");
-        free(node);
         return NULL;
     }
 

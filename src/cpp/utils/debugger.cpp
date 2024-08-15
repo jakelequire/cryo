@@ -257,7 +257,7 @@ namespace Cryo
         if (!node || node == nullptr)
         {
             std::cerr << "<Error>: Undefined AST Node." << std::endl;
-            exit(1);
+            std::cout << "Node: " << node << std::endl;
         }
         if (!isNodeTypeValid(node))
         {

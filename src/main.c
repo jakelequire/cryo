@@ -62,23 +62,13 @@ int main(int argc, char *argv[])
     if (programNode != NULL)
     {
         printf("\n\n>===------- AST Tree -------===<\n\n");
-        ASTNode *snapshot;
-        memcpy(&snapshot, &programNode, sizeof(ASTNode *));
-        printAST(snapshot, 0);
+        printAST(programNode, 0);
         printf("\n>===------- End Tree ------===<\n\n");
 
-        // Perform semantic analysis
-        if (analyzeNode(snapshot, table))
-        {
-            printf("[Main] Generating IR code...\n");
-            generateCodeWrapper(programNode); // <- The C++ wrapper function
-            printf(">===------------- CPP End Code Generation -------------===<\n");
-            printf("[Main] IR code generated, freeing AST.\n");
-        }
-        else
-        {
-            fprintf(stderr, "[Main] Semantic analysis failed.\n");
-        }
+        printf("[Main] Generating IR code...\n");
+        generateCodeWrapper(programNode); // <- The C++ wrapper function
+        printf(">===------------- CPP End Code Generation -------------===<\n");
+        printf("[Main] IR code generated, freeing AST.\n");
 
         freeAST(programNode);
     }
