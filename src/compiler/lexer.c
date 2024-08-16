@@ -139,7 +139,7 @@ char peekNext(Lexer *lexer)
 {
     if (isAtEnd(lexer))
         return '\0';
-    printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
+    // printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
     return lexer->current[1];
 }
 // </peekNext>
@@ -269,7 +269,7 @@ Token nextToken(Lexer *lexer, Token *token)
 // <get_next_token>
 Token get_next_token(Lexer *lexer)
 {
-    printf("[Lexer] Getting next token...\n");
+    // printf("[Lexer] Getting next token...\n");
     nextToken(lexer, &lexer->currentToken);
     return lexer->currentToken;
 }
@@ -299,7 +299,7 @@ Token peekToken(Lexer *lexer)
         nextToken(lexer, &lexer->lookahead);
         lexer->hasPeeked = true;
     }
-    printf("[Lexer] Peeked token: Type=%d, Start=%.*s, Length=%d\n", lexer->lookahead.type, lexer->lookahead.length, lexer->lookahead.start, lexer->lookahead.length);
+    // printf("[Lexer] Peeked token: Type=%d, Start=%.*s, Length=%d\n", lexer->lookahead.type, lexer->lookahead.length, lexer->lookahead.start, lexer->lookahead.length);
     return lexer->lookahead;
 }
 // </peekToken>
@@ -353,7 +353,7 @@ Token number(Lexer *lexer)
         advance(lexer);
     }
     Token token = makeToken(lexer, TOKEN_INT_LITERAL);
-    printf("[Lexer] Number token: %.*s\n", token.length, token.start);
+    // printf("[Lexer] Number token: %.*s\n", token.length, token.start);
     return token;
 }
 // </number>
@@ -373,7 +373,7 @@ Token string(Lexer *lexer)
 
     advance(lexer);
     Token token = makeToken(lexer, TOKEN_STRING_LITERAL);
-    printf("[Lexer] String token: %.*s\n", token.length, token.start);
+    // printf("[Lexer] String token: %.*s\n", token.length, token.start);
     return token;
 }
 // </string>
@@ -402,7 +402,7 @@ Token boolean(Lexer *lexer)
     }
 
     Token token = makeToken(lexer, TOKEN_BOOLEAN_LITERAL);
-    printf("[Lexer] Boolean token: %.*s\n", token.length, token.start);
+    // printf("[Lexer] Boolean token: %.*s\n", token.length, token.start);
     return token;
 }
 // </boolean>
@@ -477,7 +477,7 @@ Token identifier(Lexer *lexer)
         advance(lexer);
     }
     Token token = makeToken(lexer, TOKEN_IDENTIFIER);
-    printf("[Lexer] Identifier token: %.*s\n", token.length, token.start);
+    // printf("[Lexer] Identifier token: %.*s\n", token.length, token.start);
     return token;
 }
 // </identifier>
@@ -519,7 +519,7 @@ Token checkKeyword(Lexer *lexer)
 // <checkDataType>
 CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type)
 {
-    printf("[Lexer] Checking data type: %s\n", dataType);
+    // printf("[Lexer] Checking data type: %s\n", dataType);
     // Check if the next token is the `[` character to determine if it is an array type
     if (peek(lexer) == '[')
     {

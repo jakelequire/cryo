@@ -899,10 +899,20 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
 {
     ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION);
     if (!node)
+    {
         return NULL;
+    }
+    int paramCount = 0;
+    for (int i = 0; params[i] != NULL; i++)
+    {
+        paramCount++;
+    }
+    int paramCapacity = paramCount + 1;
     node->data.functionDecl->visibility = visibility;
     node->data.functionDecl->name = strdup(function_name);
     node->data.functionDecl->params = params;
+    node->data.functionDecl->paramCount = paramCount;
+    node->data.functionDecl->paramCapacity = paramCapacity;
     node->data.functionDecl->body = function_body;
     node->data.functionDecl->returnType = returnType;
     return node;
@@ -960,15 +970,44 @@ ASTNode *createParamNode(char *name, CryoDataType type)
     return node;
 }
 
-ASTNode *createArgsNode(char *name, CryoDataType type)
+ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral)
 {
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
     if (!node)
+    {
         return NULL;
+    }
+
+    ASTNode *initVal = NULL;
+    if (isLiteral && type == DATA_TYPE_INT)
+    {
+        // Transform the string to an integer
+        int value = atoi(name);
+        initVal = createLiteralExpr(value);
+    }
+    if (isLiteral && type == DATA_TYPE_FLOAT)
+    {
+        // Transform the string to a float
+        float value = atof(name);
+        initVal = createLiteralExpr(value);
+    }
+    if (isLiteral && type == DATA_TYPE_STRING)
+    {
+        // Just use the string as the initializer
+        initVal = createStringLiteralNode(name);
+    }
+    if (isLiteral && type == DATA_TYPE_BOOLEAN)
+    {
+        // Transform the string to a boolean
+        int value = strcmp(name, "true") == 0 ? 1 : 0;
+        initVal = createLiteralExpr(value);
+    }
+
     node->data.varDecl->name = strdup(name);
     node->data.varDecl->type = type;
     node->data.varDecl->isGlobal = false;
     node->data.varDecl->isReference = true;
+    node->data.varDecl->initializer = initVal;
     return node;
 }
 

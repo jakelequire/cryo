@@ -169,64 +169,84 @@ namespace Cryo
         llvm::Value *var = nullptr;
         llvm::Constant *initialValue = nullptr;
 
-        if (node->data.varDecl->initializer->data.literal)
+        bool isLiteral = node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR;
+        if (isLiteral)
         {
-            LiteralNode *initNode = node->data.varDecl->initializer->data.literal;
-            switch (varType)
-            {
-            case DATA_TYPE_INT:
-            {
-                int intValue = initNode->intValue;
-                initialValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(cryoContext.context), intValue);
-            }
-            break;
-            case DATA_TYPE_FLOAT:
-            {
-                float floatValue = initNode->floatValue;
-                initialValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(cryoContext.context), floatValue);
-            }
-            break;
-            case DATA_TYPE_BOOLEAN:
-            {
-                bool boolValue = initNode->booleanValue;
-                initialValue = llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context), boolValue);
-            }
-            break;
-            case DATA_TYPE_STRING:
-            {
-                char *strValue = initNode->stringValue;
-                char *strValueCopy = initNode->stringValue;
-
-                std::cout << "[Variables] Creating string constant: " << strValue << std::endl;
-
-                llvm::Constant *stringConstant = llvm::ConstantDataArray::getString(cryoContext.context, strValue);
-                llvm::GlobalVariable *globalString = new llvm::GlobalVariable(
-                    *cryoContext.module,
-                    stringConstant->getType(),
-                    true,
-                    llvm::GlobalValue::PrivateLinkage,
-                    stringConstant,
-                    ".str");
-
-                initialValue = globalString;
-                llvmType = llvm::Type::getInt8Ty(cryoContext.context);
-
-                std::cout << "[Variables] Created string constant with type: " << cryoTypesInstance.LLVMTypeToString(llvmType) << std::endl;
-            }
-            break;
-            case DATA_TYPE_ARRAY:
-            {
-                std::vector<llvm::Constant *> elements = generateArrayElements(node);
-                llvm::ArrayType *arrayType = llvm::ArrayType::get(llvmType, elements.size());
-                llvm::Constant *arrayConstant = llvm::ConstantArray::get(arrayType, elements);
-                initialValue = arrayConstant;
-            }
-            break;
-            default:
-                std::cerr << "Unsupported variable type for initialization: " << CryoDataTypeToString(varType) << std::endl;
-                break;
-            }
+            std::cout << "Literal Variable Recieved" << std::endl;
         }
+        bool isExpression = node->data.varDecl->initializer->metaData->type == NODE_EXPRESSION;
+        if (isExpression)
+        {
+            std::cout << "Expression Variable Recieved" << std::endl;
+        }
+
+        // if (node->data.varDecl)
+        // {
+        //     std::cout << "[Variables] Creating Variable: "
+        //               << varName
+        //               << " of type: "
+        //               << CryoDataTypeToString(varType)
+        //               << "\nwith initializer: "
+        //               << (node->data.varDecl->initializer ? "true" : "false")
+        //               << " as "
+        //               << (node->data.varDecl ? "global" : "local")
+        //               << std::endl;
+        //     LiteralNode *initNode = node->data.varDecl->initializer->data.literal;
+        //     switch (varType)
+        //     {
+        //     case DATA_TYPE_INT:
+        //     {
+        //         int intValue = initNode->intValue;
+        //         initialValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(cryoContext.context), intValue);
+        //     }
+        //     break;
+        //     case DATA_TYPE_FLOAT:
+        //     {
+        //         float floatValue = initNode->floatValue;
+        //         initialValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(cryoContext.context), floatValue);
+        //     }
+        //     break;
+        //     case DATA_TYPE_BOOLEAN:
+        //     {
+        //         bool boolValue = initNode->booleanValue;
+        //         initialValue = llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context), boolValue);
+        //     }
+        //     break;
+        //     case DATA_TYPE_STRING:
+        //     {
+        //         char *strValue = initNode->stringValue;
+        //         char *strValueCopy = initNode->stringValue;
+
+        //         std::cout << "[Variables] Creating string constant: " << strValue << std::endl;
+
+        //         llvm::Constant *stringConstant = llvm::ConstantDataArray::getString(cryoContext.context, strValue);
+        //         llvm::GlobalVariable *globalString = new llvm::GlobalVariable(
+        //             *cryoContext.module,
+        //             stringConstant->getType(),
+        //             true,
+        //             llvm::GlobalValue::PrivateLinkage,
+        //             stringConstant,
+        //             ".str");
+
+        //         initialValue = globalString;
+        //         llvmType = llvm::Type::getInt8Ty(cryoContext.context);
+
+        //         std::cout << "[Variables] Created string constant with type: " << cryoTypesInstance.LLVMTypeToString(llvmType) << std::endl;
+        //     }
+        //     break;
+        //     case DATA_TYPE_ARRAY:
+        //     {
+        //         std::vector<llvm::Constant *> elements = generateArrayElements(node);
+        //         llvm::ArrayType *arrayType = llvm::ArrayType::get(llvmType, elements.size());
+        //         llvm::Constant *arrayConstant = llvm::ConstantArray::get(arrayType, elements);
+        //         initialValue = arrayConstant;
+        //     }
+        //     break;
+        //     default:
+        //         std::cerr << "Unsupported variable type for initialization: " << CryoDataTypeToString(varType) << std::endl;
+        //         break;
+        //     }
+        // }
 
         if (node->data.varDecl->isGlobal)
         {
@@ -236,12 +256,12 @@ namespace Cryo
                                                llvm::GlobalValue::ExternalLinkage,
                                                initialValue, varName);
             }
-            else
-            {
-                var = new llvm::GlobalVariable(*cryoContext.module, llvmType, false,
-                                               llvm::GlobalValue::ExternalLinkage,
-                                               nullptr, varName);
-            }
+            // else
+            // {
+            //     var = new llvm::GlobalVariable(*cryoContext.module, llvmType, false,
+            //                                    llvm::GlobalValue::ExternalLinkage,
+            //                                    nullptr, varName);
+            // }
         }
         else
         {

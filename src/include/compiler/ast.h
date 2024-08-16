@@ -336,7 +336,7 @@ extern "C"
     ASTNode *createParamListNode(void);
     ASTNode *createArgumentListNode(void);
     ASTNode *createParamNode(char *name, CryoDataType type);
-    ASTNode *createArgsNode(char *name, CryoDataType type);
+    ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral);
 
     /* @Node_Creation - Modules & Externals */
     ASTNode *createImportNode(char *importPath);

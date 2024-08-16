@@ -394,8 +394,8 @@ namespace Cryo
 
         CryoContext &cryoContext = compiler.getContext();
 
-        ASTNode **statements = node->data.block->statements;
-        for (int i = 0; i < node->data.block->statementCount; i++)
+        ASTNode **statements = node->data.functionBlock->statements;
+        for (int i = 0; i < node->data.functionBlock->statementCount; i++)
         {
             identifyNodeExpression(statements[i]);
         }

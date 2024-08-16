@@ -726,6 +726,11 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
 
     ASTNode **params = parseParameterList(lexer, table, context);
 
+    for (int i = 0; params[i] != NULL; i++)
+    {
+        printf("[Parser] Parameter %d: %s\n", i, params[i]->data.varDecl->name);
+    }
+
     CryoDataType returnType = DATA_TYPE_VOID; // Default return type
     if (currentToken.type == TOKEN_RESULT_ARROW)
     {
@@ -998,13 +1003,34 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
 
     char *argName = strndup(currentToken.start, currentToken.length);
-    getNextToken(lexer);
+    bool isLiteral = false;
+
+    // Resolve the type if it's not a literal
+    // Check if `argName` is a literal number
+    if (currentToken.type == TOKEN_INT_LITERAL)
+    {
+        printf("[Parser] Argument is an integer literal\n");
+        isLiteral = true;
+    }
+    else if (currentToken.type == TOKEN_STRING_LITERAL)
+    {
+        printf("[Parser] Argument is a string literal\n");
+        isLiteral = true;
+    }
+    else if (currentToken.type == TOKEN_BOOLEAN_LITERAL)
+    {
+        printf("[Parser] Argument is a boolean literal\n");
+        isLiteral = true;
+    }
 
     // Resolve the type using the symbol table
     CryoSymbol *symbol = findSymbol(table, argName);
     CryoDataType argType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
 
-    return createArgsNode(argName, argType);
+    // Consume the argument name
+    getNextToken(lexer);
+
+    return createArgsNode(argName, argType, isLiteral);
 }
 // </parseArguments>
 
@@ -1055,13 +1081,43 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     }
 
     char *argName = strndup(currentToken.start, currentToken.length);
+    bool isLiteral = false;
 
+    // Resolve the type if it's not a literal
+    // Check if `argName` is a literal number
+    if (currentToken.type == TOKEN_INT_LITERAL)
+    {
+        printf("[Parser] Argument is an integer literal\n");
+        expectedType = DATA_TYPE_INT;
+        isLiteral = true;
+    }
+    else if (currentToken.type == TOKEN_STRING_LITERAL)
+    {
+        printf("[Parser] Argument is a string literal\n");
+        expectedType = DATA_TYPE_STRING;
+        isLiteral = true;
+    }
+    else if (currentToken.type == TOKEN_BOOLEAN_LITERAL)
+    {
+        printf("[Parser] Argument is a boolean literal\n");
+        expectedType = DATA_TYPE_BOOLEAN;
+        isLiteral = true;
+    }
+    else
+    {
+        // Resolve the type using the symbol table
+        CryoSymbol *symbol = findSymbol(table, argName);
+        expectedType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
+        isLiteral = false;
+    }
+
+    // Consume the argument name
     getNextToken(lexer);
 
     printf("\n\n<#> [Parser] Creating argument node with expected type: %s\n", CryoDataTypeToString(expectedType));
     printf("<#> [Parser] Argument name: %s\n", argName);
 
-    return createArgsNode(argName, expectedType);
+    return createArgsNode(argName, expectedType, isLiteral);
 }
 // </parseArgumentsWithExpectedType>
 
