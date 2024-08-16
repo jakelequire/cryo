@@ -1,13 +1,16 @@
 // Just a temp file to do work on the AST w/o needing to work in the main code.
 #include "compiler/ast.h"
 
-// typedef struct CryoProgram
-// {
-//     struct ASTNode **statements;
-//     size_t statementCount;
-//     size_t statementCapacity;
-// } CryoProgram;
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoProgram
+/// {
+///     ASTNode **statements;
+///     size_t statementCount;
+///     size_t statementCapacity;
+/// } CryoProgram;
+///```
 CryoProgram *createCryoProgramContainer()
 {
     CryoProgram *node = (CryoProgram *)calloc(1, sizeof(CryoProgram));
@@ -32,14 +35,17 @@ CryoProgram *createCryoProgramContainer()
     return node;
 }
 
-// typedef struct CryoBlockNode
-// {
-//     struct ASTNode **statements;
-//     int statementCount;
-//     int statementCapacity;
-// } CryoBlockNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoBlockNode
+/// {
+///     ASTNode **statements;
+///     int statementCount;
+///     int statementCapacity;
+/// } CryoBlockNode;
+///```
+///
 CryoBlockNode *createCryoBlockNodeContainer()
 {
     CryoBlockNode *node = (CryoBlockNode *)calloc(1, sizeof(CryoBlockNode));
@@ -64,12 +70,18 @@ CryoBlockNode *createCryoBlockNodeContainer()
     return node;
 }
 
-// typedef struct CryoFunctionBlock
-// {
-//     struct ASTNode *function;
-//     struct CryoBlockNode *block;
-// } CryoFunctionBlock;
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoFunctionBlock
+/// {
+///     ASTNode *function;
+///     ASTNode **statements;
+///     int statementCount;
+///     int statementCapacity;
+/// } CryoFunctionBlock;
+///```
+///
 CryoFunctionBlock *createCryoFunctionBlockContainer()
 {
     CryoFunctionBlock *block = (CryoFunctionBlock *)malloc(sizeof(CryoFunctionBlock));
@@ -83,12 +95,15 @@ CryoFunctionBlock *createCryoFunctionBlockContainer()
     return block;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct CryoModule
-// {
-//     ASTNode **astTable;
-// } CryoModule;
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoModule
+/// {
+///     ASTNode **astTable;
+/// } CryoModule;
+///```
+///
 CryoModule *createCryoModuleContainer()
 {
     CryoModule *node = (CryoModule *)calloc(1, sizeof(CryoModule));
@@ -103,17 +118,20 @@ CryoModule *createCryoModuleContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct CryoMetaData
-// {
-//     enum CryoNodeType type;      // Node Type
-//     int line;                    // Line number for error reporting
-//     int column;                  // Column number for error reporting
-//     struct ASTNode *firstChild;  // First child node (for linked list structure)
-//     struct ASTNode *nextSibling; // Next sibling node (for linked list structure)
-//     char *moduleName;            // Current Module
-// } CryoMetaData;
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoMetaData
+/// {
+///     enum CryoNodeType type;      // Node Type
+///     int line;                    // Line number for error reporting
+///     int column;                  // Column number for error reporting
+///     struct ASTNode *firstChild;  // First child node (for linked list structure)
+///     struct ASTNode *nextSibling; // Next sibling node (for linked list structure)
+///     char *moduleName;            // Current Module
+/// } CryoMetaData;
+///```
+///
 CryoMetaData *createMetaDataContainer()
 {
     CryoMetaData *node = (CryoMetaData *)calloc(1, sizeof(CryoMetaData));
@@ -133,15 +151,18 @@ CryoMetaData *createMetaDataContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct CryoScope
-// {
-//     int scopeLevel;
-//     char *scopeName;
-//     CryoNodeType *scopeType;
-//     bool isGlobal;
-// }
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoScope
+/// {
+///     int scopeLevel;
+///     char *scopeName;
+///     CryoNodeType *scopeType;
+///     bool isGlobal;
+/// } CryoScope;
+///```
+///
 CryoScope *createCryoScopeContainer()
 {
     CryoScope *node = (CryoScope *)calloc(1, sizeof(CryoScope));
@@ -158,18 +179,89 @@ CryoScope *createCryoScopeContainer()
     return node;
 }
 
-// typedef struct
-// {
-//     enum CryoNodeType type;
-//     enum CryoVisibilityType visibility;
-//     enum CryoDataType returnType;
-//     char *name;
-//     struct ASTNode **params;
-//     int paramCount;
-//     int paramCapacity;
-//     struct ASTNode *body;
-// } FunctionDeclNode;
+/// ---
+/// ### Structure
+///```
+/// typedef struct ExternNode
+/// {
+///     struct ASTNode *externNode;
+/// } ExternNode;
+///```
+///
+ExternNode *createExternNodeContainer(CryoNodeType type)
+{
+    ExternNode *node = (ExternNode *)calloc(1, sizeof(ExternNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ExternNode node.");
+        return NULL;
+    }
 
+    switch (type)
+    {
+    case NODE_EXTERN_FUNCTION:
+    {
+        printf("[Containers] Creating ExternNode for NODE_EXTERN_FUNCTION\n");
+        node->externNode = NULL;
+        break;
+    }
+    default:
+    {
+        fprintf(stderr, "[AST] Error: Unknown node type for ExternNode."); // Should never happen
+        return NULL;
+    }
+    }
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct ExternFunctionNode
+/// {
+///     char *name;
+///     struct ASTNode **params;
+///     int paramCount;
+///     int paramCapacity;
+///     CryoDataType returnType;
+/// } ExternFunctionNode;
+///```
+///
+ExternFunctionNode *createExternFunctionNodeContainer()
+{
+    ExternFunctionNode *node = (ExternFunctionNode *)calloc(1, sizeof(ExternFunctionNode) * 2);
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ExternFunctionNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->params = NULL;
+    node->paramCount = 0;
+    node->paramCapacity = 6;
+    node->returnType = DATA_TYPE_UNKNOWN;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct FunctionDeclNode
+/// {
+///     enum CryoNodeType type;
+///     enum CryoVisibilityType visibility;
+///     enum CryoDataType returnType;
+///     char *name;
+///     struct ASTNode **params;
+///     int paramCount;
+///     int paramCapacity;
+///     struct ASTNode *body;
+/// } FunctionDeclNode;
+///```
+///
 FunctionDeclNode *createFunctionNodeContainer()
 {
     FunctionDeclNode *node = (FunctionDeclNode *)calloc(1, sizeof(FunctionDeclNode));
@@ -188,14 +280,18 @@ FunctionDeclNode *createFunctionNodeContainer()
     return node;
 }
 
-// typedef struct FunctionCallNode
-// {
-//     char *name;
-//     struct ASTNode **args;
-//     int argCount;
-//     int argCapacity;
-// } FunctionCallNode;
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct FunctionCallNode
+/// {
+///     char *name;
+///     struct ASTNode **args;
+///     int argCount;
+///     int argCapacity;
+/// } FunctionCallNode;
+///```
+///
 FunctionCallNode *createFunctionCallNodeContainer()
 {
     FunctionCallNode *node = (FunctionCallNode *)calloc(1, sizeof(FunctionCallNode));
@@ -213,19 +309,22 @@ FunctionCallNode *createFunctionCallNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct LiteralNode
-// {
-//     enum CryoDataType dataType; // Data type of the literal
-//     union
-//     {
-//         int intValue;
-//         float floatValue;
-//         char *stringValue;
-//         int booleanValue;
-//     };
-// } LiteralNode;
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct LiteralNode
+/// {
+///     enum CryoDataType dataType; // Data type of the literal
+///     union
+///     {
+///         int intValue;
+///         float floatValue;
+///         char *stringValue;
+///         int booleanValue;
+///     };
+/// } LiteralNode;
+///```
+///
 LiteralNode *createLiteralNodeContainer()
 {
     LiteralNode *node = (LiteralNode *)calloc(1, sizeof(LiteralNode));
@@ -244,16 +343,17 @@ LiteralNode *createLiteralNodeContainer()
     return node;
 }
 
-//
-// // *NEW* Untested & Unimplemnted
-// typedef struct IfStatementNode
-// {
-//     struct ASTNode *condition;
-//     struct ASTNode *thenBranch;
-//     struct ASTNode *elseBranch;
-// } IfStatementNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct IfStatementNode
+/// {
+///     struct ASTNode *condition;
+///     struct ASTNode *thenBranch;
+///     struct ASTNode *elseBranch;
+/// } IfStatementNode;
+///```
+///
 IfStatementNode *createIfStatementContainer()
 {
     IfStatementNode *node = (IfStatementNode *)calloc(1, sizeof(IfStatementNode));
@@ -270,15 +370,18 @@ IfStatementNode *createIfStatementContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct ForStatementNode
-// {
-//     struct ASTNode *initializer;
-//     struct ASTNode *condition;
-//     struct ASTNode *increment;
-//     struct ASTNode *body;
-// } ForStatementNode;
-//
+/// ---
+/// ### Structure
+///```
+/// typedef struct ForStatementNode
+/// {
+///     struct ASTNode *initializer;
+///     struct ASTNode *condition;
+///     struct ASTNode *increment;
+///     struct ASTNode *body;
+/// } ForStatementNode;
+///```
+///
 ForStatementNode *createForStatementNodeContainer()
 {
     ForStatementNode *node = (ForStatementNode *)calloc(1, sizeof(ForStatementNode));
@@ -296,13 +399,16 @@ ForStatementNode *createForStatementNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct WhileStatementNode
-// {
-//     struct ASTNode *condition;
-//     struct ASTNode *body;
-// } WhileStatementNode;
-//
+/// ---
+/// ### Structure
+///```
+/// typedef struct WhileStatementNode
+/// {
+///     struct ASTNode *condition;
+///     struct ASTNode *body;
+/// } WhileStatementNode;
+///```
+///
 WhileStatementNode *createWhileStatementNodeContainer()
 {
     WhileStatementNode *node = (WhileStatementNode *)calloc(1, sizeof(WhileStatementNode));
@@ -318,21 +424,20 @@ WhileStatementNode *createWhileStatementNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct ExpressionNode
-// {
-//     CryoNodeType nodeType;
-//     union
-//     {
-//         // For Variable References
-//         struct VariableNameNode *varNameNode;
-//         struct LiteralNode *literalNode;
-//         // Unsure what else to put here but I'll figure it out later
-//     }
-//
-// } ExpressionNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoExpressionNode
+/// {
+///     CryoNodeType nodeType;
+///     union
+///     {
+///         struct VariableNameNode *varNameNode;
+///         struct LiteralNode *literalNode;
+///     } data;
+/// } CryoExpressionNode;
+///```
+///
 CryoExpressionNode *createExpressionNodeContainer()
 {
     CryoExpressionNode *node = (CryoExpressionNode *)calloc(1, sizeof(CryoExpressionNode));
@@ -349,24 +454,21 @@ CryoExpressionNode *createExpressionNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct VariableNode
-// {
-//     enum CryoDataType type;
-//     struct VarNameNode *varNameNode;
-//     char *name;
-//     bool isGlobal;
-//     bool isLocal;
-//     bool isReference;
-//     // This is the data attached to the variable
-//     union
-//     {
-//         LiteralNode *literalNode;
-//         ExpressionNode *expressionNode;
-//     }
-// } VariableNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoVariableNode
+/// {
+///     enum CryoDataType type;
+///     struct VariableNameNode *varNameNode;
+///     char *name;
+///     bool isGlobal;
+///     bool isLocal;
+///     bool isReference;
+///     struct ASTNode *initializer;
+/// } CryoVariableNode;
+///```
+///
 CryoVariableNode *createVariableNodeContainer()
 {
     CryoVariableNode *node = (CryoVariableNode *)calloc(1, sizeof(CryoVariableNode));
@@ -387,15 +489,17 @@ CryoVariableNode *createVariableNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct VariableNameNode
-// {
-//     enum CryoDataType refType;
-//     bool isRef;
-//     char *varName;
-// } VariableNameNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct VariableNameNode
+/// {
+///     enum CryoDataType refType;
+///     bool isRef;
+///     char *varName;
+/// } VariableNameNode;
+///```
+///
 VariableNameNode *createVariableNameNodeContainer(char *varName)
 {
     VariableNameNode *node = (VariableNameNode *)calloc(1, sizeof(VariableNameNode));
@@ -411,17 +515,20 @@ VariableNameNode *createVariableNameNodeContainer(char *varName)
 
     return node;
 }
-// // *NEW* Untested & Unimplemnted
-// typedef struct ParamNode
-// {
-//     enum CryoNodeType nodeType;
-//     struct VariableNode **params;
-//     int paramCount;
-//     int paramCapacity;
-//     char *funcRefName;
-// } ParamNode;
-//
 
+/// ---
+/// ### Structure
+///```
+/// typedef struct ParamNode
+/// {
+///     enum CryoNodeType nodeType;
+///     struct VariableNode **params;
+///     int paramCount;
+///     int paramCapacity;
+///     char *funcRefName;
+/// } ParamNode;
+///```
+///
 ParamNode *createParamNodeContainer()
 {
     ParamNode *node = (ParamNode *)calloc(1, sizeof(ParamNode));
@@ -440,17 +547,19 @@ ParamNode *createParamNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct ArgNode
-// {
-//     enum CryoNodeType nodeType;
-//     struct VariableNode **args;
-//     int argCount;
-//     int argCapacity;
-//     char *funcRefName;
-// } ArgNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct ArgNode
+/// {
+///     enum CryoNodeType nodeType;
+///     struct VariableNode **args;
+///     int argCount;
+///     int argCapacity;
+///     char *funcRefName;
+/// } ArgNode;
+///```
+///
 ArgNode *createArgNodeContainer()
 {
     ArgNode *node = (ArgNode *)calloc(1, sizeof(ArgNode));
@@ -469,15 +578,17 @@ ArgNode *createArgNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct ReturnNode
-// {
-//     struct ASTNode *returnValue;
-//     struct ASTNode *expression;
-//     CryoDataType returnType;
-// } ReturnNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoReturnNode
+/// {
+///     struct ASTNode *returnValue;
+///     struct ASTNode *expression;
+///     CryoDataType returnType;
+/// } CryoReturnNode;
+///```
+///
 CryoReturnNode *createReturnNodeContainer()
 {
     CryoReturnNode *node = (CryoReturnNode *)calloc(1, sizeof(CryoReturnNode));
@@ -494,14 +605,17 @@ CryoReturnNode *createReturnNodeContainer()
     return node;
 }
 
-// typedef struct CryoBinaryOpNode
-// {
-//     struct ASTNode *left;
-//     struct ASTNode *right;
-//     CryoOperatorType op;
-// } CryoBinaryOpNode;
-//
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoBinaryOpNode
+/// {
+///     struct ASTNode *left;
+///     struct ASTNode *right;
+///     CryoOperatorType op;
+/// } CryoBinaryOpNode;
+///```
+///
 CryoBinaryOpNode *createBinaryOpNodeContainer()
 {
     CryoBinaryOpNode *node = (CryoBinaryOpNode *)calloc(1, sizeof(CryoBinaryOpNode));
@@ -517,12 +631,17 @@ CryoBinaryOpNode *createBinaryOpNodeContainer()
 
     return node;
 }
-// typedef struct CryoUnaryOpNode
-// {
-//     CryoTokenType op;
-//     struct ASTNode *operand;
-// } CryoUnaryOpNode;
 
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoUnaryOpNode
+/// {
+///     CryoTokenType op;
+///     struct ASTNode *operand;
+/// } CryoUnaryOpNode;
+///```
+///
 CryoUnaryOpNode *createUnaryOpNodeContainer()
 {
     CryoUnaryOpNode *node = (CryoUnaryOpNode *)calloc(1, sizeof(CryoUnaryOpNode));
@@ -538,14 +657,17 @@ CryoUnaryOpNode *createUnaryOpNodeContainer()
     return node;
 }
 
-// // *NEW* Untested & Unimplemnted
-// typedef struct ArrayNode
-// {
-//     struct ASTNode **elements;
-//     int elementCount;
-//     int elementCapacity;
-// }
-
+/// ---
+/// ### Structure
+///```
+/// typedef struct CryoArrayNode
+/// {
+///     struct ASTNode **elements;
+///     int elementCount;
+///     int elementCapacity;
+/// } CryoArrayNode;
+///```
+///
 CryoArrayNode *createArrayNodeContainer()
 {
     CryoArrayNode *node = (CryoArrayNode *)calloc(1, sizeof(CryoArrayNode));

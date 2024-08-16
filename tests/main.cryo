@@ -1,9 +1,11 @@
 // namespace main
+extern function printInt(num: int) -> void;
 
 const qix: int = 34;
 
-public function add(a: int, b: int) -> int {
-    return a + b;
+public function add(a: int, b: int) -> void {
+    const c: int = a + b;
+    return;
 }
 
 public function main() -> void {

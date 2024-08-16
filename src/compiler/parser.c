@@ -778,32 +778,18 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
         return NULL;
     }
 
-    ASTNode *externNode = createExternFuncNode();
-    if (!externNode)
-    {
-        error("Failed to create extern function node.", "parseExternFunctionDeclaration", table);
-        return NULL;
-    }
-
     char *functionName = strndup(currentToken.start, currentToken.length);
-    externNode->data.externNode->externNode->data.functionDecl->name = functionName;
-    externNode->data.externNode->externNode->data.functionDecl->visibility = VISIBILITY_EXTERN;
     printf("[Parser] Function name: %s\n", functionName);
 
     getNextToken(lexer);
 
     ASTNode **params = parseParameterList(lexer, table, context);
-    externNode->data.externNode->externNode->data.functionDecl->params = params;
-
     // get length of params
     int paramCount = 0;
     while (params[paramCount] != NULL)
     {
         paramCount++;
     }
-    externNode->data.externNode->externNode->data.functionDecl->paramCount = paramCount;
-
-    printf("[Parser] Function parameter count: %d\n", paramCount);
 
     CryoDataType returnType = DATA_TYPE_VOID; // Default return type
     if (currentToken.type == TOKEN_RESULT_ARROW)
@@ -811,7 +797,6 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
         printf("[Parser] Found return type arrow\n");
         getNextToken(lexer);
         returnType = parseType(lexer, context, table);
-        externNode->data.externNode->externNode->data.functionDecl->returnType = returnType;
         getNextToken(lexer);
     }
     else
@@ -822,7 +807,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     printf("\n\n<#!> [Parser] Extern Function Return Type: %s \n", CryoDataTypeToString(returnType));
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", table);
 
-    return externNode;
+    return createExternFuncNode(functionName, params, returnType);
 }
 // </parseExternFunctionDeclaration>
 

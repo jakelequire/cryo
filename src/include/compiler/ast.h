@@ -77,6 +77,15 @@ typedef struct ExternNode
     struct ASTNode *externNode;
 } ExternNode;
 
+typedef struct ExternFunctionNode
+{
+    char *name;
+    struct ASTNode **params;
+    int paramCount;
+    int paramCapacity;
+    CryoDataType returnType;
+} ExternFunctionNode;
+
 typedef struct FunctionDeclNode
 {
     CryoNodeType type;
@@ -221,6 +230,8 @@ typedef struct ASTNode
         CryoFunctionBlock *functionBlock;
         // For Externs
         ExternNode *externNode;
+        // Extern Functions
+        ExternFunctionNode *externFunction;
         // For Return Statements
         CryoReturnNode *returnStatement;
         // For Literals
@@ -262,6 +273,7 @@ CryoFunctionBlock *createCryoFunctionBlockContainer();
 CryoModule *createCryoModuleContainer();
 CryoMetaData *createMetaDataContainer();
 CryoScope *createCryoScopeContainer();
+ExternNode *createExternNodeContainer(CryoNodeType type);
 FunctionDeclNode *createFunctionNodeContainer();
 FunctionCallNode *createFunctionCallNodeContainer();
 LiteralNode *createLiteralNodeContainer();
@@ -327,7 +339,7 @@ extern "C"
 
     /* @Node_Creation - Functions */
     ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType);
-    ASTNode *createExternFuncNode(void);
+    ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType);
     ASTNode *createFunctionCallNode(void);
     ASTNode *createReturnNode(ASTNode *returnValue);
     ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType);

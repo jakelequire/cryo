@@ -171,7 +171,7 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node)
         fprintf(stderr, "Error: node is null in addASTNodeSymbol\n");
         return;
     }
-    printf("DEBUG [SymTable] Adding symbol Type: %s\n", CryoNodeTypeToString(node->metaData->type));
+    // printf("DEBUG [SymTable] Adding symbol Type: %s\n", CryoNodeTypeToString(node->metaData->type));
 
     CryoSymbol *symbolNode = createCryoSymbol(table, node);
     if (!symbolNode)
@@ -205,7 +205,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
         return NULL;
     }
 
-    CryoSymbol *symbolNode = (CryoSymbol *)malloc(sizeof(CryoSymbol));
+    CryoSymbol *symbolNode = (CryoSymbol *)malloc(sizeof(CryoSymbol) * 2);
     if (!symbolNode)
     {
         fprintf(stderr, "Error: Failed to allocate memory for symbolNode\n");
@@ -245,10 +245,10 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
         break;
 
     case NODE_EXTERN_FUNCTION:
-        symbolNode->name = strdup(node->data.externNode->externNode->data.functionDecl->name);
+        symbolNode->name = strdup(node->data.externFunction->name);
         symbolNode->nodeType = node->metaData->type;
-        symbolNode->valueType = node->data.externNode->externNode->data.functionDecl->returnType;
-        symbolNode->argCount = node->data.externNode->externNode->data.functionDecl->paramCount;
+        symbolNode->valueType = node->data.externFunction->returnType;
+        symbolNode->argCount = node->data.externFunction->paramCount;
         break;
 
     case NODE_PARAM_LIST:

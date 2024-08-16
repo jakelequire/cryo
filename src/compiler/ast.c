@@ -437,6 +437,9 @@ ASTNode *createASTNode(CryoNodeType type)
     case NODE_FUNCTION_DECLARATION:
         node->data.functionDecl = createFunctionNodeContainer();
         break;
+    case NODE_EXTERN_FUNCTION:
+        node->data.externNode = createExternNodeContainer(NODE_EXTERN_FUNCTION);
+        break;
     case NODE_FUNCTION_CALL:
         node->data.functionCall = createFunctionCallNodeContainer();
         break;
@@ -918,9 +921,24 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     return node;
 }
 
-ASTNode *createExternFuncNode(void)
+ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType)
 {
-    return createASTNode(NODE_EXTERN_FUNCTION);
+    ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION);
+    if (!node)
+        return NULL;
+
+    int paramCount = 0;
+    for (int i = 0; params[i] != NULL; i++)
+    {
+        paramCount++;
+    }
+
+    node->data.externFunction->name = strdup(function_name);
+    node->data.externFunction->params = params;
+    node->data.externFunction->paramCount = paramCount;
+    node->data.externFunction->returnType = returnType;
+
+    return node;
 }
 
 ASTNode *createFunctionCallNode(void)
