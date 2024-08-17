@@ -14,15 +14,39 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "utils/support.h"
 
+/// @brief      Duplicate a string in memory.
+/// @param s    The string to duplicate.
+/// @return     A pointer to the duplicated string.
+char *strdup(const char *s)
+{
+    size_t slen = strlen(s);
+    char *result = malloc(slen + 1);
+    if (result == NULL)
+    {
+        return NULL;
+    }
 
-namespace Cryo {
+    memcpy(result, s, slen + 1);
+    return result;
+}
 
+/// @brief      Duplicate a string in memory with a maximum length.
+/// @param s    The string to duplicate.
+/// @param n    The maximum length of the string.
+/// @return     A pointer to the duplicated string.
+char *strndup(const char *s, size_t n)
+{
+    size_t slen = strlen(s);
+    size_t len = slen < n ? slen : n;
+    char *result = malloc(len + 1);
+    if (result == NULL)
+    {
+        return NULL;
+    }
 
-
-
-
-
-
-} // namespace Cryo
+    memcpy(result, s, len);
+    result[len] = '\0';
+    return result;
+}

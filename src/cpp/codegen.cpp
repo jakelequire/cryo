@@ -35,7 +35,9 @@ namespace Cryo
         CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
         CryoDebugger &cryoDebugger = compiler.getDebugger();
 
-        // cryoDebugger.logNode(root);
+        std::cout << "\n\n ------ Debug AST View ------\n";
+        cryoDebugger.logNode(root);
+        std::cout << "------ Debug AST View ------\n\n";
 
         // First Pass: Declare all functions
         std::cout << "\nFirst Pass: Declaring all functions\n";

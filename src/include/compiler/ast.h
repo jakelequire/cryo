@@ -19,13 +19,20 @@
 /*------ <includes> ------*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <malloc.h>
 /*---<custom_includes>---*/
 #include "compiler/token.h"
 #include "compiler/lexer.h"
 #include "compiler/symtable.h"
+#include "utils/support.h"
 /*---------<end>---------*/
+extern char *strdup(const char *__s)
+    __THROW __attribute_malloc__ __nonnull((1));
+
+extern char *strndup(const char *__string, size_t __n)
+    __THROW __attribute_malloc__ __nonnull((1));
 
 // *NEW* Untested & Unimplemnted
 typedef struct CryoModule

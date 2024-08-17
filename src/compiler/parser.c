@@ -779,7 +779,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     }
 
     char *functionName = strndup(currentToken.start, currentToken.length);
-    printf("[Parser] Function name: %s\n", functionName);
+    printf("[Parser] Function name: %s\n", strdup(functionName));
 
     getNextToken(lexer);
 
@@ -807,7 +807,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     printf("\n\n<#!> [Parser] Extern Function Return Type: %s \n", CryoDataTypeToString(returnType));
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", table);
 
-    return createExternFuncNode(functionName, params, returnType);
+    return createExternFuncNode(strdup(functionName), params, returnType);
 }
 // </parseExternFunctionDeclaration>
 

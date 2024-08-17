@@ -237,7 +237,7 @@ ExternFunctionNode *createExternFunctionNodeContainer()
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
+    node->name = NULL;
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = 6;

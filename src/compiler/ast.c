@@ -44,8 +44,18 @@ void printAST(ASTNode *node, int indent)
         }
         break;
 
+    case NODE_EXTERN_FUNCTION:
+        printf("Extern Function Node: %s\n", strdup(node->data.externFunction->name));
+        printf("Extern Function Return Type: %s\n", CryoDataTypeToString(node->data.externFunction->returnType));
+        printf("Extern Function Parameters:\n");
+        for (int i = 0; i < node->data.externFunction->paramCount; i++)
+        {
+            printAST(node->data.externFunction->params[i], indent + 2);
+        }
+        break;
+
     case NODE_FUNCTION_DECLARATION:
-        printf("Function Declaration Node name: %s\n", node->data.functionDecl->name);
+        printf("Function Declaration Node name: %s\n", strdup(node->data.functionDecl->name));
         printf("Function Declaration Node returnType: %s\n",
                CryoDataTypeToString(node->data.functionDecl->returnType));
         printf("Function Declaration Node visibility: %s\n",

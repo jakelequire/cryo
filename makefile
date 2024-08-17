@@ -1,12 +1,55 @@
+#*******************************************************************************
+#  Copyright 2024 Jacob LeQuire                                                *
+#  SPDX-License-Identifier: Apache-2.0                                         *
+#    Licensed under the Apache License, Version 2.0 (the "License");           *
+#    you may not use this file except in compliance with the License.          *
+#    You may obtain a copy of the License at                                   *
+#                                                                              *
+#    http://www.apache.org/licenses/LICENSE-2.0                                *
+#                                                                              *
+#    Unless required by applicable law or agreed to in writing, software       *
+#    distributed under the License is distributed on an "AS IS" BASIS,         *
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+#    See the License for the specific language governing permissions and       *
+#    limitations under the License.                                            *
+#                                                                              *
+#*******************************************************************************/
+
+# --------------------------------------------- #
+# `-O0` - No optimization						#
+# `-O1` - Basic optimization					#
+# `-O2` - Further optimization					#
+# `-O3` - Maximum optimization					#
+# `-Og` - Optimize debugging experience			#
+# `-Os` - Optimize for size						#
+# `-Ofast` - Optimize for speed					#
+# `-Oz` - Optimize for size						#
+# --------------------------------------------- #
+OPTIMIZATION = -O2
+DEBUG_FLAGS = -g -v -D_CRT_SECURE_NO_WARNINGS 
+C_STANDARD = -std=c17
+CXX_STANDARD = -std=c++17
+
+# OS-specific settings for compilers
+ifeq ($(OS), Windows_NT)
+# Windows settings
+	C_COMPILER = C:/msys64/mingw64/bin/gcc
+	CXX_COMPILER = C:/msys64/mingw64/bin/g++
+else
+# Linux settings
+	C_COMPILER = /usr/local/bin/clang
+	CXX_COMPILER = /usr/local/bin/clang++
+endif
+
 # OS-specific settings
 ifeq ($(OS), Windows_NT)
     # Windows settings
-    CC = clang -g -v -D_CRT_SECURE_NO_WARNINGS 
-    CXX = clang++ -std=c++17 -g -v -D_CRT_SECURE_NO_WARNINGS 
-    CFLAGS = -I"C:/msys64/mingw64/include" \
-             -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
-    CXXFLAGS = -I"C:/msys64/mingw64/include" \
-               -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+    CC = $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CXX = $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CFLAGS = -I"C:/msys64/mingw64/include" -I./src/include -I./src/include/runtime -I./src/include/cli \
+			-I./src/include/compiler -I./src/include/utils -I./src/include/tests
+    CXXFLAGS = -I"C:/msys64/mingw64/include" -I./src/include -I./src/include/runtime -I./src/include/cli \
+			-I./src/include/compiler -I./src/include/utils -I./src/include/tests
     LDFLAGS = -L"C:/msys64/mingw64/lib" $(LLVM_LIBS) $(STDLIBS) -v
     LLVM_LIBS := -lLLVM-18
     STDLIBS := -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32 -Wl,-subsystem,console
@@ -16,14 +59,17 @@ ifeq ($(OS), Windows_NT)
     BIN_SUFFIX = .exe
 else
     # Linux settings
-    CC = clang -g -v
-    CXX = clang++ -std=c++17 -g -v
-    CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
-    CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+    CC = $(C_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CXX = $(CXX_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
+			-I./src/include/utils -I./src/include/tests
+    CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
+			-I./src/include/utils -I./src/include/tests
     LLVM_CONFIG = llvm-config
     LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
     LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
     LDFLAGS = $(LLVM_LDFLAGS) -lpthread -v
+	STD_LIBS = -lstdc++ -lm -lc -lgcc -lgcc_eh -lstdc++fs
     MKDIR = mkdir -p
     RMDIR = rm -rf
     DEL = rm -f
@@ -47,14 +93,14 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_DIR = $(SRC_DIR)cpp/
 
 # Source files
-COMPILER_SRC = $(COMPILER_DIR)containers.c $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c  \
+COMPILER_SRC = 	$(COMPILER_DIR)containers.c $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c  \
 				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \
 				$(COMPILER_DIR)error.c
 
 CLI_SRC = $(CLI_DIR)compiler.c $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
 			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c 
 
-UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c
+UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c $(UTILS_DIR)supportlibs.c $(UTILS_DIR)arena.c
 MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
@@ -73,7 +119,7 @@ CRYO_SRC = $(CRYO_DIR)cryolib.c
 COMPILER_OBJ =  $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
 				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o
 
-UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o
+UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o $(OBJ_DIR)supportlibs.o $(OBJ_DIR)arena.o
 
 CLI_OBJ = $(OBJ_DIR)compiler.o $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o \
 			$(OBJ_DIR)cmd_devWatch.o $(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o 
@@ -106,14 +152,28 @@ $(OBJ_DIR):
 $(BIN_DIR):
 	$(MKDIR) $(BIN_DIR)
 
-# Compilation rules
-$(OBJ_DIR)%.o: $(COMPILER_DIR)%.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
 
+# --------------------------------------------- #
+#             Object file rules 				#
+# --------------------------------------------- #
+
+# ---------------------------------------------
+# Utils Compilation rules
 $(OBJ_DIR)logger.o: $(UTILS_DIR)logger.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)fs.o: $(UTILS_DIR)fs.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)arena.o: $(UTILS_DIR)arena.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)supportlibs.o: $(UTILS_DIR)supportlibs.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# ---------------------------------------------
+# Compilation rules
+$(OBJ_DIR)%.o: $(COMPILER_DIR)%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)main.o: $(SRC_DIR)main.c | $(OBJ_DIR)
@@ -131,7 +191,7 @@ $(OBJ_DIR)symtable.o : $(COMPILER_DIR)symtable.c | $(OBJ_DIR)
 $(OBJ_DIR)error.o : $(COMPILER_DIR)error.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-
+# ---------------------------------------------
 # CLI Compilation rules
 $(OBJ_DIR)compiler.o : $(CLI_DIR)compiler.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -154,7 +214,7 @@ $(OBJ_DIR)cmd_help.o : $(CLI_COMMANDS_DIR)cmd_help.c | $(OBJ_DIR)
 $(OBJ_DIR)cmd_version.o : $(CLI_COMMANDS_DIR)cmd_version.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-
+# ---------------------------------------------
 # CPP Compilation rules
 $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -206,12 +266,13 @@ $(OBJ_DIR)cryoContext.o : $(CPP_DIR)context/cryoContext.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR)compiler_cpp.o : $(CPP_DIR)compiler.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	
+
+# ---------------------------------------------
 # Cryo Lib Compilation rules
 $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
 	$(CXX) $(CFLAGS) -c $< -o $@ 
 
-
+# ---------------------------------------------
 # Linking binaries
 $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
@@ -222,6 +283,7 @@ $(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) | 
 $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+# ---------------------------------------------
 # Running executables
 runmain: $(MAIN_BIN)
 	$(MAIN_BIN) ./src/tests/data/test1.cy
@@ -232,6 +294,7 @@ runcli: $(CLI_BIN_EXE)
 runtest: $(TEST_BIN)
 	$(TEST_BIN)
 
+# ---------------------------------------------
 # Clean up - remove object files and executables
 clean:
 	python3 ./scripts/clean.py

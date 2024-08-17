@@ -53,7 +53,7 @@ namespace Cryo
         switch (node->metaData->type)
         {
         case NODE_PROGRAM:
-            std::cout << "Program Node" << std::endl;
+            std::cout << "\nProgram Node" << std::endl;
             std::cout << "Statements Count: " << node->data.program->statementCount << std::endl;
             for (int i = 0; i < node->data.program->statementCount; ++i)
             {
@@ -62,7 +62,7 @@ namespace Cryo
             break;
 
         case NODE_FUNCTION_DECLARATION:
-            std::cout << "Function Declaration Node" << std::endl;
+            std::cout << "\nFunction Declaration Node" << std::endl;
             std::cout << "Function Name: " << node->data.functionDecl->name << std::endl;
             std::cout << "Return Type: " << CryoDataTypeToString(node->data.functionDecl->returnType) << std::endl;
             std::cout << "Parameter Count: " << node->data.functionDecl->paramCount << std::endl;
@@ -74,7 +74,7 @@ namespace Cryo
             break;
 
         case NODE_FUNCTION_CALL:
-            std::cout << "Function Call Node" << std::endl;
+            std::cout << "\nFunction Call Node" << std::endl;
             std::cout << "Function Name: " << node->data.functionCall->name << std::endl;
             std::cout << "Argument Count: " << node->data.functionCall->argCount << std::endl;
             for (int i = 0; i < node->data.functionCall->argCount; ++i)
@@ -89,7 +89,7 @@ namespace Cryo
                 std::cerr << "Error: varDecl is null." << std::endl;
                 break;
             }
-            std::cout << "Variable Declaration Node" << std::endl;
+            std::cout << "\nVariable Declaration Node" << std::endl;
             std::cout << "Variable Name: " << node->data.varDecl->name << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.varDecl->type) << std::endl;
             std::cout << "Is Global: " << (node->data.varDecl->isGlobal ? 0 : 1) << std::endl;
@@ -98,7 +98,7 @@ namespace Cryo
             break;
 
         case NODE_LITERAL_EXPR:
-            std::cout << "Literal Expression Node" << std::endl;
+            std::cout << "\nLiteral Expression Node" << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.literal->dataType) << std::endl;
             switch (node->data.literal->dataType)
             {
@@ -118,7 +118,7 @@ namespace Cryo
             break;
 
         case NODE_BINARY_EXPR:
-            std::cout << "Binary Expression Node" << std::endl;
+            std::cout << "\nBinary Expression Node" << std::endl;
             std::cout << "Operator: " << CryoOperatorTypeToString(node->data.bin_op->op) << std::endl;
             std::cout << "Left Operand: " << std::endl;
             logNode(node->data.bin_op->left);
@@ -127,26 +127,26 @@ namespace Cryo
             break;
 
         case NODE_UNARY_EXPR:
-            std::cout << "Unary Expression Node" << std::endl;
+            std::cout << "\nUnary Expression Node" << std::endl;
             std::cout << "Operator: " << CryoTokenToString(node->data.unary_op->op) << std::endl;
             logNode(node->data.unary_op->operand);
             break;
 
         case NODE_IF_STATEMENT:
-            std::cout << "If Statement Node" << std::endl;
+            std::cout << "\nIf Statement Node" << std::endl;
             std::cout << "Condition: " << std::endl;
             logNode(node->data.ifStatement->condition);
-            std::cout << "Then Branch: " << std::endl;
+            std::cout << "\nThen Branch: " << std::endl;
             logNode(node->data.ifStatement->thenBranch);
             if (node->data.ifStatement->elseBranch)
             {
-                std::cout << "Else Branch: " << std::endl;
+                std::cout << "\nElse Branch: " << std::endl;
                 logNode(node->data.ifStatement->elseBranch);
             }
             break;
 
         case NODE_WHILE_STATEMENT:
-            std::cout << "While Statement Node" << std::endl;
+            std::cout << "\nWhile Statement Node" << std::endl;
             std::cout << "Condition: " << std::endl;
             logNode(node->data.whileStatement->condition);
             std::cout << "Body: " << std::endl;
@@ -154,7 +154,7 @@ namespace Cryo
             break;
 
         case NODE_FOR_STATEMENT:
-            std::cout << "For Statement Node" << std::endl;
+            std::cout << "\nFor Statement Node" << std::endl;
             std::cout << "Initializer: " << std::endl;
             logNode(node->data.forStatement->initializer);
             std::cout << "Condition: " << std::endl;
@@ -166,17 +166,28 @@ namespace Cryo
             break;
 
         case NODE_RETURN_STATEMENT:
-            std::cout << "Return Statement Node" << std::endl;
+            std::cout << "\nReturn Statement Node" << std::endl;
             std::cout << "Return Value: " << std::endl;
             logNode(node->data.returnStatement->returnValue);
             break;
 
         case NODE_IMPORT_STATEMENT:
-            std::cout << "Import Statement Node" << std::endl;
+            std::cout << "\nImport Statement Node" << std::endl;
+            break;
+
+        case NODE_EXTERN_FUNCTION:
+            std::cout << "\nExtern Function Node" << std::endl;
+            std::cout << "Function Name: " << strdup(node->data.externFunction->name) << std::endl;
+            std::cout << "Return Type: " << CryoDataTypeToString(node->data.externFunction->returnType) << std::endl;
+            std::cout << "Parameter Count: " << node->data.externFunction->paramCount << std::endl;
+            for (int i = 0; i < node->data.externFunction->paramCount; ++i)
+            {
+                logNode(node->data.externFunction->params[i]);
+            }
             break;
 
         case NODE_EXTERN_STATEMENT:
-            std::cout << "Extern Statement Node" << std::endl;
+            std::cout << "\nExtern Statement Node" << std::endl;
             if (node->data.externNode->externNode->data.functionDecl)
             {
                 std::cout << "Extern Function: " << std::endl;
@@ -185,7 +196,7 @@ namespace Cryo
             break;
 
         case NODE_ARRAY_LITERAL:
-            std::cout << "Array Literal Node" << std::endl;
+            std::cout << "\nArray Literal Node" << std::endl;
             std::cout << "Element Count: " << node->data.array->elementCount << std::endl;
             for (int i = 0; i < node->data.array->elementCount; ++i)
             {
@@ -194,7 +205,7 @@ namespace Cryo
             break;
 
         case NODE_PARAM_LIST:
-            std::cout << "Parameter List Node" << std::endl;
+            std::cout << "\nParameter List Node" << std::endl;
             std::cout << "Parameter Count: " << node->data.paramList->paramCount << std::endl;
             for (int i = 0; i < node->data.paramList->paramCount; ++i)
             {
@@ -203,7 +214,7 @@ namespace Cryo
             break;
 
         case NODE_ARG_LIST:
-            std::cout << "Argument List Node" << std::endl;
+            std::cout << "\nArgument List Node" << std::endl;
             std::cout << "Argument Count: " << node->data.argList->argCount << std::endl;
             for (int i = 0; i < node->data.argList->argCount; ++i)
             {
@@ -212,7 +223,7 @@ namespace Cryo
             break;
 
         case NODE_FUNCTION_BLOCK:
-            std::cout << "Function Block Node" << std::endl;
+            std::cout << "\nFunction Block Node" << std::endl;
             logNode(node->data.functionBlock->function);
             std::cout << "Statement Count: " << node->data.functionBlock->statementCount << std::endl;
             for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
@@ -222,28 +233,28 @@ namespace Cryo
             break;
 
         case NODE_VAR_NAME:
-            std::cout << "Variable Name Node" << std::endl;
+            std::cout << "\nVariable Name Node" << std::endl;
             std::cout << "Variable Name: " << node->data.varName->varName << std::endl;
             std::cout << "Is Reference: " << (node->data.varName->isRef ? 0 : 1) << std::endl;
             break;
 
         case NODE_STRING_LITERAL:
-            std::cout << "String Literal Node" << std::endl;
+            std::cout << "\nString Literal Node" << std::endl;
             std::cout << "Value: " << node->data.literal->stringValue << std::endl;
             break;
 
         case NODE_BOOLEAN_LITERAL:
-            std::cout << "Boolean Literal Node" << std::endl;
+            std::cout << "\nBoolean Literal Node" << std::endl;
             std::cout << "Value: " << (node->data.literal->booleanValue ? "True" : "False") << std::endl;
             break;
 
         case NODE_NAMESPACE:
-            std::cout << "Namespace Node" << std::endl;
+            std::cout << "\nNamespace Node" << std::endl;
             std::cout << "Namespace Name: " << node->metaData->moduleName << std::endl;
             break;
 
         default:
-            std::cout << "Unknown Node Type" << std::endl;
+            std::cout << "\nUnknown Node Type" << std::endl;
             std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
             break;
         }
@@ -286,6 +297,10 @@ namespace Cryo
      */
     bool CryoDebugger::isNodeTypeValid(ASTNode *node)
     {
+        if (!node)
+        {
+            return false;
+        }
         switch (node->metaData->type)
         {
         case NODE_PROGRAM:

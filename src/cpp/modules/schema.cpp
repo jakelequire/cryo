@@ -55,7 +55,7 @@ namespace Cryo
                 FunctionDeclNode *functionNode = statement->data.functionDecl;
                 if (functionNode)
                 {
-                    if (functionNode->name == "main")
+                    if (strcmp(functionNode->name, "main") == 0)
                     {
                         std::cout << "[Schema] `main` Function Found, not generating prototype." << std::endl;
                         mainFunctionExists = true;
@@ -72,8 +72,9 @@ namespace Cryo
 
             case NODE_EXTERN_FUNCTION:
             {
-                FunctionDeclNode *externFunctionNode = statement->data.externNode->externNode->data.functionDecl;
-                if (externFunctionNode && declaredFunctions.find(externFunctionNode->name) == declaredFunctions.end())
+                ExternFunctionNode *externFunctionNode = statement->data.externFunction;
+                char *externFunctionName = strdup(externFunctionNode->name);
+                if (externFunctionNode && declaredFunctions.find(externFunctionName) == declaredFunctions.end())
                 {
                     cryoSyntaxInstance.generateExternalPrototype(statement);
                     declaredFunctions.insert(externFunctionNode->name);
