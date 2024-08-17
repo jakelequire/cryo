@@ -21,6 +21,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <malloc.h>
 #include <sys/types.h>
 #include <stddef.h>
 #include <sys/stat.h>
@@ -28,4 +29,4 @@
 extern char *strdup(const char *s);
 extern char *strndup(const char *s, size_t n);
 
-#endif // SUPPORT_H
+#endif // SUPPORT_Hx
