@@ -201,7 +201,6 @@ ExternNode *createExternNodeContainer(CryoNodeType type)
     {
     case NODE_EXTERN_FUNCTION:
     {
-        printf("[Containers] Creating ExternNode for NODE_EXTERN_FUNCTION\n");
         node->externNode = NULL;
         break;
     }
@@ -230,7 +229,7 @@ ExternNode *createExternNodeContainer(CryoNodeType type)
 ///
 ExternFunctionNode *createExternFunctionNodeContainer()
 {
-    ExternFunctionNode *node = (ExternFunctionNode *)calloc(1, sizeof(ExternFunctionNode) * 2);
+    ExternFunctionNode *node = (ExternFunctionNode *)calloc(1, sizeof(ExternFunctionNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ExternFunctionNode node.");

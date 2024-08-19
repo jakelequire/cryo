@@ -26,3 +26,27 @@ void logMessage(const char *type, int line, const char *module, const char *mess
     va_end(args);
     return;
 }
+
+const char *intToConstChar(int num)
+{
+    static char buffer[12];
+    snprintf(buffer, sizeof(buffer), "%d", num);
+    return buffer;
+}
+
+char *intToChar(int num)
+{
+    static char buffer[12];
+    snprintf(buffer, sizeof(buffer), "%d", num);
+    return buffer;
+}
+
+int charToInt(char *str)
+{
+    int num = 0;
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        num = num * 10 + str[i] - '0';
+    }
+    return num;
+}

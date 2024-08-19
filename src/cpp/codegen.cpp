@@ -39,7 +39,7 @@ namespace Cryo
 
         std::cout << "\n\n ------ Debug AST View ------\n";
         cryoDebugger.logNode(root);
-        std::cout << "------ Debug AST View ------\n\n";
+        std::cout << "------^ Debug AST View ^------\n\n";
 
         // First Pass: Declare all functions
         cryoDebugger.logMessage("INFO", __LINE__, "Generation", "First Pass: Declare all functions");

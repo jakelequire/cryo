@@ -36,8 +36,8 @@ namespace Cryo
 
     void CryoDebugger::logMessage(const char *type, int line, const std::string &category, const std::string &message)
     {
-        std::cout << "[" << type << std::setw(7) << "] "
-                  << "\t@" << std::setw(5) << line
+        std::cout << "[" << type << std::setw(6) << "] "
+                  << "\t@" << std::setw(4) << line
                   << "\t{ " << std::setw(12) << std::left << category << "}"
                   << "\t" << message
                   << std::endl;
@@ -116,7 +116,7 @@ namespace Cryo
             switch (node->data.literal->dataType)
             {
             case DATA_TYPE_INT:
-                std::cout << "Value: " << node->data.literal->intValue << std::endl;
+                std::cout << "Value: " << (int)node->data.literal->intValue << std::endl;
                 std::cout << "String Value: " << node->data.literal->stringValue << std::endl;
                 break;
             case DATA_TYPE_FLOAT:

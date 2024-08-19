@@ -621,7 +621,7 @@ extern "C"
     /* @Node_Creation - Expressions & Statements */
     ASTNode *createProgramNode(void);
     ASTNode *createNamespaceNode(char *name);
-    ASTNode *createLiteralExpr(int value);
+    ASTNode *createLiteralIntExpr(int value);
     ASTNode *createExpressionStatement(ASTNode *expression);
     ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op);
     ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand);

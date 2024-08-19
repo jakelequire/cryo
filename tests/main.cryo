@@ -1,5 +1,7 @@
 // namespace main
 extern function printInt(num: int) -> void;
+extern function printIntPtr(num: int) -> void;
+extern function printConstIntPtr(num: int) -> void;
 
 const qix: int = 34;
 
@@ -10,7 +12,9 @@ public function add(a: int, b: int) -> void {
 
 public function main() -> void {
     // add(2, 3);
-    printInt(qix);
+    printInt(32);
+    // printIntPtr(qix);
+    // printConstIntPtr(qix);
     return;
 }
 

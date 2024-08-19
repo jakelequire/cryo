@@ -823,7 +823,11 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", CryoDataTypeToString(returnType));
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", table);
 
-    return createExternFuncNode(strdup(functionName), params, returnType);
+    ASTNode *externFunc = createExternFuncNode(functionName, params, returnType);
+
+    free(functionName);
+    free(params);
+    return externFunc;
 }
 // </parseExternFunctionDeclaration>
 
@@ -897,6 +901,8 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 
     consume(lexer, TOKEN_RPAREN, "Expected ')' after arguments.", "parseFunctionCall", table);
     consume(lexer, TOKEN_SEMICOLON, "Expected ';' after function call.", "parseFunctionCall", table);
+
+    logMessage("INFO", __LINE__, "Parser", "Function call parsed.");
 
     return functionCallNode;
 }

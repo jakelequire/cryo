@@ -49,7 +49,28 @@ namespace Cryo
     {
         CryoDebugger &cryoDebugger = compiler.getDebugger();
         cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Allocating local variable");
-        return context.builder.CreateAlloca(type, nullptr, name);
+
+        if (!context.builder.GetInsertBlock())
+        {
+            cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "No valid insertion point for local variable allocation");
+            return nullptr;
+        }
+
+        try
+        {
+            llvm::AllocaInst *allocaInst = context.builder.CreateAlloca(type, nullptr, name);
+            if (!allocaInst)
+            {
+                cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Failed to allocate variable");
+                return nullptr;
+            }
+            return allocaInst;
+        }
+        catch (const std::exception &e)
+        {
+            cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Exception during variable allocation: " + std::string(e.what()));
+            return nullptr;
+        }
     }
 
     llvm::Value *CryoSyntax::allocateVariable(CryoContext &context, llvm::Type *type, const char *name)
@@ -193,6 +214,38 @@ namespace Cryo
         llvm::Value *var = nullptr;
         llvm::Constant *initialValue = nullptr;
 
+        CryoNodeType initType = node->metaData->type;
+        std::string initTypeName = (std::string)CryoNodeTypeToString(initType);
+        cryoDebugger.logMessage("DEBUG", __LINE__, "Variables", "Variable Initialization Type: " + initTypeName);
+
+        CryoDataType initDataType = node->data.varDecl->type;
+        std::string initDataTypeName = (std::string)CryoDataTypeToString(initDataType);
+        cryoDebugger.logMessage("DEBUG", __LINE__, "Variables", "Variable Initialization Data Type: " + initDataTypeName);
+
+        std::string varNameStr = varName;
+        cryoDebugger.logMessage("DEBUG", __LINE__, "Variables", "Variable Name: " + varNameStr);
+
+        // Check if the variable is a reference (pointer to a value)
+        bool isReference = node->data.varDecl->isReference;
+        if (isReference)
+        {
+            cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Creating Reference Variable: " + varNameStr);
+            llvmType = cryoTypesInstance.getLLVMType(initDataType);
+
+            llvm::StringRef var_name_str = (llvm::StringRef)(varNameStr);
+
+            var = createLocalVariable(cryoContext, llvmType, var_name_str);
+            if (!var)
+            {
+                cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Failed to create reference variable");
+                return nullptr;
+            }
+
+            cryoContext.namedValues[varNameStr] = var;
+            cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Generated reference variable declaration for " + varNameStr);
+            return var;
+        }
+
         bool isLiteral = node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR;
         if (isLiteral)
         {
@@ -203,6 +256,19 @@ namespace Cryo
             {
                 cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Failed to generate initial value for variable");
                 return nullptr;
+            }
+
+            if (node->data.varDecl->isGlobal)
+            {
+                cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Creating Global Variable with Literal Initializer");
+                var = new llvm::GlobalVariable(*cryoContext.module, llvmType, false,
+                                               llvm::GlobalValue::ExternalLinkage,
+                                               initialValue, strdup(varName));
+            }
+            else
+            {
+                cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable with Literal Name");
+                var = cryoContext.builder.CreateAlloca(llvmType, nullptr, strdup(varName));
             }
         }
         bool isExpression = node->data.varDecl->initializer->metaData->type == NODE_EXPRESSION;
@@ -215,6 +281,19 @@ namespace Cryo
             {
                 cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Failed to generate initial value for variable");
                 return nullptr;
+            }
+
+            if (node->data.varDecl->isGlobal)
+            {
+                cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Creating Global Variable with Expression Initializer");
+                var = new llvm::GlobalVariable(*cryoContext.module, llvmType, false,
+                                               llvm::GlobalValue::ExternalLinkage,
+                                               initialValue, strdup(varName));
+            }
+            else
+            {
+                cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable with Expression");
+                var = cryoContext.builder.CreateAlloca(llvmType, nullptr, strdup(varName));
             }
         }
 

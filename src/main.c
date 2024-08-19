@@ -62,11 +62,16 @@ int main(int argc, char *argv[])
     if (programNode != NULL)
     {
         printf("\n\n>===------- AST Tree -------===<\n\n");
-        printAST(programNode, 0);
+        int size = programNode->data.program->statementCount;
+        ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
+        memcpy(nodeCpy, programNode, sizeof(ASTNode));
+
+        printAST(nodeCpy, 0);
+
         printf("\n>===------- End Tree ------===<\n\n");
 
         printf("[Main] Generating IR code...\n");
-        generateCodeWrapper(programNode); // <- The C++ wrapper function
+        generateCodeWrapper(nodeCpy); // <- The C++ wrapper function
         printf(">===------------- CPP End Code Generation -------------===<\n");
         printf("[Main] IR code generated, freeing AST.\n");
 

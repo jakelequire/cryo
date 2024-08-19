@@ -36,9 +36,9 @@ namespace Cryo
             return;
         }
 
-        llvm::FunctionType *funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(cryoContext.module->getContext()), false);
+        llvm::FunctionType *funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(cryoContext.context), false);
         llvm::Function *function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "_defaulted", cryoContext.module.get());
-        llvm::BasicBlock *entry = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(cryoContext.context, "entry", function);
 
         cryoContext.builder.SetInsertPoint(entry);
         cryoContext.builder.CreateRetVoid();
@@ -122,7 +122,7 @@ namespace Cryo
         {
             // Generate the function prototype if it doesn't exist
             generateFunctionPrototype(node);
-            auto function = cryoContext.module->getFunction(functionName);
+            function = cryoContext.module->getFunction(functionName);
             if (!function)
             {
                 cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate function prototype");
@@ -131,7 +131,7 @@ namespace Cryo
         }
 
         cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating code for function");
-        llvm::BasicBlock *entry = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(cryoContext.context, "entry", function);
         cryoContext.builder.SetInsertPoint(entry);
 
         // Create a new scope for the function
@@ -252,8 +252,12 @@ namespace Cryo
         CryoTypes &cryoTypesInstance = compiler.getTypes();
         CryoContext &cryoContext = compiler.getContext();
 
-        char *functionName = node->data.externNode->externNode->data.functionDecl->name;
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating code for External Declaration Node");
+        char *functionName = strdup(node->data.externNode->externNode->data.functionDecl->name);
+        cryoDebugger.logMessage("DEBUG", __LINE__, "Functions", "Function Name: " + std::string(functionName));
         FunctionDeclNode *functionNode = node->data.externNode->externNode->data.functionDecl;
+        CryoDataType returnTypeData = functionNode->returnType;
+        cryoDebugger.logMessage("DEBUG", __LINE__, "Functions", "Return Type: " + std::to_string(returnTypeData));
 
         // Check if the function already exists in the module
         if (cryoContext.module->getFunction(functionName))

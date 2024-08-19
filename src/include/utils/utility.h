@@ -21,12 +21,37 @@
 #include <stdarg.h>
 #include <aio.h>
 
-// Define log levels
-// 0 - None
-// 1 - All
-#define LOG_LEVEL 1
+// >==------ Prototypes ------==< //
 
-// Prototypes
+///
+/// @brief          Replaces the printf function with a custom logMessage function that logs the message to the console.
+/// @param type     The type of message to log (ERROR, WARNING, INFO, DEBUG)
+/// @param line     The line number where the message was logged (use `__LINE__`)
+/// @param module   The module where the message was logged
+/// @param message  The message to log
+/// @param          ... The arguments to log
+///
 void logMessage(const char *type, int line, const char *module, const char *message, ...);
+
+///
+/// @brief          Converts an integer to a constant character pointer.
+/// @param num      The integer to convert
+/// @return         The constant character pointer
+///
+const char *intToConstChar(int num);
+
+///
+/// @brief          Converts an integer to a character pointer.
+/// @param num      The integer to convert
+/// @return         The character pointer
+///
+char *intToChar(int num);
+
+///
+/// @brief          Converts a character pointer to an integer.
+/// @param str      The character pointer to convert
+/// @return         The integer
+///
+int charToInt(char *str);
 
 #endif // UTILITY_H

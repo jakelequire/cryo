@@ -242,6 +242,8 @@ void freeAST(ASTNode *node)
         return;
     }
 
+    logMessage("INFO", __LINE__, "AST", "Freeing AST node of type: %s", CryoNodeTypeToString(node->metaData->type));
+
     switch (node->metaData->type)
     {
     case NODE_PROGRAM:
@@ -403,7 +405,7 @@ void freeAST(ASTNode *node)
 
     free(node->metaData);
     free(node);
-    // printf("[AST] Node of type %s successfully freed.\n", CryoNodeTypeToString(node->metaData->type));
+    logMessage("INFO", __LINE__, "AST", "Freed AST node");
 }
 // </freeAST>
 
@@ -679,13 +681,16 @@ ASTNode *createLiteralExpr(int value)
         return NULL;
     }
 
+    logMessage("DEBUG", __LINE__, "AST", "Created literal expression node with value: %d", value);
+    int intCpy = value;
     node->data.literal->dataType = DATA_TYPE_INT;
     node->data.literal->intValue = value;
     // convert from int to string
     char *buffer = (char *)malloc(12);
-    sprintf(buffer, "%d", value);
+    sprintf(buffer, "%d", intCpy);
     node->data.literal->stringValue = buffer;
 
+    logMessage("DEBUG", __LINE__, "AST", "Literal expression node created with value: %d", value);
     return node;
 }
 
@@ -699,25 +704,32 @@ ASTNode *createExpressionStatement(ASTNode *expression)
     node->data.expression = (CryoExpressionNode *)malloc(sizeof(CryoExpressionNode));
     if (!node->data.expression)
     {
+        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for expression statement node");
         return NULL;
     }
+
+    logMessage("DEBUG", __LINE__, "AST", "Creating expression statement node");
 
     node->data.expression->nodeType = expression->metaData->type;
 
     if (expression->metaData->type == NODE_VAR_NAME)
     {
+        logMessage("DEBUG", __LINE__, "AST", "Expression is a variable name");
         node->data.expression->data.varNameNode = expression->data.varName;
     }
     else if (expression->metaData->type == NODE_LITERAL_EXPR)
     {
+        logMessage("DEBUG", __LINE__, "AST", "Expression is a literal");
         node->data.expression->data.literalNode = expression->data.literal;
     }
     else
     {
         // Handle other types of expressions if needed
+        logMessage("ERROR", __LINE__, "AST", "Unsupported expression type");
         return NULL;
     }
 
+    logMessage("DEBUG", __LINE__, "AST", "Expression statement node created");
     return node;
 }
 
@@ -733,6 +745,8 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op)
     {
         return NULL;
     }
+
+    logMessage("DEBUG", __LINE__, "AST", "Created binary expression node with operator: %s", CryoOperatorTypeToString(op));
 
     node->data.bin_op->left = left;
     node->data.bin_op->right = right;
@@ -766,11 +780,14 @@ ASTNode *createIntLiteralNode(int value)
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
         return NULL;
+
+    logMessage("INFO", __LINE__, "AST", "Created integer literal node with value: %d", value);
+
     node->data.literal->dataType = DATA_TYPE_INT;
     node->data.literal->intValue = value;
-    char *str = (char *)malloc(12);
-    sprintf(str, "%d", value);
-    node->data.literal->stringValue = str;
+    node->data.literal->stringValue = intToChar(value);
+
+    logMessage("DEBUG", __LINE__, "AST", "Integer literal node created with value: %d", value);
     return node;
 }
 
@@ -779,6 +796,9 @@ ASTNode *createFloatLiteralNode(float value)
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
         return NULL;
+
+    logMessage("INFO", __LINE__, "AST", "Created float literal node with value: %f", value);
+
     node->data.literal->dataType = DATA_TYPE_FLOAT;
     node->data.literal->floatValue = value;
     return node;
@@ -789,6 +809,9 @@ ASTNode *createStringLiteralNode(char *value)
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
         return NULL;
+
+    logMessage("INFO", __LINE__, "AST", "Created string literal node with value: %s", value);
+
     node->data.literal->dataType = DATA_TYPE_STRING;
     node->data.literal->stringValue = strdup(value);
     return node;
@@ -799,6 +822,9 @@ ASTNode *createBooleanLiteralNode(int value)
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
     if (!node)
         return NULL;
+
+    logMessage("INFO", __LINE__, "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
+
     node->data.literal->dataType = DATA_TYPE_BOOLEAN;
     node->data.literal->booleanValue = value;
     return node;
@@ -809,6 +835,9 @@ ASTNode *createIdentifierNode(char *name)
     ASTNode *node = createASTNode(NODE_VAR_NAME);
     if (!node)
         return NULL;
+
+    logMessage("INFO", __LINE__, "AST", "Created identifier node with name: %s", name);
+
     node->data.varName->varName = strdup(name);
     return node;
 }
@@ -963,9 +992,37 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataTyp
         paramCount++;
     }
 
+    node->data.externFunction = (ExternFunctionNode *)calloc(1, sizeof(ExternFunctionNode));
+    if (!node->data.externFunction)
+    {
+        free(node);
+        return NULL;
+    }
+
     node->data.externFunction->name = strdup(function_name);
-    node->data.externFunction->params = params;
+    if (!node->data.externFunction->name)
+    {
+        free(node->data.externFunction);
+        free(node);
+        return NULL;
+    }
+
+    node->data.externFunction->params = NULL;
     node->data.externFunction->paramCount = paramCount;
+
+    if (paramCount > 0 && params)
+    {
+        node->data.externFunction->params = (ASTNode **)malloc(paramCount * sizeof(ASTNode *));
+        if (!node->data.externFunction->params)
+        {
+            free(node->data.externFunction->name);
+            free(node->data.externFunction);
+            free(node);
+            return NULL;
+        }
+        memcpy(node->data.externFunction->params, params, paramCount * sizeof(ASTNode *));
+    }
+
     node->data.externFunction->returnType = returnType;
 
     return node;
@@ -1031,13 +1088,13 @@ ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral)
     {
         // Transform the string to an integer
         int value = atoi(name);
-        initVal = createLiteralExpr(value);
+        initVal = createIntLiteralNode(value);
     }
     if (isLiteral && type == DATA_TYPE_FLOAT)
     {
         // Transform the string to a float
         float value = atof(name);
-        initVal = createLiteralExpr(value);
+        initVal = createFloatLiteralNode(value);
     }
     if (isLiteral && type == DATA_TYPE_STRING)
     {
@@ -1048,7 +1105,7 @@ ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral)
     {
         // Transform the string to a boolean
         int value = strcmp(name, "true") == 0 ? 1 : 0;
-        initVal = createLiteralExpr(value);
+        initVal = createBooleanLiteralNode(value);
     }
 
     node->data.varDecl->name = strdup(name);
