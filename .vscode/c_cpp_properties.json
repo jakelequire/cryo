@@ -78,7 +78,8 @@
             ],
             "compilerPath": "/usr/local/bin/clang++",
             "compilerArgs": [
-                "-Wall"
+                "-Wall",
+                "-Wextra"
             ],
             "cStandard": "c17",
             "cppStandard": "c++17",

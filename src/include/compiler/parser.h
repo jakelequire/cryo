@@ -32,6 +32,7 @@
 #include "compiler/error.h"
 #include "utils/fs.h"
 #include "utils/logger.h"
+#include "utils/utility.h"
 /*---------<end>---------*/
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;

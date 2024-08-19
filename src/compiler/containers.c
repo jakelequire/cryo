@@ -237,7 +237,7 @@ ExternFunctionNode *createExternFunctionNodeContainer()
         return NULL;
     }
 
-    node->name = NULL;
+    node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = 6;
@@ -271,7 +271,7 @@ FunctionDeclNode *createFunctionNodeContainer()
         return NULL;
     }
 
-    node->name = NULL;
+    node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->body = NULL;
     node->returnType = DATA_TYPE_VOID;
@@ -301,7 +301,7 @@ FunctionCallNode *createFunctionCallNodeContainer()
         return NULL;
     }
 
-    node->name = NULL;
+    node->name = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = 6;
@@ -337,7 +337,7 @@ LiteralNode *createLiteralNodeContainer()
     node->dataType = DATA_TYPE_UNKNOWN;
     node->intValue = 0;
     node->floatValue = 0;
-    node->stringValue = NULL;
+    node->stringValue = (char *)calloc(1, sizeof(char));
     node->booleanValue = false;
 
     return node;

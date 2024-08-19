@@ -29,9 +29,10 @@ namespace Cryo
 
     bool CryoModules::declareFunctions(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (!node)
         {
-            std::cerr << "Error: node is null." << std::endl;
+            cryoDebugger.logMessage("ERROR", __LINE__, "Schema", "Node is null in declareFunctions");
             return false;
         }
 
@@ -44,7 +45,7 @@ namespace Cryo
             ASTNode *statement = node->data.program->statements[i];
             if (!statement)
             {
-                std::cerr << "Error: statement is null at index " << i << "." << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Schema", "Statement is null in declareFunctions");
                 continue;
             }
 
@@ -55,9 +56,9 @@ namespace Cryo
                 FunctionDeclNode *functionNode = statement->data.functionDecl;
                 if (functionNode)
                 {
-                    if (strcmp(functionNode->name, "main") == 0)
+                    if (strcmp(strdup(functionNode->name), "main") == 0)
                     {
-                        std::cout << "[Schema] `main` Function Found, not generating prototype." << std::endl;
+                        cryoDebugger.logMessage("INFO", __LINE__, "Schema", "Main function exists");
                         mainFunctionExists = true;
                         continue;
                     }
@@ -65,6 +66,7 @@ namespace Cryo
                     {
                         cryoSyntaxInstance.generateFunctionPrototype(statement);
                         declaredFunctions.insert(functionNode->name);
+                        cryoDebugger.logMessage("INFO", __LINE__, "Schema", "Function declared: " + std::string(functionNode->name));
                     }
                 }
                 break;
@@ -78,21 +80,22 @@ namespace Cryo
                 {
                     cryoSyntaxInstance.generateExternalPrototype(statement);
                     declaredFunctions.insert(externFunctionNode->name);
+                    cryoDebugger.logMessage("INFO", __LINE__, "Schema", "Extern function declared: " + std::string(externFunctionNode->name));
                 }
                 else
                 {
-                    std::cerr << "Error: extern function node is null or already declared." << std::endl;
+                    cryoDebugger.logMessage("ERROR", __LINE__, "Schema", "Extern function already declared: " + std::string(externFunctionNode->name));
                 }
                 break;
             }
 
             default:
-                std::cout << "[Schema] Non-Function Declaration in @declareFunctions. Skipping..." << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Schema", "Unsupported node type in declareFunctions");
                 break;
             }
         }
 
-        std::cout << "[Schema] Function Declarations Complete." << std::endl;
+        cryoDebugger.logMessage("INFO", __LINE__, "Schema", "Function declaration complete");
         return mainFunctionExists;
     }
 

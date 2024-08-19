@@ -14,40 +14,19 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_DEBUGGER
-#define CRYO_DEBUGGER
-#include "codegen.h"
-#include <iomanip>
+#ifndef UTILITY_H
+#define UTILITY_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <aio.h>
 
-namespace Cryo
-{
-    class CryoContext;
+// Define log levels
+// 0 - None
+// 1 - All
+#define LOG_LEVEL 1
 
-#define VALIDATE_ASTNODE(node) checkNode(node)
-#define DEBUG_PANIC debugPanic()
-#define DEBUG_ASSERT nullptr // Temp value
+// Prototypes
+void logMessage(const char *type, int line, const char *module, const char *message, ...);
 
-    class CryoDebugger
-    {
-    public:
-        CryoDebugger(CryoContext &context) : context(context) {}
-
-        void logNode(ASTNode *node);
-        void logError(const std::string &message, const std::string &detail);
-        void logError(const std::string &message);
-        void logSuccess(const std::string &message, const std::string &detail);
-        void logMessage(const char *type, int line, const std::string &category, const std::string &message);
-        // Macro Implementations
-        void checkNode(ASTNode *node);
-        void debugPanic(std::string funcName);
-
-    private:
-        CryoContext &context;
-        bool isNodeTypeValid(ASTNode *node);
-
-    protected:
-    };
-
-}
-
-#endif // CRYO_DEBUGGER
+#endif // UTILITY_H

@@ -229,28 +229,29 @@ Token nextToken(Lexer *lexer, Token *token)
     if (isAlpha(c))
     {
         *token = checkKeyword(lexer);
-        printf("[Lexer] Identifier token created: %.*s\n", token->length, token->start);
+        logMessage("INFO", __LINE__, "Lexer", "Keyword token created");
+        // printf("[Lexer] Identifier token created: %.*s\n", token->length, token->start);
         return *token;
     }
 
     if (isDigit(c))
     {
         *token = number(lexer);
-        printf("[Lexer] Number token created: %.*s\n", token->length, token->start);
+        logMessage("INFO", __LINE__, "Lexer", "Number token created");
         return *token;
     }
 
     if (c == '"')
     {
         *token = string(lexer);
-        printf("[Lexer] String token created: %.*s\n", token->length, token->start);
+        logMessage("INFO", __LINE__, "Lexer", "String token created");
         return *token;
     }
 
     if (c == '&')
     {
         *token = makeToken(lexer, TOKEN_AMPERSAND);
-        printf("[Lexer] Ampersand token created: %.*s\n", token->length, token->start);
+        logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
         return *token;
     }
 
@@ -258,7 +259,7 @@ Token nextToken(Lexer *lexer, Token *token)
     if (symToken.type != TOKEN_UNKNOWN)
     {
         *token = symToken;
-        printf("[Lexer] Symbol token created: %.*s\n", token->length, token->start);
+        logMessage("INFO", __LINE__, "Lexer", "Symbol token created");
         return *token;
     }
 
@@ -299,7 +300,6 @@ Token peekToken(Lexer *lexer)
         nextToken(lexer, &lexer->lookahead);
         lexer->hasPeeked = true;
     }
-    // printf("[Lexer] Peeked token: Type=%d, Start=%.*s, Length=%d\n", lexer->lookahead.type, lexer->lookahead.length, lexer->lookahead.start, lexer->lookahead.length);
     return lexer->lookahead;
 }
 // </peekToken>
@@ -326,8 +326,9 @@ Token makeToken(Lexer *lexer, CryoTokenType type)
     token.line = lexer->line;
     token.column = lexer->column;
 
-    printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
-           token.length, token.start, token.type, token.line, token.column);
+    // printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
+    //        token.length, token.start, token.type, token.line, token.column);
+    logMessage("INFO", __LINE__, "Lexer", "Token created: Type: %d, Line: %d, Column: %d", token.type, token.line, token.column);
     return token;
 }
 // </makeToken>

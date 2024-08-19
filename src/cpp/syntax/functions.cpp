@@ -22,16 +22,17 @@ namespace Cryo
     void CryoSyntax::createDefaultMainFunction()
     {
         CryoContext &cryoContext = compiler.getContext();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
         // Check if _defaulted function already exists
         if (cryoContext.module->getFunction("main"))
         {
-            std::cout << "[Functions] Main function already exists. Not creating default.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Functions", "main function already exists. Skipping creation.");
             return;
         }
         if (cryoContext.module->getFunction("_defaulted"))
         {
-            std::cout << "[Functions] _defaulted function already exists. Skipping creation.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Functions", "_defaulted function already exists. Skipping creation.");
             return;
         }
 
@@ -42,14 +43,17 @@ namespace Cryo
         cryoContext.builder.SetInsertPoint(entry);
         cryoContext.builder.CreateRetVoid();
 
-        std::cout << "[Functions] Created basic block for default main function\n";
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Created default main function");
+
+        return;
     }
 
     void CryoSyntax::generateFunctionPrototype(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (node == nullptr)
         {
-            std::cerr << "Error: node is null in generateFunctionPrototype." << std::endl;
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Node is null in generateFunctionPrototype");
             return;
         }
 
@@ -72,7 +76,7 @@ namespace Cryo
         // Check if the function already exists in the module
         if (cryoContext.module->getFunction(functionName))
         {
-            std::cerr << "[Functions] Warning: Function " << functionName << " already exists in the module\n";
+            cryoDebugger.logMessage("WARNING", __LINE__, "Functions", "Function already exists in module");
             return;
         }
 
@@ -92,23 +96,24 @@ namespace Cryo
     {
         CryoContext &cryoContext = compiler.getContext();
         CryoTypes &cryoTypesInstance = compiler.getTypes();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
-        char *functionName;
+        char *functionName = nullptr;
         FunctionDeclNode *functionNode = nullptr;
 
-        if (node->metaData->type == NODE_EXTERN_STATEMENT)
+        if (node->metaData->type == NODE_FUNCTION_DECLARATION)
         {
-            functionName = node->data.externNode->externNode->data.functionDecl->name;
-            functionNode = node->data.externNode->externNode->data.functionDecl;
-        }
-        else if (node->metaData->type == NODE_FUNCTION_DECLARATION)
-        {
-            functionName = node->data.functionDecl->name;
+            functionName = strdup(node->data.functionDecl->name);
             functionNode = node->data.functionDecl;
+        }
+        else if (node->metaData->type == NODE_EXTERN_STATEMENT)
+        {
+            functionName = strdup(node->data.externNode->externNode->data.functionDecl->name);
+            functionNode = node->data.externNode->externNode->data.functionDecl;
         }
         else
         {
-            std::cerr << "[Functions] Error: Invalid function node\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Invalid node type for function generation");
             return;
         }
 
@@ -120,15 +125,14 @@ namespace Cryo
             auto function = cryoContext.module->getFunction(functionName);
             if (!function)
             {
-                std::cerr << "[Functions] Error: Failed to generate function prototype\n";
+                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate function prototype");
                 return;
             }
         }
 
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating code for function");
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(cryoContext.module->getContext(), "entry", function);
-        std::cout << "[Functions] Generating function " << functionName << std::endl;
         cryoContext.builder.SetInsertPoint(entry);
-        std::cout << "[Functions] Set insert point for function " << functionName << std::endl;
 
         // Create a new scope for the function
         // cryoContext.namedValues.clear();
@@ -145,11 +149,16 @@ namespace Cryo
         llvm::FunctionType *funcType = llvm::FunctionType::get(returnType, paramTypes, false);
         if (!function)
         {
+            cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Creating function");
             function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
         }
         else
         {
-            std::cerr << "[CPP] Warning: Function " << functionName << " already exists in the module\n";
+            if (function->getFunctionType() != funcType)
+            {
+                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Function type mismatch");
+                return;
+            }
         }
 
         cryoContext.builder.SetInsertPoint(entry);
@@ -157,6 +166,7 @@ namespace Cryo
         // Generate code for the function body
         if (node->data.functionDecl->body)
         {
+            cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating function block");
             generateFunctionBlock(node->data.functionDecl->body);
         }
 
@@ -165,10 +175,12 @@ namespace Cryo
         {
             if (returnType->isVoidTy())
             {
+                cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Function Block has no terminator");
                 cryoContext.builder.CreateRetVoid();
             }
             else
             {
+                cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Function Block has no terminator");
                 cryoContext.builder.CreateRet(llvm::Constant::getNullValue(returnType));
             }
         }
@@ -177,22 +189,23 @@ namespace Cryo
 
     void CryoSyntax::generateExternalPrototype(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (node == nullptr)
         {
-            std::cerr << "[Functions] Error: Node is null in generateExternalPrototype\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Node is null in generateExternalPrototype");
             return;
         }
 
         CryoTypes &cryoTypesInstance = compiler.getTypes();
         CryoContext &cryoContext = compiler.getContext();
 
-        char *functionName = node->data.externNode->externNode->data.functionDecl->name;
-        FunctionDeclNode *functionNode = node->data.externNode->externNode->data.functionDecl;
+        char *functionName = node->data.externFunction->name;
+        ExternFunctionNode *functionNode = node->data.externFunction;
 
         // Check if the function already exists in the module
         if (cryoContext.module->getFunction(functionName))
         {
-            std::cerr << "[Functions] Warning: Function " << functionName << " already exists in the module\n";
+            cryoDebugger.logMessage("WARNING", __LINE__, "Functions", "Function already exists in module");
             return;
         }
 
@@ -216,21 +229,23 @@ namespace Cryo
             }
             // Add other types as needed
             default:
-                std::cerr << "Unsupported parameter type in function " << functionNode->name << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Unsupported parameter type in function");
                 return;
             }
             paramTypes.push_back(paramType);
         }
 
         llvm::FunctionType *funcType = llvm::FunctionType::get(cryoTypesInstance.getLLVMType(functionNode->returnType), paramTypes, false);
-        llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
+        llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, strdup(functionName), cryoContext.module.get());
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generated external function prototype");
     }
 
     void CryoSyntax::generateExternalDeclaration(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (node == nullptr)
         {
-            std::cerr << "[Functions] Error: Node is null in generateExternalDeclaration\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "External Declaration Node is null");
             return;
         }
 
@@ -243,7 +258,7 @@ namespace Cryo
         // Check if the function already exists in the module
         if (cryoContext.module->getFunction(functionName))
         {
-            std::cerr << "[Functions] Warning: Function " << functionName << " already exists in the module\n";
+            cryoDebugger.logMessage("WARNING", __LINE__, "Functions", "Function already exists in module");
             return;
         }
 
@@ -265,7 +280,7 @@ namespace Cryo
                 break;
             // Add other types as needed
             default:
-                std::cerr << "Unsupported parameter type in function " << functionNode->name << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Unsupported parameter type in function");
                 return;
             }
             paramTypes.push_back(paramType);
@@ -276,6 +291,7 @@ namespace Cryo
 
     void CryoSyntax::generateReturnStatement(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         CryoContext &cryoContext = compiler.getContext();
         if (!node->data.returnStatement->expression)
         {
@@ -286,6 +302,7 @@ namespace Cryo
         llvm::Value *returnValue = generateExpression(node->data.returnStatement->expression);
         cryoContext.builder.CreateRet(returnValue);
 
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generated return statement");
         return;
     }
 
@@ -293,13 +310,14 @@ namespace Cryo
     {
         CryoContext &cryoContext = compiler.getContext();
         CryoTypes &cryoTypesInstance = compiler.getTypes();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
-        std::cout << "[Functions] Generating call to function: " << node->data.functionCall->name << std::endl;
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating call to function");
 
         llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall->name);
         if (!function)
         {
-            std::cerr << "[Functions] Error: Function " << node->data.functionCall->name << " not found in module" << std::endl;
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Function not found in module");
             return;
         }
 
@@ -309,7 +327,7 @@ namespace Cryo
             llvm::Value *arg = generateExpression(node->data.functionCall->args[i]);
             if (arg == nullptr)
             {
-                std::cerr << "Error: Failed to generate argument " << i << " for function call" << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate argument for function call");
                 return;
             }
 
@@ -321,32 +339,36 @@ namespace Cryo
                     // If the function expects a pointer but we have a value, pass the address
                     llvm::AllocaInst *temp = cryoContext.builder.CreateAlloca(arg->getType());
                     cryoContext.builder.CreateStore(arg, temp);
+                    cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Passing pointer argument");
                     arg = temp;
                 }
                 else if (!paramType->isPointerTy() && arg->getType()->isPointerTy())
                 {
                     // If the function expects a value but we have a pointer, load it
+                    cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Loading pointer argument");
                     arg = cryoContext.builder.CreateLoad(paramType, arg);
                 }
             }
 
+            cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Adding argument to function call");
             args.push_back(arg);
         }
         llvm::Value *call = cryoContext.builder.CreateCall(function, args);
-        std::cout << "[Functions] Generated function call to " << node->data.functionCall->name << std::endl;
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generated function call");
     }
 
     llvm::Value *CryoSyntax::createFunctionCall(ASTNode *node)
     {
         CryoContext &cryoContext = compiler.getContext();
         CryoTypes &cryoTypesInstance = compiler.getTypes();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
-        std::cout << "[Functions] Generating call to function: " << node->data.functionCall->name << std::endl;
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating call to function");
 
         llvm::Function *function = cryoContext.module->getFunction(node->data.functionCall->name);
         if (!function)
         {
-            std::cerr << "[Functions] Error: Function " << node->data.functionCall->name << " not found in module" << std::endl;
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Function not found in module");
             return nullptr;
         }
 
@@ -356,7 +378,7 @@ namespace Cryo
             llvm::Value *arg = generateExpression(node->data.functionCall->args[i]);
             if (arg == nullptr)
             {
-                std::cerr << "Error: Failed to generate argument " << i << " for function call" << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate argument for function call");
                 return nullptr;
             }
 
@@ -368,27 +390,33 @@ namespace Cryo
                     // If the function expects a pointer but we have a value, pass the address
                     llvm::AllocaInst *temp = cryoContext.builder.CreateAlloca(arg->getType());
                     cryoContext.builder.CreateStore(arg, temp);
+
+                    cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Passing pointer argument");
                     arg = temp;
                 }
                 else if (!paramType->isPointerTy() && arg->getType()->isPointerTy())
                 {
                     // If the function expects a value but we have a pointer, load it
+                    cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Loading pointer argument");
                     arg = cryoContext.builder.CreateLoad(paramType, arg);
                 }
             }
 
+            cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Adding argument to function call");
             args.push_back(arg);
         }
         llvm::Value *call = cryoContext.builder.CreateCall(function, args);
-        std::cout << "[Functions] Generated function call to " << node->data.functionCall->name << std::endl;
+
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generated function call");
         return call;
     }
 
     void CryoSyntax::generateFunctionBlock(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (!node)
         {
-            std::cerr << "[Functions] Error: Node is null in generateFunctionBlock\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Function block node is null");
             return;
         }
 
@@ -400,6 +428,7 @@ namespace Cryo
             identifyNodeExpression(statements[i]);
         }
 
+        cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Function block generation complete");
         return;
     }
 

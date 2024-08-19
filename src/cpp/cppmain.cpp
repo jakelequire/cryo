@@ -23,12 +23,6 @@ int generateCodeWrapper(ASTNode *node)
 {
     std::cout << ">===------------- CPP Code Generation -------------===<\n"
               << std::endl;
-    std::cout << "[CPP] Starting Code Generation..." << std::endl;
-    std::cout << "\n\n [ DEBUG ]\n";
-    std::cout << "\n ------ CPP AST View ------\n";
-    printAST(node, 0);
-    std::cout << "------ CPP AST View ------\n";
-    std::cout << "\n";
 
     Cryo::CryoCompiler compiler;
     compiler.compile(node);

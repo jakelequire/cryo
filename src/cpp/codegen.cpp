@@ -23,34 +23,36 @@ namespace Cryo
      */
     void CodeGen::executeCodeGeneration(ASTNode *root)
     {
-        std::cout << "\nStarting Code Generation... @executeCodeGeneration\n";
-        if (root == nullptr)
-        {
-            std::cerr << "Error: root is null." << std::endl;
-            return;
-        }
 
         CryoContext &cryoContext = compiler.getContext();
         CryoModules &cryoModulesInstance = compiler.getModules();
         CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
         CryoDebugger &cryoDebugger = compiler.getDebugger();
 
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Starting Code Generation");
+
+        if (root == nullptr)
+        {
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Root node is null");
+            return;
+        }
+
         std::cout << "\n\n ------ Debug AST View ------\n";
         cryoDebugger.logNode(root);
         std::cout << "------ Debug AST View ------\n\n";
 
         // First Pass: Declare all functions
-        std::cout << "\nFirst Pass: Declaring all functions\n";
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "First Pass: Declare all functions");
         bool mainFunctionExists = cryoModulesInstance.declareFunctions(root);
 
         if (!mainFunctionExists)
         {
-            std::cout << "[CPP] Main function not found, creating default main function\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Main function does not exist. Creating default main function");
             cryoSyntaxInstance.createDefaultMainFunction();
         }
 
         // Second Pass: Generate code for the entire program
-        std::cout << "\nSecond Pass: Generate code for the entire program\n";
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Second Pass: Generate code for the entire program");
         cryoSyntaxInstance.identifyNodeExpression(root);
 
         llvm::Function *defaultMain = cryoContext.module->getFunction("_defaulted");
@@ -61,7 +63,7 @@ namespace Cryo
             {
                 cryoContext.builder.SetInsertPoint(&entryBlock);
                 cryoContext.builder.CreateRetVoid();
-                std::cout << "[CPP] Added return statement to default main function in entry block\n";
+                cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Default main function has no return statement. Adding return void");
             }
         }
 
@@ -70,7 +72,7 @@ namespace Cryo
             std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
             cryoContext.module->print(llvm::errs(), nullptr);
             std::cout << "\n>===----------------- End Error -----------------===<\n";
-            std::cerr << "Error: LLVM module verification failed\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "LLVM module verification failed");
             exit(1);
         }
         else
@@ -80,7 +82,7 @@ namespace Cryo
 
             if (EC)
             {
-                std::cerr << "Could not open file: " << EC.message() << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Error opening file for writing");
             }
             else
             {
@@ -90,11 +92,15 @@ namespace Cryo
                 cryoContext.module->print(llvm::outs(), nullptr);
                 std::cout << "\n>===------- End IR Code ------===<\n"
                           << std::endl;
-                std::cout << "LLVM IR written to output.ll" << std::endl;
+                dest.flush();
+                dest.close();
+
+                cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Code Generation Complete");
             }
         }
 
-        std::cout << "\nCode generation complete\n";
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Code Generation Complete");
+        return;
     } // <executeCodeGeneration>
 
     /**
@@ -102,13 +108,14 @@ namespace Cryo
      */
     void CryoSyntax::identifyNodeExpression(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (!node)
         {
-            std::cerr << "[CodeGen] Error: Code Generation Failed, ASTNode is null. @<identifyExpression>";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Node is null in identifyNodeExpression");
             exit(0);
             return;
         }
-        std::cout << "[CodeGen] @identifyNodeExpression Starting Code Generation...\n";
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identifying Node Expression");
 
         CryoModules cryoModulesInstance = compiler.getModules();
         CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
@@ -117,209 +124,209 @@ namespace Cryo
         {
         case NODE_PROGRAM:
         {
-            std::cout << "[CodeGen] Identified NODE_PROGRAM.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_PROGRAM");
             cryoModulesInstance.generateProgram(node);
             break;
         }
 
         case NODE_FUNCTION_DECLARATION:
         {
-            std::cout << "[CodeGen] Identified NODE_FUNCTION_DECLARATION.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_FUNCTION_DECLARATION");
             cryoSyntaxInstance.generateFunction(node);
             break;
         }
 
         case NODE_VAR_DECLARATION:
         {
-            std::cout << "[CodeGen] Identified NODE_VAR_DECLARATION.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_VAR_DECLARATION");
             cryoSyntaxInstance.generateVarDeclaration(node);
             break;
         }
 
         case NODE_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_STATEMENT");
             cryoSyntaxInstance.generateStatement(node);
             break;
         }
 
         case NODE_EXPRESSION:
         {
-            std::cout << "[CodeGen] Identified NODE_EXPRESSION.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_EXPRESSION");
             cryoSyntaxInstance.generateExpression(node);
             break;
         }
 
         case NODE_BINARY_EXPR:
         {
-            std::cout << "[CodeGen] Identified NODE_BINARY_EXPR.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_BINARY_EXPR");
             cryoSyntaxInstance.generateBinaryOperation(node);
             break;
         }
 
         case NODE_UNARY_EXPR:
         {
-            std::cout << "[CodeGen] Identified NODE_UNARY_EXPR.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_UNARY_EXPR");
             // Todo
             break;
         }
 
         case NODE_LITERAL_EXPR:
         {
-            std::cout << "[CodeGen] Identified NODE_LITERAL_EXPR.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_LITERAL_EXPR");
             // Todo
             break;
         }
 
         case NODE_VAR_NAME:
         {
-            std::cout << "[CodeGen] Identified NODE_VAR_NAME.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_VAR_NAME");
             // Todo
             break;
         }
 
         case NODE_FUNCTION_CALL:
         {
-            std::cout << "[CodeGen] Identified NODE_FUNCTION_CALL.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_FUNCTION_CALL");
             cryoSyntaxInstance.generateFunctionCall(node);
             break;
         }
 
         case NODE_IF_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_IF_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_IF_STATEMENT");
             // Todo
             break;
         }
 
         case NODE_WHILE_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_WHILE_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_WHILE_STATEMENT");
             // Todo
             break;
         }
 
         case NODE_FOR_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_FOR_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_FOR_STATEMENT");
             // Todo
             break;
         }
 
         case NODE_RETURN_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_RETURN_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_RETURN_STATEMENT");
             cryoSyntaxInstance.generateReturnStatement(node);
             break;
         }
 
         case NODE_BLOCK:
         {
-            std::cout << "[CodeGen] Identified NODE_BLOCK.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_BLOCK");
             cryoModulesInstance.generateBlock(node);
             break;
         }
 
         case NODE_FUNCTION_BLOCK:
         {
-            std::cout << "[CodeGen] Identified NODE_FUNCTION_BLOCK.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_FUNCTION_BLOCK");
             cryoSyntaxInstance.generateFunctionBlock(node);
             break;
         }
 
         case NODE_EXPRESSION_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_EXPRESSION_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_EXPRESSION_STATEMENT");
             // cryoSyntaxInstance.generateExpression(node->data.stmt.stmt);
             break;
         }
 
         case NODE_ASSIGN:
         {
-            std::cout << "[CodeGen] Identified NODE_ASSIGN.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_ASSIGN");
             // Todo
             break;
         }
 
         case NODE_PARAM_LIST:
         {
-            std::cout << "[CodeGen] Identified NODE_PARAM_LIST.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_PARAM_LIST");
             // Todo
             break;
         }
 
         case NODE_TYPE:
         {
-            std::cout << "[CodeGen] Identified NODE_TYPE.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_TYPE");
             // Todo
             break;
         }
 
         case NODE_STRING_LITERAL:
         {
-            std::cout << "[CodeGen] Identified NODE_STRING_LITERAL.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_STRING_LITERAL");
             // Todo
             break;
         }
 
         case NODE_STRING_EXPRESSION:
         {
-            std::cout << "[CodeGen] Identified NODE_STRING_EXPRESSION.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_STRING_EXPRESSION");
             // Todo
             break;
         }
 
         case NODE_BOOLEAN_LITERAL:
         {
-            std::cout << "[CodeGen] Identified NODE_BOOLEAN_LITERAL.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_BOOLEAN_LITERAL");
             // Todo
             break;
         }
 
         case NODE_ARRAY_LITERAL:
         {
-            std::cout << "[CodeGen] Identified NODE_ARRAY_LITERAL.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_ARRAY_LITERAL");
             cryoSyntaxInstance.generateArrayLiteral(node);
             break;
         }
 
         case NODE_IMPORT_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_IMPORT_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_IMPORT_STATEMENT");
             // Todo
             break;
         }
 
         case NODE_EXTERN_STATEMENT:
         {
-            std::cout << "[CodeGen] Identified NODE_EXTERN_STATEMENT.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_EXTERN_STATEMENT");
             // Todo
             break;
         }
 
         case NODE_EXTERN_FUNCTION:
         {
-            std::cout << "[CodeGen] Identified NODE_EXTERN_FUNCTION.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_EXTERN_FUNCTION");
             cryoSyntaxInstance.generateExternalDeclaration(node);
             break;
         }
 
         case NODE_ARG_LIST:
         {
-            std::cout << "[CodeGen] Identified NODE_ARG_LIST.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_ARG_LIST");
             // Todo
             break;
         }
 
         case NODE_UNKNOWN:
         {
-            std::cerr << "[CodeGen] Error: `NODE_UNKNOWN` found. @<identifyNodeExpression>.\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Identified NODE_UNKNOWN");
             break;
         }
 
         default:
         {
-            std::cerr << "[CodeGen] Error: Unknown Node Type. @<identifyNodeExpression>\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Unsupported node type");
             break;
         }
         }

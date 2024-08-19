@@ -215,7 +215,9 @@
       "any": "cpp",
       "unistd.h": "c",
       "containers.h": "c",
-      "support.h": "c"
+      "support.h": "c",
+      "stdint.h": "c",
+      "utility.h": "c"
     },
     "cmake.ignoreCMakeListsMissing": true,
     "C_Cpp.errorSquiggles": "enabled"

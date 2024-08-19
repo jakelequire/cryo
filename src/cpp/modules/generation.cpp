@@ -23,35 +23,40 @@ namespace Cryo
     {
         CodeGen &codeGenInstance = compiler.getCodeGen();
         CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
-        std::cout << "[Generation] Generating code for program\n";
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for Program Node");
         if (node->data.program->statementCount == 0)
         {
-            std::cerr << "[Generation] Error generating code for program: No statements found\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Program Node has no statements");
             return;
         }
         for (int i = 0; i < node->data.program->statementCount; ++i)
         {
-            std::cout << "[Generation] Generating code for program statement " << i << "\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for Program Statement");
             cryoSyntaxInstance.identifyNodeExpression(node->data.program->statements[i]);
-            std::cout << "[Generation] Moving to next statement\n";
         }
+
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Program code generation complete");
         return;
     }
 
     void CryoModules::generateBlock(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (!node)
         {
-            std::cerr << "[Generation] Error: Failed to generate Block Node. \n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Block Node is null");
+            return;
         }
-        std::cout << "[Generation] Generating code for Block Node.\n";
+
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for Block Node");
         CodeGen &codeGenInstance = compiler.getCodeGen();
         CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
 
         for (int i = 0; i < node->data.block->statementCount; i++)
         {
-            std::cout << "[Generation] Generating Code for Block Statement...\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for Block Statement");
             cryoSyntaxInstance.identifyNodeExpression(node->data.block->statements[i]);
         }
 
@@ -60,12 +65,14 @@ namespace Cryo
 
     void CryoModules::generateFunctionBlock(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (!node)
         {
-            std::cerr << "[Generation] Error: Failed to generate Function Block. @<generateFunctionBlock>\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Function Block Node is null");
             return;
         }
-        std::cout << "[Generation] Generating code for Function Block Node.\n";
+
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for Function Block Node");
         CodeGen &codeGenInstance = compiler.getCodeGen();
         CryoContext &cryoContext = compiler.getContext();
         CryoTypes &cryoTypesInstance = compiler.getTypes();
@@ -73,25 +80,27 @@ namespace Cryo
 
         for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
         {
-            std::cout << "[Generation] Generating code for Block Statement. Count: " << i << "\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for Function Block Statement");
             cryoSyntaxInstance.identifyNodeExpression(node->data.functionBlock->statements[i]);
-            std::cout << "[Generation] Moving to next statement...\n";
         }
 
         llvm::BasicBlock *BB = cryoContext.builder.GetInsertBlock();
         if (!BB->getTerminator())
         {
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Function Block has no terminator");
             cryoContext.builder.CreateRetVoid();
         }
 
-        std::cout << "[Generation] Function Block code generation complete!\n";
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Function Block code generation complete");
+        return;
     }
 
     void CryoModules::generateExternalDeclaration(ASTNode *node)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (!node)
         {
-            std::cerr << "[Generation] Error: Extern Declaration Node is null.\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "External Declaration Node is null");
             return;
         }
 
@@ -104,36 +113,44 @@ namespace Cryo
         llvm::Type *returnType = cryoTypesInstance.getLLVMType(returnTypeData);
         std::vector<llvm::Type *> paramTypes;
 
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for External Declaration Node");
         for (int i = 0; i < node->data.externNode->externNode->data.functionDecl->paramCount; i++)
         {
             ASTNode *parameter = node->data.externNode->externNode->data.functionDecl->params[i];
             llvm::Type *paramType;
             if (parameter == nullptr)
             {
-                std::cerr << "[Generation] Error: Extern Parameter is null\n";
+                cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Parameter Node is null");
                 break;
             }
             if (parameter->data.varDecl->type == DATA_TYPE_INT)
             {
+                cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating extern code for type int");
                 paramType = cryoTypesInstance.getLLVMType(DATA_TYPE_INT);
                 paramTypes.push_back(paramType);
                 break;
             }
             if (parameter->data.varDecl->type == DATA_TYPE_STRING)
             {
+                cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating extern code for type string");
                 paramType = cryoTypesInstance.getLLVMType(DATA_TYPE_STRING);
                 paramTypes.push_back(paramType);
                 break;
             }
             if (!paramType)
             {
-                std::cerr << "[Generation] Error: Extern Unknown parameter type\n";
+                cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Parameter type is null");
                 return;
             }
         }
         llvm::FunctionType *funcType = llvm::FunctionType::get(returnType, paramTypes[0], false);
 
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating extern code for function");
         llvm::Function *function = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, functionName, cryoContext.module.get());
+        function->setCallingConv(llvm::CallingConv::C);
+
+        cryoDebugger.logMessage("INFO", __LINE__, "Generation", "External Declaration code generation complete");
+        return;
     }
 
 } // namespace Cryo

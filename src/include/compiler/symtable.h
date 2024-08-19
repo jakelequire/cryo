@@ -21,6 +21,7 @@
 #include "token.h"
 #include "lexer.h"
 #include "parser.h"
+#include "utils/utility.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -30,11 +31,10 @@
 
 typedef struct ASTNode ASTNode;
 
-
-
-typedef struct {
-    ASTNode* node;
-    char* name;
+typedef struct
+{
+    ASTNode *node;
+    char *name;
     CryoNodeType nodeType;
     CryoDataType valueType;
     int scopeLevel;
@@ -42,33 +42,31 @@ typedef struct {
     int argCount;
 } CryoSymbol;
 
-typedef struct CryoSymbolTable {
-    CryoSymbol** symbols;
+typedef struct CryoSymbolTable
+{
+    CryoSymbol **symbols;
     int count;
     int capacity;
     int scopeDepth;
 } CryoSymbolTable;
 
+char *logSymCryoDataType(CryoDataType type);
 
-char* logSymCryoDataType(CryoDataType type);
+CryoSymbolTable *createSymbolTable(void);
+void freeSymbolTable(CryoSymbolTable *table);
+void printSymbolTable(CryoSymbolTable *table);
+void enterScope(CryoSymbolTable *table);
+void jumpScope(CryoSymbolTable *table);
+void exitScope(CryoSymbolTable *table);
+void enterBlockScope(CryoSymbolTable *table);
+void exitBlockScope(CryoSymbolTable *table);
+void addSymbol(CryoSymbolTable *table, CryoSymbol *symbol);
+CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name);
 
+CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node);
+void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node);
 
-CryoSymbolTable* createSymbolTable      (void);
-void freeSymbolTable                    (CryoSymbolTable* table);
-void printSymbolTable                   (CryoSymbolTable* table);
-void enterScope                         (CryoSymbolTable* table);
-void jumpScope                          (CryoSymbolTable* table);
-void exitScope                          (CryoSymbolTable* table);
-void enterBlockScope                    (CryoSymbolTable* table);
-void exitBlockScope                     (CryoSymbolTable* table);
-void addSymbol                          (CryoSymbolTable* table, CryoSymbol* symbol);
-CryoSymbol* findSymbol                  (CryoSymbolTable* table, const char* name);
-
-CryoSymbol* createCryoSymbol            (CryoSymbolTable* table, ASTNode* node);
-void addASTNodeSymbol                   (CryoSymbolTable* table, ASTNode* node);
-
-void traverseAST(ASTNode* node, CryoSymbolTable* table);
-bool analyzeNode(ASTNode* node, CryoSymbolTable* table);
-
+void traverseAST(ASTNode *node, CryoSymbolTable *table);
+bool analyzeNode(ASTNode *node, CryoSymbolTable *table);
 
 #endif // SYMTABLE_H

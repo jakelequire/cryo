@@ -82,7 +82,10 @@ namespace Cryo
 
     llvm::Type *CryoTypes::getLLVMType(CryoDataType type)
     {
-        std::cout << "[Types] Getting LLVM Type for " << CryoDataTypeToString(type) << std::endl;
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
+
+        char *typeStr = CryoDataTypeToString(type);
+        cryoDebugger.logMessage("INFO", __LINE__, "Types", "Getting LLVM type for " + std::string(typeStr));
         // Test if the context exists at all:
 
         CryoContext &cryoContext = compiler.getContext();
@@ -90,38 +93,39 @@ namespace Cryo
         switch (type)
         {
         case DATA_TYPE_INT:
-            std::cout << "[Types] Returning int type\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning int type");
             return llvm::Type::getInt32Ty(cryoContext.context);
         case DATA_TYPE_FLOAT:
-            std::cout << "[Types] Returning float type\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning float type");
             return llvm::Type::getFloatTy(cryoContext.context);
         case DATA_TYPE_STRING:
-            std::cout << "[Types] Returning string type\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning string type");
             return llvm::Type::getInt8Ty(cryoContext.context);
         case DATA_TYPE_BOOLEAN:
-            std::cout << "[Types] Returning boolean type\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning boolean type");
             return llvm::Type::getInt1Ty(cryoContext.context);
         case DATA_TYPE_VOID:
-            std::cout << "[Types] Returning void type\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning void type");
             return llvm::Type::getVoidTy(cryoContext.context);
         case DATA_TYPE_ARRAY:
-            std::cout << "[Types] Returning array type\n";
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning array type");
             return llvm::ArrayType::get(llvm::Type::getInt32Ty(cryoContext.context), 0);
         case DATA_TYPE_UNKNOWN:
-            std::cerr << "[Types] Error: Unknown type\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unknown data type");
             return nullptr;
 
         default:
-            std::cerr << "[Types] Error: Unsupported type\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unsupported data type");
             return nullptr;
         }
     }
 
     llvm::Type *CryoTypes::createLLVMConstantType(CryoDataType type)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         if (type == DATA_TYPE_UNKNOWN)
         {
-            std::cerr << "[Types] Error: Unknown type\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unknown data type");
             return nullptr;
         }
 
@@ -130,44 +134,56 @@ namespace Cryo
         switch (type)
         {
         case DATA_TYPE_INT:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning int type");
             return llvm::Type::getInt32Ty(cryoContext.context);
         case DATA_TYPE_FLOAT:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning float type");
             return llvm::Type::getFloatTy(cryoContext.context);
         case DATA_TYPE_STRING:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning string type");
             return llvm::Type::getInt8Ty(cryoContext.context); // String is represented as i8
         case DATA_TYPE_BOOLEAN:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning boolean type");
             return llvm::Type::getInt1Ty(cryoContext.context);
         case DATA_TYPE_VOID:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning void type");
             return llvm::Type::getVoidTy(cryoContext.context);
         default:
-            std::cerr << "[Types] Error: Unsupported type\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unsupported data type");
             return nullptr;
         }
     }
 
     llvm::PointerType *CryoTypes::createLLVMPointerType(CryoDataType type)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         llvm::Type *baseType = createLLVMConstantType(type);
         if (!baseType)
         {
             return nullptr;
         }
+
+        std::cout << "[INFO] \t@" << __LINE__ << "\t{Types}\t\t Creating pointer type for " << CryoDataTypeToString(type) << std::endl;
         return llvm::PointerType::get(baseType, 0);
     }
 
     llvm::ArrayType *CryoTypes::createLLVMArrayType(CryoDataType elementType, unsigned int size)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         llvm::Type *baseType = createLLVMConstantType(elementType);
         if (!baseType)
         {
             return nullptr;
         }
+
+        std::cout << "[INFO] \t@" << __LINE__ << "\t{Types}\t\t Creating array type for " << CryoDataTypeToString(elementType) << " with size " << size << std::endl;
         return llvm::ArrayType::get(baseType, size);
     }
 
     llvm::StructType *CryoTypes::createLLVMStructType(const std::vector<CryoDataType> &memberTypes, const std::string &name)
     {
         CryoContext &cryoContext = compiler.getContext();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
         std::vector<llvm::Type *> llvmTypes;
         for (const auto &type : memberTypes)
@@ -177,21 +193,25 @@ namespace Cryo
             {
                 return nullptr;
             }
+
             llvmTypes.push_back(memberType);
         }
 
         if (name.empty())
         {
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating struct type");
             return llvm::StructType::get(cryoContext.context, llvmTypes);
         }
         else
         {
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating named struct type");
             return llvm::StructType::create(cryoContext.context, llvmTypes, name);
         }
     }
 
     llvm::FunctionType *CryoTypes::createLLVMFunctionType(CryoDataType returnType, const std::vector<CryoDataType> &paramTypes, bool isVarArg)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         llvm::Type *llvmReturnType = createLLVMConstantType(returnType);
         if (!llvmReturnType)
         {
@@ -209,15 +229,17 @@ namespace Cryo
             llvmParamTypes.push_back(paramType);
         }
 
+        std::cout << "[INFO] \t@" << __LINE__ << "\t{Types}\t\t Creating function type\n";
         return llvm::FunctionType::get(llvmReturnType, llvmParamTypes, isVarArg);
     }
 
     llvm::Constant *CryoTypes::convertLLVMPtrToConstant(llvm::Value *ptr)
     {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
         llvm::Constant *constant = llvm::dyn_cast<llvm::Constant>(ptr);
         if (!constant)
         {
-            std::cerr << "[Types] Error: Value is not a constant\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Failed to convert pointer to constant");
             return nullptr;
         }
         return constant;
@@ -226,21 +248,27 @@ namespace Cryo
     llvm::Constant *CryoTypes::createLLVMConstant(CryoDataType type, const std::string &value)
     {
         CryoContext &cryoContext = compiler.getContext();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
         switch (type)
         {
         case DATA_TYPE_INT:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating int constant");
             return llvm::ConstantInt::get(cryoContext.context, llvm::APInt(32, value, 10));
         case DATA_TYPE_FLOAT:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating float constant");
             return llvm::ConstantFP::get(cryoContext.context, llvm::APFloat(std::stof(value)));
         case DATA_TYPE_STRING:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating string constant");
             return llvm::ConstantDataArray::getString(cryoContext.context, value);
         case DATA_TYPE_BOOLEAN:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating boolean constant");
             return llvm::ConstantInt::get(cryoContext.context, llvm::APInt(1, value, 10));
         case DATA_TYPE_VOID:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating void constant");
             return nullptr;
         default:
-            std::cerr << "[Types] Error: Unsupported type\n";
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unsupported data type");
             return nullptr;
         }
     }

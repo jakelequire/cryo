@@ -34,6 +34,15 @@ namespace Cryo
         std::cout << "[CPP] " << message << (detail.empty() ? "" : ": " + detail) << std::endl;
     }
 
+    void CryoDebugger::logMessage(const char *type, int line, const std::string &category, const std::string &message)
+    {
+        std::cout << "[" << type << std::setw(7) << "] "
+                  << "\t@" << std::setw(5) << line
+                  << "\t{ " << std::setw(12) << std::left << category << "}"
+                  << "\t" << message
+                  << std::endl;
+    }
+
     /**
      * @public
      * @brief Used to log a specific node.
@@ -94,7 +103,11 @@ namespace Cryo
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.varDecl->type) << std::endl;
             std::cout << "Is Global: " << (node->data.varDecl->isGlobal ? 0 : 1) << std::endl;
             std::cout << "Is Reference: " << (node->data.varDecl->isReference ? "Yes" : "No") << std::endl;
-            logNode(node->data.varDecl->initializer);
+            if (node->data.varDecl->initializer)
+            {
+                std::cout << "Initializer: " << std::endl;
+                logNode(node->data.varDecl->initializer);
+            }
             break;
 
         case NODE_LITERAL_EXPR:
@@ -104,6 +117,7 @@ namespace Cryo
             {
             case DATA_TYPE_INT:
                 std::cout << "Value: " << node->data.literal->intValue << std::endl;
+                std::cout << "String Value: " << node->data.literal->stringValue << std::endl;
                 break;
             case DATA_TYPE_FLOAT:
                 std::cout << "Value: " << node->data.literal->floatValue << std::endl;
@@ -168,7 +182,14 @@ namespace Cryo
         case NODE_RETURN_STATEMENT:
             std::cout << "\nReturn Statement Node" << std::endl;
             std::cout << "Return Value: " << std::endl;
-            logNode(node->data.returnStatement->returnValue);
+            if (node->data.returnStatement->returnValue)
+            {
+                logNode(node->data.returnStatement->returnValue);
+            }
+            else
+            {
+                std::cout << "Void" << std::endl;
+            }
             break;
 
         case NODE_IMPORT_STATEMENT:
@@ -224,7 +245,6 @@ namespace Cryo
 
         case NODE_FUNCTION_BLOCK:
             std::cout << "\nFunction Block Node" << std::endl;
-            logNode(node->data.functionBlock->function);
             std::cout << "Statement Count: " << node->data.functionBlock->statementCount << std::endl;
             for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
             {
@@ -273,6 +293,8 @@ namespace Cryo
         if (!isNodeTypeValid(node))
         {
             std::cerr << "<Error>: Unknown or Invalid Node Type." << std::endl;
+            std::cout << "Node: " << node << std::endl;
+            std::cout << "Node: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
             exit(1);
         }
     }
@@ -299,6 +321,8 @@ namespace Cryo
     {
         if (!node)
         {
+            std::cout << "[Debugger] Node is Null!\n"
+                      << std::endl;
             return false;
         }
         switch (node->metaData->type)
@@ -333,17 +357,19 @@ namespace Cryo
         case NODE_ARG_LIST:
         case NODE_NAMESPACE:
         {
+            std::cout << "✅ Node is Valid!\n"
+                      << std::endl;
             return true;
         }
 
         case NODE_UNKNOWN:
         {
-            std::cerr << "[Debugger] Node is Unknown!\n"
+            std::cerr << "[❌] Node is Unknown!\n"
                       << std::endl;
             return false;
         }
         default:
-            std::cerr << "[Debugger] Node is Invalid!\n"
+            std::cerr << "[❌] Node is Invalid!\n"
                       << std::endl;
             return false;
         }

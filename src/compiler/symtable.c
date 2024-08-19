@@ -87,9 +87,10 @@ void freeSymbolTable(CryoSymbolTable *table)
 // <printSymbolTable>
 void printSymbolTable(CryoSymbolTable *table)
 {
-    printf("[SymTable - Debug] Symbol count: %d\n", table->count);
-    printf("[SymTable - Debug] Scope depth: %d\n", table->scopeDepth);
-    printf("[SymTable - Debug] Table capacity: %d\n", table->capacity);
+    printf("\n\n-------------------------------------------------------------------------------------------------\n");
+    printf("[SymTable] Symbol count: %d\n", table->count);
+    printf("[SymTable] Scope depth: %d\n", table->scopeDepth);
+    printf("[SymTable] Table capacity: %d\n", table->capacity);
     printf("\n-------------------------------------------------------------------------------------------------\n");
     printf("Symbol Table:\n\n");
     printf("Name                 Type                 Val/RetType          Scope        Const       ArgCount\n");
@@ -176,7 +177,7 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node)
     CryoSymbol *symbolNode = createCryoSymbol(table, node);
     if (!symbolNode)
     {
-        fprintf(stderr, "Error: Failed to create symbolNode in addASTNodeSymbol\n");
+        logMessage("ERROR", __LINE__, "SymTable", "Failed to create symbol node");
         return;
     }
 
@@ -186,13 +187,13 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node)
         table->symbols = (CryoSymbol **)realloc(table->symbols, table->capacity * sizeof(CryoSymbol *));
         if (!table->symbols)
         {
-            fprintf(stderr, "Error: Failed to reallocate memory for symbols table\n");
+            logMessage("ERROR", __LINE__, "SymTable", "Failed to reallocate memory for symbol table");
             return;
         }
     }
 
     table->symbols[table->count++] = symbolNode;
-    fprintf(stdout, "Symbol added: %s\n", symbolNode->name ? symbolNode->name : "Unnamed Symbol");
+    logMessage("INFO", __LINE__, "SymTable", "Symbol added: %s", strdup(symbolNode->name));
 }
 // </addASTNodeSymbol>
 
@@ -201,14 +202,14 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
 {
     if (!node)
     {
-        fprintf(stderr, "Error: node is null in createCryoSymbol\n");
+        logMessage("ERROR", __LINE__, "SymTable", "Node is null in createCryoSymbol");
         return NULL;
     }
 
     CryoSymbol *symbolNode = (CryoSymbol *)malloc(sizeof(CryoSymbol) * 2);
     if (!symbolNode)
     {
-        fprintf(stderr, "Error: Failed to allocate memory for symbolNode\n");
+        logMessage("ERROR", __LINE__, "SymTable", "Failed to allocate memory for symbolNode");
         return NULL;
     }
 
@@ -229,9 +230,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
 
     case NODE_VAR_DECLARATION:
     {
-        printf("[Symtable] Variable Name: %s\n", node->data.varDecl->name);
-        char *var_name = strdup(node->data.varDecl->name);
-        symbolNode->name = var_name;
+        symbolNode->name = strdup(node->data.varDecl->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
         break;
@@ -276,7 +275,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
         break;
 
     default:
-        fprintf(stderr, "Error: Unsupported node type %d\n", node->metaData->type);
+        logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
         error("Unsupported node type", "createCryoSymbol", table);
         free(symbolNode);
         return NULL;

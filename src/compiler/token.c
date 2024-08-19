@@ -738,7 +738,7 @@ CryoOperatorType CryoTokenToOperator(CryoTokenType token)
 
 CryoDataType CryoDataTypeStringToType(char *typeStr)
 {
-    printf("[Token] Converting data type string to type: %s\n", typeStr);
+    logMessage("INFO", __LINE__, "Token", "Converting data type string to type: %s", typeStr);
     if (strcmp(typeStr, "int") == 0)
     {
         return DATA_TYPE_INT;
@@ -781,7 +781,7 @@ CryoDataType CryoDataTypeStringToType(char *typeStr)
     }
     else
     {
-        fprintf(stderr, "<!> [Token] Error: Unknown data type: %s\n", typeStr);
+        logMessage("ERROR", __LINE__, "Token", "Unknown data type: %s", typeStr);
         return DATA_TYPE_UNKNOWN;
     }
 }

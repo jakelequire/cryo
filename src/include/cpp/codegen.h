@@ -57,6 +57,7 @@ extern "C"
 #include "compiler/ast.h"
 #include "compiler/symtable.h"
 #include "utils/support.h"
+#include "utils/utility.h"
 }
 
 namespace Cryo
