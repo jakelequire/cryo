@@ -217,7 +217,8 @@
       "containers.h": "c",
       "support.h": "c",
       "stdint.h": "c",
-      "utility.h": "c"
+      "utility.h": "c",
+      "arena.h": "c"
     },
     "cmake.ignoreCMakeListsMissing": true,
     "C_Cpp.errorSquiggles": "enabled"

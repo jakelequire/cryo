@@ -17,51 +17,8 @@
 #include "compiler/symtable.h"
 #include <string.h>
 
-// <logSymCryoDataType>
-char *logSymCryoDataType(CryoDataType type)
-{
-    switch (type)
-    {
-    case DATA_TYPE_UNKNOWN:
-        return "unknown";
-    case DATA_TYPE_INT:
-        return "int";
-    case DATA_TYPE_FLOAT:
-        return "float";
-    case DATA_TYPE_STRING:
-        return "string";
-    case DATA_TYPE_BOOLEAN:
-        return "boolean";
-    case DATA_TYPE_FUNCTION:
-        return "function";
-    case DATA_TYPE_EXTERN_FUNCTION:
-        return "extern_func";
-    case DATA_TYPE_VOID:
-        return "void";
-    case DATA_TYPE_NULL:
-        return "null";
-    case DATA_TYPE_ARRAY:
-        return "array";
-    case DATA_TYPE_INT_ARRAY:
-        return "int[]";
-    case DATA_TYPE_FLOAT_ARRAY:
-        return "float[]";
-    case DATA_TYPE_STRING_ARRAY:
-        return "string[]";
-    case DATA_TYPE_BOOLEAN_ARRAY:
-        return "boolean[]";
-    case DATA_TYPE_VOID_ARRAY:
-        return "void[]";
-    case INTERNAL_DATA_TYPE_EXPRESSION:
-        return "i_expression";
-    default:
-        return "unknown";
-    }
-}
-// </logSymCryoDataType>
-
 // <createSymbolTable>
-CryoSymbolTable *createSymbolTable()
+CryoSymbolTable *createSymbolTable(Arena *arena)
 {
     CryoSymbolTable *table = (CryoSymbolTable *)malloc(sizeof(CryoSymbolTable));
     table->count = 0;
@@ -73,7 +30,7 @@ CryoSymbolTable *createSymbolTable()
 // </createSymbolTable>
 
 // <freeSymbolTable>
-void freeSymbolTable(CryoSymbolTable *table)
+void freeSymbolTable(CryoSymbolTable *table, Arena *arena)
 {
     for (int i = 0; i < table->count; i++)
     {
@@ -85,7 +42,7 @@ void freeSymbolTable(CryoSymbolTable *table)
 // </freeSymbolTable>
 
 // <printSymbolTable>
-void printSymbolTable(CryoSymbolTable *table)
+void printSymbolTable(CryoSymbolTable *table, Arena *arena)
 {
     printf("\n\n-------------------------------------------------------------------------------------------------\n");
     printf("[SymTable] Symbol count: %d\n", table->count);
@@ -120,14 +77,14 @@ void printSymbolTable(CryoSymbolTable *table)
 // </printSymbolTable>
 
 // <enterScope>
-void enterScope(CryoSymbolTable *table)
+void enterScope(CryoSymbolTable *table, Arena *arena)
 {
     table->scopeDepth++;
 }
 // </enterScope>
 
 // <jumpScope>
-void jumpScope(CryoSymbolTable *table)
+void jumpScope(CryoSymbolTable *table, Arena *arena)
 {
     while (table->count > 0 && table->symbols[table->count - 1]->scopeLevel >= table->scopeDepth)
     {
@@ -138,7 +95,7 @@ void jumpScope(CryoSymbolTable *table)
 // </jumpScope>
 
 // <exitScope>
-void exitScope(CryoSymbolTable *table)
+void exitScope(CryoSymbolTable *table, Arena *arena)
 {
     while (table->count > 0 && table->symbols[table->count - 1]->scopeLevel == table->scopeDepth)
     {
@@ -151,21 +108,21 @@ void exitScope(CryoSymbolTable *table)
 // </exitScope>
 
 // <enterBlockScope>
-void enterBlockScope(CryoSymbolTable *table)
+void enterBlockScope(CryoSymbolTable *table, Arena *arena)
 {
-    enterScope(table);
+    enterScope(table, arena);
 }
 // </enterBlockScope>
 
 // <exitBlockScope>
-void exitBlockScope(CryoSymbolTable *table)
+void exitBlockScope(CryoSymbolTable *table, Arena *arena)
 {
-    exitScope(table);
+    exitScope(table, arena);
 }
 // </exitBlockScope>
 
 // <addASTNodeSymbol>
-void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node)
+void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
 {
     if (!node)
     {
@@ -174,7 +131,7 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node)
     }
     // printf("DEBUG [SymTable] Adding symbol Type: %s\n", CryoNodeTypeToString(node->metaData->type));
 
-    CryoSymbol *symbolNode = createCryoSymbol(table, node);
+    CryoSymbol *symbolNode = createCryoSymbol(table, node, arena);
     if (!symbolNode)
     {
         logMessage("ERROR", __LINE__, "SymTable", "Failed to create symbol node");
@@ -198,7 +155,7 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node)
 // </addASTNodeSymbol>
 
 // <resolveNodeSymbol>
-CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
+CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
 {
     if (!node)
     {
@@ -276,7 +233,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
 
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
-        error("Unsupported node type", "createCryoSymbol", table);
+        error("Unsupported node type", "createCryoSymbol", table, arena);
         free(symbolNode);
         return NULL;
     }
@@ -285,7 +242,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node)
 }
 
 // <findSymbol>
-CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name)
+CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name, Arena *arena)
 {
     for (int i = table->count - 1; i >= 0; i--)
     {
@@ -300,7 +257,7 @@ CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name)
 
 // Main Entry Point
 // <analyzeNode>
-bool analyzeNode(ASTNode *node, CryoSymbolTable *table)
+bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {
     // traverseAST(node, table);
 

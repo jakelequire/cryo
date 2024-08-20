@@ -25,19 +25,19 @@
 #include "compiler/symtable.h"
 #include "compiler/error.h"
 #include "utils/fs.h"
+#include "utils/arena.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void generateCodeWrapper(ASTNode* node);
+    void generateCodeWrapper(ASTNode *node);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-int cryoCompiler(const char* source);
-
+int cryoCompiler(const char *source);
 
 #endif // CLI_COMPILER_H

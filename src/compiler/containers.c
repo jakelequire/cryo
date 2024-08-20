@@ -11,7 +11,7 @@
 ///     size_t statementCapacity;
 /// } CryoProgram;
 ///```
-CryoProgram *createCryoProgramContainer()
+CryoProgram *createCryoProgramContainer(Arena *arena)
 {
     CryoProgram *node = (CryoProgram *)calloc(1, sizeof(CryoProgram));
     if (!node)
@@ -46,7 +46,7 @@ CryoProgram *createCryoProgramContainer()
 /// } CryoBlockNode;
 ///```
 ///
-CryoBlockNode *createCryoBlockNodeContainer()
+CryoBlockNode *createCryoBlockNodeContainer(Arena *arena)
 {
     CryoBlockNode *node = (CryoBlockNode *)calloc(1, sizeof(CryoBlockNode));
     if (!node)
@@ -82,7 +82,7 @@ CryoBlockNode *createCryoBlockNodeContainer()
 /// } CryoFunctionBlock;
 ///```
 ///
-CryoFunctionBlock *createCryoFunctionBlockContainer()
+CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena)
 {
     CryoFunctionBlock *block = (CryoFunctionBlock *)malloc(sizeof(CryoFunctionBlock));
     if (block)
@@ -104,7 +104,7 @@ CryoFunctionBlock *createCryoFunctionBlockContainer()
 /// } CryoModule;
 ///```
 ///
-CryoModule *createCryoModuleContainer()
+CryoModule *createCryoModuleContainer(Arena *arena)
 {
     CryoModule *node = (CryoModule *)calloc(1, sizeof(CryoModule));
     if (!node)
@@ -132,7 +132,7 @@ CryoModule *createCryoModuleContainer()
 /// } CryoMetaData;
 ///```
 ///
-CryoMetaData *createMetaDataContainer()
+CryoMetaData *createMetaDataContainer(Arena *arena)
 {
     CryoMetaData *node = (CryoMetaData *)calloc(1, sizeof(CryoMetaData));
     if (!node)
@@ -163,7 +163,7 @@ CryoMetaData *createMetaDataContainer()
 /// } CryoScope;
 ///```
 ///
-CryoScope *createCryoScopeContainer()
+CryoScope *createCryoScopeContainer(Arena *arena)
 {
     CryoScope *node = (CryoScope *)calloc(1, sizeof(CryoScope));
     if (!node)
@@ -188,7 +188,7 @@ CryoScope *createCryoScopeContainer()
 /// } ExternNode;
 ///```
 ///
-ExternNode *createExternNodeContainer(CryoNodeType type)
+ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena)
 {
     ExternNode *node = (ExternNode *)calloc(1, sizeof(ExternNode));
     if (!node)
@@ -227,7 +227,7 @@ ExternNode *createExternNodeContainer(CryoNodeType type)
 /// } ExternFunctionNode;
 ///```
 ///
-ExternFunctionNode *createExternFunctionNodeContainer()
+ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena)
 {
     ExternFunctionNode *node = (ExternFunctionNode *)calloc(1, sizeof(ExternFunctionNode));
     if (!node)
@@ -261,7 +261,7 @@ ExternFunctionNode *createExternFunctionNodeContainer()
 /// } FunctionDeclNode;
 ///```
 ///
-FunctionDeclNode *createFunctionNodeContainer()
+FunctionDeclNode *createFunctionNodeContainer(Arena *arena)
 {
     FunctionDeclNode *node = (FunctionDeclNode *)calloc(1, sizeof(FunctionDeclNode));
     if (!node)
@@ -291,7 +291,7 @@ FunctionDeclNode *createFunctionNodeContainer()
 /// } FunctionCallNode;
 ///```
 ///
-FunctionCallNode *createFunctionCallNodeContainer()
+FunctionCallNode *createFunctionCallNodeContainer(Arena *arena)
 {
     FunctionCallNode *node = (FunctionCallNode *)calloc(1, sizeof(FunctionCallNode));
     if (!node)
@@ -324,7 +324,7 @@ FunctionCallNode *createFunctionCallNodeContainer()
 /// } LiteralNode;
 ///```
 ///
-LiteralNode *createLiteralNodeContainer()
+LiteralNode *createLiteralNodeContainer(Arena *arena)
 {
     LiteralNode *node = (LiteralNode *)calloc(1, sizeof(LiteralNode));
     if (!node)
@@ -353,7 +353,7 @@ LiteralNode *createLiteralNodeContainer()
 /// } IfStatementNode;
 ///```
 ///
-IfStatementNode *createIfStatementContainer()
+IfStatementNode *createIfStatementContainer(Arena *arena)
 {
     IfStatementNode *node = (IfStatementNode *)calloc(1, sizeof(IfStatementNode));
     if (!node)
@@ -381,7 +381,7 @@ IfStatementNode *createIfStatementContainer()
 /// } ForStatementNode;
 ///```
 ///
-ForStatementNode *createForStatementNodeContainer()
+ForStatementNode *createForStatementNodeContainer(Arena *arena)
 {
     ForStatementNode *node = (ForStatementNode *)calloc(1, sizeof(ForStatementNode));
     if (!node)
@@ -408,7 +408,7 @@ ForStatementNode *createForStatementNodeContainer()
 /// } WhileStatementNode;
 ///```
 ///
-WhileStatementNode *createWhileStatementNodeContainer()
+WhileStatementNode *createWhileStatementNodeContainer(Arena *arena)
 {
     WhileStatementNode *node = (WhileStatementNode *)calloc(1, sizeof(WhileStatementNode));
     if (!node)
@@ -437,7 +437,7 @@ WhileStatementNode *createWhileStatementNodeContainer()
 /// } CryoExpressionNode;
 ///```
 ///
-CryoExpressionNode *createExpressionNodeContainer()
+CryoExpressionNode *createExpressionNodeContainer(Arena *arena)
 {
     CryoExpressionNode *node = (CryoExpressionNode *)calloc(1, sizeof(CryoExpressionNode));
     if (!node)
@@ -468,7 +468,7 @@ CryoExpressionNode *createExpressionNodeContainer()
 /// } CryoVariableNode;
 ///```
 ///
-CryoVariableNode *createVariableNodeContainer()
+CryoVariableNode *createVariableNodeContainer(Arena *arena)
 {
     CryoVariableNode *node = (CryoVariableNode *)calloc(1, sizeof(CryoVariableNode));
     if (!node)
@@ -499,7 +499,7 @@ CryoVariableNode *createVariableNodeContainer()
 /// } VariableNameNode;
 ///```
 ///
-VariableNameNode *createVariableNameNodeContainer(char *varName)
+VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena)
 {
     VariableNameNode *node = (VariableNameNode *)calloc(1, sizeof(VariableNameNode));
     if (!node)
@@ -528,7 +528,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName)
 /// } ParamNode;
 ///```
 ///
-ParamNode *createParamNodeContainer()
+ParamNode *createParamNodeContainer(Arena *arena)
 {
     ParamNode *node = (ParamNode *)calloc(1, sizeof(ParamNode));
     if (!node)
@@ -559,7 +559,7 @@ ParamNode *createParamNodeContainer()
 /// } ArgNode;
 ///```
 ///
-ArgNode *createArgNodeContainer()
+ArgNode *createArgNodeContainer(Arena *arena)
 {
     ArgNode *node = (ArgNode *)calloc(1, sizeof(ArgNode));
     if (!node)
@@ -588,7 +588,7 @@ ArgNode *createArgNodeContainer()
 /// } CryoReturnNode;
 ///```
 ///
-CryoReturnNode *createReturnNodeContainer()
+CryoReturnNode *createReturnNodeContainer(Arena *arena)
 {
     CryoReturnNode *node = (CryoReturnNode *)calloc(1, sizeof(CryoReturnNode));
     if (!node)
@@ -615,7 +615,7 @@ CryoReturnNode *createReturnNodeContainer()
 /// } CryoBinaryOpNode;
 ///```
 ///
-CryoBinaryOpNode *createBinaryOpNodeContainer()
+CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena)
 {
     CryoBinaryOpNode *node = (CryoBinaryOpNode *)calloc(1, sizeof(CryoBinaryOpNode));
     if (!node)
@@ -641,7 +641,7 @@ CryoBinaryOpNode *createBinaryOpNodeContainer()
 /// } CryoUnaryOpNode;
 ///```
 ///
-CryoUnaryOpNode *createUnaryOpNodeContainer()
+CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena)
 {
     CryoUnaryOpNode *node = (CryoUnaryOpNode *)calloc(1, sizeof(CryoUnaryOpNode));
     if (!node)
@@ -667,7 +667,7 @@ CryoUnaryOpNode *createUnaryOpNodeContainer()
 /// } CryoArrayNode;
 ///```
 ///
-CryoArrayNode *createArrayNodeContainer()
+CryoArrayNode *createArrayNodeContainer(Arena *arena)
 {
     CryoArrayNode *node = (CryoArrayNode *)calloc(1, sizeof(CryoArrayNode));
     if (!node)

@@ -28,6 +28,7 @@
 #include "compiler/lexer.h"
 #include "compiler/symtable.h"
 #include "utils/support.h"
+#include "utils/arena.h"
 /*---------<end>---------*/
 extern char *strdup(const char *__s)
     __THROW __attribute_malloc__ __nonnull((1));
@@ -579,28 +580,28 @@ typedef struct ASTNode
 
 #define INITIAL_CAPACITY 8
 
-CryoProgram *createCryoProgramContainer();
-CryoBlockNode *createCryoBlockNodeContainer();
-CryoFunctionBlock *createCryoFunctionBlockContainer();
-CryoModule *createCryoModuleContainer();
-CryoMetaData *createMetaDataContainer();
-CryoScope *createCryoScopeContainer();
-ExternNode *createExternNodeContainer(CryoNodeType type);
-FunctionDeclNode *createFunctionNodeContainer();
-FunctionCallNode *createFunctionCallNodeContainer();
-LiteralNode *createLiteralNodeContainer();
-IfStatementNode *createIfStatementContainer();
-ForStatementNode *createForStatementNodeContainer();
-WhileStatementNode *createWhileStatementNodeContainer();
-CryoExpressionNode *createExpressionNodeContainer();
-CryoVariableNode *createVariableNodeContainer();
-VariableNameNode *createVariableNameNodeContainer(char *varName);
-ParamNode *createParamNodeContainer();
-ArgNode *createArgNodeContainer();
-CryoReturnNode *createReturnNodeContainer();
-CryoBinaryOpNode *createBinaryOpNodeContainer();
-CryoUnaryOpNode *createUnaryOpNodeContainer();
-CryoArrayNode *createArrayNodeContainer();
+CryoProgram *createCryoProgramContainer(Arena *arena);
+CryoBlockNode *createCryoBlockNodeContainer(Arena *arena);
+CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena);
+CryoModule *createCryoModuleContainer(Arena *arena);
+CryoMetaData *createMetaDataContainer(Arena *arena);
+CryoScope *createCryoScopeContainer(Arena *arena);
+ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena);
+FunctionDeclNode *createFunctionNodeContainer(Arena *arena);
+FunctionCallNode *createFunctionCallNodeContainer(Arena *arena);
+LiteralNode *createLiteralNodeContainer(Arena *arena);
+IfStatementNode *createIfStatementContainer(Arena *arena);
+ForStatementNode *createForStatementNodeContainer(Arena *arena);
+WhileStatementNode *createWhileStatementNodeContainer(Arena *arena);
+CryoExpressionNode *createExpressionNodeContainer(Arena *arena);
+CryoVariableNode *createVariableNodeContainer(Arena *arena);
+VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena);
+ParamNode *createParamNodeContainer(Arena *arena);
+ArgNode *createArgNodeContainer(Arena *arena);
+CryoReturnNode *createReturnNodeContainer(Arena *arena);
+CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena);
+CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena);
+CryoArrayNode *createArrayNodeContainer(Arena *arena);
 
 #ifdef __cplusplus
 extern "C"
@@ -608,71 +609,71 @@ extern "C"
 #endif
 
     /* @Node_Accessors */
-    void printAST(ASTNode *node, int indent);
-    void freeAST(ASTNode *node);
+    void printAST(ASTNode *node, int indent, Arena *arena);
+    void freeAST(ASTNode *node, Arena *arena);
 
     /* @Node_Management */
-    ASTNode *createASTNode(CryoNodeType type);
-    void addChildNode(ASTNode *parent, ASTNode *child);
-    void addStatementToBlock(ASTNode *block, ASTNode *statement);
-    void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement);
-    void addFunctionToProgram(ASTNode *program, ASTNode *function);
+    ASTNode *createASTNode(CryoNodeType type, Arena *arena);
+    void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena);
+    void addStatementToBlock(ASTNode *block, ASTNode *statement, Arena *arena);
+    void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena);
+    void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena);
 
     /* @Node_Creation - Expressions & Statements */
-    ASTNode *createProgramNode(void);
-    ASTNode *createNamespaceNode(char *name);
-    ASTNode *createLiteralIntExpr(int value);
-    ASTNode *createExpressionStatement(ASTNode *expression);
-    ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op);
-    ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand);
+    ASTNode *createProgramNode(Arena *arena);
+    ASTNode *createNamespaceNode(char *name, Arena *arena);
+    ASTNode *createLiteralIntExpr(int value, Arena *arena);
+    ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena);
+    ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Arena *arena);
+    ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena);
 
     /* @Node_Creation - Literals */
-    ASTNode *createIntLiteralNode(int value);
-    ASTNode *createFloatLiteralNode(float value);
-    ASTNode *createStringLiteralNode(char *value);
-    ASTNode *createBooleanLiteralNode(int value);
-    ASTNode *createIdentifierNode(char *name);
+    ASTNode *createIntLiteralNode(int value, Arena *arena);
+    ASTNode *createFloatLiteralNode(float value, Arena *arena);
+    ASTNode *createStringLiteralNode(char *value, Arena *arena);
+    ASTNode *createBooleanLiteralNode(int value, Arena *arena);
+    ASTNode *createIdentifierNode(char *name, Arena *arena);
 
     /* @Node_Blocks - Blocks */
-    ASTNode *createBlockNode(void);
-    ASTNode *createFunctionBlock(void);
-    ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch);
-    ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body);
-    ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body);
+    ASTNode *createBlockNode(Arena *arena);
+    ASTNode *createFunctionBlock(Arena *arena);
+    ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena);
+    ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena);
+    ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena);
 
     /* @Node_Blocks - Literals */
-    ASTNode *createBooleanLiteralExpr(int value);
-    ASTNode *createStringLiteralExpr(char *str);
-    ASTNode *createStringExpr(char *str);
+    ASTNode *createBooleanLiteralExpr(int value, Arena *arena);
+    ASTNode *createStringLiteralExpr(char *str, Arena *arena);
+    ASTNode *createStringExpr(char *str, Arena *arena);
 
     /* @Node_Creation - Variables */
-    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference);
-    ASTNode *createVariableExpr(char *name, bool isReference);
+    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference, Arena *arena);
+    ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena);
 
     /* @Node_Creation - Functions */
-    ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType);
-    ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType);
-    ASTNode *createFunctionCallNode(void);
-    ASTNode *createReturnNode(ASTNode *returnValue);
-    ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType);
+    ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType, Arena *arena);
+    ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType, Arena *arena);
+    ASTNode *createFunctionCallNode(Arena *arena);
+    ASTNode *createReturnNode(ASTNode *returnValue, Arena *arena);
+    ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType, Arena *arena);
 
     /* @Node_Creation - Parameters */
-    ASTNode *createParamListNode(void);
-    ASTNode *createArgumentListNode(void);
-    ASTNode *createParamNode(char *name, CryoDataType type);
-    ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral);
+    ASTNode *createParamListNode(Arena *arena);
+    ASTNode *createArgumentListNode(Arena *arena);
+    ASTNode *createParamNode(char *name, CryoDataType type, Arena *arena);
+    ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *arena);
 
     /* @Node_Creation - Modules & Externals */
-    ASTNode *createImportNode(char *importPath);
-    ASTNode *createExternNode(ASTNode *externNode);
+    ASTNode *createImportNode(char *importPath, Arena *arena);
+    ASTNode *createExternNode(ASTNode *externNode, Arena *arena);
 
     /* @Node_Creation - Conditionals */
-    ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch);
-    ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body);
-    ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body);
+    ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena);
+    ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena);
+    ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena);
 
     /* @Node_Creation - Arrays */
-    ASTNode *createArrayLiteralNode(void);
+    ASTNode *createArrayLiteralNode(Arena *arena);
 
 #ifdef __cplusplus
 }

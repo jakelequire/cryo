@@ -24,7 +24,7 @@ ASTNode *programNode = NULL;
 /* @Node_Accessors */
 
 // <printAST>
-void printAST(ASTNode *node, int indent)
+void printAST(ASTNode *node, int indent, Arena *arena)
 {
     if (!node)
         return;
@@ -40,7 +40,7 @@ void printAST(ASTNode *node, int indent)
                node->data.program->statementCapacity);
         for (size_t i = 0; i < node->data.program->statementCount; i++)
         {
-            printAST(node->data.program->statements[i], indent + 2);
+            printAST(node->data.program->statements[i], indent + 2, arena);
         }
         break;
 
@@ -50,7 +50,7 @@ void printAST(ASTNode *node, int indent)
         printf("Extern Function Parameters:\n");
         for (int i = 0; i < node->data.externFunction->paramCount; i++)
         {
-            printAST(node->data.externFunction->params[i], indent + 2);
+            printAST(node->data.externFunction->params[i], indent + 2, arena);
         }
         break;
 
@@ -63,10 +63,10 @@ void printAST(ASTNode *node, int indent)
         printf("Function Declaration Node params:\n");
         for (int i = 0; i < node->data.functionDecl->paramCount; i++)
         {
-            printAST(node->data.functionDecl->params[i], indent + 2);
+            printAST(node->data.functionDecl->params[i], indent + 2, arena);
         }
         printf("Function Declaration Node body:\n");
-        printAST(node->data.functionDecl->body, indent + 2);
+        printAST(node->data.functionDecl->body, indent + 2, arena);
         break;
 
     case NODE_VAR_DECLARATION:
@@ -82,12 +82,12 @@ void printAST(ASTNode *node, int indent)
 
     case NODE_BINARY_EXPR:
         printf("\nBinary Expression Node: %s\n", CryoOperatorTypeToString(node->data.bin_op->op));
-        printAST(node->data.bin_op->left, indent + 2);
-        printAST(node->data.bin_op->right, indent + 2);
+        printAST(node->data.bin_op->left, indent + 2, arena);
+        printAST(node->data.bin_op->right, indent + 2, arena);
         break;
 
     case NODE_UNARY_EXPR:
-        printAST(node->data.unary_op->operand, indent + 2);
+        printAST(node->data.unary_op->operand, indent + 2, arena);
         break;
 
     case NODE_LITERAL_EXPR:
@@ -122,48 +122,48 @@ void printAST(ASTNode *node, int indent)
         printf("\nFunction Call Node: %s\n", strdup(node->data.functionCall->name));
         for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            printAST(node->data.functionCall->args[i], indent + 2);
+            printAST(node->data.functionCall->args[i], indent + 2, arena);
         }
         break;
 
     case NODE_IF_STATEMENT:
         printf("\nIf Statement Node\n");
         printf("Condition:\n");
-        printAST(node->data.ifStatement->condition, indent + 2);
+        printAST(node->data.ifStatement->condition, indent + 2, arena);
         printf("Then Branch:\n");
-        printAST(node->data.ifStatement->thenBranch, indent + 2);
+        printAST(node->data.ifStatement->thenBranch, indent + 2, arena);
         if (node->data.ifStatement->elseBranch)
         {
             printf("Else Branch:\n");
-            printAST(node->data.ifStatement->elseBranch, indent + 2);
+            printAST(node->data.ifStatement->elseBranch, indent + 2, arena);
         }
         break;
 
     case NODE_WHILE_STATEMENT:
         printf("\nWhile Statement Node\n");
         printf("Condition:\n");
-        printAST(node->data.whileStatement->condition, indent + 2);
+        printAST(node->data.whileStatement->condition, indent + 2, arena);
         printf("Body:\n");
-        printAST(node->data.whileStatement->body, indent + 2);
+        printAST(node->data.whileStatement->body, indent + 2, arena);
         break;
 
     case NODE_FOR_STATEMENT:
         printf("\nFor Statement Node\n");
         printf("Initializer:\n");
-        printAST(node->data.forStatement->initializer, indent + 2);
+        printAST(node->data.forStatement->initializer, indent + 2, arena);
         printf("Condition:\n");
-        printAST(node->data.forStatement->condition, indent + 2);
+        printAST(node->data.forStatement->condition, indent + 2, arena);
         printf("Increment:\n");
-        printAST(node->data.forStatement->increment, indent + 2);
+        printAST(node->data.forStatement->increment, indent + 2, arena);
         printf("Body:\n");
-        printAST(node->data.forStatement->body, indent + 2);
+        printAST(node->data.forStatement->body, indent + 2, arena);
         break;
 
     case NODE_RETURN_STATEMENT:
         printf("\nReturn Statement Node\n");
         if (node->data.returnStatement->returnValue)
         {
-            printAST(node->data.returnStatement->returnValue, indent + 2);
+            printAST(node->data.returnStatement->returnValue, indent + 2, arena);
         }
         break;
 
@@ -173,18 +173,18 @@ void printAST(ASTNode *node, int indent)
                node->data.block->statementCapacity);
         for (int i = 0; i < node->data.block->statementCount; i++)
         {
-            printAST(node->data.block->statements[i], indent + 2);
+            printAST(node->data.block->statements[i], indent + 2, arena);
         }
         break;
 
     case NODE_FUNCTION_BLOCK:
         printf("\nFunction Block Node\n");
         printf("Function:\n");
-        printAST(node->data.functionBlock->function, indent + 2);
+        printAST(node->data.functionBlock->function, indent + 2, arena);
         printf("Block:\n");
         for (int i = 0; i < node->data.functionBlock->statementCount; i++)
         {
-            printAST(node->data.functionBlock->statements[i], indent + 2);
+            printAST(node->data.functionBlock->statements[i], indent + 2, arena);
         }
         break;
 
@@ -194,7 +194,7 @@ void printAST(ASTNode *node, int indent)
                node->data.paramList->paramCapacity);
         for (int i = 0; i < node->data.paramList->paramCount; i++)
         {
-            printAST((ASTNode *)node->data.paramList->params[i], indent + 2);
+            printAST((ASTNode *)node->data.paramList->params[i], indent + 2, arena);
         }
         break;
 
@@ -204,7 +204,7 @@ void printAST(ASTNode *node, int indent)
                node->data.argList->argCapacity);
         for (int i = 0; i < node->data.argList->argCount; i++)
         {
-            printAST((ASTNode *)node->data.argList->args[i], indent + 2);
+            printAST((ASTNode *)node->data.argList->args[i], indent + 2, arena);
         }
         break;
 
@@ -214,7 +214,7 @@ void printAST(ASTNode *node, int indent)
                node->data.array->elementCapacity);
         for (int i = 0; i < node->data.array->elementCount; i++)
         {
-            printAST(node->data.array->elements[i], indent + 2);
+            printAST(node->data.array->elements[i], indent + 2, arena);
         }
         break;
 
@@ -234,7 +234,7 @@ void printAST(ASTNode *node, int indent)
 // </printAST>
 
 // <freeAST>
-void freeAST(ASTNode *node)
+void freeAST(ASTNode *node, Arena *arena)
 {
     if (!node)
     {
@@ -249,18 +249,18 @@ void freeAST(ASTNode *node)
     case NODE_PROGRAM:
         for (size_t i = 0; i < node->data.program->statementCount; i++)
         {
-            freeAST(node->data.program->statements[i]);
+            freeAST(node->data.program->statements[i], arena);
         }
         free(node->data.program->statements);
         free(node->data.program);
         break;
 
     case NODE_FUNCTION_DECLARATION:
-        freeAST(node->data.functionDecl->body);
+        freeAST(node->data.functionDecl->body, arena);
         free(node->data.functionDecl->name);
         for (int i = 0; i < node->data.functionDecl->paramCount; i++)
         {
-            freeAST(node->data.functionDecl->params[i]);
+            freeAST(node->data.functionDecl->params[i], arena);
         }
         free(node->data.functionDecl->params);
         free(node->data.functionDecl);
@@ -276,13 +276,13 @@ void freeAST(ASTNode *node)
         break;
 
     case NODE_BINARY_EXPR:
-        freeAST(node->data.bin_op->left);
-        freeAST(node->data.bin_op->right);
+        freeAST(node->data.bin_op->left, arena);
+        freeAST(node->data.bin_op->right, arena);
         free(node->data.bin_op);
         break;
 
     case NODE_UNARY_EXPR:
-        freeAST(node->data.unary_op->operand);
+        freeAST(node->data.unary_op->operand, arena);
         free(node->data.unary_op);
         break;
 
@@ -303,40 +303,40 @@ void freeAST(ASTNode *node)
         free(node->data.functionCall->name);
         for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            freeAST(node->data.functionCall->args[i]);
+            freeAST(node->data.functionCall->args[i], arena);
         }
         free(node->data.functionCall->args);
         free(node->data.functionCall);
         break;
 
     case NODE_IF_STATEMENT:
-        freeAST(node->data.ifStatement->condition);
-        freeAST(node->data.ifStatement->thenBranch);
+        freeAST(node->data.ifStatement->condition, arena);
+        freeAST(node->data.ifStatement->thenBranch, arena);
         if (node->data.ifStatement->elseBranch)
         {
-            freeAST(node->data.ifStatement->elseBranch);
+            freeAST(node->data.ifStatement->elseBranch, arena);
         }
         free(node->data.ifStatement);
         break;
 
     case NODE_WHILE_STATEMENT:
-        freeAST(node->data.whileStatement->condition);
-        freeAST(node->data.whileStatement->body);
+        freeAST(node->data.whileStatement->condition, arena);
+        freeAST(node->data.whileStatement->body, arena);
         free(node->data.whileStatement);
         break;
 
     case NODE_FOR_STATEMENT:
-        freeAST(node->data.forStatement->initializer);
-        freeAST(node->data.forStatement->condition);
-        freeAST(node->data.forStatement->increment);
-        freeAST(node->data.forStatement->body);
+        freeAST(node->data.forStatement->initializer, arena);
+        freeAST(node->data.forStatement->condition, arena);
+        freeAST(node->data.forStatement->increment, arena);
+        freeAST(node->data.forStatement->body, arena);
         free(node->data.forStatement);
         break;
 
     case NODE_RETURN_STATEMENT:
         if (node->data.returnStatement->returnValue)
         {
-            freeAST(node->data.returnStatement->returnValue);
+            freeAST(node->data.returnStatement->returnValue, arena);
         }
         free(node->data.returnStatement);
         break;
@@ -344,22 +344,22 @@ void freeAST(ASTNode *node)
     case NODE_BLOCK:
         for (int i = 0; i < node->data.block->statementCount; i++)
         {
-            freeAST(node->data.block->statements[i]);
+            freeAST(node->data.block->statements[i], arena);
         }
         free(node->data.block->statements);
         free(node->data.block);
         break;
 
     case NODE_FUNCTION_BLOCK:
-        freeAST(node->data.functionBlock->function);
-        freeAST((ASTNode *)node->data.functionBlock->statements);
+        freeAST(node->data.functionBlock->function, arena);
+        freeAST((ASTNode *)node->data.functionBlock->statements, arena);
         free(node->data.functionBlock);
         break;
 
     case NODE_PARAM_LIST:
         for (int i = 0; i < node->data.paramList->paramCount; i++)
         {
-            freeAST((ASTNode *)node->data.paramList->params[i]);
+            freeAST((ASTNode *)node->data.paramList->params[i], arena);
         }
         free(node->data.paramList->params);
         free(node->data.paramList);
@@ -368,7 +368,7 @@ void freeAST(ASTNode *node)
     case NODE_ARG_LIST:
         for (int i = 0; i < node->data.argList->argCount; i++)
         {
-            freeAST((ASTNode *)node->data.argList->args[i]);
+            freeAST((ASTNode *)node->data.argList->args[i], arena);
         }
         free(node->data.argList->args);
         free(node->data.argList);
@@ -377,7 +377,7 @@ void freeAST(ASTNode *node)
     case NODE_ARRAY_LITERAL:
         for (int i = 0; i < node->data.array->elementCount; i++)
         {
-            freeAST(node->data.array->elements[i]);
+            freeAST(node->data.array->elements[i], arena);
         }
         free(node->data.array->elements);
         free(node->data.array);
@@ -386,7 +386,7 @@ void freeAST(ASTNode *node)
     case NODE_EXTERN_FUNCTION:
         for (size_t i = 0; i < node->data.externFunction->paramCount; i++)
         {
-            freeAST(node->data.externFunction->params[i]);
+            freeAST(node->data.externFunction->params[i], arena);
         }
         free(node->data.externFunction->params);
         free(node->data.externFunction);
@@ -413,7 +413,7 @@ void freeAST(ASTNode *node)
 /* @Node_Management */
 
 // <createASTNode>
-ASTNode *createASTNode(CryoNodeType type)
+ASTNode *createASTNode(CryoNodeType type, Arena *arena)
 {
     ASTNode *node = (ASTNode *)calloc(1, sizeof(ASTNode));
     if (!node)
@@ -422,7 +422,7 @@ ASTNode *createASTNode(CryoNodeType type)
         return NULL;
     }
 
-    node->metaData = createMetaDataContainer();
+    node->metaData = createMetaDataContainer(arena);
     if (!node->metaData)
     {
         logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST node metadata");
@@ -436,61 +436,61 @@ ASTNode *createASTNode(CryoNodeType type)
     case NODE_NAMESPACE:
         break;
     case NODE_PROGRAM:
-        node->data.program = createCryoProgramContainer();
+        node->data.program = createCryoProgramContainer(arena);
         break;
     case NODE_BLOCK:
-        node->data.block = createCryoBlockNodeContainer();
+        node->data.block = createCryoBlockNodeContainer(arena);
         break;
     case NODE_FUNCTION_BLOCK:
-        node->data.functionBlock = createCryoFunctionBlockContainer();
+        node->data.functionBlock = createCryoFunctionBlockContainer(arena);
         break;
     case NODE_RETURN_STATEMENT:
-        node->data.returnStatement = createReturnNodeContainer();
+        node->data.returnStatement = createReturnNodeContainer(arena);
         break;
     case NODE_LITERAL_EXPR:
-        node->data.literal = createLiteralNodeContainer();
+        node->data.literal = createLiteralNodeContainer(arena);
         break;
     case NODE_VAR_DECLARATION:
-        node->data.varDecl = createVariableNodeContainer();
+        node->data.varDecl = createVariableNodeContainer(arena);
         break;
     case NODE_VAR_NAME:
-        node->data.varName = createVariableNameNodeContainer("");
+        node->data.varName = createVariableNameNodeContainer("", arena);
         break;
     case NODE_EXPRESSION:
-        node->data.expression = createExpressionNodeContainer();
+        node->data.expression = createExpressionNodeContainer(arena);
         break;
     case NODE_FUNCTION_DECLARATION:
-        node->data.functionDecl = createFunctionNodeContainer();
+        node->data.functionDecl = createFunctionNodeContainer(arena);
         break;
     case NODE_EXTERN_FUNCTION:
-        node->data.externNode = createExternNodeContainer(NODE_EXTERN_FUNCTION);
+        node->data.externNode = createExternNodeContainer(NODE_EXTERN_FUNCTION, arena);
         break;
     case NODE_FUNCTION_CALL:
-        node->data.functionCall = createFunctionCallNodeContainer();
+        node->data.functionCall = createFunctionCallNodeContainer(arena);
         break;
     case NODE_IF_STATEMENT:
-        node->data.ifStatement = createIfStatementContainer();
+        node->data.ifStatement = createIfStatementContainer(arena);
         break;
     case NODE_FOR_STATEMENT:
-        node->data.forStatement = createForStatementNodeContainer();
+        node->data.forStatement = createForStatementNodeContainer(arena);
         break;
     case NODE_WHILE_STATEMENT:
-        node->data.whileStatement = createWhileStatementNodeContainer();
+        node->data.whileStatement = createWhileStatementNodeContainer(arena);
         break;
     case NODE_BINARY_EXPR:
-        node->data.bin_op = createBinaryOpNodeContainer();
+        node->data.bin_op = createBinaryOpNodeContainer(arena);
         break;
     case NODE_UNARY_EXPR:
-        node->data.unary_op = createUnaryOpNodeContainer();
+        node->data.unary_op = createUnaryOpNodeContainer(arena);
         break;
     case NODE_PARAM_LIST:
-        node->data.paramList = createParamNodeContainer();
+        node->data.paramList = createParamNodeContainer(arena);
         break;
     case NODE_ARG_LIST:
-        node->data.argList = createArgNodeContainer();
+        node->data.argList = createArgNodeContainer(arena);
         break;
     case NODE_ARRAY_LITERAL:
-        node->data.array = createArrayNodeContainer();
+        node->data.array = createArrayNodeContainer(arena);
         break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
@@ -503,7 +503,7 @@ ASTNode *createASTNode(CryoNodeType type)
 // </createASTNode>
 
 // <addChildNode>
-void addChildNode(ASTNode *parent, ASTNode *child)
+void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena)
 {
     if (!parent || !child)
     {
@@ -528,7 +528,7 @@ void addChildNode(ASTNode *parent, ASTNode *child)
 // </addChildNode>
 
 // <addStatementToBlock>
-void addStatementToBlock(ASTNode *blockNode, ASTNode *statement)
+void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena)
 {
     if (blockNode->metaData->type != NODE_BLOCK && blockNode->metaData->type != NODE_FUNCTION_BLOCK)
     {
@@ -562,7 +562,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement)
 }
 // </addStatementToBlock>
 
-void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement)
+void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena)
 {
     if (!functionBlock || !statement || !functionBlock->metaData || functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
     {
@@ -610,11 +610,11 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement)
     logMessage("INFO", __LINE__, "AST", "Debug: block=%p, statementCount=%d, statementCapacity=%d",
                (void *)block, block->statementCount, block->statementCapacity);
 
-    addChildNode(functionBlock, statement);
+    addChildNode(functionBlock, statement, arena);
 }
 
 // <addFunctionToProgram>
-void addFunctionToProgram(ASTNode *program, ASTNode *function)
+void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena)
 {
     if (!program || !function)
     {
@@ -642,15 +642,15 @@ void addFunctionToProgram(ASTNode *program, ASTNode *function)
     }
 
     prog->statements[prog->statementCount++] = function;
-    addChildNode(program, function);
+    addChildNode(program, function, arena);
 }
 // </addFunctionToProgram>
 
 // -------------------------------------------------------------------
 
-ASTNode *createNamespaceNode(char *name)
+ASTNode *createNamespaceNode(char *name, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_NAMESPACE);
+    ASTNode *node = createASTNode(NODE_NAMESPACE, arena);
     if (!node)
         return NULL;
     node->metaData->moduleName = strdup(name);
@@ -659,9 +659,9 @@ ASTNode *createNamespaceNode(char *name)
 }
 
 // Create a program node
-ASTNode *createProgramNode(void)
+ASTNode *createProgramNode(Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_PROGRAM);
+    ASTNode *node = createASTNode(NODE_PROGRAM, arena);
     if (!node)
         return NULL;
 
@@ -669,9 +669,9 @@ ASTNode *createProgramNode(void)
 }
 
 // Create a literal expression node
-ASTNode *createLiteralExpr(int value)
+ASTNode *createLiteralExpr(int value, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena);
     if (!node)
         return NULL;
 
@@ -695,9 +695,9 @@ ASTNode *createLiteralExpr(int value)
 }
 
 // Create an expression statement node
-ASTNode *createExpressionStatement(ASTNode *expression)
+ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_EXPRESSION);
+    ASTNode *node = createASTNode(NODE_EXPRESSION, arena);
     if (!node)
         return NULL;
 
@@ -734,9 +734,9 @@ ASTNode *createExpressionStatement(ASTNode *expression)
 }
 
 // Create a binary expression node
-ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op)
+ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_BINARY_EXPR);
+    ASTNode *node = createASTNode(NODE_BINARY_EXPR, arena);
     if (!node)
         return NULL;
 
@@ -756,9 +756,9 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op)
 }
 
 // Create a unary expression node
-ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand)
+ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_UNARY_EXPR);
+    ASTNode *node = createASTNode(NODE_UNARY_EXPR, arena);
     if (!node)
         return NULL;
 
@@ -775,9 +775,9 @@ ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand)
 }
 
 /* @Node_Creation - Literals */
-ASTNode *createIntLiteralNode(int value)
+ASTNode *createIntLiteralNode(int value, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena);
     if (!node)
         return NULL;
 
@@ -791,9 +791,9 @@ ASTNode *createIntLiteralNode(int value)
     return node;
 }
 
-ASTNode *createFloatLiteralNode(float value)
+ASTNode *createFloatLiteralNode(float value, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena);
     if (!node)
         return NULL;
 
@@ -804,9 +804,9 @@ ASTNode *createFloatLiteralNode(float value)
     return node;
 }
 
-ASTNode *createStringLiteralNode(char *value)
+ASTNode *createStringLiteralNode(char *value, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena);
     if (!node)
         return NULL;
 
@@ -817,9 +817,9 @@ ASTNode *createStringLiteralNode(char *value)
     return node;
 }
 
-ASTNode *createBooleanLiteralNode(int value)
+ASTNode *createBooleanLiteralNode(int value, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena);
     if (!node)
         return NULL;
 
@@ -830,9 +830,9 @@ ASTNode *createBooleanLiteralNode(int value)
     return node;
 }
 
-ASTNode *createIdentifierNode(char *name)
+ASTNode *createIdentifierNode(char *name, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_VAR_NAME);
+    ASTNode *node = createASTNode(NODE_VAR_NAME, arena);
     if (!node)
         return NULL;
 
@@ -843,9 +843,9 @@ ASTNode *createIdentifierNode(char *name)
 }
 
 /* @Node_Blocks - Blocks */
-ASTNode *createBlockNode(void)
+ASTNode *createBlockNode(Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_BLOCK);
+    ASTNode *node = createASTNode(NODE_BLOCK, arena);
     if (!node)
         return NULL;
     node->data.block->statements = NULL;
@@ -854,18 +854,18 @@ ASTNode *createBlockNode(void)
     return node;
 }
 
-ASTNode *createFunctionBlock()
+ASTNode *createFunctionBlock(Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK);
+    ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK, arena);
     if (!node)
         return NULL;
 
     return node;
 }
 
-ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch)
+ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_IF_STATEMENT);
+    ASTNode *node = createASTNode(NODE_IF_STATEMENT, arena);
     if (!node)
         return NULL;
     node->data.ifStatement->condition = condition;
@@ -874,9 +874,9 @@ ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_b
     return node;
 }
 
-ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body)
+ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_FOR_STATEMENT);
+    ASTNode *node = createASTNode(NODE_FOR_STATEMENT, arena);
     if (!node)
         return NULL;
     node->data.forStatement->initializer = initializer;
@@ -886,9 +886,9 @@ ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *incre
     return node;
 }
 
-ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body)
+ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_WHILE_STATEMENT);
+    ASTNode *node = createASTNode(NODE_WHILE_STATEMENT, arena);
     if (!node)
         return NULL;
     node->data.whileStatement->condition = condition;
@@ -897,19 +897,19 @@ ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body)
 }
 
 /* @Node_Blocks - Literals */
-ASTNode *createBooleanLiteralExpr(int value)
+ASTNode *createBooleanLiteralExpr(int value, Arena *arena)
 {
-    return createBooleanLiteralNode(value);
+    return createBooleanLiteralNode(value, arena);
 }
 
-ASTNode *createStringLiteralExpr(char *str)
+ASTNode *createStringLiteralExpr(char *str, Arena *arena)
 {
-    return createStringLiteralNode(str);
+    return createStringLiteralNode(str, arena);
 }
 
-ASTNode *createStringExpr(char *str)
+ASTNode *createStringExpr(char *str, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_STRING_EXPRESSION);
+    ASTNode *node = createASTNode(NODE_STRING_EXPRESSION, arena);
     if (!node)
         return NULL;
     node->data.literal->dataType = DATA_TYPE_STRING;
@@ -918,9 +918,9 @@ ASTNode *createStringExpr(char *str)
 }
 
 /* @Node_Creation - Variables */
-ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference)
+ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena);
     if (!node)
     {
         logMessage("ERROR", __LINE__, "AST", "Failed to create variable declaration node");
@@ -935,7 +935,7 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
 
     node->data.varDecl->type = dataType;
     node->data.varDecl->name = strdup(var_name);
-    node->data.varDecl->varNameNode = createVariableNameNodeContainer(var_name);
+    node->data.varDecl->varNameNode = createVariableNameNodeContainer(var_name, arena);
     node->metaData->line = line;
     node->data.varDecl->isGlobal = isGlobal;
     node->data.varDecl->isLocal = !isGlobal;
@@ -946,9 +946,9 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
     return node;
 }
 
-ASTNode *createVariableExpr(char *name, bool isReference)
+ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_VAR_NAME);
+    ASTNode *node = createASTNode(NODE_VAR_NAME, arena);
     if (!node)
         return NULL;
     node->data.varName->varName = strdup(name);
@@ -957,9 +957,9 @@ ASTNode *createVariableExpr(char *name, bool isReference)
 }
 
 /* @Node_Creation - Functions */
-ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType)
+ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION);
+    ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION, arena);
     if (!node)
     {
         return NULL;
@@ -980,9 +980,9 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     return node;
 }
 
-ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType)
+ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION);
+    ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION, arena);
     if (!node)
         return NULL;
 
@@ -1028,23 +1028,23 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataTyp
     return node;
 }
 
-ASTNode *createFunctionCallNode(void)
+ASTNode *createFunctionCallNode(Arena *arena)
 {
-    return createASTNode(NODE_FUNCTION_CALL);
+    return createASTNode(NODE_FUNCTION_CALL, arena);
 }
 
-ASTNode *createReturnNode(ASTNode *returnValue)
+ASTNode *createReturnNode(ASTNode *returnValue, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT);
+    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena);
     if (!node)
         return NULL;
     node->data.returnStatement->returnValue = returnValue;
     return node;
 }
 
-ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType)
+ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT);
+    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena);
     if (!node)
         return NULL;
     node->data.returnStatement->expression = returnExpression;
@@ -1053,19 +1053,19 @@ ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnTy
 }
 
 /* @Node_Creation - Parameters */
-ASTNode *createParamListNode(void)
+ASTNode *createParamListNode(Arena *arena)
 {
-    return createASTNode(NODE_PARAM_LIST);
+    return createASTNode(NODE_PARAM_LIST, arena);
 }
 
-ASTNode *createArgumentListNode(void)
+ASTNode *createArgumentListNode(Arena *arena)
 {
-    return createASTNode(NODE_ARG_LIST);
+    return createASTNode(NODE_ARG_LIST, arena);
 }
 
-ASTNode *createParamNode(char *name, CryoDataType type)
+ASTNode *createParamNode(char *name, CryoDataType type, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena);
     if (!node)
         return NULL;
     node->data.varDecl->name = strdup(name);
@@ -1075,9 +1075,9 @@ ASTNode *createParamNode(char *name, CryoDataType type)
     return node;
 }
 
-ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral)
+ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION);
+    ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena);
     if (!node)
     {
         return NULL;
@@ -1088,24 +1088,24 @@ ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral)
     {
         // Transform the string to an integer
         int value = atoi(name);
-        initVal = createIntLiteralNode(value);
+        initVal = createIntLiteralNode(value, arena);
     }
     if (isLiteral && type == DATA_TYPE_FLOAT)
     {
         // Transform the string to a float
         float value = atof(name);
-        initVal = createFloatLiteralNode(value);
+        initVal = createFloatLiteralNode(value, arena);
     }
     if (isLiteral && type == DATA_TYPE_STRING)
     {
         // Just use the string as the initializer
-        initVal = createStringLiteralNode(name);
+        initVal = createStringLiteralNode(name, arena);
     }
     if (isLiteral && type == DATA_TYPE_BOOLEAN)
     {
         // Transform the string to a boolean
         int value = strcmp(name, "true") == 0 ? 1 : 0;
-        initVal = createBooleanLiteralNode(value);
+        initVal = createBooleanLiteralNode(value, arena);
     }
 
     node->data.varDecl->name = strdup(name);
@@ -1117,18 +1117,18 @@ ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral)
 }
 
 /* @Node_Creation - Modules & Externals */
-ASTNode *createImportNode(char *importPath)
+ASTNode *createImportNode(char *importPath, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT);
+    ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT, arena);
     if (!node)
         return NULL;
     // node->data.importStatement->modulePath = strdup(importPath);
     return node;
 }
 
-ASTNode *createExternNode(ASTNode *externNode)
+ASTNode *createExternNode(ASTNode *externNode, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_EXTERN_STATEMENT);
+    ASTNode *node = createASTNode(NODE_EXTERN_STATEMENT, arena);
     if (!node)
         return NULL;
     node->data.externNode->externNode = externNode;
@@ -1136,23 +1136,23 @@ ASTNode *createExternNode(ASTNode *externNode)
 }
 
 /* @Node_Creation - Conditionals */
-ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch)
+ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena)
 {
-    return createIfBlock(condition, then_branch, else_branch);
+    return createIfBlock(condition, then_branch, else_branch, arena);
 }
 
-ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body)
+ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena)
 {
-    return createForBlock(initializer, condition, increment, body);
+    return createForBlock(initializer, condition, increment, body, arena);
 }
 
-ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body)
+ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena)
 {
-    return createWhileBlock(condition, body);
+    return createWhileBlock(condition, body, arena);
 }
 
 /* @Node_Creation - Arrays */
-ASTNode *createArrayLiteralNode(void)
+ASTNode *createArrayLiteralNode(Arena *arena)
 {
-    return createASTNode(NODE_ARRAY_LITERAL);
+    return createASTNode(NODE_ARRAY_LITERAL, arena);
 }

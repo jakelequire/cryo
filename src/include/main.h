@@ -1,8 +1,8 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         *  
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          * 
+ *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -25,21 +25,20 @@
 #include "compiler/symtable.h"
 #include "compiler/error.h"
 #include "utils/logger.h"
-
-
+#include "utils/arena.h"
 
 // C++ headers
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void generateCodeWrapper(ASTNode* node);
+    void generateCodeWrapper(ASTNode *node);
 
 #ifdef __cplusplus
 }
 #endif
 
-int main            (int argc, char* argv[]);
-
+int main(int argc, char *argv[]);
 
 #endif // MAIN_H

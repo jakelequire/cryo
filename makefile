@@ -100,7 +100,7 @@ COMPILER_SRC = 	$(COMPILER_DIR)containers.c $(COMPILER_DIR)ast.c $(COMPILER_DIR)
 CLI_SRC = $(CLI_DIR)compiler.c $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
 			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c 
 
-UTILS_SRC = $(UTILS_DIR)logger.c $(UTILS_DIR)fs.c $(UTILS_DIR)supportlibs.c $(UTILS_DIR)arena.c $(UTILS_DIR)utility.c
+UTILS_SRC = $(UTILS_DIR)fs.c $(UTILS_DIR)supportlibs.c $(UTILS_DIR)arena.c $(UTILS_DIR)utility.c
 MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
@@ -119,7 +119,7 @@ CRYO_SRC = $(CRYO_DIR)cryolib.c
 COMPILER_OBJ =  $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
 				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o
 
-UTILS_OBJ = $(OBJ_DIR)logger.o $(OBJ_DIR)fs.o $(OBJ_DIR)supportlibs.o $(OBJ_DIR)arena.o $(OBJ_DIR)utility.o
+UTILS_OBJ = $(OBJ_DIR)fs.o $(OBJ_DIR)supportlibs.o $(OBJ_DIR)arena.o $(OBJ_DIR)utility.o
 
 CLI_OBJ = $(OBJ_DIR)compiler.o $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o \
 			$(OBJ_DIR)cmd_devWatch.o $(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o 
@@ -159,9 +159,6 @@ $(BIN_DIR):
 
 # ---------------------------------------------
 # Utils Compilation rules
-$(OBJ_DIR)logger.o: $(UTILS_DIR)logger.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
 $(OBJ_DIR)fs.o: $(UTILS_DIR)fs.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 

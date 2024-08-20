@@ -47,17 +47,23 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Initialize the Arena
+    Arena *arena;
+    initArena(arena, 1024, 16);
+
+    // Initialize the call stack
     initCallStack(&callStack, 10);
 
+    // Initialize the lexer
     Lexer lexer;
     initLexer(&lexer, source);
     printf("\n[DEBUG] Lexer initialized\n\n");
 
     // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable();
+    CryoSymbolTable *table = createSymbolTable(arena);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table);
+    ASTNode *programNode = parseProgram(&lexer, table, arena);
 
     if (programNode != NULL)
     {
@@ -66,7 +72,7 @@ int main(int argc, char *argv[])
         ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
         memcpy(nodeCpy, programNode, sizeof(ASTNode));
 
-        printAST(nodeCpy, 0);
+        printAST(nodeCpy, 0, arena);
 
         printf("\n>===------- End Tree ------===<\n\n");
 
@@ -75,7 +81,7 @@ int main(int argc, char *argv[])
         printf(">===------------- CPP End Code Generation -------------===<\n");
         printf("[Main] IR code generated, freeing AST.\n");
 
-        freeAST(programNode);
+        freeAST(programNode, arena);
     }
     else
     {

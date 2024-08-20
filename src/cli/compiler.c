@@ -16,16 +16,18 @@
  ********************************************************************************/
 #include "cli/compiler.h"
 
-
-
-
-
 // <cryoCompiler>
-int cryoCompiler(const char* source) {
-    if(!source) {
+int cryoCompiler(const char *source)
+{
+    if (!source)
+    {
         fprintf(stderr, "\n[Main] Error in reading source.\n");
         return 1;
     }
+
+    // Initialize the Arena
+    Arena *arena;
+    initArena(arena, 1024, 16);
 
     initCallStack(&callStack, 10);
 
@@ -33,33 +35,31 @@ int cryoCompiler(const char* source) {
     initLexer(&lexer, source);
     printf("\n[DEBUG] Lexer initialized\n\n");
 
-
     // Initialize the symbol table
-    CryoSymbolTable* table = createSymbolTable();
+    CryoSymbolTable *table = createSymbolTable(arena);
 
     // Parse the source code
-    ASTNode* programNode = parseProgram(&lexer, table);
+    ASTNode *programNode = parseProgram(&lexer, table, arena);
 
-        if (programNode != NULL) {
+    if (programNode != NULL)
+    {
         printf("\n\n>===------- AST Tree -------===<\n\n");
-        printAST(programNode, 0);
+        printAST(programNode, 0, arena);
         printf("\n>===------- End Tree ------===<\n\n");
 
-        // Perform semantic analysis
-        if (analyzeNode(programNode, table)) {
-            printf("[Main] Generating IR code...\n");
-            generateCodeWrapper(programNode); // <- The C++ wrapper function
-            printf(">===------------- CPP End Code Generation -------------===<\n");
-            printf("[Main] IR code generated, freeing AST.\n");
-        } else {
-            fprintf(stderr, "[Main] Semantic analysis failed.\n");
-            return 1;
-        }
+        printf("[Main] Generating IR code...\n");
+        generateCodeWrapper(programNode); // <- The C++ wrapper function
+        printf(">===------------- CPP End Code Generation -------------===<\n");
+        printf("[Main] IR code generated, freeing AST.\n");
 
-        freeAST(programNode);
-    } else {
+        freeAST(programNode, arena);
+    }
+    else
+    {
         fprintf(stderr, "[Main] Failed to parse program.\n");
         freeCallStack(&callStack);
+        freeSymbolTable(table, arena);
+        freeArena(arena);
         return 1;
     }
 

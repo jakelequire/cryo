@@ -33,6 +33,7 @@
 #include "utils/fs.h"
 #include "utils/logger.h"
 #include "utils/utility.h"
+#include "utils/arena.h"
 /*---------<end>---------*/
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
@@ -58,73 +59,73 @@ typedef struct
 /* =========================================================== */
 /* @Function_Prototypes                                        */
 
-void printLine(const char *source, int line);
+void printLine(const char *source, int line, Arena *arena);
 
 /* @Entry_Point | Lexer passes tokens to the entry point to be processed. */
-ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table);
+ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena);
 
 /* @Helper_Functions | Debugging, Errors, Walkers */
-void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table);
-void getNextToken(Lexer *lexer);
-void error(char *message, char *functionName, CryoSymbolTable *table);
-void debugCurrentToken(void);
-char *getNamespaceName(Lexer *lexer);
-Token peekNextUnconsumedToken(Lexer *lexer);
+void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena);
+void getNextToken(Lexer *lexer, Arena *arena);
+void error(char *message, char *functionName, CryoSymbolTable *table, Arena *arena);
+void debugCurrentToken(Arena *arena);
+char *getNamespaceName(Lexer *lexer, Arena *arena);
+Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena);
 
 /* @DataType_Management */
-CryoDataType getCryoDataType(const char *typeStr);
-CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table);
-int getOperatorPrecedence(CryoTokenType type);
+CryoDataType getCryoDataType(const char *typeStr, Arena *arena);
+CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table, Arena *arena);
+int getOperatorPrecedence(CryoTokenType type, Arena *arena);
 
 /* @Parser_Management */
 // ASTNode* createProgramNode               (void);     !! Move to AST
-void addStatementToProgram(ASTNode *program, CryoSymbolTable *table, ASTNode *statement);
+void addStatementToProgram(ASTNode *program, CryoSymbolTable *table, ASTNode *statement, Arena *arena);
 
 /* @ASTNode_Parsing - Expressions & Statements*/
-ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseExpressionStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, ASTNode *left, int precedence);
-ASTNode *parseUnaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseExpressionStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, ASTNode *left, int precedence, Arena *arena);
+ASTNode *parseUnaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 
 /* @ASTNode_Parsing - Blocks*/
-ASTNode *parseBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode *parseBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 
 /* @ASTNode_Parsing - Variables*/
-ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 
 /* @ASTNode_Parsing - Functions*/
-ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoVisibilityType visibility);
-ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *functionName);
-ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoVisibilityType visibility, Arena *arena);
+ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *functionName, Arena *arena);
+ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 /* @ASTNode_Parsing - Parameters */
-ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoDataType expectedType);
-void addParameterToList(CryoSymbolTable *table, ASTNode *paramListNode, ASTNode *param);
-void addArgumentToList(CryoSymbolTable *table, ASTNode *argListNode, ASTNode *arg);
-void addArgumentToFunctionCall(CryoSymbolTable *table, ASTNode *functionCall, ASTNode *arg);
-void addParameterToExternDecl(CryoSymbolTable *table, ASTNode *externDeclNode, ASTNode *param);
+ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoDataType expectedType, Arena *arena);
+void addParameterToList(CryoSymbolTable *table, ASTNode *paramListNode, ASTNode *param, Arena *arena);
+void addArgumentToList(CryoSymbolTable *table, ASTNode *argListNode, ASTNode *arg, Arena *arena);
+void addArgumentToFunctionCall(CryoSymbolTable *table, ASTNode *functionCall, ASTNode *arg, Arena *arena);
+void addParameterToExternDecl(CryoSymbolTable *table, ASTNode *externDeclNode, ASTNode *param, Arena *arena);
 
 /* @ASTNode_Parsing - Modules & Externals */
-ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseExtern(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseExtern(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 
 /* @ASTNode_Parsing - Conditionals */
-ASTNode *parseIfStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-ASTNode *parseWhileStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
+ASTNode *parseIfStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseWhileStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 
 /* @ASTNode_Parsing - Arrays */
-ASTNode *parseArrayLiteral(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context);
-void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, ASTNode *element);
+ASTNode *parseArrayLiteral(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, ASTNode *element, Arena *arena);
 
 /* =========================================================== */
 /* @DEBUG | Used to debug the parser in a different executable */

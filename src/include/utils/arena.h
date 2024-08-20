@@ -35,6 +35,9 @@
 // Structs
 /**
  * @brief Arena structure for managing memory allocations.
+ * each arena has a base pointer, size, offset, alignment, next arena, free list, and total allocations.
+ *
+ * @note The free list is used for pooling memory blocks to reduce fragmentation.
  */
 typedef struct Arena
 {

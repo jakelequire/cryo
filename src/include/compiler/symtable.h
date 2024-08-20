@@ -22,6 +22,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "utils/utility.h"
+#include "utils/arena.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -50,23 +51,21 @@ typedef struct CryoSymbolTable
     int scopeDepth;
 } CryoSymbolTable;
 
-char *logSymCryoDataType(CryoDataType type);
+CryoSymbolTable *createSymbolTable(Arena *arena);
+void freeSymbolTable(CryoSymbolTable *table, Arena *arena);
+void printSymbolTable(CryoSymbolTable *table, Arena *arena);
+void enterScope(CryoSymbolTable *table, Arena *arena);
+void jumpScope(CryoSymbolTable *table, Arena *arena);
+void exitScope(CryoSymbolTable *table, Arena *arena);
+void enterBlockScope(CryoSymbolTable *table, Arena *arena);
+void exitBlockScope(CryoSymbolTable *table, Arena *arena);
+void addSymbol(CryoSymbolTable *table, CryoSymbol *symbol, Arena *arena);
+CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name, Arena *arena);
 
-CryoSymbolTable *createSymbolTable(void);
-void freeSymbolTable(CryoSymbolTable *table);
-void printSymbolTable(CryoSymbolTable *table);
-void enterScope(CryoSymbolTable *table);
-void jumpScope(CryoSymbolTable *table);
-void exitScope(CryoSymbolTable *table);
-void enterBlockScope(CryoSymbolTable *table);
-void exitBlockScope(CryoSymbolTable *table);
-void addSymbol(CryoSymbolTable *table, CryoSymbol *symbol);
-CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name);
+CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
+void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 
-CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node);
-void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node);
-
-void traverseAST(ASTNode *node, CryoSymbolTable *table);
-bool analyzeNode(ASTNode *node, CryoSymbolTable *table);
+void traverseAST(ASTNode *node, CryoSymbolTable *table, Arena *arena);
+bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena);
 
 #endif // SYMTABLE_H
