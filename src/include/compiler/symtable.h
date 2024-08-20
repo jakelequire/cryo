@@ -59,13 +59,11 @@ void jumpScope(CryoSymbolTable *table, Arena *arena);
 void exitScope(CryoSymbolTable *table, Arena *arena);
 void enterBlockScope(CryoSymbolTable *table, Arena *arena);
 void exitBlockScope(CryoSymbolTable *table, Arena *arena);
-void addSymbol(CryoSymbolTable *table, CryoSymbol *symbol, Arena *arena);
 CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name, Arena *arena);
 
 CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 
-void traverseAST(ASTNode *node, CryoSymbolTable *table, Arena *arena);
 bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena);
 
 #endif // SYMTABLE_H

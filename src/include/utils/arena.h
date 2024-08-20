@@ -30,6 +30,21 @@
 // Macros
 #define ARENA_ALLOC(arena, size) arena_alloc_aligned(arena, size, 8)
 #define DEBUG_ARENA_ALLOC(arena, size) debugArenaAlloc(arena, size, __FILE__, __LINE__)
+#define SMALL_POOL_SIZE 32
+#define MEDIUM_POOL_SIZE 128
+#define LARGE_POOL_SIZE 512
+
+typedef struct PoolBlock
+{
+    struct PoolBlock *next;
+} PoolBlock;
+
+typedef struct MemoryPool
+{
+    size_t block_size;
+    PoolBlock *free_list;
+    size_t num_blocks;
+} MemoryPool;
 
 // ------------------------------
 // Structs
@@ -48,6 +63,10 @@ typedef struct Arena
     struct Arena *next;            // For chaining arenas
     struct MemoryBlock *free_list; // Pooling free blocks
     size_t total_allocations;      // For debugging or tracking purposes
+    MemoryPool small_pool;
+    MemoryPool medium_pool;
+    MemoryPool large_pool;
+
 } Arena;
 
 /**
@@ -70,6 +89,32 @@ typedef struct AllocationHeader
 } AllocationHeader;
 // ------------------------------
 // Function prototypes
+
+/**
+ * @brief Initializes a memory pool with the specified block size and number of blocks.
+ *
+ * @param pool Pointer to the MemoryPool structure to initialize.
+ * @param block_size The size of each memory block in bytes.
+ * @param num_blocks The number of blocks to allocate in the pool.
+ *
+ * @note This function initializes the free list with all blocks in the pool.
+ */
+void initMemoryPool(MemoryPool *pool, size_t block_size, size_t num_blocks);
+
+/**
+ * @brief Allocates a block of memory from the pool.
+ *
+ * @param pool Pointer to the MemoryPool from which to allocate memory.
+ */
+void *poolAlloc(MemoryPool *pool);
+
+/**
+ * @brief Frees a block of memory from the pool.
+ *
+ * @param pool Pointer to the MemoryPool from which to free memory.
+ * @param ptr Pointer to the memory block to free.
+ */
+void poolFree(MemoryPool *pool, void *ptr);
 
 /**
  * @brief Initializes a memory arena with the specified size and alignment.

@@ -25,15 +25,15 @@ int cryoCompiler(const char *source)
         return 1;
     }
 
-    // Initialize the Arena
-    Arena *arena;
-    initArena(arena, 1024, 16);
-
     initCallStack(&callStack, 10);
 
     Lexer lexer;
     initLexer(&lexer, source);
     printf("\n[DEBUG] Lexer initialized\n\n");
+
+    // Initialize the Arena
+    Arena *arena;
+    initArena(arena, 1024, 16);
 
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
@@ -57,9 +57,6 @@ int cryoCompiler(const char *source)
     else
     {
         fprintf(stderr, "[Main] Failed to parse program.\n");
-        freeCallStack(&callStack);
-        freeSymbolTable(table, arena);
-        freeArena(arena);
         return 1;
     }
 

@@ -16,10 +16,48 @@
  ********************************************************************************/
 #include "utils/arena.h"
 
+void initMemoryPool(MemoryPool *pool, size_t block_size, size_t num_blocks)
+{
+    pool->block_size = block_size;
+    pool->num_blocks = num_blocks;
+    pool->free_list = NULL;
+
+    // Allocate memory for the pool
+    char *memory = (char *)malloc(block_size * num_blocks);
+    for (size_t i = 0; i < num_blocks; i++)
+    {
+        PoolBlock *block = (PoolBlock *)(memory + i * block_size);
+        block->next = pool->free_list;
+        pool->free_list = block;
+    }
+}
+
+void *poolAlloc(MemoryPool *pool)
+{
+    if (pool->free_list == NULL)
+    {
+        return NULL; // Pool is empty
+    }
+    PoolBlock *block = pool->free_list;
+    pool->free_list = block->next;
+    return block;
+}
+
+void poolFree(MemoryPool *pool, void *ptr)
+{
+    PoolBlock *block = (PoolBlock *)ptr;
+    block->next = pool->free_list;
+    pool->free_list = block;
+}
+
 void initArena(Arena *arena, size_t size, size_t alignment)
 {
     printf("[INFO] { Arena } Initializing arena with size %zu\n", size);
+    // the `arena` parameter is an uninitialized pointer
+    arena = (Arena *)aligned_alloc(alignment, sizeof(Arena));
+
     arena->base = aligned_alloc(alignment, size);
+    printf("[INFO] { Arena } Arena base address: %p\n", arena->base);
     if (!arena->base)
     {
         printf("[ERROR] { Arena } Failed to allocate memory for arena\n");
@@ -32,6 +70,12 @@ void initArena(Arena *arena, size_t size, size_t alignment)
     arena->free_list = NULL;
     arena->total_allocations = 0;
     printf("[INFO] { Arena } Arena initialized...\n");
+
+    initMemoryPool(&arena->small_pool, 16, 1024);
+    initMemoryPool(&arena->medium_pool, 32, 512);
+    initMemoryPool(&arena->large_pool, 64, 256);
+
+    printf("[INFO] { Arena } Memory pools initialized...\n");
 }
 
 void *debugArenaAlloc(Arena *arena, size_t size, const char *file, int line)

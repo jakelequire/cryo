@@ -259,8 +259,6 @@ CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name, Arena *arena)
 // <analyzeNode>
 bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {
-    // traverseAST(node, table);
-
     // Cleanup
     for (int i = 0; i < table->count; i++)
     {
