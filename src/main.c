@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
     const char *filePath = argv[1];
     char *source = readFile(filePath);
     if (source == NULL)
@@ -46,10 +49,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Failed to read source file.\n");
         return 1;
     }
-
-    // Initialize the Arena
-    Arena *arena;
-    initArena(arena, 1024, 16);
 
     // Initialize the call stack
     initCallStack(&callStack, 10);
