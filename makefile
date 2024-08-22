@@ -27,8 +27,9 @@
 # --------------------------------------------- #
 OPTIMIZATION = -Og
 DEBUG_FLAGS =  -v -D_CRT_SECURE_NO_WARNINGS 
-C_STANDARD = -std=c17
-CXX_STANDARD = -std=c++17
+# C23
+C_STANDARD = -std=c2x
+CXX_STANDARD = -std=c++20
 
 # OS-specific settings for compilers
 ifeq ($(OS), Windows_NT)

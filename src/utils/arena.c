@@ -16,6 +16,9 @@
  ********************************************************************************/
 #include "utils/arena.h"
 
+void *aligned_alloc(size_t alignment, size_t size);
+
+
 void initMemoryPool(MemoryPool *pool, size_t block_size, size_t num_blocks)
 {
     pool->block_size = block_size;

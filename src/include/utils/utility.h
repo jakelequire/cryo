@@ -16,10 +16,16 @@
  ********************************************************************************/
 #ifndef UTILITY_H
 #define UTILITY_H
+#ifdef _WIN32
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#else // UNIX
 #include <aio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#endif
 
 // >==------ Prototypes ------==< //
 

@@ -26,6 +26,9 @@
 #include <stddef.h>
 #include <sys/stat.h>
 
+// Forward declarations
+void *aligned_alloc(size_t alignment, size_t size);
+
 // ------------------------------
 // Macros
 #define ARENA_ALLOC(arena, size) arena_alloc_aligned(arena, size, 8)

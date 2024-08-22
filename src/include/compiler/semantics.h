@@ -32,11 +32,11 @@
 
 // Symbol Management
 
-void checkVariable(ASTNode *node, CryoSymbolTable *table);
-void checkAssignment(ASTNode *node, CryoSymbolTable *table);
-void checkFunctionCall(ASTNode *node, CryoSymbolTable *table);
-void traverseAST(ASTNode *node, CryoSymbolTable *table);
-CryoDataType getExpressionType(ASTNode *node);
+void checkVariable(ASTNode *node, CryoSymbolTable *table, Arena *arena);
+void checkAssignment(ASTNode *node, CryoSymbolTable *table, Arena *arena);
+void checkFunctionCall(ASTNode *node, CryoSymbolTable *table, Arena *arena);
+void traverseAST(ASTNode *node, CryoSymbolTable *table, Arena *arena);
+CryoDataType getExpressionType(ASTNode *node, Arena *arena);
 /*-----<end_prototypes>-----*/
 
 #endif // SEMANTICS_H

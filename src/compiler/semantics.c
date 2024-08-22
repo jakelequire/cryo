@@ -20,9 +20,9 @@
 // >===--------- Semantic Checks ----------===< //
 // >===------------------------------------===< //
 // Check variable usage
-void checkVariable(ASTNode *node, CryoSymbolTable *table)
+void checkVariable(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {
-    CryoSymbol *symbol = findSymbol(table, node->data.varDecl->name);
+    CryoSymbol *symbol = findSymbol(table, node->data.varDecl->name, arena);
     if (!symbol)
     {
         fprintf(stderr, "[Semantics] Error: Undefined variable '%s'\n", node->data.varDecl->name);
@@ -31,9 +31,9 @@ void checkVariable(ASTNode *node, CryoSymbolTable *table)
 }
 
 // Check if an assignment is valid
-void checkAssignment(ASTNode *node, CryoSymbolTable *table)
+void checkAssignment(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {
-    CryoSymbol *symbol = findSymbol(table, node->data.varName->varName);
+    CryoSymbol *symbol = findSymbol(table, node->data.varName->varName, arena);
     if (!symbol)
     {
         fprintf(stderr, "[Sema] Error: Undefined variable '%s' in assignment\n", node->data.varName->varName);
@@ -47,7 +47,7 @@ void checkAssignment(ASTNode *node, CryoSymbolTable *table)
 
     // Assuming the right-hand side of the assignment is an expression
     ASTNode *rhsNode = node->data.bin_op->right; // Assuming assignment is a binary operation
-    CryoDataType rhsType = getExpressionType(rhsNode);
+    CryoDataType rhsType = getExpressionType(rhsNode, arena);
 
     if (symbol->valueType != rhsType)
     {
@@ -57,9 +57,9 @@ void checkAssignment(ASTNode *node, CryoSymbolTable *table)
 }
 
 // Check a function call
-void checkFunctionCall(ASTNode *node, CryoSymbolTable *table)
+void checkFunctionCall(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {
-    CryoSymbol *symbol = findSymbol(table, node->data.functionCall->name);
+    CryoSymbol *symbol = findSymbol(table, node->data.functionCall->name, arena);
     if (!symbol || symbol->valueType != DATA_TYPE_FUNCTION)
     {
         fprintf(stderr, "[Sema] Error: Undefined function '%s'\n", node->data.functionCall->name);
@@ -72,9 +72,9 @@ void checkFunctionCall(ASTNode *node, CryoSymbolTable *table)
     }
 }
 
-void checkFunctionDeclaration(ASTNode *node, CryoSymbolTable *table)
+void checkFunctionDeclaration(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {
-    enterScope(table);
+    enterScope(table, arena);
 
     // Add function parameters to the symbol table
     for (int i = 0; i < node->data.functionDecl->paramCount; i++)
@@ -87,17 +87,17 @@ void checkFunctionDeclaration(ASTNode *node, CryoSymbolTable *table)
     // traverseAST(node->data.functionDecl->body, table);
 
     // Ensure return type matches
-    CryoDataType returnType = getExpressionType(node->data.functionDecl->body);
+    CryoDataType returnType = getExpressionType(node->data.functionDecl->body, arena);
     if (node->data.functionDecl->returnType != returnType)
     {
         fprintf(stderr, "[Sema] Error: Return type mismatch in function '%s'.\n", node->data.functionDecl->name);
         exit(1);
     }
 
-    exitScope(table);
+    exitScope(table, arena);
 }
 
-void checkBinaryExpression(ASTNode *node, CryoSymbolTable *table)
+void checkBinaryExpression(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {
     if (!node)
         return;
@@ -109,8 +109,8 @@ void checkBinaryExpression(ASTNode *node, CryoSymbolTable *table)
     // traverseAST(left, table);
     // traverseAST(right, table);
 
-    CryoDataType leftType = getExpressionType(left);
-    CryoDataType rightType = getExpressionType(right);
+    CryoDataType leftType = getExpressionType(left, arena);
+    CryoDataType rightType = getExpressionType(right, arena);
 
     // Check if types of left and right operands are compatible
     if (leftType != rightType)
@@ -124,7 +124,7 @@ void checkBinaryExpression(ASTNode *node, CryoSymbolTable *table)
 }
 
 // Helper function to get the type of an expression
-CryoDataType getExpressionType(ASTNode *node)
+CryoDataType getExpressionType(ASTNode *node, Arena *arena)
 {
     switch (node->metaData->type)
     {
