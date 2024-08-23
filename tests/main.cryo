@@ -2,8 +2,10 @@
 extern function printInt(num: int) -> void;
 extern function printIntPtr(num: int) -> void;
 extern function printConstIntPtr(num: int) -> void;
+extern function printf(str: string) -> void;
 
 const qix: int = 34;
+const foo: string = "Hello, world!";
 
 public function add(a: int, b: int) -> void {
     // const c: int = a + b;
@@ -11,8 +13,8 @@ public function add(a: int, b: int) -> void {
 }
 
 public function main() -> void {
-    // add(2, 3);
-    printInt(32);
+    add(2, 3);
+    printf(foo);
     // printIntPtr(qix);
     // printConstIntPtr(qix);
     return;

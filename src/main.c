@@ -75,12 +75,15 @@ int main(int argc, char *argv[])
 
         printf("\n>===------- End Tree ------===<\n\n");
 
+        DEBUG_ARENA_PRINT(arena);
+
         printf("[Main] Generating IR code...\n");
         generateCodeWrapper(nodeCpy); // <- The C++ wrapper function
         printf(">===------------- CPP End Code Generation -------------===<\n");
         printf("[Main] IR code generated, freeing AST.\n");
 
-        freeAST(programNode, arena);
+        // Free the Arena
+        freeArena(arena);
     }
     else
     {

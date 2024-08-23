@@ -28,9 +28,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "utils/utility.h"
+#include "utility.h"
 
-#define ARENA_SIZE 1024 * 1024
+#define ARENA_SIZE 1024 * 512
 #define ALIGNMENT 16
 
 extern char *strdup(const char *__s);
@@ -85,6 +85,7 @@ typedef struct Arena
 
 #define ARENA_ALLOC(arena, size) arenaAllocAligned(arena, size, (arena)->alignment, __FILE__, __LINE__)
 #define DEBUG_ARENA_ALLOC(arena, size) debugArenaAlloc(arena, size, __FILE__, __LINE__)
+#define DEBUG_ARENA_PRINT(arena) arenaDebugPrint(arena)
 
 /**
  * @brief Allocation header structure for tracking debugging information.

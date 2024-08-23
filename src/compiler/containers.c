@@ -28,14 +28,14 @@
 ///```
 CryoProgram *createCryoProgramContainer(Arena *arena)
 {
-    CryoProgram *node = (CryoProgram *)calloc(1, sizeof(CryoProgram));
+    CryoProgram *node = (CryoProgram *)ARENA_ALLOC(arena, sizeof(CryoProgram));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate CryoProgram node.");
         return NULL;
     }
 
-    const int initialCapacity = 6; // Or any other small, non-zero value
+    const int initialCapacity = 6;
     node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -63,15 +63,15 @@ CryoProgram *createCryoProgramContainer(Arena *arena)
 ///
 CryoBlockNode *createCryoBlockNodeContainer(Arena *arena)
 {
-    CryoBlockNode *node = (CryoBlockNode *)calloc(1, sizeof(CryoBlockNode));
+    CryoBlockNode *node = (CryoBlockNode *)ARENA_ALLOC(arena, sizeof(CryoBlockNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate CryoBlockNode node.");
         return NULL;
     }
 
-    const int initialCapacity = 6; // Or any other small, non-zero value
-    node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    const int initialCapacity = 12; // Or any other small, non-zero value
+    node->statements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->statements)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
@@ -99,7 +99,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena)
 ///
 CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena)
 {
-    CryoFunctionBlock *block = (CryoFunctionBlock *)malloc(sizeof(CryoFunctionBlock));
+    CryoFunctionBlock *block = (CryoFunctionBlock *)ARENA_ALLOC(arena, sizeof(CryoFunctionBlock));
     if (block)
     {
         block->function = NULL;
@@ -121,7 +121,7 @@ CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena)
 ///
 CryoModule *createCryoModuleContainer(Arena *arena)
 {
-    CryoModule *node = (CryoModule *)calloc(1, sizeof(CryoModule));
+    CryoModule *node = (CryoModule *)ARENA_ALLOC(arena, sizeof(CryoModule));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate createCryoModuleContainer node.");
@@ -149,7 +149,7 @@ CryoModule *createCryoModuleContainer(Arena *arena)
 ///
 CryoMetaData *createMetaDataContainer(Arena *arena)
 {
-    CryoMetaData *node = (CryoMetaData *)calloc(1, sizeof(CryoMetaData));
+    CryoMetaData *node = (CryoMetaData *)ARENA_ALLOC(arena, sizeof(CryoMetaData));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate CryoMetaData node.");
@@ -180,7 +180,7 @@ CryoMetaData *createMetaDataContainer(Arena *arena)
 ///
 CryoScope *createCryoScopeContainer(Arena *arena)
 {
-    CryoScope *node = (CryoScope *)calloc(1, sizeof(CryoScope));
+    CryoScope *node = (CryoScope *)ARENA_ALLOC(arena, sizeof(CryoScope));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate CryoScope node.");
@@ -205,7 +205,7 @@ CryoScope *createCryoScopeContainer(Arena *arena)
 ///
 ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena)
 {
-    ExternNode *node = (ExternNode *)calloc(1, sizeof(ExternNode));
+    ExternNode *node = (ExternNode *)ARENA_ALLOC(arena, sizeof(ExternNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ExternNode node.");
@@ -244,7 +244,7 @@ ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena)
 ///
 ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena)
 {
-    ExternFunctionNode *node = (ExternFunctionNode *)calloc(1, sizeof(ExternFunctionNode));
+    ExternFunctionNode *node = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ExternFunctionNode node.");
@@ -278,7 +278,7 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena)
 ///
 FunctionDeclNode *createFunctionNodeContainer(Arena *arena)
 {
-    FunctionDeclNode *node = (FunctionDeclNode *)calloc(1, sizeof(FunctionDeclNode));
+    FunctionDeclNode *node = (FunctionDeclNode *)ARENA_ALLOC(arena, sizeof(FunctionDeclNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate FunctionDeclNode node.");
@@ -308,7 +308,7 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena)
 ///
 FunctionCallNode *createFunctionCallNodeContainer(Arena *arena)
 {
-    FunctionCallNode *node = (FunctionCallNode *)calloc(1, sizeof(FunctionCallNode));
+    FunctionCallNode *node = (FunctionCallNode *)ARENA_ALLOC(arena, sizeof(FunctionCallNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate FunctionCallNode node.");
@@ -341,7 +341,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena)
 ///
 LiteralNode *createLiteralNodeContainer(Arena *arena)
 {
-    LiteralNode *node = (LiteralNode *)calloc(1, sizeof(LiteralNode));
+    LiteralNode *node = (LiteralNode *)ARENA_ALLOC(arena, sizeof(LiteralNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate LiteralNode node.");
@@ -370,7 +370,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena)
 ///
 IfStatementNode *createIfStatementContainer(Arena *arena)
 {
-    IfStatementNode *node = (IfStatementNode *)calloc(1, sizeof(IfStatementNode));
+    IfStatementNode *node = (IfStatementNode *)ARENA_ALLOC(arena, sizeof(IfStatementNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate IfStatementNode node.");
@@ -398,7 +398,7 @@ IfStatementNode *createIfStatementContainer(Arena *arena)
 ///
 ForStatementNode *createForStatementNodeContainer(Arena *arena)
 {
-    ForStatementNode *node = (ForStatementNode *)calloc(1, sizeof(ForStatementNode));
+    ForStatementNode *node = (ForStatementNode *)ARENA_ALLOC(arena, sizeof(ForStatementNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ForStatementNode node.");
@@ -425,7 +425,7 @@ ForStatementNode *createForStatementNodeContainer(Arena *arena)
 ///
 WhileStatementNode *createWhileStatementNodeContainer(Arena *arena)
 {
-    WhileStatementNode *node = (WhileStatementNode *)calloc(1, sizeof(WhileStatementNode));
+    WhileStatementNode *node = (WhileStatementNode *)ARENA_ALLOC(arena, sizeof(WhileStatementNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate WhileStatementNode node.");
@@ -454,7 +454,7 @@ WhileStatementNode *createWhileStatementNodeContainer(Arena *arena)
 ///
 CryoExpressionNode *createExpressionNodeContainer(Arena *arena)
 {
-    CryoExpressionNode *node = (CryoExpressionNode *)calloc(1, sizeof(CryoExpressionNode));
+    CryoExpressionNode *node = (CryoExpressionNode *)ARENA_ALLOC(arena, sizeof(CryoExpressionNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ExpressionNode node.");
@@ -485,7 +485,7 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena)
 ///
 CryoVariableNode *createVariableNodeContainer(Arena *arena)
 {
-    CryoVariableNode *node = (CryoVariableNode *)calloc(1, sizeof(CryoVariableNode));
+    CryoVariableNode *node = (CryoVariableNode *)ARENA_ALLOC(arena, sizeof(CryoVariableNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate VariableNode node.");
@@ -516,7 +516,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena)
 ///
 VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena)
 {
-    VariableNameNode *node = (VariableNameNode *)calloc(1, sizeof(VariableNameNode));
+    VariableNameNode *node = (VariableNameNode *)ARENA_ALLOC(arena, sizeof(VariableNameNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate VariableNameNode node.");
@@ -545,7 +545,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena)
 ///
 ParamNode *createParamNodeContainer(Arena *arena)
 {
-    ParamNode *node = (ParamNode *)calloc(1, sizeof(ParamNode));
+    ParamNode *node = (ParamNode *)ARENA_ALLOC(arena, sizeof(ParamNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ParamNode node.");
@@ -576,7 +576,7 @@ ParamNode *createParamNodeContainer(Arena *arena)
 ///
 ArgNode *createArgNodeContainer(Arena *arena)
 {
-    ArgNode *node = (ArgNode *)calloc(1, sizeof(ArgNode));
+    ArgNode *node = (ArgNode *)ARENA_ALLOC(arena, sizeof(ArgNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ArgNode node.");
@@ -605,7 +605,7 @@ ArgNode *createArgNodeContainer(Arena *arena)
 ///
 CryoReturnNode *createReturnNodeContainer(Arena *arena)
 {
-    CryoReturnNode *node = (CryoReturnNode *)calloc(1, sizeof(CryoReturnNode));
+    CryoReturnNode *node = (CryoReturnNode *)ARENA_ALLOC(arena, sizeof(CryoReturnNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ReturnNode node.");
@@ -632,7 +632,7 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena)
 ///
 CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena)
 {
-    CryoBinaryOpNode *node = (CryoBinaryOpNode *)calloc(1, sizeof(CryoBinaryOpNode));
+    CryoBinaryOpNode *node = (CryoBinaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoBinaryOpNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate BinaryOpNode node.");
@@ -658,7 +658,7 @@ CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena)
 ///
 CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena)
 {
-    CryoUnaryOpNode *node = (CryoUnaryOpNode *)calloc(1, sizeof(CryoUnaryOpNode));
+    CryoUnaryOpNode *node = (CryoUnaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoUnaryOpNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate UnaryOpNode node.");
@@ -684,7 +684,7 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena)
 ///
 CryoArrayNode *createArrayNodeContainer(Arena *arena)
 {
-    CryoArrayNode *node = (CryoArrayNode *)calloc(1, sizeof(CryoArrayNode));
+    CryoArrayNode *node = (CryoArrayNode *)ARENA_ALLOC(arena, sizeof(CryoArrayNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ArrayNode node.");
@@ -692,7 +692,7 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena)
     }
 
     const int initialCapacity = 6; // Or any other small, non-zero value
-    node->elements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    node->elements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->elements)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate elements array.");

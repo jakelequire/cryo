@@ -253,9 +253,9 @@ namespace Cryo
         CryoContext &cryoContext = compiler.getContext();
 
         cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating code for External Declaration Node");
-        char *functionName = strdup(node->data.externNode->externNode->data.functionDecl->name);
+        char *functionName = strdup(node->data.externFunction->name);
         cryoDebugger.logMessage("DEBUG", __LINE__, "Functions", "Function Name: " + std::string(functionName));
-        FunctionDeclNode *functionNode = node->data.externNode->externNode->data.functionDecl;
+        ExternFunctionNode *functionNode = node->data.externFunction;
         CryoDataType returnTypeData = functionNode->returnType;
         cryoDebugger.logMessage("DEBUG", __LINE__, "Functions", "Return Type: " + std::to_string(returnTypeData));
 

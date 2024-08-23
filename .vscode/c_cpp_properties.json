@@ -102,7 +102,7 @@
                 "/usr/local/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/local/bin/clang++"
+            "compilerPath": "/usr/lib/llvm-18/bin/clang++",
         }
     ],
     "version": 4

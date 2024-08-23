@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "utils/utility.h"
+#include "utility.h"
 
 #ifdef __cplusplus
 extern "C"

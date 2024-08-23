@@ -20,10 +20,10 @@
 // <createSymbolTable>
 CryoSymbolTable *createSymbolTable(Arena *arena)
 {
-    CryoSymbolTable *table = (CryoSymbolTable *)malloc(sizeof(CryoSymbolTable));
+    CryoSymbolTable *table = (CryoSymbolTable *)ARENA_ALLOC(arena, sizeof(CryoSymbolTable));
     table->count = 0;
     table->capacity = 10;
-    table->symbols = (CryoSymbol **)malloc(table->capacity * sizeof(CryoSymbol *));
+    table->symbols = (CryoSymbol **)ARENA_ALLOC(arena, table->capacity * sizeof(CryoSymbol *));
     table->scopeDepth = 0;
     return table;
 }
@@ -163,7 +163,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         return NULL;
     }
 
-    CryoSymbol *symbolNode = (CryoSymbol *)malloc(sizeof(CryoSymbol) * 2);
+    CryoSymbol *symbolNode = (CryoSymbol *)ARENA_ALLOC(arena, sizeof(CryoSymbol));
     if (!symbolNode)
     {
         logMessage("ERROR", __LINE__, "SymTable", "Failed to allocate memory for symbolNode");
@@ -234,7 +234,6 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
         error("Unsupported node type", "createCryoSymbol", table, arena);
-        free(symbolNode);
         return NULL;
     }
 

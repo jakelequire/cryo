@@ -92,7 +92,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena)
             // traverseAST(statement, table);
             addStatementToProgram(program, table, statement, arena);
             addASTNodeSymbol(table, statement, arena);
-            printSymbolTable(table, arena);
+            // printSymbolTable(table, arena);
         }
         else
         {
@@ -676,7 +676,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
         {
             error("[Parser] Unknown data type.", "parseVarDeclaration", table, arena);
         }
-        free(varType);
         getNextToken(lexer, arena);
     }
     else
@@ -825,8 +824,6 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
 
     ASTNode *externFunc = createExternFuncNode(functionName, params, returnType, arena);
 
-    free(functionName);
-    free(params);
     return externFunc;
 }
 // </parseExternFunctionDeclaration>
@@ -840,7 +837,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     functionCallNode->data.functionCall->name = strdup(functionName);
     functionCallNode->data.functionCall->argCount = 0;
     functionCallNode->data.functionCall->argCapacity = 8;
-    functionCallNode->data.functionCall->args = (ASTNode **)malloc(functionCallNode->data.functionCall->argCapacity * sizeof(ASTNode *));
+    functionCallNode->data.functionCall->args = (ASTNode **)ARENA_ALLOC(arena, functionCallNode->data.functionCall->argCapacity * sizeof(ASTNode *));
 
     CryoSymbol *funcSymbol = findSymbol(table, functionName, arena);
     if (!funcSymbol)
@@ -952,7 +949,6 @@ ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     // consume data type:
     getNextToken(lexer, arena);
     ASTNode *node = createParamNode(paramName, paramType, arena);
-    free(paramName);
     return node;
 }
 // </parseParameter>
@@ -963,7 +959,7 @@ ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     logMessage("INFO", __LINE__, "Parser", "Parsing parameter list...");
     consume(lexer, TOKEN_LPAREN, "Expected `(` to start parameter list.", "parseParameterList", table, arena);
 
-    ASTNode **paramListNode = (ASTNode **)malloc(8 * sizeof(ASTNode *));
+    ASTNode **paramListNode = (ASTNode **)ARENA_ALLOC(arena, 8 * sizeof(ASTNode *));
     if (!paramListNode)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to allocate memory for parameter list.");

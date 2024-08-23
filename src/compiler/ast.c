@@ -415,7 +415,7 @@ void freeAST(ASTNode *node, Arena *arena)
 // <createASTNode>
 ASTNode *createASTNode(CryoNodeType type, Arena *arena)
 {
-    ASTNode *node = (ASTNode *)calloc(1, sizeof(ASTNode));
+    ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     if (!node)
     {
         logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST node");
@@ -582,7 +582,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
     {
         block->statementCapacity = 8; // Start with a reasonable capacity
         block->statementCount = 0;
-        block->statements = (ASTNode **)malloc(sizeof(ASTNode *) * block->statementCapacity);
+        block->statements = (ASTNode **)ARENA_ALLOC(arena, sizeof(ASTNode *) * block->statementCapacity);
         if (!block->statements)
         {
             logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for function block statements");
@@ -675,7 +675,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena)
     if (!node)
         return NULL;
 
-    node->data.literal = (LiteralNode *)malloc(sizeof(LiteralNode));
+    node->data.literal = (LiteralNode *)ARENA_ALLOC(arena, sizeof(LiteralNode));
     if (!node->data.literal)
     {
         return NULL;
@@ -686,7 +686,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena)
     node->data.literal->dataType = DATA_TYPE_INT;
     node->data.literal->intValue = value;
     // convert from int to string
-    char *buffer = (char *)malloc(12);
+    char *buffer = (char *)ARENA_ALLOC(arena, sizeof(char));
     sprintf(buffer, "%d", intCpy);
     node->data.literal->stringValue = buffer;
 
@@ -701,7 +701,7 @@ ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena)
     if (!node)
         return NULL;
 
-    node->data.expression = (CryoExpressionNode *)malloc(sizeof(CryoExpressionNode));
+    node->data.expression = (CryoExpressionNode *)ARENA_ALLOC(arena, sizeof(CryoExpressionNode));
     if (!node->data.expression)
     {
         logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for expression statement node");
@@ -740,7 +740,7 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Ar
     if (!node)
         return NULL;
 
-    node->data.bin_op = (CryoBinaryOpNode *)malloc(sizeof(CryoBinaryOpNode));
+    node->data.bin_op = (CryoBinaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoBinaryOpNode));
     if (!node->data.bin_op)
     {
         return NULL;
@@ -762,7 +762,7 @@ ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena)
     if (!node)
         return NULL;
 
-    node->data.unary_op = (CryoUnaryOpNode *)malloc(sizeof(CryoUnaryOpNode));
+    node->data.unary_op = (CryoUnaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoUnaryOpNode));
     if (!node->data.unary_op)
     {
         return NULL;
@@ -992,18 +992,15 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataTyp
         paramCount++;
     }
 
-    node->data.externFunction = (ExternFunctionNode *)calloc(1, sizeof(ExternFunctionNode));
+    node->data.externFunction = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
     if (!node->data.externFunction)
     {
-        free(node);
         return NULL;
     }
 
     node->data.externFunction->name = strdup(function_name);
     if (!node->data.externFunction->name)
     {
-        free(node->data.externFunction);
-        free(node);
         return NULL;
     }
 
@@ -1012,12 +1009,9 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataTyp
 
     if (paramCount > 0 && params)
     {
-        node->data.externFunction->params = (ASTNode **)malloc(paramCount * sizeof(ASTNode *));
+        node->data.externFunction->params = (ASTNode **)ARENA_ALLOC(arena, paramCount * sizeof(ASTNode *));
         if (!node->data.externFunction->params)
         {
-            free(node->data.externFunction->name);
-            free(node->data.externFunction);
-            free(node);
             return NULL;
         }
         memcpy(node->data.externFunction->params, params, paramCount * sizeof(ASTNode *));

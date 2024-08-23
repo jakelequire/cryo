@@ -30,6 +30,7 @@
 #include "utils/support.h"
 #include "utils/arena.h"
 /*---------<end>---------*/
+
 extern char *strdup(const char *__s);
 
 extern char *strndup(const char *__string, size_t __n);
