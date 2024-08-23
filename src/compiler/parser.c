@@ -98,7 +98,6 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena)
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to parse statement.");
             error("Failed to parse statement.", "parseProgram", table, arena);
-            freeAST(program, arena);
             return NULL;
         }
     }
@@ -1065,7 +1064,6 @@ ASTNode *parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         else
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to parse argument.");
-            freeAST(argListNode, arena);
             return NULL;
         }
 
@@ -1455,6 +1453,5 @@ int parser(int argc, char *argv[])
     printAST(program, 0, arena);
 
     free(source);
-    freeAST(program, arena);
     return 0;
 }

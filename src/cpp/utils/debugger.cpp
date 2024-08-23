@@ -116,7 +116,7 @@ namespace Cryo
             switch (node->data.literal->dataType)
             {
             case DATA_TYPE_INT:
-                std::cout << "Value: " << (int)node->data.literal->intValue << std::endl;
+                std::cout << "Value: " << node->data.literal->intValue << std::endl;
                 std::cout << "String Value: " << node->data.literal->stringValue << std::endl;
                 break;
             case DATA_TYPE_FLOAT:

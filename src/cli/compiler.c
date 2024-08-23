@@ -50,8 +50,7 @@ int cryoCompiler(const char *source)
         generateCodeWrapper(programNode); // <- The C++ wrapper function
         printf(">===------------- CPP End Code Generation -------------===<\n");
         printf("[Main] IR code generated, freeing AST.\n");
-
-        freeAST(programNode, arena);
+        freeArena(arena);
     }
     else
     {

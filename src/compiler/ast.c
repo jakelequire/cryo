@@ -74,6 +74,15 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         printf("Variable Type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
         printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
         printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
+        if (node->data.varDecl->initializer)
+        {
+            printf("Initializer:");
+            printAST(node->data.varDecl->initializer, indent + 2, arena);
+        }
+        else
+        {
+            printf("No Initializer\n");
+        }
         break;
 
     case NODE_EXPRESSION:
@@ -233,181 +242,6 @@ void printAST(ASTNode *node, int indent, Arena *arena)
 }
 // </printAST>
 
-// <freeAST>
-void freeAST(ASTNode *node, Arena *arena)
-{
-    if (!node)
-    {
-        printf("[AST] No node to free\n");
-        return;
-    }
-
-    logMessage("INFO", __LINE__, "AST", "Freeing AST node of type: %s", CryoNodeTypeToString(node->metaData->type));
-
-    switch (node->metaData->type)
-    {
-    case NODE_PROGRAM:
-        for (size_t i = 0; i < node->data.program->statementCount; i++)
-        {
-            freeAST(node->data.program->statements[i], arena);
-        }
-        free(node->data.program->statements);
-        free(node->data.program);
-        break;
-
-    case NODE_FUNCTION_DECLARATION:
-        freeAST(node->data.functionDecl->body, arena);
-        free(node->data.functionDecl->name);
-        for (int i = 0; i < node->data.functionDecl->paramCount; i++)
-        {
-            freeAST(node->data.functionDecl->params[i], arena);
-        }
-        free(node->data.functionDecl->params);
-        free(node->data.functionDecl);
-        break;
-
-    case NODE_VAR_DECLARATION:
-        free(node->data.varDecl->name);
-        free(node->data.varDecl);
-        break;
-
-    case NODE_EXPRESSION:
-        free(node->data.expression);
-        break;
-
-    case NODE_BINARY_EXPR:
-        freeAST(node->data.bin_op->left, arena);
-        freeAST(node->data.bin_op->right, arena);
-        free(node->data.bin_op);
-        break;
-
-    case NODE_UNARY_EXPR:
-        freeAST(node->data.unary_op->operand, arena);
-        free(node->data.unary_op);
-        break;
-
-    case NODE_LITERAL_EXPR:
-        if (node->data.literal->dataType == DATA_TYPE_STRING)
-        {
-            free(node->data.literal->stringValue);
-        }
-        free(node->data.literal);
-        break;
-
-    case NODE_VAR_NAME:
-        free(node->data.varName->varName);
-        free(node->data.varName);
-        break;
-
-    case NODE_FUNCTION_CALL:
-        free(node->data.functionCall->name);
-        for (int i = 0; i < node->data.functionCall->argCount; i++)
-        {
-            freeAST(node->data.functionCall->args[i], arena);
-        }
-        free(node->data.functionCall->args);
-        free(node->data.functionCall);
-        break;
-
-    case NODE_IF_STATEMENT:
-        freeAST(node->data.ifStatement->condition, arena);
-        freeAST(node->data.ifStatement->thenBranch, arena);
-        if (node->data.ifStatement->elseBranch)
-        {
-            freeAST(node->data.ifStatement->elseBranch, arena);
-        }
-        free(node->data.ifStatement);
-        break;
-
-    case NODE_WHILE_STATEMENT:
-        freeAST(node->data.whileStatement->condition, arena);
-        freeAST(node->data.whileStatement->body, arena);
-        free(node->data.whileStatement);
-        break;
-
-    case NODE_FOR_STATEMENT:
-        freeAST(node->data.forStatement->initializer, arena);
-        freeAST(node->data.forStatement->condition, arena);
-        freeAST(node->data.forStatement->increment, arena);
-        freeAST(node->data.forStatement->body, arena);
-        free(node->data.forStatement);
-        break;
-
-    case NODE_RETURN_STATEMENT:
-        if (node->data.returnStatement->returnValue)
-        {
-            freeAST(node->data.returnStatement->returnValue, arena);
-        }
-        free(node->data.returnStatement);
-        break;
-
-    case NODE_BLOCK:
-        for (int i = 0; i < node->data.block->statementCount; i++)
-        {
-            freeAST(node->data.block->statements[i], arena);
-        }
-        free(node->data.block->statements);
-        free(node->data.block);
-        break;
-
-    case NODE_FUNCTION_BLOCK:
-        freeAST(node->data.functionBlock->function, arena);
-        freeAST((ASTNode *)node->data.functionBlock->statements, arena);
-        free(node->data.functionBlock);
-        break;
-
-    case NODE_PARAM_LIST:
-        for (int i = 0; i < node->data.paramList->paramCount; i++)
-        {
-            freeAST((ASTNode *)node->data.paramList->params[i], arena);
-        }
-        free(node->data.paramList->params);
-        free(node->data.paramList);
-        break;
-
-    case NODE_ARG_LIST:
-        for (int i = 0; i < node->data.argList->argCount; i++)
-        {
-            freeAST((ASTNode *)node->data.argList->args[i], arena);
-        }
-        free(node->data.argList->args);
-        free(node->data.argList);
-        break;
-
-    case NODE_ARRAY_LITERAL:
-        for (int i = 0; i < node->data.array->elementCount; i++)
-        {
-            freeAST(node->data.array->elements[i], arena);
-        }
-        free(node->data.array->elements);
-        free(node->data.array);
-        break;
-
-    case NODE_EXTERN_FUNCTION:
-        for (size_t i = 0; i < node->data.externFunction->paramCount; i++)
-        {
-            freeAST(node->data.externFunction->params[i], arena);
-        }
-        free(node->data.externFunction->params);
-        free(node->data.externFunction);
-        break;
-
-    case NODE_NAMESPACE:
-        break;
-
-    case NODE_UNKNOWN:
-        break;
-
-    default:
-        logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(node->metaData->type));
-        break;
-    }
-
-    free(node->metaData);
-    free(node);
-    logMessage("INFO", __LINE__, "AST", "Freed AST node");
-}
-// </freeAST>
 
 /* ====================================================================== */
 /* @Node_Management */

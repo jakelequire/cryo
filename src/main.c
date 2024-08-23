@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     // Initialize the lexer
     Lexer lexer;
     initLexer(&lexer, source);
-    printf("\n[DEBUG] Lexer initialized\n\n");
+    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
 
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
@@ -89,14 +89,6 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, "[Main] Failed to parse program.\n");
     }
-
-    // Cleanup symbol table
-    // for (int i = 0; i < table->count; i++) {
-    //     free(table->symbols[i]->name);
-    //     free(table->symbols[i]);
-    // }
-    // free(table->symbols);
-    // free(table);
 
     printf("[DEBUG] Program parsed\n");
 

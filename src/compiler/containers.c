@@ -351,7 +351,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena)
     node->dataType = DATA_TYPE_UNKNOWN;
     node->intValue = 0;
     node->floatValue = 0;
-    node->stringValue = (char *)calloc(1, sizeof(char));
+    node->stringValue = (char *)ARENA_ALLOC(arena, sizeof(char));
     node->booleanValue = false;
 
     return node;
