@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
     else
     {
         fprintf(stderr, "[Main] Failed to parse program.\n");
+        freeArena(arena);
     }
 
     printf("[DEBUG] Program parsed\n");

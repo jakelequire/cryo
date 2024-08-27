@@ -3,18 +3,28 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# Variables
+## Variables
+
+# BASE_FILE is the main file of the project
 BASE_FILE="./tests/main.cryo"
+# SRC_FILE is produced by the compiler at the top level of the project
 SRC_FILE="output.ll"
+# The object file for the standard library
 LIB_OBJ="./src/bin/.o/cryolib.o"
+# The build directory
 BUILD_DIR="build"
+# The output file
 OUTPUT_FILE="output"
+# The object file
 OBJ_FILE="output.o"
+# The out directory
+OUT_DIR="$BUILD_DIR/out"
+# The compiler executable
 COMPILER_EXE="./src/bin/main"
 
 # Functions
 function log {
-    echo "[INFO] $1"
+    echo "[BUILD] $1"
 }
 
 function error {
@@ -22,37 +32,52 @@ function error {
     exit 1
 }
 
+function cleanup {
+    log "Cleaning up..."
+    rm ./output.ll
+}
+
+# Create the necessary directories if they don't exist
+mkdir -p $BUILD_DIR
+mkdir -p $OUT_DIR
+
 # Compile the project
 log "Compiling the project..."
 $COMPILER_EXE $BASE_FILE || error "Compilation failed"
 
-
 # Build the project
 log "Building the project..."
 
-# Create the build directory if it doesn't exist
-mkdir -p $BUILD_DIR
+# Copy the source file to the out directory
+log "Copying files to the out directory..."
+cp $SRC_FILE $OUT_DIR/output.ll || error "Failed to copy $SRC_FILE"
 
-# Copy the source file & object file to the build directory
-log "Copying files to the build directory..."
-cp $SRC_FILE $BUILD_DIR || error "Failed to copy $SRC_FILE"
-cp $LIB_OBJ $BUILD_DIR || error "Failed to copy $LIB_OBJ"
+# Compile the standard library
+clang -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll
 
-# Change to the build directory
-cd $BUILD_DIR
+# Change to the out directory
+cd $OUT_DIR
 
-# Compile the source file
-log "Compiling the source file..."
-llc -filetype=obj $SRC_FILE -o $OBJ_FILE || error "Compilation failed"
+# Combine the `cryolib.ll` and `output.ll` files into one object file
+llvm-link cryolib.ll output.ll -o bin.ll
 
-ld -relocatable $(basename $LIB_OBJ) $OBJ_FILE  -o bin.o || error "Compilation failed"
+# Compile the object file
+llc -filetype=obj bin.ll -o bin.o
 
-# Link the object files
-log "Linking the object files..."
-clang++  $OBJ_FILE -o $OUTPUT_FILE || error "Linking failed"
+# Change back to the original directory
+cd - > /dev/null
+
+# Link the object files and place the output in the build directory
+clang++ $OUT_DIR/bin.o -o $BUILD_DIR/$OUTPUT_FILE
+
+# Cleanup
+cleanup
+
+log "Build completed successfully, running the output file..."
+log ">===---------------------------------------------------------===<"
 
 # Run the output file
-log "Running the output file..."
-./$OUTPUT_FILE || error "Execution failed"
+$BUILD_DIR/$OUTPUT_FILE
 
-log "Build and execution completed successfully."
+# Exit successfully
+exit 0

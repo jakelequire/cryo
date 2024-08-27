@@ -40,4 +40,4 @@
 <string>         ::=  '"' { <any-character-except-quote> } '"'
 <boolean>        ::=  "true" | "false"
 
-<comments>       ::=  "//" { <any-character-except-newline> } | "/*" { <any-character> } "*/"
+<comments>       ::=  "//" { <any-character-except-newline> } | "/*" { <any-character> } "*/" | "/**" { <any-character> } "**/" | "///" { <any-character-except-newline> }
