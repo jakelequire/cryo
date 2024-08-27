@@ -70,6 +70,8 @@ namespace Cryo
                 cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for boolean literal");
                 return llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context),
                                               node->data.literal->value.booleanValue);
+            case DATA_TYPE_INT_ARRAY:
+                cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for integer array literal");
 
             case DATA_TYPE_VOID:
             case DATA_TYPE_UNKNOWN:

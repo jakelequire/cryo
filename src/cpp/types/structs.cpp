@@ -142,4 +142,45 @@ namespace Cryo
         return globalVar;
     }
 
+    // Create an integer array
+    llvm::GlobalVariable *CryoTypes::createIntArray(const std::vector<int> &values, const std::string &name)
+    {
+        if (values.empty())
+        {
+            return nullptr;
+        }
+
+        llvm::LLVMContext &context = compiler.getContext().context;
+        llvm::Module *module = compiler.getContext().module.get();
+        llvm::IRBuilder<> &builder = compiler.getContext().builder;
+
+        // Create array type
+        llvm::ArrayType *arrayType = llvm::ArrayType::get(builder.getInt32Ty(), values.size());
+
+        // Create array elements
+        std::vector<llvm::Constant *> elementConstants;
+        elementConstants.reserve(values.size());
+        for (int value : values)
+        {
+            elementConstants.push_back(llvm::ConstantInt::get(builder.getInt32Ty(), value));
+        }
+
+        // Create array constant
+        llvm::Constant *arrayConstant = llvm::ConstantArray::get(arrayType, elementConstants);
+
+        // Create global variable
+        llvm::GlobalVariable *arrayGlobal = new llvm::GlobalVariable(
+            *module,
+            arrayType,
+            true, // isConstant
+            llvm::GlobalValue::PrivateLinkage,
+            arrayConstant,
+            name);
+
+        // Set alignment (optional, adjust as needed)
+        arrayGlobal->setAlignment(llvm::Align(4));
+
+        return arrayGlobal;
+    }
+
 } // namespace Cryo

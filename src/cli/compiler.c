@@ -43,23 +43,35 @@ int cryoCompiler(const char *source)
     if (programNode != NULL)
     {
         printf("\n\n>===------- AST Tree -------===<\n\n");
-        printAST(programNode, 0, arena);
+        int size = programNode->data.program->statementCount;
+        ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
+        memcpy(nodeCpy, programNode, sizeof(ASTNode));
+
+        printSymbolTable(table, arena);
+
+        printAST(nodeCpy, 0, arena);
+
         printf("\n>===------- End Tree ------===<\n\n");
 
+        DEBUG_ARENA_PRINT(arena);
+
         printf("[Main] Generating IR code...\n");
-        generateCodeWrapper(programNode); // <- The C++ wrapper function
+        generateCodeWrapper(nodeCpy); // <- The C++ wrapper function
         printf(">===------------- CPP End Code Generation -------------===<\n");
         printf("[Main] IR code generated, freeing AST.\n");
+
+        // Free the Arena
         freeArena(arena);
     }
     else
     {
         fprintf(stderr, "[Main] Failed to parse program.\n");
-        return 1;
+        freeArena(arena);
     }
 
     printf("[DEBUG] Program parsed\n");
 
+    free(source);
     return 0;
 }
 // <cryoCompiler>

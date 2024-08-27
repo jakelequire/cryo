@@ -3,8 +3,8 @@ extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
 
 const qix: int = 34;
-// const foo: string = "Hello!";
-const buz: int[] = [1, 2, 3, 4, 5];
+const foo: string = "Hello!";
+// const buz: int[] = [1, 2, 3, 4, 5];
 
 public function main() -> void
 {

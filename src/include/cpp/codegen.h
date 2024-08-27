@@ -506,6 +506,7 @@ namespace Cryo
 
         llvm::Constant *convertLLVMPtrToConstant(llvm::Value *ptr);
         llvm::Constant *createLLVMConstant(CryoDataType type, const std::string &value);
+        llvm::GlobalVariable *createIntArray(const std::vector<int> &values, const std::string &name = "intArray");
 
     private:
         CryoCompiler &compiler;
