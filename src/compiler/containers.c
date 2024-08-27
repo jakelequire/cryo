@@ -341,18 +341,19 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena)
 ///
 LiteralNode *createLiteralNodeContainer(Arena *arena)
 {
-    LiteralNode *node = (LiteralNode *)ARENA_ALLOC(arena, sizeof(LiteralNode));
+    LiteralNode *node = (LiteralNode *)ARENA_ALLOC(arena, sizeof(LiteralNode) * 2);
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate LiteralNode node.");
         return NULL;
     }
 
+
     node->dataType = DATA_TYPE_UNKNOWN;
-    node->intValue = 0;
-    node->floatValue = 0;
-    node->stringValue = (char *)ARENA_ALLOC(arena, sizeof(char));
-    node->booleanValue = false;
+    node->value.intValue =  0;
+    node->value.floatValue = 0;
+    node->value.stringValue = (char *)ARENA_ALLOC(arena, sizeof(char));
+    node->value.booleanValue = false;
 
     return node;
 }

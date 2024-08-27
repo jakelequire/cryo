@@ -1,3 +1,11 @@
 // namespace main
+extern function printInt(i: int) -> void;
 
 const qix: int = 34;
+// const foo: string = "Hello!";
+
+public function main() -> void
+{
+    printInt(qix);
+    return;
+}

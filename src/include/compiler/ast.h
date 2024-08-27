@@ -23,6 +23,8 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdint.h>
+#include <stdarg.h>
+#include <stddef.h>
 /*---<custom_includes>---*/
 #include "compiler/token.h"
 #include "compiler/lexer.h"
@@ -31,11 +33,11 @@
 #include "utils/arena.h"
 /*---------<end>---------*/
 
+// strdup
 extern char *strdup(const char *__s);
-
+// strndup
 extern char *strndup(const char *__string, size_t __n);
 
-// *NEW* Untested & Unimplemnted
 
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 /// ---
@@ -257,7 +259,7 @@ typedef struct FunctionCallNode
 ///         float floatValue;
 ///         char *stringValue;
 ///         int booleanValue;
-///     };
+///     } value;
 /// } LiteralNode;
 ///
 /// ```
@@ -270,7 +272,7 @@ typedef struct LiteralNode
         float floatValue;
         char *stringValue;
         int booleanValue;
-    };
+    } value;
 } LiteralNode;
 
 /// #### The IfStatementNode struct represents an if statement in the AST.

@@ -36,7 +36,7 @@ const char *intToConstChar(int num)
 
 char *intToChar(int num)
 {
-    static char buffer[12];
+    char buffer[12];
     snprintf(buffer, sizeof(buffer), "%d", num);
     return buffer;
 }

@@ -133,7 +133,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *
 void getNextToken(Lexer *lexer, Arena *arena)
 {
     // printf("[Parser] @getNextToken | Current Token before: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
-    logMessage("INFO", __LINE__, "Parser", "Current Token before: Type=%d, Start=%.*s, Length=%d", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
+    logMessage("INFO", __LINE__, "Parser", "Current Token before: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(currentToken.type), currentToken.length, currentToken.start, currentToken.length);
     if (isAtEnd(lexer))
     {
         currentToken.type = TOKEN_EOF;
@@ -144,7 +144,7 @@ void getNextToken(Lexer *lexer, Arena *arena)
         return;
     }
     currentToken = get_next_token(lexer);
-    logMessage("INFO", __LINE__, "Parser", "Current Token after: Type=%d, Start=%.*s, Length=%d", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
+    logMessage("INFO", __LINE__, "Parser", "Current Token after: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(currentToken.type), currentToken.length, currentToken.start, currentToken.length);
 }
 // </getNextToken>
 
@@ -709,10 +709,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     logMessage("INFO", __LINE__, "Parser", "Variable declaration parsed.");
 
     ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, arena);
-    // printf("DEBUG [Parser] Node type after creation: %s\n", CryoDataTypeToString(varDeclNode->data.varDecl->type));
-    // printf("[Parser] Created Variable Declaration Node: %s\n", var_name);
-    // printf("[Parser] Variable Declaration Node Type: %s\n", CryoNodeTypeToString(varDeclNode->metaData->type));
-    // printf("[Parser] Variable Declaration Data Type: %s\n", CryoDataTypeToString(varDeclNode->data.varDecl->type));
 
     return varDeclNode;
 }

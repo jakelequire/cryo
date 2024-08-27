@@ -45,9 +45,11 @@ cd $BUILD_DIR
 log "Compiling the source file..."
 llc -filetype=obj $SRC_FILE -o $OBJ_FILE || error "Compilation failed"
 
+ld -relocatable $(basename $LIB_OBJ) $OBJ_FILE  -o bin.o || error "Compilation failed"
+
 # Link the object files
 log "Linking the object files..."
-clang++ $(basename $LIB_OBJ) $OBJ_FILE -o $OUTPUT_FILE || error "Linking failed"
+clang++  $OBJ_FILE -o $OUTPUT_FILE || error "Linking failed"
 
 # Run the output file
 log "Running the output file..."

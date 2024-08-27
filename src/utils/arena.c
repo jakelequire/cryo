@@ -128,13 +128,13 @@ void *debugArenaAlloc(Arena *arena, size_t size, const char *file, int line)
 
 void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char *file, int line)
 {
-    logMessage("INFO", __LINE__, "Arena", "Allocating memory with alignment");
+    // logMessage("INFO", __LINE__, "Arena", "Allocating memory with alignment");
     size_t offset = arena->offset;
-    logMessage("INFO", __LINE__, "Arena", "Getting current offset: %zu", offset);
+    // logMessage("INFO", __LINE__, "Arena", "Getting current offset: %zu", offset);
     size_t aligned_offset = (offset + (alignment - 1)) & ~(alignment - 1);
-    logMessage("INFO", __LINE__, "Arena", "Calculating aligned offset: %zu", aligned_offset);
+    // logMessage("INFO", __LINE__, "Arena", "Calculating aligned offset: %zu", aligned_offset);
     size_t new_offset = aligned_offset + size;
-    logMessage("INFO", __LINE__, "Arena", "Calculating new offset: %zu", new_offset);
+    // logMessage("INFO", __LINE__, "Arena", "Calculating new offset: %zu", new_offset);
 
     if (new_offset > arena->size)
     {

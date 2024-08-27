@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
         ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
         memcpy(nodeCpy, programNode, sizeof(ASTNode));
 
+        printSymbolTable(table, arena);
+
         printAST(nodeCpy, 0, arena);
 
         printf("\n>===------- End Tree ------===<\n\n");

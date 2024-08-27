@@ -231,6 +231,8 @@ namespace Cryo
          */
         void generateFunctionBlock(ASTNode *node);
 
+        llvm::Value *generateArguments(ASTNode *node);
+
         /**
          * @brief Generates the LLVM code for a function declaration.
          * @param node The ASTNode representing the function declaration.
@@ -265,6 +267,7 @@ namespace Cryo
          */
         void initializeVariable(CryoContext &context, llvm::Value *var, ASTNode *initializer);
 
+        llvm::Constant *getVariableValue(ASTNode *node);
         llvm::Value *allocateVariable(CryoContext &context, llvm::Type *type, const char *name);
         llvm::Value *createLocalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name);
         bool validateVarDeclarationNode(const ASTNode *node);
@@ -302,7 +305,7 @@ namespace Cryo
          * @param varName The name of the variable.
          * @return The created global variable.
          */
-        llvm::Value *createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant);
+        llvm::Value *createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant, llvm::Constant *initialValue = nullptr);
 
         /**
          * @brief Loads a global variable from the LLVM IR.

@@ -104,23 +104,23 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         switch (node->data.literal->dataType)
         {
         case DATA_TYPE_INT:
-            printf("Integer Literal Node: %d\n", node->data.literal->intValue);
+            printf("Integer Literal Node: %d\n", node->data.literal->value.intValue);
             break;
         case DATA_TYPE_FLOAT:
-            printf("Float Literal Node: %f\n", node->data.literal->floatValue);
+            printf("Float Literal Node: %f\n", node->data.literal->value.floatValue);
             break;
         case DATA_TYPE_STRING:
-            printf("String Literal Node: %s\n", node->data.literal->stringValue);
+            printf("String Literal Node: %s\n", node->data.literal->value.stringValue);
             break;
         case DATA_TYPE_BOOLEAN:
-            printf("Boolean Literal Node: %s\n", node->data.literal->booleanValue ? "true" : "false");
+            printf("Boolean Literal Node: %s\n", node->data.literal->value.booleanValue ? "true" : "false");
             break;
         default:
             printf("Unknown Literal Type\n");
         }
         break;
     case NODE_STRING_EXPRESSION:
-        printf("\nString Expression Node: %s\n", node->data.literal->stringValue);
+        printf("\nString Expression Node: %s\n", node->data.literal->value.stringValue);
         break;
     case NODE_VAR_NAME:
         printf("\nVariable Name Node: %s\n", node->data.varName->varName);
@@ -241,7 +241,6 @@ void printAST(ASTNode *node, int indent, Arena *arena)
     }
 }
 // </printAST>
-
 
 /* ====================================================================== */
 /* @Node_Management */
@@ -518,11 +517,11 @@ ASTNode *createLiteralExpr(int value, Arena *arena)
     logMessage("DEBUG", __LINE__, "AST", "Created literal expression node with value: %d", value);
     int intCpy = value;
     node->data.literal->dataType = DATA_TYPE_INT;
-    node->data.literal->intValue = value;
+    node->data.literal->value.intValue = value;
     // convert from int to string
     char *buffer = (char *)ARENA_ALLOC(arena, sizeof(char));
     sprintf(buffer, "%d", intCpy);
-    node->data.literal->stringValue = buffer;
+    node->data.literal->value.stringValue = buffer;
 
     logMessage("DEBUG", __LINE__, "AST", "Literal expression node created with value: %d", value);
     return node;
@@ -613,15 +612,14 @@ ASTNode *createIntLiteralNode(int value, Arena *arena)
 {
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena);
     if (!node)
+    {
         return NULL;
-
+    }
     logMessage("INFO", __LINE__, "AST", "Created integer literal node with value: %d", value);
 
+    node->data.literal->value.intValue = value;
     node->data.literal->dataType = DATA_TYPE_INT;
-    node->data.literal->intValue = value;
-    node->data.literal->stringValue = intToChar(value);
 
-    logMessage("DEBUG", __LINE__, "AST", "Integer literal node created with value: %d", value);
     return node;
 }
 
@@ -634,7 +632,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena)
     logMessage("INFO", __LINE__, "AST", "Created float literal node with value: %f", value);
 
     node->data.literal->dataType = DATA_TYPE_FLOAT;
-    node->data.literal->floatValue = value;
+    node->data.literal->value.floatValue = value;
     return node;
 }
 
@@ -647,7 +645,7 @@ ASTNode *createStringLiteralNode(char *value, Arena *arena)
     logMessage("INFO", __LINE__, "AST", "Created string literal node with value: %s", value);
 
     node->data.literal->dataType = DATA_TYPE_STRING;
-    node->data.literal->stringValue = strdup(value);
+    node->data.literal->value.stringValue = strdup(value);
     return node;
 }
 
@@ -660,7 +658,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena)
     logMessage("INFO", __LINE__, "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
 
     node->data.literal->dataType = DATA_TYPE_BOOLEAN;
-    node->data.literal->booleanValue = value;
+    node->data.literal->value.booleanValue = value;
     return node;
 }
 
@@ -747,7 +745,7 @@ ASTNode *createStringExpr(char *str, Arena *arena)
     if (!node)
         return NULL;
     node->data.literal->dataType = DATA_TYPE_STRING;
-    node->data.literal->stringValue = strdup(str);
+    node->data.literal->value.stringValue = strdup(str);
     return node;
 }
 

@@ -39,7 +39,7 @@ namespace Cryo
             {
                 cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for integer literal");
                 llvm::ConstantInt *intVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(cryoContext.context),
-                                                                   node->data.literal->intValue);
+                                                                   node->data.literal->value.intValue);
                 if (!intVal || intVal->getType() == nullptr)
                 {
                     cryoDebugger.logMessage("ERROR", __LINE__, "Generation", "Failed to generate code for integer literal");
@@ -51,12 +51,12 @@ namespace Cryo
             {
                 cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for float literal");
                 return llvm::ConstantFP::get(llvm::Type::getFloatTy(cryoContext.context),
-                                             node->data.literal->floatValue);
+                                             node->data.literal->value.floatValue);
             }
             case DATA_TYPE_STRING:
             {
                 cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for string literal");
-                llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.context, node->data.literal->stringValue);
+                llvm::Constant *strConstant = llvm::ConstantDataArray::getString(cryoContext.context, node->data.literal->value.stringValue);
                 llvm::GlobalVariable *strGlobal = new llvm::GlobalVariable(
                     *cryoContext.module,
                     strConstant->getType(),
@@ -69,7 +69,7 @@ namespace Cryo
             case DATA_TYPE_BOOLEAN:
                 cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for boolean literal");
                 return llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context),
-                                              node->data.literal->booleanValue);
+                                              node->data.literal->value.booleanValue);
 
             case DATA_TYPE_VOID:
             case DATA_TYPE_UNKNOWN:
@@ -121,7 +121,7 @@ namespace Cryo
         case CryoNodeType::NODE_STRING_LITERAL:
         {
             cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for string literal");
-            return cryoTypesInstance.createString(node->data.literal->stringValue);
+            return cryoTypesInstance.createString(node->data.literal->value.stringValue);
         }
 
         default:

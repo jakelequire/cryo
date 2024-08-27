@@ -328,7 +328,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type)
 
     // printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
     //        token.length, token.start, token.type, token.line, token.column);
-    logMessage("INFO", __LINE__, "Lexer", "Token created: Type: %d, Line: %d, Column: %d", token.type, token.line, token.column);
+    logMessage("INFO", __LINE__, "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
     return token;
 }
 // </makeToken>

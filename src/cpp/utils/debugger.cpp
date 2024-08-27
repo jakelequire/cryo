@@ -116,17 +116,16 @@ namespace Cryo
             switch (node->data.literal->dataType)
             {
             case DATA_TYPE_INT:
-                std::cout << "Value: " << node->data.literal->intValue << std::endl;
-                std::cout << "String Value: " << node->data.literal->stringValue << std::endl;
+                std::cout << "Value: " << node->data.literal->value.intValue << std::endl;
                 break;
             case DATA_TYPE_FLOAT:
-                std::cout << "Value: " << node->data.literal->floatValue << std::endl;
+                std::cout << "Value: " << node->data.literal->value.floatValue << std::endl;
                 break;
             case DATA_TYPE_STRING:
-                std::cout << "Value: " << node->data.literal->stringValue << std::endl;
+                std::cout << "Value: " << node->data.literal->value.stringValue << std::endl;
                 break;
             case DATA_TYPE_BOOLEAN:
-                std::cout << "Value: " << (node->data.literal->booleanValue ? "True" : "False") << std::endl;
+                std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
                 break;
             }
             break;
@@ -260,12 +259,12 @@ namespace Cryo
 
         case NODE_STRING_LITERAL:
             std::cout << "\nString Literal Node" << std::endl;
-            std::cout << "Value: " << node->data.literal->stringValue << std::endl;
+            std::cout << "Value: " << node->data.literal->value.stringValue << std::endl;
             break;
 
         case NODE_BOOLEAN_LITERAL:
             std::cout << "\nBoolean Literal Node" << std::endl;
-            std::cout << "Value: " << (node->data.literal->booleanValue ? "True" : "False") << std::endl;
+            std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
             break;
 
         case NODE_NAMESPACE:

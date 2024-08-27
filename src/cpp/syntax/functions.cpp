@@ -328,7 +328,12 @@ namespace Cryo
         std::vector<llvm::Value *> args;
         for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            llvm::Value *arg = generateExpression(node->data.functionCall->args[i]);
+            std::cout << "[DEBUG] Getting Arguments..." << std::endl;
+            llvm::Value *arg = generateArguments(node->data.functionCall->args[i]);
+            std::cout << "[DEBUG]"
+                      << CryoNodeTypeToString(node->data.functionCall->args[i]->metaData->type)
+                      << std::endl;
+
             if (arg == nullptr)
             {
                 cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate argument for function call");
@@ -379,7 +384,7 @@ namespace Cryo
         std::vector<llvm::Value *> args;
         for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            llvm::Value *arg = generateExpression(node->data.functionCall->args[i]);
+            llvm::Value *arg = generateArguments(node->data.functionCall->args[i]);
             if (arg == nullptr)
             {
                 cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate argument for function call");
@@ -434,6 +439,80 @@ namespace Cryo
 
         cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Function block generation complete");
         return;
+    }
+
+    llvm::Value *CryoSyntax::generateArguments(ASTNode *node)
+    {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
+        if (!node)
+        {
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Arguments node is null");
+            return nullptr;
+        }
+
+        std::cout << "[DEBUG] Generating Arguments for node type: "
+                  << CryoNodeTypeToString(node->metaData->type) << std::endl;
+
+        CryoContext &cryoContext = compiler.getContext();
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
+
+        llvm::Value *value = nullptr;
+        switch (node->metaData->type)
+        {
+        case NODE_LITERAL_EXPR:
+        {
+            CryoDataType dt = node->data.literal->dataType;
+            switch (dt)
+            {
+            case DATA_TYPE_INT:
+                value = llvm::ConstantInt::get(cryoContext.context, llvm::APInt(32, node->data.literal->value.intValue, true));
+                break;
+
+            case DATA_TYPE_STRING:
+                value = cryoContext.builder.CreateGlobalStringPtr(node->data.literal->value.stringValue);
+                break;
+            }
+
+            break;
+        }
+        case NODE_VAR_DECLARATION: {
+            llvm::Type *type = cryoTypesInstance.getLLVMType(node->data.varDecl->type);
+            llvm::Value *initValue = nullptr;
+            if (node->data.varDecl->initializer)
+            {
+                initValue = generateExpression(node->data.varDecl->initializer);
+                if (!initValue)
+                {
+                    cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate init value for variable declaration");
+                    return nullptr;
+                }
+            }
+
+            llvm::AllocaInst *alloca = cryoContext.builder.CreateAlloca(type, nullptr, node->data.varDecl->name);
+            if (initValue)
+            {
+                cryoContext.builder.CreateStore(initValue, alloca);
+            }
+
+            value = alloca;
+            break;
+        }
+        case NODE_VAR_NAME:
+        {
+            value = cryoContext.namedValues[node->data.varName->varName];
+            if (!value)
+            {
+                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Unknown variable name");
+                return nullptr;
+            }
+            break;
+        }
+        default:
+            cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Unsupported argument type");
+            return nullptr;
+        }
+
+        return value;
     }
 
 } // namespace Cryo
