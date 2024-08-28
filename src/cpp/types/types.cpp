@@ -100,7 +100,7 @@ namespace Cryo
             return llvm::Type::getFloatTy(cryoContext.context);
         case DATA_TYPE_STRING:
             cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning string type");
-            return llvm::Type::getInt8Ty(cryoContext.context);
+            return llvm::PointerType::get(llvm::Type::getInt8Ty(cryoContext.context), 0); // For "Hello" (5 chars + null terminator)
         case DATA_TYPE_BOOLEAN:
             cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning boolean type");
             return llvm::Type::getInt1Ty(cryoContext.context);
@@ -271,6 +271,80 @@ namespace Cryo
             cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unsupported data type");
             return nullptr;
         }
+    }
+
+    llvm::Constant *CryoTypes::generateLiteralValue(ASTNode *literalNode)
+    {
+        CryoContext &cryoContext = compiler.getContext();
+
+        switch (literalNode->data.literal->dataType)
+        {
+        case DATA_TYPE_INT:
+            return cryoContext.builder.getInt32(literalNode->data.literal->value.intValue);
+        case DATA_TYPE_FLOAT:
+            return llvm::ConstantFP::get(cryoContext.context, llvm::APFloat(literalNode->data.literal->value.floatValue));
+        case DATA_TYPE_BOOLEAN:
+            return cryoContext.builder.getInt1(literalNode->data.literal->value.booleanValue);
+        case DATA_TYPE_STRING:
+            return cryoContext.builder.CreateGlobalStringPtr(literalNode->data.literal->value.stringValue);
+        default:
+            return nullptr;
+        }
+    }
+
+    llvm::Value *CryoTypes::createArrayLiteral(ASTNode *node)
+    {
+        CryoContext &cryoContext = compiler.getContext();
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
+
+        if (!node || node->metaData->type != NODE_ARRAY_LITERAL)
+        {
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Invalid array literal node");
+            return nullptr;
+        }
+
+        CryoArrayNode *arrayNode = node->data.array;
+        if (arrayNode->elementCount == 0)
+        {
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Empty array literal");
+            return nullptr;
+        }
+
+        CryoDataType elementType = arrayNode->elements[0]->data.literal->dataType;
+        llvm::Type *elementLLVMType = getLLVMType(elementType);
+
+        if (!elementLLVMType)
+        {
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unsupported array element type");
+            return nullptr;
+        }
+
+        cryoDebugger.logMessage("INFO", __LINE__, "Types", "Creating array literal");
+
+        std::vector<llvm::Constant *> elements;
+
+        for (int i = 0; i < arrayNode->elementCount; i++)
+        {
+            if (arrayNode->elements[i]->data.literal->dataType != elementType)
+            {
+                cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Array element type mismatch");
+                return nullptr;
+            }
+            else
+            {
+                llvm::Constant *elementValue = generateLiteralValue(arrayNode->elements[i]);
+                if (!elementValue)
+                {
+                    cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Failed to generate array element value");
+                    return nullptr;
+                }
+                elements.push_back(elementValue);
+            }
+        }
+
+        llvm::ArrayRef<llvm::Constant *> elementArray(elements);
+
+        return llvm::ConstantArray::get(llvm::ArrayType::get(elementLLVMType, arrayNode->elementCount), elementArray);
     }
 
 } // namespace Cryo

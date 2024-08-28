@@ -89,29 +89,25 @@ namespace Cryo
             return generateBinaryOperation(node);
         }
 
-        case CryoNodeType::NODE_VAR_NAME:
+        case NODE_VAR_NAME:
         {
-            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for variable name");
             llvm::Value *var = lookupVariable(node->data.varName->varName);
             if (!var)
             {
-                std::cerr << "[ERROR] \t@" << __LINE__ << "\t{Generation}\t\t Variable not found: " << node->data.varName->varName << std::endl;
+                cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found: " + std::string(node->data.varName->varName));
                 return nullptr;
             }
 
-            if (llvm::isa<llvm::GlobalVariable>(var))
+            llvm::Type *varType = var->getType();
+            if (varType->isPointerTy() && varType->isArrayTy())
             {
-                llvm::GlobalVariable *global = llvm::cast<llvm::GlobalVariable>(var);
-
-                cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for global variable");
-                return cryoContext.builder.CreateLoad(global->getValueType(), global, node->data.varName->varName);
+                // This is likely a string
+                return cryoContext.builder.CreateLoad(llvm::PointerType::get(cryoContext.context, 0), var, node->data.varName->varName);
             }
-            else if (var->getType()->isPointerTy())
+            else
             {
-                cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for pointer variable");
-                return cryoContext.builder.CreateLoad(var->getType(), var, node->data.varName->varName);
+                return cryoContext.builder.CreateLoad(varType, var, node->data.varName->varName);
             }
-            return var;
         }
 
         case CryoNodeType::NODE_VAR_DECLARATION:
@@ -124,6 +120,12 @@ namespace Cryo
         {
             cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for string literal");
             return cryoTypesInstance.createString(node->data.literal->value.stringValue);
+        }
+
+        case CryoNodeType::NODE_ARRAY_LITERAL:
+        {
+            cryoDebugger.logMessage("INFO", __LINE__, "Generation", "Generating code for array literal");
+            return cryoTypesInstance.createArrayLiteral(node);
         }
 
         default:

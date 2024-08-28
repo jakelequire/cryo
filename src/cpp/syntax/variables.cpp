@@ -45,29 +45,31 @@ namespace Cryo
         }
     }
 
-    llvm::Constant *CryoSyntax::getVariableValue(ASTNode *node)
+    llvm::Value *CryoSyntax::getVariableValue(char *name)
     {
         CryoContext &cryoContext = compiler.getContext();
         CryoDebugger &cryoDebugger = compiler.getDebugger();
 
-        if (!node || node->metaData->type != NODE_VAR_DECLARATION)
-        {
-            cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Invalid variable declaration node");
-            return nullptr;
-        }
-
-        llvm::Value *var = lookupVariable(node->data.varDecl->name);
+        llvm::Value *var = lookupVariable(name);
         if (!var)
         {
-            cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found: " + std::string(node->data.varDecl->name));
+            cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found: " + std::string(name));
             return nullptr;
         }
 
         llvm::Type *varType = var->getType();
-        cryoContext.builder.CreateLoad(varType, var, node->data.varDecl->name);
+        if (varType->isPointerTy() && varType->isArrayTy())
+        {
+            // This is likely a string
+            return cryoContext.builder.CreateLoad(llvm::PointerType::get(cryoContext.context, 0), var, name);
+        }
+        else
+        {
+            return cryoContext.builder.CreateLoad(varType, var, name);
+        }
 
-        cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Loaded variable: " + std::string(node->data.varDecl->name));
-        return (llvm::Constant *)var;
+        cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Loaded variable: " + std::string(name));
+        return var;
     }
 
     llvm::Value *CryoSyntax::createLocalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name)
@@ -175,7 +177,16 @@ namespace Cryo
         if (node->data.varDecl->isGlobal)
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Creating Global Variable");
-            var = createGlobalVariable(cryoContext, llvmType, varName, node->data.varDecl->isReference, initialValue);
+            if (node->data.varDecl->type == DATA_TYPE_STRING)
+            {
+                const char *strValue = node->data.varDecl->initializer->data.literal->value.stringValue;
+                initialValue = llvm::ConstantDataArray::getString(cryoContext.context, strValue, true);
+                var = createGlobalVariable(cryoContext, llvmType, varName, node->data.varDecl->isReference, initialValue, true);
+            }
+            else
+            {
+                var = createGlobalVariable(cryoContext, llvmType, varName, node->data.varDecl->isReference, initialValue, false);
+            }
         }
         else
         {
@@ -284,33 +295,43 @@ namespace Cryo
         return var;
     }
 
-    llvm::Value *CryoSyntax::getVariableValue(char *name)
+    llvm::Value *CryoSyntax::createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant, llvm::Constant *initialValue, bool isString)
     {
-        CryoContext &cryoContext = compiler.getContext();
         CryoDebugger &cryoDebugger = compiler.getDebugger();
+        CryoContext &cryoContext = compiler.getContext();
 
-        llvm::Value *var = lookupVariable(name);
-        if (!var)
+        llvm::GlobalVariable *global = nullptr;
+
+        if (isString)
         {
-            cryoDebugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found: " + std::string(name));
-            return nullptr;
+            // Create a global variable for the string constant
+            llvm::GlobalVariable *strConstant = new llvm::GlobalVariable(
+                *cryoContext.module,
+                initialValue->getType(),
+                true, // isConstant
+                llvm::GlobalValue::PrivateLinkage,
+                initialValue,
+                name + ".str");
+
+            // Create a global pointer to the string
+            global = new llvm::GlobalVariable(
+                *cryoContext.module,
+                llvm::PointerType::get(cryoContext.context, 0),
+                isConstant,
+                llvm::GlobalValue::ExternalLinkage,
+                strConstant,
+                name);
         }
-        llvm::Type *varType = var->getType();
-        cryoContext.builder.CreateLoad(varType, var, name);
-
-        cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Loaded variable: " + std::string(name));
-        return var;
-    }
-
-    llvm::Value *CryoSyntax::createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant, llvm::Constant *initialValue)
-    {
-        CryoDebugger &cryoDebugger = compiler.getDebugger();
-        CryoContext &cryoContext = compiler.getContext();
-        llvm::GlobalVariable *global = new llvm::GlobalVariable(
-            *compiler.getContext().module, type, isConstant,
-            llvm::GlobalValue::ExternalLinkage,
-            initialValue,
-            name);
+        else
+        {
+            global = new llvm::GlobalVariable(
+                *cryoContext.module,
+                type,
+                isConstant,
+                llvm::GlobalValue::ExternalLinkage,
+                initialValue,
+                name);
+        }
 
         cryoDebugger.logMessage("INFO", __LINE__, "Variables", "Created global variable: " + name.str());
         return global;

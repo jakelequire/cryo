@@ -328,12 +328,7 @@ namespace Cryo
         std::vector<llvm::Value *> args;
         for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
-            std::cout << "[DEBUG] Getting Arguments..." << std::endl;
             llvm::Value *arg = generateArguments(node->data.functionCall->args[i]);
-            std::cout << "[DEBUG]"
-                      << CryoNodeTypeToString(node->data.functionCall->args[i]->metaData->type)
-                      << std::endl;
-
             if (arg == nullptr)
             {
                 cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Failed to generate argument for function call");
@@ -450,9 +445,6 @@ namespace Cryo
             return nullptr;
         }
 
-        std::cout << "[DEBUG] Generating Arguments for node type: "
-                  << CryoNodeTypeToString(node->metaData->type) << std::endl;
-
         CryoContext &cryoContext = compiler.getContext();
         CryoTypes &cryoTypesInstance = compiler.getTypes();
 
@@ -475,7 +467,8 @@ namespace Cryo
 
             break;
         }
-        case NODE_VAR_DECLARATION: {
+        case NODE_VAR_DECLARATION:
+        {
             llvm::Type *type = cryoTypesInstance.getLLVMType(node->data.varDecl->type);
             llvm::Value *initValue = nullptr;
             if (node->data.varDecl->initializer)

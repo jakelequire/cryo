@@ -305,7 +305,7 @@ namespace Cryo
          * @param varName The name of the variable.
          * @return The created global variable.
          */
-        llvm::Value *createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant, llvm::Constant *initialValue = nullptr);
+        llvm::Value *createGlobalVariable(CryoContext &context, llvm::Type *type, llvm::StringRef name, bool isConstant, llvm::Constant *initialValue, bool isString);
 
         /**
          * @brief Loads a global variable from the LLVM IR.
@@ -506,7 +506,9 @@ namespace Cryo
 
         llvm::Constant *convertLLVMPtrToConstant(llvm::Value *ptr);
         llvm::Constant *createLLVMConstant(CryoDataType type, const std::string &value);
-        llvm::GlobalVariable *createIntArray(const std::vector<int> &values, const std::string &name = "intArray");
+        llvm::StructType *createGenericArrayType(llvm::LLVMContext &context);
+        llvm::Value *createArrayLiteral(ASTNode *node);
+        llvm::Constant *generateLiteralValue(ASTNode *literalNode);
 
     private:
         CryoCompiler &compiler;
