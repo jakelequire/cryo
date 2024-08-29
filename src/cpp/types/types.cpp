@@ -110,6 +110,8 @@ namespace Cryo
         case DATA_TYPE_ARRAY:
             cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning array type");
             return llvm::ArrayType::get(llvm::Type::getInt32Ty(cryoContext.context), 0);
+        case DATA_TYPE_INT_ARRAY:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning int array type");
         case DATA_TYPE_UNKNOWN:
             cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unknown data type");
             return nullptr;
@@ -118,6 +120,44 @@ namespace Cryo
             cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unsupported data type");
             return nullptr;
         }
+    }
+
+    llvm::Type *CryoTypes::getLLVMType(CryoDataType type, int length)
+    {
+        CryoDebugger &cryoDebugger = compiler.getDebugger();
+
+        char *typeStr = CryoDataTypeToString(type);
+        cryoDebugger.logMessage("INFO", __LINE__, "Types", "Getting LLVM type for " + std::string(typeStr));
+        // Test if the context exists at all:
+
+        CryoContext &cryoContext = compiler.getContext();
+
+        switch (type)
+        {
+        case DATA_TYPE_INT_ARRAY:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning int array type");
+            return llvm::ArrayType::get(llvm::Type::getInt32Ty(cryoContext.context), length);
+        case DATA_TYPE_FLOAT_ARRAY:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning float array type");
+            return llvm::ArrayType::get(llvm::Type::getFloatTy(cryoContext.context), length);
+        case DATA_TYPE_STRING_ARRAY:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning string array type");
+            return llvm::ArrayType::get(llvm::PointerType::get(llvm::Type::getInt8Ty(cryoContext.context), 0), length);
+        case DATA_TYPE_BOOLEAN_ARRAY:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning boolean array type");
+            return llvm::ArrayType::get(llvm::Type::getInt1Ty(cryoContext.context), length);
+        case DATA_TYPE_STRING:
+            cryoDebugger.logMessage("INFO", __LINE__, "Types", "Returning string type");
+            return llvm::PointerType::get(llvm::Type::getInt8Ty(cryoContext.context), length);
+        case DATA_TYPE_UNKNOWN:
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unknown data type");
+            return nullptr;
+        default:
+            cryoDebugger.logMessage("ERROR", __LINE__, "Types", "Unsupported data type");
+            return nullptr;
+        }
+
+        return nullptr;
     }
 
     llvm::Type *CryoTypes::createLLVMConstantType(CryoDataType type)

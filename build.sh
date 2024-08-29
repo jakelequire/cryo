@@ -76,8 +76,8 @@ cleanup
 log "Build completed successfully, running the output file..."
 log ">===---------------------------------------------------------===<"
 
-# Run the output file
-$BUILD_DIR/$OUTPUT_FILE
+# Run the output file safely
+$BUILD_DIR/$OUTPUT_FILE || error "Failed to run the output file"
 
 # Exit successfully
 exit 0

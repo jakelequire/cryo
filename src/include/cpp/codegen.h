@@ -96,7 +96,10 @@ namespace Cryo
         {
             module = std::make_unique<llvm::Module>("main", context);
             std::cout << "[CPP.h] Module Initialized" << std::endl;
+            module->setDataLayout("e-m:e-p:64:64-i64:64-f80:128-n8:16:32:64-S128");
             // namedValues = std::unordered_map<std::string, llvm::Value *>();
+
+            std::cout << "[CPP.h] Context Initialized" << std::endl;
         }
 
     private:
@@ -380,6 +383,8 @@ namespace Cryo
          * @return The converted LLVM type.
          */
         llvm::Type *getLLVMType(CryoDataType type);
+        /// Function Overload: For Arrays & Strings.
+        llvm::Type *getLLVMType(CryoDataType type, int length);
 
         /**
          * @brief Creates a new LLVM constant type based on the given CryoDataType.

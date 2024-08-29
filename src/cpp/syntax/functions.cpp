@@ -313,7 +313,6 @@ namespace Cryo
     void CryoSyntax::generateFunctionCall(ASTNode *node)
     {
         CryoContext &cryoContext = compiler.getContext();
-        CryoTypes &cryoTypesInstance = compiler.getTypes();
         CryoDebugger &cryoDebugger = compiler.getDebugger();
 
         cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating call to function");
@@ -336,22 +335,16 @@ namespace Cryo
             }
 
             llvm::Type *paramType = function->getArg(i)->getType();
-            if (arg->getType() != paramType)
+
+            // If arg is a pointer type (like AllocaInst), load its value
+            if (arg->getType()->isPointerTy() && !paramType->isPointerTy())
             {
-                if (paramType->isPointerTy() && !arg->getType()->isPointerTy())
-                {
-                    // If the function expects a pointer but we have a value, pass the address
-                    llvm::AllocaInst *temp = cryoContext.builder.CreateAlloca(arg->getType());
-                    cryoContext.builder.CreateStore(arg, temp);
-                    cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Passing pointer argument");
-                    arg = temp;
-                }
-                else if (!paramType->isPointerTy() && arg->getType()->isPointerTy())
-                {
-                    // If the function expects a value but we have a pointer, load it
-                    cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Loading pointer argument");
-                    arg = cryoContext.builder.CreateLoad(paramType, arg);
-                }
+                arg = cryoContext.builder.CreateLoad(paramType, arg);
+            }
+            // Special case for strings: keep them as pointers
+            else if (paramType->isPointerTy() && arg->getType()->isArrayTy())
+            {
+                arg = cryoContext.builder.CreateBitCast(arg, paramType);
             }
 
             cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Adding argument to function call");
@@ -439,33 +432,21 @@ namespace Cryo
     llvm::Value *CryoSyntax::generateArguments(ASTNode *node)
     {
         CryoDebugger &cryoDebugger = compiler.getDebugger();
+        CryoContext &cryoContext = compiler.getContext();
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
+
         if (!node)
         {
             cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Arguments node is null");
             return nullptr;
         }
 
-        CryoContext &cryoContext = compiler.getContext();
-        CryoTypes &cryoTypesInstance = compiler.getTypes();
-
         llvm::Value *value = nullptr;
         switch (node->metaData->type)
         {
         case NODE_LITERAL_EXPR:
         {
-            CryoDataType dt = node->data.literal->dataType;
-            switch (dt)
-            {
-            case DATA_TYPE_INT:
-                value = llvm::ConstantInt::get(cryoContext.context, llvm::APInt(32, node->data.literal->value.intValue, true));
-                break;
-
-            case DATA_TYPE_STRING:
-                value = cryoContext.builder.CreateGlobalStringPtr(node->data.literal->value.stringValue);
-                break;
-            }
-
-            break;
+            return cryoTypesInstance.generateLiteralValue(node);
         }
         case NODE_VAR_DECLARATION:
         {
@@ -491,14 +472,10 @@ namespace Cryo
             break;
         }
         case NODE_VAR_NAME:
+            return lookupVariable(node->data.varName->varName);
+        case NODE_BINARY_EXPR:
         {
-            value = cryoContext.namedValues[node->data.varName->varName];
-            if (!value)
-            {
-                cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Unknown variable name");
-                return nullptr;
-            }
-            break;
+            return generateExpression(node);
         }
         default:
             cryoDebugger.logMessage("ERROR", __LINE__, "Functions", "Unsupported argument type");

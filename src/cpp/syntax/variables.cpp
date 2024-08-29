@@ -166,25 +166,35 @@ namespace Cryo
         }
 
         llvm::StringRef varName(node->data.varDecl->name);
-        llvm::Type *llvmType = cryoTypes.getLLVMType(node->data.varDecl->type);
-        if (!llvmType)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Variables", "Unsupported variable type");
-            return;
-        }
-
+        llvm::Type *llvmType = nullptr;
         llvm::Value *var = nullptr;
+
         if (node->data.varDecl->isGlobal)
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Creating Global Variable");
             if (node->data.varDecl->type == DATA_TYPE_STRING)
             {
                 const char *strValue = node->data.varDecl->initializer->data.literal->value.stringValue;
+                int strLength = strlen(strValue);
+                llvmType = cryoTypes.getLLVMType(node->data.varDecl->type, strLength);
                 initialValue = llvm::ConstantDataArray::getString(cryoContext.context, strValue, true);
                 var = createGlobalVariable(cryoContext, llvmType, varName, node->data.varDecl->isReference, initialValue, true);
             }
+            else if (node->data.varDecl->type == DATA_TYPE_INT_ARRAY)
+            {
+                debugger.logMessage("INFO", __LINE__, "Variables", "Creating Global Variable with Array Initializer");
+                // Idk why I have to -1 but it works :)
+                int elementCount = node->data.varDecl->initializer->data.array->elementCount - 1;
+
+                llvmType = cryoTypes.getLLVMType(node->data.varDecl->type, elementCount);
+                llvm::ArrayType *arrayType = llvm::cast<llvm::ArrayType>(llvmType);
+                initialValue = llvm::ConstantArray::get(arrayType, generateArrayElements(node->data.varDecl->initializer));
+
+                var = createGlobalVariable(cryoContext, llvmType, varName, node->data.varDecl->isReference, initialValue, false);
+            }
             else
             {
+                llvmType = cryoTypes.getLLVMType(node->data.varDecl->type);
                 var = createGlobalVariable(cryoContext, llvmType, varName, node->data.varDecl->isReference, initialValue, false);
             }
         }
@@ -192,6 +202,7 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
             std::string varNameStr = varName.str();
+            llvmType = cryoTypes.getLLVMType(node->data.varDecl->type);
             var = createLocalVariable(cryoContext, llvmType, varNameStr);
         }
 

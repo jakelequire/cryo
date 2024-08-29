@@ -1,12 +1,15 @@
 // namespace main
-// extern function printInt(i: int) -> void;
-// extern function printStr(s: string) -> void;
+extern function printInt(i: int) -> void;
+extern function printStr(s: string) -> void;
 
 const qix: int = 34;
-// const foo: string = "Hello!";
+const foo: string = "Hello!";
 const ARR: int[] = [1, 2, 3, 4, 5];
 
 public function main() -> void
 {
+    printInt(69);
+    printInt(qix);
+    // printStr(foo);
     return;
 }

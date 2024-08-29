@@ -38,7 +38,6 @@ extern char *strdup(const char *__s);
 // strndup
 extern char *strndup(const char *__string, size_t __n);
 
-
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 /// ---
 /// ```
