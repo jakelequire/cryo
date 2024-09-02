@@ -314,6 +314,7 @@ namespace Cryo
     {
         CryoContext &cryoContext = compiler.getContext();
         CryoDebugger &cryoDebugger = compiler.getDebugger();
+        CryoTypes &cryoTypesInstance = compiler.getTypes();
 
         cryoDebugger.logMessage("INFO", __LINE__, "Functions", "Generating call to function");
 

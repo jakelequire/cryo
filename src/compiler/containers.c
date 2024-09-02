@@ -35,7 +35,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena)
         return NULL;
     }
 
-    const int initialCapacity = 6;
+    const int initialCapacity = 32;
     node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -70,7 +70,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena)
         return NULL;
     }
 
-    const int initialCapacity = 12; // Or any other small, non-zero value
+    const int initialCapacity = 32; // Or any other small, non-zero value
     node->statements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -348,9 +348,8 @@ LiteralNode *createLiteralNodeContainer(Arena *arena)
         return NULL;
     }
 
-
     node->dataType = DATA_TYPE_UNKNOWN;
-    node->value.intValue =  0;
+    node->value.intValue = 0;
     node->value.floatValue = 0;
     node->value.stringValue = (char *)ARENA_ALLOC(arena, sizeof(char));
     node->value.booleanValue = false;

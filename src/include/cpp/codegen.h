@@ -96,7 +96,7 @@ namespace Cryo
         {
             module = std::make_unique<llvm::Module>("main", context);
             std::cout << "[CPP.h] Module Initialized" << std::endl;
-            module->setDataLayout("e-m:e-p:64:64-i64:64-f80:128-n8:16:32:64-S128");
+            module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128");
             // namedValues = std::unordered_map<std::string, llvm::Value *>();
 
             std::cout << "[CPP.h] Context Initialized" << std::endl;

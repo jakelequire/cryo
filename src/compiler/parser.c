@@ -321,8 +321,7 @@ void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode
     if (program->statementCount >= program->statementCapacity)
     {
         program->statementCapacity = (program->statementCapacity > 0) ? (program->statementCapacity * 2) : 1;
-        program->statements = (ASTNode **)realloc(program->statements,
-                                                  program->statementCapacity * sizeof(ASTNode *));
+        program->statements = (ASTNode **)realloc(program->statements, sizeof(ASTNode *) * program->statementCapacity);
         if (!program->statements)
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to reallocate memory for program statements");
@@ -620,6 +619,7 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
         if (statement)
         {
             logMessage("INFO", __LINE__, "Parser", "Adding statement to function block...");
+            DEBUG_ARENA_PRINT(arena);
             addStatementToFunctionBlock(functionBlock, statement, arena);
         }
         else
