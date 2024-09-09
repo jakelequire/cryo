@@ -105,10 +105,58 @@ namespace Cryo
         // TODO: Implement
     }
 
-    void Generator::handleLiteralExpression(ASTNode *node)
+    llvm::Value* Generator::handleLiteralExpression(ASTNode *node)
     {
-        std::cout << "[CPP] Handling Literal Expression" << std::endl;
-        // TODO: Implement
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Literal Expression");
+
+        llvm::Value *llvmValue = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+        LiteralNode  *literalNode = node->data.literal;
+
+        switch (literalNode->dataType)
+        {
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
+            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, literalNode->value.intValue, true));
+            break;
+        }
+        case DATA_TYPE_STRING:
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Creating String Constant");
+            llvmConstant = llvm::ConstantDataArray::getString(compiler.getContext().context, literalNode->value.stringValue);
+            break;
+        }
+        case DATA_TYPE_FLOAT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Creating Float Constant");
+            llvmConstant = llvm::ConstantFP::get(compiler.getContext().context, llvm::APFloat(literalNode->value.floatValue));
+            break;
+        }
+        case DATA_TYPE_BOOLEAN:
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Creating Boolean Constant");
+            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(1, literalNode->value.booleanValue, true));
+            break;
+        }
+        case DATA_TYPE_VOID:
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Creating Void Constant");
+            llvmConstant = llvm::Constant::getNullValue(llvm::Type::getVoidTy(compiler.getContext().context));
+            break;
+        }
+        default:
+            debugger.logMessage("ERROR", __LINE__, "Generator", "Unknown type");
+            std::cout << "Received: " << CryoDataTypeToString(literalNode->dataType) << std::endl;
+            exit(1);
+            break;
+        }
+
+        llvmValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
+
+        debugger.logMessage("INFO", __LINE__, "Generator", "Literal Expression Handled");
+        return llvmValue;
     }
 
     void Generator::handleIfStatement(ASTNode *node)

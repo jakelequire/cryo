@@ -45,6 +45,8 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         CryoContext &cryoContext = compiler.getContext();
+        Variables &variables = compiler.getVariables();
+        Generator &generator = compiler.getGenerator();
         Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Declaration");
 
@@ -97,6 +99,7 @@ namespace Cryo
             llvm::Twine(functionName),
             *cryoContext.module);
 
+
         // Set the function arguments
         int i = 0;
         for (auto &arg : function->args())
@@ -109,13 +112,39 @@ namespace Cryo
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(compiler.getContext().context, "entry", function);
         compiler.getContext().builder.SetInsertPoint(entryBlock);
 
-        // Parse the function body without `parseTree` to avoid recursion
+        // Note to self: This is the block that will loop through the function body & statement
+        // I need to find a better and most consistent way to handle this.
+        // It seems like I need something like the `parseTree` method but that returns a `llvm::Value *` without removing `parseTree`.
+        // These statements needs to be in the same block as the function body.
         for (int i = 0; i < functionBody->data.functionBlock->statementCount; ++i)
         {
             debugger.logMessage("INFO", __LINE__, "Functions", "Parsing Statement " + std::to_string(i + 1) + " of " + std::to_string(functionBody->data.functionBlock->statementCount));
             ASTNode *statement = functionBody->data.functionBlock->statements[i];
             CryoNodeType nodeType = statement->metaData->type;
             std::cout << "Statement: " << CryoNodeTypeToString(statement->metaData->type) << std::endl;
+
+            // if(nodeType == NODE_VAR_DECLARATION)
+            // {
+            //     VariableIR* varIR = variables.createNewLocalVariable(statement);
+            //     llvm::Value* varValue = varIR->value;
+            //     llvm::Type* varType = varIR->type;
+            //     std::string varName = varIR->name;
+            // }
+
+            if(nodeType == NODE_RETURN_STATEMENT) 
+            {
+                llvm::Type *returnLLVMType = types.getReturnType(returnType);
+                if(returnType == DATA_TYPE_VOID)
+                {
+                    compiler.getContext().builder.CreateRetVoid();
+                }
+                else
+                {
+                    // For non-void functions, grab the return value from the return statement
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
+                }
+            }
 
             compiler.getGenerator().parseTree(statement);
         }
@@ -136,6 +165,9 @@ namespace Cryo
                 llvm::Value *defaultReturnValue = llvm::UndefValue::get(returnLLVMType);
                 compiler.getContext().builder.CreateRet(defaultReturnValue);
             }
+        } else 
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Function already has a terminator");
         }
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Declaration Created");

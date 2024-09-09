@@ -25,6 +25,64 @@ namespace Cryo
         exit(0);
     }
 
+    // unused
+    /*
+        llvm::Value *value;
+        llvm::Type *type;
+        std::string name;
+        CryoDataType dataType;
+    */
+    VariableIR *Variables::createNewLocalVariable(ASTNode* node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating New Variable");
+
+        CryoVariableNode *varDecl = node->data.varDecl;
+        assert(varDecl != nullptr);
+
+        VariableIR *var = new VariableIR();
+
+        CryoDataType varType = node->data.varDecl->type;
+        std::string varName = std::string(varDecl->name);
+        llvm::Value *llvmValue = nullptr;
+        llvm::Type *llvmType = nullptr;
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+
+        if(varType == DATA_TYPE_STRING )
+        {
+            int _len = compiler.getTypes().getLiteralValLength(varDecl->initializer);
+            llvmType = compiler.getTypes().getType(varType, _len);
+            var->type = llvmType;
+            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+        }
+        if(varType == DATA_TYPE_INT)
+        {
+            llvmType = compiler.getTypes().getType(varType, 0);
+            var->type = llvmType;
+            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+        }
+        else
+        {
+            llvmType = compiler.getTypes().getType(varType, 0);
+            var->type = llvmType;
+            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+
+        var->name = varName;
+        var->dataType = varType;
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
+        var->value = llvmValue;
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Set");
+
+        return var;
+    }
+
+
     // -----------------------------------------------------------------------------------------------
 
     void Variables::processConstVariable(CryoVariableNode *varNode)

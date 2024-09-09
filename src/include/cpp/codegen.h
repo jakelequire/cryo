@@ -58,6 +58,31 @@ namespace Cryo
     class Arrays;
     class Functions;
 
+
+    typedef struct VariableIR
+    {
+        llvm::Value *value;
+        llvm::Type *type;
+        std::string name;
+        CryoDataType dataType;
+    } VariableIR;
+
+    typedef struct ExpressionIR
+    {
+        llvm::Value *value;
+        llvm::Type *type;
+        CryoDataType dataType;
+    } ExpressionIR;
+
+    typedef struct FunctionIR
+    {
+        llvm::Function *function;
+        llvm::Type *returnType;
+        std::vector<llvm::Type *> argTypes;
+        std::vector<llvm::Value *> argValues;
+        std::string name;
+    } FunctionIR;
+
     /// -----------------------------------------------------------------------------------------------
     /**
      * @class CryoContext
@@ -85,7 +110,7 @@ namespace Cryo
         {
             module = std::make_unique<llvm::Module>("main", context);
             std::cout << "[CPP.h] Module Initialized" << std::endl;
-            module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128");
+            module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
             // namedValues = std::unordered_map<std::string, llvm::Value *>();
 
             std::cout << "[CPP.h] Context Initialized" << std::endl;
@@ -162,6 +187,7 @@ namespace Cryo
 
         void generateCode(ASTNode *root);
         void parseTree(ASTNode *root);
+        llvm::Value *getInitilizerValue(ASTNode *node);
 
         // Actual logic for handling different types of nodes
         // This is the main entry point for the generator
@@ -174,7 +200,7 @@ namespace Cryo
         void handleVariableDeclaration(ASTNode *node);
         void handleBinaryExpression(ASTNode *node);
         void handleUnaryExpression(ASTNode *node);
-        void handleLiteralExpression(ASTNode *node);
+        llvm::Value* handleLiteralExpression(ASTNode *node);
         void handleIfStatement(ASTNode *node);
         void handleWhileStatement(ASTNode *node);
         void handleForStatement(ASTNode *node);
@@ -230,6 +256,7 @@ namespace Cryo
 
         void handleConstVariable(ASTNode *node);
         void handleRefVariable(ASTNode *node);
+        VariableIR *createNewLocalVariable(ASTNode* node);
 
         void processConstVariable(CryoVariableNode *varNode);
 

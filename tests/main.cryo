@@ -13,6 +13,11 @@ const boolFalse: boolean = false;
 
 public function main() -> void 
 {
-    const intFour: int = 3;
+    const intInnerFunc: int = 3;
     return;
+}
+
+public function testNumRet() -> int
+{
+    return 42;
 }

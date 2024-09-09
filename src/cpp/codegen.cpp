@@ -173,4 +173,47 @@ namespace Cryo
 
         return;
     }
+
+    llvm::Value *Generator::getInitilizerValue(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Variables &variables = compiler.getVariables();
+        Generator &generator = compiler.getGenerator();
+        Types &types = compiler.getTypes();
+
+        CryoNodeType nodeType = node->metaData->type;
+        llvm::Value *llvmValue = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+
+        switch (nodeType)
+        {
+        case NODE_LITERAL_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Handling Literal Expression");
+            llvmValue = generator.handleLiteralExpression(node);
+            break;
+        }
+        case NODE_RETURN_STATEMENT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Handling Return Statement");
+            CryoNodeType  retType = node->data.returnStatement->returnValue->metaData->type;
+            std::cout << "Node Type: " << CryoNodeTypeToString(retType) << std::endl;
+
+            if(retType == NODE_LITERAL_EXPR)
+            {
+                llvmValue = generator.handleLiteralExpression(node->data.returnStatement->returnValue);
+            }
+            
+            break;
+        }
+        default:
+            debugger.logMessage("ERROR", __LINE__, "Generator", "Unknown node type");
+            std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
+            exit(1);
+        }
+
+        return llvmValue;
+    }
+
+    
 } // namespace Cryo

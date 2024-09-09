@@ -81,10 +81,10 @@ clang -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll
 cd $OUT_DIR
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file
-llvm-link cryolib.ll output.ll -o bin.ll 
+llvm-link-18 cryolib.ll output.ll -o bin.ll 
 
 # Compile the object file
-llc -filetype=obj -relocation-model=static bin.ll -o bin.o
+llc-18 -filetype=obj -relocation-model=static bin.ll -o bin.o
 
 # Change back to the original directory
 cd - > /dev/null

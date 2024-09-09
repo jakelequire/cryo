@@ -28,8 +28,8 @@
 OPTIMIZATION = -Og
 DEBUG_FLAGS =  -v -D_CRT_SECURE_NO_WARNINGS 
 # C23
-C_STANDARD = -std=c2x
-CXX_STANDARD = -std=c++20
+C_STANDARD = -std=c23
+CXX_STANDARD = -std=c++23
 
 # OS-specific settings for compilers
 ifeq ($(OS), Windows_NT)
@@ -38,8 +38,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang
-	CXX_COMPILER = clang++
+	C_COMPILER = clang-18
+	CXX_COMPILER = clang++-18
 endif
 
 # OS-specific settings
@@ -63,10 +63,10 @@ else
     CC = $(C_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CXX = $(CXX_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
-			-I./src/include/utils -I./src/include/tests $(LLVM_CFLAGS)
+			-I./src/include/utils -I./src/include/tests  $(LDFLAGS)
     CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
-			-I./src/include/utils -I./src/include/tests $(LLVM_CFLAGS)
-    LLVM_CONFIG = llvm-config
+			-I./src/include/utils -I./src/include/tests -I/usr/lib/llvm-18/include
+    LLVM_CONFIG = llvm-config-18
     LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
     LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
     LDFLAGS = $(LLVM_LDFLAGS) -lpthread -v
