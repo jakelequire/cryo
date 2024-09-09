@@ -8,16 +8,11 @@ const strTwo: string = "Goodbye, World!";
 const boolTrue: boolean = true;
 const boolFalse: boolean = false;
 
-const arrOne: int[] = [1, 2, 3, 4, 5];
+// const arrOne: int[] = [1, 2, 3, 4, 5];
 // const arrTwo: string[] = ["one", "two", "three", "four", "five"];
 
-public function main() -> string 
+public function main() -> void 
 {
     const intFour: int = 3;
     return;
-}
-
-public function foz() -> int
-{
-    return 69;
 }

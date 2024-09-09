@@ -3,6 +3,21 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Set the IFS to only split on newlines and tabs
+IFS=$'\n\t'
+
+# Set the shell options
+shopt -s nullglob
+
+# Set the trap to cleanup on exit
+trap cleanup EXIT
+
+# Set the trap to cleanup on error
+trap cleanup ERR
+
+# Set the trap to cleanup on termination
+trap cleanup SIGTERM
+
 ## Variables
 
 # BASE_FILE is the main file of the project
@@ -36,6 +51,13 @@ function cleanup {
     log "Cleaning up..."
     rm ./output.ll
 }
+
+
+# Build from make
+make all || error "Failed to build the project"
+
+# Clear the screen
+clear
 
 # Create the necessary directories if they don't exist
 mkdir -p $BUILD_DIR

@@ -60,6 +60,8 @@ namespace Cryo
             {
 
                 int _len = types.getLiteralValLength(initializer);
+                if (type == DATA_TYPE_STRING)
+                    _len += 1; // Add one for the null terminator
                 debugger.logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
                 llvmType = types.getType(type, _len);
                 char *typeNode = CryoDataTypeToString(type);
