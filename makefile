@@ -108,7 +108,10 @@ MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
-CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp $(CPP_UTILS_DIR)debugger.cpp
+CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp $(CPP_DIR)generator.cpp $(CPP_DIR)types.cpp \
+		$(CPP_UTILS_DIR)debugger.cpp $(CPP_SEMANTICS_DIR)variables.cpp $(CPP_SEMANTICS_DIR)functions.cpp \
+		$(CPP_SEMANTICS_DIR)arrays.cpp 
+		
 
 
 # Cryo Lib Files
@@ -128,7 +131,8 @@ RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
-CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppmain.o
+CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppmain.o $(OBJ_DIR)variables.o \
+			$(OBJ_DIR)functions.o $(OBJ_DIR)arrays.o $(OBJ_DIR)generator.o $(OBJ_DIR)types.o
 
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
@@ -219,6 +223,21 @@ $(OBJ_DIR)codegen.o: $(CPP_DIR)codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)debugger.o: $(CPP_DIR)utils/debugger.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)generator.o: $(CPP_DIR)generator.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)types.o: $(CPP_DIR)types.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)variables.o: $(CPP_SEMANTICS_DIR)variables.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)functions.o: $(CPP_SEMANTICS_DIR)functions.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)arrays.o: $(CPP_SEMANTICS_DIR)arrays.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 	
 # ---------------------------------------------
