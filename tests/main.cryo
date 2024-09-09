@@ -1,15 +1,23 @@
-// namespace main
-extern function printInt(i: int) -> void;
+const intOne: int = 32;
+const intTwo: int = 64;
+const intThree: int = 128;
 
-const qix: int = 36963;
-const foo: string = "a";
-const uhhh: int = 3;
-const bool: boolean = true;
-const ARR: int[] = [1, 2, 3, 4, 5];
+const strOne: string = "Hello, World!";
+const strTwo: string = "Goodbye, World!";
 
-public function main() -> void
+const boolTrue: boolean = true;
+const boolFalse: boolean = false;
+
+const arrOne: int[] = [1, 2, 3, 4, 5];
+// const arrTwo: string[] = ["one", "two", "three", "four", "five"];
+
+public function main() -> string 
 {
-    printInt(qix);
-    
+    const intFour: int = 3;
     return;
+}
+
+public function foz() -> int
+{
+    return 69;
 }

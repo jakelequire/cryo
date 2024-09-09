@@ -18,61 +18,53 @@
 
 namespace Cryo
 {
+
     /**
-     * The Entry Point to the CodeGen process.
+     * @brief The entry point to the generation process (passed from the top-level compiler).
+     * @param node
      */
     void CodeGen::executeCodeGeneration(ASTNode *root)
     {
+        std::cout << "[CPP] Executing Code Generation" << std::endl;
 
+        CryoCompiler &compiler = this->compiler;
+
+        compiler.getGenerator().generateCode(root);
+    }
+
+    /**
+     * Generates code from the given AST tree.
+     *
+     * @param root The root node of the AST tree.
+     */
+    void Generator::generateCode(ASTNode *root)
+    {
+        std::cout << "[CPP] Generating Code" << std::endl;
+        CryoDebugger &debugger = compiler.getDebugger();
         CryoContext &cryoContext = compiler.getContext();
-        CryoModules &cryoModulesInstance = compiler.getModules();
-        CryoSyntax &cryoSyntaxInstance = compiler.getSyntax();
-        CryoDebugger &cryoDebugger = compiler.getDebugger();
 
-        cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Starting Code CodeGen");
-
-        if (root == nullptr)
+        if (!root)
         {
-            cryoDebugger.logMessage("ERROR", __LINE__, "CodeGen", "Root node is null");
+            std::cerr << "[CPP] Root is null!" << std::endl;
+            return;
+        }
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Linting Tree");
+        bool validateTree = debugger.lintTree(root);
+        if (validateTree == false)
+        {
+            std::cerr << "[CPP] Tree is invalid!" << std::endl;
             return;
         }
 
-        std::cout << "\n\n ------ Debug AST View ------\n";
-        cryoDebugger.logNode(root);
-        std::cout << "------^ Debug AST View ^------\n\n";
-
-        // First Pass: Declare all functions
-        cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "First Pass: Declare all functions");
-        bool mainFunctionExists = cryoModulesInstance.declareFunctions(root);
-
-        if (!mainFunctionExists)
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Main function does not exist. Creating default main function");
-            cryoSyntaxInstance.createDefaultMainFunction();
-        }
-
-        // Second Pass: Generate code for the entire program
-        cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Second Pass: Generate code for the entire program");
-        cryoSyntaxInstance.identifyNodeExpression(root);
-
-        llvm::Function *defaultMain = cryoContext.module->getFunction("_defaulted");
-        if (defaultMain)
-        {
-            llvm::BasicBlock &entryBlock = defaultMain->getEntryBlock();
-            if (!entryBlock.getTerminator())
-            {
-                cryoContext.builder.SetInsertPoint(&entryBlock);
-                cryoContext.builder.CreateRetVoid();
-                cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Default main function has no return statement. Adding return void");
-            }
-        }
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
+        parseTree(root);
 
         if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {
             std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
             cryoContext.module->print(llvm::errs(), nullptr);
             std::cout << "\n>===----------------- End Error -----------------===<\n";
-            cryoDebugger.logMessage("ERROR", __LINE__, "CodeGen", "LLVM module verification failed");
+            debugger.logMessage("ERROR", __LINE__, "CodeGen", "LLVM module verification failed");
             exit(1);
         }
         else
@@ -82,7 +74,7 @@ namespace Cryo
 
             if (EC)
             {
-                cryoDebugger.logMessage("ERROR", __LINE__, "CodeGen", "Error opening file for writing");
+                debugger.logMessage("ERROR", __LINE__, "CodeGen", "Error opening file for writing");
             }
             else
             {
@@ -95,242 +87,90 @@ namespace Cryo
                 dest.flush();
                 dest.close();
 
-                cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
+                debugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
             }
         }
 
-        cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
         return;
-    } // <executeCodeGeneration>
+    }
 
     /**
-     * Identify the type of node and call the appropriate function to generate code.
+     * Parses the given AST tree starting from the root node.
+     *
+     * @param root The root node of the AST tree.
      */
-    void CryoSyntax::identifyNodeExpression(ASTNode *node)
+    void Generator::parseTree(ASTNode *root)
     {
-        CryoDebugger &cryoDebugger = compiler.getDebugger();
-        if (!node)
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
+
+        if (!root)
         {
-            cryoDebugger.logMessage("ERROR", __LINE__, "CodeGen", "Node is null in identifyNodeExpression");
-            exit(0);
+            debugger.logMessage("ERROR", __LINE__, "CodeGen", "Root is null!");
             return;
         }
-        cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identifying Node Expression");
 
-        CryoModules cryoModulesInstance = compiler.getModules();
-        CryoSyntax cryoSyntaxInstance = compiler.getSyntax();
+        Generator &generator = this->compiler.getGenerator();
 
-        switch (node->metaData->type)
+        switch (root->metaData->type)
         {
         case NODE_PROGRAM:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_PROGRAM");
-            cryoModulesInstance.generateProgram(node);
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Program");
+            generator.handleProgram(root);
             break;
-        }
-
         case NODE_FUNCTION_DECLARATION:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_FUNCTION_DECLARATION");
-            cryoSyntaxInstance.generateFunction(node);
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Function Declaration");
+            generator.handleFunctionDeclaration(root);
             break;
-        }
-
-        case NODE_VAR_DECLARATION:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_VAR_DECLARATION");
-            cryoSyntaxInstance.generateVarDeclaration(node);
-            break;
-        }
-
-        case NODE_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_STATEMENT");
-            cryoSyntaxInstance.generateStatement(node);
-            break;
-        }
-
-        case NODE_EXPRESSION:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_EXPRESSION");
-            cryoSyntaxInstance.generateExpression(node);
-            break;
-        }
-
-        case NODE_BINARY_EXPR:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_BINARY_EXPR");
-            cryoSyntaxInstance.generateBinaryOperation(node);
-            break;
-        }
-
-        case NODE_UNARY_EXPR:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_UNARY_EXPR");
-            // Todo
-            break;
-        }
-
-        case NODE_LITERAL_EXPR:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_LITERAL_EXPR");
-            // Todo
-            break;
-        }
-
-        case NODE_VAR_NAME:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_VAR_NAME");
-            // Todo
-            break;
-        }
-
-        case NODE_FUNCTION_CALL:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_FUNCTION_CALL");
-            cryoSyntaxInstance.generateFunctionCall(node);
-            break;
-        }
-
-        case NODE_IF_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_IF_STATEMENT");
-            // Todo
-            break;
-        }
-
-        case NODE_WHILE_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_WHILE_STATEMENT");
-            // Todo
-            break;
-        }
-
-        case NODE_FOR_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_FOR_STATEMENT");
-            // Todo
-            break;
-        }
-
-        case NODE_RETURN_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_RETURN_STATEMENT");
-            cryoSyntaxInstance.generateReturnStatement(node);
-            break;
-        }
-
-        case NODE_BLOCK:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_BLOCK");
-            cryoModulesInstance.generateBlock(node);
-            break;
-        }
-
         case NODE_FUNCTION_BLOCK:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_FUNCTION_BLOCK");
-            cryoSyntaxInstance.generateFunctionBlock(node);
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Function Block");
+            generator.handleFunctionBlock(root);
             break;
-        }
-
-        case NODE_EXPRESSION_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_EXPRESSION_STATEMENT");
-            // cryoSyntaxInstance.generateExpression(node->data.stmt.stmt);
+        case NODE_RETURN_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Return Statement");
+            generator.handleReturnStatement(root);
             break;
-        }
-
-        case NODE_ASSIGN:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_ASSIGN");
-            // Todo
+        case NODE_FUNCTION_CALL:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Function Call");
+            generator.handleFunctionCall(root);
             break;
-        }
-
-        case NODE_PARAM_LIST:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_PARAM_LIST");
-            // Todo
+        case NODE_VAR_DECLARATION:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Declaration");
+            generator.handleVariableDeclaration(root);
             break;
-        }
-
-        case NODE_TYPE:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_TYPE");
-            // Todo
+        case NODE_BINARY_EXPR:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Binary Expression");
+            generator.handleBinaryExpression(root);
             break;
-        }
-
-        case NODE_STRING_LITERAL:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_STRING_LITERAL");
-            // Todo
+        case NODE_UNARY_EXPR:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Unary Expression");
+            generator.handleUnaryExpression(root);
             break;
-        }
-
-        case NODE_STRING_EXPRESSION:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_STRING_EXPRESSION");
-            // Todo
+        case NODE_LITERAL_EXPR:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression");
+            generator.handleLiteralExpression(root);
             break;
-        }
-
-        case NODE_BOOLEAN_LITERAL:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_BOOLEAN_LITERAL");
-            // Todo
+        case NODE_IF_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling If Statement");
+            generator.handleIfStatement(root);
             break;
-        }
-
-        case NODE_ARRAY_LITERAL:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_ARRAY_LITERAL");
-            cryoSyntaxInstance.generateArrayLiteral(node);
+        case NODE_WHILE_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling While Statement");
+            generator.handleWhileStatement(root);
             break;
-        }
-
-        case NODE_IMPORT_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_IMPORT_STATEMENT");
-            // Todo
+        case NODE_FOR_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling For Statement");
+            generator.handleForStatement(root);
             break;
-        }
-
-        case NODE_EXTERN_STATEMENT:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_EXTERN_STATEMENT");
-            // Todo
-            break;
-        }
-
-        case NODE_EXTERN_FUNCTION:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_EXTERN_FUNCTION");
-            cryoSyntaxInstance.generateExternalDeclaration(node);
-            break;
-        }
-
-        case NODE_ARG_LIST:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_ARG_LIST");
-            // Todo
-            break;
-        }
-
-        case NODE_UNKNOWN:
-        {
-            cryoDebugger.logMessage("INFO", __LINE__, "CodeGen", "Identified NODE_UNKNOWN");
-            break;
-        }
-
         default:
-        {
-            cryoDebugger.logMessage("ERROR", __LINE__, "CodeGen", "Unsupported node type");
+            debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
+            exit(EXIT_FAILURE);
             break;
         }
-        }
-        return;
-    } // <identifyNodeExpression>
 
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Tree Parsed");
+
+        return;
+    }
 } // namespace Cryo

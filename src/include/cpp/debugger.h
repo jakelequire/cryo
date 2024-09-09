@@ -16,7 +16,9 @@
  ********************************************************************************/
 #ifndef CRYO_DEBUGGER
 #define CRYO_DEBUGGER
-#include "codegen.h"
+#include "cpp/codegen.h"
+#include "compiler/ast.h"
+
 #include <iomanip>
 
 namespace Cryo
@@ -40,6 +42,11 @@ namespace Cryo
         // Macro Implementations
         void checkNode(ASTNode *node);
         void debugPanic(std::string funcName);
+
+        // New Prototypes
+        bool lintTree(ASTNode *node);
+        bool assertNode(ASTNode *node);
+        bool isValidNodeType(CryoNodeType type);
 
     private:
         CryoContext &context;

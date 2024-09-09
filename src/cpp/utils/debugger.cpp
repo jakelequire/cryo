@@ -374,4 +374,595 @@ namespace Cryo
         }
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    bool CryoDebugger::lintTree(ASTNode *node)
+    {
+        static int nodeCount = 0;
+        nodeCount++;
+
+        if (!node)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "Node is null");
+            return false;
+        }
+
+        std::stringstream ss;
+        ss << "Processing node " << nodeCount << " of type: " << CryoNodeTypeToString(node->metaData->type)
+           << " at address: " << node;
+        logMessage("INFO", __LINE__, "Debugger", ss.str());
+
+        // Perform a basic memory integrity check
+        if (!isValidNodeType(node->metaData->type))
+        {
+            ss.str("");
+            ss << "Invalid node type detected: " << node->metaData->type;
+            logMessage("ERROR", __LINE__, "Debugger", ss.str());
+            return false;
+        }
+
+        switch (node->metaData->type)
+        {
+        case NODE_PROGRAM:
+            logMessage("INFO", __LINE__, "Debugger", "Processing PROGRAM node");
+            assertNode(node);
+            for (int i = 0; i < node->data.program->statementCount; ++i)
+            {
+                ss.str("");
+                ss << "Processing statement " << i + 1 << " of " << node->data.program->statementCount;
+                logMessage("INFO", __LINE__, "Debugger", ss.str());
+                lintTree(node->data.program->statements[i]);
+            }
+            break;
+
+        case NODE_VAR_DECLARATION:
+            logMessage("INFO", __LINE__, "Debugger", "Processing VAR_DECLARATION node");
+            assertNode(node);
+            if (node->data.varDecl->initializer)
+            {
+                lintTree(node->data.varDecl->initializer);
+            }
+            break;
+
+        case NODE_FUNCTION_DECLARATION:
+            logMessage("WARNING", __LINE__, "Debugger", "Unexpected FUNCTION_DECLARATION node encountered");
+            assertNode(node);
+            break;
+
+        case NODE_FUNCTION_CALL:
+            assertNode(node);
+            for (int i = 0; i < node->data.functionCall->argCount; ++i)
+            {
+                lintTree(node->data.functionCall->args[i]);
+            }
+            break;
+
+        case NODE_LITERAL_EXPR:
+            assertNode(node);
+            break;
+
+        case NODE_BINARY_EXPR:
+            assertNode(node);
+            lintTree(node->data.bin_op->left);
+            lintTree(node->data.bin_op->right);
+            break;
+
+        case NODE_UNARY_EXPR:
+            assertNode(node);
+            lintTree(node->data.unary_op->operand);
+            break;
+
+        case NODE_IF_STATEMENT:
+            assertNode(node);
+            lintTree(node->data.ifStatement->condition);
+            lintTree(node->data.ifStatement->thenBranch);
+            if (node->data.ifStatement->elseBranch)
+            {
+                lintTree(node->data.ifStatement->elseBranch);
+            }
+            break;
+
+        case NODE_WHILE_STATEMENT:
+            assertNode(node);
+            lintTree(node->data.whileStatement->condition);
+            lintTree(node->data.whileStatement->body);
+            break;
+
+        case NODE_FOR_STATEMENT:
+            assertNode(node);
+            lintTree(node->data.forStatement->initializer);
+            lintTree(node->data.forStatement->condition);
+            lintTree(node->data.forStatement->increment);
+            lintTree(node->data.forStatement->body);
+            break;
+
+        case NODE_RETURN_STATEMENT:
+            assertNode(node);
+            if (node->data.returnStatement->returnValue)
+            {
+                lintTree(node->data.returnStatement->returnValue);
+            }
+            break;
+
+        case NODE_IMPORT_STATEMENT:
+            assertNode(node);
+            break;
+
+        case NODE_EXTERN_FUNCTION:
+            assertNode(node);
+            for (int i = 0; i < node->data.externFunction->paramCount; ++i)
+            {
+                lintTree(node->data.externFunction->params[i]);
+            }
+            break;
+
+        case NODE_EXTERN_STATEMENT:
+            assertNode(node);
+            lintTree(node->data.externNode->externNode);
+            break;
+
+        case NODE_ARRAY_LITERAL:
+            assertNode(node);
+            for (int i = 0; i < node->data.array->elementCount; ++i)
+            {
+                lintTree(node->data.array->elements[i]);
+            }
+            break;
+
+        case NODE_PARAM_LIST:
+            assertNode(node);
+            for (int i = 0; i < node->data.paramList->paramCount; ++i)
+            {
+                lintTree(node->data.paramList->params[i]->initializer);
+            }
+            break;
+
+        case NODE_ARG_LIST:
+            assertNode(node);
+            for (int i = 0; i < node->data.argList->argCount; ++i)
+            {
+                lintTree(node->data.argList->args[i]->initializer);
+            }
+            break;
+
+        case NODE_FUNCTION_BLOCK:
+            assertNode(node);
+            for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
+            {
+                lintTree(node->data.functionBlock->statements[i]);
+            }
+            break;
+
+        case NODE_VAR_NAME:
+            assertNode(node);
+            break;
+
+        case NODE_STRING_LITERAL:
+            assertNode(node);
+            break;
+
+        case NODE_BOOLEAN_LITERAL:
+            assertNode(node);
+            break;
+
+        case NODE_NAMESPACE:
+            assertNode(node);
+            break;
+
+        case NODE_UNKNOWN:
+            logMessage("ERROR", __LINE__, "Debugger", "Unknown node type");
+            break;
+
+        default:
+            ss.str("");
+            ss << "Unknown node type: " << node->metaData->type;
+            logMessage("ERROR", __LINE__, "Debugger", ss.str());
+        }
+
+        return true;
+    }
+
+    bool CryoDebugger::isValidNodeType(CryoNodeType type)
+    {
+        // Add all valid node types to this check
+        return (type >= NODE_PROGRAM && type < NODE_UNKNOWN);
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    bool CryoDebugger::assertNode(ASTNode *node)
+    {
+        if (!node)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "Node is null");
+            return false;
+        }
+
+        switch (node->metaData->type)
+        {
+        case NODE_PROGRAM:
+        {
+            if (node->data.program->statementCount == 0)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Program has no statements");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Program passed assertion.");
+            break;
+        }
+
+        case NODE_FUNCTION_DECLARATION:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Checking function declaration node");
+
+            if (node->data.functionDecl == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Function declaration data is null");
+                return false;
+            }
+
+            if (node->data.functionDecl->name == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Function has no name");
+                return false;
+            }
+            else
+            {
+                logMessage("INFO", __LINE__, "Debugger", "Function name: " + std::string(node->data.functionDecl->name));
+            }
+
+            if (node->data.functionDecl->returnType == DATA_TYPE_UNKNOWN)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Function has unknown return type");
+                return false;
+            }
+            else
+            {
+                logMessage("INFO", __LINE__, "Debugger", "Function return type: " + std::string(CryoDataTypeToString(node->data.functionDecl->returnType)));
+            }
+
+            if (node->data.functionDecl->body == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Function has no body");
+                return false;
+            }
+            else
+            {
+                logMessage("INFO", __LINE__, "Debugger", "Function body exists");
+            }
+
+            logMessage("INFO", __LINE__, "Debugger", "Function declaration node passed basic checks");
+
+            // Additional checks for parameters, if needed
+            if (node->data.functionDecl->params != nullptr)
+            {
+                logMessage("INFO", __LINE__, "Debugger", "Checking function parameters");
+                for (int i = 0; i < node->data.functionDecl->paramCount; ++i)
+                {
+                    if (node->data.functionDecl->params[i] == nullptr)
+                    {
+                        logMessage("ERROR", __LINE__, "Debugger", "Function has a null parameter at index " + std::to_string(i));
+                        return false;
+                    }
+                }
+                logMessage("INFO", __LINE__, "Debugger", "All function parameters are non-null");
+            }
+            else
+            {
+                logMessage("INFO", __LINE__, "Debugger", "Function has no parameters");
+            }
+
+            logMessage("INFO", __LINE__, "Debugger", "Function declaration passed all assertions");
+            logNode(node);
+            break;
+        }
+
+        case NODE_FUNCTION_CALL:
+        {
+            if (node->data.functionCall->name == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Function call has no name");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Function call passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_VAR_DECLARATION:
+        {
+            if (node->data.varDecl->name == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Variable has no name");
+                return false;
+            }
+            if (node->data.varDecl->type == DATA_TYPE_UNKNOWN)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Variable has no type");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Variable passed assertion:");
+            logNode(node);
+            break;
+        }
+
+        case NODE_LITERAL_EXPR:
+        {
+            if (node->data.literal->dataType == DATA_TYPE_UNKNOWN)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Literal has no type");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Literal passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_BINARY_EXPR:
+        {
+            if (node->data.bin_op->left == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Binary expression has no left operand");
+                return false;
+            }
+            if (node->data.bin_op->right == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Binary expression has no right operand");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Binary expression passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_UNARY_EXPR:
+        {
+            if (node->data.unary_op->operand == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Unary expression has no operand");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Unary expression passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_IF_STATEMENT:
+        {
+            if (node->data.ifStatement->condition == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "If statement has no condition");
+                return false;
+            }
+            if (node->data.ifStatement->thenBranch == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "If statement has no then branch");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "If statement passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_WHILE_STATEMENT:
+        {
+            if (node->data.whileStatement->condition == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "While statement has no condition");
+                return false;
+            }
+            if (node->data.whileStatement->body == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "While statement has no body");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "While statement passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_FOR_STATEMENT:
+        {
+            if (node->data.forStatement->initializer == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "For statement has no initializer");
+                return false;
+            }
+            if (node->data.forStatement->condition == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "For statement has no condition");
+                return false;
+            }
+            if (node->data.forStatement->increment == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "For statement has no increment");
+                return false;
+            }
+            if (node->data.forStatement->body == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "For statement has no body");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "For statement passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_RETURN_STATEMENT:
+        {
+            if (node->data.returnStatement->returnValue == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Return statement has no return value");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Return statement passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_IMPORT_STATEMENT:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Import statement passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_EXTERN_FUNCTION:
+        {
+            if (node->data.externFunction->name == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Extern function has no name");
+                return false;
+            }
+            if (node->data.externFunction->returnType == DATA_TYPE_UNKNOWN)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Extern function has no return type");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Extern function passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_EXTERN_STATEMENT:
+        {
+            if (node->data.externNode->externNode == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Extern statement has no extern node");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Extern statement passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_ARRAY_LITERAL:
+        {
+            if (node->data.array->elementCount == 0)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Array literal has no elements");
+                return false;
+            }
+            for (int i = 0; i < node->data.array->elementCount; ++i)
+            {
+                if (node->data.array->elements[i] == nullptr)
+                {
+                    logMessage("ERROR", __LINE__, "Debugger", "Array literal has a null element");
+                    return false;
+                }
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Array literal passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_PARAM_LIST:
+        {
+            for (int i = 0; i < node->data.paramList->paramCount; ++i)
+            {
+                if (node->data.paramList->params[i] == nullptr)
+                {
+                    logMessage("ERROR", __LINE__, "Debugger", "Parameter list has a null parameter");
+                    return false;
+                }
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Parameter list passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_ARG_LIST:
+        {
+            for (int i = 0; i < node->data.argList->argCount; ++i)
+            {
+                if (node->data.argList->args[i] == nullptr)
+                {
+                    logMessage("ERROR", __LINE__, "Debugger", "Argument list has a null argument");
+                    return false;
+                }
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Argument list passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_FUNCTION_BLOCK:
+        {
+            if (node->data.functionBlock->statementCount == 0)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Function block has no statements");
+                return false;
+            }
+            for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
+            {
+                if (node->data.functionBlock->statements[i] == nullptr)
+                {
+                    logMessage("ERROR", __LINE__, "Debugger", "Function block has a null statement");
+                    return false;
+                }
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Function block passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_VAR_NAME:
+        {
+            if (node->data.varName->varName == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Variable name has no name");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Variable name passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_STRING_LITERAL:
+        {
+            if (node->data.literal->value.stringValue == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "String literal has no value");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "String literal passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_BOOLEAN_LITERAL:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Boolean literal passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_NAMESPACE:
+        {
+            if (node->metaData->moduleName == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Namespace has no name");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Namespace passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_UNKNOWN:
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "Unknown node type");
+            return false;
+        }
+
+        default:
+            logMessage("ERROR", __LINE__, "Debugger", "Invalid node type");
+            return false;
+        }
+
+        logMessage("INFO", __LINE__, "Debugger", "Node passed assertion.");
+
+        return true;
+    }
+
 } // namespace Cryo
