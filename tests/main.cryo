@@ -21,3 +21,8 @@ public function testNumRet() -> int
 {
     return 42;
 }
+
+public function testStrRet() -> string
+{
+    return "Hello, World!";
+}

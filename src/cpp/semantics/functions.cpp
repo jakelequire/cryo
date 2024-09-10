@@ -99,7 +99,6 @@ namespace Cryo
             llvm::Twine(functionName),
             *cryoContext.module);
 
-
         // Set the function arguments
         int i = 0;
         for (auto &arg : function->args())
@@ -131,12 +130,19 @@ namespace Cryo
             //     std::string varName = varIR->name;
             // }
 
-            if(nodeType == NODE_RETURN_STATEMENT) 
+            if (nodeType == NODE_RETURN_STATEMENT)
             {
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
-                if(returnType == DATA_TYPE_VOID)
+                if (returnType == DATA_TYPE_VOID)
                 {
                     compiler.getContext().builder.CreateRetVoid();
+                }
+                if (returnType == DATA_TYPE_STRING)
+                {
+                    int _len = types.getLiteralValLength(statement);
+                    llvm::Type *returnLLVMType = types.getType(returnType, _len);
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
                 }
                 else
                 {
@@ -156,16 +162,19 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Functions", "Adding terminator to function");
             if (returnType == DATA_TYPE_VOID)
             {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Function is void");
                 compiler.getContext().builder.CreateRetVoid();
             }
             else
             {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Function has a return type");
                 // For non-void functions, create a default return value
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
                 llvm::Value *defaultReturnValue = llvm::UndefValue::get(returnLLVMType);
                 compiler.getContext().builder.CreateRet(defaultReturnValue);
             }
-        } else 
+        }
+        else
         {
             debugger.logMessage("INFO", __LINE__, "Functions", "Function already has a terminator");
         }

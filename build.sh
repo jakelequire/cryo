@@ -49,7 +49,12 @@ function error {
 
 function cleanup {
     log "Cleaning up..."
-    rm ./output.ll
+    cd ../../
+    # If the file exists check
+    if [ -f $SRC_FILE ]; then
+        # Remove the file
+        rm $SRC_FILE
+    fi
 }
 
 

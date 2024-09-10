@@ -105,14 +105,17 @@ namespace Cryo
         // TODO: Implement
     }
 
-    llvm::Value* Generator::handleLiteralExpression(ASTNode *node)
+    llvm::Value *Generator::handleLiteralExpression(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Generator", "Handling Literal Expression");
 
         llvm::Value *llvmValue = nullptr;
         llvm::Constant *llvmConstant = nullptr;
-        LiteralNode  *literalNode = node->data.literal;
+        LiteralNode *literalNode = node->data.literal;
+
+        assert(literalNode != nullptr);
+        debugger.logMessage("INFO", __LINE__, "Generator", "Literal Node Found");
 
         switch (literalNode->dataType)
         {

@@ -859,12 +859,20 @@ ASTNode *createFunctionCallNode(Arena *arena)
     return createASTNode(NODE_FUNCTION_CALL, arena);
 }
 
-ASTNode *createReturnNode(ASTNode *returnValue, Arena *arena)
+ASTNode *createReturnNode(ASTNode *returnValue, CryoDataType returnType, Arena *arena)
 {
     ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena);
     if (!node)
         return NULL;
     node->data.returnStatement->returnValue = returnValue;
+    node->data.returnStatement->expression = returnValue;
+    node->data.returnStatement->returnType = returnType;
+
+    if (returnType == DATA_TYPE_VOID)
+    {
+        logMessage("WARN", __LINE__, "AST", node, "Return statement has void return type");
+    }
+
     return node;
 }
 

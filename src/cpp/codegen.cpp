@@ -177,6 +177,7 @@ namespace Cryo
     llvm::Value *Generator::getInitilizerValue(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        CryoContext &cryoContext = compiler.getContext();
         Variables &variables = compiler.getVariables();
         Generator &generator = compiler.getGenerator();
         Types &types = compiler.getTypes();
@@ -189,31 +190,60 @@ namespace Cryo
         {
         case NODE_LITERAL_EXPR:
         {
-            debugger.logMessage("INFO", __LINE__, "Generator", "Handling Literal Expression");
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression");
             llvmValue = generator.handleLiteralExpression(node);
             break;
         }
         case NODE_RETURN_STATEMENT:
         {
-            debugger.logMessage("INFO", __LINE__, "Generator", "Handling Return Statement");
-            CryoNodeType  retType = node->data.returnStatement->returnValue->metaData->type;
-            std::cout << "Node Type: " << CryoNodeTypeToString(retType) << std::endl;
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Return Statement");
+            // debugger.logNode(node);
+            CryoDataType dataType = node->data.returnStatement->returnType;
+            std::cout << "Data Type: " << CryoDataTypeToString(dataType) << std::endl;
 
-            if(retType == NODE_LITERAL_EXPR)
+            switch (dataType)
             {
-                llvmValue = generator.handleLiteralExpression(node->data.returnStatement->returnValue);
+            case DATA_TYPE_INT:
+            case DATA_TYPE_FLOAT:
+            case DATA_TYPE_BOOLEAN:
+            {
+                debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression (int/float/boolean)");
+                llvmValue = generator.handleLiteralExpression(node->data.returnStatement->expression);
+                break;
             }
-            
+            case DATA_TYPE_STRING:
+            {
+                debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression (string)");
+                llvmValue = generator.handleLiteralExpression(node->data.returnStatement->expression);
+                break;
+            }
+            case DATA_TYPE_VOID:
+            {
+                debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression (void)");
+                llvmValue = llvm::Constant::getNullValue(llvm::Type::getVoidTy(cryoContext.context));
+                // Q: Why would the above line be segfaulting?
+                // A: The above line is segfaulting because the return type is void, and the return value is null.
+                debugger.logMessage("INFO", __LINE__, "CodeGen", "Returning Constant");
+                break;
+            }
+            default:
+            {
+                debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown data type");
+                std::cout << "Received: " << CryoDataTypeToString(dataType) << std::endl;
+                exit(1);
+            }
+            }
             break;
         }
         default:
-            debugger.logMessage("ERROR", __LINE__, "Generator", "Unknown node type");
+            debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown node type");
             std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
             exit(1);
         }
 
+        assert(llvmValue != nullptr);
+
         return llvmValue;
     }
 
-    
 } // namespace Cryo

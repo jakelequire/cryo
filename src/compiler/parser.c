@@ -906,6 +906,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
     logMessage("INFO", __LINE__, "Parser", "Parsing return statement...");
     consume(lexer, TOKEN_KW_RETURN, "Expected `return` keyword.", "parseReturnStatement", table, arena);
 
+    CryoDataType returnType = DATA_TYPE_VOID;
     ASTNode *expression = NULL;
     if (currentToken.type != TOKEN_SEMICOLON)
     {
@@ -913,8 +914,18 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
         printf("[Parser] Parsed return expression\n");
     }
 
+    if (expression)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Return expression: %s", CryoNodeTypeToString(expression->metaData->type));
+        if (expression->metaData->type == NODE_LITERAL_EXPR)
+        {
+            returnType = expression->data.literal->dataType;
+            printf("[Parser] Return expression data type: %s\n", CryoDataTypeToString(returnType));
+        }
+    }
+
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseReturnStatement", table, arena);
-    ASTNode *returnNode = createReturnNode(expression, arena);
+    ASTNode *returnNode = createReturnNode(expression, returnType, arena);
     logMessage("INFO", __LINE__, "Parser", "Return statement parsed.");
     return returnNode;
 }

@@ -180,6 +180,7 @@ namespace Cryo
 
         case NODE_RETURN_STATEMENT:
             std::cout << "\nReturn Statement Node" << std::endl;
+            std::cout << "Return Type : " << CryoDataTypeToString(node->data.returnStatement->returnType) << std::endl;
             std::cout << "Return Value: " << std::endl;
             if (node->data.returnStatement->returnValue)
             {

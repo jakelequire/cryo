@@ -654,7 +654,7 @@ extern "C"
     ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType, Arena *arena);
     ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType, Arena *arena);
     ASTNode *createFunctionCallNode(Arena *arena);
-    ASTNode *createReturnNode(ASTNode *returnValue, Arena *arena);
+    ASTNode *createReturnNode(ASTNode *returnValue, CryoDataType returnType, Arena *arena);
     ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType, Arena *arena);
 
     /* @Node_Creation - Parameters */
