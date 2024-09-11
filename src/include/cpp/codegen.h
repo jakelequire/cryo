@@ -45,6 +45,7 @@
 
 #include "cpp/debugger.h"
 #include "compiler/ast.h"
+#include "cpp/backend_symtable.h"
 
 namespace Cryo
 {
@@ -57,7 +58,6 @@ namespace Cryo
     class Literals;
     class Arrays;
     class Functions;
-
 
     typedef struct VariableIR
     {
@@ -188,6 +188,7 @@ namespace Cryo
         void generateCode(ASTNode *root);
         void parseTree(ASTNode *root);
         llvm::Value *getInitilizerValue(ASTNode *node);
+        std::string getNamespace(ASTNode *node);
 
         // Actual logic for handling different types of nodes
         // This is the main entry point for the generator
@@ -202,7 +203,7 @@ namespace Cryo
         void handleVariableDeclaration(ASTNode *node);
         void handleBinaryExpression(ASTNode *node);
         void handleUnaryExpression(ASTNode *node);
-        llvm::Value* handleLiteralExpression(ASTNode *node);
+        llvm::Value *handleLiteralExpression(ASTNode *node);
         void handleIfStatement(ASTNode *node);
         void handleWhileStatement(ASTNode *node);
         void handleForStatement(ASTNode *node);
@@ -259,7 +260,7 @@ namespace Cryo
 
         void handleConstVariable(ASTNode *node);
         void handleRefVariable(ASTNode *node);
-        VariableIR *createNewLocalVariable(ASTNode* node);
+        VariableIR *createNewLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
 
         void processConstVariable(CryoVariableNode *varNode);
@@ -309,9 +310,9 @@ namespace Cryo
         void createFunctionDeclaration(ASTNode *node);
         void createFunctionBlock(ASTNode *node);
         void createReturnStatement(ASTNode *node);
-        void createExternFunction(ASTNode* node);
+        void createExternFunction(ASTNode *node);
         void createFunctionCall(ASTNode *node);
-        llvm::Type* traverseBlockReturnType(CryoFunctionBlock* blockNode);
+        llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
     };
 
     // -----------------------------------------------------------------------------------------------

@@ -28,6 +28,7 @@ namespace Cryo
         std::cout << "[CPP] Executing Code Generation" << std::endl;
 
         CryoCompiler &compiler = this->compiler;
+        assert(root != nullptr);
 
         compiler.getGenerator().generateCode(root);
     }
@@ -42,12 +43,17 @@ namespace Cryo
         std::cout << "[CPP] Generating Code" << std::endl;
         CryoDebugger &debugger = compiler.getDebugger();
         CryoContext &cryoContext = compiler.getContext();
+        assert(cryoContext.module != nullptr);
+        assert(root != nullptr);
 
-        if (!root)
-        {
-            std::cerr << "[CPP] Root is null!" << std::endl;
-            return;
-        }
+        BackendSymTable symTable;
+        symTable.initSymTable();
+
+        std::string namespaceName = getNamespace(root);
+        symTable.initModule(root, namespaceName);
+
+        symTable.printTable(namespaceName);
+
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Linting Tree");
         bool validateTree = debugger.lintTree(root);
         if (validateTree == false)
@@ -167,6 +173,16 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Extern Function");
             generator.handleExternFunction(root);
             break;
+        case NODE_NAMESPACE:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Namespace");
+            // set the module name
+            std::string moduleName = std::string(root->data.cryoNamespace->name);
+            std::cout << "Module Name: " << moduleName << std::endl;
+            compiler.getContext().module->setModuleIdentifier(moduleName);
+            // Set the namespace name
+            break;
+        }
         default:
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             exit(EXIT_FAILURE);
@@ -252,6 +268,28 @@ namespace Cryo
         assert(llvmValue != nullptr);
 
         return llvmValue;
+    }
+
+    std::string Generator::getNamespace(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Getting Namespace");
+
+        std::string namespaceName = "";
+
+        int count = node->data.program->statementCount;
+        for (int i = 0; i < count; i++)
+        {
+            CryoNodeType nodeType = node->data.program->statements[i]->metaData->type;
+            if (nodeType == NODE_NAMESPACE)
+            {
+                namespaceName = node->data.program->statements[i]->data.cryoNamespace->name;
+                break;
+            }
+        }
+        std::cout << "Namespace: " << namespaceName << std::endl;
+
+        return namespaceName;
     }
 
 } // namespace Cryo

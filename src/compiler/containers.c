@@ -19,6 +19,28 @@
 /// ---
 /// ### Structure
 ///```
+/// typedef struct CryoNamespace
+/// {
+///     char *name;
+/// } CryoNamespace;
+///```
+CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena)
+{
+    CryoNamespace *node = (CryoNamespace *)ARENA_ALLOC(arena, sizeof(CryoNamespace));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate CryoNamespace node.");
+        return NULL;
+    }
+
+    node->name = "defaulted";
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
 /// typedef struct CryoProgram
 /// {
 ///     ASTNode **statements;

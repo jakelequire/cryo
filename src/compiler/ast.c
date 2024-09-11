@@ -228,7 +228,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         break;
 
     case NODE_NAMESPACE:
-        printf("\nNamespace Node: %s\n", node->metaData->moduleName);
+        printf("\nNamespace Node: %s\n", node->data.cryoNamespace->name);
         break;
 
     case NODE_UNKNOWN:
@@ -267,6 +267,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena)
     switch (type)
     {
     case NODE_NAMESPACE:
+        node->data.cryoNamespace = createCryoNamespaceNodeContainer(arena);
         break;
     case NODE_PROGRAM:
         node->data.program = createCryoProgramContainer(arena);
@@ -486,7 +487,10 @@ ASTNode *createNamespaceNode(char *name, Arena *arena)
     ASTNode *node = createASTNode(NODE_NAMESPACE, arena);
     if (!node)
         return NULL;
-    node->metaData->moduleName = strdup(name);
+    assert(name != NULL);
+    node->data.cryoNamespace->name = strdup(name);
+
+    logMessage("INFO", __LINE__, "AST", "Created namespace node with name: %s", strdup(name));
 
     return node;
 }

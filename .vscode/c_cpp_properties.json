@@ -98,11 +98,10 @@
             "name": "Linux Clang++",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/**",
-                "/usr/local/include/**"
+                "/usr/lib/llvm-18/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/lib/llvm-18/bin/clang++",
+            "compilerPath": "/usr/lib/llvm-18/bin/clang++"
         }
     ],
     "version": 4

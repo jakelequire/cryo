@@ -1,3 +1,5 @@
+namespace main;
+
 extern function printInt(i: int) -> void;
 
 const intOne: int = 32;

@@ -38,8 +38,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang
-	CXX_COMPILER = clang++
+	C_COMPILER = clang-18
+	CXX_COMPILER = clang++-18
 endif
 
 # OS-specific settings
@@ -65,8 +65,8 @@ else
     CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
 			-I./src/include/utils -I./src/include/tests
     CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
-			-I./src/include/utils -I./src/include/tests
-    LLVM_CONFIG = llvm-config
+			-I./src/include/utils -I./src/include/tests $(LLVM_CFLAGS)
+    LLVM_CONFIG = llvm-config-18
     LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
     LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
     LDFLAGS = $(LLVM_LDFLAGS) -lpthread -v
@@ -110,7 +110,7 @@ RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 # CPP Files
 CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_DIR)codegen.cpp $(CPP_DIR)generator.cpp $(CPP_DIR)types.cpp \
 		$(CPP_UTILS_DIR)debugger.cpp $(CPP_SEMANTICS_DIR)variables.cpp $(CPP_SEMANTICS_DIR)functions.cpp \
-		$(CPP_SEMANTICS_DIR)arrays.cpp 
+		$(CPP_SEMANTICS_DIR)arrays.cpp  $(CPP_UTILS_DIR)backend_symtable.cpp
 		
 
 
@@ -132,7 +132,8 @@ TEST_OBJ = $(OBJ_DIR)test.o
 
 # CPP Object files
 CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)codegen.o $(OBJ_DIR)cppmain.o $(OBJ_DIR)variables.o \
-			$(OBJ_DIR)functions.o $(OBJ_DIR)arrays.o $(OBJ_DIR)generator.o $(OBJ_DIR)types.o
+		$(OBJ_DIR)functions.o $(OBJ_DIR)arrays.o $(OBJ_DIR)generator.o $(OBJ_DIR)types.o \
+		$(OBJ_DIR)backend_symtable.o
 
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
@@ -223,6 +224,9 @@ $(OBJ_DIR)codegen.o: $(CPP_DIR)codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)debugger.o: $(CPP_DIR)utils/debugger.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)backend_symtable.o: $(CPP_UTILS_DIR)backend_symtable.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)generator.o: $(CPP_DIR)generator.cpp | $(OBJ_DIR)

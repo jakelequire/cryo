@@ -54,6 +54,21 @@ typedef struct CryoModule
     ASTNode **astTable;
 } CryoModule;
 
+/// #### The Namespace for the AST.
+/// ---
+/// ```
+///
+/// typedef struct CryoNamespace
+/// {
+///     char *name;
+/// } CryoNamespace;
+/// ```
+///
+typedef struct CryoNamespace
+{
+    char *name;
+} CryoNamespace;
+
 /// #### The CryoProgram struct represents the overall structure of a Cryo program.
 /// ---
 /// ```
@@ -535,6 +550,8 @@ typedef struct ASTNode
 
     union
     {
+        // For Namespaces
+        CryoNamespace *cryoNamespace;
         // For the main program
         CryoProgram *program;
         // For Blocks
@@ -580,6 +597,7 @@ typedef struct ASTNode
 
 #define INITIAL_CAPACITY 8
 
+CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena);
 CryoProgram *createCryoProgramContainer(Arena *arena);
 CryoBlockNode *createCryoBlockNodeContainer(Arena *arena);
 CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena);

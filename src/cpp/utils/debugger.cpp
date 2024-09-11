@@ -270,7 +270,7 @@ namespace Cryo
 
         case NODE_NAMESPACE:
             std::cout << "\nNamespace Node" << std::endl;
-            std::cout << "Namespace Name: " << node->metaData->moduleName << std::endl;
+            std::cout << "Namespace Name: " << node->data.cryoNamespace->name << std::endl;
             break;
 
         default:
@@ -357,8 +357,8 @@ namespace Cryo
         case NODE_ARG_LIST:
         case NODE_NAMESPACE:
         {
-            std::cout << "✅ Node is Valid!\n"
-                      << std::endl;
+            // std::cout << "✅ Node is Valid!\n"
+            //           << std::endl;
             return true;
         }
 
@@ -940,7 +940,7 @@ namespace Cryo
 
         case NODE_NAMESPACE:
         {
-            if (node->metaData->moduleName == nullptr)
+            if (node->data.cryoNamespace->name == nullptr)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Namespace has no name");
                 return false;
