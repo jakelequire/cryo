@@ -437,7 +437,13 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
     case TOKEN_BOOLEAN_LITERAL:
         logMessage("INFO", __LINE__, "Parser", "Parsing boolean literal");
-        node = createBooleanLiteralNode(strcmp(currentToken.start, "true") == 0, arena);
+        char* booleanValueStr = strndup(currentToken.start, currentToken.length);
+        if(strcmp(booleanValueStr, "true") != 0 && strcmp(booleanValueStr, "false") != 0)
+        {
+            error("Invalid boolean value", "parsePrimaryExpression", table, arena);
+        }
+        int booleanValue = strcmp(booleanValueStr, "true") == 0 ? 1 : 0;
+        node = createBooleanLiteralNode(booleanValue, arena);
         getNextToken(lexer, arena);
         return node;
 

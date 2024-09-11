@@ -26,6 +26,18 @@ namespace Cryo
     }
     // -----------------------------------------------------------------------------------------------
 
+    void Generator::handleExternFunction(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Functions &functions = compiler.getFunctions();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Extern Function");
+
+        functions.handleFunction(node);
+
+        debugger.logMessage("INFO", __LINE__, "Generator", "Extern Function Handled");
+        return;
+    }
+
     void Generator::handleFunctionDeclaration(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -65,9 +77,13 @@ namespace Cryo
     void Generator::handleFunctionCall(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        Functions &functions = compiler.getFunctions();
         debugger.logMessage("INFO", __LINE__, "Generator", "Handling Function Call");
 
-        exit(1);
+        functions.handleFunction(node);
+
+        debugger.logMessage("INFO", __LINE__, "Generator", "Function Call Handled");
+        return;
     }
 
     void Generator::handleVariableDeclaration(ASTNode *node)

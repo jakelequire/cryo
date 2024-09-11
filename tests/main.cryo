@@ -1,3 +1,5 @@
+extern function printInt(i: int) -> void;
+
 const intOne: int = 32;
 const intTwo: int = 64;
 const intThree: int = 128;
@@ -8,12 +10,13 @@ const strTwo: string = "Goodbye, World!";
 const boolTrue: boolean = true;
 const boolFalse: boolean = false;
 
-// const arrOne: int[] = [1, 2, 3, 4, 5];
-// const arrTwo: string[] = ["one", "two", "three", "four", "five"];
+const arrOne: int[] = [1, 2, 3, 4, 5];
+// const arrTwo: string[] = ["one", "two", "three", "four", "five", "nineteen"];
 
 public function main() -> void 
 {
     const intInnerFunc: int = 3;
+    printInt(intOne);
     return;
 }
 

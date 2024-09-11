@@ -49,7 +49,6 @@ function error {
 
 function cleanup {
     log "Cleaning up..."
-    cd ../../
     # If the file exists check
     if [ -f $SRC_FILE ]; then
         # Remove the file
@@ -92,7 +91,7 @@ llvm-link-18 cryolib.ll output.ll -o bin.ll
 llc-18 -filetype=obj -relocation-model=static bin.ll -o bin.o
 
 # Change back to the original directory
-cd - > /dev/null
+cd ../../
 
 # Link the object files and place the output in the build directory
 clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$OUTPUT_FILE

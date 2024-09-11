@@ -42,7 +42,7 @@ namespace Cryo
                 case DATA_TYPE_STRING:
                 {
                     int _len = compiler.getTypes().getLiteralValLength(element);
-                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, _len);
+                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, _len + 1);
                     llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
                     elements.push_back(llvmElement);
                     break;

@@ -180,4 +180,26 @@ namespace Cryo
         return;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    llvm::Value *Variables::getVariable(std::string name)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Getting Variable");
+
+        llvm::Value *llvmValue = nullptr;
+
+        llvmValue = compiler.getContext().module->getNamedGlobal(name);
+
+        if (!llvmValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            exit(1);
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");
+
+        return llvmValue;
+    }
+
 } // namespace Cryo

@@ -25,12 +25,19 @@ namespace Cryo
         case NODE_FUNCTION_CALL:
         {
             debugger.logMessage("INFO", __LINE__, "Functions", "Handling Function Call");
+            createFunctionCall(node);
             break;
         }
         case NODE_RETURN_STATEMENT:
         {
             debugger.logMessage("INFO", __LINE__, "Functions", "Handling Return Statement");
             createReturnStatement(node);
+            break;
+        }
+        case NODE_EXTERN_FUNCTION:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Handling Extern Function");
+            createExternFunction(node);
             break;
         }
         default:
@@ -89,8 +96,16 @@ namespace Cryo
         ASTNode *functionBody = functionNode->body;
         assert(functionBody != nullptr);
 
+        llvm::Type* funcRetType = nullptr;
+        CryoFunctionBlock *functionBlock = functionBody->data.functionBlock;
+
+        // Traverse the function block to get the return type
+        funcRetType = traverseBlockReturnType(functionBody->data.functionBlock);
+
         // Create the function type
-        llvm::FunctionType *functionType = llvm::FunctionType::get(types.getType(returnType, 0), argTypes, false);
+        llvm::FunctionType *functionType = llvm::FunctionType::get(funcRetType, argTypes, false);
+
+        std::cout << "Function Type: " << std::endl;
 
         // Create the function
         llvm::Function *function = llvm::Function::Create(
@@ -115,6 +130,7 @@ namespace Cryo
         // I need to find a better and most consistent way to handle this.
         // It seems like I need something like the `parseTree` method but that returns a `llvm::Value *` without removing `parseTree`.
         // These statements needs to be in the same block as the function body.
+
         for (int i = 0; i < functionBody->data.functionBlock->statementCount; ++i)
         {
             debugger.logMessage("INFO", __LINE__, "Functions", "Parsing Statement " + std::to_string(i + 1) + " of " + std::to_string(functionBody->data.functionBlock->statementCount));
@@ -122,34 +138,45 @@ namespace Cryo
             CryoNodeType nodeType = statement->metaData->type;
             std::cout << "Statement: " << CryoNodeTypeToString(statement->metaData->type) << std::endl;
 
-            // if(nodeType == NODE_VAR_DECLARATION)
-            // {
-            //     VariableIR* varIR = variables.createNewLocalVariable(statement);
-            //     llvm::Value* varValue = varIR->value;
-            //     llvm::Type* varType = varIR->type;
-            //     std::string varName = varIR->name;
-            // }
-
             if (nodeType == NODE_RETURN_STATEMENT)
             {
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
-                if (returnType == DATA_TYPE_VOID)
+                switch(returnType) 
                 {
-                    compiler.getContext().builder.CreateRetVoid();
+                    case DATA_TYPE_VOID:
+                    {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning void");
+                        compiler.getContext().builder.CreateRet(nullptr);
+                        break;
+                    }
+                    case DATA_TYPE_INT:
+                    {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning int");
+                        llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                        compiler.getContext().builder.CreateRet(returnValue);
+                        break;
+                    }
+                    case DATA_TYPE_STRING:
+                    {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning string");
+                        int _len = types.getLiteralValLength(statement);
+                        llvm::Type *returnType = types.getType(DATA_TYPE_STRING, _len);
+                        llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                        compiler.getContext().builder.CreateRet(returnValue);
+
+                        
+                        break;
+                    }
+                    default:
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
+                        std::cout << "Received: " << CryoDataTypeToString(returnType) << std::endl;
+                        exit(1);
+                    }
                 }
-                if (returnType == DATA_TYPE_STRING)
-                {
-                    int _len = types.getLiteralValLength(statement);
-                    llvm::Type *returnLLVMType = types.getType(returnType, _len);
-                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
-                    compiler.getContext().builder.CreateRet(returnValue);
-                }
-                else
-                {
-                    // For non-void functions, grab the return value from the return statement
-                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
-                    compiler.getContext().builder.CreateRet(returnValue);
-                }
+                
+                // move past the return statement
+                continue;
             }
 
             compiler.getGenerator().parseTree(statement);
@@ -159,20 +186,8 @@ namespace Cryo
         llvm::BasicBlock *currentBlock = compiler.getContext().builder.GetInsertBlock();
         if (!currentBlock->getTerminator())
         {
-            debugger.logMessage("INFO", __LINE__, "Functions", "Adding terminator to function");
-            if (returnType == DATA_TYPE_VOID)
-            {
-                debugger.logMessage("INFO", __LINE__, "Functions", "Function is void");
-                compiler.getContext().builder.CreateRetVoid();
-            }
-            else
-            {
-                debugger.logMessage("INFO", __LINE__, "Functions", "Function has a return type");
-                // For non-void functions, create a default return value
-                llvm::Type *returnLLVMType = types.getReturnType(returnType);
-                llvm::Value *defaultReturnValue = llvm::UndefValue::get(returnLLVMType);
-                compiler.getContext().builder.CreateRet(defaultReturnValue);
-            }
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Adding terminator to function");
+            exit(1);
         }
         else
         {
@@ -218,10 +233,12 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
+    // TODO: Remove
     void Functions::createReturnStatement(ASTNode *node)
     {
-
         CryoDebugger &debugger = compiler.getDebugger();
+        Generator &generator = compiler.getGenerator();
+        CryoContext &cryoContext = compiler.getContext();
         if (node->metaData->type != NODE_RETURN_STATEMENT)
         {
             debugger.logMessage("ERROR", __LINE__, "Functions", "Node is not a return statement");
@@ -234,16 +251,186 @@ namespace Cryo
         assert(returnNode != nullptr);
 
         CryoDataType returnType = returnNode->returnType;
-        if (returnType == DATA_TYPE_VOID)
+        debugger.logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
+        
+        // This function should not trigger, exit if it does
+        exit(1);
+
+        // This is being handled in the function block
+        // Nothing to do in this function
+        // I might migrate the logic within the `createFunctionDeclaration` function to this function in the future.
+
+        return;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    /**
+     * @brief Traverse the function block to get the return type for the function declaration.
+     * (Not the return statement terminator)
+     */
+    llvm::Type* Functions::traverseBlockReturnType(CryoFunctionBlock* blockNode)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "Functions", "Traversing Function Block");
+
+        ASTNode **statements = blockNode->statements;
+        llvm::Type* returnType = nullptr;
+
+        for (int i = 0; i < blockNode->statementCount; ++i)
         {
-            debugger.logMessage("INFO", __LINE__, "Functions", "Returning void");
-            llvm::ReturnInst *ret = llvm::ReturnInst::Create(compiler.getContext().context, nullptr, compiler.getContext().builder.GetInsertBlock());
+            ASTNode *statement = statements[i];
+            if (statement->metaData->type == NODE_RETURN_STATEMENT)
+            {
+            CryoDataType nodeDataType = statement->data.returnStatement->returnType;
 
-            // add the return instruction to the block
-            compiler.getContext().builder.Insert(ret, "main");
+            switch(nodeDataType)
+            {
+                case DATA_TYPE_INT:
+                {
 
-            return;
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Returning int");
+                    returnType = types.getReturnType(DATA_TYPE_INT);
+                    break;
+                }
+                case DATA_TYPE_STRING:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Returning string");
+                    int _len = types.getLiteralValLength(statement->data.returnStatement->expression);
+                    debugger.logNode(statement);
+                    // +1 for the null terminator
+                    returnType = types.getType(DATA_TYPE_STRING, _len + 1);
+                    break;
+                }
+                case DATA_TYPE_VOID:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Returning void");
+                    returnType = types.getReturnType(DATA_TYPE_VOID);
+                    break;
+                }
+                default:
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
+                    std::cout << "Received: " << CryoDataTypeToString(nodeDataType) << std::endl;
+                    exit(1);
+                    break;
+                }
+            }
+            }
         }
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Block Traversed");
+        return returnType;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    /**
+     * @brief Create an extern function.
+     * This should only declare the function in the IR, it will not create the function body.
+     */
+    void Functions::createExternFunction(ASTNode* node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Functions", "Creating Extern Function");
+
+        ExternFunctionNode *functionNode = node->data.externFunction;
+
+        // Get the function name
+        char *functionName = functionNode->name;
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
+
+        // Get the return type
+        CryoDataType returnType = functionNode->returnType;
+        debugger.logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
+
+        // Get the function arguments
+        int argCount = functionNode->paramCount;
+        debugger.logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
+
+        std::vector<llvm::Type *> argTypes;
+        for (int i = 0; i < argCount; ++i)
+        {
+            CryoVariableNode *argNode = functionNode->params[i]->data.varDecl;
+            assert(argNode != nullptr);
+            CryoDataType _argType = argNode->type;
+
+            if (_argType == DATA_TYPE_STRING)
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
+                int _len = compiler.getTypes().getLiteralValLength(argNode->initializer);
+                llvm::Type *argType = compiler.getTypes().getType(_argType, _len);
+                argTypes.push_back(argType);
+                continue;
+            }
+
+            llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
+            argTypes.push_back(argType);
+        }
+
+        // Create the function type
+        llvm::FunctionType *functionType = llvm::FunctionType::get(compiler.getTypes().getReturnType(returnType), argTypes, false);
+
+        // Create the function
+        llvm::Function *function = llvm::Function::Create(
+            functionType,
+            llvm::Function::ExternalLinkage,
+            llvm::Twine(functionName),
+            *compiler.getContext().module);
+
+        // Set the function arguments
+        int i = 0;
+        for (auto &arg : function->args())
+        {
+            arg.setName(functionNode->params[i]->data.varDecl->name);
+            ++i;
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Functions", "Extern Function Created");
+
+        return;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    void Functions::createFunctionCall(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
+        
+        FunctionCallNode *functionCallNode = node->data.functionCall;
+        assert(functionCallNode != nullptr);
+
+        // Get the function name
+        char *functionName = functionCallNode->name;
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
+
+        // Get the function arguments
+        int argCount = functionCallNode->argCount;
+        debugger.logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
+
+        std::vector<llvm::Value *> argValues;
+        for (int i = 0; i < argCount; ++i)
+        {
+            ASTNode *argNode = functionCallNode->args[i];
+            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+            argValues.push_back(argValue);
+        }
+
+        // Get the function
+        llvm::Function *function = compiler.getContext().module->getFunction(functionName);
+        if (!function)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            exit(1);
+        }
+
+        // Create the function call
+        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
+
+        return;
     }
 
 }

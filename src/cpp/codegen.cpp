@@ -163,6 +163,10 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling For Statement");
             generator.handleForStatement(root);
             break;
+        case NODE_EXTERN_FUNCTION:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Extern Function");
+            generator.handleExternFunction(root);
+            break;
         default:
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             exit(EXIT_FAILURE);
@@ -220,9 +224,7 @@ namespace Cryo
             case DATA_TYPE_VOID:
             {
                 debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression (void)");
-                llvmValue = llvm::Constant::getNullValue(llvm::Type::getVoidTy(cryoContext.context));
-                // Q: Why would the above line be segfaulting?
-                // A: The above line is segfaulting because the return type is void, and the return value is null.
+                llvmValue = llvm::UndefValue::get(llvm::Type::getVoidTy(cryoContext.context));
                 debugger.logMessage("INFO", __LINE__, "CodeGen", "Returning Constant");
                 break;
             }
@@ -233,6 +235,12 @@ namespace Cryo
                 exit(1);
             }
             }
+            break;
+        }
+        case NODE_VAR_DECLARATION:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Declaration");
+            llvmValue = variables.getVariable(node->data.varDecl->name);
             break;
         }
         default:

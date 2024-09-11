@@ -130,7 +130,9 @@ namespace Cryo
             if (node->data.literal->dataType == DATA_TYPE_STRING)
             {
                 debugger.logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
-                return strlen(node->data.literal->value.stringValue);
+                int _len = strlen(node->data.literal->value.stringValue);
+                std::cout << "<TYPES> String Length: " << _len << std::endl;
+                return _len;
             }
 
             if (node->data.literal->dataType == DATA_TYPE_INT)

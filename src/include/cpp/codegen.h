@@ -193,6 +193,8 @@ namespace Cryo
         // This is the main entry point for the generator
 
         void handleProgram(ASTNode *node);
+
+        void handleExternFunction(ASTNode *node);
         void handleFunctionDeclaration(ASTNode *node);
         void handleFunctionBlock(ASTNode *node);
         void handleReturnStatement(ASTNode *node);
@@ -227,7 +229,8 @@ namespace Cryo
         llvm::Type *getReturnType(CryoDataType type);
 
         /**
-         * @brief Returns the length of a string literal.
+         * @brief Returns the length of a string literal or Array type.
+         * All other types return `0`.
          */
         int getLiteralValLength(ASTNode *node);
 
@@ -257,6 +260,7 @@ namespace Cryo
         void handleConstVariable(ASTNode *node);
         void handleRefVariable(ASTNode *node);
         VariableIR *createNewLocalVariable(ASTNode* node);
+        llvm::Value *getVariable(std::string name);
 
         void processConstVariable(CryoVariableNode *varNode);
 
@@ -305,6 +309,9 @@ namespace Cryo
         void createFunctionDeclaration(ASTNode *node);
         void createFunctionBlock(ASTNode *node);
         void createReturnStatement(ASTNode *node);
+        void createExternFunction(ASTNode* node);
+        void createFunctionCall(ASTNode *node);
+        llvm::Type* traverseBlockReturnType(CryoFunctionBlock* blockNode);
     };
 
     // -----------------------------------------------------------------------------------------------
