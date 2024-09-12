@@ -128,6 +128,8 @@ namespace Cryo
                 std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
                 break;
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_BINARY_EXPR:
@@ -137,12 +139,16 @@ namespace Cryo
             logNode(node->data.bin_op->left);
             std::cout << "Right Operand: " << std::endl;
             logNode(node->data.bin_op->right);
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_UNARY_EXPR:
             std::cout << "\nUnary Expression Node" << std::endl;
             std::cout << "Operator: " << CryoTokenToString(node->data.unary_op->op) << std::endl;
             logNode(node->data.unary_op->operand);
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_IF_STATEMENT:
@@ -156,6 +162,8 @@ namespace Cryo
                 std::cout << "\nElse Branch: " << std::endl;
                 logNode(node->data.ifStatement->elseBranch);
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_WHILE_STATEMENT:
@@ -164,6 +172,8 @@ namespace Cryo
             logNode(node->data.whileStatement->condition);
             std::cout << "Body: " << std::endl;
             logNode(node->data.whileStatement->body);
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_FOR_STATEMENT:
@@ -176,6 +186,8 @@ namespace Cryo
             logNode(node->data.forStatement->increment);
             std::cout << "Body: " << std::endl;
             logNode(node->data.forStatement->body);
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_RETURN_STATEMENT:
@@ -190,6 +202,8 @@ namespace Cryo
             {
                 std::cout << "Void" << std::endl;
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_IMPORT_STATEMENT:
@@ -205,6 +219,8 @@ namespace Cryo
             {
                 logNode(node->data.externFunction->params[i]);
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_EXTERN_STATEMENT:
@@ -214,6 +230,8 @@ namespace Cryo
                 std::cout << "Extern Function: " << std::endl;
                 logNode(reinterpret_cast<ASTNode *>(node->data.externNode->externNode->data.functionDecl));
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_ARRAY_LITERAL:
@@ -223,6 +241,8 @@ namespace Cryo
             {
                 logNode(node->data.array->elements[i]);
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_PARAM_LIST:
@@ -232,6 +252,8 @@ namespace Cryo
             {
                 logNode(node->data.paramList->params[i]->initializer);
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_ARG_LIST:
@@ -241,6 +263,8 @@ namespace Cryo
             {
                 logNode(node->data.argList->args[i]->initializer);
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_FUNCTION_BLOCK:
@@ -250,27 +274,37 @@ namespace Cryo
             {
                 logNode(node->data.functionBlock->statements[i]);
             }
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_VAR_NAME:
             std::cout << "\nVariable Name Node" << std::endl;
             std::cout << "Variable Name: " << node->data.varName->varName << std::endl;
             std::cout << "Is Reference: " << (node->data.varName->isRef ? 0 : 1) << std::endl;
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_STRING_LITERAL:
             std::cout << "\nString Literal Node" << std::endl;
             std::cout << "Value: " << node->data.literal->value.stringValue << std::endl;
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_BOOLEAN_LITERAL:
             std::cout << "\nBoolean Literal Node" << std::endl;
             std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         case NODE_NAMESPACE:
             std::cout << "\nNamespace Node" << std::endl;
             std::cout << "Namespace Name: " << node->data.cryoNamespace->name << std::endl;
+            std::cout << "----------------------------------------" << std::endl;
+
             break;
 
         default:

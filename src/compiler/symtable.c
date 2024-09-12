@@ -51,7 +51,7 @@ void printSymbolTable(CryoSymbolTable *table, Arena *arena)
     printf("\n-------------------------------------------------------------------------------------------------\n");
     printf("Symbol Table:\n\n");
     printf("Name                 Type                 Val/RetType          Scope        Const       ArgCount\n");
-    printf("\n-------------------------------------------------------------------------------------------------\n");
+    printf("-------------------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++)
     {
         if (table->symbols[i] == NULL)
@@ -181,7 +181,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
     switch (node->metaData->type)
     {
     case NODE_NAMESPACE:
-        symbolNode->name = strdup(node->metaData->moduleName);
+        symbolNode->name = strdup(node->data.cryoNamespace->name);
         symbolNode->nodeType = node->metaData->type;
         break;
 

@@ -27,9 +27,10 @@
 
 namespace Cryo
 {
-    class BackendSymTable;
-    class CryoCompiler;
-    class CryoContext;
+}
+
+namespace Cryo
+{
     class CryoDebugger;
 
     // -----------------------------------------------------------------------------------------------
@@ -54,8 +55,8 @@ namespace Cryo
     class BackendSymTable
     {
     public:
-        BackendSymTable() {}
-        ~BackendSymTable() {}
+        BackendSymTable() = default; // Add this line if it doesn't exist
+        ~BackendSymTable() = default;
 
         // Properties
         SymTable symTable;
@@ -64,7 +65,11 @@ namespace Cryo
         // Prototypes
         void initSymTable(void);
         void initModule(ASTNode *root, std::string namespaceName);
-        SymTableNode getSymNode(std::string namespaceName);
+
+        ASTNode *getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName);
+        SymTableNode getSymTableNode(std::string namespaceName);
+        SymTable getSymTable();
+
         void printTable(std::string namespaceName);
 
     private:

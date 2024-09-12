@@ -46,13 +46,9 @@ namespace Cryo
         assert(cryoContext.module != nullptr);
         assert(root != nullptr);
 
-        BackendSymTable symTable;
-        symTable.initSymTable();
-
+        // Get / Set the symbol table for the module and its state
         std::string namespaceName = getNamespace(root);
-        symTable.initModule(root, namespaceName);
-
-        symTable.printTable(namespaceName);
+        compiler.getSymTable().initModule(root, namespaceName);
 
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Linting Tree");
         bool validateTree = debugger.lintTree(root);

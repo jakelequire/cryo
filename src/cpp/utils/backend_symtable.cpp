@@ -54,7 +54,54 @@ namespace Cryo
         std::cout << "\n\n";
     }
 
-    SymTableNode BackendSymTable::getSymNode(std::string namespaceName)
+    ASTNode *BackendSymTable::getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName)
+    {
+        CryoDebugger &debugger = getDebugger();
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        ASTNode *node = nullptr;
+
+        switch (nodeType)
+        {
+        case NODE_VAR_DECLARATION:
+        {
+            // Find the variable in the SymTable
+            CryoVariableNode varNode = symNode.variables[nodeName];
+            std::cout << "===-------------------===" << std::endl;
+            debugger.logNode(varNode.initializer);
+            std::cout << "===-------------------===" << std::endl;
+
+            return varNode.initializer;
+        }
+        case NODE_FUNCTION_DECLARATION:
+        {
+            FunctionDeclNode funcNode = symNode.functions[nodeName];
+            return funcNode.body;
+        }
+        case NODE_EXTERN_FUNCTION:
+        {
+            ExternFunctionNode externFuncNode = symNode.externFunctions[nodeName];
+            node = nullptr;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "BackendSymTable", "Unknown node type");
+            std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
+
+            break;
+        }
+        }
+
+        assert(node != nullptr);
+        return node;
+    }
+
+    SymTable BackendSymTable::getSymTable()
+    {
+        return symTable;
+    }
+
+    SymTableNode BackendSymTable::getSymTableNode(std::string namespaceName)
     {
         // Find the namespace in the SymTable
         SymTableNode symNode = symTable.namespaces[namespaceName];
@@ -65,7 +112,7 @@ namespace Cryo
     {
         CryoDebugger &debugger = getDebugger();
         // Find the namespace in the SymTable and print it
-        SymTableNode symNode = getSymNode(namespaceName);
+        SymTableNode symNode = getSymTableNode(namespaceName);
 
         std::cout << "[BackendSymTable] Printing SymTable" << std::endl;
 

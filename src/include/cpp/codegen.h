@@ -47,6 +47,13 @@
 #include "compiler/ast.h"
 #include "cpp/backend_symtable.h"
 
+// Forward declare all the Backend Symbol Table Definitions
+namespace Cryo
+{
+    struct SymTable;       // Forward declaration
+    class BackendSymTable; // Forward declaration if needed
+}
+
 namespace Cryo
 {
     class CodeGen;
@@ -134,6 +141,7 @@ namespace Cryo
         Variables &getVariables() { return *variables; }
         Arrays &getArrays() { return *arrays; }
         Functions &getFunctions() { return *functions; }
+        BackendSymTable &getSymTable() { return *symTable; }
 
         void compile(ASTNode *root);
 
@@ -146,6 +154,7 @@ namespace Cryo
         std::unique_ptr<Variables> variables;
         std::unique_ptr<Arrays> arrays;
         std::unique_ptr<Functions> functions;
+        std::unique_ptr<BackendSymTable> symTable;
     };
 
     /**
@@ -324,7 +333,8 @@ namespace Cryo
           types(std::make_unique<Types>(*this)),
           variables(std::make_unique<Variables>(*this)),
           arrays(std::make_unique<Arrays>(*this)),
-          functions(std::make_unique<Functions>(*this))
+          functions(std::make_unique<Functions>(*this)),
+          symTable(std::make_unique<BackendSymTable>())
 
     {
         context.initializeContext();

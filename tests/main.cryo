@@ -1,5 +1,6 @@
-namespace main;
+namespace test;
 
+extern function printStr(s: string) -> void;
 extern function printInt(i: int) -> void;
 
 const intOne: int = 32;
@@ -19,6 +20,7 @@ public function main() -> void
 {
     const intInnerFunc: int = 3;
     printInt(intOne);
+    printStr(strOne);
     return;
 }
 

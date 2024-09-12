@@ -96,7 +96,7 @@ namespace Cryo
         ASTNode *functionBody = functionNode->body;
         assert(functionBody != nullptr);
 
-        llvm::Type* funcRetType = nullptr;
+        llvm::Type *funcRetType = nullptr;
         CryoFunctionBlock *functionBlock = functionBody->data.functionBlock;
 
         // Traverse the function block to get the return type
@@ -141,40 +141,39 @@ namespace Cryo
             if (nodeType == NODE_RETURN_STATEMENT)
             {
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
-                switch(returnType) 
+                switch (returnType)
                 {
-                    case DATA_TYPE_VOID:
-                    {
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning void");
-                        compiler.getContext().builder.CreateRet(nullptr);
-                        break;
-                    }
-                    case DATA_TYPE_INT:
-                    {
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning int");
-                        llvm::Value *returnValue = generator.getInitilizerValue(statement);
-                        compiler.getContext().builder.CreateRet(returnValue);
-                        break;
-                    }
-                    case DATA_TYPE_STRING:
-                    {
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning string");
-                        int _len = types.getLiteralValLength(statement);
-                        llvm::Type *returnType = types.getType(DATA_TYPE_STRING, _len);
-                        llvm::Value *returnValue = generator.getInitilizerValue(statement);
-                        compiler.getContext().builder.CreateRet(returnValue);
-
-                        
-                        break;
-                    }
-                    default:
-                    {
-                        debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
-                        std::cout << "Received: " << CryoDataTypeToString(returnType) << std::endl;
-                        exit(1);
-                    }
+                case DATA_TYPE_VOID:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Returning void");
+                    compiler.getContext().builder.CreateRet(nullptr);
+                    break;
                 }
-                
+                case DATA_TYPE_INT:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Returning int");
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
+                    break;
+                }
+                case DATA_TYPE_STRING:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Returning string");
+                    int _len = types.getLiteralValLength(statement);
+                    llvm::Type *returnType = types.getType(DATA_TYPE_STRING, _len);
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
+
+                    break;
+                }
+                default:
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
+                    std::cout << "Received: " << CryoDataTypeToString(returnType) << std::endl;
+                    exit(1);
+                }
+                }
+
                 // move past the return statement
                 continue;
             }
@@ -252,7 +251,7 @@ namespace Cryo
 
         CryoDataType returnType = returnNode->returnType;
         debugger.logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
-        
+
         // This function should not trigger, exit if it does
         exit(1);
 
@@ -269,24 +268,24 @@ namespace Cryo
      * @brief Traverse the function block to get the return type for the function declaration.
      * (Not the return statement terminator)
      */
-    llvm::Type* Functions::traverseBlockReturnType(CryoFunctionBlock* blockNode)
+    llvm::Type *Functions::traverseBlockReturnType(CryoFunctionBlock *blockNode)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "Functions", "Traversing Function Block");
 
         ASTNode **statements = blockNode->statements;
-        llvm::Type* returnType = nullptr;
+        llvm::Type *returnType = nullptr;
 
         for (int i = 0; i < blockNode->statementCount; ++i)
         {
             ASTNode *statement = statements[i];
             if (statement->metaData->type == NODE_RETURN_STATEMENT)
             {
-            CryoDataType nodeDataType = statement->data.returnStatement->returnType;
+                CryoDataType nodeDataType = statement->data.returnStatement->returnType;
 
-            switch(nodeDataType)
-            {
+                switch (nodeDataType)
+                {
                 case DATA_TYPE_INT:
                 {
 
@@ -316,7 +315,7 @@ namespace Cryo
                     exit(1);
                     break;
                 }
-            }
+                }
             }
         }
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Block Traversed");
@@ -329,7 +328,7 @@ namespace Cryo
      * @brief Create an extern function.
      * This should only declare the function in the IR, it will not create the function body.
      */
-    void Functions::createExternFunction(ASTNode* node)
+    void Functions::createExternFunction(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Extern Function");
@@ -358,8 +357,7 @@ namespace Cryo
             if (_argType == DATA_TYPE_STRING)
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
-                int _len = compiler.getTypes().getLiteralValLength(argNode->initializer);
-                llvm::Type *argType = compiler.getTypes().getType(_argType, _len);
+                llvm::Type *argType = compiler.getTypes().getType(_argType, 0);
                 argTypes.push_back(argType);
                 continue;
             }
@@ -396,8 +394,9 @@ namespace Cryo
     void Functions::createFunctionCall(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        Generator &generator = compiler.getGenerator();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
-        
+
         FunctionCallNode *functionCallNode = node->data.functionCall;
         assert(functionCallNode != nullptr);
 
@@ -405,15 +404,59 @@ namespace Cryo
         char *functionName = functionCallNode->name;
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
 
+        // get the current modules name
+        std::string moduleName = compiler.getContext().module->getName().str();
+        debugger.logMessage("INFO", __LINE__, "Functions", "Module Name: " + moduleName);
+
+        // Get the symbol table
+        SymTableNode symbolTable = compiler.getSymTable().getSymTableNode(moduleName);
+
         // Get the function arguments
         int argCount = functionCallNode->argCount;
         debugger.logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
 
+        // Get the argument values
         std::vector<llvm::Value *> argValues;
         for (int i = 0; i < argCount; ++i)
         {
             ASTNode *argNode = functionCallNode->args[i];
-            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+            CryoNodeType argType = argNode->metaData->type;
+            CryoDataType argTypeData = argNode->data.varDecl->type;
+
+            std::cout << "===----------------------===" << std::endl;
+            std::cout << "Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
+            std::cout << "Argument Data Type: " << CryoDataTypeToString(argTypeData) << std::endl;
+            std::cout << "===----------------------===" << std::endl;
+
+            if (argTypeData == DATA_TYPE_STRING)
+            {
+                // We can use direct values for strings like we do for integers.
+                // We can also use the symbol table to get the value of the string.
+                // Functions that take in strings as arguments treat them as pointers.
+
+                // Get the string value
+                std::string argName = std::string(argNode->data.varDecl->name);
+                std::cout << "Argument Name: " << argName << std::endl;
+
+                // Create a load instruction to get the value of the string
+                llvm::Value *argValue = generator.getInitilizerValue(argNode);
+                assert(argValue != nullptr);
+
+                argValues.push_back(argValue);
+                continue;
+            }
+
+            std::string argName = std::string(argNode->data.varDecl->name);
+            std::cout << "Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
+
+            ASTNode *retreivedNode = compiler.getSymTable().getASTNode(moduleName, argType, argName);
+            if (!retreivedNode)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
+                exit(1);
+            }
+
+            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(retreivedNode);
             argValues.push_back(argValue);
         }
 
