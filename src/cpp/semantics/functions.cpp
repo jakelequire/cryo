@@ -428,6 +428,8 @@ namespace Cryo
             std::cout << "Argument Data Type: " << CryoDataTypeToString(argTypeData) << std::endl;
             std::cout << "===----------------------===" << std::endl;
 
+            // if (argType == NODE_)
+
             if (argTypeData == DATA_TYPE_STRING)
             {
                 // We can use direct values for strings like we do for integers.
@@ -436,7 +438,43 @@ namespace Cryo
 
                 // Get the string value
                 std::string argName = std::string(argNode->data.varDecl->name);
-                std::cout << "Argument Name: " << argName << std::endl;
+                std::cout << "!Argument Name: " << argName << std::endl;
+
+                // Check if the variable is in the global named values
+                llvm::GlobalValue *globalValue = compiler.getContext().module->getNamedValue(argName);
+                if (globalValue)
+                {
+                    std::cout << "Global Value Found" << std::endl;
+                    argValues.push_back(globalValue);
+                    continue;
+                }
+                else
+                {
+                    std::cout << "Global Value Not Found" << std::endl;
+                    // Since the variable is not in the global named values, we can assume that it is a local variable.
+                    int _len = compiler.getTypes().getLiteralValLength(argNode);
+                    std::cout << "Length: " << _len << std::endl;
+                    llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len);
+                    std::cout << "Arg Type: " << argType << std::endl;
+                    llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+                    if (argValue == nullptr)
+                    {
+                        // Create the value if it is not found
+                        // Load Instruction:
+                        llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len);
+                        llvm::Value *arg = compiler.getContext().builder.CreateAlloca(argType, nullptr, argName);
+                        llvm::Value *_argValue = compiler.getContext().builder.CreateLoad(argType->getPointerTo(), arg);
+                        // Create the store
+                        compiler.getContext().builder.CreateStore(_argValue, arg);
+                        argValues.push_back(_argValue);
+                    }
+                    else
+                    {
+                        argValues.push_back(argValue);
+                    }
+                    std::cout << "Arg Value: " << argValue << std::endl;
+                    continue;
+                }
 
                 // Create a load instruction to get the value of the string
                 llvm::Value *argValue = generator.getInitilizerValue(argNode);

@@ -47,15 +47,11 @@
 #include "compiler/ast.h"
 #include "cpp/backend_symtable.h"
 
-// Forward declare all the Backend Symbol Table Definitions
 namespace Cryo
 {
     struct SymTable;       // Forward declaration
     class BackendSymTable; // Forward declaration if needed
-}
 
-namespace Cryo
-{
     class CodeGen;
     class CryoCompiler;
     class Generator;
@@ -65,6 +61,8 @@ namespace Cryo
     class Literals;
     class Arrays;
     class Functions;
+    class IfStatements;
+    class Declarations;
 
     typedef struct VariableIR
     {
@@ -116,11 +114,8 @@ namespace Cryo
         void initializeContext()
         {
             module = std::make_unique<llvm::Module>("main", context);
+            module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128");
             std::cout << "[CPP.h] Module Initialized" << std::endl;
-            module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
-            // namedValues = std::unordered_map<std::string, llvm::Value *>();
-
-            std::cout << "[CPP.h] Context Initialized" << std::endl;
         }
 
     private:
@@ -141,6 +136,8 @@ namespace Cryo
         Variables &getVariables() { return *variables; }
         Arrays &getArrays() { return *arrays; }
         Functions &getFunctions() { return *functions; }
+        IfStatements &getIfStatements() { return *ifStatements; }
+        Declarations &getDeclarations() { return *declarations; }
         BackendSymTable &getSymTable() { return *symTable; }
 
         void compile(ASTNode *root);
@@ -154,6 +151,8 @@ namespace Cryo
         std::unique_ptr<Variables> variables;
         std::unique_ptr<Arrays> arrays;
         std::unique_ptr<Functions> functions;
+        std::unique_ptr<IfStatements> ifStatements;
+        std::unique_ptr<Declarations> declarations;
         std::unique_ptr<BackendSymTable> symTable;
     };
 
@@ -219,6 +218,8 @@ namespace Cryo
 
     private:
         CryoCompiler &compiler;
+
+        void preprocess(ASTNode *root);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -325,6 +326,48 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
+    class IfStatements
+    {
+    public:
+        IfStatements(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief The main entry point to handle if statements.
+         */
+        void handleIfStatement(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+
+        void createIfStatement(ASTNode *node);
+        llvm::BasicBlock *createIfCondition(ASTNode *node);
+    };
+
+    // -----------------------------------------------------------------------------------------------
+    class Declarations
+    {
+    public:
+        Declarations(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Declares all functions in the AST tree and hoists them to the top of the IR.
+         */
+        void preprocessDeclare(ASTNode *root);
+
+    private:
+        CryoCompiler &compiler;
+
+        /**
+         * @brief Creates a function declaration in the IR.
+         */
+        void createFunctionDeclaration(ASTNode *node);
+    };
+
+    // -----------------------------------------------------------------------------------------------
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
           debugger(std::make_unique<CryoDebugger>(context)),
@@ -334,6 +377,8 @@ namespace Cryo
           variables(std::make_unique<Variables>(*this)),
           arrays(std::make_unique<Arrays>(*this)),
           functions(std::make_unique<Functions>(*this)),
+          ifStatements(std::make_unique<IfStatements>(*this)),
+          declarations(std::make_unique<Declarations>(*this)),
           symTable(std::make_unique<BackendSymTable>())
 
     {

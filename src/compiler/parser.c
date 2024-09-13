@@ -377,6 +377,9 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     case TOKEN_KW_NAMESPACE:
         return parseNamespace(lexer, table, context, arena);
 
+    case TOKEN_KW_IF:
+        return parseIfStatement(lexer, table, context, arena);
+
     case TOKEN_EOF:
         return NULL;
 
@@ -437,8 +440,8 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
     case TOKEN_BOOLEAN_LITERAL:
         logMessage("INFO", __LINE__, "Parser", "Parsing boolean literal");
-        char* booleanValueStr = strndup(currentToken.start, currentToken.length);
-        if(strcmp(booleanValueStr, "true") != 0 && strcmp(booleanValueStr, "false") != 0)
+        char *booleanValueStr = strndup(currentToken.start, currentToken.length);
+        if (strcmp(booleanValueStr, "true") != 0 && strcmp(booleanValueStr, "false") != 0)
         {
             error("Invalid boolean value", "parsePrimaryExpression", table, arena);
         }
@@ -1307,7 +1310,7 @@ ASTNode *parseIfStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     consume(lexer, TOKEN_KW_IF, "Expected `if` keyword.", "parseIfStatement", table, arena);
     context->isParsingIfCondition = true;
 
-    ASTNode *condition = parseExpression(lexer, table, context, arena);
+    ASTNode *condition = parseIfCondition(lexer, table, context, arena);
     ASTNode *ifBlock = parseBlock(lexer, table, context, arena);
     ASTNode *elseBlock = NULL;
 
@@ -1328,6 +1331,25 @@ ASTNode *parseIfStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     return createIfStatement(condition, ifBlock, elseBlock, arena);
 }
 // </parseIfStatement>
+
+ASTNode *parseIfCondition(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing if condition...");
+    char *cur_token = strndup(currentToken.start, currentToken.length);
+    printf("\n\n[Parser] Current token: %s\n\n", cur_token);
+
+    consume(lexer, TOKEN_LPAREN, "Expected `(` to start if condition.", "parseIfCondition", table, arena);
+
+    char *cur_token_cpy = strndup(currentToken.start, currentToken.length);
+
+    printf("\n\n[Parser] Current token: %s\n\n", cur_token_cpy);
+
+    ASTNode *condition = parseExpression(lexer, table, context, arena);
+
+    consume(lexer, TOKEN_RPAREN, "Expected `)` to end if condition.", "parseIfCondition", table, arena);
+
+    return condition;
+}
 
 // <parseForLoop>
 ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)

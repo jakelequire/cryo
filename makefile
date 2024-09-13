@@ -92,6 +92,8 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_SEMANTICS_DIR = $(SRC_DIR)cpp/semantics/
 CPP_UTILS_DIR = $(SRC_DIR)cpp/utils/
 
+# --------------------------------------------------------------------------------- #
+
 # CPP files
 CPP_DIR = $(SRC_DIR)cpp/
 
@@ -111,9 +113,9 @@ RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)codegen.cpp \
 		$(CPP_DIR)generator.cpp $(CPP_DIR)types.cpp $(CPP_UTILS_DIR)debugger.cpp \
 		$(CPP_SEMANTICS_DIR)variables.cpp $(CPP_SEMANTICS_DIR)functions.cpp \
-		$(CPP_SEMANTICS_DIR)arrays.cpp  
+		$(CPP_SEMANTICS_DIR)arrays.cpp $(CPP_DIR)declarations.cpp $(CPP_DIR)ifstatement.cpp
 		
-
+# --------------------------------------------------------------------------------- #
 
 # Cryo Lib Files
 CRYO_SRC = $(CRYO_DIR)cryolib.c
@@ -122,23 +124,27 @@ CRYO_SRC = $(CRYO_DIR)cryolib.c
 COMPILER_OBJ =  $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
 				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o
 
+# CPP Object files
+CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)backend_symtable.o $(OBJ_DIR)codegen.o \
+		$(OBJ_DIR)cppmain.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o $(OBJ_DIR)arrays.o \
+		$(OBJ_DIR)generator.o $(OBJ_DIR)types.o $(OBJ_DIR)declarations.o $(OBJ_DIR)ifstatement.o \
+
+# Utils Object files
 UTILS_OBJ = $(OBJ_DIR)fs.o $(OBJ_DIR)supportlibs.o $(OBJ_DIR)arena.o $(OBJ_DIR)utility.o
 
+# CLI Object files
 CLI_OBJ = $(OBJ_DIR)compiler.o $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o \
 			$(OBJ_DIR)cmd_devWatch.o $(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o 
 
+# Main Object files
 MAIN_OBJ = $(OBJ_DIR)main.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
-# CPP Object files
-CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)backend_symtable.o $(OBJ_DIR)codegen.o \
-		$(OBJ_DIR)cppmain.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o \
-		$(OBJ_DIR)arrays.o $(OBJ_DIR)generator.o $(OBJ_DIR)types.o \
-		
-
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
+
+# --------------------------------------------------------------------------------- #
 
 # Define the target binaries
 MAIN_BIN = $(BIN_DIR)main$(BIN_SUFFIX)
@@ -219,22 +225,28 @@ $(OBJ_DIR)cmd_version.o : $(CLI_COMMANDS_DIR)cmd_version.c | $(OBJ_DIR)
 
 # ---------------------------------------------
 # CPP Compilation rules
+$(OBJ_DIR)debugger.o: $(CPP_UTILS_DIR)debugger.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)backend_symtable.o: $(CPP_UTILS_DIR)backend_symtable.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 $(OBJ_DIR)cppmain.o: $(CPP_DIR)cppmain.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)codegen.o: $(CPP_DIR)codegen.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)debugger.o: $(CPP_DIR)utils/debugger.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ_DIR)backend_symtable.o: $(CPP_UTILS_DIR)backend_symtable.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
 $(OBJ_DIR)generator.o: $(CPP_DIR)generator.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)types.o: $(CPP_DIR)types.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)declarations.o: $(CPP_DIR)declarations.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)ifstatement.o: $(CPP_SEMANTICS_DIR)ifstatement.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)variables.o: $(CPP_SEMANTICS_DIR)variables.cpp | $(OBJ_DIR)
@@ -245,7 +257,6 @@ $(OBJ_DIR)functions.o: $(CPP_SEMANTICS_DIR)functions.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR)arrays.o: $(CPP_SEMANTICS_DIR)arrays.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	
 # ---------------------------------------------
 # Cryo Lib Compilation rules
 $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)

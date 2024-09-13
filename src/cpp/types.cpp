@@ -162,6 +162,19 @@ namespace Cryo
             return arrays.getArrayLength(node);
         }
 
+        if (node->metaData->type == NODE_VAR_DECLARATION)
+        {
+            if (node->data.varDecl->type == DATA_TYPE_STRING)
+            {
+                debugger.logMessage("INFO", __LINE__, "Types", "Getting length of string variable");
+                return strlen(node->data.varDecl->initializer->data.literal->value.stringValue);
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         char *typeNode = CryoNodeTypeToString(node->metaData->type);
 
         debugger.logMessage("ERROR", __LINE__, "Types", "Unknown node type");

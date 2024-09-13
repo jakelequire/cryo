@@ -34,7 +34,6 @@ void printConstIntPtr(const int *value)
 
 void printInt(int value)
 {
-    printf("Attempting to execute printInt function: \n");
     printf("%d\n", value);
 }
 
@@ -50,7 +49,6 @@ void printFloat(float value)
 
 void printStr(char *value)
 {
-    printf("Attempting to execute printStr function: \n");
     printf("%s\n", value);
 }
 

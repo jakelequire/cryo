@@ -180,8 +180,14 @@ namespace Cryo
 
     void Generator::handleIfStatement(ASTNode *node)
     {
-        std::cout << "[CPP] Handling If Statement" << std::endl;
-        // TODO: Implement
+        CryoDebugger &debugger = compiler.getDebugger();
+        IfStatements &ifStatements = compiler.getIfStatements();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling If Statement");
+
+        ifStatements.handleIfStatement(node);
+
+        debugger.logMessage("INFO", __LINE__, "Generator", "If Statement Handled");
+        return;
     }
 
     void Generator::handleWhileStatement(ASTNode *node)

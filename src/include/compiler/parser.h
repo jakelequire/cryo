@@ -120,6 +120,7 @@ ASTNode *parseExtern(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
 
 /* @ASTNode_Parsing - Conditionals */
 ASTNode *parseIfStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseIfCondition(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 ASTNode *parseWhileStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 

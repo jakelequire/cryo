@@ -14,56 +14,24 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "cpp/codegen.h"
 
-#include "cryo/cryolib.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-// Testing the compatibility of the C and Cryo code
-
-// Integers
-
-void printIntPtr(int *value)
+namespace Cryo
 {
-    printf("Attempting to execute printIntPtr function: \n");
-    printf("%d\n", value);
-}
+    /// @public
+    void Declarations::preprocessDeclare(ASTNode *root)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Declarations", "Preprocessing Declarations");
 
-void printConstIntPtr(const int *value)
-{
-    printf("Attempting to execute printConstIntPtr function: \n");
-    printf("%d\n", value);
-}
+        exit(0);
+    }
 
-void printInt(int value)
-{
-    printf("%d\n", value);
-}
+    /// @private
+    void Declarations::createFunctionDeclaration(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Declarations", "Creating Function Declaration");
+    }
 
-// Floats
-
-void printFloat(float value)
-{
-    printf("Attempting to execute printFloat function: \n");
-    printf("%f\n", value);
-}
-
-// Strings
-
-void printStr(char *value)
-{
-    printf("%s\n", value);
-}
-
-void printConstStr(const char *value)
-{
-    printf("Attempting to execute printConstStr function: \n");
-    printf("%s\n", value);
-}
-
-void printStrU(char value)
-{
-    printf("Attempting to execute printStrPtr function: \n");
-    printf("%c\n", value);
-}
+} // namespace Cryo

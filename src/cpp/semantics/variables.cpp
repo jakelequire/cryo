@@ -32,7 +32,7 @@ namespace Cryo
         std::string name;
         CryoDataType dataType;
     */
-    VariableIR *Variables::createNewLocalVariable(ASTNode* node)
+    VariableIR *Variables::createNewLocalVariable(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating New Variable");
@@ -49,14 +49,14 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
 
-        if(varType == DATA_TYPE_STRING )
+        if (varType == DATA_TYPE_STRING)
         {
             int _len = compiler.getTypes().getLiteralValLength(varDecl->initializer);
             llvmType = compiler.getTypes().getType(varType, _len);
             var->type = llvmType;
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
         }
-        if(varType == DATA_TYPE_INT)
+        if (varType == DATA_TYPE_INT)
         {
             llvmType = compiler.getTypes().getType(varType, 0);
             var->type = llvmType;
@@ -81,7 +81,6 @@ namespace Cryo
 
         return var;
     }
-
 
     // -----------------------------------------------------------------------------------------------
 
@@ -194,7 +193,7 @@ namespace Cryo
         if (!llvmValue)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
-            exit(1);
+            llvmValue = nullptr;
         }
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");

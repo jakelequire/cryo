@@ -9,9 +9,6 @@ IFS=$'\n\t'
 # Set the shell options
 shopt -s nullglob
 
-# Set the trap to cleanup on exit
-trap cleanup EXIT
-
 # Set the trap to cleanup on error
 trap cleanup ERR
 
@@ -48,6 +45,9 @@ function error {
 }
 
 function cleanup {
+    echo ""
+    echo ""
+    log "----------------------------------------"
     log "Cleaning up..."
     # If the file exists check
     if [ -f $SRC_FILE ]; then
@@ -100,10 +100,12 @@ clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$OUTPUT_FILE
 cleanup
 
 log "Build completed successfully, running the output file..."
-log ">===---------------------------------------------------------===<"
+log ">===----------------<Output>----------------===<"
+echo ""
+echo ""
+# Run the output file
+$BUILD_DIR/$OUTPUT_FILE
 
-# Run the output file safely
-$BUILD_DIR/$OUTPUT_FILE || error "Failed to run the output file"
 
 # Exit successfully
 exit 0

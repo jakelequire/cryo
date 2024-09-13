@@ -87,12 +87,10 @@ namespace Cryo
         {
             debugger.logMessage("ERROR", __LINE__, "BackendSymTable", "Unknown node type");
             std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
-
             break;
         }
         }
 
-        assert(node != nullptr);
         return node;
     }
 

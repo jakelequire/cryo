@@ -33,18 +33,12 @@ namespace Cryo
         compiler.getGenerator().generateCode(root);
     }
 
-    /**
-     * Generates code from the given AST tree.
-     *
-     * @param root The root node of the AST tree.
-     */
-    void Generator::generateCode(ASTNode *root)
+    /// @private
+    void Generator::preprocess(ASTNode *root)
     {
-        std::cout << "[CPP] Generating Code" << std::endl;
         CryoDebugger &debugger = compiler.getDebugger();
-        CryoContext &cryoContext = compiler.getContext();
-        assert(cryoContext.module != nullptr);
-        assert(root != nullptr);
+        Declarations &declarations = compiler.getDeclarations();
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Code Generation");
 
         // Get / Set the symbol table for the module and its state
         std::string namespaceName = getNamespace(root);
@@ -57,6 +51,28 @@ namespace Cryo
             std::cerr << "[CPP] Tree is invalid!" << std::endl;
             return;
         }
+
+        // Declare all functions in the AST tree
+        // declarations.preprocessDeclare(root); <- TODO: Implement this function
+
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
+        return;
+    }
+
+    /**
+     * Generates code from the given AST tree.
+     *
+     * @param root The root node of the AST tree.
+     */
+    void Generator::generateCode(ASTNode *root)
+    {
+        std::cout << "[CPP] Generating Code" << std::endl;
+        CryoDebugger &debugger = compiler.getDebugger();
+        CryoContext &cryoContext = compiler.getContext();
+        assert(cryoContext.module != nullptr);
+
+        // Preprocess the AST tree
+        preprocess(root);
 
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
         parseTree(root);
@@ -260,8 +276,6 @@ namespace Cryo
             std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
             exit(1);
         }
-
-        assert(llvmValue != nullptr);
 
         return llvmValue;
     }

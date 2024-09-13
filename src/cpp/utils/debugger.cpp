@@ -268,6 +268,7 @@ namespace Cryo
             break;
 
         case NODE_FUNCTION_BLOCK:
+            std::cout << "----------------------------------------" << std::endl;
             std::cout << "\nFunction Block Node" << std::endl;
             std::cout << "Statement Count: " << node->data.functionBlock->statementCount << std::endl;
             for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
@@ -279,14 +280,16 @@ namespace Cryo
             break;
 
         case NODE_VAR_NAME:
+            std::cout << "----------------------------------------" << std::endl;
             std::cout << "\nVariable Name Node" << std::endl;
             std::cout << "Variable Name: " << node->data.varName->varName << std::endl;
-            std::cout << "Is Reference: " << (node->data.varName->isRef ? 0 : 1) << std::endl;
+            std::cout << "Is Reference: " << (node->data.varName->isRef ? "True" : "False") << std::endl;
             std::cout << "----------------------------------------" << std::endl;
 
             break;
 
         case NODE_STRING_LITERAL:
+            std::cout << "----------------------------------------" << std::endl;
             std::cout << "\nString Literal Node" << std::endl;
             std::cout << "Value: " << node->data.literal->value.stringValue << std::endl;
             std::cout << "----------------------------------------" << std::endl;
@@ -294,6 +297,7 @@ namespace Cryo
             break;
 
         case NODE_BOOLEAN_LITERAL:
+            std::cout << "----------------------------------------" << std::endl;
             std::cout << "\nBoolean Literal Node" << std::endl;
             std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
             std::cout << "----------------------------------------" << std::endl;
@@ -301,8 +305,21 @@ namespace Cryo
             break;
 
         case NODE_NAMESPACE:
+            std::cout << "----------------------------------------" << std::endl;
             std::cout << "\nNamespace Node" << std::endl;
             std::cout << "Namespace Name: " << node->data.cryoNamespace->name << std::endl;
+            std::cout << "----------------------------------------" << std::endl;
+
+            break;
+
+        case NODE_BLOCK:
+            std::cout << "----------------------------------------" << std::endl;
+            std::cout << "\nBlock Node" << std::endl;
+            std::cout << "Statement Count: " << node->data.block->statementCount << std::endl;
+            for (int i = 0; i < node->data.block->statementCount; ++i)
+            {
+                logNode(node->data.block->statements[i]);
+            }
             std::cout << "----------------------------------------" << std::endl;
 
             break;
