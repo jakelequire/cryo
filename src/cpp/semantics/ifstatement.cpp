@@ -31,11 +31,6 @@ namespace Cryo
         // This includes the lables `ifBlock`, `thenBlock`, `elseBlock` and `mergeBlock`
         llvm::BasicBlock *ifConditionBlock = createIfStatement(node);
 
-        // Jump up to the parent block from the current block
-
-        // Set the insert point to the if condition block
-        // compiler.getContext().builder.SetInsertPoint(ifConditionBlock);
-
         debugger.logMessage("INFO", __LINE__, "IfStatements", "If Statement Handled");
     }
 
@@ -170,8 +165,7 @@ namespace Cryo
         }
         }
 
-        // Jump back to main function block
-
         return {conditionBlock, condition};
     }
+
 } // namespace Cryo

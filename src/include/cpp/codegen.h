@@ -226,6 +226,30 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
+    enum BooleanFalsey
+    {
+        FALSEY_NONE = 0,
+        FALSEY_ZERO = 1,
+        FALSEY_EMPTY = 2,
+        FALSEY_NULL = 3,
+        FALSEY_FALSE = 4
+    };
+
+    enum BooleanTruthy
+    {
+        TRUTHY_NON_ZERO = 0,
+        TRUTHY_NON_EMPTY = 1,
+        TRUTHY_NON_NULL = 2,
+        TRUTHY_TRUE = 3
+    };
+
+    typedef struct CryoBoolean
+    {
+        BooleanFalsey falsey;
+        BooleanTruthy truthy;
+        bool result;
+    } CryoBoolean;
+
     class Types
     {
     public:
@@ -247,6 +271,11 @@ namespace Cryo
          * All other types return `0`.
          */
         int getLiteralValLength(ASTNode *node);
+
+        /**
+         * @brief Evaluates a boolean expression and returns the CryoBoolean result.
+         */
+        CryoBoolean *evalBooleanExpression(ASTNode *node);
 
     private:
         CryoCompiler &compiler;

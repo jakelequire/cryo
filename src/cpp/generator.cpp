@@ -124,6 +124,7 @@ namespace Cryo
     llvm::Value *Generator::handleLiteralExpression(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "Generator", "Handling Literal Expression");
 
         llvm::Value *llvmValue = nullptr;
@@ -156,7 +157,17 @@ namespace Cryo
         case DATA_TYPE_BOOLEAN:
         {
             debugger.logMessage("INFO", __LINE__, "Generator", "Creating Boolean Constant");
-            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(1, literalNode->value.booleanValue, true));
+            int boolVal;
+            bool boolValue = literalNode->value.booleanValue;
+            if (boolValue)
+            {
+                boolVal = 1;
+            }
+            else
+            {
+                boolVal = 0;
+            }
+            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(boolVal, boolVal, true));
             break;
         }
         case DATA_TYPE_VOID:
