@@ -414,7 +414,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
     // Initialize statements array if it doesn't exist
     if (!block->statements)
     {
-        block->statementCapacity = 8; // Start with a reasonable capacity
+        block->statementCapacity = 16; // Start with a reasonable capacity
         block->statementCount = 0;
         block->statements = (ASTNode **)ARENA_ALLOC(arena, sizeof(ASTNode *) * block->statementCapacity);
         if (!block->statements)

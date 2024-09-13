@@ -17,10 +17,17 @@ const arrOne: int[] = [1, 2, 3, 4, 5];
 
 public function main() -> void 
 {
-    const intInnerFunc: int = 3;
-    printInt(intOne);
     printStr(strOne);
-    printStr("Hello!");
+    printStr("THIS IS PAIN");
+
+    if(boolTrue)
+    {
+        printStr("Boolean is true");
+    }
+    else
+    {
+        printStr("Boolean is false");
+    }
 
     return;
 }

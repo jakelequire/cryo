@@ -110,6 +110,9 @@ namespace Cryo
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
         std::unordered_map<std::string, llvm::Value *> namedValues;
+        std::string currentNamespace;
+        // Current Function
+        llvm::Function *currentFunction;
 
         void initializeContext()
         {
@@ -341,8 +344,8 @@ namespace Cryo
     private:
         CryoCompiler &compiler;
 
-        void createIfStatement(ASTNode *node);
-        llvm::BasicBlock *createIfCondition(ASTNode *node);
+        llvm::BasicBlock *createIfStatement(ASTNode *node);
+        std::pair<llvm::BasicBlock *, llvm::Value *> createIfCondition(ASTNode *node);
     };
 
     // -----------------------------------------------------------------------------------------------

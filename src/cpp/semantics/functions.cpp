@@ -195,6 +195,8 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Declaration Created");
 
+        // compiler.getContext().currentFunction = function;
+
         return;
     }
 
@@ -450,26 +452,36 @@ namespace Cryo
                 }
                 else
                 {
-                    std::cout << "Global Value Not Found" << std::endl;
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Argument");
+                    // Trim the `\22` from the string
+                    argName = argName.substr(1, argName.length() - 2);
+                    // Reassign the name to the variable
+                    argNode->data.varDecl->name = (char *)argName.c_str();
                     // Since the variable is not in the global named values, we can assume that it is a local variable.
                     int _len = compiler.getTypes().getLiteralValLength(argNode);
-                    std::cout << "Length: " << _len << std::endl;
-                    llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len);
-                    std::cout << "Arg Type: " << argType << std::endl;
+                    // Note: unsure why I have to subtract 1 but it works for now
+                    llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len - 1);
                     llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
                     if (argValue == nullptr)
                     {
-                        // Create the value if it is not found
-                        // Load Instruction:
-                        llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len);
-                        llvm::Value *arg = compiler.getContext().builder.CreateAlloca(argType, nullptr, argName);
-                        llvm::Value *_argValue = compiler.getContext().builder.CreateLoad(argType->getPointerTo(), arg);
-                        // Create the store
-                        compiler.getContext().builder.CreateStore(_argValue, arg);
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument Value Not Found, creating one...");
+                        llvm::Constant *initializer = llvm::ConstantDataArray::getString(compiler.getContext().context, argName, true);
+                        llvm::GlobalVariable *globalVariable = new llvm::GlobalVariable(
+                            *compiler.getContext().module,
+                            argType,
+                            false,
+                            llvm::GlobalValue::ExternalLinkage,
+                            initializer,
+                            llvm::Twine(argName));
+
+                        // Get the value of the string
+                        llvm::Value *_argValue = compiler.getGenerator().getInitilizerValue(argNode);
+
                         argValues.push_back(_argValue);
                     }
                     else
                     {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument Value Found");
                         argValues.push_back(argValue);
                     }
                     std::cout << "Arg Value: " << argValue << std::endl;

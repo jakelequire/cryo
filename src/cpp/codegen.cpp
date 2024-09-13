@@ -43,6 +43,7 @@ namespace Cryo
         // Get / Set the symbol table for the module and its state
         std::string namespaceName = getNamespace(root);
         compiler.getSymTable().initModule(root, namespaceName);
+        compiler.getContext().currentNamespace = namespaceName;
 
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Linting Tree");
         bool validateTree = debugger.lintTree(root);
@@ -195,8 +196,20 @@ namespace Cryo
             // Set the namespace name
             break;
         }
+        case NODE_BLOCK:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Block");
+            ASTNode **statements = root->data.block->statements;
+            int statementCount = root->data.block->statementCount;
+            for (int i = 0; i < statementCount; i++)
+            {
+                generator.parseTree(statements[i]);
+            }
+            break;
+        }
         default:
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
+            std::cout << "Received: " << CryoNodeTypeToString(root->metaData->type) << std::endl;
             exit(EXIT_FAILURE);
             break;
         }
@@ -269,6 +282,12 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Declaration");
             llvmValue = variables.getVariable(node->data.varDecl->name);
+            break;
+        }
+        case NODE_VAR_NAME:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Name");
+            llvmValue = variables.getVariable(node->data.varName->varName);
             break;
         }
         default:
