@@ -32,10 +32,9 @@ namespace Cryo
         llvm::BasicBlock *ifConditionBlock = createIfStatement(node);
 
         // Jump up to the parent block from the current block
-        compiler.getContext().builder.ClearInsertionPoint();
 
         // Set the insert point to the if condition block
-        compiler.getContext().builder.SetInsertPoint(ifConditionBlock);
+        // compiler.getContext().builder.SetInsertPoint(ifConditionBlock);
 
         debugger.logMessage("INFO", __LINE__, "IfStatements", "If Statement Handled");
     }
@@ -63,7 +62,6 @@ namespace Cryo
         ASTNode *elseBranch = ifNode->elseBranch;
 
         // Create the condition
-        // Create the condition
         auto [conditionBlock, conditionValue] = createIfCondition(condition);
         debugger.logMessage("INFO", __LINE__, "IfStatements", "Condition Block Created");
 
@@ -77,7 +75,7 @@ namespace Cryo
         llvm::BasicBlock *mergeBlock = llvm::BasicBlock::Create(compiler.getContext().context, "mergeBlock", currentFunction);
 
         // Create the conditional branch in the condition block
-        compiler.getContext().builder.SetInsertPoint(conditionBlock);
+        // compiler.getContext().builder.SetInsertPoint(conditionBlock);
         compiler.getContext().builder.CreateCondBr(conditionValue, thenBlock, elseBlock);
 
         // Generate code for the then block
@@ -99,6 +97,9 @@ namespace Cryo
             compiler.getContext().builder.CreateBr(mergeBlock);
         }
 
+        // No clue why this worked below, but it did
+        compiler.getContext().builder.ClearInsertionPoint();
+
         // Set the insert point to the merge block
         compiler.getContext().builder.SetInsertPoint(mergeBlock);
 
@@ -118,13 +119,15 @@ namespace Cryo
         std::cout << "<!>Node Type: " << CryoNodeTypeToString(nodeType) << std::endl;
 
         llvm::Function *currentFunction = compiler.getContext().builder.GetInsertBlock()->getParent();
-
         // Create the condition block
         llvm::BasicBlock *conditionBlock = llvm::BasicBlock::Create(compiler.getContext().context, "ifCondition", currentFunction);
+        // Set the `br label %ifCondition` in the parent block
+        compiler.getContext().builder.CreateBr(conditionBlock);
+        // Set the insert point to the condition block
         compiler.getContext().builder.SetInsertPoint(conditionBlock);
 
+        // Create the condition
         llvm::Value *condition = nullptr;
-
         switch (nodeType)
         {
         case NODE_LITERAL_EXPR:
@@ -152,7 +155,7 @@ namespace Cryo
             if (!varValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "IfStatements", "Variable value not found");
-                exit(0);
+                exit(1);
             }
             // Create the condition
             condition = compiler.getContext().builder.CreateICmpNE(varValue, llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, 0, true)), "ifCondition");
@@ -166,6 +169,8 @@ namespace Cryo
             break;
         }
         }
+
+        // Jump back to main function block
 
         return {conditionBlock, condition};
     }
