@@ -175,6 +175,12 @@ namespace Cryo
             }
         }
 
+        if (node->metaData->type == NODE_INDEX_EXPR)
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Getting length of index expression");
+            return 0;
+        }
+
         char *typeNode = CryoNodeTypeToString(node->metaData->type);
 
         debugger.logMessage("ERROR", __LINE__, "Types", "Unknown node type");

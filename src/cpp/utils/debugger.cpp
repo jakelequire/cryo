@@ -327,7 +327,8 @@ namespace Cryo
         case NODE_INDEX_EXPR:
             std::cout << "----------------------------------------" << std::endl;
             std::cout << "\nIndex Expression Node" << std::endl;
-            std::cout << "Array Name: " << node->data.indexExpr->array << std::endl;
+            std::cout << "Array Name: " << std::endl;
+            logNode(node->data.indexExpr->array);
             std::cout << "Index: " << std::endl;
             logNode(node->data.indexExpr->index);
             std::cout << "----------------------------------------" << std::endl;

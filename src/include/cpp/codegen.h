@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdint.h>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -333,7 +334,7 @@ namespace Cryo
         void handleArrayLiteral(ASTNode *node);
         llvm::ArrayType *getArrayType(ASTNode *node);
         int getArrayLength(ASTNode *node);
-        llvm::Value *handleIndexExpression(ASTNode *node);
+        void handleIndexExpression(ASTNode *node, std::string varName);
 
     private:
         CryoCompiler &compiler;

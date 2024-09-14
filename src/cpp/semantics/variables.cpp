@@ -94,6 +94,7 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Variables", "Processing Const Variable");
 
         char *varName = varNode->name;
+        std::cout << "Variable Name: " << varName << std::endl;
         CryoDataType type = varNode->type;
         ASTNode *initializer = varNode->initializer;
 
@@ -107,11 +108,11 @@ namespace Cryo
             if (initializer->metaData->type == NODE_INDEX_EXPR)
             {
                 debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Index");
-                llvm::Value *indexArr = arrays.handleIndexExpression(initializer);
+                char *arrayName = initializer->data.indexExpr->name;
+                std::cout << "Array Name: " << arrayName << std::endl;
+                arrays.handleIndexExpression(initializer, varName);
                 debugger.logMessage("INFO", __LINE__, "Variables", "Array Index Processed");
-
-                llvmType = indexArr->getType();
-                llvmValue = indexArr;
+                return;
             }
             // Check if the initializer is an array
             if (initializer->metaData->type == NODE_ARRAY_LITERAL)

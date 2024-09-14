@@ -97,11 +97,13 @@ namespace Cryo
         bool isRef = varDecl->isReference;
         if (isRef)
         {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Reference Variable");
             // A Pointer variable
             variableInstance.handleRefVariable(node);
         }
         else
         {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Constant Variable");
             // A Constant variable
             variableInstance.handleConstVariable(node);
         }
@@ -139,7 +141,13 @@ namespace Cryo
         case DATA_TYPE_INT:
         {
             debugger.logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
-            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, literalNode->value.intValue, true));
+            debugger.logNode(node);
+            int intValue = literalNode->value.intValue;
+            std::cout << "\n\nLiteral Int Value:" << node->data.literal->value.intValue << std::endl;
+            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, intValue, true));
+            llvmConstant->print(llvm::outs());
+            std::cout << "\n";
+
             break;
         }
         case DATA_TYPE_STRING:

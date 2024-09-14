@@ -13,7 +13,7 @@ const strTwo: string = "Goodbye, World!";
 const boolTrue: boolean = true;
 const boolFalse: boolean = false;
 
-const arrOne: int[] = [1, 2, 3, 4, 5];
+const arrOne: int[] = [1, 2, 69, 4, 5];
 const arrIndexTest: int = arrOne[2];
 
 

@@ -300,7 +300,6 @@ namespace Cryo
         case NODE_INDEX_EXPR:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Index Expression");
-            llvmValue = arrays.handleIndexExpression(node);
             break;
         }
         default:
