@@ -727,3 +727,30 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena)
 
     return node;
 }
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct IndexExprNode
+/// {
+///     char *name;
+///     struct ASTNode *array;
+///     struct ASTNode *index;
+/// } IndexExprNode;
+///```
+///
+IndexExprNode *createIndexExprNodeContainer(Arena *arena)
+{
+    IndexExprNode *node = (IndexExprNode *)ARENA_ALLOC(arena, sizeof(IndexExprNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate IndexExprNode node.");
+        return NULL;
+    }
+
+    node->name = ARENA_ALLOC(arena, sizeof(char));
+    node->array = NULL;
+    node->index = NULL;
+
+    return node;
+}

@@ -155,7 +155,9 @@ Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena)
     {
         return currentToken;
     }
-    return get_next_token(lexer);
+    Lexer tempLexer = *lexer;
+    Token nextToken = get_next_token(&tempLexer);
+    return nextToken;
 }
 // </peekNextUnconsumedToken>
 
@@ -266,34 +268,36 @@ CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *t
 // </parseType>
 
 // <getOperatorPrecedence>
-int getOperatorPrecedence(CryoTokenType type, Arena *arena)
+int getOperatorPrecedence(CryoOperatorType type, Arena *arena)
 {
+    printf("[Parser] @getOperatorPrecedence | Operator: %s\n", CryoOperatorToString(type));
     switch (type)
     {
-    case TOKEN_PLUS:
-    case TOKEN_MINUS:
+    case OPERATOR_ADD:
+    case OPERATOR_SUB:
+        logMessage("INFO", __LINE__, "Parser", "Operator: %s, Precedence: 1", CryoOperatorToString(type));
         return 1;
-
-    case TOKEN_STAR:
-    case TOKEN_SLASH:
+    case OPERATOR_MUL:
+    case OPERATOR_DIV:
+    case OPERATOR_MOD:
+        logMessage("INFO", __LINE__, "Parser", "Operator: %s, Precedence: 2", CryoOperatorToString(type));
         return 2;
-
-    case TOKEN_OP_EQ:
-    case TOKEN_OP_NEQ:
+    case OPERATOR_LT:
+    case OPERATOR_GT:
+    case OPERATOR_LTE:
+    case OPERATOR_GTE:
+        logMessage("INFO", __LINE__, "Parser", "Operator: %s, Precedence: 3", CryoOperatorToString(type));
         return 3;
-
-    case TOKEN_OP_LT:
-    case TOKEN_OP_LTE:
-    case TOKEN_OP_GT:
-    case TOKEN_OP_GTE:
+    case OPERATOR_EQ:
+    case OPERATOR_NEQ:
+        logMessage("INFO", __LINE__, "Parser", "Operator: %s, Precedence: 4", CryoOperatorToString(type));
         return 4;
-
-    case TOKEN_OP_AND:
+    case OPERATOR_AND:
+        logMessage("INFO", __LINE__, "Parser", "Operator: %s, Precedence: 5", CryoOperatorToString(type));
         return 5;
-
-    case TOKEN_OP_OR:
+    case OPERATOR_OR:
+        logMessage("INFO", __LINE__, "Parser", "Operator: %s, Precedence: 6", CryoOperatorToString(type));
         return 6;
-
     default:
         return 0;
     }
@@ -364,15 +368,21 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         return parseImport(lexer, table, context, arena);
 
     case TOKEN_KW_EXTERN:
+        logMessage("INFO", __LINE__, "Parser", "Parsing extern declaration...");
         return parseExtern(lexer, table, context, arena);
 
     case TOKEN_IDENTIFIER:
         if (currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena).type == TOKEN_LPAREN)
         {
+            logMessage("INFO", __LINE__, "Parser", "Parsing function call...");
             char *functionName = strndup(currentToken.start, currentToken.length);
             return parseFunctionCall(lexer, table, context, functionName, arena);
         }
-        return parseExpressionStatement(lexer, table, context, arena);
+        else
+        {
+            logMessage("INFO", __LINE__, "Parser", "Parsing identifier...");
+            return parsePrimaryExpression(lexer, table, context, arena);
+        }
 
     case TOKEN_KW_NAMESPACE:
         return parseNamespace(lexer, table, context, arena);
@@ -455,6 +465,16 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         return parseArrayLiteral(lexer, table, context, arena);
 
     case TOKEN_IDENTIFIER:
+        // Peek to see if the next token is `[` for array indexing
+        if (peekNextUnconsumedToken(lexer, arena).type == TOKEN_LBRACKET)
+        {
+            logMessage("INFO", __LINE__, "Parser", "Parsing array indexing");
+            return parseArrayIndexing(lexer, table, context, NULL, arena);
+        }
+        else
+        {
+            logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena).type));
+        }
         logMessage("INFO", __LINE__, "Parser", "Parsing identifier");
         node = createIdentifierNode(strndup(currentToken.start, currentToken.length), arena);
         getNextToken(lexer, arena);
@@ -464,6 +484,14 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         error("Expected an expression", "parsePrimaryExpression", table, arena);
         return NULL;
     }
+
+    // Check for array indexing after an identifier or other primary expression
+    while (currentToken.type == TOKEN_LBRACKET)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing array indexing");
+        node = parseArrayIndexing(lexer, table, context, NULL, arena);
+    }
+    return node;
 }
 // </parsePrimaryExpression>
 
@@ -471,12 +499,12 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 ASTNode *parseExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing expression...");
-    ASTNode *left = parsePrimaryExpression(lexer, table, context, arena);
-    if (!left)
-    {
-        error("Expected an expression.", "parseExpression", table, arena);
-    }
-    return parseBinaryExpression(lexer, table, context, left, 1, arena);
+    // ASTNode *left = parsePrimaryExpression(lexer, table, context, arena);
+    // if (!left)
+    // {
+    //     error("Expected an expression.", "parseExpression", table, arena);
+    // }
+    return parseBinaryExpression(lexer, table, context, 1, arena);
 }
 // </parseExpression>
 
@@ -496,19 +524,49 @@ ASTNode *parseExpressionStatement(Lexer *lexer, CryoSymbolTable *table, ParsingC
 // </parseExpressionStatement>
 
 // <parseBinaryExpression>
-ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, ASTNode *left, int precedence, Arena *arena)
+ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, int minPrecedence, Arena *arena)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing binary expression...");
+    ASTNode *left = parsePrimaryExpression(lexer, table, context, arena);
+    if (!left)
+    {
+        error("Expected an expression.", "parseBinaryExpression", table, arena);
+        return NULL;
+    }
+
     while (true)
     {
-        int currentPrecedence = getOperatorPrecedence(currentToken.type, arena);
-        if (currentPrecedence < precedence)
+        logMessage("INFO", __LINE__, "Parser", "Current Token: %s", CryoTokenToString(currentToken.type));
+        CryoTokenType operator= currentToken.type;
+        printf("Operator: %s\n", CryoTokenToString(operator));
+        CryoOperatorType _op = CryoTokenToOperator(operator);
+        printf("Operator: %s\n", CryoOperatorToString(_op));
+        int precedence = getOperatorPrecedence(_op, arena);
+        printf("Precedence: %d\n", precedence);
+
+        // if (operator== )
+        // {
+        //     // This means that the literal expression is an array indexing operation
+        //     // <TOKEN_RBRACKET> <TOKEN_INT_LITERAL> <TOKEN_LBRACKET> = NODE_INDEX_EXPR
+        //     consume()
+        // }
+
+        if (precedence < minPrecedence)
         {
-            return left;
+            break;
         }
 
-        CryoTokenType operator= currentToken.type;
-        logMessage("INFO", __LINE__, "Parser", "Current operator: %s", CryoTokenToString(operator));
+        getNextToken(lexer, arena); // consume operator
+
+        // Parse the right side with a higher precedence
+        ASTNode *right = parseBinaryExpression(lexer, table, context, precedence + 1, arena);
+        if (!right)
+        {
+            error("Expected an expression on the right side of the operator.", "parseBinaryExpression", table, arena);
+            return NULL;
+        }
+
+        // Create a new binary expression node
         CryoOperatorType op = CryoTokenToOperator(operator);
         if (op == OPERATOR_NA)
         {
@@ -516,22 +574,13 @@ ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCont
             return NULL;
         }
 
-        getNextToken(lexer, arena); // consume operator
+        ASTNode *newNode = createBinaryExpr(left, right, op, arena);
+        left = newNode;
 
-        ASTNode *right = parsePrimaryExpression(lexer, table, context, arena);
-        if (!right)
-        {
-            error("Expected an expression on the right side of the binary operator.", "parseBinaryExpression", table, arena);
-        }
-
-        int nextPrecedence = getOperatorPrecedence(currentToken.type, arena);
-        if (currentPrecedence < nextPrecedence)
-        {
-            right = parseBinaryExpression(lexer, table, context, right, currentPrecedence + 1, arena);
-        }
-
-        left = createBinaryExpr(left, right, op, arena);
+        logMessage("INFO", __LINE__, "Parser", "Binary expression parsed: %s", CryoNodeTypeToString(newNode->metaData->type));
     }
+
+    return left;
 }
 // </parseBinaryExpression>
 
@@ -836,6 +885,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
 ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *functionName, Arena *arena)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing function call...");
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseFunctionCall", table, arena);
 
     ASTNode *functionCallNode = createFunctionCallNode(arena);
     functionCallNode->data.functionCall->name = strdup(functionName);
@@ -1343,7 +1393,6 @@ ASTNode *parseIfCondition(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     char *cur_token_cpy = strndup(currentToken.start, currentToken.length);
 
     printf("\n\n[Parser] Current token: %s\n\n", cur_token_cpy);
-
     ASTNode *condition = parseExpression(lexer, table, context, arena);
 
     consume(lexer, TOKEN_RPAREN, "Expected `)` to end if condition.", "parseIfCondition", table, arena);
@@ -1457,6 +1506,37 @@ void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, AST
     }
 }
 // <addElementToArrayLiteral>
+
+ASTNode *parseArrayIndexing(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *arrayName, Arena *arena)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing array indexing...");
+    char *arrName = strndup(currentToken.start, currentToken.length);
+    char *arrCpyName = strdup(arrName);
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseArrayIndexing", table, arena);
+    consume(lexer, TOKEN_LBRACKET, "Expected `[` to start array indexing.", "parseArrayIndexing", table, arena);
+
+    printf("[Parser] Array name: %s\n", arrCpyName);
+    ASTNode *arrNode = ARENA_ALLOC(arena, sizeof(ASTNode));
+    // Find the array in the symbol table
+    CryoSymbol *symbol = findSymbol(table, arrCpyName, arena);
+    if (!symbol)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Array not found.");
+        error("Array not found.", "parseArrayIndexing", table, arena);
+        exit(1);
+        return NULL;
+    }
+    else
+    {
+        logMessage("INFO", __LINE__, "Parser", "Array found.");
+        arrNode = symbol->node;
+    }
+
+    ASTNode *index = parseExpression(lexer, table, context, arena);
+    consume(lexer, TOKEN_RBRACKET, "Expected `]` to end array indexing.", "parseArrayIndexing", table, arena);
+    printf("[Parser] Array name: %s\n", strdup(arrCpyName));
+    return createIndexExprNode(strdup(arrCpyName), arrNode, index, arena);
+}
 
 /* =========================================================== */
 /* @DEBUG | Used to debug the parser in a different executable */

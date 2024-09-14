@@ -112,6 +112,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
 
 /* @DataType_Evaluation */
 bool isAlpha(char c);
+bool isAlphaNumeric(char c);
 bool isDigit(char c);
 bool isType(char c);
 

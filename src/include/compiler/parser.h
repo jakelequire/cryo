@@ -75,7 +75,7 @@ Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena);
 /* @DataType_Management */
 CryoDataType getCryoDataType(const char *typeStr, Arena *arena);
 CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table, Arena *arena);
-int getOperatorPrecedence(CryoTokenType type, Arena *arena);
+int getOperatorPrecedence(CryoOperatorType type, Arena *arena);
 
 /* @Parser_Management */
 // ASTNode* createProgramNode               (void);     !! Move to AST
@@ -87,7 +87,7 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 ASTNode *parseExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 ASTNode *parseExpressionStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
-ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, ASTNode *left, int precedence, Arena *arena);
+ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, int minPrecedence, Arena *arena);
 ASTNode *parseUnaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 
@@ -127,6 +127,7 @@ ASTNode *parseWhileStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 /* @ASTNode_Parsing - Arrays */
 ASTNode *parseArrayLiteral(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
 void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, ASTNode *element, Arena *arena);
+ASTNode *parseArrayIndexing(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *arrayName, Arena *arena);
 
 /* =========================================================== */
 /* @DEBUG | Used to debug the parser in a different executable */

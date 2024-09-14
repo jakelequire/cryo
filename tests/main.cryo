@@ -14,19 +14,21 @@ const boolTrue: boolean = true;
 const boolFalse: boolean = false;
 
 const arrOne: int[] = [1, 2, 3, 4, 5];
+const arrIndexTest: int = arrOne[2];
+
 
 public function main() -> void 
 {
     printStr(strOne);
     printStr("THIS IS PAIN");
 
-    if(boolTrue)
+    if(10 != 10)
     {
-        printStr("Boolean is true");
+        printStr("10 is not equal to 10");
     }
     else
     {
-        printStr("Boolean is false");
+        printStr("10 is equal to 10");
     }
 
     return;

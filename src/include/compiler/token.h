@@ -168,6 +168,8 @@ extern "C"
         TOKEN_LESS,           // `<`
         TOKEN_GREATER,        // `>`
         TOKEN_EQUAL,          // `=`
+        TOKEN_STRICT_EQUAL,   // `==`
+        TOKEN_NOT_EQUAL,      // `!=`
         TOKEN_DOT,            // `.`
         TOKEN_COMMA,          // `,`
         TOKEN_HASH,           // `#`
@@ -267,7 +269,8 @@ extern "C"
         NODE_EXTERN_FUNCTION,      // 26
         NODE_ARG_LIST,             // 27
         NODE_NAMESPACE,            // 28
-        NODE_UNKNOWN,              // 29
+        NODE_INDEX_EXPR,           // 29
+        NODE_UNKNOWN,              // 30
     } CryoNodeType;
 
     typedef enum CryoDataType
@@ -309,6 +312,7 @@ extern "C"
     char *CryoVisibilityTypeToString(CryoVisibilityType visibility);
     char *CryoTokenToString(CryoTokenType node);
     char *CryoOperatorTypeToString(CryoOperatorType op);
+    char *CryoOperatorToString(CryoOperatorType op);
     CryoOperatorType CryoTokenToOperator(CryoTokenType token);
 
     CryoDataType CryoDataTypeStringToType(char *typeStr);

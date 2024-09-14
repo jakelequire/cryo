@@ -157,6 +157,65 @@ namespace Cryo
 
             break;
         }
+        case NODE_BINARY_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "IfStatements", "Handling Binary Expression");
+            // Get the left and right operands
+            ASTNode *leftOperand = node->data.bin_op->left;
+            ASTNode *rightOperand = node->data.bin_op->right;
+            // Get the operator
+            CryoOperatorType binaryOperator = node->data.bin_op->op;
+            // Get the operator value
+            llvm::CmpInst::Predicate operatorValue = llvm::CmpInst::Predicate::ICMP_NE;
+            switch (binaryOperator)
+            {
+            case OPERATOR_EQ:
+            {
+                operatorValue = llvm::CmpInst::Predicate::ICMP_EQ;
+                break;
+            }
+            case OPERATOR_NEQ:
+            {
+                operatorValue = llvm::CmpInst::Predicate::ICMP_NE;
+                break;
+            }
+            case OPERATOR_LT:
+            {
+                operatorValue = llvm::CmpInst::Predicate::ICMP_SLT;
+                break;
+            }
+            case OPERATOR_GT:
+            {
+                operatorValue = llvm::CmpInst::Predicate::ICMP_SGT;
+                break;
+            }
+            case OPERATOR_LTE:
+            {
+                operatorValue = llvm::CmpInst::Predicate::ICMP_SLE;
+                break;
+            }
+            case OPERATOR_GTE:
+            {
+                operatorValue = llvm::CmpInst::Predicate::ICMP_SGE;
+                break;
+            }
+            default:
+            {
+                debugger.logMessage("ERROR", __LINE__, "IfStatements", "Unknown operator");
+                exit(1);
+            }
+            }
+
+            // Get the left and right values
+            llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(leftOperand);
+            llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightOperand);
+            // Create the condition
+            condition = compiler.getContext().builder.CreateICmp(operatorValue, leftValue, rightValue, "ifCondition");
+
+            debugger.logMessage("INFO", __LINE__, "IfStatements", "Binary Expression Handled");
+
+            break;
+        }
         default:
         {
             debugger.logMessage("ERROR", __LINE__, "IfStatements", "Unknown node type @ IfStatements::createIfCondition");

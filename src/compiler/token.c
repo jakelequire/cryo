@@ -144,6 +144,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "ARG_LIST";
     case NODE_NAMESPACE:
         return "NAMESPACE";
+    case NODE_INDEX_EXPR:
+        return "INDEX_EXPR";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -480,6 +482,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_GREATER";
     case TOKEN_EQUAL:
         return "TOKEN_EQUAL";
+    case TOKEN_STRICT_EQUAL:
+        return "TOKEN_STRICT_EQUAL";
     case TOKEN_DOT:
         return "TOKEN_DOT";
     case TOKEN_COMMA:
@@ -700,15 +704,15 @@ CryoOperatorType CryoTokenToOperator(CryoTokenType token)
         return OPERATOR_RSHIFT;
     case TOKEN_OP_LT:
         return OPERATOR_LT;
-    case TOKEN_OP_GT:
+    case TOKEN_GREATER:
         return OPERATOR_GT;
-    case TOKEN_OP_LTE:
+    case TOKEN_LESS:
         return OPERATOR_LTE;
     case TOKEN_OP_GTE:
         return OPERATOR_GTE;
     case TOKEN_OP_EQ:
         return OPERATOR_EQ;
-    case TOKEN_OP_NEQ:
+    case TOKEN_NOT_EQUAL:
         return OPERATOR_NEQ;
     case TOKEN_OP_ASSIGN:
         return OPERATOR_ASSIGN;
@@ -728,11 +732,78 @@ CryoOperatorType CryoTokenToOperator(CryoTokenType token)
         return OPERATOR_OR_ASSIGN;
     case TOKEN_OP_XOR_ASSIGN:
         return OPERATOR_XOR_ASSIGN;
+    case TOKEN_STRICT_EQUAL:
+        return OPERATOR_EQ;
     default:
         return OPERATOR_NA;
     }
 }
 // </CryoTokenToOperator>
+
+// <CryoOperatorToString>
+char *CryoOperatorToString(CryoOperatorType op)
+{
+    switch (op)
+    {
+    case OPERATOR_ADD:
+        return "+";
+    case OPERATOR_SUB:
+        return "-";
+    case OPERATOR_MUL:
+        return "*";
+    case OPERATOR_DIV:
+        return "/";
+    case OPERATOR_MOD:
+        return "%";
+    case OPERATOR_AND:
+        return "&";
+    case OPERATOR_OR:
+        return "|";
+    case OPERATOR_XOR:
+        return "^";
+    case OPERATOR_NOT:
+        return "!";
+    case OPERATOR_LSHIFT:
+        return "<<";
+    case OPERATOR_RSHIFT:
+        return ">>";
+    case OPERATOR_LT:
+        return "<";
+    case OPERATOR_GT:
+        return ">";
+    case OPERATOR_LTE:
+        return "<=";
+    case OPERATOR_GTE:
+        return ">=";
+    case OPERATOR_EQ:
+        return "==";
+    case OPERATOR_NEQ:
+        return "!=";
+    case OPERATOR_ASSIGN:
+        return "=";
+    case OPERATOR_ADD_ASSIGN:
+        return "+=";
+    case OPERATOR_SUB_ASSIGN:
+        return "-=";
+    case OPERATOR_MUL_ASSIGN:
+        return "*=";
+    case OPERATOR_DIV_ASSIGN:
+        return "/=";
+    case OPERATOR_MOD_ASSIGN:
+        return "%=";
+    case OPERATOR_AND_ASSIGN:
+        return "&=";
+    case OPERATOR_OR_ASSIGN:
+        return "|=";
+    case OPERATOR_XOR_ASSIGN:
+        return "^=";
+    case OPERATOR_NA:
+        return "<N/A>";
+    default:
+        return "<OPERATOR UNKNOWN>";
+    }
+}
+// </CryoOperatorToString>
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -231,6 +231,16 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         printf("\nNamespace Node: %s\n", node->data.cryoNamespace->name);
         break;
 
+    case NODE_INDEX_EXPR:
+    {
+        printf("\nIndex Expression Node\n");
+        printf("Array:\n");
+        printAST(node->data.indexExpr->array, indent + 2, arena);
+        printf("Index:\n");
+        printAST(node->data.indexExpr->index, indent + 2, arena);
+        break;
+    }
+
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");
         break;
@@ -325,6 +335,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena)
         break;
     case NODE_ARRAY_LITERAL:
         node->data.array = createArrayNodeContainer(arena);
+        break;
+    case NODE_INDEX_EXPR:
+        node->data.indexExpr = createIndexExprNodeContainer(arena);
         break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
@@ -993,4 +1006,21 @@ ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena)
 ASTNode *createArrayLiteralNode(Arena *arena)
 {
     return createASTNode(NODE_ARRAY_LITERAL, arena);
+}
+
+// Add a new function to create an index expression node
+ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena)
+{
+    ASTNode *node = createASTNode(NODE_INDEX_EXPR, arena);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create index expression node");
+        return NULL;
+    }
+
+    node->data.indexExpr->name = strdup(arrayName);
+    node->data.indexExpr->array = arrayRef;
+    node->data.indexExpr->index = index;
+
+    return node;
 }

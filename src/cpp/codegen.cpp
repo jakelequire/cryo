@@ -156,6 +156,7 @@ namespace Cryo
             break;
         case NODE_VAR_DECLARATION:
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Declaration");
+            debugger.logNode(root->data.varDecl->initializer);
             generator.handleVariableDeclaration(root);
             break;
         case NODE_BINARY_EXPR:
@@ -207,6 +208,11 @@ namespace Cryo
             }
             break;
         }
+        case NODE_INDEX_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Index Expression");
+            break;
+        }
         default:
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             std::cout << "Received: " << CryoNodeTypeToString(root->metaData->type) << std::endl;
@@ -226,6 +232,7 @@ namespace Cryo
         Variables &variables = compiler.getVariables();
         Generator &generator = compiler.getGenerator();
         Types &types = compiler.getTypes();
+        Arrays &arrays = compiler.getArrays();
 
         CryoNodeType nodeType = node->metaData->type;
         llvm::Value *llvmValue = nullptr;
@@ -288,6 +295,12 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Name");
             llvmValue = variables.getVariable(node->data.varName->varName);
+            break;
+        }
+        case NODE_INDEX_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Index Expression");
+            llvmValue = arrays.handleIndexExpression(node);
             break;
         }
         default:

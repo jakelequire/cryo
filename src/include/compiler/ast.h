@@ -544,6 +544,28 @@ typedef struct CryoArrayNode
     int elementCapacity;
 } CryoArrayNode;
 
+/// #### The IndexExprNode struct represents an index expression in the AST.
+/// ---
+///
+/// ```
+/// typedef struct IndexExprNode
+/// {
+///     char *name;
+///     struct ASTNode *array;
+///     struct ASTNode *index;
+/// } IndexExprNode;
+///
+/// ```
+typedef struct IndexExprNode
+{
+    // Name of the array reference
+    char *name;
+    // Should be the array node itself
+    struct ASTNode *array;
+    // Should be a literal expression node with an int value
+    struct ASTNode *index;
+} IndexExprNode;
+
 typedef struct ASTNode
 {
     CryoMetaData *metaData;
@@ -592,6 +614,8 @@ typedef struct ASTNode
         ArgNode *argList;
         // For Arrays
         CryoArrayNode *array;
+        // For Index Expressions
+        IndexExprNode *indexExpr;
     } data;
 } ASTNode;
 
@@ -620,6 +644,7 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena);
 CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena);
 CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena);
 CryoArrayNode *createArrayNodeContainer(Arena *arena);
+IndexExprNode *createIndexExprNodeContainer(Arena *arena);
 
 #ifdef __cplusplus
 extern "C"
@@ -692,6 +717,7 @@ extern "C"
 
     /* @Node_Creation - Arrays */
     ASTNode *createArrayLiteralNode(Arena *arena);
+    ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena);
 
 #ifdef __cplusplus
 }

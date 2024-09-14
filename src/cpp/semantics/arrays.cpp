@@ -119,4 +119,67 @@ namespace Cryo
         return arrayNode->elementCount;
     }
 
+    llvm::Value *Arrays::handleIndexExpression(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Handling Index Expression");
+        IndexExprNode *indexNode = node->data.indexExpr;
+        assert(indexNode != nullptr);
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Index Expression Node Found");
+
+        // Get the array name
+        char *arrayName = indexNode->name;
+        std::cout << "Array Name: " << arrayName << std::endl;
+
+        // Look up the array in the symbol table
+        ASTNode *arrayNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
+
+        int elementCount = getArrayLength(arrayNode);
+
+        // Get the index of the literal expression
+        llvm::Value *index = compiler.getGenerator().handleLiteralExpression(indexNode->index);
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Index Processed");
+
+        int indexValue = indexNode->index->data.literal->value.intValue;
+        std::cout << "Index Value: " << indexValue << std::endl;
+
+        ASTNode *indexedArrayEl = nullptr;
+        CryoDataType indexedArrayElType;
+        for (int i = 0; i < elementCount; ++i)
+        {
+            ASTNode *arrNode = arrayNode->data.array->elements[i];
+            if (i == indexValue)
+            {
+                std::cout << "Element Found" << std::endl;
+                indexedArrayEl = arrNode;
+                indexedArrayElType = arrNode->data.literal->dataType;
+            }
+        }
+
+        llvm::Value *llvmValue = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+        llvm::Type *llvmType = nullptr;
+
+        switch (indexedArrayElType)
+        {
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Arrays", "Creating Int Constant");
+            llvmType = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+            llvmConstant = llvm::ConstantInt::get(llvmType, indexValue);
+            llvmValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown array element type");
+            exit(1);
+        }
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Index Expression Processed");
+
+        return llvmValue;
+    }
+
 } // namespace Cryo

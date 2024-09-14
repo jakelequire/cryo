@@ -333,6 +333,7 @@ namespace Cryo
         void handleArrayLiteral(ASTNode *node);
         llvm::ArrayType *getArrayType(ASTNode *node);
         int getArrayLength(ASTNode *node);
+        llvm::Value *handleIndexExpression(ASTNode *node);
 
     private:
         CryoCompiler &compiler;

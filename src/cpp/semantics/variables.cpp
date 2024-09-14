@@ -104,6 +104,15 @@ namespace Cryo
 
         if (initializer)
         {
+            if (initializer->metaData->type == NODE_INDEX_EXPR)
+            {
+                debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Index");
+                llvm::Value *indexArr = arrays.handleIndexExpression(initializer);
+                debugger.logMessage("INFO", __LINE__, "Variables", "Array Index Processed");
+
+                llvmType = indexArr->getType();
+                llvmValue = indexArr;
+            }
             // Check if the initializer is an array
             if (initializer->metaData->type == NODE_ARRAY_LITERAL)
             {
@@ -115,7 +124,6 @@ namespace Cryo
             }
             else
             {
-
                 int _len = types.getLiteralValLength(initializer);
                 if (type == DATA_TYPE_STRING)
                     _len += 1; // Add one for the null terminator

@@ -324,6 +324,16 @@ namespace Cryo
 
             break;
 
+        case NODE_INDEX_EXPR:
+            std::cout << "----------------------------------------" << std::endl;
+            std::cout << "\nIndex Expression Node" << std::endl;
+            std::cout << "Array Name: " << node->data.indexExpr->array << std::endl;
+            std::cout << "Index: " << std::endl;
+            logNode(node->data.indexExpr->index);
+            std::cout << "----------------------------------------" << std::endl;
+
+            break;
+
         default:
             std::cout << "\nUnknown Node Type" << std::endl;
             std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
@@ -407,6 +417,7 @@ namespace Cryo
         case NODE_EXTERN_FUNCTION:
         case NODE_ARG_LIST:
         case NODE_NAMESPACE:
+        case NODE_INDEX_EXPR:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
