@@ -613,6 +613,20 @@ namespace Cryo
             assertNode(node);
             break;
 
+        case NODE_BLOCK:
+            assertNode(node);
+            for (int i = 0; i < node->data.block->statementCount; ++i)
+            {
+                lintTree(node->data.block->statements[i]);
+            }
+            break;
+        
+        case NODE_INDEX_EXPR:
+            assertNode(node);
+            lintTree(node->data.indexExpr->array);
+            lintTree(node->data.indexExpr->index);
+            break;
+
         case NODE_UNKNOWN:
             logMessage("ERROR", __LINE__, "Debugger", "Unknown node type");
             break;

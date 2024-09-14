@@ -122,6 +122,8 @@ namespace Cryo
     void Arrays::handleIndexExpression(ASTNode *node, std::string varName)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        CryoContext &context = compiler.getContext();
+        Variables &variables = compiler.getVariables();
         debugger.logMessage("INFO", __LINE__, "Arrays", "Handling Index Expression");
         IndexExprNode *indexNode = node->data.indexExpr;
         assert(indexNode != nullptr);
@@ -133,61 +135,36 @@ namespace Cryo
 
         // Look up the array in the symbol table
         ASTNode *arrayNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
-
         int elementCount = getArrayLength(arrayNode);
-
-        // Get the index of the literal expression
-        // llvm::Value *index = compiler.getGenerator().handleLiteralExpression(indexNode->index);
-        // debugger.logMessage("INFO", __LINE__, "Arrays", "Index Processed");
-
+        std::cout << "Element Count: " << elementCount << std::endl;
         int indexValue = indexNode->index->data.literal->value.intValue;
         std::cout << "Index Value: " << indexValue << std::endl;
 
-        ASTNode *indexedArrayEl = nullptr;
-        CryoDataType indexedArrayElType;
-        LiteralNode *indexedArrayElLit = nullptr;
-        llvm::Value *indexedArrayElValue = nullptr;
-        llvm::Type *llvmType = nullptr;
-        llvm::Constant *llvmConstant = nullptr;
-        for (int i = 0; i < elementCount; ++i)
+        ASTNode *indexArrayNode = arrayNode->data.array->elements[indexValue];
+        CryoNodeType indexArrayNodeType = indexArrayNode->metaData->type;
+        if (indexArrayNodeType == NODE_LITERAL_EXPR)
         {
-            ASTNode *arrNode = arrayNode->data.array->elements[i];
-            if (i == indexValue)
-            {
-                std::cout << "Element Found" << std::endl;
-                indexedArrayEl = arrNode;
-                indexedArrayElType = arrNode->data.literal->dataType;
-                std::cout << "Element Type: " << CryoDataTypeToString(indexedArrayElType) << std::endl;
-                std::cout << "Element Value: " << arrNode->data.literal->value.intValue << std::endl;
-                indexedArrayElLit = arrNode->data.literal;
-                debugger.logNode(indexedArrayEl);
-
-                // Create the variable from the literal expression
-                llvmType = compiler.getTypes().getType(indexedArrayElType, 0);
-                switch (indexedArrayElType)
-                {
-                case DATA_TYPE_INT:
-                {
-                    llvmConstant = llvm::ConstantInt::get(llvmType, indexedArrayElLit->value.intValue);
-                    break;
-                }
-                }
-                break;
-            }
+            std::cout << "Index Array Node Type: " << CryoNodeTypeToString(indexArrayNodeType) << std::endl;
+            std::cout << "Element Type: " << CryoDataTypeToString(indexArrayNode->data.literal->dataType) << std::endl;
+            std::cout << "Element Value: " << indexArrayNode->data.literal->value.intValue << std::endl;
+            // Creat the variable from the literal expression
+            llvm::Type *llvmType = compiler.getTypes().getType(indexArrayNode->data.literal->dataType, 0);
+            llvm::Constant *llvmConstant = llvm::ConstantInt::get(llvmType, indexArrayNode->data.literal->value.intValue);
+            // Create the global variable
+            llvm::GlobalVariable *var = new llvm::GlobalVariable(
+                *compiler.getContext().module,
+                llvmType,
+                false,
+                llvm::GlobalValue::ExternalLinkage,
+                llvmConstant,
+                llvm::Twine(varName));
         }
-
-        // llvmConstant = llvm::dyn_cast<llvm::Constant>(indexedArrayElValue);
-
-        // Create the variable
-        llvm::GlobalVariable *var = new llvm::GlobalVariable(
-            *compiler.getContext().module,
-            llvmType,
-            false,
-            llvm::GlobalValue::ExternalLinkage,
-            llvmConstant,
-            llvm::Twine(varName));
-
-        debugger.logMessage("INFO", __LINE__, "Arrays", "Index Expression Processed");
+        else
+        {
+            std::cout << "Index Array Node Type: Unknown" << std::endl;
+            std::cout << "Received: " << CryoNodeTypeToString(indexArrayNodeType) << std::endl;
+            exit(0);
+        }
         return;
     }
 

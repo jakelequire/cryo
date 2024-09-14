@@ -56,6 +56,8 @@ namespace Cryo
         // Declare all functions in the AST tree
         // declarations.preprocessDeclare(root); <- TODO: Implement this function
 
+        exit(0);
+
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
         return;
     }

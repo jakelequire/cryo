@@ -1,5 +1,4 @@
 namespace test;
-
 extern function printStr(s: string) -> void;
 extern function printInt(i: int) -> void;
 
@@ -14,13 +13,24 @@ const boolTrue: boolean = true;
 const boolFalse: boolean = false;
 
 const arrOne: int[] = [1, 2, 69, 4, 5];
-const arrIndexTest: int = arrOne[2];
+//                     0  1   2  3  4
+const arrIndexZero: int = arrOne[0];
+const arrIndexOne: int = arrOne[1];
+const arrIndexTwo: int = arrOne[2];
+const arrIndexThree: int = arrOne[3];
+const arrIndexFour: int = arrOne[4];
 
 
 public function main() -> void 
 {
     printStr(strOne);
     printStr("THIS IS PAIN");
+    printInt(intOne);
+    printInt(arrIndexZero);
+    // printInt(arrIndexOne);
+    // printInt(arrIndexTwo);
+    // printInt(arrIndexThree);
+    // printInt(arrIndexFour);
 
     if(10 != 10)
     {

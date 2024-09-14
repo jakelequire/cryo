@@ -89,6 +89,7 @@ char peek(Lexer *lexer);
 char peekNext(Lexer *lexer);
 bool matchToken(Lexer *lexer, CryoTokenType type);
 void skipWhitespace(Lexer *lexer);
+void skipComment(Lexer *lexer);
 
 /* @Lexer_Functions */
 Token nextToken(Lexer *lexer, Token *token);

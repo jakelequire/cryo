@@ -141,11 +141,9 @@ namespace Cryo
         case DATA_TYPE_INT:
         {
             debugger.logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
-            debugger.logNode(node);
             int intValue = literalNode->value.intValue;
             std::cout << "\n\nLiteral Int Value:" << node->data.literal->value.intValue << std::endl;
             llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, intValue, true));
-            llvmConstant->print(llvm::outs());
             std::cout << "\n";
 
             break;

@@ -67,9 +67,9 @@ namespace Cryo
         {
             // Find the variable in the SymTable
             CryoVariableNode varNode = symNode.variables[nodeName];
-            std::cout << "===-------------------===" << std::endl;
-            debugger.logNode(varNode.initializer);
-            std::cout << "===-------------------===" << std::endl;
+            // std::cout << "===-------------------===" << std::endl;
+            // debugger.logNode(varNode.initializer);
+            // std::cout << "===-------------------===" << std::endl;
 
             return varNode.initializer;
         }
@@ -192,6 +192,12 @@ namespace Cryo
             {
             case NODE_VAR_DECLARATION:
             {
+                if (node->data.varDecl->initializer->metaData->type == NODE_INDEX_EXPR)
+                {
+                    std::cout << "Index Expression" << std::endl;
+
+                    DEBUG_BREAKPOINT;
+                }
                 // Add the variable to the SymTable
                 char *varName = node->data.varDecl->name;
                 CryoVariableNode varNode;
@@ -202,6 +208,7 @@ namespace Cryo
                 varNode.initializer = node->data.varDecl->initializer;
                 std::string varNameStr = std::string(varName);
                 program.variables.insert({varNameStr, varNode});
+                debugger->logNode(node);
                 break;
             }
             case NODE_FUNCTION_DECLARATION:

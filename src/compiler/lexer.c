@@ -114,6 +114,7 @@ void freeLexer(Lexer *lexer)
 // <advance>
 char advance(Lexer *lexer)
 {
+    printf("[Lexer] Advancing to next character: %c\n", lexer->current[0]);
     lexer->current++;
     lexer->column++;
     return lexer->current[-1];
@@ -139,7 +140,7 @@ char peekNext(Lexer *lexer)
 {
     if (isAtEnd(lexer))
         return '\0';
-    // printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
+    printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
     return (char)&lexer->current[1];
 }
 // </peekNext>
@@ -175,8 +176,10 @@ void skipWhitespace(Lexer *lexer)
             advance(lexer);
             break;
         case '/':
-            if (peekNext(lexer) == '/')
+            printf("[Lexer] Found comment character: %c\n", c);
+            if (peek(lexer) == '/')
             {
+                printf("[Lexer] Found single line comment character: %c\n", c);
                 while (peek(lexer) != '\n' && !isAtEnd(lexer))
                     advance(lexer);
             }
@@ -184,17 +187,22 @@ void skipWhitespace(Lexer *lexer)
             {
                 advance(lexer);
                 advance(lexer);
-                while (!(peek(lexer) == '*' && peekNext(lexer) == '/') && !isAtEnd(lexer))
+                while (peek(lexer) != '*' && peekNext(lexer) != '/' && !isAtEnd(lexer))
                 {
                     if (peek(lexer) == '\n')
+                    {
                         lexer->line++;
+                        lexer->column = 0;
+                    }
                     advance(lexer);
                 }
-                if (!isAtEnd(lexer))
+                if (isAtEnd(lexer))
                 {
-                    advance(lexer);
-                    advance(lexer);
+                    logMessage("ERROR", __LINE__, "Lexer", "Unterminated block comment.");
+                    return;
                 }
+                advance(lexer);
+                advance(lexer);
             }
             else
             {

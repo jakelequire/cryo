@@ -43,10 +43,15 @@
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
 
 #include "cpp/debugger.h"
 #include "compiler/ast.h"
 #include "cpp/backend_symtable.h"
+
+#define DEBUG_BREAKPOINT                                               \
+    printf("\n<!> Debug Breakpoint! Exiting... Line: %i\n", __LINE__); \
+    exit(0)
 
 namespace Cryo
 {

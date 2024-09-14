@@ -299,7 +299,6 @@ namespace Cryo
                 {
                     debugger.logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement->data.returnStatement->expression);
-                    debugger.logNode(statement);
                     // +1 for the null terminator
                     returnType = types.getType(DATA_TYPE_STRING, _len + 1);
                     break;
@@ -493,6 +492,16 @@ namespace Cryo
                 assert(argValue != nullptr);
 
                 argValues.push_back(argValue);
+                continue;
+            }
+
+            if (argTypeData == DATA_TYPE_INT)
+            {
+                // Find the variable in the symbol table
+                std::string argName = std::string(argNode->data.varDecl->name);
+                std::cout << "Argument Name: " << argName << std::endl;
+
+                exit(0);
                 continue;
             }
 
