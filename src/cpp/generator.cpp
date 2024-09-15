@@ -223,6 +223,7 @@ namespace Cryo
     void Generator::handleForStatement(ASTNode *node)
     {
         std::cout << "[CPP] Handling For Statement" << std::endl;
+        DEBUG_BREAKPOINT;
         // TODO: Implement
     }
 

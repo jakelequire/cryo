@@ -200,6 +200,9 @@ extern "C"
         TOKEN_LCURLY_BRACKET, // `{{`
         TOKEN_RCURLY_BRACKET, // `}}`
         TOKEN_ELLIPSIS,       // `...`
+        TOKEN_DOUBLE_COLON,   // `::`
+        TOKEN_INCREMENT,      // `++`
+        TOKEN_DECREMENT,      // `--`
 
         TOKEN_ITER_VAR,    // `$`
         TOKEN_ITER_STEP,   // `..`

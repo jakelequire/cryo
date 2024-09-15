@@ -321,11 +321,18 @@ typedef struct IfStatementNode
 /// } ForStatementNode;
 ///
 /// ```
+/// ```
+/// for(initializer; condition; increment) { ... }
+/// ```
 typedef struct ForStatementNode
 {
+    // `${initializer};`
     struct ASTNode *initializer;
+    // `${condition};`
     struct ASTNode *condition;
+    // `${increment};`
     struct ASTNode *increment;
+    // { body }
     struct ASTNode *body;
 } ForStatementNode;
 
@@ -409,6 +416,9 @@ typedef struct CryoExpressionNode
 ///     bool isReference;
 ///     // This is the data attached to the variable
 ///     struct ASTNode *initializer;
+///     // Optional index expression for array handling
+///     bool hasIndexExpr;
+///     struct IndexExprNode *indexExpr;
 /// } CryoVariableNode;
 ///
 /// ```
@@ -421,6 +431,7 @@ typedef struct CryoVariableNode
     bool isLocal;
     bool isReference;
     bool isMutable;
+    bool isIterator;
     // This is the data attached to the variable
     struct ASTNode *initializer;
     // Optional index expression for array handling

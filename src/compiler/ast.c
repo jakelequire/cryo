@@ -75,6 +75,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
         printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
         printf("Is Mutable: %s\n", node->data.varDecl->isMutable ? "true" : "false");
+        printf("Is Iterator: %s\n", node->data.varDecl->isIterator ? "true" : "false");
         printf("Has Index Expression: %s\n", node->data.varDecl->hasIndexExpr ? "true" : "false");
 
         if (node->data.varDecl->initializer)
@@ -94,8 +95,12 @@ void printAST(ASTNode *node, int indent, Arena *arena)
 
     case NODE_BINARY_EXPR:
         printf("\nBinary Expression Node: %s\n", CryoOperatorTypeToString(node->data.bin_op->op));
+        printf("\nLeft Operand:");
         printAST(node->data.bin_op->left, indent + 2, arena);
+        printf("\nOperator: %s\n", CryoOperatorTypeToString(node->data.bin_op->op));
+        printf("\nRight Operand:");
         printAST(node->data.bin_op->right, indent + 2, arena);
+        printf("\n");
         break;
 
     case NODE_UNARY_EXPR:

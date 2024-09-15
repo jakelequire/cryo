@@ -451,6 +451,8 @@ Token symbolChar(Lexer *lexer, char symbol)
         return makeToken(lexer, TOKEN_RBRACKET);
     case ',':
         return makeToken(lexer, TOKEN_COMMA);
+    case '$':
+        return makeToken(lexer, TOKEN_DOLLAR);
     case '.':
     {
         if (peek(lexer) == '.')
@@ -477,6 +479,11 @@ Token symbolChar(Lexer *lexer, char symbol)
         }
         return makeToken(lexer, TOKEN_MINUS);
     case '+':
+        if (peek(lexer) == '+')
+        {
+            advance(lexer);
+            return makeToken(lexer, TOKEN_INCREMENT);
+        }
         return makeToken(lexer, TOKEN_PLUS);
     case ';':
         return makeToken(lexer, TOKEN_SEMICOLON);

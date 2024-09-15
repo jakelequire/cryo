@@ -546,6 +546,10 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_RCURLY_BRACKET";
     case TOKEN_ELLIPSIS:
         return "TOKEN_ELLIPSIS";
+    case TOKEN_INCREMENT:
+        return "TOKEN_INCREMENT";
+    case TOKEN_DECREMENT:
+        return "TOKEN_DECREMENT";
 
     case TOKEN_ITER_VAR:
         return "TOKEN_ITER_VAR";

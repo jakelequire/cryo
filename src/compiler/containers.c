@@ -501,8 +501,12 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena)
 ///     bool isGlobal;
 ///     bool isLocal;
 ///     bool isReference;
+///     bool isMutable;
+///     bool isIterator;
 ///     struct ASTNode *initializer;
 ///     struct ASTNode *indexExpr;
+///     bool hasIndexExpr;
+///     ASTNode *indexExpr;
 /// } CryoVariableNode;
 ///```
 ///
@@ -522,6 +526,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena)
     node->isLocal = false;
     node->isReference = false;
     node->isMutable = false;
+    node->isIterator = false;
     node->initializer = NULL;
     node->hasIndexExpr = false;
     node->indexExpr = NULL;

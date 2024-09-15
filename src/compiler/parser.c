@@ -1418,17 +1418,67 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing for loop...");
     consume(lexer, TOKEN_KW_FOR, "Expected `for` keyword.", "parseForLoop", table, arena);
-
     consume(lexer, TOKEN_LPAREN, "Expected `(` to start for loop.", "parseForLoop", table, arena);
+    consume(lexer, TOKEN_DOLLAR, "Expected `$` to start initilizer with an iterable.", "parseForLoop", table, arena);
 
-    ASTNode *init = parseStatement(lexer, table, context, arena);
+    // The current token is <TOKEN_IDENTIFIER> which is the name of the iterable
+    char *iterableName = strndup(currentToken.start, currentToken.length);
+
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier for the iterable.", "parseForLoop", table, arena);
+    // Check the type of for loop were in.
+    // For now, the structure is:
+    // for($iterable: <type> = <expression>; <condition>; <update>)
+    CryoDataType iterDataType = DATA_TYPE_UNKNOWN;
+    getNextToken(lexer, arena);
+    char *iterableType = strndup(currentToken.start, currentToken.length);
+    printf("\n\nType: %s\n\n", iterableType);
+    CryoDataType dataType = CryoDataTypeStringToType(iterableType);
+    if (dataType == DATA_TYPE_UNKNOWN)
+    {
+        error("Unknown data type.", "parseForLoop", table, arena);
+    }
+    printf("DataType: %s\n", CryoDataTypeToString(dataType));
+    iterDataType = dataType;
+
+    getNextToken(lexer, arena);
+    consume(lexer, TOKEN_EQUAL, "Expected `=` after iterable type.", "parseForLoop", table, arena);
+
+    ASTNode *iterable = parseExpression(lexer, table, context, arena);
+
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena);
+
+    ASTNode *init = createVarDeclarationNode(iterableName, iterDataType, iterable, false, false, false, arena);
+    if (init->metaData->type != NODE_VAR_DECLARATION)
+    {
+        error("Expected a variable declaration node.", "parseForLoop", table, arena);
+        exit(0);
+    }
+    init->data.varDecl->isIterator = true;
+
     ASTNode *condition = parseExpression(lexer, table, context, arena);
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena);
 
     ASTNode *update = parseExpression(lexer, table, context, arena);
+    char *cur_token = strndup(currentToken.start, currentToken.length);
+    printf("\n\n[Parser] Current token: %s\n\n", cur_token);
+
+    if (currentToken.type == TOKEN_INCREMENT)
+    {
+        getNextToken(lexer, arena);
+    }
+    else if (currentToken.type == TOKEN_DECREMENT)
+    {
+        getNextToken(lexer, arena);
+    }
+    else
+    {
+        error("Expected an increment or decrement operator.", "parseForLoop", table, arena);
+    }
+
     consume(lexer, TOKEN_RPAREN, "Expected `)` to end for loop.", "parseForLoop", table, arena);
 
     ASTNode *body = parseBlock(lexer, table, context, arena);
+
     return createForStatement(init, condition, update, body, arena);
 }
 // </parseForLoop>
