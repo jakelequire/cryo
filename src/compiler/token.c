@@ -621,58 +621,10 @@ char *CryoOperatorTypeToString(CryoOperatorType op)
         return "OPERATOR_OR_ASSIGN";
     case OPERATOR_XOR_ASSIGN:
         return "OPERATOR_XOR_ASSIGN";
-    case TOKEN_PLUS:
-        return "TOKEN_PLUS";
-    case TOKEN_MINUS:
-        return "TOKEN_MINUS";
-    case TOKEN_STAR:
-        return "TOKEN_STAR";
-    case TOKEN_SLASH:
-        return "TOKEN_SLASH";
-    case TOKEN_OP_MOD:
-        return "TOKEN_OP_MOD";
-    case TOKEN_OP_AND:
-        return "TOKEN_OP_AND";
-    case TOKEN_OP_OR:
-        return "TOKEN_OP_OR";
-    case TOKEN_OP_XOR:
-        return "TOKEN_OP_XOR";
-    case TOKEN_OP_NOT:
-        return "TOKEN_OP_NOT";
-    case TOKEN_OP_LSHIFT:
-        return "TOKEN_OP_LSHIFT";
-    case TOKEN_OP_RSHIFT:
-        return "TOKEN_OP_RSHIFT";
-    case TOKEN_OP_LT:
-        return "TOKEN_OP_LT";
-    case TOKEN_OP_GT:
-        return "TOKEN_OP_GT";
-    case TOKEN_OP_LTE:
-        return "TOKEN_OP_LTE";
-    case TOKEN_OP_GTE:
-        return "TOKEN_OP_GTE";
-    case TOKEN_OP_EQ:
-        return "TOKEN_OP_EQ";
-    case TOKEN_OP_NEQ:
-        return "TOKEN_OP_NEQ";
-    case TOKEN_OP_ASSIGN:
-        return "TOKEN_OP_ASSIGN";
-    case TOKEN_OP_ADD_ASSIGN:
-        return "TOKEN_OP_ADD_ASSIGN";
-    case TOKEN_OP_SUB_ASSIGN:
-        return "TOKEN_OP_SUB_ASSIGN";
-    case TOKEN_OP_MUL_ASSIGN:
-        return "TOKEN_OP_MUL_ASSIGN";
-    case TOKEN_OP_DIV_ASSIGN:
-        return "TOKEN_OP_DIV_ASSIGN";
-    case TOKEN_OP_MOD_ASSIGN:
-        return "TOKEN_OP_MOD_ASSIGN";
-    case TOKEN_OP_AND_ASSIGN:
-        return "TOKEN_OP_AND_ASSIGN";
-    case TOKEN_OP_OR_ASSIGN:
-        return "TOKEN_OP_OR_ASSIGN";
-    case TOKEN_OP_XOR_ASSIGN:
-        return "TOKEN_OP_XOR_ASSIGN";
+    case OPERATOR_INCREMENT:
+        return "OPERATOR_INCREMENT";
+    case OPERATOR_DECREMENT:
+        return "OPERATOR_DECREMENT";
     case OPERATOR_NA:
         return "OPERATOR_NA";
     default:
@@ -740,6 +692,10 @@ CryoOperatorType CryoTokenToOperator(CryoTokenType token)
         return OPERATOR_XOR_ASSIGN;
     case TOKEN_STRICT_EQUAL:
         return OPERATOR_EQ;
+    case TOKEN_INCREMENT:
+        return OPERATOR_INCREMENT;
+    case TOKEN_DECREMENT:
+        return OPERATOR_DECREMENT;
     default:
         return OPERATOR_NA;
     }
@@ -803,6 +759,10 @@ char *CryoOperatorToString(CryoOperatorType op)
         return "|=";
     case OPERATOR_XOR_ASSIGN:
         return "^=";
+    case OPERATOR_INCREMENT:
+        return "++";
+    case OPERATOR_DECREMENT:
+        return "--";
     case OPERATOR_NA:
         return "<N/A>";
     default:

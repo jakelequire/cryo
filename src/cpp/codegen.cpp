@@ -239,6 +239,7 @@ namespace Cryo
         Generator &generator = compiler.getGenerator();
         Types &types = compiler.getTypes();
         Arrays &arrays = compiler.getArrays();
+        BinaryExpressions &binaryExpressions = compiler.getBinaryExpressions();
 
         CryoNodeType nodeType = node->metaData->type;
         llvm::Value *llvmValue = nullptr;
@@ -306,6 +307,12 @@ namespace Cryo
         case NODE_INDEX_EXPR:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Index Expression");
+            break;
+        }
+        case NODE_BINARY_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Binary Expression");
+            llvmValue = binaryExpressions.createBinaryExpression(node);
             break;
         }
         default:

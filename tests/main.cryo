@@ -2,59 +2,58 @@ namespace test;
 extern function printStr(s: string) -> void;
 extern function printInt(i: int) -> void;
 
-const intOne: int = 32;
-const intTwo: int = 64;
-const intThree: int = 128;
-
-const strOne: string = "Hello, World!";
-const strTwo: string = "Goodbye, World!";
-
-const boolTrue: boolean = true;
-const boolFalse: boolean = false;
-
-const arrOne: int[] = [1, 2, 69, 4, 5];
-//                     0  1   2  3  4
-const arrIndexZero: int = arrOne[0];
-const arrIndexOne: int = arrOne[1];
-const arrIndexTwo: int = arrOne[2];
-const arrIndexThree: int = arrOne[3];
-
-mut mutInt: int = 420;
+// const intOne: int = 32;
+// const intTwo: int = 64;
+// const intThree: int = 128;
+// 
+// const strOne: string = "Hello, World!";
+// const strTwo: string = "Goodbye, World!";
+// 
+// const boolTrue: boolean = true;
+// const boolFalse: boolean = false;
+// 
+// const arrOne: int[] = [1, 2, 69, 4, 5];
+// const arrIndexZero: int = arrOne[0];
+// const arrIndexOne: int = arrOne[1];
+// const arrIndexTwo: int = arrOne[2];
+// const arrIndexThree: int = arrOne[3];
+// 
+// mut mutInt: int = 420;
 
 
 public function main() -> void 
 {
-    printStr(strOne);
-    printStr("THIS IS PAIN");
-    printStr("This is a test");
-    printInt(arrIndexTwo);
-    printInt(intOne);
-    printInt(arrIndexOne);
-    printInt(arrIndexTwo);
-    printInt(arrIndexThree);
+    // printStr(strOne);
+    // printStr("THIS IS PAIN");
+    // printStr("This is a test");
+    // printInt(arrIndexTwo);
+    // printInt(intOne);
+    // printInt(arrIndexOne);
+    // printInt(arrIndexTwo);
+    // printInt(arrIndexThree);
 
-    for($i: int = 0; i < 5; i++)
+    for($index: int = 0; index < 5; ++index)
     {
-        printInt("Hi!");
+        printStr("Hi!");
     }
 
     return;
 }
 
-public function testNumRet() -> int
-{
-    if(10 != 10)
-    {
-        printStr("10 is not equal to 10");
-    }
-    else
-    {
-        printStr("10 is equal to 10");
-    }
-    return 42;
-}
+// public function testNumRet() -> int
+// {
+//     if(10 != 10)
+//     {
+//         printStr("10 is not equal to 10");
+//     }
+//     else
+//     {
+//         printStr("10 is equal to 10");
+//     }
+//     return 42;
+// }
 
-public function testStrRet() -> string
-{
-    return "Hello, World!";
-}
+// public function testStrRet() -> string
+// {
+//     return "Hello, World!";
+// }

@@ -65,6 +65,7 @@ namespace Cryo
         // Prototypes
         void initSymTable(void);
         void initModule(ASTNode *root, std::string namespaceName);
+        void traverseASTNode(ASTNode *node, SymTableNode &program);
 
         ASTNode *getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName);
         CryoVariableNode *getVariableNode(std::string namespaceName, std::string varName);

@@ -48,10 +48,7 @@
 #include "cpp/debugger.h"
 #include "compiler/ast.h"
 #include "cpp/backend_symtable.h"
-
-#define DEBUG_BREAKPOINT                                               \
-    printf("\n<!> Debug Breakpoint! Exiting... Line: %i\n", __LINE__); \
-    exit(0)
+#include "common/common.h"
 
 namespace Cryo
 {
@@ -69,6 +66,8 @@ namespace Cryo
     class Functions;
     class IfStatements;
     class Declarations;
+    class Loops;
+    class BinaryExpressions;
 
     typedef struct VariableIR
     {
@@ -148,8 +147,11 @@ namespace Cryo
         IfStatements &getIfStatements() { return *ifStatements; }
         Declarations &getDeclarations() { return *declarations; }
         BackendSymTable &getSymTable() { return *symTable; }
+        BinaryExpressions &getBinaryExpressions() { return *binaryExpressions; }
+        Loops &getLoops() { return *loops; }
 
         void compile(ASTNode *root);
+        void dumpModule(void);
 
     private:
         CryoContext &context;
@@ -163,6 +165,8 @@ namespace Cryo
         std::unique_ptr<IfStatements> ifStatements;
         std::unique_ptr<Declarations> declarations;
         std::unique_ptr<BackendSymTable> symTable;
+        std::unique_ptr<BinaryExpressions> binaryExpressions;
+        std::unique_ptr<Loops> loops;
     };
 
     /**
@@ -212,7 +216,7 @@ namespace Cryo
 
         void handleProgram(ASTNode *node);
         llvm::Value *handleLiteralExpression(ASTNode *node);
-        
+
         void handleExternFunction(ASTNode *node);
         void handleFunctionDeclaration(ASTNode *node);
         void handleFunctionBlock(ASTNode *node);
@@ -228,7 +232,6 @@ namespace Cryo
 
     private:
         CryoCompiler &compiler;
-
         void preprocess(ASTNode *root);
     };
 
@@ -310,7 +313,7 @@ namespace Cryo
         void handleConstVariable(ASTNode *node);
         void handleRefVariable(ASTNode *node);
         void handleMutableVariable(ASTNode *node);
-        void handleVariableReassignment(ASTNode * node);
+        void handleVariableReassignment(ASTNode *node);
         VariableIR *createNewLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
 
@@ -410,6 +413,47 @@ namespace Cryo
          */
         void createFunctionDeclaration(ASTNode *node);
     };
+    // -----------------------------------------------------------------------------------------------
+
+    class Loops
+    {
+    public:
+        Loops(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief The main entry point to handle while loops.
+         */
+        void handleForLoop(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
+    // -----------------------------------------------------------------------------------------------
+    class BinaryExpressions
+    {
+    public:
+        BinaryExpressions(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Handles binary expressions in the AST.
+         */
+        void handleBinaryExpression(ASTNode *node);
+
+        /**
+         * @brief Creates a binary expression in the IR.
+         */
+        llvm::Value *createBinaryExpression(ASTNode *node);
+
+        llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
+
+    private:
+        CryoCompiler &compiler;
+    };
 
     // -----------------------------------------------------------------------------------------------
     inline CryoCompiler::CryoCompiler()
@@ -423,6 +467,8 @@ namespace Cryo
           functions(std::make_unique<Functions>(*this)),
           ifStatements(std::make_unique<IfStatements>(*this)),
           declarations(std::make_unique<Declarations>(*this)),
+          loops(std::make_unique<Loops>(*this)),
+          binaryExpressions(std::make_unique<BinaryExpressions>(*this)),
           symTable(std::make_unique<BackendSymTable>())
 
     {
@@ -432,6 +478,11 @@ namespace Cryo
     inline void CryoCompiler::compile(ASTNode *root)
     {
         codeGen->executeCodeGeneration(root);
+    }
+
+    inline void CryoCompiler::dumpModule(void)
+    {
+        context.module->print(llvm::outs(), nullptr);
     }
 }
 

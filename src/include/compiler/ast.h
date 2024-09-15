@@ -332,6 +332,7 @@ typedef struct ForStatementNode
     struct ASTNode *condition;
     // `${increment};`
     struct ASTNode *increment;
+    CryoOperatorType incrementOp;
     // { body }
     struct ASTNode *body;
 } ForStatementNode;
@@ -538,6 +539,7 @@ typedef struct CryoUnaryOpNode
 {
     CryoTokenType op;
     struct ASTNode *operand;
+    struct ASTNode *expression;
 } CryoUnaryOpNode;
 
 /// #### The CryoArrayNode struct represents an array in the AST.

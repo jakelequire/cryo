@@ -120,8 +120,13 @@ namespace Cryo
 
     void Generator::handleBinaryExpression(ASTNode *node)
     {
-        std::cout << "[CPP] Handling Binary Expression" << std::endl;
-        // TODO: Implement
+        CryoDebugger &debugger = compiler.getDebugger();
+        BinaryExpressions &binaryExpressions = compiler.getBinaryExpressions();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Binary Expression");
+
+        binaryExpressions.handleBinaryExpression(node);
+
+        debugger.logMessage("INFO", __LINE__, "Generator", "Binary Expression Handled");
     }
 
     void Generator::handleUnaryExpression(ASTNode *node)
@@ -222,9 +227,13 @@ namespace Cryo
 
     void Generator::handleForStatement(ASTNode *node)
     {
-        std::cout << "[CPP] Handling For Statement" << std::endl;
-        DEBUG_BREAKPOINT;
-        // TODO: Implement
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling For Statement");
+        Loops &loops = compiler.getLoops();
+
+        loops.handleForLoop(node);
+
+        debugger.logMessage("INFO", __LINE__, "Generator", "For Statement Handled");
     }
 
     void Generator::handleReassignment(ASTNode *node)

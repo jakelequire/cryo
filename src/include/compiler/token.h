@@ -238,7 +238,9 @@ extern "C"
         OPERATOR_AND_ASSIGN,   // `&=`              23
         OPERATOR_OR_ASSIGN,    // `|=`              24
         OPERATOR_XOR_ASSIGN,   // `^=`              25
-        OPERATOR_NA,           // `<UNKNOWN>`       26
+        OPERATOR_INCREMENT,    // `++`              26
+        OPERATOR_DECREMENT,    // `--`              27
+        OPERATOR_NA,           // `<UNKNOWN>`       28
     } CryoOperatorType;
 
     typedef enum CryoNodeType

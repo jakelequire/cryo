@@ -67,6 +67,8 @@ namespace Cryo
         {
             // Find the variable in the SymTable
             CryoVariableNode varNode = symNode.variables[nodeName];
+            std::cout << "Variable Name: " << nodeName << std::endl;
+            debugger.logNode(varNode.initializer);
             // std::cout << "===-------------------===" << std::endl;
             // debugger.logNode(varNode.initializer);
             // std::cout << "===-------------------===" << std::endl;
@@ -189,86 +191,320 @@ namespace Cryo
     SymTableNode BackendSymTable::traverseModule(ASTNode *root, std::string namespaceName)
     {
         std::cout << "[BackendSymTable] Traversing Module" << std::endl;
-        // Traverse the AST and populate the SymTable
 
         SymTableNode program;
 
-        // Traverse the AST and populate the SymTable
-        int count = root->data.program->statementCount;
-        for (int i = 0; i < count; i++)
-        {
-            ASTNode *node = root->data.program->statements[i];
-            switch (node->metaData->type)
-            {
-            case NODE_VAR_DECLARATION:
-            {
-                if (node->data.varDecl->initializer->metaData->type == NODE_INDEX_EXPR)
-                {
-                    std::cout << "Index Expression" << std::endl;
-                    CryoVariableNode varNode;
-                    varNode.name = node->data.varDecl->name;
-                    varNode.type = node->data.varDecl->type;
-                    varNode.isGlobal = node->data.varDecl->isGlobal;
-                    varNode.isReference = node->data.varDecl->isReference;
-                    varNode.initializer = node->data.varDecl->initializer->data.indexExpr->array;
-                    varNode.hasIndexExpr = node->data.varDecl->hasIndexExpr;
-                    varNode.indexExpr = node->data.varDecl->initializer->data.indexExpr;
-                    std::string varNameStr = std::string(node->data.varDecl->name);
-                    program.variables.insert({varNameStr, varNode});
-                    break;
-                }
-                else
-                {
-                    // Add the variable to the SymTable
-                    char *varName = node->data.varDecl->name;
-                    CryoVariableNode varNode;
-                    varNode.name = varName;
-                    varNode.type = node->data.varDecl->type;
-                    varNode.isGlobal = node->data.varDecl->isGlobal;
-                    varNode.isReference = node->data.varDecl->isReference;
-                    varNode.initializer = node->data.varDecl->initializer;
-                    std::string varNameStr = std::string(varName);
-                    program.variables.insert({varNameStr, varNode});
-                    debugger->logNode(node);
-                    break;
-                }
-                break;
-            }
-            case NODE_FUNCTION_DECLARATION:
-            {
-                // Add the function to the SymTable
-                char *funcName = node->data.functionDecl->name;
-                FunctionDeclNode funcNode;
-                funcNode.name = funcName;
-                funcNode.returnType = node->data.functionDecl->returnType;
-                funcNode.paramCount = node->data.functionDecl->paramCount;
-                funcNode.params = node->data.functionDecl->params;
-                funcNode.body = node->data.functionDecl->body;
-                std::string funcNameStr = std::string(funcName);
-                program.functions.insert({funcNameStr, funcNode});
-                break;
-            }
-            case NODE_EXTERN_FUNCTION:
-            {
-                // Add the extern function to the SymTable
-                char *externFuncName = node->data.externFunction->name;
-                ExternFunctionNode externFuncNode;
-                externFuncNode.name = externFuncName;
-                externFuncNode.returnType = node->data.externFunction->returnType;
-                externFuncNode.paramCount = node->data.externFunction->paramCount;
-                externFuncNode.params = node->data.externFunction->params;
-                std::string externFuncNameStr = std::string(externFuncName);
-                program.externFunctions.insert({externFuncNameStr, externFuncNode});
-                break;
-            }
-            default:
-                std::cerr << "[BackendSymTable] Unknown Node Type" << std::endl;
-                break;
-            }
-        }
+        // Start the recursive traversal
+        traverseASTNode(root, program);
+
         std::cout << "[BackendSymTable] Module Traversal Complete" << std::endl;
 
         return program;
     }
 
+    void BackendSymTable::traverseASTNode(ASTNode *node, SymTableNode &program)
+    {
+        if (!node)
+            return;
+
+        CryoDebugger &debugger = getDebugger();
+
+        // Process the current node
+        switch (node->metaData->type)
+        {
+        case NODE_PROGRAM:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing PROGRAM node");
+            break;
+
+        case NODE_NAMESPACE:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing NAMESPACE node");
+            if (node->data.cryoNamespace)
+            {
+                // Store namespace information if needed
+                // program.currentNamespace = node->data.cryoNamespace->name;
+            }
+            break;
+
+        case NODE_BLOCK:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing BLOCK node");
+            break;
+
+        case NODE_FUNCTION_BLOCK:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing FUNCTION_BLOCK node");
+            break;
+
+        case NODE_EXTERN_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing EXTERN node");
+            break;
+
+        case NODE_EXTERN_FUNCTION:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing EXTERN_FUNCTION node");
+            if (node->data.externFunction)
+            {
+                ExternFunctionNode externFuncNode;
+                externFuncNode.name = node->data.externFunction->name;
+                externFuncNode.returnType = node->data.externFunction->returnType;
+                externFuncNode.paramCount = node->data.externFunction->paramCount;
+                externFuncNode.params = node->data.externFunction->params;
+                std::string externFuncNameStr = std::string(node->data.externFunction->name);
+                program.externFunctions.insert({externFuncNameStr, externFuncNode});
+            }
+            break;
+
+        case NODE_FUNCTION_DECLARATION:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing FUNCTION_DECLARATION node");
+            if (node->data.functionDecl)
+            {
+                FunctionDeclNode funcNode;
+                funcNode.name = node->data.functionDecl->name;
+                funcNode.returnType = node->data.functionDecl->returnType;
+                funcNode.paramCount = node->data.functionDecl->paramCount;
+                funcNode.params = node->data.functionDecl->params;
+                funcNode.body = node->data.functionDecl->body;
+                std::string funcNameStr = std::string(node->data.functionDecl->name);
+                program.functions.insert({funcNameStr, funcNode});
+            }
+            break;
+
+        case NODE_FUNCTION_CALL:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing FUNCTION_CALL node");
+            break;
+
+        case NODE_LITERAL_EXPR:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing LITERAL node");
+            break;
+
+        case NODE_VAR_DECLARATION:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing VAR_DECLARATION node");
+            if (node->data.varDecl)
+            {
+                CryoVariableNode varNode;
+                varNode.name = node->data.varDecl->name;
+                varNode.type = node->data.varDecl->type;
+                varNode.isGlobal = node->data.varDecl->isGlobal;
+                varNode.isReference = node->data.varDecl->isReference;
+                varNode.initializer = node->data.varDecl->initializer;
+                varNode.hasIndexExpr = node->data.varDecl->hasIndexExpr;
+                varNode.indexExpr = node->data.varDecl->indexExpr;
+                std::string varNameStr = std::string(node->data.varDecl->name);
+                program.variables.insert({varNameStr, varNode});
+            }
+            break;
+
+        case NODE_VAR_NAME:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing VAR_NAME node");
+            break;
+
+        case NODE_EXPRESSION:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing EXPRESSION node");
+            break;
+
+        case NODE_IF_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing IF_STATEMENT node");
+            break;
+
+        case NODE_FOR_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing FOR_STATEMENT node");
+            break;
+
+        case NODE_WHILE_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing WHILE_STATEMENT node");
+            break;
+
+        case NODE_BINARY_EXPR:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing BINARY_EXPR node");
+            break;
+
+        case NODE_UNARY_EXPR:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing UNARY_EXPR node");
+            break;
+
+        case NODE_PARAM_LIST:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing PARAM_LIST node");
+            break;
+
+        case NODE_ARG_LIST:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing ARG_LIST node");
+            break;
+
+        case NODE_RETURN_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing RETURN_STATEMENT node");
+            break;
+
+        case NODE_ARRAY_LITERAL:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing ARRAY_LITERAL node");
+            break;
+
+        case NODE_INDEX_EXPR:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing INDEX_EXPR node");
+            break;
+
+        case NODE_VAR_REASSIGN:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing VAR_REASSIGNMENT node");
+            break;
+
+        default:
+            debugger.logMessage("WARNING", __LINE__, "BackendSymTable", "Unknown node type: " + std::to_string(node->metaData->type));
+            break;
+        }
+
+        // Recursively traverse child nodes
+        switch (node->metaData->type)
+        {
+        case NODE_PROGRAM:
+            if (node->data.program)
+            {
+                for (size_t i = 0; i < node->data.program->statementCount; i++)
+                {
+                    traverseASTNode(node->data.program->statements[i], program);
+                }
+            }
+            break;
+
+        case NODE_BLOCK:
+            if (node->data.block)
+            {
+                for (int i = 0; i < node->data.block->statementCount; i++)
+                {
+                    traverseASTNode(node->data.block->statements[i], program);
+                }
+            }
+            break;
+
+        case NODE_FUNCTION_BLOCK:
+            if (node->data.functionBlock)
+            {
+                for (int i = 0; i < node->data.functionBlock->statementCount; i++)
+                {
+                    traverseASTNode(node->data.functionBlock->statements[i], program);
+                }
+            }
+            break;
+
+        case NODE_FUNCTION_DECLARATION:
+            if (node->data.functionDecl)
+            {
+                for (int i = 0; i < node->data.functionDecl->paramCount; i++)
+                {
+                    traverseASTNode(node->data.functionDecl->params[i], program);
+                }
+                traverseASTNode(node->data.functionDecl->body, program);
+            }
+            break;
+
+        case NODE_FUNCTION_CALL:
+            if (node->data.functionCall)
+            {
+                for (int i = 0; i < node->data.functionCall->argCount; i++)
+                {
+                    traverseASTNode(node->data.functionCall->args[i], program);
+                }
+            }
+            break;
+
+        case NODE_VAR_DECLARATION:
+            if (node->data.varDecl)
+            {
+                traverseASTNode(node->data.varDecl->initializer, program);
+                if (node->data.varDecl->hasIndexExpr)
+                {
+                    traverseASTNode(reinterpret_cast<ASTNode *>(node->data.varDecl->indexExpr), program);
+                }
+            }
+            break;
+
+        case NODE_IF_STATEMENT:
+            if (node->data.ifStatement)
+            {
+                traverseASTNode(node->data.ifStatement->condition, program);
+                traverseASTNode(node->data.ifStatement->thenBranch, program);
+                traverseASTNode(node->data.ifStatement->elseBranch, program);
+            }
+            break;
+
+        case NODE_FOR_STATEMENT:
+            if (node->data.forStatement)
+            {
+                traverseASTNode(node->data.forStatement->initializer, program);
+                traverseASTNode(node->data.forStatement->condition, program);
+                traverseASTNode(node->data.forStatement->increment, program);
+                traverseASTNode(node->data.forStatement->body, program);
+            }
+            break;
+
+        case NODE_WHILE_STATEMENT:
+            if (node->data.whileStatement)
+            {
+                traverseASTNode(node->data.whileStatement->condition, program);
+                traverseASTNode(node->data.whileStatement->body, program);
+            }
+            break;
+
+        case NODE_BINARY_EXPR:
+            if (node->data.bin_op)
+            {
+                traverseASTNode(node->data.bin_op->left, program);
+                traverseASTNode(node->data.bin_op->right, program);
+            }
+            break;
+
+        case NODE_UNARY_EXPR:
+            if (node->data.unary_op)
+            {
+                traverseASTNode(node->data.unary_op->operand, program);
+                traverseASTNode(node->data.unary_op->expression, program);
+            }
+            break;
+
+        case NODE_RETURN_STATEMENT:
+            if (node->data.returnStatement)
+            {
+                traverseASTNode(node->data.returnStatement->returnValue, program);
+                traverseASTNode(node->data.returnStatement->expression, program);
+            }
+            break;
+
+        case NODE_ARRAY_LITERAL:
+            if (node->data.array)
+            {
+                for (int i = 0; i < node->data.array->elementCount; i++)
+                {
+                    traverseASTNode(node->data.array->elements[i], program);
+                }
+            }
+            break;
+
+        case NODE_INDEX_EXPR:
+            if (node->data.indexExpr)
+            {
+                traverseASTNode(node->data.indexExpr->array, program);
+                traverseASTNode(node->data.indexExpr->index, program);
+            }
+            break;
+
+        case NODE_VAR_REASSIGN:
+            if (node->data.varReassignment)
+            {
+                traverseASTNode(node->data.varReassignment->existingVarNode, program);
+                traverseASTNode(node->data.varReassignment->newVarNode, program);
+            }
+            break;
+
+        // For node types that don't have child nodes or have been fully processed
+        case NODE_NAMESPACE:
+        case NODE_EXTERN_STATEMENT:
+        case NODE_EXTERN_FUNCTION:
+        case NODE_LITERAL_EXPR:
+        case NODE_VAR_NAME:
+        case NODE_EXPRESSION:
+        case NODE_PARAM_LIST:
+        case NODE_ARG_LIST:
+            // No further traversal needed
+            break;
+
+        default:
+            debugger.logMessage("WARNING", __LINE__, "BackendSymTable", "No traversal defined for node type: " + std::to_string(node->metaData->type));
+            break;
+        }
+    }
 } // namespace Cryo

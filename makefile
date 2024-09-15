@@ -91,6 +91,7 @@ TESTS_DIR = $(SRC_DIR)tests/
 CRYO_DIR = $(SRC_DIR)cryo/
 CPP_SEMANTICS_DIR = $(SRC_DIR)cpp/semantics/
 CPP_UTILS_DIR = $(SRC_DIR)cpp/utils/
+COMMON_DIR = $(SRC_DIR)common/
 
 # --------------------------------------------------------------------------------- #
 
@@ -102,20 +103,25 @@ COMPILER_SRC = 	$(COMPILER_DIR)containers.c $(COMPILER_DIR)ast.c $(COMPILER_DIR)
 				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \
 				$(COMPILER_DIR)error.c
 
+# CLI files
 CLI_SRC = $(CLI_DIR)compiler.c $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
 			$(CLI_COMMANDS_DIR)cmd_devWatch.c $(CLI_COMMANDS_DIR)cmd_help.c $(CLI_COMMANDS_DIR)cmd_version.c 
 
+# Utils files
 UTILS_SRC = $(UTILS_DIR)fs.c $(UTILS_DIR)supportlibs.c $(UTILS_DIR)arena.c $(UTILS_DIR)utility.c
-MAIN_SRC = $(SRC_DIR)main.c
-RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # CPP Files
 CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)codegen.cpp \
 		$(CPP_DIR)generator.cpp $(CPP_DIR)types.cpp $(CPP_UTILS_DIR)debugger.cpp \
 		$(CPP_SEMANTICS_DIR)variables.cpp $(CPP_SEMANTICS_DIR)functions.cpp \
 		$(CPP_SEMANTICS_DIR)arrays.cpp $(CPP_DIR)declarations.cpp $(CPP_DIR)ifstatement.cpp \
-		$(CPP_SEMANTICS_DIR)forloop.cpp
-		
+		$(CPP_SEMANTICS_DIR)forloop.cpp $(CPP_SEMANTICS_DIR)binaryExpression.cpp
+
+# Common Files
+COMMON_SRC = $(COMMON_DIR)common.c
+
+MAIN_SRC = $(SRC_DIR)main.c
+RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 # --------------------------------------------------------------------------------- #
 
 # Cryo Lib Files
@@ -129,10 +135,13 @@ COMPILER_OBJ =  $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(O
 CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)backend_symtable.o $(OBJ_DIR)codegen.o \
 		$(OBJ_DIR)cppmain.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o $(OBJ_DIR)arrays.o \
 		$(OBJ_DIR)generator.o $(OBJ_DIR)types.o $(OBJ_DIR)declarations.o $(OBJ_DIR)ifstatement.o \
-		$(OBJ_DIR)forloop.o
+		$(OBJ_DIR)forloop.o $(OBJ_DIR)binaryExpression.o
 
 # Utils Object files
 UTILS_OBJ = $(OBJ_DIR)fs.o $(OBJ_DIR)supportlibs.o $(OBJ_DIR)arena.o $(OBJ_DIR)utility.o
+
+# Common Object files
+COMMON_OBJ = $(OBJ_DIR)common.o
 
 # CLI Object files
 CLI_OBJ = $(OBJ_DIR)compiler.o $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)cmd_init.o \
@@ -262,7 +271,15 @@ $(OBJ_DIR)arrays.o: $(CPP_SEMANTICS_DIR)arrays.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR)forloop.o: $(CPP_SEMANTICS_DIR)forloop.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	
+
+$(OBJ_DIR)binaryExpression.o: $(CPP_SEMANTICS_DIR)binaryExpression.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# ---------------------------------------------
+# Common Compilation rules
+$(OBJ_DIR)common.o: $(COMMON_DIR)common.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # ---------------------------------------------
 # Cryo Lib Compilation rules
 $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
@@ -270,10 +287,10 @@ $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
 
 # ---------------------------------------------
 # Linking binaries
-$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) | $(BIN_DIR)
+$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) | $(BIN_DIR)
+$(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_BIN_DIR)

@@ -104,7 +104,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         break;
 
     case NODE_UNARY_EXPR:
-        printAST(node->data.unary_op->operand, indent + 2, arena);
+        printf("\nUnary Expression Node: %s\n", CryoTokenToString(node->data.unary_op->op));
         break;
 
     case NODE_LITERAL_EXPR:
@@ -633,12 +633,6 @@ ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena)
     ASTNode *node = createASTNode(NODE_UNARY_EXPR, arena);
     if (!node)
         return NULL;
-
-    node->data.unary_op = (CryoUnaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoUnaryOpNode));
-    if (!node->data.unary_op)
-    {
-        return NULL;
-    }
 
     node->data.unary_op->op = op;
     node->data.unary_op->operand = operand;

@@ -275,6 +275,8 @@ int getOperatorPrecedence(CryoOperatorType type, Arena *arena)
     {
     case OPERATOR_ADD:
     case OPERATOR_SUB:
+    case OPERATOR_INCREMENT:
+    case OPERATOR_DECREMENT:
         logMessage("INFO", __LINE__, "Parser", "Operator: %s, Precedence: 1", CryoOperatorToString(type));
         return 1;
     case OPERATOR_MUL:
@@ -485,6 +487,12 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         node = createIdentifierNode(strndup(currentToken.start, currentToken.length), arena);
         getNextToken(lexer, arena);
         return node;
+    case TOKEN_INCREMENT:
+    case TOKEN_DECREMENT:
+    case TOKEN_MINUS:
+    case TOKEN_BANG:
+        logMessage("INFO", __LINE__, "Parser", "Parsing unary expression");
+        return parseUnaryExpression(lexer, table, context, arena);
 
     default:
         error("Expected an expression", "parsePrimaryExpression", table, arena);
@@ -505,11 +513,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 ASTNode *parseExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing expression...");
-    // ASTNode *left = parsePrimaryExpression(lexer, table, context, arena);
-    // if (!left)
-    // {
-    //     error("Expected an expression.", "parseExpression", table, arena);
-    // }
+
     return parseBinaryExpression(lexer, table, context, 1, arena);
 }
 // </parseExpression>
@@ -603,6 +607,21 @@ ASTNode *parseUnaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingConte
         getNextToken(lexer, arena);
         right = parseUnaryExpression(lexer, table, context, arena);
         return createUnaryExpr(operator, right, arena);
+    }
+    if (currentToken.type == TOKEN_INCREMENT || currentToken.type == TOKEN_DECREMENT)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing unary expression...");
+        char *cur_token = strndup(currentToken.start, currentToken.length);
+        printf("<UNARY> Current Token: %s\n", cur_token);
+        operator= currentToken.type;
+
+        getNextToken(lexer, arena);
+        right = parsePrimaryExpression(lexer, table, context, arena);
+        if (!right)
+        {
+            error("Expected an operand", "parseUnaryExpression", table, arena);
+            return NULL;
+        }
     }
 
     return createUnaryExpr(operator, right, arena);
@@ -1458,22 +1477,13 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
     ASTNode *condition = parseExpression(lexer, table, context, arena);
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena);
 
+    char *__curToken = strndup(currentToken.start, currentToken.length);
+    printf("Current Token Going into `parseExpression`: %s\n", __curToken);
+
     ASTNode *update = parseExpression(lexer, table, context, arena);
     char *cur_token = strndup(currentToken.start, currentToken.length);
-    printf("\n\n[Parser] Current token: %s\n\n", cur_token);
 
-    if (currentToken.type == TOKEN_INCREMENT)
-    {
-        getNextToken(lexer, arena);
-    }
-    else if (currentToken.type == TOKEN_DECREMENT)
-    {
-        getNextToken(lexer, arena);
-    }
-    else
-    {
-        error("Expected an increment or decrement operator.", "parseForLoop", table, arena);
-    }
+    printf("\n\n[Parser] Current token: %s\n\n", cur_token);
 
     consume(lexer, TOKEN_RPAREN, "Expected `)` to end for loop.", "parseForLoop", table, arena);
 

@@ -430,6 +430,7 @@ ForStatementNode *createForStatementNodeContainer(Arena *arena)
     node->initializer = NULL;
     node->condition = NULL;
     node->increment = NULL;
+    node->incrementOp = OPERATOR_UNKNOWN;
     node->body = NULL;
 
     return node;
@@ -698,6 +699,7 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena)
 
     node->op = TOKEN_UNKNOWN;
     node->operand = NULL;
+    node->expression = NULL;
 
     return node;
 }

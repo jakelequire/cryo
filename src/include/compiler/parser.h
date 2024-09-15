@@ -34,6 +34,7 @@
 #include "utils/logger.h"
 #include "utils/utility.h"
 #include "utils/arena.h"
+#include "common/common.h"
 /*---------<end>---------*/
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
