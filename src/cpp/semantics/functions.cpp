@@ -396,6 +396,7 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Generator &generator = compiler.getGenerator();
+        Arrays &arrays = compiler.getArrays();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
 
         FunctionCallNode *functionCallNode = node->data.functionCall;
@@ -497,12 +498,38 @@ namespace Cryo
 
             if (argTypeData == DATA_TYPE_INT)
             {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Int Argument");
                 // Find the variable in the symbol table
                 std::string argName = std::string(argNode->data.varDecl->name);
                 std::cout << "Argument Name: " << argName << std::endl;
+                CryoVariableNode *retreivedNode = compiler.getSymTable().getVariableNode(moduleName, argName);
+                if (!retreivedNode)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
+                    exit(1);
+                }
 
-                exit(0);
-                continue;
+                if (retreivedNode->hasIndexExpr)
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument has index expression");
+                    ASTNode *indexExpr = retreivedNode->indexExpr->index;
+                    ASTNode *arrayNode = retreivedNode->initializer;
+
+                    char *arrayRefName = retreivedNode->indexExpr->name;
+                    int indexValue = indexExpr->data.literal->value.intValue;
+                    std::cout << "Array Ref Name: " << arrayRefName << std::endl;
+
+                    // Find the varaible in the symbol table from arrayRefName
+                    ASTNode *arrayRefNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, arrayRefName);
+                    debugger.logNode(arrayRefNode);
+                    llvm::Value *indexedValue = arrays.indexArrayForValue(arrayRefNode, indexValue);
+                    argValues.push_back(indexedValue);
+                    continue;
+                }
+                else
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument does not have index expression");
+                }
             }
 
             std::string argName = std::string(argNode->data.varDecl->name);

@@ -340,6 +340,7 @@ namespace Cryo
         llvm::ArrayType *getArrayType(ASTNode *node);
         int getArrayLength(ASTNode *node);
         void handleIndexExpression(ASTNode *node, std::string varName);
+        llvm::Value *indexArrayForValue(ASTNode *array, int index);
 
     private:
         CryoCompiler &compiler;

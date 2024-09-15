@@ -422,6 +422,9 @@ typedef struct CryoVariableNode
     bool isReference;
     // This is the data attached to the variable
     struct ASTNode *initializer;
+    // Optional index expression for array handling
+    bool hasIndexExpr;
+    struct IndexExprNode *indexExpr;
 } CryoVariableNode;
 
 /// #### The ParamNode struct represents a parameter list in the AST.

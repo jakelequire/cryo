@@ -103,6 +103,7 @@ namespace Cryo
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.varDecl->type) << std::endl;
             std::cout << "Is Global: " << (node->data.varDecl->isGlobal ? 0 : 1) << std::endl;
             std::cout << "Is Reference: " << (node->data.varDecl->isReference ? "Yes" : "No") << std::endl;
+            std::cout << "Has Index Expression: " << (node->data.varDecl->hasIndexExpr ? "Yes" : "No") << std::endl;
             if (node->data.varDecl->initializer)
             {
                 std::cout << "Initializer: " << std::endl;
@@ -620,7 +621,7 @@ namespace Cryo
                 lintTree(node->data.block->statements[i]);
             }
             break;
-        
+
         case NODE_INDEX_EXPR:
             assertNode(node);
             lintTree(node->data.indexExpr->array);

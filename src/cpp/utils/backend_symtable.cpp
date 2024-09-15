@@ -94,6 +94,15 @@ namespace Cryo
         return node;
     }
 
+    CryoVariableNode *BackendSymTable::getVariableNode(std::string namespaceName, std::string varName)
+    {
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the variable in the SymTable
+        CryoVariableNode *varNode = &symNode.variables[varName];
+        return varNode;
+    }
+
     SymTable BackendSymTable::getSymTable()
     {
         return symTable;
@@ -127,6 +136,7 @@ namespace Cryo
             std::cout << "Type: " << var.second.type << std::endl;
             std::cout << "Is Global: " << var.second.isGlobal << std::endl;
             std::cout << "Is Reference: " << var.second.isReference << std::endl;
+            std::cout << "Has Index Expression: " << var.second.hasIndexExpr << std::endl;
             std::cout << "Initializer: " << std::endl;
             std::cout << ">>------------------<<" << std::endl;
             debugger.logNode(var.second.initializer);
@@ -195,20 +205,33 @@ namespace Cryo
                 if (node->data.varDecl->initializer->metaData->type == NODE_INDEX_EXPR)
                 {
                     std::cout << "Index Expression" << std::endl;
-
-                    DEBUG_BREAKPOINT;
+                    CryoVariableNode varNode;
+                    varNode.name = node->data.varDecl->name;
+                    varNode.type = node->data.varDecl->type;
+                    varNode.isGlobal = node->data.varDecl->isGlobal;
+                    varNode.isReference = node->data.varDecl->isReference;
+                    varNode.initializer = node->data.varDecl->initializer->data.indexExpr->array;
+                    varNode.hasIndexExpr = node->data.varDecl->hasIndexExpr;
+                    varNode.indexExpr = node->data.varDecl->initializer->data.indexExpr;
+                    std::string varNameStr = std::string(node->data.varDecl->name);
+                    program.variables.insert({varNameStr, varNode});
+                    break;
                 }
-                // Add the variable to the SymTable
-                char *varName = node->data.varDecl->name;
-                CryoVariableNode varNode;
-                varNode.name = varName;
-                varNode.type = node->data.varDecl->type;
-                varNode.isGlobal = node->data.varDecl->isGlobal;
-                varNode.isReference = node->data.varDecl->isReference;
-                varNode.initializer = node->data.varDecl->initializer;
-                std::string varNameStr = std::string(varName);
-                program.variables.insert({varNameStr, varNode});
-                debugger->logNode(node);
+                else
+                {
+                    // Add the variable to the SymTable
+                    char *varName = node->data.varDecl->name;
+                    CryoVariableNode varNode;
+                    varNode.name = varName;
+                    varNode.type = node->data.varDecl->type;
+                    varNode.isGlobal = node->data.varDecl->isGlobal;
+                    varNode.isReference = node->data.varDecl->isReference;
+                    varNode.initializer = node->data.varDecl->initializer;
+                    std::string varNameStr = std::string(varName);
+                    program.variables.insert({varNameStr, varNode});
+                    debugger->logNode(node);
+                    break;
+                }
                 break;
             }
             case NODE_FUNCTION_DECLARATION:

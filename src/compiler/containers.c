@@ -502,6 +502,7 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena)
 ///     bool isLocal;
 ///     bool isReference;
 ///     struct ASTNode *initializer;
+///     struct ASTNode *indexExpr;
 /// } CryoVariableNode;
 ///```
 ///
@@ -521,6 +522,8 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena)
     node->isLocal = false;
     node->isReference = false;
     node->initializer = NULL;
+    node->hasIndexExpr = false;
+    node->indexExpr = NULL;
 
     return node;
 }

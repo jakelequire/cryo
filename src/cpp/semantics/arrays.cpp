@@ -168,4 +168,28 @@ namespace Cryo
         return;
     }
 
+    llvm::Value *Arrays::indexArrayForValue(ASTNode *array, int index)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Array", "Indexing Array for Value");
+
+        CryoArrayNode *arrayNode = array->data.array;
+        assert(arrayNode != nullptr);
+
+        for (int i = 0; i < arrayNode->elementCount; ++i)
+        {
+            ASTNode *element = arrayNode->elements[i];
+            if (i == index)
+            {
+                debugger.logMessage("INFO", __LINE__, "Array", "Index Found");
+                return compiler.getGenerator().getInitilizerValue(element);
+            }
+            else
+            {
+                debugger.logMessage("INFO", __LINE__, "Array", "Index Not Found");
+            }
+        }
+        debugger.logMessage("ERROR", __LINE__, "Array", "Failed to index array for value");
+    }
+
 } // namespace Cryo

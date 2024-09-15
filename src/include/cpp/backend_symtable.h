@@ -67,6 +67,7 @@ namespace Cryo
         void initModule(ASTNode *root, std::string namespaceName);
 
         ASTNode *getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName);
+        CryoVariableNode *getVariableNode(std::string namespaceName, std::string varName);
         SymTableNode getSymTableNode(std::string namespaceName);
         SymTable getSymTable();
 

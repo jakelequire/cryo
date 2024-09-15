@@ -25,12 +25,12 @@ public function main() -> void
 {
     printStr(strOne);
     printStr("THIS IS PAIN");
+    printInt(arrIndexTwo);
     printInt(intOne);
-    printInt(arrIndexZero);
-    // printInt(arrIndexOne);
-    // printInt(arrIndexTwo);
-    // printInt(arrIndexThree);
-    // printInt(arrIndexFour);
+    printInt(arrIndexOne);
+    printInt(arrIndexTwo);
+    printInt(arrIndexThree);
+    printInt(arrIndexFour);
 
     if(10 != 10)
     {

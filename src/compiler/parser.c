@@ -767,6 +767,13 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     logMessage("INFO", __LINE__, "Parser", "Variable declaration parsed.");
 
     ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, arena);
+    if (initializer->metaData->type == NODE_INDEX_EXPR)
+    {
+        printf("\n\n\n");
+        logMessage("INFO", __LINE__, "Parser", "Index expression detected.");
+        varDeclNode->data.varDecl->indexExpr = initializer;
+        varDeclNode->data.varDecl->hasIndexExpr = true;
+    }
 
     return varDeclNode;
 }

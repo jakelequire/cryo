@@ -74,6 +74,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         printf("Variable Type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
         printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
         printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
+        printf("Has Index Expression: %s\n", node->data.varDecl->hasIndexExpr ? "true" : "false");
         if (node->data.varDecl->initializer)
         {
             printf("Initializer:");
