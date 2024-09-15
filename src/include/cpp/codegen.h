@@ -211,7 +211,8 @@ namespace Cryo
         // This is the main entry point for the generator
 
         void handleProgram(ASTNode *node);
-
+        llvm::Value *handleLiteralExpression(ASTNode *node);
+        
         void handleExternFunction(ASTNode *node);
         void handleFunctionDeclaration(ASTNode *node);
         void handleFunctionBlock(ASTNode *node);
@@ -220,10 +221,10 @@ namespace Cryo
         void handleVariableDeclaration(ASTNode *node);
         void handleBinaryExpression(ASTNode *node);
         void handleUnaryExpression(ASTNode *node);
-        llvm::Value *handleLiteralExpression(ASTNode *node);
         void handleIfStatement(ASTNode *node);
         void handleWhileStatement(ASTNode *node);
         void handleForStatement(ASTNode *node);
+        void handleReassignment(ASTNode *node);
 
     private:
         CryoCompiler &compiler;
@@ -308,10 +309,13 @@ namespace Cryo
 
         void handleConstVariable(ASTNode *node);
         void handleRefVariable(ASTNode *node);
+        void handleMutableVariable(ASTNode *node);
+        void handleVariableReassignment(ASTNode * node);
         VariableIR *createNewLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
 
         void processConstVariable(CryoVariableNode *varNode);
+        void createMutableVariable(ASTNode *node);
 
     private:
         CryoCompiler &compiler;

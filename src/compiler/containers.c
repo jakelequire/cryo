@@ -521,6 +521,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena)
     node->isGlobal = false;
     node->isLocal = false;
     node->isReference = false;
+    node->isMutable = false;
     node->initializer = NULL;
     node->hasIndexExpr = false;
     node->indexExpr = NULL;
@@ -754,6 +755,37 @@ IndexExprNode *createIndexExprNodeContainer(Arena *arena)
     node->name = ARENA_ALLOC(arena, sizeof(char));
     node->array = NULL;
     node->index = NULL;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct VariableReassignmentNode
+/// {
+///     char *existingVarName;
+///     struct ASTNode *existingVarNode;
+///     CryoDataType existingVarType;
+///     struct ASTNode *newVarNode;
+/// } VariableReassignmentNode;
+///```
+///
+VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena)
+{
+    VariableReassignmentNode *node = (VariableReassignmentNode *)ARENA_ALLOC(arena, sizeof(VariableReassignmentNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate VariableReassignmentNode node.");
+        return NULL;
+    }
+
+    node->existingVarName = (char *)calloc(1, sizeof(char));
+    node->existingVarNode = NULL;
+    node->existingVarType = DATA_TYPE_UNKNOWN;
+    node->newVarNode = NULL;
+
+    logMessage("INFO", __LINE__, "Containers", "Created VariableReassignmentNode");
 
     return node;
 }

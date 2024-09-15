@@ -213,6 +213,12 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Index Expression");
             break;
         }
+        case NODE_VAR_REASSIGN:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Reassignment");
+            generator.handleReassignment(root);
+            break;
+        }
         default:
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             std::cout << "Received: " << CryoNodeTypeToString(root->metaData->type) << std::endl;

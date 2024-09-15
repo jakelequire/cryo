@@ -471,6 +471,12 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             logMessage("INFO", __LINE__, "Parser", "Parsing array indexing");
             return parseArrayIndexing(lexer, table, context, NULL, arena);
         }
+        // Peek to see if the next token is `=` for assignment
+        else if (peekNextUnconsumedToken(lexer, arena).type == TOKEN_EQUAL)
+        {
+            logMessage("INFO", __LINE__, "Parser", "Parsing assignment");
+            return parseAssignment(lexer, table, context, NULL, arena);
+        }
         else
         {
             logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena).type));
@@ -1514,6 +1520,7 @@ void addElementToArrayLiteral(CryoSymbolTable *table, ASTNode *arrayLiteral, AST
 }
 // <addElementToArrayLiteral>
 
+// <parseArrayIndexing>
 ASTNode *parseArrayIndexing(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *arrayName, Arena *arena)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing array indexing...");
@@ -1543,6 +1550,47 @@ ASTNode *parseArrayIndexing(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     consume(lexer, TOKEN_RBRACKET, "Expected `]` to end array indexing.", "parseArrayIndexing", table, arena);
     printf("[Parser] Array name: %s\n", strdup(arrCpyName));
     return createIndexExprNode(strdup(arrCpyName), arrNode, index, arena);
+}
+// </parseArrayIndexing>
+
+/* ====================================================================== */
+/* @ASTNode_Parsing - Assignments                                         */
+ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *varName, Arena *arena)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing assignment...");
+    char *_varName = strndup(currentToken.start, currentToken.length);
+    char *varNameCpy = strdup(_varName);
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseAssignment", table, arena);
+    consume(lexer, TOKEN_EQUAL, "Expected `=` for assignment.", "parseAssignment", table, arena);
+    logMessage("INFO", __LINE__, "Parser", "Variable name: %s", varNameCpy);
+
+    // Find the variable in the symbol table
+    CryoSymbol *symbol = findSymbol(table, varNameCpy, arena);
+    if (!symbol)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Variable not found.");
+        error("Variable not found.", "parseAssignment", table, arena);
+        return NULL;
+    }
+    printAST(symbol->node, 0, arena);
+    ASTNode *oldValue = symbol->node;
+    ASTNode *newValue = parseExpression(lexer, table, context, arena);
+
+    // Check if the symbol is mutable
+    bool isMutable = oldValue->data.varDecl->isMutable;
+    if (!isMutable)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Variable is not mutable.");
+        error("Variable is not mutable.", "parseAssignment", table, arena);
+        return NULL;
+    }
+
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseAssignment", table, arena);
+    printf("\n\nFinished parsing assignment\n");
+
+    ASTNode *assignment = createVarReassignment(strdup(varNameCpy), oldValue, newValue, arena);
+    printf("\n\nAssignment Node Type %s\n", CryoNodeTypeToString(assignment->metaData->type));
+    return assignment;
 }
 
 /* =========================================================== */

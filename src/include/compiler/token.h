@@ -270,7 +270,8 @@ extern "C"
         NODE_ARG_LIST,             // 27
         NODE_NAMESPACE,            // 28
         NODE_INDEX_EXPR,           // 29
-        NODE_UNKNOWN,              // 30
+        NODE_VAR_REASSIGN,         // 30
+        NODE_UNKNOWN,              // 31
     } CryoNodeType;
 
     typedef enum CryoDataType

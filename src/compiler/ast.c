@@ -74,7 +74,9 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         printf("Variable Type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
         printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
         printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
+        printf("Is Mutable: %s\n", node->data.varDecl->isMutable ? "true" : "false");
         printf("Has Index Expression: %s\n", node->data.varDecl->hasIndexExpr ? "true" : "false");
+
         if (node->data.varDecl->initializer)
         {
             printf("Initializer:");
@@ -242,6 +244,17 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         break;
     }
 
+    case NODE_VAR_REASSIGN:
+    {
+        printf("\nVariable Reassignment Node\n");
+        printf("Referenced Variable Name: %s\n", node->data.varReassignment->existingVarName);
+        printf("Existing Value:\n");
+        printAST(node->data.varReassignment->existingVarNode, indent + 2, arena);
+        printf("New Value:\n");
+        printAST(node->data.varReassignment->newVarNode, indent + 2, arena);
+        break;
+    }
+
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");
         break;
@@ -339,6 +352,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena)
         break;
     case NODE_INDEX_EXPR:
         node->data.indexExpr = createIndexExprNodeContainer(arena);
+        break;
+    case NODE_VAR_REASSIGN:
+        node->data.varReassignment = createVariableReassignmentNodeContainer(arena);
         break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
@@ -768,7 +784,7 @@ ASTNode *createStringExpr(char *str, Arena *arena)
 }
 
 /* @Node_Creation - Variables */
-ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference, Arena *arena)
+ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, Arena *arena)
 {
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena);
     if (!node)
@@ -786,10 +802,11 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
     node->data.varDecl->type = dataType;
     node->data.varDecl->name = strdup(var_name);
     node->data.varDecl->varNameNode = createVariableNameNodeContainer(var_name, arena);
-    node->metaData->line = line;
+    node->metaData->line = 0;
     node->data.varDecl->isGlobal = isGlobal;
     node->data.varDecl->isLocal = !isGlobal;
     node->data.varDecl->isReference = isReference;
+    node->data.varDecl->isMutable = isMutable;
     node->data.varDecl->initializer = initializer;
 
     logMessage("INFO", __LINE__, "AST", "Created variable declaration node for %s", var_name);
@@ -1022,6 +1039,22 @@ ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index,
     node->data.indexExpr->name = strdup(arrayName);
     node->data.indexExpr->array = arrayRef;
     node->data.indexExpr->index = index;
+
+    return node;
+}
+
+ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena)
+{
+    ASTNode *node = createASTNode(NODE_VAR_REASSIGN, arena);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create variable reassignment node");
+        return NULL;
+    }
+
+    node->data.varReassignment->existingVarName = strdup(varName);
+    node->data.varReassignment->existingVarNode = existingVarNode;
+    node->data.varReassignment->newVarNode = newVarNode;
 
     return node;
 }

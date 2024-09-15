@@ -18,11 +18,20 @@ const arrIndexZero: int = arrOne[0];
 const arrIndexOne: int = arrOne[1];
 const arrIndexTwo: int = arrOne[2];
 const arrIndexThree: int = arrOne[3];
-const arrIndexFour: int = arrOne[4];
+
+mut mutInt: int = 420;
 
 
 public function main() -> void 
 {
+    printStr("Mutable int before: ");
+    printInt(mutInt);
+    printStr("--------------------");
+    mutInt = 69;
+    printStr("Mutable int after: ");
+    printInt(mutInt);
+    printStr("--------------------");
+
     printStr(strOne);
     printStr("THIS IS PAIN");
     printInt(arrIndexTwo);
@@ -30,8 +39,14 @@ public function main() -> void
     printInt(arrIndexOne);
     printInt(arrIndexTwo);
     printInt(arrIndexThree);
-    printInt(arrIndexFour);
 
+
+
+    return;
+}
+
+public function testNumRet() -> int
+{
     if(10 != 10)
     {
         printStr("10 is not equal to 10");
@@ -40,12 +55,6 @@ public function main() -> void
     {
         printStr("10 is equal to 10");
     }
-
-    return;
-}
-
-public function testNumRet() -> int
-{
     return 42;
 }
 

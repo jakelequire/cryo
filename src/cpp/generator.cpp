@@ -95,11 +95,18 @@ namespace Cryo
         CryoVariableNode *varDecl = node->data.varDecl;
 
         bool isRef = varDecl->isReference;
+        bool isMutable = varDecl->isMutable;
         if (isRef)
         {
             debugger.logMessage("INFO", __LINE__, "Generator", "Reference Variable");
             // A Pointer variable
             variableInstance.handleRefVariable(node);
+        }
+        if (isMutable)
+        {
+            debugger.logMessage("INFO", __LINE__, "Generator", "Mutable Variable");
+            // A Mutable variable
+            variableInstance.handleMutableVariable(node);
         }
         else
         {
@@ -217,6 +224,17 @@ namespace Cryo
     {
         std::cout << "[CPP] Handling For Statement" << std::endl;
         // TODO: Implement
+    }
+
+    void Generator::handleReassignment(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Variables &variables = compiler.getVariables();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Reassignment");
+
+        variables.handleVariableReassignment(node);
+
+        return;
     }
 
 } // namespace Cryo

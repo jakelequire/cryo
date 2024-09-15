@@ -187,9 +187,11 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
 
     case NODE_VAR_DECLARATION:
     {
+        bool isMutable = node->data.varDecl->isMutable;
         symbolNode->name = strdup(node->data.varDecl->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
+        symbolNode->isConstant = !isMutable;
         break;
     }
 
@@ -229,6 +231,12 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->name = strdup(node->data.varDecl->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
+        break;
+
+    case NODE_VAR_REASSIGN:
+        symbolNode->name = strdup(node->data.varReassignment->existingVarName);
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->valueType = node->data.varReassignment->existingVarType;
         break;
 
     default:

@@ -521,7 +521,6 @@ namespace Cryo
 
                     // Find the varaible in the symbol table from arrayRefName
                     ASTNode *arrayRefNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, arrayRefName);
-                    debugger.logNode(arrayRefNode);
                     llvm::Value *indexedValue = arrays.indexArrayForValue(arrayRefNode, indexValue);
                     argValues.push_back(indexedValue);
                     continue;

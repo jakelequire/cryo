@@ -146,6 +146,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "NAMESPACE";
     case NODE_INDEX_EXPR:
         return "INDEX_EXPR";
+    case NODE_VAR_REASSIGN:
+        return "VAR_REASSIGN";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

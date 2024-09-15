@@ -420,6 +420,7 @@ typedef struct CryoVariableNode
     bool isGlobal;
     bool isLocal;
     bool isReference;
+    bool isMutable;
     // This is the data attached to the variable
     struct ASTNode *initializer;
     // Optional index expression for array handling
@@ -569,6 +570,27 @@ typedef struct IndexExprNode
     struct ASTNode *index;
 } IndexExprNode;
 
+/// #### The VariableReassignmentNode struct represents a variable reassignment in the AST.
+/// ---
+///
+/// ```
+/// typedef struct VariableReassignmentNode
+/// {
+///     char *existingVarName;
+///     ASTNode *existingVarNode;
+///     CryoDataType existingVarType;
+///     ASTNode *newVarNode;
+/// } VariableReassignmentNode;
+///
+/// ```
+typedef struct VariableReassignmentNode
+{
+    char *existingVarName;
+    ASTNode *existingVarNode;
+    CryoDataType existingVarType;
+    ASTNode *newVarNode;
+} VariableReassignmentNode;
+
 typedef struct ASTNode
 {
     CryoMetaData *metaData;
@@ -619,6 +641,8 @@ typedef struct ASTNode
         CryoArrayNode *array;
         // For Index Expressions
         IndexExprNode *indexExpr;
+        // For Variable Reassignments
+        VariableReassignmentNode *varReassignment;
     } data;
 } ASTNode;
 
@@ -648,6 +672,7 @@ CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena);
 CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena);
 CryoArrayNode *createArrayNodeContainer(Arena *arena);
 IndexExprNode *createIndexExprNodeContainer(Arena *arena);
+VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena);
 
 #ifdef __cplusplus
 extern "C"
@@ -693,7 +718,7 @@ extern "C"
     ASTNode *createStringExpr(char *str, Arena *arena);
 
     /* @Node_Creation - Variables */
-    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, int line, bool isGlobal, bool isReference, Arena *arena);
+    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, Arena *arena);
     ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena);
 
     /* @Node_Creation - Functions */
@@ -721,6 +746,9 @@ extern "C"
     /* @Node_Creation - Arrays */
     ASTNode *createArrayLiteralNode(Arena *arena);
     ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena);
+
+    /* @Node_Creation - Variable Reassignments */
+    ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena);
 
 #ifdef __cplusplus
 }

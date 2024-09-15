@@ -22,7 +22,67 @@ namespace Cryo
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Variables", "Handling Ref Variable");
 
-        exit(0);
+        DEBUG_BREAKPOINT;
+    }
+
+    void Variables::handleMutableVariable(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Handling Mutable Variable");
+
+        createMutableVariable(node);
+    }
+
+    void Variables::handleVariableReassignment(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Handling Variable Reassignment");
+        std::string currentModuleName = compiler.getContext().currentNamespace;
+
+        // Find the variable in the symbol table
+        std::string existingVarName = std::string(node->data.varReassignment->existingVarName);
+        std::cout << "Variable Name: " << existingVarName << std::endl;
+        ASTNode *varNode = compiler.getSymTable().getASTNode(currentModuleName, NODE_VAR_DECLARATION, existingVarName);
+        if (!varNode)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            exit(1);
+        }
+        debugger.logNode(varNode);
+
+        // Get the new value
+        ASTNode *newValue = node->data.varReassignment->newVarNode;
+        llvm::Value *newVal = compiler.getGenerator().getInitilizerValue(newValue);
+        if (!newVal)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "New value not found");
+            exit(1);
+        }
+
+        llvm::Value *varValue = compiler.getContext().namedValues[existingVarName];
+        if (!varValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+            exit(1);
+        }
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
+        llvm::Instruction *inst = compiler.getContext().builder.CreateStore(newVal, varValue);
+        // Set the insert point
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
+        llvm::GlobalVariable *key = inst->getModule()->getNamedGlobal(existingVarName);
+        if (key)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
+            key->setInitializer(llvm::dyn_cast<llvm::Constant>(newVal));
+        }
+        else
+        {
+            DEBUG_BREAKPOINT;
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
+        return;
     }
 
     // unused
@@ -181,6 +241,115 @@ namespace Cryo
                     llvm::GlobalValue::ExternalLinkage,
                     llvmConstant,
                     llvm::Twine(varName));
+                compiler.getContext().namedValues[varName] = var;
+                debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
+            }
+        }
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
+
+        return;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+    void Variables::createMutableVariable(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        CryoContext &cryoContext = compiler.getContext();
+        Arrays &arrays = compiler.getArrays();
+
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Processing Const Variable");
+        CryoVariableNode *varNode = node->data.varDecl;
+        char *varName = varNode->name;
+        std::cout << "Variable Name: " << varName << std::endl;
+        CryoDataType type = varNode->type;
+        ASTNode *initializer = varNode->initializer;
+
+        llvm::Type *llvmType = nullptr;
+        llvm::Value *llvmValue = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+        llvm::ArrayType *llvmArrayType = nullptr;
+
+        if (initializer)
+        {
+            if (initializer->metaData->type == NODE_INDEX_EXPR)
+            {
+                debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Index");
+                char *arrayName = initializer->data.indexExpr->name;
+                std::cout << "Array Name: " << arrayName << std::endl;
+                arrays.handleIndexExpression(initializer, varName);
+                debugger.logMessage("INFO", __LINE__, "Variables", "Array Index Processed");
+                return;
+            }
+            // Check if the initializer is an array
+            if (initializer->metaData->type == NODE_ARRAY_LITERAL)
+            {
+                debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Literal");
+
+                arrays.handleArrayLiteral(initializer);
+
+                debugger.logMessage("INFO", __LINE__, "Variables", "Array Literal Processed");
+            }
+            else
+            {
+                int _len = types.getLiteralValLength(initializer);
+                if (type == DATA_TYPE_STRING)
+                    _len += 1; // Add one for the null terminator
+                debugger.logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
+                llvmType = types.getType(type, _len);
+                char *typeNode = CryoDataTypeToString(type);
+                debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(typeNode));
+
+                switch (type)
+                {
+                case DATA_TYPE_INT:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Constant");
+                    llvmConstant = llvm::ConstantInt::get(llvmType, initializer->data.literal->value.intValue);
+                    break;
+                }
+                case DATA_TYPE_FLOAT:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Float Constant");
+                    llvmConstant = llvm::ConstantFP::get(llvmType, initializer->data.literal->value.floatValue);
+                    break;
+                }
+                case DATA_TYPE_BOOLEAN:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Boolean Constant");
+                    llvmConstant = llvm::ConstantInt::get(llvmType, initializer->data.literal->value.booleanValue);
+                    break;
+                }
+                case DATA_TYPE_STRING:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Constant");
+                    llvmConstant = llvm::ConstantDataArray::getString(cryoContext.context, initializer->data.literal->value.stringValue);
+                    break;
+                }
+                default:
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown type");
+                    exit(1);
+                    break;
+                }
+
+                debugger.logMessage("INFO", __LINE__, "Variables", "Constant Created");
+                llvmValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
+
+                if (!llvmValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Failed to cast constant to value");
+                    exit(1);
+                }
+
+                llvm::GlobalVariable *var = new llvm::GlobalVariable(
+                    *cryoContext.module,
+                    llvmType,
+                    false,
+                    llvm::GlobalValue::WeakAnyLinkage,
+                    llvmConstant,
+                    llvm::Twine(varName));
+
+                compiler.getContext().namedValues[varName] = var;
             }
         }
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
