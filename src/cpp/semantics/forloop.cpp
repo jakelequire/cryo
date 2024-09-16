@@ -51,44 +51,46 @@ namespace Cryo
         // Emit the initializer
         if (node->data.forStatement->initializer)
         {
+            // Reveiving a NODE_VAR_DECLARATION here
             compiler.getGenerator().parseTree(node->data.forStatement->initializer);
+        }
+
+        // Get the created initializer value
+        llvm::Value *initializerValue = nullptr;
+        if (node->data.forStatement->initializer)
+        {
+            // Create a load instruction for the initializer
+            initializerValue = compiler.getGenerator().getInitilizerValue(node->data.forStatement->initializer);
+            if (!initializerValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Loops", "Failed to get initializer value");
+                return;
+            }
         }
 
         // Branch to the loop block
         builder.CreateBr(loopBB);
         builder.SetInsertPoint(loopBB);
 
+        // Create the comparison
+        debugger.logMessage("INFO", __LINE__, "Loops", "Creating Comparison Expression");
+        // Create the load instruction
+        builder.CreateLoad(llvm::Type::getInt32Ty(context), initializerValue);
+
         // Emit the condition
         llvm::Value *conditionValue = nullptr;
         if (node->data.forStatement->condition)
         {
-            ASTNode *conditionNode = node->data.forStatement->condition;
-            CryoNodeType conditionType = conditionNode->metaData->type;
-            std::cout << "-------------------" << std::endl;
-            debugger.logNode(conditionNode);
-            std::cout << "-------------------" << std::endl;
-            if (conditionType == NODE_BINARY_EXPR)
-            {
-                ASTNode *left = conditionNode->data.bin_op->left;
-                ASTNode *right = conditionNode->data.bin_op->right;
-                CryoOperatorType op = conditionNode->data.bin_op->op;
-
-                llvm::Value *compareExpr = binExp.createComparisonExpression(left, right, op);
-                if (!compareExpr)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Loops", "Failed to create comparison expression");
-                    exit(1);
-                    return;
-                }
-                conditionValue = compareExpr;
-            }
-            debugger.logMessage("INFO", __LINE__, "Loops", "Loop Condition Created");
-
-            // Create the condition
+            debugger.logMessage("INFO", __LINE__, "Loops", "Creating Condition Value");
+            conditionValue = binExp.createComparisonExpression(
+                node->data.forStatement->condition->data.bin_op->left,
+                node->data.forStatement->condition->data.bin_op->right,
+                node->data.forStatement->condition->data.bin_op->op);
         }
         else
         {
-            debugger.logMessage("INFO", __LINE__, "Loops", "Creating True Condition");
+            debugger.logMessage("INFO", __LINE__, "Loops", "Creating True Condition Value");
+            conditionValue = llvm::ConstantInt::getTrue(context);
         }
         debugger.logMessage("INFO", __LINE__, "Loops", "Condition Value Created");
         builder.CreateCondBr(conditionValue, bodyBB, exitBB);
@@ -105,7 +107,50 @@ namespace Cryo
         builder.SetInsertPoint(incrementBB);
         if (node->data.forStatement->increment)
         {
-            compiler.getGenerator().parseTree(node->data.forStatement->increment);
+            // Find the variable in the symbol table
+            ASTNode *incrementNode = node->data.forStatement->increment;
+            if (incrementNode->metaData->type == NODE_UNARY_EXPR)
+            {
+                debugger.logMessage("INFO", __LINE__, "Loops", "Processing Increment");
+                CryoTokenType op = incrementNode->data.unary_op->op;
+                std::string varName = incrementNode->data.unary_op->operand->data.varName->varName;
+                // Find the variable in the symbol table
+                std::cout << "Variable Name: " << varName << std::endl;
+                ASTNode *varNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, varName);
+                if (!varNode)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Loops", "Variable not found");
+                    exit(1);
+                }
+                if (incrementNode->metaData->type == NODE_UNARY_EXPR)
+                {
+                    debugger.logMessage("INFO", __LINE__, "Loops", "Processing Increment");
+                    CryoTokenType op = incrementNode->data.unary_op->op;
+                    std::string varName = incrementNode->data.unary_op->operand->data.varName->varName;
+                    // Find the variable in the symbol table
+                    std::cout << "Variable Name: " << varName << std::endl;
+                    llvm::Value *indexVar = compiler.getGenerator().getInitilizerValue(incrementNode->data.unary_op->operand);
+                    llvm::Value *currentValue = builder.CreateLoad(llvm::Type::getInt32Ty(context), indexVar);
+                    llvm::Value *incrementedValue;
+
+                    if (op == TOKEN_INCREMENT)
+                    {
+                        incrementedValue = builder.CreateAdd(currentValue, llvm::ConstantInt::get(context, llvm::APInt(32, 1)));
+                    }
+                    else if (op == TOKEN_DECREMENT)
+                    {
+                        incrementedValue = builder.CreateSub(currentValue, llvm::ConstantInt::get(context, llvm::APInt(32, 1)));
+                    }
+                    else
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Loops", "Unknown increment operator");
+                        return;
+                    }
+
+                    builder.CreateStore(incrementedValue, indexVar);
+                }
+            }
+            // DEBUG_BREAKPOINT;
         }
         builder.CreateBr(loopBB);
 

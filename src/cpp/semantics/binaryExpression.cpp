@@ -135,7 +135,7 @@ namespace Cryo
     llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op)
     {
         CryoDebugger &debugger = compiler.getDebugger();
-        std::string currentModule = compiler.getContext().currentNamespace;
+        llvm::IRBuilder<> &builder = compiler.getContext().builder;
         debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Comparison Expression");
 
         llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(left);
@@ -147,40 +147,55 @@ namespace Cryo
             return nullptr;
         }
 
-        CryoDataType leftType = left->data.varDecl->type;
-        CryoDataType rightType = right->data.varDecl->type;
-        CryoNodeType leftNodeType = left->metaData->type;
-        CryoNodeType rightNodeType = right->metaData->type;
-        llvm::Type *llvmLeftType = nullptr;
-        llvm::Type *llvmRightType = nullptr;
-
-        if (leftNodeType == NODE_VAR_NAME)
+        // // Load value if right is a pointer (a variable)
+        if (rightValue->getType()->isPointerTy())
         {
-            // Find the variable in the symbol table
-            std::string argName = std::string(left->data.varName->varName);
-            std::cout << "Argument Name: " << argName << std::endl;
-            std::cout << "Current Module: " << currentModule << std::endl;
-            CryoVariableNode *retreivedNode = compiler.getSymTable().getVariableNode(currentModule, argName);
-            if (!retreivedNode)
-            {
-                debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
-                compiler.dumpModule();
-                exit(1);
-            }
-            std::cout << "--------<OUTPUT>--------" << std::endl;
-            std::cout << retreivedNode->name << std::endl;
-            debugger.logNode(retreivedNode->initializer);
-            std::cout << "--------</OUTPUT>--------" << std::endl;
-
-            // DEBUG_BREAKPOINT;
+            debugger.logMessage("INFO", __LINE__, "BinExp", "Loading right operand");
+            rightValue = builder.CreateLoad(rightValue->getType()->getPointerTo(), rightValue, "rightLoad");
+        }
+        if (leftValue->getType()->isPointerTy() && rightValue->getType()->isPointerTy())
+        {
+            debugger.logMessage("INFO", __LINE__, "BinExp", "Loading left operand");
+            leftValue = builder.CreateLoad(leftValue->getType()->getPointerTo(), leftValue, "leftLoad");
         }
 
-        std::cout << "Left Node Type: " << CryoNodeTypeToString(leftNodeType) << std::endl;
-        std::cout << "Left Type: " << CryoDataTypeToString(leftType) << std::endl;
-        std::cout << "Right Node Type: " << CryoNodeTypeToString(rightNodeType) << std::endl;
-        std::cout << "Right Type: " << CryoDataTypeToString(rightType) << std::endl;
+        // Ensure both operands have the same type
+        if (leftValue->getType() != rightValue->getType())
+        {
+            debugger.logMessage("WARNING", __LINE__, "BinExp", "Operand types don't match, attempting to cast");
 
-        // DEBUG_BREAKPOINT;
+            if (leftValue->getType()->isPointerTy() && rightValue->getType()->isIntegerTy())
+            {
+                // If left is a pointer and right is an integer, we need to load the value from the pointer
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Casting left operand to match right operand");
+                leftValue = compiler.getContext().builder.CreateLoad(rightValue->getType(), leftValue, "leftLoad");
+            }
+            else if (leftValue->getType()->isIntegerTy() && rightValue->getType()->isPointerTy())
+            {
+                // If left is an integer and right is a pointer, we need to load the value from the pointer
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Casting right operand to match left operand");
+                rightValue = compiler.getContext().builder.CreateLoad(leftValue->getType(), rightValue, "rightLoad");
+            }
+            else if (leftValue->getType()->isIntegerTy() && rightValue->getType()->isIntegerTy())
+            {
+                // If both are integers but of different sizes, cast to the larger size
+                if (leftValue->getType()->getIntegerBitWidth() < rightValue->getType()->getIntegerBitWidth())
+                {
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Casting left operand to match right operand");
+                    leftValue = compiler.getContext().builder.CreateIntCast(leftValue, rightValue->getType(), true, "leftCast");
+                }
+                else
+                {
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Casting right operand to match left operand");
+                    rightValue = compiler.getContext().builder.CreateIntCast(rightValue, leftValue->getType(), true, "rightCast");
+                }
+            }
+            else
+            {
+                debugger.logMessage("ERROR", __LINE__, "BinExp", "Unable to cast operands to matching types");
+                return nullptr;
+            }
+        }
 
         llvm::CmpInst::Predicate predicate;
         switch (op)
@@ -208,10 +223,7 @@ namespace Cryo
             return nullptr;
         }
 
-        llvm::Value *compareExpr = compiler.getContext().builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Comparison Expression Created");
-
-        return compareExpr;
+        return compiler.getContext().builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");
     }
 
 } // namespace Cryo

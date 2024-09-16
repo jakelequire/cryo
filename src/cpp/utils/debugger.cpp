@@ -338,6 +338,19 @@ namespace Cryo
 
             break;
 
+        case NODE_VAR_REASSIGN:
+            std::cout << "----------------------------------------" << std::endl;
+            std::cout << "\nVariable Reassignment Node" << std::endl;
+            std::cout << "Variable Name: " << node->data.varReassignment->existingVarName << std::endl;
+            std::cout << "Type: " << CryoDataTypeToString(node->data.varReassignment->existingVarType) << std::endl;
+            std::cout << "Old Value: " << std::endl;
+            logNode(node->data.varReassignment->existingVarNode);
+            std::cout << "New Value: " << std::endl;
+            logNode(node->data.varReassignment->newVarNode);
+            std::cout << "----------------------------------------" << std::endl;
+
+            break;
+
         default:
             std::cout << "\nUnknown Node Type" << std::endl;
             std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
@@ -629,6 +642,10 @@ namespace Cryo
             assertNode(node);
             lintTree(node->data.indexExpr->array);
             lintTree(node->data.indexExpr->index);
+            break;
+
+        case NODE_VAR_REASSIGN:
+            assertNode(node);
             break;
 
         case NODE_UNKNOWN:
@@ -1027,6 +1044,33 @@ namespace Cryo
                 return false;
             }
             logMessage("INFO", __LINE__, "Debugger", "Namespace passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_VAR_REASSIGN:
+        {
+            if (node->data.varReassignment->existingVarName == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no name");
+                return false;
+            }
+            if (node->data.varReassignment->existingVarNode == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no value");
+                return false;
+            }
+            if (node->data.varReassignment->existingVarType == DATA_TYPE_UNKNOWN)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no type");
+                return false;
+            }
+            if (node->data.varReassignment->newVarNode == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no new value");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Variable reassign passed assertion.");
             logNode(node);
             break;
         }

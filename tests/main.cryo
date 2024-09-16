@@ -23,19 +23,14 @@ extern function printInt(i: int) -> void;
 
 public function main() -> void 
 {
-    // printStr(strOne);
-    // printStr("THIS IS PAIN");
-    // printStr("This is a test");
-    // printInt(arrIndexTwo);
-    // printInt(intOne);
-    // printInt(arrIndexOne);
-    // printInt(arrIndexTwo);
-    // printInt(arrIndexThree);
+    const cap: int = 5;
 
-    for($index: int = 0; index < 5; ++index)
+    printStr("Starting For Loop...");
+    for($index: int = 0; index < cap; ++index)
     {
-        printStr("Hi!");
+        printStr("WHY GOD");
     }
+    printStr("Ending For Loop...");
 
     return;
 }
