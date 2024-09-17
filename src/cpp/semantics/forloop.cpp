@@ -48,12 +48,17 @@ namespace Cryo
         llvm::BasicBlock *incrementBB = llvm::BasicBlock::Create(context, "increment", currentFunction);
         llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(context, "exit", currentFunction);
 
+        // Create the loop variable in the entry block
+        builder.SetInsertPoint(preheaderBB);
+        llvm::AllocaInst *iAlloca = builder.CreateAlloca(llvm::Type::getInt32Ty(context), nullptr, "i.alloca");
+
         // Emit the initializer
         if (node->data.forStatement->initializer)
         {
             // Reveiving a NODE_VAR_DECLARATION here
             debugger.logMessage("INFO", __LINE__, "Loops", "Creating Initializer");
-            compiler.getGenerator().parseTree(node->data.forStatement->initializer);
+            llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(node->data.forStatement->initializer);
+            builder.CreateStore(initValue, iAlloca);
         }
 
         // Get the created initializer value

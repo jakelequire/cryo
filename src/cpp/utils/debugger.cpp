@@ -286,6 +286,7 @@ namespace Cryo
             std::cout << "----------------------------------------" << std::endl;
             std::cout << "\nVariable Name Node" << std::endl;
             std::cout << "Variable Name: " << node->data.varName->varName << std::endl;
+            std::cout << "Data Type: " << CryoDataTypeToString(node->data.varName->refType) << std::endl;
             std::cout << "Is Reference: " << (node->data.varName->isRef ? "True" : "False") << std::endl;
             std::cout << "----------------------------------------" << std::endl;
 

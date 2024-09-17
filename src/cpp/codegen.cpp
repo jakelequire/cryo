@@ -295,7 +295,17 @@ namespace Cryo
         case NODE_VAR_DECLARATION:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Declaration");
-            llvmValue = variables.getVariable(node->data.varDecl->name);
+            llvm::Value *locatedVar = variables.getVariable(node->data.varDecl->name);
+            if (locatedVar)
+            {
+                debugger.logMessage("INFO", __LINE__, "CodeGen", "Variable already exists");
+                return locatedVar;
+            }
+            else
+            {
+                debugger.logMessage("INFO", __LINE__, "CodeGen", "Variable does not exist");
+                llvmValue = variables.createLocalVariable(node);
+            }
             break;
         }
         case NODE_VAR_NAME:

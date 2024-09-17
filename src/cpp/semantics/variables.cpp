@@ -84,6 +84,63 @@ namespace Cryo
         return;
     }
 
+    llvm::Value *Variables::createLocalVariable(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
+        debugger.logNode(node);
+
+        CryoVariableNode *varDecl = node->data.varDecl;
+        assert(varDecl != nullptr);
+
+        CryoDataType varType = varDecl->type;
+        std::string varName = std::string(varDecl->name);
+        llvm::Value *llvmValue = nullptr;
+        llvm::Type *llvmType = nullptr;
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+
+        if (varType == DATA_TYPE_STRING)
+        {
+            int _len = compiler.getTypes().getLiteralValLength(varDecl->initializer);
+            llvmType = compiler.getTypes().getType(varType, _len);
+            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+
+            // Create a alloc/store instruction
+            llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+            compiler.getContext().namedValues[varName] = llvmValue;
+            // Get the value of the string
+            llvm::Value *varValue = compiler.getGenerator().getInitilizerValue(varDecl->initializer);
+            if (!varValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                exit(1);
+            }
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
+            llvm::Instruction *inst = compiler.getContext().builder.CreateStore(varValue, llvmValue);
+        }
+        if (varType == DATA_TYPE_INT)
+        {
+            llvmType = compiler.getTypes().getType(varType, 0);
+            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+        }
+        else
+        {
+            llvmType = compiler.getTypes().getType(varType, 0);
+            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+
+        llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+        compiler.getContext().namedValues[varName] = llvmValue;
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Set");
+
+        return llvmValue;
+    }
+
     // unused
     /*
         llvm::Value *value;

@@ -185,7 +185,9 @@ namespace Cryo
                 if (!varValuePtr)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Arrays", "Variable value not found");
-                    exit(1);
+                    // Create a new local variable
+                    llvm::Value *localVar = variables.createLocalVariable(indexNode->index);
+                    varValuePtr = localVar;
                 }
                 std::cout << "Variable Value: " << varValuePtr << std::endl;
 

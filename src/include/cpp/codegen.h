@@ -319,6 +319,7 @@ namespace Cryo
         void handleRefVariable(ASTNode *node);
         void handleMutableVariable(ASTNode *node);
         void handleVariableReassignment(ASTNode *node);
+        llvm::Value *createLocalVariable(ASTNode *node);
         VariableIR *createNewLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
 
