@@ -288,6 +288,11 @@ namespace Cryo
         int getLiteralIntValue(LiteralNode *node);
 
         /**
+         * @brief Returns the LLVM integer constant value of an integer.
+         */
+        llvm::ConstantInt *getLiteralIntValue(int value);
+
+        /**
          * @brief Evaluates a boolean expression and returns the CryoBoolean result.
          */
         CryoBoolean *evalBooleanExpression(ASTNode *node);
@@ -322,6 +327,7 @@ namespace Cryo
         llvm::Value *createLocalVariable(ASTNode *node);
         VariableIR *createNewLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
+        llvm::Value *getLocalScopedVariable(std::string name);
 
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);

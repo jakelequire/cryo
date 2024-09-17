@@ -695,15 +695,30 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena)
     return node;
 }
 
-ASTNode *createIdentifierNode(char *name, Arena *arena)
+ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena)
 {
     ASTNode *node = createASTNode(NODE_VAR_NAME, arena);
     if (!node)
         return NULL;
 
     logMessage("INFO", __LINE__, "AST", "Created identifier node with name: %s", name);
-
-    node->data.varName->varName = strdup(name);
+    char *varName = strdup(name);
+    // Attempt to find the symbol in the symbol table (It's okay if it can't find and can just create the node)
+    CryoSymbol *sym = findSymbol(symTable, varName, arena);
+    if (sym)
+    {
+        logMessage("INFO", __LINE__, "AST", "Found symbol in symbol table: %s", sym->name);
+        node->data.varName->varName = strdup(sym->name);
+        node->data.varName->isRef = true;
+        node->data.varName->refType = sym->valueType;
+    }
+    else
+    {
+        logMessage("INFO", __LINE__, "AST", "Symbol not found in symbol table: %s", varName);
+        node->data.varName->varName = strdup(varName);
+        node->data.varName->isRef = true;
+        node->data.varName->refType = DATA_TYPE_UNKNOWN;
+    }
     return node;
 }
 
@@ -781,7 +796,7 @@ ASTNode *createStringExpr(char *str, Arena *arena)
 }
 
 /* @Node_Creation - Variables */
-ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, Arena *arena)
+ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena)
 {
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena);
     if (!node)
@@ -796,6 +811,8 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
         return NULL;
     }
 
+    printf("\n\nData Type in Var Decl: %s\n\n", CryoDataTypeToString(dataType));
+
     node->data.varDecl->type = dataType;
     node->data.varDecl->name = strdup(var_name);
     node->data.varDecl->varNameNode = createVariableNameNodeContainer(var_name, arena);
@@ -804,6 +821,7 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
     node->data.varDecl->isLocal = !isGlobal;
     node->data.varDecl->isReference = isReference;
     node->data.varDecl->isMutable = isMutable;
+    node->data.varDecl->isIterator = isIterator;
     node->data.varDecl->initializer = initializer;
 
     logMessage("INFO", __LINE__, "AST", "Created variable declaration node for %s", var_name);

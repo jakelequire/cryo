@@ -186,7 +186,7 @@ void error(char *message, char *functionName, CryoSymbolTable *table, Arena *are
         printf(" ");
     }
 
-    printf("^ %s\n", message);
+    printf(" ^ %s\n", message);
     printf("\n------------------------------------------------------------------------\n\n");
     freeCallStack(&callStack);
     exit(1);
@@ -467,6 +467,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         return parseArrayLiteral(lexer, table, context, arena);
 
     case TOKEN_IDENTIFIER:
+    {
         // Peek to see if the next token is `[` for array indexing
         if (peekNextUnconsumedToken(lexer, arena).type == TOKEN_LBRACKET)
         {
@@ -484,9 +485,10 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena).type));
         }
         logMessage("INFO", __LINE__, "Parser", "Parsing identifier");
-        node = createIdentifierNode(strndup(currentToken.start, currentToken.length), arena);
+        node = createIdentifierNode(strndup(currentToken.start, currentToken.length), table, arena);
         getNextToken(lexer, arena);
         return node;
+    }
     case TOKEN_INCREMENT:
     case TOKEN_DECREMENT:
     case TOKEN_MINUS:
@@ -791,7 +793,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 
     logMessage("INFO", __LINE__, "Parser", "Variable declaration parsed.");
 
-    ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, arena);
+    ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, false, arena);
     if (initializer->metaData->type == NODE_INDEX_EXPR)
     {
         printf("\n\n\n");
@@ -1457,7 +1459,6 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
         error("Unknown data type.", "parseForLoop", table, arena);
     }
     printf("DataType: %s\n", CryoDataTypeToString(dataType));
-    iterDataType = dataType;
 
     getNextToken(lexer, arena);
     consume(lexer, TOKEN_EQUAL, "Expected `=` after iterable type.", "parseForLoop", table, arena);
@@ -1466,13 +1467,11 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena);
 
-    ASTNode *init = createVarDeclarationNode(iterableName, iterDataType, iterable, false, false, false, arena);
-    if (init->metaData->type != NODE_VAR_DECLARATION)
-    {
-        error("Expected a variable declaration node.", "parseForLoop", table, arena);
-        exit(0);
-    }
-    init->data.varDecl->isIterator = true;
+    printf("\n\nDataType in ForLoop init: %s\n\n", CryoDataTypeToString(dataType));
+    ASTNode *init = createVarDeclarationNode(iterableName, dataType, iterable, false, false, false, true, arena);
+    printAST(init, 0, arena);
+
+    addASTNodeSymbol(table, init, arena);
 
     ASTNode *condition = parseExpression(lexer, table, context, arena);
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena);

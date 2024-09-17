@@ -201,6 +201,13 @@ namespace Cryo
         return node->value.intValue;
     }
 
+    llvm::ConstantInt *Types::getLiteralIntValue(int value)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Getting integer literal value");
+        return llvm::ConstantInt::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), value);
+    }
+
     CryoBoolean *Types::evalBooleanExpression(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();

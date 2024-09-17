@@ -22,6 +22,8 @@ namespace Cryo
     void Loops::handleForLoop(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        Variables &variables = compiler.getVariables();
+        Types &types = compiler.getTypes();
         BinaryExpressions &binExp = compiler.getBinaryExpressions();
         llvm::LLVMContext &context = compiler.getContext().context;
         llvm::IRBuilder<> &builder = compiler.getContext().builder;
@@ -48,17 +50,12 @@ namespace Cryo
         llvm::BasicBlock *incrementBB = llvm::BasicBlock::Create(context, "increment", currentFunction);
         llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(context, "exit", currentFunction);
 
-        // Create the loop variable in the entry block
-        builder.SetInsertPoint(preheaderBB);
-        llvm::AllocaInst *iAlloca = builder.CreateAlloca(llvm::Type::getInt32Ty(context), nullptr, "i.alloca");
-
         // Emit the initializer
         if (node->data.forStatement->initializer)
         {
             // Reveiving a NODE_VAR_DECLARATION here
             debugger.logMessage("INFO", __LINE__, "Loops", "Creating Initializer");
-            llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(node->data.forStatement->initializer);
-            builder.CreateStore(initValue, iAlloca);
+            // compiler.getGenerator().parseTree(node->data.forStatement->initializer);
         }
 
         // Get the created initializer value
@@ -67,12 +64,25 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "Loops", "Getting Initializer Value");
             // Create a load instruction for the initializer
-            initializerValue = compiler.getGenerator().getInitilizerValue(node->data.forStatement->initializer);
+            // initializerValue = compiler.getGenerator().getInitilizerValue(node->data.forStatement->initializer);
+            // if (!initializerValue)
+            // {
+            //     debugger.logMessage("ERROR", __LINE__, "Loops", "Failed to get initializer value");
+            //     return;
+            // }
+            // llvm::Value *initVal = compiler.getGenerator().getInitilizerValue(node->data.forStatement->initializer);
+            initializerValue = variables.createLocalVariable(node->data.forStatement->initializer);
             if (!initializerValue)
             {
-                debugger.logMessage("ERROR", __LINE__, "Loops", "Failed to get initializer value");
+                debugger.logMessage("ERROR", __LINE__, "Loops", "Failed to create initializer value");
                 return;
             }
+            // Make sure the initializer has its value attached to it
+            initializerValue->setName(node->data.forStatement->initializer->data.varDecl->name);
+            // TODO: Somehow get the literal ints value and replace the `0` in the function below.
+            llvm::ConstantInt *valueOfInit = types.getLiteralIntValue(0);
+            // Store the initializer value
+            builder.CreateStore(valueOfInit, initializerValue);
         }
 
         // Branch to the loop block
@@ -137,7 +147,7 @@ namespace Cryo
                     std::string varName = incrementNode->data.unary_op->operand->data.varName->varName;
                     // Find the variable in the symbol table
                     std::cout << "Variable Name: " << varName << std::endl;
-                    llvm::Value *indexVar = compiler.getGenerator().getInitilizerValue(incrementNode->data.unary_op->operand);
+                    llvm::Value *indexVar = variables.getLocalScopedVariable(varName);
                     llvm::Value *currentValue = builder.CreateLoad(llvm::Type::getInt32Ty(context), indexVar);
                     llvm::Value *incrementedValue;
 

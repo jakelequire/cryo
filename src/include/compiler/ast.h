@@ -716,7 +716,7 @@ extern "C"
     ASTNode *createFloatLiteralNode(float value, Arena *arena);
     ASTNode *createStringLiteralNode(char *value, Arena *arena);
     ASTNode *createBooleanLiteralNode(int value, Arena *arena);
-    ASTNode *createIdentifierNode(char *name, Arena *arena);
+    ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena);
 
     /* @Node_Blocks - Blocks */
     ASTNode *createBlockNode(Arena *arena);
@@ -731,7 +731,7 @@ extern "C"
     ASTNode *createStringExpr(char *str, Arena *arena);
 
     /* @Node_Creation - Variables */
-    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, Arena *arena);
+    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena);
     ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena);
 
     /* @Node_Creation - Functions */

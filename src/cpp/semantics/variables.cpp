@@ -176,6 +176,8 @@ namespace Cryo
         {
             llvmType = compiler.getTypes().getType(varType, 0);
             var->type = llvmType;
+            int val = varDecl->initializer->data.literal->value.intValue;
+            llvmValue = llvm::ConstantInt::get(llvmType, val);
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
         }
         else
@@ -423,6 +425,26 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
 
         llvmValue = compiler.getContext().module->getNamedGlobal(name);
+
+        if (!llvmValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            llvmValue = nullptr;
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");
+
+        return llvmValue;
+    }
+
+    llvm::Value *Variables::getLocalScopedVariable(std::string name)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Getting Local Scoped Variable");
+
+        llvm::Value *llvmValue = nullptr;
+
+        llvmValue = compiler.getContext().namedValues[name];
 
         if (!llvmValue)
         {

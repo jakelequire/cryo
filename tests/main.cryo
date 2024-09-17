@@ -28,9 +28,9 @@ public function main() -> void
 {
     const cap: int = 5;
     printStr("Starting For Loop...");
-    for($i: int = 0; i < cap; ++i)
+    for($index: int = 0; index < cap; ++index)
     {
-        const refOutterArray: int = debugArrayOutter[i];
+        const refOutterArray: int = debugArrayOutter[index];
         printInt(refOutterArray);
     }
     printStr("Ending For Loop...");
