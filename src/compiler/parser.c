@@ -156,7 +156,7 @@ Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena)
         return currentToken;
     }
     Lexer tempLexer = *lexer;
-    Token nextToken = get_next_token(&tempLexer);
+    Token nextToken = peekNextToken(&tempLexer);
     return nextToken;
 }
 // </peekNextUnconsumedToken>

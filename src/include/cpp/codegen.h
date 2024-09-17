@@ -283,6 +283,11 @@ namespace Cryo
         int getLiteralValLength(ASTNode *node);
 
         /**
+         * @brief Returns the integer value of a literal node.
+         */
+        int getLiteralIntValue(LiteralNode *node);
+
+        /**
          * @brief Evaluates a boolean expression and returns the CryoBoolean result.
          */
         CryoBoolean *evalBooleanExpression(ASTNode *node);
@@ -348,6 +353,7 @@ namespace Cryo
         int getArrayLength(ASTNode *node);
         void handleIndexExpression(ASTNode *node, std::string varName);
         llvm::Value *indexArrayForValue(ASTNode *array, int index);
+        llvm::Value *getIndexExpressionValue(ASTNode *node);
 
     private:
         CryoCompiler &compiler;

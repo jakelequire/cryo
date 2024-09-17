@@ -188,6 +188,19 @@ namespace Cryo
         return 0;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    int Types::getLiteralIntValue(LiteralNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        if (node->dataType != DATA_TYPE_INT)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Types", "Invalid data type");
+            return 0;
+        }
+        return node->value.intValue;
+    }
+
     CryoBoolean *Types::evalBooleanExpression(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();

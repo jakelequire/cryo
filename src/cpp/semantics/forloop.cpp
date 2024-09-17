@@ -52,6 +52,7 @@ namespace Cryo
         if (node->data.forStatement->initializer)
         {
             // Reveiving a NODE_VAR_DECLARATION here
+            debugger.logMessage("INFO", __LINE__, "Loops", "Creating Initializer");
             compiler.getGenerator().parseTree(node->data.forStatement->initializer);
         }
 
@@ -59,6 +60,7 @@ namespace Cryo
         llvm::Value *initializerValue = nullptr;
         if (node->data.forStatement->initializer)
         {
+            debugger.logMessage("INFO", __LINE__, "Loops", "Getting Initializer Value");
             // Create a load instruction for the initializer
             initializerValue = compiler.getGenerator().getInitilizerValue(node->data.forStatement->initializer);
             if (!initializerValue)
@@ -99,6 +101,7 @@ namespace Cryo
         builder.SetInsertPoint(bodyBB);
         if (node->data.forStatement->body)
         {
+            debugger.logMessage("INFO", __LINE__, "Loops", "Creating Loop Body");
             compiler.getGenerator().parseTree(node->data.forStatement->body);
         }
         builder.CreateBr(incrementBB);

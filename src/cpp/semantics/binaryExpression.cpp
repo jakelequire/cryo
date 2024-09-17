@@ -164,21 +164,21 @@ namespace Cryo
         {
             debugger.logMessage("WARNING", __LINE__, "BinExp", "Operand types don't match, attempting to cast");
 
+            // If left is a pointer and right is an integer, we need to load the value from the pointer
             if (leftValue->getType()->isPointerTy() && rightValue->getType()->isIntegerTy())
             {
-                // If left is a pointer and right is an integer, we need to load the value from the pointer
                 debugger.logMessage("INFO", __LINE__, "BinExp", "Casting left operand to match right operand");
                 leftValue = compiler.getContext().builder.CreateLoad(rightValue->getType(), leftValue, "leftLoad");
             }
+            // If left is an integer and right is a pointer, we need to load the value from the pointer
             else if (leftValue->getType()->isIntegerTy() && rightValue->getType()->isPointerTy())
             {
-                // If left is an integer and right is a pointer, we need to load the value from the pointer
                 debugger.logMessage("INFO", __LINE__, "BinExp", "Casting right operand to match left operand");
                 rightValue = compiler.getContext().builder.CreateLoad(leftValue->getType(), rightValue, "rightLoad");
             }
+            // If both are integers but of different sizes, cast to the larger size
             else if (leftValue->getType()->isIntegerTy() && rightValue->getType()->isIntegerTy())
             {
-                // If both are integers but of different sizes, cast to the larger size
                 if (leftValue->getType()->getIntegerBitWidth() < rightValue->getType()->getIntegerBitWidth())
                 {
                     debugger.logMessage("INFO", __LINE__, "BinExp", "Casting left operand to match right operand");

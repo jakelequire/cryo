@@ -68,7 +68,6 @@ namespace Cryo
             // Find the variable in the SymTable
             CryoVariableNode varNode = symNode.variables[nodeName];
             std::cout << "Variable Name: " << nodeName << std::endl;
-            debugger.logNode(varNode.initializer);
             // std::cout << "===-------------------===" << std::endl;
             // debugger.logNode(varNode.initializer);
             // std::cout << "===-------------------===" << std::endl;

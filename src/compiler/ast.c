@@ -713,9 +713,7 @@ ASTNode *createBlockNode(Arena *arena)
     ASTNode *node = createASTNode(NODE_BLOCK, arena);
     if (!node)
         return NULL;
-    node->data.block->statements = NULL;
-    node->data.block->statementCount = 0;
-    node->data.block->statementCapacity = 0;
+
     return node;
 }
 

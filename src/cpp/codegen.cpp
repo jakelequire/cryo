@@ -307,6 +307,7 @@ namespace Cryo
         case NODE_INDEX_EXPR:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Index Expression");
+            llvmValue = arrays.getIndexExpressionValue(node);
             break;
         }
         case NODE_BINARY_EXPR:

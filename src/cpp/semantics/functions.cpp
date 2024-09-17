@@ -424,13 +424,54 @@ namespace Cryo
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argType = argNode->metaData->type;
             CryoDataType argTypeData = argNode->data.varDecl->type;
+            bool isReference = argNode->data.varDecl->isReference;
 
             std::cout << "===----------------------===" << std::endl;
-            std::cout << "Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
+            std::cout << "Argument Node Type: " << CryoNodeTypeToString(argType) << std::endl;
             std::cout << "Argument Data Type: " << CryoDataTypeToString(argTypeData) << std::endl;
             std::cout << "===----------------------===" << std::endl;
 
-            // if (argType == NODE_)
+            if (argTypeData == DATA_TYPE_UNKNOWN && isReference)
+            {
+                // Try to find the variable in the symbol table
+                std::string argName = std::string(argNode->data.varDecl->name);
+                std::cout << "Argument Name: " << argName << std::endl;
+
+                // Check if the variable is in the global named values
+                llvm::GlobalValue *globalValue = compiler.getContext().module->getNamedValue(argName);
+                ASTNode *argNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, argName);
+
+                if (argNode)
+                {
+                    CryoNodeType argNodeType = argNode->metaData->type;
+                    std::cout << "Argument Name: " << argName << std::endl;
+                    std::cout << "Argument Node Type: " << CryoNodeTypeToString(argNodeType) << std::endl;
+                    std::cout << "Global Value Found" << std::endl;
+                    if (argNodeType == NODE_INDEX_EXPR)
+                    {
+                        // Get the value within `argName` and not as a pointer
+                        llvm::Value *argValue = generator.getInitilizerValue(argNode);
+                        if (argValue == nullptr)
+                        {
+                            debugger.logMessage("ERROR", __LINE__, "Functions", "Argument Value Not Found");
+                            exit(1);
+                        }
+
+                        argValues.push_back(argValue);
+                    }
+                    else
+                    {
+                        llvm::Value *argValue = generator.getInitilizerValue(argNode);
+                        argValues.push_back(argValue);
+                    }
+                    continue;
+                }
+                else
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
+                    exit(1);
+                }
+            }
 
             if (argTypeData == DATA_TYPE_STRING)
             {

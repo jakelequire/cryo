@@ -662,7 +662,6 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
         if (isDigit(peekNext(lexer)))
         {
             logMessage("INFO", __LINE__, "Lexer", "Parsing array index...");
-            advance(lexer);
             while (isDigit(peek(lexer)))
             {
                 advance(lexer);

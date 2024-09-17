@@ -57,7 +57,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena)
         return NULL;
     }
 
-    const int initialCapacity = 32;
+    const int initialCapacity = 128;
     node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -92,7 +92,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena)
         return NULL;
     }
 
-    const int initialCapacity = 32; // Or any other small, non-zero value
+    int initialCapacity = 128; // Or any other small, non-zero value
     node->statements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -127,7 +127,7 @@ CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena)
         block->function = NULL;
         block->statements = NULL;
         block->statementCount = 0;
-        block->statementCapacity = 0;
+        block->statementCapacity = 128;
     }
     return block;
 }
@@ -276,7 +276,7 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena)
     node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 6;
+    node->paramCapacity = 128;
     node->returnType = DATA_TYPE_UNKNOWN;
 
     return node;
@@ -340,7 +340,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena)
     node->name = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 6;
+    node->argCapacity = 128;
 
     return node;
 }
@@ -587,7 +587,7 @@ ParamNode *createParamNodeContainer(Arena *arena)
     node->nodeType = NODE_UNKNOWN;
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 6;
+    node->paramCapacity = 128;
     node->funcRefName = NULL;
 
     return node;
@@ -618,7 +618,7 @@ ArgNode *createArgNodeContainer(Arena *arena)
     node->nodeType = NODE_UNKNOWN;
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 6;
+    node->argCapacity = 128;
     node->funcRefName = NULL;
 
     return node;
@@ -724,7 +724,7 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena)
         return NULL;
     }
 
-    const int initialCapacity = 6; // Or any other small, non-zero value
+    const int initialCapacity = 64; // Or any other small, non-zero value
     node->elements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->elements)
     {

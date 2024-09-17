@@ -21,14 +21,17 @@ extern function printInt(i: int) -> void;
 // mut mutInt: int = 420;
 
 
+const debugArrayOutter: int[] = [1, 2, 3, 4, 5];
+const debugIndexArrayOutter: int = debugArrayOutter[2];
+
 public function main() -> void 
 {
     const cap: int = 5;
-
     printStr("Starting For Loop...");
-    for($index: int = 0; index < cap; ++index)
+    for($i: int = 0; i < cap; ++i)
     {
-        printStr("WHY GOD");
+        const refOutterArray: int = debugArrayOutter[i];
+        printInt(refOutterArray);
     }
     printStr("Ending For Loop...");
 

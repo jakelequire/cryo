@@ -49,7 +49,6 @@ namespace Cryo
             debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
             exit(1);
         }
-        debugger.logNode(varNode);
 
         // Get the new value
         ASTNode *newValue = node->data.varReassignment->newVarNode;
