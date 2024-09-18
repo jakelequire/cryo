@@ -119,6 +119,8 @@ namespace Cryo
         for (auto &arg : function->args())
         {
             arg.setName(functionNode->params[i]->data.varDecl->name);
+            compiler.getContext().namedValues[functionNode->params[i]->data.varDecl->name] = &arg;
+            compiler.getContext().builder.GetInsertBlock()->getModule()->getOrInsertGlobal(functionNode->params[i]->data.varDecl->name, arg.getType());
             ++i;
         }
 
@@ -152,7 +154,8 @@ namespace Cryo
                 case DATA_TYPE_INT:
                 {
                     debugger.logMessage("INFO", __LINE__, "Functions", "Returning int");
-                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    ASTNode *returnStatement = statement->data.returnStatement->expression;
+                    llvm::Value *returnValue = generator.getInitilizerValue(returnStatement);
                     compiler.getContext().builder.CreateRet(returnValue);
                     break;
                 }
@@ -178,7 +181,7 @@ namespace Cryo
                 continue;
             }
 
-            compiler.getGenerator().parseTree(statement);
+            // compiler.getGenerator().parseTree(statement);
         }
 
         // Check if the current block is already terminated
@@ -317,6 +320,11 @@ namespace Cryo
                     break;
                 }
                 }
+            }
+            if (statement->metaData->type == NODE_BINARY_EXPR)
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Binary Expression Found");
+                returnType = types.getReturnType(DATA_TYPE_INT);
             }
         }
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Block Traversed");

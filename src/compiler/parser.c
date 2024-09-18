@@ -1015,6 +1015,11 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
             returnType = expression->data.literal->dataType;
             printf("[Parser] Return expression data type: %s\n", CryoDataTypeToString(returnType));
         }
+        if (expression->metaData->type == NODE_BINARY_EXPR)
+        {
+            returnType = DATA_TYPE_INT;
+            printf("[Parser] Return expression data type: %s\n", CryoDataTypeToString(returnType));
+        }
     }
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseReturnStatement", table, arena);
