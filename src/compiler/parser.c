@@ -133,7 +133,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *
 void getNextToken(Lexer *lexer, Arena *arena)
 {
     // printf("[Parser] @getNextToken | Current Token before: Type=%d, Start=%.*s, Length=%d\n", currentToken.type, currentToken.length, currentToken.start, currentToken.length);
-    logMessage("INFO", __LINE__, "Parser", "Current Token before: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(currentToken.type), currentToken.length, currentToken.start, currentToken.length);
+    // logMessage("INFO", __LINE__, "Parser", "Current Token before: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(currentToken.type), currentToken.length, currentToken.start, currentToken.length);
     if (isAtEnd(lexer))
     {
         currentToken.type = TOKEN_EOF;
@@ -144,7 +144,7 @@ void getNextToken(Lexer *lexer, Arena *arena)
         return;
     }
     currentToken = get_next_token(lexer);
-    logMessage("INFO", __LINE__, "Parser", "Current Token after: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(currentToken.type), currentToken.length, currentToken.start, currentToken.length);
+    // logMessage("INFO", __LINE__, "Parser", "Current Token after: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(currentToken.type), currentToken.length, currentToken.start, currentToken.length);
 }
 // </getNextToken>
 
@@ -480,6 +480,13 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             logMessage("INFO", __LINE__, "Parser", "Parsing assignment");
             return parseAssignment(lexer, table, context, NULL, arena);
         }
+        // Peek to see if the next token is `(` to start a function call.
+        else if (peekNextUnconsumedToken(lexer, arena).type == TOKEN_LPAREN)
+        {
+            logMessage("INFO", __LINE__, "Parser", "Parsing function call");
+            char *functionName = strndup(currentToken.start, currentToken.length);
+            return parseFunctionCall(lexer, table, context, functionName, arena);
+        }
         else
         {
             logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena).type));
@@ -700,11 +707,12 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF)
     {
+        logMessage("INFO", __LINE__, "Parser", "Parsing statement... %s", CryoTokenToString(currentToken.type));
         ASTNode *statement = parseStatement(lexer, table, context, arena);
         if (statement)
         {
             logMessage("INFO", __LINE__, "Parser", "Adding statement to function block...");
-            DEBUG_ARENA_PRINT(arena);
+            // DEBUG_ARENA_PRINT(arena);
             addStatementToFunctionBlock(functionBlock, statement, arena);
         }
         else
@@ -777,7 +785,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     // Check if the variable is a reference (Note: This is not yet implemented in the lexer)
     if (currentToken.type == TOKEN_AMPERSAND)
     {
-
         isReference = true;
         getNextToken(lexer, arena);
     }
@@ -789,7 +796,14 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
         error("[Parser] Expected expression after '='.", "parseVarDeclaration", table, arena);
     }
 
-    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", table, arena);
+    if (initializer->metaData->type == NODE_FUNCTION_CALL)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Function call detected.");
+    }
+    else
+    {
+        consume(lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", table, arena);
+    }
 
     logMessage("INFO", __LINE__, "Parser", "Variable declaration parsed.");
 
@@ -976,6 +990,9 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         }
     }
 
+    consume(lexer, TOKEN_RPAREN, "Expected ')' after arguments.", "parseFunctionCall", table, arena);
+    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after function call.", "parseFunctionCall", table, arena);
+
     // Ensure argument count matches
     if (functionCallNode->data.functionCall->argCount != funcSymbol->argCount)
     {
@@ -983,9 +1000,6 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         error("Argument count mismatch for function call.", "parseFunctionCall", table, arena);
         return NULL;
     }
-
-    consume(lexer, TOKEN_RPAREN, "Expected ')' after arguments.", "parseFunctionCall", table, arena);
-    consume(lexer, TOKEN_SEMICOLON, "Expected ';' after function call.", "parseFunctionCall", table, arena);
 
     logMessage("INFO", __LINE__, "Parser", "Function call parsed.");
 
@@ -1222,6 +1236,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
         // Resolve the type using the symbol table
         CryoSymbol *symbol = findSymbol(table, argName, arena);
         expectedType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
+        logMessage("INFO", __LINE__, "Parser", "Argument type: %s", CryoDataTypeToString(expectedType));
         isLiteral = false;
     }
 

@@ -88,6 +88,14 @@ namespace Cryo
                 continue;
             }
 
+            if (_argType == DATA_TYPE_INT)
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Converting int to LLVM type");
+                llvm::Type *argType = types.getType(_argType, 0);
+                argTypes.push_back(argType);
+                continue;
+            }
+
             llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
             argTypes.push_back(argType);
         }
@@ -114,19 +122,23 @@ namespace Cryo
             llvm::Twine(functionName),
             *cryoContext.module);
 
+        // Create the entry block
+        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(compiler.getContext().context, "entry", function);
+        compiler.getContext().builder.SetInsertPoint(entryBlock);
+        compiler.getContext().currentFunction = function;
+        compiler.getContext().inGlobalScope = false;
+
         // Set the function arguments
         int i = 0;
         for (auto &arg : function->args())
         {
+            // We are storing the aguments in the named values map
             arg.setName(functionNode->params[i]->data.varDecl->name);
             compiler.getContext().namedValues[functionNode->params[i]->data.varDecl->name] = &arg;
-            compiler.getContext().builder.GetInsertBlock()->getModule()->getOrInsertGlobal(functionNode->params[i]->data.varDecl->name, arg.getType());
+            llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(arg.getType(), nullptr, arg.getName());
+            compiler.getContext().builder.CreateStore(&arg, alloca);
             ++i;
         }
-
-        // Create the entry block
-        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(compiler.getContext().context, "entry", function);
-        compiler.getContext().builder.SetInsertPoint(entryBlock);
 
         // Note to self: This is the block that will loop through the function body & statement
         // I need to find a better and most consistent way to handle this.
@@ -139,6 +151,20 @@ namespace Cryo
             ASTNode *statement = functionBody->data.functionBlock->statements[i];
             CryoNodeType nodeType = statement->metaData->type;
             std::cout << "Statement: " << CryoNodeTypeToString(statement->metaData->type) << std::endl;
+
+            if (nodeType == NODE_VAR_DECLARATION)
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Variable Declaration");
+                variables.createLocalVariable(statement);
+                continue;
+            }
+
+            if (nodeType == NODE_FUNCTION_CALL)
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
+                createFunctionCall(statement);
+                continue;
+            }
 
             if (nodeType == NODE_RETURN_STATEMENT)
             {
@@ -176,12 +202,13 @@ namespace Cryo
                     exit(1);
                 }
                 }
-
-                // move past the return statement
                 continue;
             }
 
-            // compiler.getGenerator().parseTree(statement);
+            else
+            {
+                compiler.getGenerator().parseTree(statement);
+            }
         }
 
         // Check if the current block is already terminated
@@ -198,7 +225,10 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Declaration Created");
 
-        // compiler.getContext().currentFunction = function;
+        // Exit the scope of the function
+        compiler.getContext().builder.ClearInsertionPoint();
+        compiler.getContext().currentFunction = nullptr;
+        compiler.getContext().inGlobalScope = true;
 
         return;
     }
@@ -224,7 +254,7 @@ namespace Cryo
             ASTNode *statement = statements[i];
             if (statement->metaData->type == NODE_RETURN_STATEMENT)
             {
-
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
                 return;
             }
             compiler.getGenerator().parseTree(statement);
@@ -258,7 +288,7 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
 
         // This function should not trigger, exit if it does
-        exit(1);
+        DEBUG_BREAKPOINT;
 
         // This is being handled in the function block
         // Nothing to do in this function
@@ -437,7 +467,15 @@ namespace Cryo
             std::cout << "===----------------------===" << std::endl;
             std::cout << "Argument Node Type: " << CryoNodeTypeToString(argType) << std::endl;
             std::cout << "Argument Data Type: " << CryoDataTypeToString(argTypeData) << std::endl;
+            std::cout << "Argument Name: " << argNode->data.varDecl->name << std::endl;
             std::cout << "===----------------------===" << std::endl;
+            debugger.logNode(argNode);
+            if (argType == NODE_FUNCTION_CALL)
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument is a function call");
+                createFunctionCall(argNode);
+                continue;
+            }
 
             if (argTypeData == DATA_TYPE_STRING)
             {
@@ -503,7 +541,7 @@ namespace Cryo
                 continue;
             }
 
-            if (argTypeData == DATA_TYPE_INT)
+            if (argTypeData == DATA_TYPE_INT && argType != NODE_FUNCTION_CALL)
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating Int Argument");
                 // Find the variable in the symbol table
@@ -539,7 +577,7 @@ namespace Cryo
             }
 
             std::string argName = std::string(argNode->data.varDecl->name);
-            std::cout << "Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
+            std::cout << "!Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
 
             ASTNode *retreivedNode = compiler.getSymTable().getASTNode(moduleName, argType, argName);
             if (!retreivedNode)

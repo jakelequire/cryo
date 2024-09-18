@@ -33,34 +33,30 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Binary Expression");
 
         ASTNode *leftASTNode = node->data.bin_op->left;
-        if (!leftASTNode)
-        {
-            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate operands for binary expression");
-            return nullptr;
-        }
+        assert(leftASTNode != nullptr);
 
         ASTNode *rightASTNode = node->data.bin_op->right;
-        if (!rightASTNode)
-        {
-            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate operands for binary expression");
-            return nullptr;
-        }
+        assert(rightASTNode != nullptr);
 
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Getting values for binary expression (left)");
         llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(leftASTNode);
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Left Value Generated");
         if (!leftValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate values for binary expression");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Left Value Generated");
 
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Getting values for binary expression (right)");
         llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightASTNode);
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Right Value Generated");
         if (!rightValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate values for binary expression");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Right Value Generated");
 
         CryoOperatorType operatorType = node->data.bin_op->op;
         switch (operatorType)

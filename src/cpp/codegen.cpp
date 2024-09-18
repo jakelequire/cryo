@@ -156,7 +156,6 @@ namespace Cryo
             break;
         case NODE_VAR_DECLARATION:
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Declaration");
-            debugger.logNode(root->data.varDecl->initializer);
             generator.handleVariableDeclaration(root);
             break;
         case NODE_BINARY_EXPR:
@@ -256,7 +255,6 @@ namespace Cryo
         case NODE_RETURN_STATEMENT:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Return Statement");
-            // debugger.logNode(node);
             CryoDataType dataType = node->data.returnStatement->returnType;
             std::cout << "Data Type: " << CryoDataTypeToString(dataType) << std::endl;
 
@@ -324,6 +322,12 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Binary Expression");
             llvmValue = binaryExpressions.createBinaryExpression(node);
+            break;
+        }
+        case NODE_FUNCTION_CALL:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Function Call");
+            generator.handleFunctionCall(node);
             break;
         }
         default:

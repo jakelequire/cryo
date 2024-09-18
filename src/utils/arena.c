@@ -152,7 +152,7 @@ void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char 
     arena->offset = new_offset;
     arena->total_allocations++;
 
-    logMessage("INFO", __LINE__, "Arena", "Memory allocated with alignment");
+    // logMessage("INFO", __LINE__, "Arena", "Memory allocated with alignment");
     return result;
 }
 

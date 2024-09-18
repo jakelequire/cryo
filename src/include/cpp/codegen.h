@@ -118,6 +118,7 @@ namespace Cryo
         std::string currentNamespace;
         // Current Function
         llvm::Function *currentFunction;
+        bool inGlobalScope = true;
 
         void initializeContext()
         {

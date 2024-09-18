@@ -114,7 +114,7 @@ void freeLexer(Lexer *lexer)
 // <advance>
 char advance(Lexer *lexer)
 {
-    printf("[Lexer] Advancing to next character: %c\n", lexer->current[0]);
+    // printf("[Lexer] Advancing to next character: %c\n", lexer->current[0]);
     lexer->current++;
     lexer->column++;
     return lexer->current[-1];
@@ -140,7 +140,7 @@ char peekNext(Lexer *lexer)
 {
     if (isAtEnd(lexer))
         return '\0';
-    printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
+    // printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
     return (char)&lexer->current[1];
 }
 // </peekNext>
@@ -176,10 +176,10 @@ void skipWhitespace(Lexer *lexer)
             advance(lexer);
             break;
         case '/':
-            printf("[Lexer] Found comment character: %c\n", c);
+            // printf("[Lexer] Found comment character: %c\n", c);
             if (peek(lexer) == '/')
             {
-                printf("[Lexer] Found single line comment character: %c\n", c);
+                // printf("[Lexer] Found single line comment character: %c\n", c);
                 while (peek(lexer) != '\n' && !isAtEnd(lexer))
                     advance(lexer);
             }
@@ -233,13 +233,13 @@ Token nextToken(Lexer *lexer, Token *token)
         return *token;
     }
 
-    logMessage("INFO", __LINE__, "Lexer", "Getting next token...");
+    // logMessage("INFO", __LINE__, "Lexer", "Getting next token...");
 
     char c = advance(lexer);
 
     if (isAlpha(c))
     {
-        logMessage("INFO", __LINE__, "Lexer", "Creating identifier token");
+        // logMessage("INFO", __LINE__, "Lexer", "Creating identifier token");
         *token = checkKeyword(lexer);
         logMessage("INFO", __LINE__, "Lexer", "Keyword token created");
         // printf("[Lexer] Identifier token created: %.*s\n", token->length, token->start);
@@ -248,7 +248,7 @@ Token nextToken(Lexer *lexer, Token *token)
 
     if (isDigit(c))
     {
-        logMessage("INFO", __LINE__, "Lexer", "Creating number token");
+        // logMessage("INFO", __LINE__, "Lexer", "Creating number token");
         *token = number(lexer);
         logMessage("INFO", __LINE__, "Lexer", "Number token created");
         return *token;
@@ -256,7 +256,7 @@ Token nextToken(Lexer *lexer, Token *token)
 
     if (c == '"')
     {
-        logMessage("INFO", __LINE__, "Lexer", "Creating string token");
+        // logMessage("INFO", __LINE__, "Lexer", "Creating string token");
         *token = string(lexer);
         logMessage("INFO", __LINE__, "Lexer", "String token created");
         return *token;
@@ -264,13 +264,13 @@ Token nextToken(Lexer *lexer, Token *token)
 
     if (c == '&')
     {
-        logMessage("INFO", __LINE__, "Lexer", "Creating ampersand token");
+        // logMessage("INFO", __LINE__, "Lexer", "Creating ampersand token");
         *token = makeToken(lexer, TOKEN_AMPERSAND);
         logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
         return *token;
     }
 
-    logMessage("INFO", __LINE__, "Lexer", "Creating symbol token");
+    // logMessage("INFO", __LINE__, "Lexer", "Creating symbol token");
     Token symToken = symbolChar(lexer, c);
     if (symToken.type != TOKEN_UNKNOWN)
     {
@@ -279,7 +279,7 @@ Token nextToken(Lexer *lexer, Token *token)
         return *token;
     }
 
-    printf("\n\n\n\n\nCurrent Token: %s \n\n\n\n\n", CryoTokenToString(peekToken(lexer).type));
+    // printf("\n\n\n\n\nCurrent Token: %s \n\n\n\n\n", CryoTokenToString(peekToken(lexer).type));
 
     logMessage("ERROR", __LINE__, "Lexer", "Unexpected character: %c", c);
     return identifier(lexer);
@@ -338,10 +338,10 @@ Token peekNextToken(Lexer *lexer)
 // <makeToken>
 Token makeToken(Lexer *lexer, CryoTokenType type)
 {
-    printf("\n\nCreating Token: %s\n\n", CryoTokenToString(type));
+    // printf("\n\nCreating Token: %s\n\n", CryoTokenToString(type));
     // current token
     char *currentToken = my_strndup(lexer->start, lexer->current - lexer->start);
-    printf("Current Token: %s\n", currentToken);
+    // printf("Current Token: %s\n", currentToken);
 
     Token token;
     token.type = type;
@@ -535,10 +535,10 @@ Token symbolChar(Lexer *lexer, char symbol)
 Token identifier(Lexer *lexer)
 {
     char *cur_token = my_strndup(lexer->start, lexer->current - lexer->start);
-    printf("\n!![Lexer] Current token: %s\n", cur_token);
+    // printf("\n!![Lexer] Current token: %s\n", cur_token);
     while (isAlpha(peek(lexer)) || isDigit(peek(lexer)))
     {
-        printf("\n!![Lexer] Current token: %s\n", cur_token);
+        // printf("\n!![Lexer] Current token: %s\n", cur_token);
         advance(lexer);
     }
     if (peek(lexer) == '[')
@@ -546,21 +546,21 @@ Token identifier(Lexer *lexer)
         // Peek next character for a number specificly for array indexing
         if (isDigit(peekNext(lexer)))
         {
-            printf("\n!![Lexer] Current token: %s\n", cur_token);
+            // printf("\n!![Lexer] Current token: %s\n", cur_token);
             advance(lexer);
             while (isDigit(peek(lexer)))
             {
-                printf("\n!![Lexer] Current token: %s\n", cur_token);
+                // printf("\n!![Lexer] Current token: %s\n", cur_token);
                 advance(lexer);
             }
         }
         else
         {
-            printf("\n!![Lexer] Current token: %s\n", cur_token);
+            // printf("\n!![Lexer] Current token: %s\n", cur_token);
             exit(0);
         }
     }
-    printf("\n!![Lexer] Current token: %s\n", cur_token);
+    // printf("\n!![Lexer] Current token: %s\n", cur_token);
     Token token = makeToken(lexer, TOKEN_IDENTIFIER);
     // printf("[Lexer] Identifier token: %.*s\n", token.length, token.start);
     return token;
@@ -578,18 +578,18 @@ Token checkKeyword(Lexer *lexer)
 
     int length = (int)(lexer->current - lexer->start);
     const char *keyword = my_strndup(lexer->start, length);
-    printf("[Lexer] Checking keyword: %s\n", keyword);
+    // printf("[Lexer] Checking keyword: %s\n", keyword);
     char *nextChar = my_strndup(lexer->current, 1);
     char *nextnextChar = my_strndup(lexer->current + 1, 1);
-    printf("[Lexer] Next character: %s\n", nextChar);
-    printf("[Lexer] Next next character: %s\n", nextnextChar);
+    // printf("[Lexer] Next character: %s\n", nextChar);
+    // printf("[Lexer] Next next character: %s\n", nextnextChar);
 
     char *typeStr = my_strndup(lexer->start, length);
 
     // check if after the keyword is a `[` character and a `]` character immediately after
     if (strcmp(nextChar, "[") == 0 && strcmp(nextnextChar, "]") == 0)
     {
-        printf("[Lexer] Next character is an array type\n");
+        // printf("[Lexer] Next character is an array type\n");
         // append `[]` to the typeStr to indicate an array type
         char *arrayType = (char *)malloc(strlen(typeStr) + 3); // +3 for '[]' and null terminator
         if (arrayType == NULL)
@@ -602,7 +602,7 @@ Token checkKeyword(Lexer *lexer)
         strcpy(arrayType, typeStr);
         strcat(arrayType, "[]");
         // Consuming the `]` character
-        printf("[Lexer] Array type: %s\n", arrayType);
+        // printf("[Lexer] Array type: %s\n", arrayType);
 
         // Free the old typeStr and update it with the new array type
         free(typeStr);
@@ -613,10 +613,10 @@ Token checkKeyword(Lexer *lexer)
     }
     else
     {
-        printf("[Lexer] Next character is not an array type\n");
+        // printf("[Lexer] Next character is not an array type\n");
     }
 
-    printf("\n\n\nType String: %s\n\n\n", typeStr);
+    // printf("\n\n\nType String: %s\n\n\n", typeStr);
 
     // Check if the keyword is a data type
     CryoTokenType type = checkDataType(lexer, typeStr, TOKEN_IDENTIFIER);
@@ -643,7 +643,7 @@ Token checkKeyword(Lexer *lexer)
 // <checkDataType>
 CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type)
 {
-    printf("[Lexer] Checking data type: %s\n", dataType);
+    // printf("[Lexer] Checking data type: %s\n", dataType);
     // Check if the next token is the `[` character to determine if it is an array type
     if (peek(lexer) == '[')
     {

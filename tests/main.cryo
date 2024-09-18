@@ -1,12 +1,20 @@
 namespace test;
 
-
-public function main() -> void
-{
-    return;
-}
+extern function printInt(a: int) -> void;
 
 public function add(a: int, b: int) -> int
 {
     return a + b;
 }
+
+
+public function main() -> void
+{
+    const intOne: int = 34;
+    const intTwo: int = 35;
+    const addResult: int = add(intOne, intTwo);
+    printInt(addResult);
+
+    return;
+}
+

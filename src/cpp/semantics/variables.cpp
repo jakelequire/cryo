@@ -88,7 +88,6 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
-        debugger.logNode(node);
 
         CryoVariableNode *varDecl = node->data.varDecl;
         assert(varDecl != nullptr);
@@ -122,6 +121,12 @@ namespace Cryo
         if (varType == DATA_TYPE_INT)
         {
             llvmType = compiler.getTypes().getType(varType, 0);
+            llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+            // Store the value
+            int intval = varDecl->initializer->data.literal->value.intValue;
+            llvm::Value *val = llvm::ConstantInt::get(llvmType, intval);
+            llvm::Instruction *inst = compiler.getContext().builder.CreateStore(val, llvmValue);
+            compiler.getContext().namedValues[varName] = llvmValue;
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
         }
         else
@@ -132,7 +137,7 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
 
-        llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+        // llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
         compiler.getContext().namedValues[varName] = llvmValue;
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
@@ -221,6 +226,26 @@ namespace Cryo
         llvm::Constant *llvmConstant = nullptr;
         llvm::ArrayType *llvmArrayType = nullptr;
 
+        bool isGlobal = varNode->isGlobal;
+
+        if (!isGlobal)
+        {
+            // Get the current block
+            llvm::BasicBlock *currentBlock = cryoContext.builder.GetInsertBlock();
+            if (!currentBlock)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Current block not found");
+                exit(1);
+            }
+            debugger.logMessage("INFO", __LINE__, "Variables", "Current block found");
+            // Set the insert point
+            cryoContext.builder.SetInsertPoint(currentBlock);
+        }
+        else
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Global Variable");
+        }
+
         if (initializer)
         {
             if (initializer->metaData->type == NODE_INDEX_EXPR)
@@ -249,7 +274,8 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
                 llvmType = types.getType(type, _len);
                 char *typeNode = CryoDataTypeToString(type);
-                debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(typeNode));
+                debugger.logMessage("INFO", __LINE__, "Variables", "Varname: " + std::string(varName));
+                debugger.logMessage("INFO", __LINE__, "Variables", "Data Type: " + std::string(typeNode));
 
                 switch (type)
                 {
@@ -432,7 +458,17 @@ namespace Cryo
             llvmValue = nullptr;
         }
 
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");
+        llvmValue = getLocalScopedVariable(name);
+        if (!llvmValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            llvmValue = nullptr;
+        }
+
+        if (llvmValue != nullptr)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");
+        }
 
         return llvmValue;
     }
@@ -452,7 +488,10 @@ namespace Cryo
             llvmValue = nullptr;
         }
 
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");
+        if (llvmValue != nullptr)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");
+        }
 
         return llvmValue;
     }
