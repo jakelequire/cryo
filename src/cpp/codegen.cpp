@@ -244,6 +244,10 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
         llvm::Constant *llvmConstant = nullptr;
 
+        std::cout << "<>-----------<GET INIT VALUE>------------<>" << std::endl;
+        debugger.logNode(node);
+        std::cout << "<>-----------<GET INIT VALUE>------------<>" << std::endl;
+
         switch (nodeType)
         {
         case NODE_LITERAL_EXPR:
@@ -359,6 +363,97 @@ namespace Cryo
         std::cout << "Namespace: " << namespaceName << std::endl;
 
         return namespaceName;
+    }
+
+    void Generator::printCurrentNamedValues(void)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Variables &variables = compiler.getVariables();
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Printing Current Named Values");
+
+        llvm::Function *currentFunction = compiler.getContext().builder.GetInsertBlock()->getParent();
+        llvm::Function::arg_iterator args = currentFunction->arg_begin();
+        llvm::Function::arg_iterator end = currentFunction->arg_end();
+
+        for (; args != end; ++args)
+        {
+            llvm::Value *argValue = &*args;
+            std::string argName = argValue->getName().str();
+            std::cout << "Arg Name: " << argName << std::endl;
+        }
+
+        llvm::Function::iterator block = currentFunction->begin();
+        llvm::Function::iterator endBlock = currentFunction->end();
+
+        for (; block != endBlock; ++block)
+        {
+            llvm::BasicBlock::iterator inst = block->begin();
+            llvm::BasicBlock::iterator endInst = block->end();
+
+            for (; inst != endInst; ++inst)
+            {
+                llvm::Instruction *instruction = &*inst;
+                std::string instName = instruction->getName().str();
+                std::cout << "Inst Name: " << instName << std::endl;
+            }
+        }
+
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Named Values Printed");
+    }
+
+    llvm::Value *Generator::getNamedValue(std::string name)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Getting Named Value");
+
+        llvm::Function *currentFunction = compiler.getContext().builder.GetInsertBlock()->getParent();
+        llvm::Function::arg_iterator args = currentFunction->arg_begin();
+        llvm::Function::arg_iterator end = currentFunction->arg_end();
+        llvm::Value *llvmValue = nullptr;
+
+        for (; args != end; ++args)
+        {
+            llvm::Value *argValue = &*args;
+            std::string argName = argValue->getName().str();
+            if (argName == name)
+            {
+                llvmValue = argValue;
+                break;
+            }
+        }
+
+        llvm::Function::iterator block = currentFunction->begin();
+        llvm::Function::iterator endBlock = currentFunction->end();
+
+        for (; block != endBlock; ++block)
+        {
+            llvm::BasicBlock::iterator inst = block->begin();
+            llvm::BasicBlock::iterator endInst = block->end();
+
+            for (; inst != endInst; ++inst)
+            {
+                llvm::Instruction *instruction = &*inst;
+                std::string instName = instruction->getName().str();
+                if (instName == name)
+                {
+                    llvmValue = instruction;
+                    break;
+                }
+            }
+        }
+
+        if (!llvmValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "CodeGen", "Named Value not found");
+            llvmValue = nullptr;
+        }
+
+        if (llvmValue != nullptr)
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Named Value Found");
+        }
+
+        return llvmValue;
     }
 
 } // namespace Cryo

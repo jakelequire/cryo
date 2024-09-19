@@ -14,11 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
+#include "visualDebug.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-// Prototypes
-void printInt(int *value);
-void printStr(char *value);
+// TODO: This will be a small library that will allow for the visualization of the AST and Symbol Table.
+

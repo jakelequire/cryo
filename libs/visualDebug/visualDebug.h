@@ -14,11 +14,14 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
+#ifndef VISUAL_DEBUG_H
+#define VISUAL_DEBUG_H
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-// Prototypes
-void printInt(int *value);
-void printStr(char *value);
+#include "compiler/token.h"
+#include "compiler/ast.h"
+
+#endif // VISUAL_DEBUG_H

@@ -1,6 +1,6 @@
 namespace test;
 
-extern function printInt(a: int) -> void;
+extern function printInt(integer: int) -> void;
 
 public function add(a: int, b: int) -> int
 {
@@ -10,7 +10,7 @@ public function add(a: int, b: int) -> int
 
 public function main() -> void
 {
-    const intOne: int = 34;
+    const intOne: int = 420;
     const intTwo: int = 35;
     const addResult: int = add(intOne, intTwo);
     printInt(addResult);

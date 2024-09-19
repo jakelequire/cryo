@@ -33,6 +33,8 @@ namespace Cryo
         createMutableVariable(node);
     }
 
+    // -----------------------------------------------------------------------------------------------
+
     void Variables::handleVariableReassignment(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -84,6 +86,8 @@ namespace Cryo
         return;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
     llvm::Value *Variables::createLocalVariable(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -93,9 +97,26 @@ namespace Cryo
         assert(varDecl != nullptr);
 
         CryoDataType varType = varDecl->type;
+        ASTNode *initializer = varDecl->initializer;
+        assert(initializer != nullptr);
+        CryoNodeType initializerNodeType = initializer->metaData->type;
         std::string varName = std::string(varDecl->name);
         llvm::Value *llvmValue = nullptr;
         llvm::Type *llvmType = nullptr;
+
+        std::cout << "------------<Variable Declaration>------------" << std::endl;
+        std::cout << "Variable Name: " << varName << std::endl;
+        std::cout << "\n Initializer Node: \n"
+                  << std::endl;
+        debugger.logNode(initializer);
+        std::cout << "------------<Variable Declaration>------------" << std::endl;
+
+        if (initializerNodeType == NODE_FUNCTION_CALL)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a function call");
+            llvmValue = createVarWithFuncCallInitilizer(node);
+            return llvmValue;
+        }
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
 
@@ -145,6 +166,8 @@ namespace Cryo
 
         return llvmValue;
     }
+
+    // -----------------------------------------------------------------------------------------------
 
     // unused
     /*
@@ -201,6 +224,9 @@ namespace Cryo
         var->value = llvmValue;
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Set");
+
+        // Add the variable to the named values map
+        compiler.getContext().namedValues[varName] = llvmValue;
 
         return var;
     }
@@ -335,6 +361,7 @@ namespace Cryo
     }
 
     // -----------------------------------------------------------------------------------------------
+
     void Variables::createMutableVariable(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -473,6 +500,8 @@ namespace Cryo
         return llvmValue;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
     llvm::Value *Variables::getLocalScopedVariable(std::string name)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -494,6 +523,117 @@ namespace Cryo
         }
 
         return llvmValue;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    llvm::Value *Variables::createVarWithFuncCallInitilizer(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable with Function Call Initializer");
+
+        // Should be the function call node
+        ASTNode *initializer = node->data.varDecl->initializer;
+        // The variable node
+        ASTNode *variable = node;
+        assert(initializer != nullptr);
+
+        std::string moduleName = compiler.getContext().currentNamespace;
+
+        std::cout << "------------<Initializer>------------" << std::endl;
+        debugger.logNode(initializer);
+        std::cout << "-----------" << std::endl;
+        std::cout << "Initializer Type: " << CryoNodeTypeToString(initializer->metaData->type) << std::endl;
+        std::cout << "------------<Initializer>------------" << std::endl;
+
+        // Create the variable
+        std::string varName = std::string(variable->data.varDecl->name);
+        llvm::Type *varType = compiler.getTypes().getType(variable->data.varDecl->type, 0);
+        llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(varType, nullptr, varName);
+
+        // Get the function call
+        if (initializer->metaData->type != NODE_FUNCTION_CALL)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Initializer is not a function call");
+            DEBUG_BREAKPOINT;
+        }
+
+        std::string functionName = std::string(initializer->data.functionCall->name);
+        std::cout << "Function Name: " << functionName << std::endl;
+
+        // Get the arguments
+        std::vector<llvm::Value *> argValues;
+        for (int i = 0; i < initializer->data.functionCall->argCount; ++i)
+        {
+            ASTNode *argNode = initializer->data.functionCall->args[i];
+            CryoNodeType argNodeType = argNode->metaData->type;
+            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+            if (!argValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Argument value not found");
+                exit(1);
+            }
+            if (argNodeType == NODE_VAR_DECLARATION)
+            {
+                std::cout << "Argument Name: " << argNode->data.varDecl->name << std::endl;
+                std::cout << "Argument Type: " << CryoDataTypeToString(argNode->data.varDecl->type) << std::endl;
+                std::cout << "Argument Node Type: " << CryoNodeTypeToString(argNode->metaData->type) << std::endl;
+                ASTNode *varNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, argNode->data.varDecl->name);
+                if (!varNode)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                    exit(1);
+                }
+                CryoNodeType varNodeType = varNode->metaData->type;
+                std::cout << "Variable Node Type: " << CryoNodeTypeToString(varNodeType) << std::endl;
+                if (varNodeType == NODE_LITERAL_EXPR)
+                {
+                    CryoDataType varDataType = varNode->data.literal->dataType;
+                    switch (varDataType)
+                    {
+                    case DATA_TYPE_INT:
+                    {
+                        int val = varNode->data.literal->value.intValue;
+                        argValue = compiler.getTypes().getLiteralIntValue(val);
+                        break;
+                    }
+                    default:
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+                        exit(1);
+                    }
+                    }
+                }
+            }
+
+            debugger.logMessage("INFO", __LINE__, "Variables", "Argument Value Found");
+            argValues.push_back(argValue);
+        }
+        debugger.logMessage("INFO", __LINE__, "Variables", "Argument list parsed.");
+
+        // Get the function
+        llvm::Function *function = compiler.getContext().module->getFunction(functionName);
+        if (!function)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Function not found");
+            exit(1);
+        }
+        debugger.logMessage("INFO", __LINE__, "Variables", "Function Found");
+
+        // Create the function call
+        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+        if (!functionCall)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Function call not created");
+            exit(1);
+        }
+
+        // Store the call into the variable
+        llvm::Instruction *inst = compiler.getContext().builder.CreateStore(functionCall, varValue);
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created");
+
+        return functionCall;
     }
 
 } // namespace Cryo

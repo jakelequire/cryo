@@ -210,7 +210,9 @@ namespace Cryo
         void generateCode(ASTNode *root);
         void parseTree(ASTNode *root);
         llvm::Value *getInitilizerValue(ASTNode *node);
+        llvm::Value *getNamedValue(std::string name);
         std::string getNamespace(ASTNode *node);
+        void printCurrentNamedValues(void);
 
         // Actual logic for handling different types of nodes
         // This is the main entry point for the generator
@@ -329,6 +331,7 @@ namespace Cryo
         VariableIR *createNewLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
+        llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
 
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);

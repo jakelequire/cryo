@@ -60,7 +60,8 @@ void exitScope(CryoSymbolTable *table, Arena *arena);
 void enterBlockScope(CryoSymbolTable *table, Arena *arena);
 void exitBlockScope(CryoSymbolTable *table, Arena *arena);
 CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name, Arena *arena);
-
+bool isSymbolInTable(CryoSymbolTable *table, char *name);
+char *getNameOfNode(ASTNode *node);
 CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 

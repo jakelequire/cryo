@@ -713,6 +713,7 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
         {
             logMessage("INFO", __LINE__, "Parser", "Adding statement to function block...");
             // DEBUG_ARENA_PRINT(arena);
+            addASTNodeSymbol(table, statement, arena);
             addStatementToFunctionBlock(functionBlock, statement, arena);
         }
         else
@@ -878,7 +879,9 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
         return NULL;
     }
 
-    return createFunctionNode(visibility, functionName, params, functionBlock, returnType, arena);
+    ASTNode *functionNode = createFunctionNode(visibility, functionName, params, functionBlock, returnType, arena);
+    addASTNodeSymbol(table, functionNode, arena);
+    return functionNode;
 }
 // </parseFunctionDeclaration>
 
@@ -1067,6 +1070,7 @@ ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     // consume data type:
     getNextToken(lexer, arena);
     ASTNode *node = createParamNode(paramName, paramType, arena);
+    addASTNodeSymbol(table, node, arena);
     return node;
 }
 // </parseParameter>
@@ -1267,7 +1271,7 @@ void addParameterToList(CryoSymbolTable *table, ASTNode *paramListNode, ASTNode 
                 return;
             }
         }
-
+ 
         paramList->params[paramList->paramCount++] = param->data.varDecl;
     }
     else

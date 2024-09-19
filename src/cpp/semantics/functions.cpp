@@ -159,12 +159,12 @@ namespace Cryo
                 continue;
             }
 
-            if (nodeType == NODE_FUNCTION_CALL)
-            {
-                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
-                createFunctionCall(statement);
-                continue;
-            }
+            // if (nodeType == NODE_FUNCTION_CALL)
+            // {
+            //     debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
+            //     createFunctionCall(statement);
+            //     continue;
+            // }
 
             if (nodeType == NODE_RETURN_STATEMENT)
             {
@@ -402,7 +402,7 @@ namespace Cryo
             }
 
             llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
-            argTypes.push_back(argType);
+            argTypes.push_back(argType->getPointerTo());
         }
 
         // Create the function type
@@ -435,6 +435,7 @@ namespace Cryo
         CryoDebugger &debugger = compiler.getDebugger();
         Generator &generator = compiler.getGenerator();
         Arrays &arrays = compiler.getArrays();
+        Variables &variables = compiler.getVariables();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
 
         FunctionCallNode *functionCallNode = node->data.functionCall;
@@ -465,17 +466,13 @@ namespace Cryo
             bool isReference = argNode->data.varDecl->isReference;
 
             std::cout << "===----------------------===" << std::endl;
+            std::cout << "Argument #: " << i + 1 << std::endl;
+            std::cout << "Function Name: " << functionName << std::endl;
             std::cout << "Argument Node Type: " << CryoNodeTypeToString(argType) << std::endl;
             std::cout << "Argument Data Type: " << CryoDataTypeToString(argTypeData) << std::endl;
             std::cout << "Argument Name: " << argNode->data.varDecl->name << std::endl;
             std::cout << "===----------------------===" << std::endl;
             debugger.logNode(argNode);
-            if (argType == NODE_FUNCTION_CALL)
-            {
-                debugger.logMessage("INFO", __LINE__, "Functions", "Argument is a function call");
-                createFunctionCall(argNode);
-                continue;
-            }
 
             if (argTypeData == DATA_TYPE_STRING)
             {
@@ -492,6 +489,7 @@ namespace Cryo
                 if (globalValue)
                 {
                     std::cout << "Global Value Found" << std::endl;
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Global Value Found");
                     argValues.push_back(globalValue);
                     continue;
                 }
@@ -521,12 +519,14 @@ namespace Cryo
 
                         // Get the value of the string
                         llvm::Value *_argValue = compiler.getGenerator().getInitilizerValue(argNode);
+                        assert(_argValue != nullptr);
 
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                         argValues.push_back(_argValue);
                     }
                     else
                     {
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument Value Found");
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                         argValues.push_back(argValue);
                     }
                     std::cout << "Arg Value: " << argValue << std::endl;
@@ -537,11 +537,12 @@ namespace Cryo
                 llvm::Value *argValue = generator.getInitilizerValue(argNode);
                 assert(argValue != nullptr);
 
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                 argValues.push_back(argValue);
                 continue;
             }
 
-            if (argTypeData == DATA_TYPE_INT && argType != NODE_FUNCTION_CALL)
+            if (argTypeData == DATA_TYPE_INT)
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating Int Argument");
                 // Find the variable in the symbol table
@@ -560,34 +561,59 @@ namespace Cryo
                     ASTNode *indexExpr = retreivedNode->indexExpr->index;
                     ASTNode *arrayNode = retreivedNode->initializer;
 
-                    char *arrayRefName = retreivedNode->indexExpr->name;
+                    char *arrayRefName = arrayNode->data.varDecl->name;
                     int indexValue = indexExpr->data.literal->value.intValue;
                     std::cout << "Array Ref Name: " << arrayRefName << std::endl;
 
                     // Find the varaible in the symbol table from arrayRefName
                     ASTNode *arrayRefNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, arrayRefName);
                     llvm::Value *indexedValue = arrays.indexArrayForValue(arrayRefNode, indexValue);
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                     argValues.push_back(indexedValue);
                     continue;
                 }
                 else
                 {
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument does not have index expression");
+                    char *varNameCpy = (char *)retreivedNode->name;
+                    std::string _varName = std::string(varNameCpy);
+                    std::cout << "$Variable Name: " << _varName << std::endl;
+                    // Set a pointer to the variable
+                    llvm::Value *argValue = generator.getNamedValue(_varName);
+                    if (!argValue)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                        generator.printCurrentNamedValues();
+                        exit(1);
+                    }
+                    // Set argValues type to i32
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                    argValues.push_back(argValue);
+                    continue;
                 }
             }
-
-            std::string argName = std::string(argNode->data.varDecl->name);
-            std::cout << "!Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
-
-            ASTNode *retreivedNode = compiler.getSymTable().getASTNode(moduleName, argType, argName);
-            if (!retreivedNode)
+            else
             {
-                debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
-                exit(1);
-            }
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Argument");
+                std::string argName = std::string(argNode->data.varDecl->name);
+                std::cout << "!Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
 
-            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(retreivedNode);
-            argValues.push_back(argValue);
+                ASTNode *retreivedNode = compiler.getSymTable().getASTNode(moduleName, argType, argName);
+                if (!retreivedNode)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
+                    exit(1);
+                }
+                debugger.logNode(retreivedNode);
+                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(retreivedNode);
+                if (!argValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    exit(1);
+                }
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                argValues.push_back(argValue);
+            }
         }
 
         // Get the function
@@ -600,6 +626,12 @@ namespace Cryo
 
         // Create the function call
         llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+
+        if (!functionCall)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
+            exit(1);
+        }
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
 
