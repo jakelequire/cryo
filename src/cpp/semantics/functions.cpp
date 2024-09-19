@@ -583,10 +583,17 @@ namespace Cryo
                     if (!argValue)
                     {
                         debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                        generator.printCurrentNamedValues();
-                        exit(1);
+                        // Create a new variable
+                        llvm::Value *newVar = variables.createLocalVariable(argNode);
+                        if (!newVar)
+                        {
+                            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
+                            exit(1);
+                        }
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                        argValues.push_back(newVar);
+                        continue;
                     }
-                    // Set argValues type to i32
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                     argValues.push_back(argValue);
                     continue;
@@ -637,5 +644,4 @@ namespace Cryo
 
         return;
     }
-
 }

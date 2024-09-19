@@ -123,7 +123,7 @@ namespace Cryo
         if (varType == DATA_TYPE_STRING)
         {
             int _len = compiler.getTypes().getLiteralValLength(varDecl->initializer);
-            llvmType = compiler.getTypes().getType(varType, _len);
+            llvmType = compiler.getTypes().getType(varType, _len + 3);
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
 
             // Create a alloc/store instruction
