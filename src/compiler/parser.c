@@ -373,6 +373,10 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         logMessage("INFO", __LINE__, "Parser", "Parsing extern declaration...");
         return parseExtern(lexer, table, context, arena);
 
+    case TOKEN_KW_DEBUGGER:
+        parseDebugger(lexer, table, context, arena);
+        return NULL;
+
     case TOKEN_IDENTIFIER:
         if (currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena).type == TOKEN_LPAREN)
         {
@@ -401,6 +405,18 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
 }
 // </parseStatement>
+
+/// @brief This function handles the `debugger` keyword. Which is used to pause the program execution.
+void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing debugger statement...");
+    consume(lexer, TOKEN_KW_DEBUGGER, "Expected 'debugger' keyword.", "parseDebugger", table, arena);
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseDebugger", table, arena);
+    logMessage("INFO", __LINE__, "Parser", "Debugger statement parsed.");
+
+    DEBUG_BREAKPOINT;
+    return;
+}
 
 ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
 {
@@ -446,6 +462,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     case TOKEN_STRING_LITERAL:
         logMessage("INFO", __LINE__, "Parser", "Parsing string literal");
         char *str = strndup(currentToken.start + 1, currentToken.length - 2);
+        printf("String: %s\n", str);
         node = createStringLiteralNode(str, arena);
         getNextToken(lexer, arena);
         return node;
@@ -1038,6 +1055,10 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
             printf("[Parser] Return expression data type: %s\n", CryoDataTypeToString(returnType));
         }
     }
+    else
+    {
+        logMessage("INFO", __LINE__, "Parser", "No return expression.");
+    }
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseReturnStatement", table, arena);
     ASTNode *returnNode = createReturnNode(expression, returnType, arena);
@@ -1271,7 +1292,7 @@ void addParameterToList(CryoSymbolTable *table, ASTNode *paramListNode, ASTNode 
                 return;
             }
         }
- 
+
         paramList->params[paramList->paramCount++] = param->data.varDecl;
     }
     else

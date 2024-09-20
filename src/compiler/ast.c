@@ -449,7 +449,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
     // Initialize statements array if it doesn't exist
     if (!block->statements)
     {
-        block->statementCapacity = 16; // Start with a reasonable capacity
+        block->statementCapacity = 64; // Start with a reasonable capacity
         block->statementCount = 0;
         block->statements = (ASTNode **)ARENA_ALLOC(arena, sizeof(ASTNode *) * block->statementCapacity);
         if (!block->statements)
@@ -677,8 +677,14 @@ ASTNode *createStringLiteralNode(char *value, Arena *arena)
 
     logMessage("INFO", __LINE__, "AST", "Created string literal node with value: %s", value);
 
+    // Trim the `"` characters from the string
+    char *trimmedString = strdup(value);
+    trimmedString++;
+    trimmedString[strlen(trimmedString) - 1] = '\0';
+
     node->data.literal->dataType = DATA_TYPE_STRING;
-    node->data.literal->value.stringValue = strdup(value);
+    node->data.literal->value.stringValue = strdup(trimmedString);
+
     return node;
 }
 

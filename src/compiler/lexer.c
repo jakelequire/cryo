@@ -44,6 +44,7 @@ KeywordToken keywords[] = {
     {"continue", TOKEN_KW_CONTINUE},
     {"import", TOKEN_KW_IMPORT},
     {"namespace", TOKEN_KW_NAMESPACE},
+    {"debugger", TOKEN_KW_DEBUGGER},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
@@ -176,8 +177,9 @@ void skipWhitespace(Lexer *lexer)
             advance(lexer);
             break;
         case '/':
+        {
             // printf("[Lexer] Found comment character: %c\n", c);
-            if (peek(lexer) == '/')
+            if (peekNext(lexer) == '/')
             {
                 // printf("[Lexer] Found single line comment character: %c\n", c);
                 while (peek(lexer) != '\n' && !isAtEnd(lexer))
@@ -206,13 +208,19 @@ void skipWhitespace(Lexer *lexer)
             }
             else
             {
+                printf("[Lexer] Found division character: %c\n", c);
                 return;
             }
+            // Move the lexers current position -1 to account for the advance in the loop
+            lexer->current--;
+
             break;
+        }
         default:
             return;
         }
     }
+    return;
 }
 // </skipWhitespace>
 
@@ -236,6 +244,8 @@ Token nextToken(Lexer *lexer, Token *token)
     // logMessage("INFO", __LINE__, "Lexer", "Getting next token...");
 
     char c = advance(lexer);
+
+    printf("[Lexer] Current character: %c\n", c);
 
     if (isAlpha(c))
     {
@@ -269,7 +279,6 @@ Token nextToken(Lexer *lexer, Token *token)
         logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
         return *token;
     }
-
     // logMessage("INFO", __LINE__, "Lexer", "Creating symbol token");
     Token symToken = symbolChar(lexer, c);
     if (symToken.type != TOKEN_UNKNOWN)
@@ -453,6 +462,8 @@ Token symbolChar(Lexer *lexer, char symbol)
         return makeToken(lexer, TOKEN_COMMA);
     case '$':
         return makeToken(lexer, TOKEN_DOLLAR);
+    case '/':
+        return makeToken(lexer, TOKEN_SLASH);
     case '.':
     {
         if (peek(lexer) == '.')
@@ -489,8 +500,6 @@ Token symbolChar(Lexer *lexer, char symbol)
         return makeToken(lexer, TOKEN_SEMICOLON);
     case '*':
         return makeToken(lexer, TOKEN_STAR);
-    case '/':
-        return makeToken(lexer, TOKEN_SLASH);
     case '%':
         return makeToken(lexer, TOKEN_PERCENT);
     case '!':

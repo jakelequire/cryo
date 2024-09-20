@@ -153,6 +153,7 @@ extern "C"
         TOKEN_KW_ASYNC,        // `async`
         TOKEN_KW_EXPRESSION,   // `expression`
         TOKEN_KW_EXTERN,       // `extern`
+        TOKEN_KW_DEBUGGER,     // `debugger`
                                // Add more keywords as needed
 
         // Operators and punctuations
