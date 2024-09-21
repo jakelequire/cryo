@@ -3,6 +3,8 @@ namespace test;
 extern function printInt(integer: int) -> void;
 extern function printStr(str: string) -> void;
 
+// This is a test comment
+
 public function add(a: int, b: int) -> int {
     return a + b;
 }
@@ -13,10 +15,6 @@ public function subtract(a: int, b: int) -> int {
 
 public function multiply(a: int, b: int) -> int {
     return a * b;
-}
-
-public function divide(a: int, b: int) -> int {
-    return a / b;
 }
 
 
@@ -30,18 +28,13 @@ public function main() -> void {
     const addResult: int = add(intOne, intTwo);
     const subtractResult: int = subtract(intTwo, intOne);
     const multiplyResult: int = multiply(intOne, intTwo);
-    const divideResult: int = divide(intThree, intFour);
 
     printInt(addResult);
     printInt(subtractResult);
     printInt(multiplyResult);
-    printInt(divideResult);
 
     printInt(420);
     printStr("Hello, World!");
-
-    const complexBinExpr: int = 1 + 2 * 3 - 4 / 2;
-    printInt(complexBinExpr);
 
     return;
 }

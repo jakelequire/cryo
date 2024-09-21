@@ -30,7 +30,6 @@ namespace Cryo
     /// @brief
     /// This function should replace the `createBinaryExpression` function.
     /// It should be able to handle multiple expressions within the binary expression.
-    /// This
     llvm::Value *BinaryExpressions::handleComplexBinOp(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -45,6 +44,8 @@ namespace Cryo
         llvm::Value *result = nullptr;
         ASTNode *currentNode = node;
 
+        compiler.getContext().builder.SetInsertPoint(compiler.getContext().builder.GetInsertBlock());
+
         while (currentNode->metaData->type == NODE_BINARY_EXPR)
         {
             ASTNode *leftNode = currentNode->data.bin_op->left;
@@ -54,10 +55,13 @@ namespace Cryo
             if (leftNode->metaData->type == NODE_BINARY_EXPR)
             {
                 // If left node is a binary expression, recursively handle it
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Handling left binary expression");
                 leftValue = handleComplexBinOp(leftNode);
             }
             else
             {
+                // Otherwise, get the value
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
                 leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
             }
 
@@ -66,11 +70,13 @@ namespace Cryo
             if (!result)
             {
                 // First iteration
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Creating binary expression");
                 result = createBinaryExpression(currentNode, leftValue, rightValue);
             }
             else
             {
                 // Subsequent iterations
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Creating binary expression");
                 result = createBinaryExpression(currentNode, result, rightValue);
             }
 
@@ -83,6 +89,7 @@ namespace Cryo
             // Move to the next node (if any)
             if (rightNode->metaData->type == NODE_BINARY_EXPR)
             {
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Moving to next binary expression");
                 currentNode = rightNode;
             }
             else
@@ -90,6 +97,11 @@ namespace Cryo
                 break;
             }
         }
+
+        assert(result != nullptr);
+
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Binary expression handled successfully");
+        return result;
     }
 
     llvm::Value *BinaryExpressions::createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue)

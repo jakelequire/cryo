@@ -141,10 +141,25 @@ char peekNext(Lexer *lexer)
 {
     if (isAtEnd(lexer))
         return '\0';
-    // printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
+    printf("[Lexer] Peeking next character: %c\n", lexer->current[1]);
     return (char)&lexer->current[1];
 }
 // </peekNext>
+
+// <peekNextUnconsumedLexerToken>
+char peekNextUnconsumedLexerToken(Lexer *lexer)
+{
+    Lexer tempLexer = *lexer;
+    return peekNextToken(&tempLexer).type;
+}
+// </peekNextUnconsumedLexerToken>
+
+// <currentChar>
+char currentChar(Lexer *lexer)
+{
+    return *lexer->current;
+}
+// </currentChar>
 
 // <matchToken>
 bool matchToken(Lexer *lexer, CryoTokenType type)
@@ -176,46 +191,6 @@ void skipWhitespace(Lexer *lexer)
             lexer->column = 0;
             advance(lexer);
             break;
-        case '/':
-        {
-            // printf("[Lexer] Found comment character: %c\n", c);
-            if (peekNext(lexer) == '/')
-            {
-                // printf("[Lexer] Found single line comment character: %c\n", c);
-                while (peek(lexer) != '\n' && !isAtEnd(lexer))
-                    advance(lexer);
-            }
-            else if (peekNext(lexer) == '*')
-            {
-                advance(lexer);
-                advance(lexer);
-                while (peek(lexer) != '*' && peekNext(lexer) != '/' && !isAtEnd(lexer))
-                {
-                    if (peek(lexer) == '\n')
-                    {
-                        lexer->line++;
-                        lexer->column = 0;
-                    }
-                    advance(lexer);
-                }
-                if (isAtEnd(lexer))
-                {
-                    logMessage("ERROR", __LINE__, "Lexer", "Unterminated block comment.");
-                    return;
-                }
-                advance(lexer);
-                advance(lexer);
-            }
-            else
-            {
-                printf("[Lexer] Found division character: %c\n", c);
-                return;
-            }
-            // Move the lexers current position -1 to account for the advance in the loop
-            lexer->current--;
-
-            break;
-        }
         default:
             return;
         }
@@ -224,12 +199,49 @@ void skipWhitespace(Lexer *lexer)
 }
 // </skipWhitespace>
 
+void skipComment(Lexer *lexer)
+{
+    char c = currentChar(lexer);
+    logMessage("INFO", __LINE__, "Lexer", "Skipping comment... Current character: %c", c);
+    if (c == '/')
+    {
+        logMessage("INFO", __LINE__, "Lexer", "Skipping single line comment...");
+        if (peek(lexer) == '/')
+        {
+            logMessage("INFO", __LINE__, "Lexer", "Skipping comment...");
+            while (currentChar(lexer) != '\n' && !isAtEnd(lexer))
+            {
+                logMessage("INFO", __LINE__, "Lexer", "Skipping comment... Current character: %c", currentChar(lexer));
+                advance(lexer);
+            }
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    if (c == '*')
+    {
+        logMessage("INFO", __LINE__, "Lexer", "Skipping multi-line comment...");
+        while (currentChar(lexer) != '*' && peekNext(lexer) != '/' && !isAtEnd(lexer))
+        {
+            logMessage("INFO", __LINE__, "Lexer", "Skipping comment... Current character: %c", currentChar(lexer));
+            advance(lexer);
+        }
+    }
+
+    return;
+}
+
 /* =========================================================== */
 /* @Lexer_Functions */
 
 // <nextToken>
 Token nextToken(Lexer *lexer, Token *token)
 {
+    skipWhitespace(lexer);
+    skipComment(lexer);
     skipWhitespace(lexer);
 
     lexer->start = lexer->current;
@@ -241,11 +253,9 @@ Token nextToken(Lexer *lexer, Token *token)
         return *token;
     }
 
-    // logMessage("INFO", __LINE__, "Lexer", "Getting next token...");
-
     char c = advance(lexer);
 
-    printf("[Lexer] Current character: %c\n", c);
+    logMessage("INFO", __LINE__, "Lexer", "Current character: %c", c);
 
     if (isAlpha(c))
     {
