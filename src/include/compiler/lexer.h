@@ -89,7 +89,7 @@ char peek(Lexer *lexer);
 char peekNext(Lexer *lexer);
 bool matchToken(Lexer *lexer, CryoTokenType type);
 void skipWhitespace(Lexer *lexer);
-void skipComment(Lexer *lexer);
+bool skipComment(Lexer *lexer);
 char peekNextUnconsumedLexerToken(Lexer *lexer);
 char currentChar(Lexer *lexer);
 

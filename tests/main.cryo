@@ -1,9 +1,9 @@
 namespace test;
+// This is a test comment
 
 extern function printInt(integer: int) -> void;
 extern function printStr(str: string) -> void;
 
-// This is a test comment
 
 public function add(a: int, b: int) -> int {
     return a + b;
@@ -17,6 +17,9 @@ public function multiply(a: int, b: int) -> int {
     return a * b;
 }
 
+public function divide(a: int, b: int) -> int {
+    return a / b;
+}
 
 
 public function main() -> void {
@@ -28,10 +31,12 @@ public function main() -> void {
     const addResult: int = add(intOne, intTwo);
     const subtractResult: int = subtract(intTwo, intOne);
     const multiplyResult: int = multiply(intOne, intTwo);
+    const divideResult: int = divide(intOne, intFour);
 
     printInt(addResult);
     printInt(subtractResult);
     printInt(multiplyResult);
+    printInt(divideResult);
 
     printInt(420);
     printStr("Hello, World!");
