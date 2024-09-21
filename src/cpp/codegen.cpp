@@ -244,10 +244,6 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
         llvm::Constant *llvmConstant = nullptr;
 
-        std::cout << "<>-----------<GET INIT VALUE>------------<>" << std::endl;
-        debugger.logNode(node);
-        std::cout << "<>-----------<GET INIT VALUE>------------<>" << std::endl;
-
         switch (nodeType)
         {
         case NODE_LITERAL_EXPR:
@@ -325,7 +321,7 @@ namespace Cryo
         case NODE_BINARY_EXPR:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Binary Expression");
-            llvmValue = binaryExpressions.createBinaryExpression(node);
+            llvmValue = binaryExpressions.handleComplexBinOp(node);
             break;
         }
         case NODE_FUNCTION_CALL:

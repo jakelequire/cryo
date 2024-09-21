@@ -27,114 +27,115 @@ namespace Cryo
         DEBUG_BREAKPOINT;
     }
 
-    llvm::Value *BinaryExpressions::createBinaryExpression(ASTNode *node)
+    /// @brief
+    /// This function should replace the `createBinaryExpression` function.
+    /// It should be able to handle multiple expressions within the binary expression.
+    /// This
+    llvm::Value *BinaryExpressions::handleComplexBinOp(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Handling Complex Binary Operation");
+
+        if (node->metaData->type != NODE_BINARY_EXPR)
+        {
+            // If it's not a binary expression, just return the value
+            return compiler.getGenerator().getInitilizerValue(node);
+        }
+
+        llvm::Value *result = nullptr;
+        ASTNode *currentNode = node;
+
+        while (currentNode->metaData->type == NODE_BINARY_EXPR)
+        {
+            ASTNode *leftNode = currentNode->data.bin_op->left;
+            ASTNode *rightNode = currentNode->data.bin_op->right;
+
+            llvm::Value *leftValue;
+            if (leftNode->metaData->type == NODE_BINARY_EXPR)
+            {
+                // If left node is a binary expression, recursively handle it
+                leftValue = handleComplexBinOp(leftNode);
+            }
+            else
+            {
+                leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+            }
+
+            llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
+
+            if (!result)
+            {
+                // First iteration
+                result = createBinaryExpression(currentNode, leftValue, rightValue);
+            }
+            else
+            {
+                // Subsequent iterations
+                result = createBinaryExpression(currentNode, result, rightValue);
+            }
+
+            if (!result)
+            {
+                debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create binary expression");
+                return nullptr;
+            }
+
+            // Move to the next node (if any)
+            if (rightNode->metaData->type == NODE_BINARY_EXPR)
+            {
+                currentNode = rightNode;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    llvm::Value *BinaryExpressions::createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Binary Expression");
 
-        ASTNode *leftASTNode = node->data.bin_op->left;
-        assert(leftASTNode != nullptr);
-
-        ASTNode *rightASTNode = node->data.bin_op->right;
-        assert(rightASTNode != nullptr);
-
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Getting values for binary expression (left)");
-        llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(leftASTNode);
-        if (!leftValue)
+        if (!leftValue || !rightValue)
         {
-            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate values for binary expression");
-            DEBUG_BREAKPOINT;
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Invalid operands for binary expression");
             return nullptr;
         }
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Left Value Generated");
-
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Getting values for binary expression (right)");
-        llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightASTNode);
-        if (!rightValue)
-        {
-            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate values for binary expression");
-            DEBUG_BREAKPOINT;
-            return nullptr;
-        }
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Right Value Generated");
 
         CryoOperatorType operatorType = node->data.bin_op->op;
         switch (operatorType)
         {
         case OPERATOR_ADD:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Add Expression");
             return compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
-        }
         case OPERATOR_SUB:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Sub Expression");
             return compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
-        }
         case OPERATOR_MUL:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Mul Expression");
             return compiler.getContext().builder.CreateMul(leftValue, rightValue, "multmp");
-        }
         case OPERATOR_DIV:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Div Expression");
             return compiler.getContext().builder.CreateSDiv(leftValue, rightValue, "divtmp");
-        }
         case OPERATOR_MOD:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Mod Expression");
             return compiler.getContext().builder.CreateSRem(leftValue, rightValue, "modtmp");
-        }
         case OPERATOR_AND:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating And Expression");
             return compiler.getContext().builder.CreateAnd(leftValue, rightValue, "andtmp");
-        }
         case OPERATOR_OR:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Or Expression");
             return compiler.getContext().builder.CreateOr(leftValue, rightValue, "ortmp");
-        }
         case OPERATOR_LT:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Less Than Expression");
             return compiler.getContext().builder.CreateICmpSLT(leftValue, rightValue, "ltcmp");
-        }
         case OPERATOR_LTE:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Less Than or Equal Expression");
             return compiler.getContext().builder.CreateICmpSLE(leftValue, rightValue, "ltecmp");
-        }
         case OPERATOR_GT:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Greater Than Expression");
             return compiler.getContext().builder.CreateICmpSGT(leftValue, rightValue, "gtcmp");
-        }
         case OPERATOR_GTE:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Greater Than or Equal Expression");
             return compiler.getContext().builder.CreateICmpSGE(leftValue, rightValue, "gtecmp");
-        }
         case OPERATOR_EQ:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Equal Expression");
             return compiler.getContext().builder.CreateICmpEQ(leftValue, rightValue, "eqcmp");
-        }
         case OPERATOR_NEQ:
-        {
-            debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Not Equal Expression");
             return compiler.getContext().builder.CreateICmpNE(leftValue, rightValue, "neqcmp");
-        }
         default:
-        {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown operator type");
             return nullptr;
         }
-        }
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Binary Expression Created");
-
-        return nullptr;
     }
 
     llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op)

@@ -19,6 +19,8 @@ public function divide(a: int, b: int) -> int {
     return a / b;
 }
 
+
+
 public function main() -> void {
     const intOne: int = 34;
     const intTwo: int = 35;
@@ -37,6 +39,9 @@ public function main() -> void {
 
     printInt(420);
     printStr("Hello, World!");
+
+    const complexBinExpr: int = 1 + 2 * 3 - 4 / 2;
+    printInt(complexBinExpr);
 
     return;
 }

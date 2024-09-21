@@ -464,9 +464,11 @@ namespace Cryo
         /**
          * @brief Creates a binary expression in the IR.
          */
-        llvm::Value *createBinaryExpression(ASTNode *node);
+        llvm::Value *createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue);
 
         llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
+
+        llvm::Value *handleComplexBinOp(ASTNode *node);
 
     private:
         CryoCompiler &compiler;

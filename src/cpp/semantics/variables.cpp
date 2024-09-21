@@ -104,17 +104,18 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
         llvm::Type *llvmType = nullptr;
 
-        std::cout << "------------<Variable Declaration>------------" << std::endl;
-        std::cout << "Variable Name: " << varName << std::endl;
-        std::cout << "\n Initializer Node: \n"
-                  << std::endl;
-        debugger.logNode(initializer);
-        std::cout << "------------<Variable Declaration>------------" << std::endl;
-
         if (initializerNodeType == NODE_FUNCTION_CALL)
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a function call");
             llvmValue = createVarWithFuncCallInitilizer(node);
+            return llvmValue;
+        }
+
+        if (initializerNodeType == NODE_BINARY_EXPR)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a binary expression");
+            // We will have to walk though the binary expression if it has multiple expressions within it
+            llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
             return llvmValue;
         }
 
@@ -539,12 +540,6 @@ namespace Cryo
         assert(initializer != nullptr);
 
         std::string moduleName = compiler.getContext().currentNamespace;
-
-        std::cout << "------------<Initializer>------------" << std::endl;
-        debugger.logNode(initializer);
-        std::cout << "-----------" << std::endl;
-        std::cout << "Initializer Type: " << CryoNodeTypeToString(initializer->metaData->type) << std::endl;
-        std::cout << "------------<Initializer>------------" << std::endl;
 
         // Create the variable
         std::string varName = std::string(variable->data.varDecl->name);

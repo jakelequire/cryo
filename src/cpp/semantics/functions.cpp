@@ -611,7 +611,6 @@ namespace Cryo
                     debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
                     exit(1);
                 }
-                debugger.logNode(retreivedNode);
                 llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(retreivedNode);
                 if (!argValue)
                 {

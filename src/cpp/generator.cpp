@@ -148,11 +148,6 @@ namespace Cryo
         assert(literalNode != nullptr);
         debugger.logMessage("INFO", __LINE__, "Generator", "Literal Node Found");
 
-        std::cout << "------------<Literal Node>------------" << std::endl;
-        debugger.logNode(node);
-        std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
-        std::cout << "------------<Literal Node>------------" << std::endl;
-
         switch (literalNode->dataType)
         {
         case DATA_TYPE_INT:
