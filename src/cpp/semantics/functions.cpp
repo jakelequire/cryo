@@ -75,16 +75,17 @@ namespace Cryo
         std::vector<llvm::Type *> argTypes;
         for (int i = 0; i < argCount; ++i)
         {
-            CryoVariableNode *argNode = functionNode->params[i]->data.varDecl;
+            CryoParameterNode *argNode = functionNode->params[i]->data.param;
             assert(argNode != nullptr);
             CryoDataType _argType = argNode->type;
 
             if (_argType == DATA_TYPE_STRING)
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
-                int _len = types.getLiteralValLength(argNode->initializer);
-                llvm::Type *argType = types.getType(_argType, _len);
-                argTypes.push_back(argType);
+                // int _len = types.getLiteralValLength(argNode->initializer);
+                // Need to find a solution to get the length of the string, setting the type as a pointer might be a temp thing.
+                llvm::Type *argType = types.getType(_argType, 32);
+                argTypes.push_back(argType->getPointerTo());
                 continue;
             }
 
@@ -133,8 +134,8 @@ namespace Cryo
         for (auto &arg : function->args())
         {
             // We are storing the aguments in the named values map
-            arg.setName(functionNode->params[i]->data.varDecl->name);
-            compiler.getContext().namedValues[functionNode->params[i]->data.varDecl->name] = &arg;
+            arg.setName(functionNode->params[i]->data.param->name);
+            compiler.getContext().namedValues[functionNode->params[i]->data.param->name] = &arg;
             llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(arg.getType(), nullptr, arg.getName());
             compiler.getContext().builder.CreateStore(&arg, alloca);
             ++i;
@@ -389,7 +390,7 @@ namespace Cryo
         std::vector<llvm::Type *> argTypes;
         for (int i = 0; i < argCount; ++i)
         {
-            CryoVariableNode *argNode = functionNode->params[i]->data.varDecl;
+            CryoParameterNode *argNode = functionNode->params[i]->data.param;
             assert(argNode != nullptr);
             CryoDataType _argType = argNode->type;
 
@@ -419,7 +420,7 @@ namespace Cryo
         int i = 0;
         for (auto &arg : function->args())
         {
-            arg.setName(functionNode->params[i]->data.varDecl->name);
+            arg.setName(functionNode->params[i]->data.param->name);
             ++i;
         }
 
@@ -462,8 +463,8 @@ namespace Cryo
         {
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argType = argNode->metaData->type;
+            std::cout << "<!> Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
             CryoDataType argTypeData = argNode->data.varDecl->type;
-            bool isReference = argNode->data.varDecl->isReference;
 
             std::cout << "===----------------------===" << std::endl;
             std::cout << "Argument #: " << i + 1 << std::endl;
@@ -499,7 +500,7 @@ namespace Cryo
                     // Trim the `\22` from the string
                     argName = argName.substr(1, argName.length() - 2);
                     // Reassign the name to the variable
-                    argNode->data.varDecl->name = (char *)argName.c_str();
+                    argNode->data.param->name = (char *)argName.c_str();
                     // Since the variable is not in the global named values, we can assume that it is a local variable.
                     int _len = compiler.getTypes().getLiteralValLength(argNode);
                     // Note: unsure why I have to subtract 1 but it works for now
@@ -602,7 +603,7 @@ namespace Cryo
             else
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating Argument");
-                std::string argName = std::string(argNode->data.varDecl->name);
+                std::string argName = std::string(argNode->data.param->name);
                 std::cout << "!Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
 
                 ASTNode *retreivedNode = compiler.getSymTable().getASTNode(moduleName, argType, argName);
@@ -642,5 +643,15 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
 
         return;
+    }
+
+    void Functions::createParameter(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        Variables &variables = compiler.getVariables();
+        debugger.logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
+
+        DEBUG_BREAKPOINT;
     }
 }

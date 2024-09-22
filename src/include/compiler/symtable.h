@@ -65,6 +65,9 @@ char *getNameOfNode(ASTNode *node);
 CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 
+void addDefinitionToSymbolTable(CryoSymbolTable *table, ASTNode *node, Arena *arena);
+void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
+
 bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena);
 
 #endif // SYMTABLE_H

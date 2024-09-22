@@ -260,6 +260,20 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         break;
     }
 
+    case NODE_PARAM:
+    {
+        printf("\nParameter Node: %s\n", node->data.param->name);
+        printf("Parameter Type: %s\n", CryoDataTypeToString(node->data.param->type));
+        printf("Function Name: %s\n", node->data.param->functionName);
+        printf("Has Default Value: %s\n", node->data.param->hasDefaultValue ? "true" : "false");
+        if (node->data.param->hasDefaultValue)
+        {
+            printf("Default Value:\n");
+            printAST(node->data.param->defaultValue, indent + 2, arena);
+        }
+        break;
+    }
+
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");
         break;
@@ -360,6 +374,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena)
         break;
     case NODE_VAR_REASSIGN:
         node->data.varReassignment = createVariableReassignmentNodeContainer(arena);
+        break;
+    case NODE_PARAM:
+        node->data.param = createParameterNodeContainer(arena);
         break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
@@ -953,15 +970,16 @@ ASTNode *createArgumentListNode(Arena *arena)
     return createASTNode(NODE_ARG_LIST, arena);
 }
 
-ASTNode *createParamNode(char *name, CryoDataType type, Arena *arena)
+ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena)
 {
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena);
+    ASTNode *node = createASTNode(NODE_PARAM, arena);
     if (!node)
         return NULL;
-    node->data.varDecl->name = strdup(name);
-    node->data.varDecl->type = type;
-    node->data.varDecl->isGlobal = false;
-    node->data.varDecl->isReference = false;
+    node->data.param->name = strdup(name);
+    node->data.param->type = type;
+    node->data.param->hasDefaultValue = false;
+    node->data.param->functionName = functionName;
+    node->data.param->defaultValue = NULL;
     return node;
 }
 

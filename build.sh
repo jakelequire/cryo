@@ -33,6 +33,8 @@ OBJ_FILE="output.o"
 OUT_DIR="$BUILD_DIR/out"
 # The compiler executable
 COMPILER_EXE="./src/bin/main"
+# Libs compiler executable
+LIBS_COMPILER_EXE="./src/bin/visualDebug"
 
 # Functions
 function log {
@@ -55,6 +57,37 @@ function cleanup {
         rm $SRC_FILE
     fi
 }
+
+function usage {
+    # No arguments - compiles the project how it is
+    # -libs - compiles the project libs
+    echo "Usage: $0 [-libs]"
+    exit 1
+}
+
+function compileLibs {
+    # Compile the libraries
+    log "Compiling the libraries..."
+    make libs || error "Failed to compile the libraries"
+    log "Libraries compiled successfully"
+
+    # Run the library
+    log "Running the library..."
+    $LIBS_COMPILER_EXE $BASE_FILE || error "Failed to run the library"
+    log "Library ran successfully"
+}
+
+# Parse command-line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -libs) compileLibs ;;
+        *) error "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+
+
 
 
 # Build from make

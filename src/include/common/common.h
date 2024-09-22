@@ -19,6 +19,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler/ast.h"
+#include "compiler/lexer.h"
+#include "compiler/parser.h"
+#include "compiler/symtable.h"
+#include "utils/utility.h"
+#include "utils/arena.h"
+#include "utils/fs.h"
+
+/*================================*/
+// Macros
+
 /// @brief A macro to break the program at a specific point for debugging.
 #define DEBUG_BREAKPOINT                                                                      \
     printf("\n#========================================================================#\n"); \
@@ -35,5 +46,26 @@
     printf("\n<!> File: %s\n", __FILE__);                                                     \
     printf("\n#========================================================================#\n"); \
     exit(1)
+
+/*================================*/
+// Function Prototypes
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+    typedef struct ASTNode ASTNode;
+
+    int globalCompiler(const char *source);
+    ASTNode *getProgramNode(const char *source);
+
+#ifdef __cplusplus
+}
+#endif
+
+typedef struct ASTNode ASTNode;
+
+int globalCompiler(const char *source);
+ASTNode *getProgramNode(const char *source);
 
 #endif // COMMON_H

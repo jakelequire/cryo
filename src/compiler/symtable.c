@@ -136,10 +136,10 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
         fprintf(stderr, "Error: name is null in addASTNodeSymbol\n");
         return;
     }
-    
+
     if (isSymbolInTable(table, name))
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Symbol already exists in table");
+        updateExistingSymbol(table, node, arena);
         return;
     }
 
@@ -186,6 +186,60 @@ bool isSymbolInTable(CryoSymbolTable *table, char *name)
 }
 // </isSymbolInTable>
 
+// <updateExistingSymbol>
+void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
+{
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "SymTable", "Node is null in updateExistingSymbol");
+        return;
+    }
+
+    char *name = getNameOfNode(node);
+    if (!name || strlen(name) == 0)
+    {
+        logMessage("ERROR", __LINE__, "SymTable", "Name is null in updateExistingSymbol");
+        return;
+    }
+
+    for (int i = table->count - 1; i >= 0; i--)
+    {
+        if (strcmp(table->symbols[i]->name, name) == 0)
+        {
+            table->symbols[i] = createCryoSymbol(table, node, arena);
+            return;
+        }
+    }
+}
+// </updateExistingSymbol>
+
+// <addDefinitionToSymbol>
+void addDefinitionToSymbolTable(CryoSymbolTable *table, ASTNode *node, Arena *arena)
+{
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "SymTable", "Node is null in addDefinitionToSymbolTable");
+        return;
+    }
+
+    char *name = getNameOfNode(node);
+    if (!name || strlen(name) == 0)
+    {
+        logMessage("ERROR", __LINE__, "SymTable", "Name is null in addDefinitionToSymbolTable");
+        return;
+    }
+
+    for (int i = table->count - 1; i >= 0; i--)
+    {
+        if (strcmp(table->symbols[i]->name, name) == 0)
+        {
+            table->symbols[i] = createCryoSymbol(table, node, arena);
+            return;
+        }
+    }
+}
+// </addDefinitionToSymbol>
+
 // <getNameOfNode>
 char *getNameOfNode(ASTNode *node)
 {
@@ -207,6 +261,8 @@ char *getNameOfNode(ASTNode *node)
         return strdup(node->data.externFunction->name);
     case NODE_PARAM_LIST:
         return strdup(node->data.varDecl->name);
+    case NODE_PARAM:
+        return strdup(node->data.param->name);
     case NODE_VAR_NAME:
         return strdup(node->data.varName->varName);
     case NODE_FUNCTION_CALL:
@@ -308,6 +364,12 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->name = strdup(node->data.varReassignment->existingVarName);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varReassignment->existingVarType;
+        break;
+
+    case NODE_PARAM:
+        symbolNode->name = strdup(node->data.param->name);
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->valueType = node->data.param->type;
         break;
 
     case NODE_RETURN_STATEMENT:

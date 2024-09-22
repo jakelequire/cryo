@@ -22,7 +22,19 @@
 #include <string.h>
 #include <sys/types.h>
 /*---------<end>---------*/
-char* readFile(const char* path);
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+    char *readFile(const char *path);
+
+#ifdef __cplusplus
+}
+#endif
+
+char *readFile(const char *path);
+
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL
 #endif

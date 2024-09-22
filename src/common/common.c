@@ -15,3 +15,71 @@
  *                                                                              *
  ********************************************************************************/
 #include "common/common.h"
+
+// Export the `globalCompiler` function to be used in C++
+
+int globalCompiler(const char *source)
+{
+    if (source == NULL || strlen(source) == 0)
+    {
+        fprintf(stderr, "Source code is empty.\n");
+        return 1;
+    }
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the call stack
+    initCallStack(&callStack, 10);
+
+    // Initialize the lexer
+    Lexer lexer;
+    initLexer(&lexer, source);
+    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
+
+    // Parse the source code
+    ASTNode *programNode = parseProgram(&lexer, table, arena);
+    if (programNode == NULL)
+    {
+        fprintf(stderr, "Failed to parse source code.\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+ASTNode *getProgramNode(const char *source)
+{
+    if (source == NULL || strlen(source) == 0)
+    {
+        fprintf(stderr, "Source code is empty.\n");
+        return NULL;
+    }
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the call stack
+    initCallStack(&callStack, 10);
+
+    // Initialize the lexer
+    Lexer lexer;
+    initLexer(&lexer, source);
+    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
+
+    // Parse the source code
+    ASTNode *programNode = parseProgram(&lexer, table, arena);
+    if (programNode == NULL)
+    {
+        fprintf(stderr, "Failed to parse source code.\n");
+        return NULL;
+    }
+
+    return programNode;
+}

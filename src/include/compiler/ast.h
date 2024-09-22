@@ -440,6 +440,28 @@ typedef struct CryoVariableNode
     struct IndexExprNode *indexExpr;
 } CryoVariableNode;
 
+/// #### The CryoParameterNode struct represents a parameter in the AST.
+/// ---
+/// ```
+///
+/// typedef struct CryoParameterNode
+/// {
+///     CryoDataType type;
+///     char *name;
+///     bool hasDefaultValue;
+///     struct ASTNode *defaultValue;
+/// } CryoParameterNode;
+///
+/// ```
+typedef struct CryoParameterNode
+{
+    CryoDataType type;
+    char *name;
+    char *functionName;
+    bool hasDefaultValue;
+    struct ASTNode *defaultValue;
+} CryoParameterNode;
+
 /// #### The ParamNode struct represents a parameter list in the AST.
 /// ---
 /// ```
@@ -650,6 +672,8 @@ typedef struct ASTNode
         ParamNode *paramList;
         // For Arguments
         ArgNode *argList;
+        // Single Parameter Node
+        CryoParameterNode *param;
         // For Arrays
         CryoArrayNode *array;
         // For Index Expressions
@@ -678,6 +702,7 @@ WhileStatementNode *createWhileStatementNodeContainer(Arena *arena);
 CryoExpressionNode *createExpressionNodeContainer(Arena *arena);
 CryoVariableNode *createVariableNodeContainer(Arena *arena);
 VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena);
+CryoParameterNode *createParameterNodeContainer(Arena *arena);
 ParamNode *createParamNodeContainer(Arena *arena);
 ArgNode *createArgNodeContainer(Arena *arena);
 CryoReturnNode *createReturnNodeContainer(Arena *arena);
@@ -744,7 +769,7 @@ extern "C"
     /* @Node_Creation - Parameters */
     ASTNode *createParamListNode(Arena *arena);
     ASTNode *createArgumentListNode(Arena *arena);
-    ASTNode *createParamNode(char *name, CryoDataType type, Arena *arena);
+    ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena);
     ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *arena);
 
     /* @Node_Creation - Modules & Externals */

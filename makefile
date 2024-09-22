@@ -92,6 +92,10 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_SEMANTICS_DIR = $(SRC_DIR)cpp/semantics/
 CPP_UTILS_DIR = $(SRC_DIR)cpp/utils/
 COMMON_DIR = $(SRC_DIR)common/
+LIB_DIR = $(SRC_DIR)libs/
+
+SFML_LIBS := $(shell pkg-config --libs sfml-all)
+SFML_CFLAGS := $(shell pkg-config --cflags sfml-all)
 
 # --------------------------------------------------------------------------------- #
 
@@ -120,8 +124,13 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)co
 # Common Files
 COMMON_SRC = $(COMMON_DIR)common.c
 
+# Main files
 MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
+
+# Library Files
+LIB_FILES = $(LIB_DIR)visualDebug/visualDebug.cpp
+
 # --------------------------------------------------------------------------------- #
 
 # Cryo Lib Files
@@ -155,14 +164,20 @@ TEST_OBJ = $(OBJ_DIR)test.o
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
 
+# Library Object files
+LIB_OBJ = $(OBJ_DIR)visualDebug.o
+
 # --------------------------------------------------------------------------------- #
 
 # Define the target binaries
 MAIN_BIN = $(BIN_DIR)main$(BIN_SUFFIX)
 CLI_BIN_EXE = $(BIN_DIR)cryo$(BIN_SUFFIX)
+VISUAL_DEBUG_BIN = $(BIN_DIR)visualDebug$(BIN_SUFFIX)
 
 # Default target
-all: $(MAIN_BIN) $(CLI_BIN_EXE)
+all: $(MAIN_BIN) $(CLI_BIN_EXE) $(VISUAL_DEBUG_BIN)
+
+libs: $(VISUAL_DEBUG_BIN)
 
 # Ensure the object directory exists
 $(OBJ_DIR):
@@ -276,6 +291,11 @@ $(OBJ_DIR)binaryExpression.o: $(CPP_SEMANTICS_DIR)binaryExpression.cpp | $(OBJ_D
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # ---------------------------------------------
+# Library Compilation rules
+$(OBJ_DIR)visualDebug.o: $(LIB_DIR)visualDebug/visualDebug.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) $(SFML_CFLAGS) -c $< -o $@
+
+# ---------------------------------------------
 # Common Compilation rules
 $(OBJ_DIR)common.o: $(COMMON_DIR)common.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -292,6 +312,9 @@ $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $
 
 $(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
+
+$(VISUAL_DEBUG_BIN): $(COMMON_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(LIB_OBJ) | $(BIN_DIR)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(SFML_LIBS)
 
 $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
@@ -311,5 +334,8 @@ runtest: $(TEST_BIN)
 # Clean up - remove object files and executables
 clean:
 	python3 ./scripts/clean.py
+
+cleanlibs:
+	python3 ./scripts/cleanLibs.py
 
 .PHONY: all clean runlexer runparser runmain runcli runtest

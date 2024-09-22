@@ -83,10 +83,6 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena)
     while (currentToken.type != TOKEN_EOF)
     {
         ASTNode *statement = parseStatement(lexer, table, &context, arena);
-        if (statement->metaData->type == NODE_NAMESPACE)
-        {
-            addStatementToProgram(program, table, statement, arena);
-        }
         if (statement)
         {
             // traverseAST(statement, table);
@@ -858,7 +854,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
 
     getNextToken(lexer, arena);
 
-    ASTNode **params = parseParameterList(lexer, table, context, arena);
+    ASTNode **params = parseParameterList(lexer, table, context, arena, strdup(functionName));
 
     for (int i = 0; params[i] != NULL; i++)
     {
@@ -887,6 +883,16 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
         error("Expected `{` to start function block.", "parseFunctionDeclaration", table, arena);
         return NULL;
     }
+
+    // Definition of the function
+    ASTNode *functionDefNode = createFunctionNode(visibility, functionName, params, NULL, returnType, arena);
+    if (!functionDefNode)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to create function node.");
+        error("Failed to create function node.", "parseFunctionDeclaration", table, arena);
+        return NULL;
+    }
+    addASTNodeSymbol(table, functionDefNode, arena);
 
     // Parse the function block
     ASTNode *functionBlock = parseFunctionBlock(lexer, table, context, arena);
@@ -919,7 +925,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
 
     getNextToken(lexer, arena);
 
-    ASTNode **params = parseParameterList(lexer, table, context, arena);
+    ASTNode **params = parseParameterList(lexer, table, context, arena, strdup(functionName));
     // get length of params
     int paramCount = 0;
     while (params[paramCount] != NULL)
@@ -1071,7 +1077,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
 /* @ASTNode_Parsing - Parameters                                          */
 
 // <parseParameter>
-ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
+ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, char *functionName)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing parameter...");
 
@@ -1090,14 +1096,14 @@ ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     CryoDataType paramType = parseType(lexer, context, table, arena);
     // consume data type:
     getNextToken(lexer, arena);
-    ASTNode *node = createParamNode(paramName, paramType, arena);
+    ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena);
     addASTNodeSymbol(table, node, arena);
     return node;
 }
 // </parseParameter>
 
 // <parseParameterList>
-ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
+ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, char *functionName)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing parameter list...");
     consume(lexer, TOKEN_LPAREN, "Expected `(` to start parameter list.", "parseParameterList", table, arena);
@@ -1112,12 +1118,12 @@ ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     int paramCount = 0;
     while (currentToken.type != TOKEN_RPAREN)
     {
-        ASTNode *param = parseParameter(lexer, table, context, arena);
+        ASTNode *param = parseParameter(lexer, table, context, arena, functionName);
         if (param)
         {
-            if (param->metaData->type == NODE_VAR_DECLARATION)
+            if (param->metaData->type == NODE_PARAM)
             {
-                logMessage("INFO", __LINE__, "Parser", "Adding parameter: %s", param->data.varDecl->name);
+                logMessage("INFO", __LINE__, "Parser", "Adding parameter: %s", param->data.param->name);
                 paramListNode[paramCount] = param;
                 paramCount++;
             }

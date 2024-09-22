@@ -386,6 +386,7 @@ namespace Cryo
         void createReturnStatement(ASTNode *node);
         void createExternFunction(ASTNode *node);
         void createFunctionCall(ASTNode *node);
+        void createParameter(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
     };
 

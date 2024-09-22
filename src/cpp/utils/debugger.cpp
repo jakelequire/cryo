@@ -352,6 +352,22 @@ namespace Cryo
 
             break;
 
+        case NODE_PARAM:
+            std::cout << "----------------------------------------" << std::endl;
+            std::cout << "\nParameter Node" << std::endl;
+            std::cout << "Parameter Name: " << node->data.param->name << std::endl;
+            std::cout << "Function Name: " << node->data.param->functionName << std::endl;
+            std::cout << "Data Type: " << CryoDataTypeToString(node->data.param->type) << std::endl;
+            std::cout << "Has Default Value: " << (node->data.param->hasDefaultValue ? "Yes" : "No") << std::endl;
+            if (node->data.param->hasDefaultValue)
+            {
+                std::cout << "Default Value: " << std::endl;
+                logNode(node->data.param->defaultValue);
+            }
+            std::cout << "----------------------------------------" << std::endl;
+
+            break;
+
         default:
             std::cout << "\nUnknown Node Type" << std::endl;
             std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
@@ -425,6 +441,7 @@ namespace Cryo
         case NODE_EXPRESSION_STATEMENT:
         case NODE_ASSIGN:
         case NODE_PARAM_LIST:
+        case NODE_PARAM:
         case NODE_TYPE:
         case NODE_STRING_LITERAL:
         case NODE_STRING_EXPRESSION:
@@ -647,6 +664,14 @@ namespace Cryo
 
         case NODE_VAR_REASSIGN:
             assertNode(node);
+            break;
+
+        case NODE_PARAM:
+            assertNode(node);
+            if (node->data.param->hasDefaultValue)
+            {
+                lintTree(node->data.param->defaultValue);
+            }
             break;
 
         case NODE_UNKNOWN:

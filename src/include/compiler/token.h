@@ -265,19 +265,20 @@ extern "C"
         NODE_EXPRESSION_STATEMENT, // 16
         NODE_ASSIGN,               // 17
         NODE_PARAM_LIST,           // 18
-        NODE_TYPE,                 // 19
-        NODE_STRING_LITERAL,       // 20
-        NODE_STRING_EXPRESSION,    // 21
-        NODE_BOOLEAN_LITERAL,      // 22
-        NODE_ARRAY_LITERAL,        // 23
-        NODE_IMPORT_STATEMENT,     // 24
-        NODE_EXTERN_STATEMENT,     // 25
-        NODE_EXTERN_FUNCTION,      // 26
-        NODE_ARG_LIST,             // 27
-        NODE_NAMESPACE,            // 28
-        NODE_INDEX_EXPR,           // 29
-        NODE_VAR_REASSIGN,         // 30
-        NODE_UNKNOWN,              // 31
+        NODE_PARAM,                // 19
+        NODE_TYPE,                 // 20
+        NODE_STRING_LITERAL,       // 21
+        NODE_STRING_EXPRESSION,    // 22
+        NODE_BOOLEAN_LITERAL,      // 23
+        NODE_ARRAY_LITERAL,        // 24
+        NODE_IMPORT_STATEMENT,     // 25
+        NODE_EXTERN_STATEMENT,     // 26
+        NODE_EXTERN_FUNCTION,      // 27
+        NODE_ARG_LIST,             // 28
+        NODE_NAMESPACE,            // 29
+        NODE_INDEX_EXPR,           // 30
+        NODE_VAR_REASSIGN,         // 31
+        NODE_UNKNOWN,              // 32
     } CryoNodeType;
 
     typedef enum CryoDataType

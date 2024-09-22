@@ -124,6 +124,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "ASSIGN";
     case NODE_PARAM_LIST:
         return "PARAM_LIST";
+    case NODE_PARAM:
+        return "PARAM";
     case NODE_TYPE:
         return "TYPE";
     case NODE_STRING_LITERAL:

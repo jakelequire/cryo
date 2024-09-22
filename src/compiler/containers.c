@@ -565,6 +565,36 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena)
 /// ---
 /// ### Structure
 ///```
+/// typedef struct CryoParameterNode
+/// {
+///     enum CryoDataType type;
+///     char *name;
+///     bool hasDefaultValue;
+///     struct ASTNode *defaultValue;
+/// } CryoParameterNode;
+///```
+///
+CryoParameterNode *createParameterNodeContainer(Arena *arena)
+{
+    CryoParameterNode *node = (CryoParameterNode *)ARENA_ALLOC(arena, sizeof(CryoParameterNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ParameterNode node.");
+        return NULL;
+    }
+
+    node->type = DATA_TYPE_UNKNOWN;
+    node->name = (char *)calloc(1, sizeof(char));
+    node->functionName = (char *)calloc(1, sizeof(char));
+    node->hasDefaultValue = false;
+    node->defaultValue = NULL;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
 /// typedef struct ParamNode
 /// {
 ///     enum CryoNodeType nodeType;

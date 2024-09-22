@@ -40,8 +40,10 @@ namespace Cryo
     {
         std::string namespaceName;
         std::unordered_map<std::string, CryoVariableNode> variables;
+        std::unordered_map<std::string, CryoParameterNode> parameters;
         std::unordered_map<std::string, FunctionDeclNode> functions;
         std::unordered_map<std::string, ExternFunctionNode> externFunctions;
+        
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program
