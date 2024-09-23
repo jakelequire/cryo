@@ -622,6 +622,8 @@ namespace Cryo
                     exit(1);
                 }
                 debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                // Make the type a non-pointer type
+                argValue->getType()->getNonOpaquePointerElementType();
                 argValues.push_back(argValue);
             }
         }

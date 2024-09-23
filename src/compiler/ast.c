@@ -137,6 +137,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
 
     case NODE_FUNCTION_CALL:
         printf("\nFunction Call Node: %s\n", strdup(node->data.functionCall->name));
+        printf("Arguments:\n");
         for (int i = 0; i < node->data.functionCall->argCount; i++)
         {
             printAST(node->data.functionCall->args[i], indent + 2, arena);

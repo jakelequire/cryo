@@ -93,8 +93,6 @@ namespace Cryo
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
 
-        compiler.dumpModule();
-
         std::cout << "-----------------------------------" << std::endl;
         debugger.logNode(node);
         std::cout << "<!> Variable Name :" << node->data.varDecl->name << std::endl;
@@ -135,8 +133,12 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a binary expression");
             // We will have to walk though the binary expression if it has multiple expressions within it
+            std::cout << "Name being passed (very start): " << varName << std::endl;
             llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
             compiler.getContext().namedValues[varName] = llvmValue;
+            // set the name of the `llvmValue` to the variable name
+            llvmValue->setName(varName);
+
             return llvmValue;
         }
 
@@ -185,6 +187,8 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Set");
+
+        compiler.dumpModule();
 
         return llvmValue;
     }
@@ -496,6 +500,7 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Variables", "Getting Variable");
+        std::cout << "Name being passed: " << name << std::endl;
 
         llvm::Value *llvmValue = nullptr;
 
@@ -507,6 +512,7 @@ namespace Cryo
             llvmValue = nullptr;
         }
 
+        std::cout << "Name being passed: " << name << std::endl;
         llvmValue = getLocalScopedVariable(name);
         if (!llvmValue)
         {
@@ -530,6 +536,7 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Variables", "Getting Local Scoped Variable");
 
         llvm::Value *llvmValue = nullptr;
+        std::cout << "Name being passed (start): " << name << std::endl;
 
         llvmValue = compiler.getContext().namedValues[name];
 
@@ -542,6 +549,13 @@ namespace Cryo
         if (llvmValue != nullptr)
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable Found");
+            // Print the variable
+            llvm::Instruction *instruction = llvm::dyn_cast<llvm::Instruction>(llvmValue);
+            if (instruction)
+            {
+                std::string instName = instruction->getName().str();
+                std::cout << "Inst Name: " << instName << std::endl;
+            }
         }
 
         return llvmValue;

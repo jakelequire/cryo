@@ -37,6 +37,7 @@ namespace Cryo
 
         if (node->metaData->type != NODE_BINARY_EXPR)
         {
+            debugger.logMessage("INFO", __LINE__, "BinExp", "Not a binary expression");
             // If it's not a binary expression, just return the value
             return compiler.getGenerator().getInitilizerValue(node);
         }

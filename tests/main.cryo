@@ -52,7 +52,7 @@ public function main() -> void {
 public function test(numberIterator: int) -> void {
     const pleasework: int = numberIterator + 1;
 
-    printInt("Hi!");
+    printInt(numberIterator);
     
     test(pleasework);
 
