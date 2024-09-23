@@ -137,7 +137,10 @@ namespace Cryo
             arg.setName(functionNode->params[i]->data.param->name);
             compiler.getContext().namedValues[functionNode->params[i]->data.param->name] = &arg;
             llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(arg.getType(), nullptr, arg.getName());
+            llvm::Type *argType = arg.getType();
+            std::string argName = arg.getName().str();
             compiler.getContext().builder.CreateStore(&arg, alloca);
+            compiler.getContext().namedValues[argName] = alloca;
             ++i;
         }
 
@@ -512,7 +515,7 @@ namespace Cryo
                         llvm::Constant *initializer = llvm::ConstantDataArray::getString(compiler.getContext().context, argName, true);
                         llvm::GlobalVariable *globalVariable = new llvm::GlobalVariable(
                             *compiler.getContext().module,
-                            argType,
+                            argType->getPointerTo(),
                             false,
                             llvm::GlobalValue::ExternalLinkage,
                             initializer,

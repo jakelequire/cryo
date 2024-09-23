@@ -447,7 +447,7 @@ namespace Cryo
         if (!llvmValue)
         {
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Named Value not found");
-            llvmValue = nullptr;
+            return nullptr;
         }
 
         if (llvmValue != nullptr)

@@ -93,6 +93,12 @@ namespace Cryo
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
 
+        compiler.dumpModule();
+
+        std::cout << "-----------------------------------" << std::endl;
+        debugger.logNode(node);
+        std::cout << "-----------------------------------" << std::endl;
+
         CryoVariableNode *varDecl = node->data.varDecl;
         assert(varDecl != nullptr);
 
@@ -104,10 +110,20 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
         llvm::Type *llvmType = nullptr;
 
+        // Check if it already exists
+        std::cout << "Variable Name: " << varName << std::endl;
+        llvmValue = compiler.getContext().namedValues[varName];
+        if (llvmValue)
+        {
+            debugger.logMessage("WARN", __LINE__, "Variables", "Variable already exists");
+            return llvmValue;
+        }
+
         if (initializerNodeType == NODE_FUNCTION_CALL)
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a function call");
             llvmValue = createVarWithFuncCallInitilizer(node);
+            compiler.getContext().namedValues[varName] = llvmValue;
             return llvmValue;
         }
 
@@ -116,6 +132,7 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a binary expression");
             // We will have to walk though the binary expression if it has multiple expressions within it
             llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
+            compiler.getContext().namedValues[varName] = llvmValue;
             return llvmValue;
         }
 

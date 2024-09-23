@@ -49,12 +49,11 @@ public function main() -> void {
     return;
 }
 
-// public function test(num: int) -> void {
-//     const foo: int =  num + 2;
-//     
-//     printInt(foo);
-// 
-//     test(5);
-// 
-//     return;
-// }
+public function test(numberIterator: int) -> void {
+    const foo: int =  numberIterator + 2;
+    const bar: int = 10;
+    printInt(foo);
+    printInt(69);
+    test(foo);
+    return;
+}
