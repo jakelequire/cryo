@@ -64,9 +64,20 @@ namespace Cryo
                 // Otherwise, get the value
                 debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
                 leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+                if (leftValue->getType()->isPointerTy())
+                {
+                    // Manually set the type to a literal type if it's a pointer
+                    leftValue = compiler.getTypes().ptrToExplicitType(leftValue);
+                }
             }
 
             llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
+
+            if (rightValue->getType()->isPointerTy())
+            {
+                // Manually set the type to a literal type if it's a pointer
+                rightValue = compiler.getTypes().ptrToExplicitType(rightValue);
+            }
 
             if (!result)
             {

@@ -301,6 +301,16 @@ namespace Cryo
          */
         CryoBoolean *evalBooleanExpression(ASTNode *node);
 
+        /**
+         * @brief Mutates a value to a pointer to the explicit type.
+         */
+        llvm::Value *ptrToExplicitType(llvm::Value *value);
+
+        /**
+         * @brief Mutates an explicit type to a pointer.
+         */
+        llvm::Value *explicitTypeToPtr(llvm::Value *value);
+
     private:
         CryoCompiler &compiler;
 
@@ -376,7 +386,7 @@ namespace Cryo
     {
     public:
         Functions(CryoCompiler &compiler) : compiler(compiler) {}
-        llvm::Value *createParameter(ASTNode *node);
+        llvm::Value *createParameter(llvm::Argument *param, llvm::Type * argTypes);
         void handleFunction(ASTNode *node);
 
     private:

@@ -93,12 +93,6 @@ namespace Cryo
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
 
-        std::cout << "-----------------------------------" << std::endl;
-        debugger.logNode(node);
-        std::cout << "<!> Variable Name :" << node->data.varDecl->name << std::endl;
-        debugger.logNode(node->data.varDecl->initializer);
-        std::cout << "-----------------------------------" << std::endl;
-
         std::string _varName = std::string(node->data.varDecl->name);
 
         CryoVariableNode *varDecl = node->data.varDecl;
@@ -166,7 +160,7 @@ namespace Cryo
         if (varType == DATA_TYPE_INT)
         {
             llvmType = compiler.getTypes().getType(varType, 0);
-            llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+            llvmValue = compiler.getContext().builder.CreateAlloca(llvmType->getPointerTo(), nullptr, varName);
             // Store the value
             int intval = varDecl->initializer->data.literal->value.intValue;
             llvm::Value *val = llvm::ConstantInt::get(llvmType, intval);
@@ -176,6 +170,8 @@ namespace Cryo
         }
         else
         {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Local Variable has unknown type");
+            DEBUG_BREAKPOINT;
             llvmType = compiler.getTypes().getType(varType, 0);
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
         }
@@ -191,70 +187,6 @@ namespace Cryo
         compiler.dumpModule();
 
         return llvmValue;
-    }
-
-    // -----------------------------------------------------------------------------------------------
-
-    // unused
-    /*
-        llvm::Value *value;
-        llvm::Type *type;
-        std::string name;
-        CryoDataType dataType;
-    */
-    VariableIR *Variables::createNewLocalVariable(ASTNode *node)
-    {
-        CryoDebugger &debugger = compiler.getDebugger();
-        debugger.logMessage("INFO", __LINE__, "Variables", "Creating New Variable");
-
-        CryoVariableNode *varDecl = node->data.varDecl;
-        assert(varDecl != nullptr);
-
-        VariableIR *var = new VariableIR();
-
-        CryoDataType varType = node->data.varDecl->type;
-        std::string varName = std::string(varDecl->name);
-        llvm::Value *llvmValue = nullptr;
-        llvm::Type *llvmType = nullptr;
-
-        debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
-
-        if (varType == DATA_TYPE_STRING)
-        {
-            int _len = compiler.getTypes().getLiteralValLength(varDecl->initializer);
-            llvmType = compiler.getTypes().getType(varType, _len);
-            var->type = llvmType;
-            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
-        }
-        if (varType == DATA_TYPE_INT)
-        {
-            llvmType = compiler.getTypes().getType(varType, 0);
-            var->type = llvmType;
-            int val = varDecl->initializer->data.literal->value.intValue;
-            llvmValue = llvm::ConstantInt::get(llvmType, val);
-            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
-        }
-        else
-        {
-            llvmType = compiler.getTypes().getType(varType, 0);
-            var->type = llvmType;
-            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
-        }
-
-        debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
-
-        var->name = varName;
-        var->dataType = varType;
-
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
-        var->value = llvmValue;
-
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Set");
-
-        // Add the variable to the named values map
-        compiler.getContext().namedValues[varName] = llvmValue;
-
-        return var;
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -555,6 +487,10 @@ namespace Cryo
             {
                 std::string instName = instruction->getName().str();
                 std::cout << "Inst Name: " << instName << std::endl;
+
+                llvm::Value *instValue = instruction->getOperand(0);
+                std::string instValueName = instValue->getName().str();
+                std::cout << "Inst Value Name: " << instValueName << std::endl;
             }
         }
 

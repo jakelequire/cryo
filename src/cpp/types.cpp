@@ -247,4 +247,50 @@ namespace Cryo
         debugger.logMessage("ERROR", __LINE__, "Types", "Unknown node type");
         return nullptr;
     }
+
+    llvm::Value *Types::ptrToExplicitType(llvm::Value *value)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Getting pointer to explicit type");
+        if (value->getType()->isPointerTy())
+        {
+            std::string valueName = value->getName().str();
+            std::cout << "Value Name: " << valueName << std::endl;
+            llvm::Instruction *getPtr = llvm::dyn_cast<llvm::Instruction>(value);
+            llvm::Type *ptrType = getPtr->getOperand(0)->getType();
+            llvm::Value *ptrValue = getPtr->getOperand(0);
+
+            value->mutateType(ptrType);
+
+            return value;
+        }
+        else
+        {
+            debugger.logMessage("ERROR", __LINE__, "Types", "Value is not a pointer");
+            return nullptr;
+        }
+    }
+
+    llvm::Value *Types::explicitTypeToPtr(llvm::Value *value)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Getting explicit type to pointer");
+        if (!value->getType()->isPointerTy())
+        {
+            std::string valueName = value->getName().str();
+            std::cout << "Value Name: " << valueName << std::endl;
+            llvm::Instruction *getPtr = llvm::dyn_cast<llvm::Instruction>(value);
+            llvm::Value *ptrValue = getPtr->getOperand(0);
+
+            value->mutateType(ptrValue->getType()->getPointerTo());
+
+            return value;
+        }
+        else
+        {
+            debugger.logMessage("ERROR", __LINE__, "Types", "Value is already a pointer");
+            return nullptr;
+        }
+    }
+
 } // namespace Cryo

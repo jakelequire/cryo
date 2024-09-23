@@ -221,7 +221,6 @@ namespace Cryo
         case NODE_VAR_NAME:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Name");
-            debugger.logNode(root);
             break;
         }
         default:
@@ -311,7 +310,7 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "CodeGen", "Variable does not exist");
                 if (node->metaData->type == NODE_PARAM)
                 {
-                    llvmValue = functions.createParameter(node);
+                    DEBUG_BREAKPOINT;
                     return llvmValue;
                 }
                 llvmValue = variables.createLocalVariable(node);
@@ -345,7 +344,8 @@ namespace Cryo
         case NODE_PARAM:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Parameter");
-            llvmValue = functions.createParameter(node);
+            // llvmValue = functions.createParameter(node);
+            DEBUG_BREAKPOINT;
             break;
         }
         default:

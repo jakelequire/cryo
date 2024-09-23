@@ -97,8 +97,8 @@ namespace Cryo
                 continue;
             }
 
-            llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
-            argTypes.push_back(argType);
+            // llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
+            // argTypes.push_back(argType);
         }
 
         // Get the function Body
@@ -123,6 +123,9 @@ namespace Cryo
             llvm::Twine(functionName),
             *cryoContext.module);
 
+        // Add the function to the symbol table
+        cryoContext.namedValues[functionName] = function;
+
         // Create the entry block
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(compiler.getContext().context, "entry", function);
         compiler.getContext().builder.SetInsertPoint(entryBlock);
@@ -135,12 +138,8 @@ namespace Cryo
         {
             // We are storing the aguments in the named values map
             arg.setName(functionNode->params[i]->data.param->name);
+            llvm::Value *param = createParameter(&arg, argTypes[i]);
             compiler.getContext().namedValues[functionNode->params[i]->data.param->name] = &arg;
-            llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(arg.getType(), nullptr, arg.getName());
-            llvm::Type *argType = arg.getType();
-            std::string argName = arg.getName().str();
-            compiler.getContext().builder.CreateStore(&arg, alloca);
-            compiler.getContext().namedValues[argName] = alloca;
             ++i;
         }
 
@@ -357,7 +356,7 @@ namespace Cryo
             }
             if (statement->metaData->type == NODE_BINARY_EXPR)
             {
-                debugger.logMessage("INFO", __LINE__, "Functions", "Binary Expression Found");
+                debugger.logMessage("INFO", __LINE__, "Functions", "");
                 returnType = types.getReturnType(DATA_TYPE_INT);
             }
         }
@@ -406,7 +405,7 @@ namespace Cryo
             }
 
             llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
-            argTypes.push_back(argType->getPointerTo());
+            argTypes.push_back(argType);
         }
 
         // Create the function type
@@ -466,8 +465,14 @@ namespace Cryo
         {
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argType = argNode->metaData->type;
-            std::cout << "<!> Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
             CryoDataType argTypeData = argNode->data.varDecl->type;
+            std::string argName = std::string(argNode->data.varDecl->name);
+            CryoVariableNode *retreivedNode = compiler.getSymTable().getVariableNode(moduleName, argName);
+            if (!retreivedNode)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
+                DEBUG_BREAKPOINT;
+            }
 
             std::cout << "===----------------------===" << std::endl;
             std::cout << "Argument #: " << i + 1 << std::endl;
@@ -476,89 +481,38 @@ namespace Cryo
             std::cout << "Argument Data Type: " << CryoDataTypeToString(argTypeData) << std::endl;
             std::cout << "Argument Name: " << argNode->data.varDecl->name << std::endl;
             std::cout << "===----------------------===" << std::endl;
-            debugger.logNode(argNode);
 
-            if (argTypeData == DATA_TYPE_STRING)
+            std::string funcName = std::string(functionName);
+            std::cout << "\n\nFunction Name: " << funcName << "\n"
+                      << std::endl;
+
+            // Callee's name:
+            llvm::Function *calleeF = compiler.getContext().module->getFunction(funcName);
+            if (!calleeF)
             {
-                // We can use direct values for strings like we do for integers.
-                // We can also use the symbol table to get the value of the string.
-                // Functions that take in strings as arguments treat them as pointers.
-
-                // Get the string value
-                std::string argName = std::string(argNode->data.varDecl->name);
-                std::cout << "!Argument Name: " << argName << std::endl;
-
-                // Check if the variable is in the global named values
-                llvm::GlobalValue *globalValue = compiler.getContext().module->getNamedValue(argName);
-                if (globalValue)
-                {
-                    std::cout << "Global Value Found" << std::endl;
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Global Value Found");
-                    argValues.push_back(globalValue);
-                    continue;
-                }
-                else
-                {
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Argument");
-                    // Trim the `\22` from the string
-                    argName = argName.substr(1, argName.length() - 2);
-                    // Reassign the name to the variable
-                    argNode->data.param->name = (char *)argName.c_str();
-                    // Since the variable is not in the global named values, we can assume that it is a local variable.
-                    int _len = compiler.getTypes().getLiteralValLength(argNode);
-                    // Note: unsure why I have to subtract 1 but it works for now
-                    llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len - 1);
-                    llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
-                    if (argValue == nullptr)
-                    {
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument Value Not Found, creating one...");
-                        llvm::Constant *initializer = llvm::ConstantDataArray::getString(compiler.getContext().context, argName, true);
-                        llvm::GlobalVariable *globalVariable = new llvm::GlobalVariable(
-                            *compiler.getContext().module,
-                            argType->getPointerTo(),
-                            false,
-                            llvm::GlobalValue::ExternalLinkage,
-                            initializer,
-                            llvm::Twine(argName));
-
-                        // Get the value of the string
-                        llvm::Value *_argValue = compiler.getGenerator().getInitilizerValue(argNode);
-                        assert(_argValue != nullptr);
-
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                        argValues.push_back(_argValue);
-                    }
-                    else
-                    {
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                        argValues.push_back(argValue);
-                    }
-                    std::cout << "Arg Value: " << argValue << std::endl;
-                    continue;
-                }
-
-                // Create a load instruction to get the value of the string
-                llvm::Value *argValue = generator.getInitilizerValue(argNode);
-                assert(argValue != nullptr);
-
-                debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                argValues.push_back(argValue);
-                continue;
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
+                DEBUG_BREAKPOINT;
             }
 
-            if (argTypeData == DATA_TYPE_INT)
+            // Get the argument type values
+            llvm::FunctionType *calleeFT = calleeF->getFunctionType();
+            llvm::Type *expectedType = calleeFT->getParamType(i);
+            std::cout << "Argument Type: " << std::endl;
+            expectedType->dump();
+
+            debugger.logMessage("INFO", __LINE__, "Functions", "Function Found");
+
+            // Get the current callee function return type
+            llvm::Type *returnType = calleeF->getReturnType();
+
+            std::cout << "Return Type: " << std::endl;
+            returnType->dump();
+
+            switch (argTypeData)
+            {
+            case DATA_TYPE_INT:
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating Int Argument");
-                // Find the variable in the symbol table
-                std::string argName = std::string(argNode->data.varDecl->name);
-                std::cout << "Argument Name: " << argName << std::endl;
-                CryoVariableNode *retreivedNode = compiler.getSymTable().getVariableNode(moduleName, argName);
-                if (!retreivedNode)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
-                    exit(1);
-                }
-
                 if (retreivedNode->hasIndexExpr)
                 {
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument has index expression");
@@ -576,87 +530,131 @@ namespace Cryo
                     argValues.push_back(indexedValue);
                     continue;
                 }
-                else
-                {
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument does not have index expression");
-                    char *varNameCpy = (char *)retreivedNode->name;
-                    std::string _varName = std::string(varNameCpy);
-                    std::cout << "$Variable Name: " << _varName << std::endl;
-                    // Set a pointer to the variable
-                    llvm::Value *argValue = generator.getNamedValue(_varName);
-                    if (!argValue)
-                    {
-                        debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                        // Create a new variable
-                        llvm::Value *newVar = variables.createLocalVariable(argNode);
-                        if (!newVar)
-                        {
-                            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
-                            exit(1);
-                        }
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                        argValues.push_back(newVar);
-                        continue;
-                    }
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                    argValues.push_back(argValue);
-                    continue;
-                }
-            }
-            else
-            {
-                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Argument");
-                std::string argName = std::string(argNode->data.param->name);
-                std::cout << "!Argument Type: " << CryoNodeTypeToString(argType) << std::endl;
-
-                ASTNode *retreivedNode = compiler.getSymTable().getASTNode(moduleName, argType, argName);
-                if (!retreivedNode)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
-                    exit(1);
-                }
-                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(retreivedNode);
+                llvm::Value *argValue = variables.getVariable(argName);
+                // If the variable is not found, create a new one
                 if (!argValue)
                 {
-                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    exit(1);
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
+                    llvm::Value *newVar = variables.createLocalVariable(argNode);
+                    // If the variable is not created, exit
+                    if (!newVar)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
+                        exit(1);
+                    }
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                    argValues.push_back(newVar);
+                    continue;
                 }
                 debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                // Make the type a non-pointer type
-                argValue->getType()->getNonOpaquePointerElementType();
+                llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+                debugger.logMessage("INFO", __LINE__, "Functions", "Got Literal Int Type");
+                argValue->mutateType(literalInt);
                 argValues.push_back(argValue);
+                break;
             }
+            case DATA_TYPE_STRING:
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Argument");
+                llvm::GlobalValue *globalValue = compiler.getContext().module->getNamedValue(argName);
+                if (globalValue)
+                {
+                    std::cout << "Global Value Found" << std::endl;
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Global Value Found");
+                    argValues.push_back(globalValue);
+                    continue;
+                }
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Argument");
+                // Trim the `\22` from the string
+                argName = argName.substr(1, argName.length() - 2);
+                // Reassign the name to the variable
+                argNode->data.param->name = (char *)argName.c_str();
+                // Since the variable is not in the global named values, we can assume that it is a local variable.
+                int _len = compiler.getTypes().getLiteralValLength(argNode);
+                // Note: unsure why I have to subtract 1 but it works for now
+                llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len - 1);
+                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+                if (argValue == nullptr)
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument Value Not Found, creating one...");
+                    llvm::Constant *initializer = llvm::ConstantDataArray::getString(compiler.getContext().context, argName, true);
+                    llvm::GlobalVariable *globalVariable = new llvm::GlobalVariable(
+                        *compiler.getContext().module,
+                        argType->getPointerTo(),
+                        false,
+                        llvm::GlobalValue::ExternalLinkage,
+                        initializer,
+                        llvm::Twine(argName));
+
+                    // Get the value of the string
+                    llvm::Value *_argValue = compiler.getGenerator().getInitilizerValue(argNode);
+                    assert(_argValue != nullptr);
+
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                    argValues.push_back(_argValue);
+                }
+                else
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                    argValues.push_back(argValue);
+                }
+                std::cout << "Arg Value: " << argValue << std::endl;
+                continue;
+            }
+
+            default:
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
+                exit(1);
+            }
+            }
+
+            // Get the function
+            llvm::Function *function = compiler.getContext().module->getFunction(functionName);
+            if (!function)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
+                exit(1);
+            }
+
+            // Create the function call
+            llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+
+            if (!functionCall)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
+                exit(1);
+            }
+
+            debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
+
+            return;
         }
-
-        // Get the function
-        llvm::Function *function = compiler.getContext().module->getFunction(functionName);
-        if (!function)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
-            exit(1);
-        }
-
-        // Create the function call
-        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
-
-        if (!functionCall)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
-            exit(1);
-        }
-
-        debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
-
-        return;
     }
 
-    llvm::Value *Functions::createParameter(ASTNode *node)
+    llvm::Value *Functions::createParameter(llvm::Argument *param, llvm::Type *argTypes)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Types &types = compiler.getTypes();
         Variables &variables = compiler.getVariables();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
 
-        DEBUG_BREAKPOINT;
+        llvm::Value *resultParam = nullptr;
+        std::cout << "Parameter Name: " << param->getName().str() << std::endl;
+        std::cout << "Parameter Type: " << std::endl;
+        argTypes->dump();
+        std::cout << "Argument Type: " << std::endl;
+        param->getType()->dump();
+
+        llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, param->getName());
+        std::string argName = param->getName().str();
+        compiler.getContext().namedValues[argName] = alloca;
+        compiler.getContext().builder.CreateStore(param, alloca);
+
+        resultParam = alloca;
+
+        debugger.logMessage("INFO", __LINE__, "Functions", "Parameter Created");
+
+        return resultParam;
     }
-}
+} // namespace Cryo
