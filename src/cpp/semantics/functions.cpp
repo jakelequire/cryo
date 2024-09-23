@@ -648,7 +648,7 @@ namespace Cryo
         return;
     }
 
-    void Functions::createParameter(ASTNode *node)
+    llvm::Value *Functions::createParameter(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Types &types = compiler.getTypes();

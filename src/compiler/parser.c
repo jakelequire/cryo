@@ -87,7 +87,11 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena)
         {
             // traverseAST(statement, table);
             addStatementToProgram(program, table, statement, arena);
-            addASTNodeSymbol(table, statement, arena);
+            printf("\n\n--------------------------------------------------\n\n");
+            printf("Adding Statement: ");
+            printAST(statement, 0, arena);
+            printf("\n\n--------------------------------------------------\n\n");
+            // addASTNodeSymbol(table, statement, arena);
             // printSymbolTable(table, arena);
         }
         else
@@ -505,6 +509,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena).type));
         }
         logMessage("INFO", __LINE__, "Parser", "Parsing identifier");
+        // Check to see if it exists in the symbol table as a variable or parameter
         node = createIdentifierNode(strndup(currentToken.start, currentToken.length), table, arena);
         getNextToken(lexer, arena);
         return node;
@@ -726,7 +731,7 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
         {
             logMessage("INFO", __LINE__, "Parser", "Adding statement to function block...");
             // DEBUG_ARENA_PRINT(arena);
-            addASTNodeSymbol(table, statement, arena);
+            // addASTNodeSymbol(table, statement, arena);
             addStatementToFunctionBlock(functionBlock, statement, arena);
         }
         else
@@ -829,6 +834,8 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
         varDeclNode->data.varDecl->indexExpr = initializer;
         varDeclNode->data.varDecl->hasIndexExpr = true;
     }
+
+    addASTNodeSymbol(table, varDeclNode, arena);
 
     return varDeclNode;
 }
@@ -950,6 +957,8 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", table, arena);
 
     ASTNode *externFunc = createExternFuncNode(functionName, params, returnType, arena);
+
+    addASTNodeSymbol(table, externFunc, arena);
 
     return externFunc;
 }

@@ -247,4 +247,15 @@ namespace Cryo
         return;
     }
 
+    void Generator::handleParam(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Functions &functions = compiler.getFunctions();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Parameter");
+
+        // A parameter is a variable declaration, just without the initializer
+
+        return;
+    }
+
 } // namespace Cryo

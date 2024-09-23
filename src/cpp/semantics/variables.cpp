@@ -97,7 +97,11 @@ namespace Cryo
 
         std::cout << "-----------------------------------" << std::endl;
         debugger.logNode(node);
+        std::cout << "<!> Variable Name :" << node->data.varDecl->name << std::endl;
+        debugger.logNode(node->data.varDecl->initializer);
         std::cout << "-----------------------------------" << std::endl;
+
+        std::string _varName = std::string(node->data.varDecl->name);
 
         CryoVariableNode *varDecl = node->data.varDecl;
         assert(varDecl != nullptr);

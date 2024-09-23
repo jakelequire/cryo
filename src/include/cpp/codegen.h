@@ -232,6 +232,7 @@ namespace Cryo
         void handleWhileStatement(ASTNode *node);
         void handleForStatement(ASTNode *node);
         void handleReassignment(ASTNode *node);
+        void handleParam(ASTNode *node);
 
     private:
         CryoCompiler &compiler;
@@ -375,7 +376,7 @@ namespace Cryo
     {
     public:
         Functions(CryoCompiler &compiler) : compiler(compiler) {}
-
+        llvm::Value *createParameter(ASTNode *node);
         void handleFunction(ASTNode *node);
 
     private:
@@ -386,7 +387,6 @@ namespace Cryo
         void createReturnStatement(ASTNode *node);
         void createExternFunction(ASTNode *node);
         void createFunctionCall(ASTNode *node);
-        void createParameter(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
     };
 

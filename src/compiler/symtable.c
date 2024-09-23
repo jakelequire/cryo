@@ -206,6 +206,7 @@ void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
     {
         if (strcmp(table->symbols[i]->name, name) == 0)
         {
+            logMessage("INFO", __LINE__, "SymTable", "Updating existing symbol: %s", name);
             table->symbols[i] = createCryoSymbol(table, node, arena);
             return;
         }

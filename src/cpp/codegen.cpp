@@ -244,6 +244,7 @@ namespace Cryo
         Generator &generator = compiler.getGenerator();
         Types &types = compiler.getTypes();
         Arrays &arrays = compiler.getArrays();
+        Functions &functions = compiler.getFunctions();
         BinaryExpressions &binaryExpressions = compiler.getBinaryExpressions();
 
         CryoNodeType nodeType = node->metaData->type;
@@ -308,6 +309,11 @@ namespace Cryo
             else
             {
                 debugger.logMessage("INFO", __LINE__, "CodeGen", "Variable does not exist");
+                if (node->metaData->type == NODE_PARAM)
+                {
+                    llvmValue = functions.createParameter(node);
+                    return llvmValue;
+                }
                 llvmValue = variables.createLocalVariable(node);
             }
             break;
@@ -334,6 +340,12 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Function Call");
             generator.handleFunctionCall(node);
+            break;
+        }
+        case NODE_PARAM:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Parameter");
+            llvmValue = functions.createParameter(node);
             break;
         }
         default:

@@ -50,10 +50,11 @@ public function main() -> void {
 }
 
 public function test(numberIterator: int) -> void {
-    const foo: int =  numberIterator + 2;
-    const bar: int = 10;
-    printInt(foo);
-    printInt(69);
-    test(foo);
+    const pleasework: int = numberIterator + 1;
+
+    printInt("Hi!");
+    
+    test(pleasework);
+
     return;
 }
