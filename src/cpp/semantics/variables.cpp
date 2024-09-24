@@ -91,6 +91,7 @@ namespace Cryo
     llvm::Value *Variables::createLocalVariable(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
 
         std::string _varName = std::string(node->data.varDecl->name);
@@ -140,6 +141,7 @@ namespace Cryo
 
         if (varType == DATA_TYPE_STRING)
         {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
             int _len = compiler.getTypes().getLiteralValLength(varDecl->initializer);
             llvmType = compiler.getTypes().getType(varType, _len + 3);
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
@@ -160,11 +162,12 @@ namespace Cryo
         if (varType == DATA_TYPE_INT)
         {
             llvmType = compiler.getTypes().getType(varType, 0);
-            llvmValue = compiler.getContext().builder.CreateAlloca(llvmType->getPointerTo(), nullptr, varName);
+            llvm::Type *ptrType = llvmType;
+            llvmValue = compiler.getContext().builder.CreateAlloca(ptrType, nullptr, varName);
             // Store the value
             int intval = varDecl->initializer->data.literal->value.intValue;
             llvm::Value *val = llvm::ConstantInt::get(llvmType, intval);
-            llvm::Instruction *inst = compiler.getContext().builder.CreateStore(val, llvmValue);
+            compiler.getContext().builder.CreateStore(val, llvmValue);
             compiler.getContext().namedValues[varName] = llvmValue;
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
         }
@@ -183,8 +186,6 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Set");
-
-        compiler.dumpModule();
 
         return llvmValue;
     }

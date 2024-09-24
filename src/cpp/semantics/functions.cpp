@@ -439,6 +439,7 @@ namespace Cryo
         Generator &generator = compiler.getGenerator();
         Arrays &arrays = compiler.getArrays();
         Variables &variables = compiler.getVariables();
+        Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
 
         FunctionCallNode *functionCallNode = node->data.functionCall;
@@ -498,7 +499,6 @@ namespace Cryo
             llvm::FunctionType *calleeFT = calleeF->getFunctionType();
             llvm::Type *expectedType = calleeFT->getParamType(i);
             std::cout << "Argument Type: " << std::endl;
-            expectedType->dump();
 
             debugger.logMessage("INFO", __LINE__, "Functions", "Function Found");
 
@@ -506,7 +506,6 @@ namespace Cryo
             llvm::Type *returnType = calleeF->getReturnType();
 
             std::cout << "Return Type: " << std::endl;
-            returnType->dump();
 
             switch (argTypeData)
             {
@@ -530,6 +529,7 @@ namespace Cryo
                     argValues.push_back(indexedValue);
                     continue;
                 }
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument named being passed to argValue : " + argName);
                 llvm::Value *argValue = variables.getVariable(argName);
                 // If the variable is not found, create a new one
                 if (!argValue)
@@ -543,13 +543,17 @@ namespace Cryo
                         exit(1);
                     }
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                    argValues.push_back(newVar);
-                    continue;
+
+                    // argValue = types.ptrToExplicitType(newVar);
+                    // argValue = newVar;
+                    argValues.push_back(argValue);
+                    break;
                 }
+
                 debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                 llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
                 debugger.logMessage("INFO", __LINE__, "Functions", "Got Literal Int Type");
-                argValue->mutateType(literalInt);
+                // argValue->mutateType(literalInt);
                 argValues.push_back(argValue);
                 break;
             }
@@ -605,7 +609,7 @@ namespace Cryo
             default:
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
-                exit(1);
+                DEBUG_BREAKPOINT;
             }
             }
 
@@ -642,9 +646,7 @@ namespace Cryo
         llvm::Value *resultParam = nullptr;
         std::cout << "Parameter Name: " << param->getName().str() << std::endl;
         std::cout << "Parameter Type: " << std::endl;
-        argTypes->dump();
         std::cout << "Argument Type: " << std::endl;
-        param->getType()->dump();
 
         llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, param->getName());
         std::string argName = param->getName().str();
