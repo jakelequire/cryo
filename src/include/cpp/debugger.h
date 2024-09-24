@@ -39,14 +39,16 @@ namespace Cryo
         void logError(const std::string &message);
         void logSuccess(const std::string &message, const std::string &detail);
         void logMessage(const char *type, int line, const std::string &category, const std::string &message);
-        // Macro Implementations
-        void checkNode(ASTNode *node);
-        void debugPanic(std::string funcName);
 
-        // New Prototypes
         bool lintTree(ASTNode *node);
         bool assertNode(ASTNode *node);
         bool isValidNodeType(CryoNodeType type);
+        void logLLVMValue(llvm::Value *valueNode);
+        std::string LLVMTypeIDToString(llvm::Type *type);
+
+        // Macro Implementations
+        void checkNode(ASTNode *node);
+        void debugPanic(std::string funcName);
 
     private:
         CryoContext &context;

@@ -293,4 +293,40 @@ namespace Cryo
         }
     }
 
+    llvm::Value *Types::castTyToVal(llvm::Value *val, llvm::Type *ty)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Casting type to value");
+
+        if (val->getType()->getTypeID() == ty->getTypeID())
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Value is already the expected type");
+            return val;
+        }
+
+        /*
+        // Currently changing both types from:
+        // `store i32 0, ptr %exampleIntOne, align 4` -> `ptr %exampleIntOne`
+        // &&                                             ^ This
+        // `call void @test(ptr %exampleIntOne)`  -> (ptr %exampleIntOne)
+        //                                             ^ This
+        //
+        // We only want to change the top of the function call, not the store instruction
+            %exampleIntOne = alloca i32, align 4, addrspace(32)
+            store i32 0, ptr %exampleIntOne, align 4
+            call void @test(ptr %exampleIntOne)
+        */
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(val);
+        if (inst)
+        {
+            llvm::Value *op = inst->getOperand(0);
+            if (op->getType()->getTypeID() == ty->getTypeID())
+            {
+                return op;
+            }
+        }
+
+        return nullptr;
+    }
+
 } // namespace Cryo

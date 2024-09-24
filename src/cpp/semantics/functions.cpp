@@ -270,7 +270,6 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    // TODO: Remove
     void Functions::createReturnStatement(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -290,9 +289,15 @@ namespace Cryo
         CryoDataType returnType = returnNode->returnType;
         debugger.logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
 
-        // This function should not trigger, exit if it does
-        DEBUG_BREAKPOINT;
-
+        switch (returnType)
+        {
+        case DATA_TYPE_VOID:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Returning void");
+            cryoContext.builder.CreateRet(nullptr);
+            break;
+        }
+        }
         // This is being handled in the function block
         // Nothing to do in this function
         // I might migrate the logic within the `createFunctionDeclaration` function to this function in the future.
@@ -527,35 +532,45 @@ namespace Cryo
                     llvm::Value *indexedValue = arrays.indexArrayForValue(arrayRefNode, indexValue);
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                     argValues.push_back(indexedValue);
-                    continue;
+                    break;
                 }
-                debugger.logMessage("INFO", __LINE__, "Functions", "Argument named being passed to argValue : " + argName);
-                llvm::Value *argValue = variables.getVariable(argName);
-                // If the variable is not found, create a new one
-                if (!argValue)
+                else
                 {
-                    debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-                    llvm::Value *newVar = variables.createLocalVariable(argNode);
-                    // If the variable is not created, exit
-                    if (!newVar)
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument named being passed to argValue : " + argName);
+                    llvm::Value *argValue = variables.getVariable(argName);
+                    // If the variable is not found, create a new one
+                    if (!argValue)
                     {
-                        debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
-                        exit(1);
-                    }
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
+                        llvm::Value *newVar = variables.createLocalVariable(argNode);
+                        // If the variable is not created, exit
+                        if (!newVar)
+                        {
+                            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
+                            exit(1);
+                        }
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
 
-                    // argValue = types.ptrToExplicitType(newVar);
-                    // argValue = newVar;
+                        // argValue = types.ptrToExplicitType(newVar);
+                        // argValue = newVar;
+                        assert(newVar != nullptr);
+                        debugger.logLLVMValue(newVar);
+                        compiler.getContext().namedValues[argName] = newVar;
+                        argValues.push_back(newVar);
+                        std::cout << "Logging value at index " << i << std::endl;
+                        debugger.logLLVMValue(argValues[i]);
+                        break;
+                    }
+
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                    llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Got Literal Int Type");
+                    // argValue->mutateType(literalInt);
+                    llvm::Value *_tempValue = argValue;
+                    debugger.logLLVMValue(_tempValue);
                     argValues.push_back(argValue);
                     break;
                 }
-
-                debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
-                debugger.logMessage("INFO", __LINE__, "Functions", "Got Literal Int Type");
-                // argValue->mutateType(literalInt);
-                argValues.push_back(argValue);
-                break;
             }
             case DATA_TYPE_STRING:
             {
@@ -605,12 +620,58 @@ namespace Cryo
                 std::cout << "Arg Value: " << argValue << std::endl;
                 continue;
             }
-
             default:
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
                 DEBUG_BREAKPOINT;
             }
+            }
+
+            std::vector<llvm::Type *> expectedTypes;
+            // Loop through the function calls expected types from the callee function
+            for (int i = 0; i < calleeFT->getNumParams(); ++i)
+            {
+                llvm::Type *expectedType = calleeFT->getParamType(i);
+                std::string typeID = debugger.LLVMTypeIDToString(expectedType);
+                std::cout << "Expected Type: " << typeID << std::endl;
+
+                expectedTypes.push_back(expectedType);
+            }
+
+            // Loop through the arguments and assign the values to the expected types
+            for (int i = 0; i < argCount; ++i)
+            {
+                llvm::Value *argValue = argValues[i];
+                debugger.logLLVMValue(argValue);
+                llvm::Type *expectedType = expectedTypes[i];
+                std::string typeID = debugger.LLVMTypeIDToString(expectedType);
+                std::cout << "Expected Type: " << typeID << std::endl;
+
+                if (!argValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    exit(1);
+                }
+
+                // If the argument is not the expected type, cast it
+                if (argValue->getType()->getTypeID() != expectedType->getTypeID())
+                {
+                    // Create a seperate load/store to match the expected type
+                    std::string valName = argName;
+
+                    llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(expectedType, nullptr, valName);
+                    llvm::Value *store = compiler.getContext().builder.CreateStore(argValue, alloca);
+                    llvm::Value *load = compiler.getContext().builder.CreateLoad(expectedType, alloca);
+                    argValues[i] = load;
+                }
+
+                // If the argument is the expected type, continue
+                else
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument is the expected type");
+                    debugger.logLLVMValue(argValue);
+                    continue;
+                }
             }
 
             // Get the function

@@ -20,5 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 // Prototypes
-void printInt(int *value);
+
+void printInt(int value);
+void printIntPtr(int *value);
 void printStr(char *value);

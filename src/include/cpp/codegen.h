@@ -311,6 +311,11 @@ namespace Cryo
          */
         llvm::Value *explicitTypeToPtr(llvm::Value *value);
 
+        /**
+         * @brief Mutate a values type to the given type.
+         */
+        llvm::Value *castTyToVal(llvm::Value *val, llvm::Type *ty);
+
     private:
         CryoCompiler &compiler;
 
@@ -386,7 +391,7 @@ namespace Cryo
     {
     public:
         Functions(CryoCompiler &compiler) : compiler(compiler) {}
-        llvm::Value *createParameter(llvm::Argument *param, llvm::Type * argTypes);
+        llvm::Value *createParameter(llvm::Argument *param, llvm::Type *argTypes);
         void handleFunction(ASTNode *node);
 
     private:

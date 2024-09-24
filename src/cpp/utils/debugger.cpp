@@ -1117,4 +1117,170 @@ namespace Cryo
         return true;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    void CryoDebugger::logLLVMValue(llvm::Value *valueNode)
+    {
+        if (valueNode == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Value is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Value Node>-----------===<<" << std::endl;
+        std::string valueStr;
+        llvm::raw_string_ostream rso(valueStr);
+
+        // This prints out the line of IR that was generated
+        valueNode->print(rso);
+        std::cout << "Inst:" << "" << rso.str() << std::endl;
+
+        // Print out the type of the value
+        std::string tyName = LLVMTypeIDToString(valueNode->getType());
+        std::cout << "Type: " << tyName << std::endl;
+
+        // Print out the name of the value
+        std::string valName = valueNode->getName().str();
+        std::cout << "Name: " << valName << std::endl;
+
+        // Print out the address of the value
+        std::cout << "Address: " << valueNode << std::endl;
+
+        std::cout << ">>===--------------------------------------===<<" << std::endl;
+        std::cout << "\n";
+    }
+
+    std::string CryoDebugger::LLVMTypeIDToString(llvm::Type *type)
+    {
+        if (!type || type == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Type is null");
+            return "Unknown";
+        }
+
+        llvm::Type::TypeID tyID = type->getTypeID();
+        std::string typeStr = "Unknown";
+        switch (tyID)
+        {
+        case llvm::Type::TypeID::HalfTyID:
+        {
+            typeStr = "HalfTyID";
+            break;
+        }
+        case llvm::Type::TypeID::BFloatTyID:
+        {
+            typeStr = "BFloatTyID";
+            break;
+        }
+        case llvm::Type::TypeID::FloatTyID:
+        {
+            typeStr = "FloatTyID";
+            break;
+        }
+        case llvm::Type::TypeID::DoubleTyID:
+        {
+            typeStr = "DoubleTyID";
+            break;
+        }
+        case llvm::Type::TypeID::X86_FP80TyID:
+        {
+            typeStr = "X86_FP80TyID";
+            break;
+        }
+        case llvm::Type::TypeID::FP128TyID:
+        {
+            typeStr = "FP128TyID";
+            break;
+        }
+        case llvm::Type::TypeID::PPC_FP128TyID:
+        {
+            typeStr = "PPC_FP128TyID";
+            break;
+        }
+        case llvm::Type::TypeID::VoidTyID:
+        {
+            typeStr = "VoidTyID";
+            break;
+        }
+        case llvm::Type::TypeID::LabelTyID:
+        {
+            typeStr = "LabelTyID";
+            break;
+        }
+        case llvm::Type::TypeID::MetadataTyID:
+        {
+            typeStr = "MetadataTyID";
+            break;
+        }
+        case llvm::Type::TypeID::X86_MMXTyID:
+        {
+            typeStr = "X86_MMXTyID";
+            break;
+        }
+        case llvm::Type::TypeID::X86_AMXTyID:
+        {
+            typeStr = "X86_AMXTyID";
+            break;
+        }
+        case llvm::Type::TypeID::TokenTyID:
+        {
+            typeStr = "TokenTyID";
+            break;
+        }
+        case llvm::Type::TypeID::IntegerTyID:
+        {
+            typeStr = "IntegerTyID";
+            break;
+        }
+        case llvm::Type::TypeID::FunctionTyID:
+        {
+            typeStr = "FunctionTyID";
+            break;
+        }
+        case llvm::Type::TypeID::PointerTyID:
+        {
+            typeStr = "PointerTyID";
+            break;
+        }
+        case llvm::Type::TypeID::StructTyID:
+        {
+            typeStr = "StructTyID";
+            break;
+        }
+        case llvm::Type::TypeID::ArrayTyID:
+        {
+            typeStr = "ArrayTyID";
+            break;
+        }
+        case llvm::Type::TypeID::FixedVectorTyID:
+        {
+            typeStr = "FixedVectorTyID";
+            break;
+        }
+        case llvm::Type::TypeID::ScalableVectorTyID:
+        {
+            typeStr = "ScalableVectorTyID";
+            break;
+        }
+        case llvm::Type::TypeID::TypedPointerTyID:
+        {
+            typeStr = "TypedPointerTyID";
+            break;
+        }
+        case llvm::Type::TypeID::TargetExtTyID:
+        {
+            typeStr = "TargetExtTyID";
+            break;
+        }
+        default:
+        {
+            typeStr = "TyID Defaulted";
+            break;
+        }
+        }
+
+        return typeStr;
+    }
+
 } // namespace Cryo

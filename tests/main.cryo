@@ -1,6 +1,7 @@
 namespace test;
 
 extern function printInt(integer: int) -> void;
+extern function printIntPtr(integer: int) -> void;
 extern function printStr(str: string) -> void;
 
 
@@ -9,9 +10,14 @@ public function test(numberIterator: int) -> void {
 
     printInt(pleasework);
     printInt(420);
-    
-    test(pleasework);
 
+    if(pleasework > 10) {
+        test(pleasework);
+    }
+    else
+    {
+        return;
+    }
     return;
 }
 
@@ -31,39 +37,38 @@ public function divide(a: int, b: int) -> int {
     return a / b;
 }
 
-public function main() ->void  {
-    const exampleIntOne: int = 0;
-    test(exampleIntOne);
+
+public function main() -> void {
+    printStr("Hello, World!");
+    // Test recursion
+    // const intZero: int = 5;
+    // test(0);
+
+    // Define some constants
+    const intOne: int = 34;
+    const intTwo: int = 35;
+    const intThree: int = 36;
+    const intFour: int = 6;
+
+    // Store the results of the operations in variables
+    const additionResult: int = add(intOne, intTwo);
+    const subtractResult: int = subtract(intTwo, intOne);
+    const multiplyResult: int = multiply(intOne, intTwo);
+    const divideResult: int   = divide(intOne, intFour);
+
+    // Print the results
+    printInt(additionResult);
+    printInt(subtractResult);
+    printInt(multiplyResult);
+    printInt(divideResult);
+
+    // Just some other print tests
+    printInt(425);
+    printStr("Hello, World!");
+
+    // Testing literals in function calls
+    const anotherAddResult: int = add(34, 35);
+    printInt(anotherAddResult);
+
     return;
 }
-
-// public function main() -> void {
-//     // Define some constants
-//     const intOne: int = 34;
-//     const intTwo: int = 35;
-//     const intThree: int = 36;
-//     const intFour: int = 6;
-// 
-//     // Store the results of the operations in variables
-//     const additionResult: int = add(intOne, intTwo);
-//     const subtractResult: int = subtract(intTwo, intOne);
-//     const multiplyResult: int = multiply(intOne, intTwo);
-//     const divideResult: int   = divide(intOne, intFour);
-// 
-//     // Print the results
-//     printInt(additionResult);
-//     printInt(subtractResult);
-//     printInt(multiplyResult);
-//     printInt(divideResult);
-// 
-//     // Just some other print tests
-//     printInt(420);
-//     printStr("Hello, World!");
-// 
-//     // Testing literals in function calls
-//     const anotherAddResult: int = add(34, 35);
-//     printInt(anotherAddResult);
-// 
-//     return;
-// }
-

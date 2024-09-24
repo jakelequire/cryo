@@ -158,18 +158,23 @@ namespace Cryo
             }
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
             llvm::Instruction *inst = compiler.getContext().builder.CreateStore(varValue, llvmValue);
+
+            return inst;
         }
         if (varType == DATA_TYPE_INT)
         {
             llvmType = compiler.getTypes().getType(varType, 0);
             llvm::Type *ptrType = llvmType;
-            llvmValue = compiler.getContext().builder.CreateAlloca(ptrType, nullptr, varName);
+            llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(ptrType, nullptr, varName);
+            llvmValue = varValue;
             // Store the value
             int intval = varDecl->initializer->data.literal->value.intValue;
             llvm::Value *val = llvm::ConstantInt::get(llvmType, intval);
             compiler.getContext().builder.CreateStore(val, llvmValue);
             compiler.getContext().namedValues[varName] = llvmValue;
             debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
+
+            return varValue;
         }
         else
         {

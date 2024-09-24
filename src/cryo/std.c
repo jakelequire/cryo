@@ -16,7 +16,12 @@
  ********************************************************************************/
 #include "std.h"
 
-void printInt(int *value)
+void printInt(int value)
+{
+    printf("%d\n", value);
+}
+
+void printIntPtr(int *value)
 {
     printf("%d\n", *value);
 }
