@@ -329,4 +329,18 @@ namespace Cryo
         return nullptr;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    std::string Types::trimStrQuotes(std::string str)
+    {
+        // Check to see if the string even has the quotes
+        if (str[0] == '\"' && str[str.length() - 1] == '\"')
+        {
+            // Remove the first and last characters
+            str = str.substr(1, str.length() - 2);
+        }
+
+        return str;
+    }
+
 } // namespace Cryo

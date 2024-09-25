@@ -39,7 +39,7 @@ public function divide(a: int, b: int) -> int {
 
 
 public function main() -> void {
-    printStr("Hello, World!");
+    printStr("Hello, World!");                 // X
     // Test recursion
     // const intZero: int = 5;
     // test(0);
@@ -57,18 +57,18 @@ public function main() -> void {
     const divideResult: int   = divide(intOne, intFour);
 
     // Print the results
-    printInt(additionResult);
-    printInt(subtractResult);
-    printInt(multiplyResult);
-    printInt(divideResult);
-
-    // Just some other print tests
-    printInt(425);
-    printStr("Hello, World!");
+    printInt(additionResult);                   // O
+    printInt(subtractResult);                   // O
+    printInt(multiplyResult);                   // O
+    printInt(divideResult);                     // O
 
     // Testing literals in function calls
     const anotherAddResult: int = add(34, 35);
-    printInt(anotherAddResult);
+    printInt(anotherAddResult);                 // O
+
+    // Just some other print tests
+    printInt(425);                              // X
+    printStr("Hello, World Again!");            // X
 
     return;
 }

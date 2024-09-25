@@ -316,6 +316,11 @@ namespace Cryo
          */
         llvm::Value *castTyToVal(llvm::Value *val, llvm::Type *ty);
 
+        /**
+         * @brief Trims the quotes from a string.
+         */
+        std::string trimStrQuotes(std::string str);
+
     private:
         CryoCompiler &compiler;
 

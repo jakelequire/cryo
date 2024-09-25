@@ -575,50 +575,35 @@ namespace Cryo
             case DATA_TYPE_STRING:
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Argument");
-                llvm::GlobalValue *globalValue = compiler.getContext().module->getNamedValue(argName);
-                if (globalValue)
-                {
-                    std::cout << "Global Value Found" << std::endl;
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Global Value Found");
-                    argValues.push_back(globalValue);
-                    continue;
-                }
-                debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Argument");
-                // Trim the `\22` from the string
-                argName = argName.substr(1, argName.length() - 2);
-                // Reassign the name to the variable
-                argNode->data.param->name = (char *)argName.c_str();
-                // Since the variable is not in the global named values, we can assume that it is a local variable.
+                std::string argName = std::string(argNode->data.varDecl->name);
+                argName = types.trimStrQuotes(argName);
+                argNode->data.varDecl->name = (char *)argName.c_str();
                 int _len = compiler.getTypes().getLiteralValLength(argNode);
-                // Note: unsure why I have to subtract 1 but it works for now
-                llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len - 1);
-                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
-                if (argValue == nullptr)
+
+                llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len);
+                llvm::Value *argValue = nullptr;
+                llvm::Value *localVar = variables.getVariable(argName);
+                if (!localVar)
                 {
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument Value Not Found, creating one...");
-                    llvm::Constant *initializer = llvm::ConstantDataArray::getString(compiler.getContext().context, argName, true);
-                    llvm::GlobalVariable *globalVariable = new llvm::GlobalVariable(
-                        *compiler.getContext().module,
-                        argType->getPointerTo(),
-                        false,
-                        llvm::GlobalValue::ExternalLinkage,
-                        initializer,
-                        llvm::Twine(argName));
-
-                    // Get the value of the string
-                    llvm::Value *_argValue = compiler.getGenerator().getInitilizerValue(argNode);
-                    assert(_argValue != nullptr);
-
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                    argValues.push_back(_argValue);
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Local Variable not found, attempting to create");
+                    llvm::Value *newVar = variables.createLocalVariable(argNode);
+                    if (!newVar)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Local Variable not created");
+                        exit(1);
+                    }
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Local Variable created");
+                    argValue = newVar;
                 }
                 else
                 {
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                    argValues.push_back(argValue);
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Local Variable found");
+                    argValue = localVar;
                 }
-                std::cout << "Arg Value: " << argValue << std::endl;
-                continue;
+
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                argValues.push_back(argValue);
+                break;
             }
             default:
             {
@@ -646,6 +631,7 @@ namespace Cryo
                 llvm::Type *expectedType = expectedTypes[i];
                 std::string typeID = debugger.LLVMTypeIDToString(expectedType);
                 std::cout << "Expected Type: " << typeID << std::endl;
+                CryoDataType argDataType = argNode->data.varDecl->type;
 
                 if (!argValue)
                 {
@@ -656,15 +642,27 @@ namespace Cryo
                 // If the argument is not the expected type, cast it
                 if (argValue->getType()->getTypeID() != expectedType->getTypeID())
                 {
-                    // Create a seperate load/store to match the expected type
-                    std::string valName = argName;
-
-                    llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(expectedType, nullptr, valName);
-                    llvm::Value *store = compiler.getContext().builder.CreateStore(argValue, alloca);
-                    llvm::Value *load = compiler.getContext().builder.CreateLoad(expectedType, alloca);
-                    argValues[i] = load;
+                    std::string valName = std::string(argNode->data.varDecl->name);
+                    switch (argDataType)
+                    {
+                    case DATA_TYPE_INT:
+                    {
+                        llvm::Value *castedValue = types.castTyToVal(argValue, expectedType);
+                        argValues[i] = castedValue;
+                        break;
+                    }
+                    case DATA_TYPE_STRING:
+                    {
+                        break;
+                    }
+                    default:
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
+                        std::cout << "Received: " << CryoDataTypeToString(argDataType) << std::endl;
+                        DEBUG_BREAKPOINT;
+                    }
+                    }
                 }
-
                 // If the argument is the expected type, continue
                 else
                 {
