@@ -8,11 +8,14 @@ extern function printStr(str: string) -> void;
 public function test(numberIterator: int) -> void {
     const pleasework: int = numberIterator + 1;
 
+    const intArr: int[] = [1, 2, 3, 4, 5];
+    const indexArr: int = intArr[0];
+
     printStr("Printing the number: ");
     printInt(pleasework);
     printStr(" ");
 
-    if(pleasework <= 10) {
+    if(pleasework < 10) {
         test(pleasework);
     }
     else

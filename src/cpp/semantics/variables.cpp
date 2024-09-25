@@ -92,6 +92,7 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Types &types = compiler.getTypes();
+        Arrays &arrays = compiler.getArrays();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
 
         std::string _varName = std::string(node->data.varDecl->name);
@@ -169,6 +170,9 @@ namespace Cryo
             if (!varValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                std::cout << ">>-------------- <Module State> --------------<<" << std::endl;
+                compiler.dumpModule();
+                std::cout << ">>-------------- </Module State> --------------<<" << std::endl;
                 exit(1);
             }
             llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty->getInt32Ty(compiler.getContext().context), variableValue, varName);
@@ -176,6 +180,23 @@ namespace Cryo
             compiler.getContext().namedValues[varName] = ptrValue;
 
             return ptrValue;
+        }
+
+        if (varType == DATA_TYPE_INT_ARRAY)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Array Variable");
+            llvm::Type *ty = compiler.getTypes().getType(varType, 0);
+            llvm::Value *varValue = arrays.createArrayLiteral(varDecl->initializer, varName);
+            if (!varValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                exit(1);
+            }
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
+            // llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, varValue, varName);
+            compiler.getContext().namedValues[varName] = varValue;
+
+            return varValue;
         }
         else
         {

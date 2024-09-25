@@ -327,6 +327,11 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Index Expression");
             llvmValue = arrays.getIndexExpressionValue(node);
+            if (!llvmValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "CodeGen", "Index Expression Value not found");
+                exit(1);
+            }
             break;
         }
         case NODE_BINARY_EXPR:
@@ -346,6 +351,12 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Parameter");
             // llvmValue = functions.createParameter(node);
             DEBUG_BREAKPOINT;
+            break;
+        }
+        case NODE_ARRAY_LITERAL:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Array Literal");
+            llvmValue = arrays.createArrayLiteral(node);
             break;
         }
         default:

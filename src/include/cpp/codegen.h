@@ -380,6 +380,7 @@ namespace Cryo
         Arrays(CryoCompiler &compiler) : compiler(compiler) {}
 
         // Prototypes
+        llvm::Value *createArrayLiteral(ASTNode *node, std::string varName = "array");
         void handleArrayLiteral(ASTNode *node);
         llvm::ArrayType *getArrayType(ASTNode *node);
         int getArrayLength(ASTNode *node);
