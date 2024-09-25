@@ -662,13 +662,13 @@ CryoOperatorType CryoTokenToOperator(CryoTokenType token)
         return OPERATOR_LSHIFT;
     case TOKEN_OP_RSHIFT:
         return OPERATOR_RSHIFT;
-    case TOKEN_OP_LT:
+    case TOKEN_LESS:
         return OPERATOR_LT;
+    case TOKEN_LESS_EQUAL:
+        return OPERATOR_LTE;
     case TOKEN_GREATER:
         return OPERATOR_GT;
-    case TOKEN_LESS:
-        return OPERATOR_LTE;
-    case TOKEN_OP_GTE:
+    case TOKEN_GREATER_EQUAL:
         return OPERATOR_GTE;
     case TOKEN_OP_EQ:
         return OPERATOR_EQ;

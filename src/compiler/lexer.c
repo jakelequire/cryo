@@ -525,8 +525,18 @@ Token symbolChar(Lexer *lexer, char symbol)
         return makeToken(lexer, TOKEN_EQUAL);
     }
     case '<':
+        if(peek(lexer) == '=')
+        {
+            advance(lexer);
+            return makeToken(lexer, TOKEN_LESS_EQUAL);
+        }
         return makeToken(lexer, TOKEN_LESS);
     case '>':
+        if(peek(lexer) == '=')
+        {
+            advance(lexer);
+            return makeToken(lexer, TOKEN_GREATER_EQUAL);
+        }
         return makeToken(lexer, TOKEN_GREATER);
     case '|':
         return makeToken(lexer, TOKEN_PIPE);

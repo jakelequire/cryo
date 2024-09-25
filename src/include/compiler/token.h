@@ -167,7 +167,9 @@ extern "C"
         TOKEN_QUESTION,       // `?`
         TOKEN_COLON,          // `:`
         TOKEN_LESS,           // `<`
+        TOKEN_LESS_EQUAL,     // `<=`
         TOKEN_GREATER,        // `>`
+        TOKEN_GREATER_EQUAL,  // `>=`
         TOKEN_EQUAL,          // `=`
         TOKEN_STRICT_EQUAL,   // `==`
         TOKEN_NOT_EQUAL,      // `!=`

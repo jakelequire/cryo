@@ -8,10 +8,11 @@ extern function printStr(str: string) -> void;
 public function test(numberIterator: int) -> void {
     const pleasework: int = numberIterator + 1;
 
+    printStr("Printing the number: ");
     printInt(pleasework);
-    printInt(420);
+    printStr(" ");
 
-    if(pleasework > 10) {
+    if(pleasework <= 10) {
         test(pleasework);
     }
     else
@@ -39,10 +40,10 @@ public function divide(a: int, b: int) -> int {
 
 
 public function main() -> void {
-    printStr("Hello, World!");                 // X
+    printStr("Hello, World!");
     // Test recursion
-    // const intZero: int = 5;
-    // test(0);
+    const intZero: int = 5;
+    test(5);
 
     // Define some constants
     const intOne: int = 34;
@@ -57,18 +58,18 @@ public function main() -> void {
     const divideResult: int   = divide(intOne, intFour);
 
     // Print the results
-    printInt(additionResult);                   // O
-    printInt(subtractResult);                   // O
-    printInt(multiplyResult);                   // O
-    printInt(divideResult);                     // O
+    printInt(additionResult);
+    printInt(subtractResult);
+    printInt(multiplyResult);
+    printInt(divideResult);
 
     // Testing literals in function calls
     const anotherAddResult: int = add(34, 35);
-    printInt(anotherAddResult);                 // O
+    printInt(anotherAddResult);
 
     // Just some other print tests
-    printInt(425);                              // X
-    printStr("Hello, World Again!");            // X
+    printInt(425);
+    printStr("Hello, World Again!");
 
     return;
 }
