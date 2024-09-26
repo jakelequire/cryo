@@ -29,7 +29,8 @@ namespace Cryo
                 case DATA_TYPE_INT:
                 {
                     llvmType = compiler.getTypes().getType(element->data.literal->dataType, 0);
-                    llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, element->data.literal->value.intValue);
+                    int index = element->data.literal->value.intValue;
+                    llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
                     elements.push_back(llvmElement);
                     break;
                 }
@@ -208,20 +209,23 @@ namespace Cryo
 
         if (node->metaData->type == NODE_INDEX_EXPR)
         {
-            std::cout << "Node is a index expression" << std::endl;
+            debugger.logMessage("INFO", __LINE__, "Arrays", "Variable is an index expression");
             CryoNodeType indexNodeType = node->data.indexExpr->index->metaData->type;
 
             // Check if it's a literal `foo[5]`
             if (indexNodeType == NODE_LITERAL_EXPR)
             {
+                debugger.logMessage("INFO", __LINE__, "Arrays", "Index is a literal");
                 std::cout << "Array Name: " << indexNode->name << std::endl;
                 int indexValue = indexNode->index->data.literal->value.intValue;
                 std::cout << "Index Value: " << indexValue << std::endl;
+                std::cout << "Test Index Value " << indexNode->index->data.varName->varName << std::endl;
                 ASTNode *arrayNode = symTable.getASTNode(context.currentNamespace, NODE_VAR_DECLARATION, arrayName);
                 ASTNode *indexArrayNode = arrayNode->data.array->elements[indexValue];
                 CryoNodeType indexArrayNodeType = indexArrayNode->metaData->type;
                 if (indexArrayNodeType == NODE_LITERAL_EXPR)
                 {
+                    debugger.logMessage("INFO", __LINE__, "Arrays", "Index Array is a literal");
                     std::cout << "Index Array Node Type: " << CryoNodeTypeToString(indexArrayNodeType) << std::endl;
                     std::cout << "Element Type: " << CryoDataTypeToString(indexArrayNode->data.literal->dataType) << std::endl;
                     std::cout << "Element Value: " << indexArrayNode->data.literal->value.intValue << std::endl;
@@ -386,9 +390,11 @@ namespace Cryo
             if (literalNode->data.literal->dataType == DATA_TYPE_INT)
             {
                 int _indexValue = literalNode->data.literal->value.intValue;
-                indexedValue = indexArrayForValue(array, _indexValue);
-
-                return indexedValue;
+                ASTNode *element = array->data.array->elements[_indexValue];
+                debugger.logNode(element);
+                llvm::Value *val = compiler.getGenerator().getInitilizerValue(element);
+                debugger.logLLVMValue(val);
+                return val;
             }
             else
             {

@@ -138,6 +138,88 @@ namespace Cryo
             return llvmValue;
         }
 
+        if (initializerNodeType == NODE_INDEX_EXPR)
+        {
+            debugger.logNode(initializer);
+            CryoNodeType indexNodeType = initializer->data.indexExpr->index->metaData->type;
+            if (indexNodeType == NODE_VAR_NAME)
+            {
+                debugger.logMessage("INFO", __LINE__, "Variables", "Index is a variable");
+                std::string indexVarName = std::string(initializer->data.indexExpr->index->data.varName->varName);
+                std::cout << "Index Variable Name: " << indexVarName << std::endl;
+                // Get the variable value
+                llvm::Value *indexValue = compiler.getVariables().getVariable(indexVarName);
+                if (!indexValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
+                    exit(1);
+                }
+                debugger.logMessage("INFO", __LINE__, "Variables", "Index Value Found");
+                debugger.logLLVMValue(indexValue);
+
+                // Get the array name
+                std::string arrayName = std::string(initializer->data.indexExpr->name);
+                std::cout << "Array Name: " << arrayName << std::endl;
+
+                // Get the array node
+                ASTNode *arrayNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
+                if (!arrayNode)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
+                    exit(1);
+                }
+
+                // We can't index the array via the AST Node. Since we cannot get the value of the index,
+                // We will have to index the array via the LLVM value
+                llvm::Value *arr = compiler.getContext().namedValues[arrayName];
+                if (!arr)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
+                    exit(1);
+                }
+                llvm::Type *arrType = arr->getType();
+                llvm::Value *indexedValue = compiler.getContext().builder.CreateGEP(arrType, arr, indexValue, varName);
+                if (!indexedValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
+                    exit(1);
+                }
+                debugger.logMessage("INFO", __LINE__, "Variables", "Indexed Value Found");
+                debugger.logLLVMValue(indexedValue);
+
+                compiler.getContext().namedValues[varName] = indexedValue;
+
+                return indexedValue;
+            }
+            else
+            {
+                std::cout << "Index Node Type: " << CryoNodeTypeToString(indexNodeType) << std::endl;
+                debugger.logMessage("INFO", __LINE__, "Variables", "Variable is an index expression");
+                int indexValue = initializer->data.indexExpr->index->data.literal->value.intValue;
+                std::cout << "Index Value: " << indexValue << std::endl;
+                std::string arrayName = std::string(initializer->data.indexExpr->name);
+                std::cout << "Array Name: " << arrayName << std::endl;
+
+                ASTNode *arrNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
+                if (!arrNode)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
+                    exit(1);
+                }
+                llvm::Value *indexedValue = arrays.indexArrayForValue(arrNode, indexValue);
+                if (!indexedValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
+                    exit(1);
+                }
+                // Allocate the variable
+                llvmValue = compiler.getContext().builder.CreateAlloca(indexedValue->getType(), indexedValue, varName);
+                compiler.getContext().namedValues[varName] = llvmValue;
+
+                return indexedValue;
+            }
+        }
+
         debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
 
         if (varType == DATA_TYPE_STRING)

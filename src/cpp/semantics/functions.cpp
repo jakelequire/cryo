@@ -517,60 +517,57 @@ namespace Cryo
             case DATA_TYPE_INT:
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating Int Argument");
-                if (retreivedNode->hasIndexExpr)
-                {
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument has index expression");
-                    ASTNode *indexExpr = retreivedNode->indexExpr->index;
-                    ASTNode *arrayNode = retreivedNode->initializer;
+                // if (retreivedNode->hasIndexExpr)
+                // {
+                //     debugger.logMessage("INFO", __LINE__, "Functions", "Argument has index expression");
+                //     ASTNode *indexExpr = retreivedNode->indexExpr->index;
+                //     ASTNode *arrayNode = retreivedNode->initializer;
 
-                    char *arrayRefName = arrayNode->data.varDecl->name;
-                    int indexValue = indexExpr->data.literal->value.intValue;
-                    std::cout << "Array Ref Name: " << arrayRefName << std::endl;
+                //     char *arrayRefName = arrayNode->data.varDecl->name;
+                //     int indexValue = indexExpr->data.literal->value.intValue;
+                //     std::cout << "Array Ref Name: " << arrayRefName << std::endl;
 
-                    // Find the varaible in the symbol table from arrayRefName
-                    ASTNode *arrayRefNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, arrayRefName);
-                    llvm::Value *indexedValue = arrays.indexArrayForValue(arrayRefNode, indexValue);
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                    argValues.push_back(indexedValue);
-                    break;
-                }
-                else
+                //     // Find the varaible in the symbol table from arrayRefName
+                //     ASTNode *arrayRefNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, arrayRefName);
+                //     llvm::Value *indexedValue = arrays.indexArrayForValue(arrayRefNode, indexValue);
+                //     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                //     argValues.push_back(indexedValue);
+                //     break;
+                // }
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument named being passed to argValue : " + argName);
+                llvm::Value *argValue = variables.getVariable(argName);
+                // If the variable is not found, create a new one
+                if (!argValue)
                 {
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument named being passed to argValue : " + argName);
-                    llvm::Value *argValue = variables.getVariable(argName);
-                    // If the variable is not found, create a new one
-                    if (!argValue)
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
+                    llvm::Value *newVar = variables.createLocalVariable(argNode);
+                    // If the variable is not created, exit
+                    if (!newVar)
                     {
-                        debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-                        llvm::Value *newVar = variables.createLocalVariable(argNode);
-                        // If the variable is not created, exit
-                        if (!newVar)
-                        {
-                            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
-                            exit(1);
-                        }
-                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-
-                        // argValue = types.ptrToExplicitType(newVar);
-                        // argValue = newVar;
-                        assert(newVar != nullptr);
-                        debugger.logLLVMValue(newVar);
-                        compiler.getContext().namedValues[argName] = newVar;
-                        argValues.push_back(newVar);
-                        std::cout << "Logging value at index " << i << std::endl;
-                        debugger.logLLVMValue(argValues[i]);
-                        break;
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
+                        exit(1);
                     }
-
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                    llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Got Literal Int Type");
-                    // argValue->mutateType(literalInt);
-                    llvm::Value *_tempValue = argValue;
-                    debugger.logLLVMValue(_tempValue);
-                    argValues.push_back(argValue);
+
+                    // argValue = types.ptrToExplicitType(newVar);
+                    // argValue = newVar;
+                    assert(newVar != nullptr);
+                    debugger.logLLVMValue(newVar);
+                    compiler.getContext().namedValues[argName] = newVar;
+                    argValues.push_back(newVar);
+                    std::cout << "Logging value at index " << i << std::endl;
+                    debugger.logLLVMValue(argValues[i]);
                     break;
                 }
+
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
+                llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+                debugger.logMessage("INFO", __LINE__, "Functions", "Got Literal Int Type");
+                // argValue->mutateType(literalInt);
+                llvm::Value *_tempValue = argValue;
+                debugger.logLLVMValue(_tempValue);
+                argValues.push_back(argValue);
+                break;
             }
             case DATA_TYPE_STRING:
             {
