@@ -68,6 +68,7 @@ namespace Cryo
     class Declarations;
     class Loops;
     class BinaryExpressions;
+    class Structs;
 
     typedef struct VariableIR
     {
@@ -150,6 +151,7 @@ namespace Cryo
         BackendSymTable &getSymTable() { return *symTable; }
         BinaryExpressions &getBinaryExpressions() { return *binaryExpressions; }
         Loops &getLoops() { return *loops; }
+        Structs &getStructs() { return *structs; }
 
         void compile(ASTNode *root);
         void dumpModule(void);
@@ -168,6 +170,7 @@ namespace Cryo
         std::unique_ptr<BackendSymTable> symTable;
         std::unique_ptr<BinaryExpressions> binaryExpressions;
         std::unique_ptr<Loops> loops;
+        std::unique_ptr<Structs> structs;
     };
 
     /**
@@ -233,6 +236,7 @@ namespace Cryo
         void handleForStatement(ASTNode *node);
         void handleReassignment(ASTNode *node);
         void handleParam(ASTNode *node);
+        void handleStruct(ASTNode *node);
 
     private:
         CryoCompiler &compiler;
@@ -497,6 +501,24 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
+
+    class Structs
+    {
+    public:
+        Structs(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Handles struct declarations in the AST.
+         */
+        void handleStructDeclaration(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
+    // -----------------------------------------------------------------------------------------------
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
           debugger(std::make_unique<CryoDebugger>(context)),
@@ -510,6 +532,7 @@ namespace Cryo
           declarations(std::make_unique<Declarations>(*this)),
           loops(std::make_unique<Loops>(*this)),
           binaryExpressions(std::make_unique<BinaryExpressions>(*this)),
+          structs(std::make_unique<Structs>(*this)),
           symTable(std::make_unique<BackendSymTable>())
 
     {

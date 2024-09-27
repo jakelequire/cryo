@@ -275,6 +275,26 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         break;
     }
 
+    case NODE_PROPERTY:
+    {
+        printf("\nProperty Node: %s\n", node->data.property->name);
+        printf("Property Type: %s\n", CryoDataTypeToString(node->data.property->type));
+        printf("Property Value:\n");
+        printAST(node->data.property->value, indent + 2, arena);
+        break;
+    }
+
+    case NODE_STRUCT_DECLARATION:
+    {
+        printf("\nStruct Declaration Node: %s\n", node->data.structNode->name);
+        printf("Struct Properties:\n");
+        for (int i = 0; i < node->data.structNode->propertyCount; i++)
+        {
+            printAST(node->data.structNode->properties[i], indent + 2, arena);
+        }
+        break;
+    }
+
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");
         break;
@@ -378,6 +398,12 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena)
         break;
     case NODE_PARAM:
         node->data.param = createParameterNodeContainer(arena);
+        break;
+    case NODE_PROPERTY:
+        node->data.property = createPropertyNodeContainer(arena);
+        break;
+    case NODE_STRUCT_DECLARATION:
+        node->data.structNode = createStructNodeContainer(arena);
         break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
@@ -1095,6 +1121,39 @@ ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode 
     node->data.varReassignment->existingVarName = strdup(varName);
     node->data.varReassignment->existingVarNode = existingVarNode;
     node->data.varReassignment->newVarNode = newVarNode;
+
+    return node;
+}
+
+ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena)
+{
+    ASTNode *node = createASTNode(NODE_PROPERTY, arena);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create field node");
+        return NULL;
+    }
+
+    node->data.property->name = strdup(fieldName);
+    node->data.property->value = fieldValue;
+    node->data.property->type = type;
+
+    return node;
+}
+
+ASTNode *createStructNode(char *structName, ASTNode **properties, Arena *arena)
+{
+    ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create struct node");
+        return NULL;
+    }
+
+    node->data.structNode->name = strdup(structName);
+    node->data.structNode->properties = properties;
+    node->data.structNode->propertyCount = 0;
+    node->data.structNode->propertyCapacity = 64;
 
     return node;
 }

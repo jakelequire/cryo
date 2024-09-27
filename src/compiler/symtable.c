@@ -274,6 +274,8 @@ char *getNameOfNode(ASTNode *node)
         return strdup(node->data.varReassignment->existingVarName);
     case NODE_RETURN_STATEMENT:
         break;
+    case NODE_STRUCT_DECLARATION:
+        return strdup(node->data.structNode->name);
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %s", CryoNodeTypeToString(node->metaData->type));
         return NULL;
@@ -371,6 +373,16 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->name = strdup(node->data.param->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.param->type;
+        break;
+
+    case NODE_STRUCT_DECLARATION:
+        symbolNode->name = strdup(node->data.structNode->name);
+        symbolNode->nodeType = node->metaData->type;
+        break;
+
+    case NODE_PROPERTY:
+        symbolNode->name = strdup(node->data.property->name);
+        symbolNode->nodeType = node->metaData->type;
         break;
 
     case NODE_RETURN_STATEMENT:

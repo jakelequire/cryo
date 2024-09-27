@@ -373,6 +373,9 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         logMessage("INFO", __LINE__, "Parser", "Parsing extern declaration...");
         return parseExtern(lexer, table, context, arena);
 
+    case TOKEN_KW_STRUCT:
+        return parseStructDeclaration(lexer, table, context, arena);
+
     case TOKEN_KW_DEBUGGER:
         parseDebugger(lexer, table, context, arena);
         return NULL;
@@ -1711,6 +1714,82 @@ ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *c
     printf("\n\nAssignment Node Type %s\n", CryoNodeTypeToString(assignment->metaData->type));
     return assignment;
 }
+
+/* ====================================================================== */
+/* @ASTNode_Parsing - Structures                                          */
+
+// <parseStructDeclaration>
+ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing struct declaration...");
+    consume(lexer, TOKEN_KW_STRUCT, "Expected `struct` keyword.", "parseStructDeclaration", table, arena);
+
+    if (currentToken.type != TOKEN_IDENTIFIER)
+    {
+        error("Expected an identifier.", "parseStructDeclaration", table, arena);
+        return NULL;
+    }
+
+    char *structName = strndup(currentToken.start, currentToken.length);
+    logMessage("INFO", __LINE__, "Parser", "Struct name: %s", structName);
+
+    getNextToken(lexer, arena);
+
+    consume(lexer, TOKEN_LBRACE, "Expected `{` to start struct declaration.", "parseStructDeclaration", table, arena);
+
+    int PROPERTY_CAPACITY = 64;
+    ASTNode **properties = (ASTNode **)ARENA_ALLOC(arena, PROPERTY_CAPACITY * sizeof(ASTNode *));
+
+    while (currentToken.type != TOKEN_RBRACE)
+    {
+        int propertyCount = 0;
+        ASTNode *field = parseStructField(lexer, table, context, arena);
+        if (field)
+        {
+            properties[propertyCount] = field;
+        }
+        else
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Failed to parse struct field.");
+            return NULL;
+        }
+    }
+
+    ASTNode *structNode = createStructNode(strdup(structName), properties, arena);
+    addASTNodeSymbol(table, structNode, arena);
+
+    consume(lexer, TOKEN_RBRACE, "Expected `}` to end struct declaration.", "parseStructDeclaration", table, arena);
+    return structNode;
+}
+
+// <parseStructField>
+ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing struct field...");
+    if (currentToken.type != TOKEN_IDENTIFIER)
+    {
+        error("Expected an identifier.", "parseStructField", table, arena);
+        return NULL;
+    }
+
+    char *fieldName = strndup(currentToken.start, currentToken.length);
+    logMessage("INFO", __LINE__, "Parser", "Field name: %s", fieldName);
+
+    getNextToken(lexer, arena);
+
+    consume(lexer, TOKEN_COLON, "Expected `:` after field name.", "parseStructField", table, arena);
+
+    CryoDataType fieldType = parseType(lexer, context, table, arena);
+    getNextToken(lexer, arena);
+
+    // This is where we could add support for values in the struct fields
+    // For now, this is just going to be a type declaration
+
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseStructField", table, arena);
+
+    return createFieldNode(fieldName, fieldType, NULL, arena);
+}
+// </parseStructField>
 
 /* =========================================================== */
 /* @DEBUG | Used to debug the parser in a different executable */

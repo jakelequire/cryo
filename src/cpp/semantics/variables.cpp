@@ -162,8 +162,9 @@ namespace Cryo
                 exit(1);
             }
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
+            debugger.logLLVMValue(varValue);
 
-            llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(varValue->getType(), nullptr, varDeclName);
+            llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(varValue->getType(), varValue, varDeclName);
             llvmValue->setName(varDeclName);
             llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
             compiler.getContext().namedValues[varDeclName] = llvmValue;

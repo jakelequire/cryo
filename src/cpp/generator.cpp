@@ -258,4 +258,15 @@ namespace Cryo
         return;
     }
 
+    void Generator::handleStruct(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Structs &structs = compiler.getStructs();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Struct");
+
+        structs.handleStructDeclaration(node);
+
+        return;
+    }
+
 } // namespace Cryo

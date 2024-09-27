@@ -826,3 +826,59 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena)
 
     return node;
 }
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct StructNode
+/// {
+///     char *name;
+///     struct PropertyNode **properties;
+///     int propertyCount;
+///     int propertyCapacity;
+/// } StructNode;
+///```
+///
+StructNode *createStructNodeContainer(Arena *arena)
+{
+    StructNode *node = (StructNode *)ARENA_ALLOC(arena, sizeof(StructNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate StructNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->properties = NULL;
+    node->propertyCount = 0;
+    node->propertyCapacity = 128;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct PropertyNode
+/// {
+///     char *name;
+///     struct ASTNode *value;
+///     CryoDataType type;
+/// } PropertyNode;
+///```
+///
+PropertyNode *createPropertyNodeContainer(Arena *arena)
+{
+    PropertyNode *node = (PropertyNode *)ARENA_ALLOC(arena, sizeof(PropertyNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate PropertyNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->value = NULL;
+    node->type = DATA_TYPE_UNKNOWN;
+
+    return node;
+}

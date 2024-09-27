@@ -150,6 +150,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "INDEX_EXPR";
     case NODE_VAR_REASSIGN:
         return "VAR_REASSIGN";
+    case NODE_STRUCT_DECLARATION:
+        return "STRUCT_DECLARATION";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

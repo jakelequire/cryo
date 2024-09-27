@@ -45,6 +45,7 @@ KeywordToken keywords[] = {
     {"import", TOKEN_KW_IMPORT},
     {"namespace", TOKEN_KW_NAMESPACE},
     {"debugger", TOKEN_KW_DEBUGGER},
+    {"struct", TOKEN_KW_STRUCT},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
@@ -525,14 +526,14 @@ Token symbolChar(Lexer *lexer, char symbol)
         return makeToken(lexer, TOKEN_EQUAL);
     }
     case '<':
-        if(peek(lexer) == '=')
+        if (peek(lexer) == '=')
         {
             advance(lexer);
             return makeToken(lexer, TOKEN_LESS_EQUAL);
         }
         return makeToken(lexer, TOKEN_LESS);
     case '>':
-        if(peek(lexer) == '=')
+        if (peek(lexer) == '=')
         {
             advance(lexer);
             return makeToken(lexer, TOKEN_GREATER_EQUAL);

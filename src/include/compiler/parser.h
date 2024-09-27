@@ -133,6 +133,10 @@ ASTNode *parseArrayIndexing(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 
 ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *varName, Arena *arena);
 
+/* @ASTNode_Parsing - Structures */
+ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena);
+
 /* =========================================================== */
 /* @DEBUG | Used to debug the parser in a different executable */
 int parser(int argc, char *argv[]);

@@ -626,6 +626,44 @@ typedef struct VariableReassignmentNode
     ASTNode *newVarNode;
 } VariableReassignmentNode;
 
+/// #### The PropertyNode struct represents a property in the AST.
+/// ---
+///
+/// ```
+/// typedef struct PropertyNode
+/// {
+///     char *name;
+///     ASTNode *value;
+///     CryoDataType type;
+/// } PropertyNode;
+///
+typedef struct PropertyNode
+{
+    char *name;
+    ASTNode *value;
+    CryoDataType type;
+} PropertyNode;
+
+/// #### The StructNode struct represents a struct in the AST.
+/// ---
+///
+/// ```
+/// typedef struct StructNode
+/// {
+///     char *name;
+///     PropertyNode **properties;
+///     int propertyCount;
+///     int propertyCapacity;
+/// } StructNode;
+///
+typedef struct StructNode
+{
+    char *name;
+    PropertyNode **properties;
+    int propertyCount;
+    int propertyCapacity;
+} StructNode;
+
 typedef struct ASTNode
 {
     CryoMetaData *metaData;
@@ -680,6 +718,10 @@ typedef struct ASTNode
         IndexExprNode *indexExpr;
         // For Variable Reassignments
         VariableReassignmentNode *varReassignment;
+        // For Structs
+        StructNode *structNode;
+        // For Properties
+        PropertyNode *property;
     } data;
 } ASTNode;
 
@@ -711,6 +753,8 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena);
 CryoArrayNode *createArrayNodeContainer(Arena *arena);
 IndexExprNode *createIndexExprNodeContainer(Arena *arena);
 VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena);
+StructNode *createStructNodeContainer(Arena *arena);
+PropertyNode *createPropertyNodeContainer(Arena *arena);
 
 #ifdef __cplusplus
 extern "C"
@@ -787,6 +831,10 @@ extern "C"
 
     /* @Node_Creation - Variable Reassignments */
     ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena);
+
+    /* @Node_Creation - Structs */
+    ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena);
+    ASTNode *createStructNode(char *structName, ASTNode **properties, Arena *arena);
 
 #ifdef __cplusplus
 }
