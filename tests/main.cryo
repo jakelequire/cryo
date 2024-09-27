@@ -13,11 +13,12 @@ public function test(numberIterator: int) -> void {
     const indexArrNew: int = intArrTwo[numberIterator];
     const foo: int = indexArrNew;
 
-    printStr("Printing the array value: ");
+    printStr("Param value: ");
+    printInt(numberIterator);
+
+    printStr("Array value: ");
     printInt(indexArrNew);
 
-    printStr("Printing the param value: ");
-    printInt(numberIterator);
     printStr(" ");
 
     if(pleasework < 5) {
@@ -74,6 +75,7 @@ public function main() -> void {
     printInt(425);
     printStr("Hello, World Again!");
     printStr("--------------------");
+    printStr("  ");
 
     const intArr: int[] = [1, 2, 3, 4, 5];
     const indexArr: int = intArr[3];
@@ -81,6 +83,8 @@ public function main() -> void {
     // Test recursion
     const intZero: int = 5;
     test(0);
+
+    printStr("--------------------");
 
     return;
 }
