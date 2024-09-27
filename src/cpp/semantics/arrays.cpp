@@ -384,6 +384,11 @@ namespace Cryo
 
                 return indexedValue;
             }
+            else
+            {
+                debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown index type");
+                DEBUG_BREAKPOINT;
+            }
         }
         if (literalNode->metaData->type == NODE_LITERAL_EXPR)
         {

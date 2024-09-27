@@ -138,6 +138,39 @@ namespace Cryo
             return llvmValue;
         }
 
+        if (initializerNodeType == NODE_PARAM)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a parameter");
+
+            DEBUG_BREAKPOINT;
+        }
+
+        if (initializerNodeType == NODE_VAR_NAME)
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a variable");
+
+            std::string varDeclName = std::string(varDecl->name);
+            std::cout << "Variable Declaration Name: " << varDeclName << std::endl;
+
+            std::string varNameRef = std::string(initializer->data.varName->varName);
+            std::cout << "Variable Name: " << varNameRef << std::endl;
+
+            llvm::Value *varValue = compiler.getVariables().getVariable(varNameRef);
+            if (!varValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                exit(1);
+            }
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
+
+            llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(varValue->getType(), nullptr, varDeclName);
+            llvmValue->setName(varDeclName);
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
+            compiler.getContext().namedValues[varDeclName] = llvmValue;
+
+            return llvmValue;
+        }
+
         if (initializerNodeType == NODE_INDEX_EXPR)
         {
             debugger.logNode(initializer);
@@ -152,6 +185,9 @@ namespace Cryo
                 if (!indexValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
+                    std::cout << ">>-------------- <Module State> --------------<<" << std::endl;
+                    compiler.dumpModule();
+                    std::cout << ">>-------------- </Module State> --------------<<" << std::endl;
                     exit(1);
                 }
                 debugger.logMessage("INFO", __LINE__, "Variables", "Index Value Found");
@@ -178,6 +214,19 @@ namespace Cryo
                     exit(1);
                 }
                 llvm::Type *arrType = arr->getType();
+                debugger.logMessage("INFO", __LINE__, "Variables", "Array Found");
+                // Make sure the index is an integer
+                if (indexValue->getType()->isPointerTy())
+                {
+                    // Transform the pointer to an integer
+                    indexValue = compiler.getContext().builder.CreatePtrToInt(indexValue, llvm::Type::getInt32Ty(compiler.getContext().context));
+                    if (!indexValue)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
+                        exit(1);
+                    }
+                }
+
                 llvm::Value *indexedValue = compiler.getContext().builder.CreateGEP(arrType, arr, indexValue, varName);
                 if (!indexedValue)
                 {

@@ -7,13 +7,18 @@ extern function printStr(str: string) -> void;
 
 public function test(numberIterator: int) -> void {
     const pleasework: int = numberIterator + 1;
-    const intArrTwo: int[] = [1, 2, 3, 4, 5];
-    const indexArrNew: int = intArrTwo[pleasework];
+    const intArrTwo: int[] = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
+    //                         0    1    2    3    4    5    6    7    8    9
+    
+    const indexArrNew: int = intArrTwo[numberIterator];
+    const foo: int = indexArrNew;
+
+    printStr("Printing the array value: ");
     printInt(indexArrNew);
 
-    // printStr("Printing the number: ");
-    // printInt(pleasework);
-    // printStr(" ");
+    printStr("Printing the param value: ");
+    printInt(numberIterator);
+    printStr(" ");
 
     if(pleasework < 5) {
         test(pleasework);
@@ -43,10 +48,6 @@ public function divide(a: int, b: int) -> int {
 public function main() -> void {
     printStr("Hello, World!");
 
-    // Test recursion
-    const intZero: int = 5;
-    test(0);
-
     // Define some constants
     const intOne: int = 34;
     const intTwo: int = 35;
@@ -72,9 +73,14 @@ public function main() -> void {
     // Just some other print tests
     printInt(425);
     printStr("Hello, World Again!");
+    printStr("--------------------");
 
     const intArr: int[] = [1, 2, 3, 4, 5];
     const indexArr: int = intArr[3];
+
+    // Test recursion
+    const intZero: int = 5;
+    test(0);
 
     return;
 }

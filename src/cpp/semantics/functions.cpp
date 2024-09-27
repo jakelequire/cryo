@@ -137,9 +137,10 @@ namespace Cryo
         for (auto &arg : function->args())
         {
             // We are storing the aguments in the named values map
-            arg.setName(functionNode->params[i]->data.param->name);
+            std::string paramName = functionNode->params[i]->data.param->name;
+            arg.setName(paramName);
             llvm::Value *param = createParameter(&arg, argTypes[i]);
-            compiler.getContext().namedValues[functionNode->params[i]->data.param->name] = &arg;
+            compiler.getContext().namedValues[paramName] = &arg;
             ++i;
         }
 
@@ -517,23 +518,34 @@ namespace Cryo
             case DATA_TYPE_INT:
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating Int Argument");
-                // if (retreivedNode->hasIndexExpr)
-                // {
-                //     debugger.logMessage("INFO", __LINE__, "Functions", "Argument has index expression");
-                //     ASTNode *indexExpr = retreivedNode->indexExpr->index;
-                //     ASTNode *arrayNode = retreivedNode->initializer;
+                if (retreivedNode->hasIndexExpr)
+                {
+                    debugger.logMessage("INFO", __LINE__, "Functions", "Argument has index expression");
+                    std::string argumentName = std::string(argNode->data.varDecl->name);
+                    std::cout << "Argument Name: " << argumentName << std::endl;
 
-                //     char *arrayRefName = arrayNode->data.varDecl->name;
-                //     int indexValue = indexExpr->data.literal->value.intValue;
-                //     std::cout << "Array Ref Name: " << arrayRefName << std::endl;
+                    llvm::Value *argValue = variables.getVariable(argumentName);
+                    if (!argValue)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
+                        DEBUG_BREAKPOINT;
+                    }
+                    debugger.logLLVMValue(argValue);
 
-                //     // Find the varaible in the symbol table from arrayRefName
-                //     ASTNode *arrayRefNode = compiler.getSymTable().getASTNode(moduleName, NODE_VAR_DECLARATION, arrayRefName);
-                //     llvm::Value *indexedValue = arrays.indexArrayForValue(arrayRefNode, indexValue);
-                //     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-                //     argValues.push_back(indexedValue);
-                //     break;
-                // }
+                    if (argValue->getType()->isPointerTy())
+                    {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Argument is a pointer");
+                        llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+                        llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(literalInt, argValue);
+                        debugger.logLLVMValue(loadValue);
+                        argValues.push_back(loadValue);
+                        break;
+                    }
+
+                    // Set the function argument
+                    argValues.push_back(argValue);
+                    break;
+                }
                 debugger.logMessage("INFO", __LINE__, "Functions", "Argument named being passed to argValue : " + argName);
                 llvm::Value *argValue = variables.getVariable(argName);
                 // If the variable is not found, create a new one
@@ -700,16 +712,18 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
 
         llvm::Value *resultParam = nullptr;
+        std::string paramName = param->getName().str();
         std::cout << "Parameter Name: " << param->getName().str() << std::endl;
         std::cout << "Parameter Type: " << std::endl;
         std::cout << "Argument Type: " << std::endl;
 
-        llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, param->getName());
-        std::string argName = param->getName().str();
-        compiler.getContext().namedValues[argName] = alloca;
-        compiler.getContext().builder.CreateStore(param, alloca);
+        llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, param, paramName);
+        compiler.getContext().namedValues[paramName] = alloca;
+        // compiler.getContext().builder.CreateStore(param, alloca);
 
         resultParam = alloca;
+
+        debugger.logLLVMValue(resultParam);
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
