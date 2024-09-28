@@ -43,8 +43,6 @@ output.bc
 output.o
 
 # Ignore Specific File Extensions
-*.vsidx
-*.vsix
 *.suo
 *.sln
 *.swp

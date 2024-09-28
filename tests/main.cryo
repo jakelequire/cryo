@@ -18,7 +18,7 @@ struct String {
 public function createArray() -> void 
 {
     const anotherFoo: int = 10;
-    const anotherBar: int = ;
+    const anotherBar: int = 15;
     return;
 }
 
@@ -27,7 +27,6 @@ public function test(numberIterator: int) -> void {
     const pleasework: int = numberIterator + 1;
     const intArrTwo: int[] = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
     //                         0    1    2    3    4    5    6    7    8    9
-    
     const indexArrNew: int = intArrTwo[numberIterator];
     const foo: int = indexArrNew;
 
