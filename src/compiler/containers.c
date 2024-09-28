@@ -24,7 +24,7 @@
 ///     char *name;
 /// } CryoNamespace;
 ///```
-CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena)
+CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoNamespace *node = (CryoNamespace *)ARENA_ALLOC(arena, sizeof(CryoNamespace));
     if (!node)
@@ -48,7 +48,7 @@ CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena)
 ///     size_t statementCapacity;
 /// } CryoProgram;
 ///```
-CryoProgram *createCryoProgramContainer(Arena *arena)
+CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
 {
     CryoProgram *node = (CryoProgram *)ARENA_ALLOC(arena, sizeof(CryoProgram));
     if (!node)
@@ -83,7 +83,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena)
 /// } CryoBlockNode;
 ///```
 ///
-CryoBlockNode *createCryoBlockNodeContainer(Arena *arena)
+CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoBlockNode *node = (CryoBlockNode *)ARENA_ALLOC(arena, sizeof(CryoBlockNode));
     if (!node)
@@ -119,7 +119,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena)
 /// } CryoFunctionBlock;
 ///```
 ///
-CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena)
+CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState *state)
 {
     CryoFunctionBlock *block = (CryoFunctionBlock *)ARENA_ALLOC(arena, sizeof(CryoFunctionBlock));
     if (block)
@@ -141,7 +141,7 @@ CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena)
 /// } CryoModule;
 ///```
 ///
-CryoModule *createCryoModuleContainer(Arena *arena)
+CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 {
     CryoModule *node = (CryoModule *)ARENA_ALLOC(arena, sizeof(CryoModule));
     if (!node)
@@ -169,7 +169,7 @@ CryoModule *createCryoModuleContainer(Arena *arena)
 /// } CryoMetaData;
 ///```
 ///
-CryoMetaData *createMetaDataContainer(Arena *arena)
+CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state)
 {
     CryoMetaData *node = (CryoMetaData *)ARENA_ALLOC(arena, sizeof(CryoMetaData));
     if (!node)
@@ -200,7 +200,7 @@ CryoMetaData *createMetaDataContainer(Arena *arena)
 /// } CryoScope;
 ///```
 ///
-CryoScope *createCryoScopeContainer(Arena *arena)
+CryoScope *createCryoScopeContainer(Arena *arena, CompilerState *state)
 {
     CryoScope *node = (CryoScope *)ARENA_ALLOC(arena, sizeof(CryoScope));
     if (!node)
@@ -225,7 +225,7 @@ CryoScope *createCryoScopeContainer(Arena *arena)
 /// } ExternNode;
 ///```
 ///
-ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena)
+ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerState *state)
 {
     ExternNode *node = (ExternNode *)ARENA_ALLOC(arena, sizeof(ExternNode));
     if (!node)
@@ -264,7 +264,7 @@ ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena)
 /// } ExternFunctionNode;
 ///```
 ///
-ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena)
+ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state)
 {
     ExternFunctionNode *node = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
     if (!node)
@@ -298,7 +298,7 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena)
 /// } FunctionDeclNode;
 ///```
 ///
-FunctionDeclNode *createFunctionNodeContainer(Arena *arena)
+FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state)
 {
     FunctionDeclNode *node = (FunctionDeclNode *)ARENA_ALLOC(arena, sizeof(FunctionDeclNode));
     if (!node)
@@ -328,7 +328,7 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena)
 /// } FunctionCallNode;
 ///```
 ///
-FunctionCallNode *createFunctionCallNodeContainer(Arena *arena)
+FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *state)
 {
     FunctionCallNode *node = (FunctionCallNode *)ARENA_ALLOC(arena, sizeof(FunctionCallNode));
     if (!node)
@@ -361,7 +361,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena)
 /// } LiteralNode;
 ///```
 ///
-LiteralNode *createLiteralNodeContainer(Arena *arena)
+LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
 {
     LiteralNode *node = (LiteralNode *)ARENA_ALLOC(arena, sizeof(LiteralNode) * 2);
     if (!node)
@@ -390,7 +390,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena)
 /// } IfStatementNode;
 ///```
 ///
-IfStatementNode *createIfStatementContainer(Arena *arena)
+IfStatementNode *createIfStatementContainer(Arena *arena, CompilerState *state)
 {
     IfStatementNode *node = (IfStatementNode *)ARENA_ALLOC(arena, sizeof(IfStatementNode));
     if (!node)
@@ -418,7 +418,7 @@ IfStatementNode *createIfStatementContainer(Arena *arena)
 /// } ForStatementNode;
 ///```
 ///
-ForStatementNode *createForStatementNodeContainer(Arena *arena)
+ForStatementNode *createForStatementNodeContainer(Arena *arena, CompilerState *state)
 {
     ForStatementNode *node = (ForStatementNode *)ARENA_ALLOC(arena, sizeof(ForStatementNode));
     if (!node)
@@ -446,7 +446,7 @@ ForStatementNode *createForStatementNodeContainer(Arena *arena)
 /// } WhileStatementNode;
 ///```
 ///
-WhileStatementNode *createWhileStatementNodeContainer(Arena *arena)
+WhileStatementNode *createWhileStatementNodeContainer(Arena *arena, CompilerState *state)
 {
     WhileStatementNode *node = (WhileStatementNode *)ARENA_ALLOC(arena, sizeof(WhileStatementNode));
     if (!node)
@@ -475,7 +475,7 @@ WhileStatementNode *createWhileStatementNodeContainer(Arena *arena)
 /// } CryoExpressionNode;
 ///```
 ///
-CryoExpressionNode *createExpressionNodeContainer(Arena *arena)
+CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoExpressionNode *node = (CryoExpressionNode *)ARENA_ALLOC(arena, sizeof(CryoExpressionNode));
     if (!node)
@@ -511,7 +511,7 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena)
 /// } CryoVariableNode;
 ///```
 ///
-CryoVariableNode *createVariableNodeContainer(Arena *arena)
+CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoVariableNode *node = (CryoVariableNode *)ARENA_ALLOC(arena, sizeof(CryoVariableNode));
     if (!node)
@@ -546,7 +546,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena)
 /// } VariableNameNode;
 ///```
 ///
-VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena)
+VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, CompilerState *state)
 {
     VariableNameNode *node = (VariableNameNode *)ARENA_ALLOC(arena, sizeof(VariableNameNode));
     if (!node)
@@ -574,7 +574,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena)
 /// } CryoParameterNode;
 ///```
 ///
-CryoParameterNode *createParameterNodeContainer(Arena *arena)
+CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoParameterNode *node = (CryoParameterNode *)ARENA_ALLOC(arena, sizeof(CryoParameterNode));
     if (!node)
@@ -605,7 +605,7 @@ CryoParameterNode *createParameterNodeContainer(Arena *arena)
 /// } ParamNode;
 ///```
 ///
-ParamNode *createParamNodeContainer(Arena *arena)
+ParamNode *createParamNodeContainer(Arena *arena, CompilerState *state)
 {
     ParamNode *node = (ParamNode *)ARENA_ALLOC(arena, sizeof(ParamNode));
     if (!node)
@@ -636,7 +636,7 @@ ParamNode *createParamNodeContainer(Arena *arena)
 /// } ArgNode;
 ///```
 ///
-ArgNode *createArgNodeContainer(Arena *arena)
+ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state)
 {
     ArgNode *node = (ArgNode *)ARENA_ALLOC(arena, sizeof(ArgNode));
     if (!node)
@@ -665,7 +665,7 @@ ArgNode *createArgNodeContainer(Arena *arena)
 /// } CryoReturnNode;
 ///```
 ///
-CryoReturnNode *createReturnNodeContainer(Arena *arena)
+CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoReturnNode *node = (CryoReturnNode *)ARENA_ALLOC(arena, sizeof(CryoReturnNode));
     if (!node)
@@ -692,7 +692,7 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena)
 /// } CryoBinaryOpNode;
 ///```
 ///
-CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena)
+CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoBinaryOpNode *node = (CryoBinaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoBinaryOpNode));
     if (!node)
@@ -718,7 +718,7 @@ CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena)
 /// } CryoUnaryOpNode;
 ///```
 ///
-CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena)
+CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoUnaryOpNode *node = (CryoUnaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoUnaryOpNode));
     if (!node)
@@ -745,7 +745,7 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena)
 /// } CryoArrayNode;
 ///```
 ///
-CryoArrayNode *createArrayNodeContainer(Arena *arena)
+CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
 {
     CryoArrayNode *node = (CryoArrayNode *)ARENA_ALLOC(arena, sizeof(CryoArrayNode));
     if (!node)
@@ -780,7 +780,7 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena)
 /// } IndexExprNode;
 ///```
 ///
-IndexExprNode *createIndexExprNodeContainer(Arena *arena)
+IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state)
 {
     IndexExprNode *node = (IndexExprNode *)ARENA_ALLOC(arena, sizeof(IndexExprNode));
     if (!node)
@@ -808,7 +808,7 @@ IndexExprNode *createIndexExprNodeContainer(Arena *arena)
 /// } VariableReassignmentNode;
 ///```
 ///
-VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena)
+VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, CompilerState *state)
 {
     VariableReassignmentNode *node = (VariableReassignmentNode *)ARENA_ALLOC(arena, sizeof(VariableReassignmentNode));
     if (!node)
@@ -839,7 +839,7 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena)
 /// } StructNode;
 ///```
 ///
-StructNode *createStructNodeContainer(Arena *arena)
+StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
 {
     StructNode *node = (StructNode *)ARENA_ALLOC(arena, sizeof(StructNode));
     if (!node)
@@ -867,7 +867,7 @@ StructNode *createStructNodeContainer(Arena *arena)
 /// } PropertyNode;
 ///```
 ///
-PropertyNode *createPropertyNodeContainer(Arena *arena)
+PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
 {
     PropertyNode *node = (PropertyNode *)ARENA_ALLOC(arena, sizeof(PropertyNode));
     if (!node)

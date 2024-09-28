@@ -73,45 +73,46 @@ typedef struct Lexer
     Token currentToken;
     Token lookahead;
     bool hasPeeked;
+    char *fileName;
 } Lexer;
 
 /* @Util_Functions */
 char *my_strndup(const char *src, size_t len);
 
 /* @Lexer */
-void initLexer(Lexer *lexer, const char *source);
+void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerState *state);
 void freeLexer(Lexer *lexer);
 
 /* @Lexer_Utils */
-char advance(Lexer *lexer);
-bool isAtEnd(Lexer *lexer);
-char peek(Lexer *lexer);
-char peekNext(Lexer *lexer);
-bool matchToken(Lexer *lexer, CryoTokenType type);
-void skipWhitespace(Lexer *lexer);
-bool skipComment(Lexer *lexer);
-char peekNextUnconsumedLexerToken(Lexer *lexer);
-char currentChar(Lexer *lexer);
+char advance(Lexer *lexer, CompilerState *state);
+bool isAtEnd(Lexer *lexer, CompilerState *state);
+char peek(Lexer *lexer, CompilerState *state);
+char peekNext(Lexer *lexer, CompilerState *state);
+bool matchToken(Lexer *lexer, CryoTokenType type, CompilerState *state);
+void skipWhitespace(Lexer *lexer, CompilerState *state);
+bool skipComment(Lexer *lexer, CompilerState *state);
+char peekNextUnconsumedLexerToken(Lexer *lexer, CompilerState *state);
+char currentChar(Lexer *lexer, CompilerState *state);
 
 /* @Lexer_Functions */
-Token nextToken(Lexer *lexer, Token *token);
-Token get_next_token(Lexer *lexer);
-Token getToken(Lexer *lexer);
-Token peekToken(Lexer *lexer);
-Token peekNextToken(Lexer *lexer);
+Token nextToken(Lexer *lexer, Token *token, CompilerState *state);
+Token get_next_token(Lexer *lexer, CompilerState *state);
+Token getToken(Lexer *lexer, CompilerState *state);
+Token peekToken(Lexer *lexer, CompilerState *state);
+Token peekNextToken(Lexer *lexer, CompilerState *state);
 
 /* @Token_Creation */
-Token makeToken(Lexer *lexer, CryoTokenType type);
-Token errorToken(Lexer *lexer, const char *message);
-Token number(Lexer *lexer);
-Token string(Lexer *lexer);
-Token boolean(Lexer *lexer);
-Token symbolChar(Lexer *lexer, char symbol);
-Token identifier(Lexer *lexer);
+Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state);
+Token errorToken(Lexer *lexer, const char *message, CompilerState *state);
+Token number(Lexer *lexer, CompilerState *state);
+Token string(Lexer *lexer, CompilerState *state);
+Token boolean(Lexer *lexer, CompilerState *state);
+Token symbolChar(Lexer *lexer, char symbol, CompilerState *state);
+Token identifier(Lexer *lexer, CompilerState *state);
 
 /* @Data_Types */
-Token checkKeyword(Lexer *lexer);
-CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type);
+Token checkKeyword(Lexer *lexer, CompilerState *state);
+CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type, CompilerState *state);
 
 /* @DataType_Evaluation */
 bool isAlpha(char c);

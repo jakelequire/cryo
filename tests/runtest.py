@@ -46,7 +46,9 @@ if_tests = [
     "./tests/ifstatement/1.basicIf.cryo"
 ]
 
-cryo_path = "C:/Programming/apps/cryo/src/bin/main.exe"
+
+cryo_path = "C:/Programming/apps/cryo/src/bin/main"
+cryo_path = "/home/phock/Programming/apps/cryo/src/bin/main"
 
 def run_test(test_file):
     if not os.path.exists(cryo_path):

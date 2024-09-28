@@ -26,6 +26,7 @@
 #include "compiler/error.h"
 #include "utils/logger.h"
 #include "utils/arena.h"
+#include "common/common.h"
 
 // C++ headers
 #ifdef __cplusplus

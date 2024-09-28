@@ -16,55 +16,59 @@
  ********************************************************************************/
 #include "compiler/error.h"
 
-
 CryoCallStack callStack;
-
 
 /* ====================================================================== */
 /* @Call_Stack */
 
 // <initCallStack>
-void initCallStack(CryoCallStack *callStack, int initialCapacity) {
+void initCallStack(CryoCallStack *callStack, int initialCapacity)
+{
     callStack->size = 0;
     callStack->capacity = initialCapacity;
     callStack->stack = (CryoStackFrame *)malloc(initialCapacity * sizeof(CryoStackFrame));
-    if (callStack->stack == NULL) {
+    if (callStack->stack == NULL)
+    {
         fprintf(stderr, "Failed to allocate memory for call stack\n");
         exit(1);
     }
 }
 // </initCallStack>
 
-
 // <freeCallStack>
-void freeCallStack(CryoCallStack *callStack) {
-    for (int i = 0; i < callStack->size; ++i) {
+void freeCallStack(CryoCallStack *callStack)
+{
+    for (int i = 0; i < callStack->size; ++i)
+    {
         free(callStack->stack[i].functionName);
     }
     free(callStack->stack);
 }
 // </freeCallStack>
 
-
 // <resizeCallStack>
-void resizeCallStack(CryoCallStack *callStack) {
+void resizeCallStack(CryoCallStack *callStack)
+{
     callStack->capacity *= 4;
     callStack->stack = (CryoStackFrame *)realloc(callStack->stack, callStack->capacity * sizeof(CryoStackFrame));
-    if (callStack->stack == NULL) {
+    if (callStack->stack == NULL)
+    {
         fprintf(stderr, "Failed to reallocate memory for call stack\n");
         exit(1);
     }
 }
 // </resizeCallStack>
 
-
 // <pushCallStack>
-void pushCallStack(CryoCallStack *callStack, const char *functionName, int lineNumber) {
-    if (callStack->size >= callStack->capacity) {
+void pushCallStack(CryoCallStack *callStack, const char *functionName, int lineNumber)
+{
+    if (callStack->size >= callStack->capacity)
+    {
         resizeCallStack(callStack);
     }
     callStack->stack[callStack->size].functionName = strdup(functionName);
-    if (callStack->stack[callStack->size].functionName == NULL) {
+    if (callStack->stack[callStack->size].functionName == NULL)
+    {
         fprintf(stderr, "Failed to duplicate function name\n");
         exit(1);
     }
@@ -73,28 +77,30 @@ void pushCallStack(CryoCallStack *callStack, const char *functionName, int lineN
 }
 // </pushCallStack>
 
-
 // <popCallStack>
-void popCallStack(CryoCallStack *callStack) {
-    if (callStack->size > 0) {
+void popCallStack(CryoCallStack *callStack)
+{
+    if (callStack->size > 0)
+    {
         free(callStack->stack[callStack->size - 1].functionName);
         callStack->size--;
-    } else {
+    }
+    else
+    {
         printf("Call stack underflow!\n");
     }
 }
 // </popCallStack>
 
-
 // <printStackTrace>
-void printStackTrace(CryoCallStack *callStack) {
+void printStackTrace(CryoCallStack *callStack)
+{
     printf("Stack Trace:\n");
-    for (int i = 0; i < callStack->size; i++) {
+    for (int i = 0; i < callStack->size; i++)
+    {
         printf("%d \tat %s (line %d)\n", i, callStack->stack[i].functionName, callStack->stack[i].lineNumber);
     }
-} 
+}
 // </printStackTrace>
 
-
-
-
+// -------------------------------------------------------------------

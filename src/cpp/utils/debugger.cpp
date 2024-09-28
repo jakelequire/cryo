@@ -57,21 +57,20 @@ namespace Cryo
             return;
         }
 
-        std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
-
         switch (node->metaData->type)
         {
         case NODE_PROGRAM:
-            std::cout << "\nProgram Node" << std::endl;
+            std::cout << ">>==----------------------{ Program Node }-----------------------==<<" << std::endl;
             std::cout << "Statements Count: " << node->data.program->statementCount << std::endl;
             for (int i = 0; i < node->data.program->statementCount; ++i)
             {
                 logNode(node->data.program->statements[i]);
             }
+            std::cout << ">>==-------------------{ ^ Program Node ^ }----------------------==<<" << std::endl;
             break;
 
         case NODE_FUNCTION_DECLARATION:
-            std::cout << "\nFunction Declaration Node" << std::endl;
+            std::cout << ">>==----------------{ Function Declaration Node }----------------==<<" << std::endl;
             std::cout << "Function Name: " << node->data.functionDecl->name << std::endl;
             std::cout << "Return Type: " << CryoDataTypeToString(node->data.functionDecl->returnType) << std::endl;
             std::cout << "Parameter Count: " << node->data.functionDecl->paramCount << std::endl;
@@ -80,16 +79,18 @@ namespace Cryo
                 logNode(node->data.functionDecl->params[i]);
             }
             logNode(node->data.functionDecl->body);
+            std::cout << ">>==------------{ ^ Function Declaration Node ^ }----------------==<<" << std::endl;
             break;
 
         case NODE_FUNCTION_CALL:
-            std::cout << "\nFunction Call Node" << std::endl;
+            std::cout << ">>==--------------------{ Function Call Node }-------------------==<<" << std::endl;
             std::cout << "Function Name: " << node->data.functionCall->name << std::endl;
             std::cout << "Argument Count: " << node->data.functionCall->argCount << std::endl;
             for (int i = 0; i < node->data.functionCall->argCount; ++i)
             {
                 logNode(node->data.functionCall->args[i]);
             }
+            std::cout << ">>==-----------------{ ^ Function Call Node ^ }------------------==<<" << std::endl;
             break;
 
         case NODE_VAR_DECLARATION:
@@ -98,7 +99,7 @@ namespace Cryo
                 std::cerr << "Error: varDecl is null." << std::endl;
                 break;
             }
-            std::cout << "\nVariable Declaration Node" << std::endl;
+            std::cout << ">>==----------------{ Variable Declaration Node }----------------==<<" << std::endl;
             std::cout << "Variable Name: " << node->data.varDecl->name << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.varDecl->type) << std::endl;
             std::cout << "Is Global: " << (node->data.varDecl->isGlobal ? 0 : 1) << std::endl;
@@ -111,10 +112,12 @@ namespace Cryo
                 std::cout << "Initializer: " << std::endl;
                 logNode(node->data.varDecl->initializer);
             }
+            std::cout << ">>==------------{ ^ Variable Declaration Node ^ }----------------==<<" << std::endl;
             break;
 
         case NODE_LITERAL_EXPR:
-            std::cout << "\nLiteral Expression Node" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>>>---{ Literal Expression Node }---<<<<" << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.literal->dataType) << std::endl;
             switch (node->data.literal->dataType)
             {
@@ -131,31 +134,29 @@ namespace Cryo
                 std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
                 break;
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>>>---------------------------------<<<<" << std::endl;
+            std::cout << "\n";
             break;
 
         case NODE_BINARY_EXPR:
-            std::cout << "\nBinary Expression Node" << std::endl;
+            std::cout << ">>==-----------------{ Binary Expression Node }------------------==<<" << std::endl;
             std::cout << "Operator: " << CryoOperatorTypeToString(node->data.bin_op->op) << std::endl;
             std::cout << "Left Operand: " << std::endl;
             logNode(node->data.bin_op->left);
             std::cout << "Right Operand: " << std::endl;
             logNode(node->data.bin_op->right);
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==----------------{ ^ Binary Expression Node ^ }---------------==<<" << std::endl;
             break;
 
         case NODE_UNARY_EXPR:
-            std::cout << "\nUnary Expression Node" << std::endl;
+            std::cout << ">>==------------------{ Unary Expression Node }------------------==<<" << std::endl;
             std::cout << "Operator: " << CryoTokenToString(node->data.unary_op->op) << std::endl;
             logNode(node->data.unary_op->operand);
-            std::cout << "----------------------------------------" << std::endl;
-
+            // std::cout << ">>==-----------------------------------------------==<<" << std::endl;
             break;
 
         case NODE_IF_STATEMENT:
-            std::cout << "\nIf Statement Node" << std::endl;
+            std::cout << ">>==--------------------{ If Statement Node }--------------------==<<" << std::endl;
             std::cout << "Condition: " << std::endl;
             logNode(node->data.ifStatement->condition);
             std::cout << "\nThen Branch: " << std::endl;
@@ -165,22 +166,20 @@ namespace Cryo
                 std::cout << "\nElse Branch: " << std::endl;
                 logNode(node->data.ifStatement->elseBranch);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==------------------{ ^ If Statement Node ^ }------------------==<<" << std::endl;
             break;
 
         case NODE_WHILE_STATEMENT:
-            std::cout << "\nWhile Statement Node" << std::endl;
+            std::cout << ">>==-------------------{ While Statement Node }------------------==<<" << std::endl;
             std::cout << "Condition: " << std::endl;
             logNode(node->data.whileStatement->condition);
             std::cout << "Body: " << std::endl;
             logNode(node->data.whileStatement->body);
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==-----------------{ ^ While Statement Node ^ }----------------==<<" << std::endl;
             break;
 
         case NODE_FOR_STATEMENT:
-            std::cout << "\nFor Statement Node" << std::endl;
+            std::cout << ">>==--------------------{ For Statement Node }-------------------==<<" << std::endl;
             std::cout << "Initializer: " << std::endl;
             logNode(node->data.forStatement->initializer);
             std::cout << "Condition: " << std::endl;
@@ -189,12 +188,11 @@ namespace Cryo
             logNode(node->data.forStatement->increment);
             std::cout << "Body: " << std::endl;
             logNode(node->data.forStatement->body);
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==------------------{ ^ For Statement Node ^ }------------------==<<" << std::endl;
             break;
 
         case NODE_RETURN_STATEMENT:
-            std::cout << "\nReturn Statement Node" << std::endl;
+            std::cout << ">>==-----------------{ Return Statement Node }-------------------==<<" << std::endl;
             std::cout << "Return Type : " << CryoDataTypeToString(node->data.returnStatement->returnType) << std::endl;
             std::cout << "Return Value: " << std::endl;
             if (node->data.returnStatement->returnValue)
@@ -203,18 +201,19 @@ namespace Cryo
             }
             else
             {
-                std::cout << "Void" << std::endl;
+                std::cout << "NO RETURN VALUE: void default" << std::endl;
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==---------------{ ^ Return Statement Node ^ }-----------------==<<" << std::endl;
             break;
 
         case NODE_IMPORT_STATEMENT:
-            std::cout << "\nImport Statement Node" << std::endl;
+            std::cout << ">>==------------------{ Import Statement Node }------------------==<<" << std::endl;
+            std::cout << "UNIMPLEMENTED" << std::endl;
+            std::cout << ">>==-----------------------------------------------==<<" << std::endl;
             break;
 
         case NODE_EXTERN_FUNCTION:
-            std::cout << "\nExtern Function Node" << std::endl;
+            std::cout << ">>==------------------{ Extern Function Node }-------------------==<<" << std::endl;
             std::cout << "Function Name: " << strdup(node->data.externFunction->name) << std::endl;
             std::cout << "Return Type: " << CryoDataTypeToString(node->data.externFunction->returnType) << std::endl;
             std::cout << "Parameter Count: " << node->data.externFunction->paramCount << std::endl;
@@ -222,139 +221,127 @@ namespace Cryo
             {
                 logNode(node->data.externFunction->params[i]);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==-----------------{ ^ Extern Function Node ^ }----------------==<<" << std::endl;
             break;
 
         case NODE_EXTERN_STATEMENT:
-            std::cout << "\nExtern Statement Node" << std::endl;
+            std::cout << ">>==------------------{ Extern Statement Node }------------------==<<" << std::endl;
             if (node->data.externNode->externNode->data.functionDecl)
             {
                 std::cout << "Extern Function: " << std::endl;
                 logNode(reinterpret_cast<ASTNode *>(node->data.externNode->externNode->data.functionDecl));
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==----------------{ ^ Extern Statement Node ^ }----------------==<<" << std::endl;
             break;
 
         case NODE_ARRAY_LITERAL:
-            std::cout << "\nArray Literal Node" << std::endl;
+            std::cout << ">>==--------------------{ Array Literal Node }-------------------==<<" << std::endl;
             std::cout << "Element Count: " << node->data.array->elementCount << std::endl;
             for (int i = 0; i < node->data.array->elementCount; ++i)
             {
                 logNode(node->data.array->elements[i]);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==------------------{ ^ Array Literal Node ^ }------------------==<<" << std::endl;
             break;
 
         case NODE_PARAM_LIST:
-            std::cout << "\nParameter List Node" << std::endl;
+            std::cout << ">>==-------------------{ Parameter List Node }-------------------==<<" << std::endl;
             std::cout << "Parameter Count: " << node->data.paramList->paramCount << std::endl;
             for (int i = 0; i < node->data.paramList->paramCount; ++i)
             {
                 logNode(node->data.paramList->params[i]->initializer);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==-----------------{ ^ Parameter List Node ^ }-----------------==<<" << std::endl;
             break;
 
         case NODE_ARG_LIST:
-            std::cout << "\nArgument List Node" << std::endl;
+            std::cout << ">>==-------------------{ Argument List Node }--------------------==<<" << std::endl;
             std::cout << "Argument Count: " << node->data.argList->argCount << std::endl;
             for (int i = 0; i < node->data.argList->argCount; ++i)
             {
                 logNode(node->data.argList->args[i]->initializer);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==------------------{ ^ Argument List Node ^ }-----------------==<<" << std::endl;
             break;
 
         case NODE_FUNCTION_BLOCK:
-            std::cout << "----------------------------------------" << std::endl;
+            std::cout << ">>==-------------------{ Function Block Node }-------------------==<<" << std::endl;
             std::cout << "\nFunction Block Node" << std::endl;
             std::cout << "Statement Count: " << node->data.functionBlock->statementCount << std::endl;
             for (int i = 0; i < node->data.functionBlock->statementCount; ++i)
             {
                 logNode(node->data.functionBlock->statements[i]);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==-----------------{ ^ Function Block Node ^ }-----------------==<<" << std::endl;
             break;
 
         case NODE_VAR_NAME:
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "\nVariable Name Node" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>>>-----{ Variable Name Node }-----<<<<" << std::endl;
             std::cout << "Variable Name: " << node->data.varName->varName << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.varName->refType) << std::endl;
             std::cout << "Is Reference: " << (node->data.varName->isRef ? "True" : "False") << std::endl;
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>>>--------------------------------<<<<" << std::endl;
+            std::cout << "\n";
             break;
 
         case NODE_STRING_LITERAL:
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "\nString Literal Node" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>>>-----{ String Literal Node }-----<<<<" << std::endl;
             std::cout << "Value: " << node->data.literal->value.stringValue << std::endl;
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>>>---------------------------------<<<<" << std::endl;
+            std::cout << "\n";
             break;
 
         case NODE_BOOLEAN_LITERAL:
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "\nBoolean Literal Node" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>>>----{ Boolean Literal Node }----<<<<" << std::endl;
             std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>>>--------------------------------<<<<" << std::endl;
+            std::cout << "\n";
             break;
 
         case NODE_NAMESPACE:
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "\nNamespace Node" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>>>-----{ Namespace Node }-----<<<<" << std::endl;
             std::cout << "Namespace Name: " << node->data.cryoNamespace->name << std::endl;
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>>>----------------------------<<<<" << std::endl;
+            std::cout << "\n";
             break;
 
         case NODE_BLOCK:
-            std::cout << "----------------------------------------" << std::endl;
+            std::cout << ">>==-----------------------{ Block Node }------------------------==<<" << std::endl;
             std::cout << "\nBlock Node" << std::endl;
             std::cout << "Statement Count: " << node->data.block->statementCount << std::endl;
             for (int i = 0; i < node->data.block->statementCount; ++i)
             {
                 logNode(node->data.block->statements[i]);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==---------------------{ ^ Block Node ^ }----------------------==<<" << std::endl;
             break;
 
         case NODE_INDEX_EXPR:
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "\nIndex Expression Node" << std::endl;
+            std::cout << ">==-------------------{ Index Expression Node }------------------==<<" << std::endl;
             std::cout << "Array Name: " << std::endl;
             logNode(node->data.indexExpr->array);
             std::cout << "Index: " << std::endl;
             logNode(node->data.indexExpr->index);
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">==-----------------{ ^ Index Expression Node ^ }----------------==<<" << std::endl;
             break;
 
         case NODE_VAR_REASSIGN:
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "\nVariable Reassignment Node" << std::endl;
+            std::cout << ">>==----------------{ Variable Reassignment Node }---------------==<<" << std::endl;
             std::cout << "Variable Name: " << node->data.varReassignment->existingVarName << std::endl;
             std::cout << "Type: " << CryoDataTypeToString(node->data.varReassignment->existingVarType) << std::endl;
             std::cout << "Old Value: " << std::endl;
             logNode(node->data.varReassignment->existingVarNode);
             std::cout << "New Value: " << std::endl;
             logNode(node->data.varReassignment->newVarNode);
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==--------------{ ^ Variable Reassignment Node ^ }--------------==<<" << std::endl;
             break;
 
         case NODE_PARAM:
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "\nParameter Node" << std::endl;
+            std::cout << ">>==----------------------{ Parameter Node }---------------------==<<" << std::endl;
             std::cout << "Parameter Name: " << node->data.param->name << std::endl;
             std::cout << "Function Name: " << node->data.param->functionName << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.param->type) << std::endl;
@@ -364,13 +351,42 @@ namespace Cryo
                 std::cout << "Default Value: " << std::endl;
                 logNode(node->data.param->defaultValue);
             }
-            std::cout << "----------------------------------------" << std::endl;
-
+            std::cout << ">>==-------------------{ ^ Parameter Node ^ }--------------------==<<" << std::endl;
             break;
 
+        case NODE_PROPERTY:
+        {
+            std::cout << "\n";
+            std::cout << ">>>>----{ Property Node }----<<<<" << std::endl;
+            std::cout << "Property Name: " << node->data.property->name << std::endl;
+            std::cout << "Data Type: " << CryoDataTypeToString(node->data.property->type) << std::endl;
+            std::cout << ">>>>-------------------------<<<<" << std::endl;
+            std::cout << "\n";
+            break;
+        }
+
+        case NODE_STRUCT_DECLARATION:
+        {
+            std::cout << ">>==-----------------{ Struct Declaration Node }-----------------==<<" << std::endl;
+            std::cout << "Struct Name: " << node->data.structNode->name << std::endl;
+            std::cout << "Property Count: " << node->data.structNode->propertyCount << std::endl;
+            std::cout << "Property Capacity: " << node->data.structNode->propertyCapacity << std::endl;
+            for (int i = 0; i < node->data.structNode->propertyCount; ++i)
+            {
+                logNode(node->data.structNode->properties[i]);
+            }
+            std::cout << ">>==---------------{ ^ Struct Declaration Node ^ }----------------==<<" << std::endl;
+            break;
+        }
+
         default:
-            std::cout << "\nUnknown Node Type" << std::endl;
-            std::cout << "Node Type: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
+            std::cout << "\n\n";
+            std::cout << "<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>" << std::endl;
+            std::cout << ">>==----------------{ Unknown Node Type }----------------==<<" << std::endl;
+            std::cout << "<!> Unknown Node Type!" << std::endl;
+            std::cout << "<!> Node Type Received: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
+            std::cout << ">>==-----------------------------------------------------==<<" << std::endl;
+            std::cout << "\n\n";
             break;
         }
     }
@@ -390,7 +406,7 @@ namespace Cryo
             std::cerr << "<Error>: Unknown or Invalid Node Type." << std::endl;
             std::cout << "Node: " << node << std::endl;
             std::cout << "Node: " << CryoNodeTypeToString(node->metaData->type) << std::endl;
-            exit(1);
+            CONDITION_FAILED;
         }
     }
 
@@ -405,7 +421,7 @@ namespace Cryo
         std::cout << "<Error> PANIC @" << funcName << "\n"
                   << ">==--------------- Debug Information ---------------==>"
                   << std::endl;
-        exit(1);
+        CONDITION_FAILED;
     }
 
     /**
@@ -454,6 +470,8 @@ namespace Cryo
         case NODE_NAMESPACE:
         case NODE_INDEX_EXPR:
         case NODE_VAR_REASSIGN:
+        case NODE_PROPERTY:
+        case NODE_STRUCT_DECLARATION:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -1150,6 +1168,38 @@ namespace Cryo
         std::cout << ">>===--------------------------------------===<<" << std::endl;
         std::cout << "\n";
     }
+
+    // -----------------------------------------------------------------------------------------------
+
+    void CryoDebugger::logLLVMStruct(llvm::StructType *structTy)
+    {
+        logMessage("INFO", __LINE__, "Debugger", "Logging LLVM Struct Type");
+
+        if (structTy == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Struct Type is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Struct Type Node>-----------===<<" << std::endl;
+
+        // Print out the name of the struct
+        std::string structName = structTy->getName().str();
+        std::cout << "Name: " << structName << std::endl;
+
+        // Print out the instruction of the struct
+        std::string structInst;
+        llvm::raw_string_ostream rso(structInst);
+        structTy->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the struct
+        std::cout << "Address: " << structTy << std::endl;
+        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+    }
+
+    // -----------------------------------------------------------------------------------------------
 
     std::string CryoDebugger::LLVMTypeIDToString(llvm::Type *type)
     {

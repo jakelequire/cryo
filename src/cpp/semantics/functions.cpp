@@ -1,3 +1,19 @@
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
 #include "cpp/codegen.h"
 
 namespace Cryo
@@ -42,7 +58,7 @@ namespace Cryo
         }
         default:
             debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown node type");
-            exit(1);
+            CONDITION_FAILED;
         }
     }
 
@@ -203,7 +219,7 @@ namespace Cryo
                 {
                     debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
                     std::cout << "Received: " << CryoDataTypeToString(returnType) << std::endl;
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 }
                 continue;
@@ -220,7 +236,7 @@ namespace Cryo
         if (!currentBlock->getTerminator())
         {
             debugger.logMessage("ERROR", __LINE__, "Functions", "Adding terminator to function");
-            exit(1);
+            CONDITION_FAILED;
         }
         else
         {
@@ -279,7 +295,7 @@ namespace Cryo
         if (node->metaData->type != NODE_RETURN_STATEMENT)
         {
             debugger.logMessage("ERROR", __LINE__, "Functions", "Node is not a return statement");
-            return;
+            CONDITION_FAILED;
         }
         Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
@@ -355,8 +371,7 @@ namespace Cryo
                 {
                     debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
                     std::cout << "Received: " << CryoDataTypeToString(nodeDataType) << std::endl;
-                    exit(1);
-                    break;
+                    CONDITION_FAILED;
                 }
                 }
             }
@@ -478,7 +493,7 @@ namespace Cryo
             if (!retreivedNode)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Argument not found");
-                DEBUG_BREAKPOINT;
+                CONDITION_FAILED;
             }
 
             std::cout << "===----------------------===" << std::endl;
@@ -498,7 +513,7 @@ namespace Cryo
             if (!calleeF)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
-                DEBUG_BREAKPOINT;
+                CONDITION_FAILED;
             }
 
             // Get the argument type values
@@ -557,7 +572,7 @@ namespace Cryo
                     if (!newVar)
                     {
                         debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not created");
-                        exit(1);
+                        CONDITION_FAILED;
                     }
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
 
@@ -617,7 +632,7 @@ namespace Cryo
             default:
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
-                DEBUG_BREAKPOINT;
+                CONDITION_FAILED;
             }
             }
 
@@ -645,7 +660,7 @@ namespace Cryo
                 if (!argValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
 
                 // If the argument is not the expected type, cast it
@@ -668,7 +683,7 @@ namespace Cryo
                     {
                         debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
                         std::cout << "Received: " << CryoDataTypeToString(argDataType) << std::endl;
-                        DEBUG_BREAKPOINT;
+                        CONDITION_FAILED;
                     }
                     }
                 }
@@ -686,7 +701,7 @@ namespace Cryo
             if (!function)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
-                exit(1);
+                CONDITION_FAILED;
             }
 
             // Create the function call
@@ -695,7 +710,7 @@ namespace Cryo
             if (!functionCall)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
-                exit(1);
+                CONDITION_FAILED;
             }
 
             debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");

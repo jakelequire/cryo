@@ -50,7 +50,7 @@ namespace Cryo
         if (validateTree == false)
         {
             std::cerr << "[CPP] Tree is invalid!" << std::endl;
-            return;
+            CONDITION_FAILED;
         }
 
         // Declare all functions in the AST tree
@@ -127,7 +127,7 @@ namespace Cryo
         if (!root)
         {
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Root is null!");
-            return;
+            CONDITION_FAILED;
         }
 
         Generator &generator = this->compiler.getGenerator();
@@ -232,7 +232,7 @@ namespace Cryo
         default:
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             std::cout << "Received: " << CryoNodeTypeToString(root->metaData->type) << std::endl;
-            exit(EXIT_FAILURE);
+            CONDITION_FAILED;
             break;
         }
 

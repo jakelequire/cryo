@@ -87,7 +87,7 @@ char *my_strndup(const char *src, size_t len)
 /* @Lexer */
 
 // <initLexer>
-void initLexer(Lexer *lexer, const char *source)
+void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerState *state)
 {
     printf("Starting Lexer Initialization...\n");
     lexer->start = source;
@@ -96,8 +96,10 @@ void initLexer(Lexer *lexer, const char *source)
     lexer->line = 1;
     lexer->column = 0;
     lexer->hasPeeked = false;
+    lexer->fileName = fileName;
 
     printf("{lexer} -------------- <Input Source Code> --------------\n\n");
+    printf("\n{lexer} File Name: %s\n", fileName);
     printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
     printf("\n{lexer} -------------------- <END> ----------------------\n\n");
 }
@@ -114,33 +116,34 @@ void freeLexer(Lexer *lexer)
 /* @Lexer_Utils */
 
 // <advance>
-char advance(Lexer *lexer)
+char advance(Lexer *lexer, CompilerState *state)
 {
     // printf("[Lexer] Advancing to next character: %c\n", lexer->current[0]);
     lexer->current++;
     lexer->column++;
+    updateCompilerColumnNumber(lexer, state);
     return lexer->current[-1];
 }
 // </advance>
 
 // <isAtEnd>
-bool isAtEnd(Lexer *lexer)
+bool isAtEnd(Lexer *lexer, CompilerState *state)
 {
     return *lexer->current == '\0' || *lexer->current == NULL || lexer->current >= lexer->end;
 }
 // </isAtEnd>
 
 // <peek>
-char peek(Lexer *lexer)
+char peek(Lexer *lexer, CompilerState *state)
 {
     return *lexer->current;
 }
 // </peek>c
 
 // <peekNext>
-char peekNext(Lexer *lexer)
+char peekNext(Lexer *lexer, CompilerState *state)
 {
-    if (isAtEnd(lexer))
+    if (isAtEnd(lexer, state))
         return '\0';
     char c = (char)&lexer->current[0];
     printf("[Lexer] <!> Peeked next character: %c\n", c);
@@ -149,27 +152,27 @@ char peekNext(Lexer *lexer)
 // </peekNext>
 
 // <peekNextUnconsumedLexerToken>
-char peekNextUnconsumedLexerToken(Lexer *lexer)
+char peekNextUnconsumedLexerToken(Lexer *lexer, CompilerState *state)
 {
     Lexer tempLexer = *lexer;
-    char c = advance(&tempLexer);
+    char c = advance(&tempLexer, state);
     return c;
 }
 // </peekNextUnconsumedLexerToken>
 
 // <currentChar>
-char currentChar(Lexer *lexer)
+char currentChar(Lexer *lexer, CompilerState *state)
 {
     return *lexer->current;
 }
 // </currentChar>
 
 // <matchToken>
-bool matchToken(Lexer *lexer, CryoTokenType type)
+bool matchToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
 {
-    if (peekToken(lexer).type == type)
+    if (peekToken(lexer, state).type == type)
     {
-        nextToken(lexer, &lexer->currentToken);
+        nextToken(lexer, &lexer->currentToken, state);
         return true;
     }
     return false;
@@ -177,54 +180,56 @@ bool matchToken(Lexer *lexer, CryoTokenType type)
 // </matchToken>
 
 // <skipWhitespace>
-void skipWhitespace(Lexer *lexer)
+void skipWhitespace(Lexer *lexer, CompilerState *state)
 {
     for (;;)
     {
-        char c = peek(lexer);
+        char c = peek(lexer, state);
         switch (c)
         {
         case ' ':
         case '\r':
         case '\t':
-            advance(lexer);
+            advance(lexer, state);
             break;
         case '\n':
             lexer->line++;
             lexer->column = 0;
-            advance(lexer);
+            updateCompilerLineNumber(lexer, state);
+            updateCompilerColumnNumber(lexer, state);
+            advance(lexer, state);
             break;
         case '/':
             printf("[Lexer] Found comment character: %c\n", c);
-            advance(lexer);
-            char next = peekNextUnconsumedLexerToken(lexer);
+            advance(lexer, state);
+            char next = peekNextUnconsumedLexerToken(lexer, state);
             printf("[Lexer] Next Unconsumed character: %c\n", next);
             if (next == '/')
             {
                 printf("[Lexer] ! Found single line comment character: %c\n", c);
-                while (peek(lexer) != '\n' && !isAtEnd(lexer))
-                    advance(lexer);
+                while (peek(lexer, state) != '\n' && !isAtEnd(lexer, state))
+                    advance(lexer, state);
             }
-            else if (peekNext(lexer) == '*')
+            else if (peekNext(lexer, state) == '*')
             {
-                advance(lexer);
-                advance(lexer);
-                while (peek(lexer) != '*' && peekNext(lexer) != '/' && !isAtEnd(lexer))
+                advance(lexer, state);
+                advance(lexer, state);
+                while (peek(lexer, state) != '*' && peekNext(lexer, state) != '/' && !isAtEnd(lexer, state))
                 {
-                    if (peek(lexer) == '\n')
+                    if (peek(lexer, state) == '\n')
                     {
                         lexer->line++;
                         lexer->column = 0;
                     }
-                    advance(lexer);
+                    advance(lexer, state);
                 }
-                if (isAtEnd(lexer))
+                if (isAtEnd(lexer, state))
                 {
                     logMessage("ERROR", __LINE__, "Lexer", "Unterminated block comment.");
                     return;
                 }
-                advance(lexer);
-                advance(lexer);
+                advance(lexer, state);
+                advance(lexer, state);
             }
             else
             {
@@ -244,50 +249,50 @@ void skipWhitespace(Lexer *lexer)
 /* @Lexer_Functions */
 
 // <nextToken>
-Token nextToken(Lexer *lexer, Token *token)
+Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
 {
-    skipWhitespace(lexer);
+    skipWhitespace(lexer, state);
 
     lexer->start = lexer->current;
 
-    if (isAtEnd(lexer))
+    if (isAtEnd(lexer, state))
     {
         logMessage("INFO", __LINE__, "Lexer", "Creating EOF token");
-        *token = makeToken(lexer, TOKEN_EOF);
+        *token = makeToken(lexer, TOKEN_EOF, state);
         return *token;
     }
 
-    char c = advance(lexer);
+    char c = advance(lexer, state);
     logMessage("INFO", __LINE__, "Lexer", "Current character: %c", c);
 
     if (isAlpha(c))
     {
-        *token = checkKeyword(lexer);
+        *token = checkKeyword(lexer, state);
         logMessage("INFO", __LINE__, "Lexer", "Keyword token created");
         return *token;
     }
 
     if (isDigit(c))
     {
-        *token = number(lexer);
+        *token = number(lexer, state);
         logMessage("INFO", __LINE__, "Lexer", "Number token created");
         return *token;
     }
 
     if (c == '"')
     {
-        *token = string(lexer);
+        *token = string(lexer, state);
         logMessage("INFO", __LINE__, "Lexer", "String token created");
         return *token;
     }
 
     if (c == '&')
     {
-        *token = makeToken(lexer, TOKEN_AMPERSAND);
+        *token = makeToken(lexer, TOKEN_AMPERSAND, state);
         logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
         return *token;
     }
-    Token symToken = symbolChar(lexer, c);
+    Token symToken = symbolChar(lexer, c, state);
     if (symToken.type != TOKEN_UNKNOWN)
     {
         *token = symToken;
@@ -296,21 +301,21 @@ Token nextToken(Lexer *lexer, Token *token)
     }
 
     logMessage("ERROR", __LINE__, "Lexer", "Unexpected character: %c", c);
-    return identifier(lexer);
+    return identifier(lexer, state);
 }
 // </nextToken>
 
 // <get_next_token>
-Token get_next_token(Lexer *lexer)
+Token get_next_token(Lexer *lexer, CompilerState *state)
 {
     // printf("[Lexer] Getting next token...\n");
-    nextToken(lexer, &lexer->currentToken);
+    nextToken(lexer, &lexer->currentToken, state);
     return lexer->currentToken;
 }
 // </get_next_token>
 
 // <getToken>
-Token getToken(Lexer *lexer)
+Token getToken(Lexer *lexer, CompilerState *state)
 {
     if (lexer->hasPeeked)
     {
@@ -319,18 +324,18 @@ Token getToken(Lexer *lexer)
     }
     else
     {
-        nextToken(lexer, &lexer->currentToken);
+        nextToken(lexer, &lexer->currentToken, state);
         return lexer->currentToken;
     }
 }
 // </getToken>
 
 // <peekToken>
-Token peekToken(Lexer *lexer)
+Token peekToken(Lexer *lexer, CompilerState *state)
 {
     if (!lexer->hasPeeked)
     {
-        nextToken(lexer, &lexer->lookahead);
+        nextToken(lexer, &lexer->lookahead, state);
         lexer->hasPeeked = true;
     }
     return lexer->lookahead;
@@ -338,10 +343,10 @@ Token peekToken(Lexer *lexer)
 // </peekToken>
 
 // <peekNextToken>
-Token peekNextToken(Lexer *lexer)
+Token peekNextToken(Lexer *lexer, CompilerState *state)
 {
-    Lexer tempLexer = *lexer;                    // Copy the current lexer state
-    Token tempNextToken = peekToken(&tempLexer); // Get the next token from the copied state
+    Lexer tempLexer = *lexer;                           // Copy the current lexer state
+    Token tempNextToken = peekToken(&tempLexer, state); // Get the next token from the copied state
     return tempNextToken;
 }
 // </peekNextToken>
@@ -350,7 +355,7 @@ Token peekNextToken(Lexer *lexer)
 /* @Token_Creation */
 
 // <makeToken>
-Token makeToken(Lexer *lexer, CryoTokenType type)
+Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
 {
     // printf("\n\nCreating Token: %s\n\n", CryoTokenToString(type));
     // current token
@@ -372,7 +377,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type)
 // </makeToken>
 
 // <errorToken>
-Token errorToken(Lexer *lexer, const char *message)
+Token errorToken(Lexer *lexer, const char *message, CompilerState *state)
 {
     Token token;
     token.type = TOKEN_ERROR;
@@ -385,197 +390,197 @@ Token errorToken(Lexer *lexer, const char *message)
 // </errorToken>
 
 // <number>
-Token number(Lexer *lexer)
+Token number(Lexer *lexer, CompilerState *state)
 {
-    while (isDigit(peek(lexer)))
+    while (isDigit(peek(lexer, state)))
     {
-        advance(lexer);
+        advance(lexer, state);
     }
-    Token token = makeToken(lexer, TOKEN_INT_LITERAL);
+    Token token = makeToken(lexer, TOKEN_INT_LITERAL, state);
     // printf("[Lexer] Number token: %.*s\n", token.length, token.start);
     return token;
 }
 // </number>
 
 // <string>
-Token string(Lexer *lexer)
+Token string(Lexer *lexer, CompilerState *state)
 {
-    while (peek(lexer) != '"' && !isAtEnd(lexer))
+    while (peek(lexer, state) != '"' && !isAtEnd(lexer, state))
     {
-        if (peek(lexer) == '\n')
+        if (peek(lexer, state) == '\n')
             lexer->line++;
-        advance(lexer);
+        advance(lexer, state);
     }
 
-    if (isAtEnd(lexer))
-        return errorToken(lexer, "Unterminated string.");
+    if (isAtEnd(lexer, state))
+        return errorToken(lexer, "Unterminated string.", state);
 
-    advance(lexer);
-    Token token = makeToken(lexer, TOKEN_STRING_LITERAL);
+    advance(lexer, state);
+    Token token = makeToken(lexer, TOKEN_STRING_LITERAL, state);
     // printf("[Lexer] String token: %.*s\n", token.length, token.start);
     return token;
 }
 // </string>
 
 // <boolean>
-Token boolean(Lexer *lexer)
+Token boolean(Lexer *lexer, CompilerState *state)
 {
-    if (peek(lexer) == 't' && peekNext(lexer) == 'r' && peekNext(lexer) == 'u' && peekNext(lexer) == 'e')
+    if (peek(lexer, state) == 't' && peekNext(lexer, state) == 'r' && peekNext(lexer, state) == 'u' && peekNext(lexer, state) == 'e')
     {
-        advance(lexer);
-        advance(lexer);
-        advance(lexer);
-        advance(lexer);
+        advance(lexer, state);
+        advance(lexer, state);
+        advance(lexer, state);
+        advance(lexer, state);
     }
-    else if (peek(lexer) == 'f' && peekNext(lexer) == 'a' && peekNext(lexer) == 'l' && peekNext(lexer) == 's' && peekNext(lexer) == 'e')
+    else if (peek(lexer, state) == 'f' && peekNext(lexer, state) == 'a' && peekNext(lexer, state) == 'l' && peekNext(lexer, state) == 's' && peekNext(lexer, state) == 'e')
     {
-        advance(lexer);
-        advance(lexer);
-        advance(lexer);
-        advance(lexer);
-        advance(lexer);
+        advance(lexer, state);
+        advance(lexer, state);
+        advance(lexer, state);
+        advance(lexer, state);
+        advance(lexer, state);
     }
     else
     {
-        return errorToken(lexer, "Invalid boolean literal.");
+        return errorToken(lexer, "Invalid boolean literal.", state);
     }
 
-    Token token = makeToken(lexer, TOKEN_BOOLEAN_LITERAL);
+    Token token = makeToken(lexer, TOKEN_BOOLEAN_LITERAL, state);
     // printf("[Lexer] Boolean token: %.*s\n", token.length, token.start);
     return token;
 }
 // </boolean>
 
 // <symbolChar>
-Token symbolChar(Lexer *lexer, char symbol)
+Token symbolChar(Lexer *lexer, char symbol, CompilerState *state)
 {
     switch (symbol)
     {
     case '(':
-        return makeToken(lexer, TOKEN_LPAREN);
+        return makeToken(lexer, TOKEN_LPAREN, state);
     case ')':
-        return makeToken(lexer, TOKEN_RPAREN);
+        return makeToken(lexer, TOKEN_RPAREN, state);
     case '{':
-        return makeToken(lexer, TOKEN_LBRACE);
+        return makeToken(lexer, TOKEN_LBRACE, state);
     case '}':
-        return makeToken(lexer, TOKEN_RBRACE);
+        return makeToken(lexer, TOKEN_RBRACE, state);
     case '[':
-        return makeToken(lexer, TOKEN_LBRACKET);
+        return makeToken(lexer, TOKEN_LBRACKET, state);
     case ']':
-        return makeToken(lexer, TOKEN_RBRACKET);
+        return makeToken(lexer, TOKEN_RBRACKET, state);
     case ',':
-        return makeToken(lexer, TOKEN_COMMA);
+        return makeToken(lexer, TOKEN_COMMA, state);
     case '$':
-        return makeToken(lexer, TOKEN_DOLLAR);
+        return makeToken(lexer, TOKEN_DOLLAR, state);
     case '/':
-        return makeToken(lexer, TOKEN_SLASH);
+        return makeToken(lexer, TOKEN_SLASH, state);
     case '.':
     {
-        if (peek(lexer) == '.')
+        if (peek(lexer, state) == '.')
         {
-            if (peekNext(lexer) == '.')
+            if (peekNext(lexer, state) == '.')
             {
-                advance(lexer);
-                advance(lexer);
-                return makeToken(lexer, TOKEN_ELLIPSIS);
+                advance(lexer, state);
+                advance(lexer, state);
+                return makeToken(lexer, TOKEN_ELLIPSIS, state);
             }
         }
         else
         {
-            return makeToken(lexer, TOKEN_DOT);
+            return makeToken(lexer, TOKEN_DOT, state);
         }
     }
     case ':':
-        return makeToken(lexer, TOKEN_COLON);
+        return makeToken(lexer, TOKEN_COLON, state);
     case '-':
-        if (peek(lexer) == '>')
+        if (peek(lexer, state) == '>')
         {
-            advance(lexer);
-            return makeToken(lexer, TOKEN_RESULT_ARROW);
+            advance(lexer, state);
+            return makeToken(lexer, TOKEN_RESULT_ARROW, state);
         }
-        return makeToken(lexer, TOKEN_MINUS);
+        return makeToken(lexer, TOKEN_MINUS, state);
     case '+':
-        if (peek(lexer) == '+')
+        if (peek(lexer, state) == '+')
         {
-            advance(lexer);
-            return makeToken(lexer, TOKEN_INCREMENT);
+            advance(lexer, state);
+            return makeToken(lexer, TOKEN_INCREMENT, state);
         }
-        return makeToken(lexer, TOKEN_PLUS);
+        return makeToken(lexer, TOKEN_PLUS, state);
     case ';':
-        return makeToken(lexer, TOKEN_SEMICOLON);
+        return makeToken(lexer, TOKEN_SEMICOLON, state);
     case '*':
-        return makeToken(lexer, TOKEN_STAR);
+        return makeToken(lexer, TOKEN_STAR, state);
     case '%':
-        return makeToken(lexer, TOKEN_PERCENT);
+        return makeToken(lexer, TOKEN_PERCENT, state);
     case '!':
     {
-        if (peek(lexer) == '=')
+        if (peek(lexer, state) == '=')
         {
-            advance(lexer);
-            return makeToken(lexer, TOKEN_NOT_EQUAL);
+            advance(lexer, state);
+            return makeToken(lexer, TOKEN_NOT_EQUAL, state);
         }
-        return makeToken(lexer, TOKEN_BANG);
+        return makeToken(lexer, TOKEN_BANG, state);
     }
     case '=':
     {
-        if (peek(lexer) == '=')
+        if (peek(lexer, state) == '=')
         {
-            advance(lexer);
-            return makeToken(lexer, TOKEN_STRICT_EQUAL);
+            advance(lexer, state);
+            return makeToken(lexer, TOKEN_STRICT_EQUAL, state);
         }
-        return makeToken(lexer, TOKEN_EQUAL);
+        return makeToken(lexer, TOKEN_EQUAL, state);
     }
     case '<':
-        if (peek(lexer) == '=')
+        if (peek(lexer, state) == '=')
         {
-            advance(lexer);
-            return makeToken(lexer, TOKEN_LESS_EQUAL);
+            advance(lexer, state);
+            return makeToken(lexer, TOKEN_LESS_EQUAL, state);
         }
-        return makeToken(lexer, TOKEN_LESS);
+        return makeToken(lexer, TOKEN_LESS, state);
     case '>':
-        if (peek(lexer) == '=')
+        if (peek(lexer, state) == '=')
         {
-            advance(lexer);
-            return makeToken(lexer, TOKEN_GREATER_EQUAL);
+            advance(lexer, state);
+            return makeToken(lexer, TOKEN_GREATER_EQUAL, state);
         }
-        return makeToken(lexer, TOKEN_GREATER);
+        return makeToken(lexer, TOKEN_GREATER, state);
     case '|':
-        return makeToken(lexer, TOKEN_PIPE);
+        return makeToken(lexer, TOKEN_PIPE, state);
     case '^':
-        return makeToken(lexer, TOKEN_CARET);
+        return makeToken(lexer, TOKEN_CARET, state);
     case '~':
-        return makeToken(lexer, TOKEN_TILDE);
+        return makeToken(lexer, TOKEN_TILDE, state);
     case '?':
-        return makeToken(lexer, TOKEN_QUESTION);
+        return makeToken(lexer, TOKEN_QUESTION, state);
     default:
-        return errorToken(lexer, "Unexpected character.");
+        return errorToken(lexer, "Unexpected character.", state);
     }
 
-    return errorToken(lexer, "Unexpected character.");
+    return errorToken(lexer, "Unexpected character.", state);
 }
 // </symbolChar>
 
 // <identifier>
-Token identifier(Lexer *lexer)
+Token identifier(Lexer *lexer, CompilerState *state)
 {
     char *cur_token = my_strndup(lexer->start, lexer->current - lexer->start);
     // printf("\n!![Lexer] Current token: %s\n", cur_token);
-    while (isAlpha(peek(lexer)) || isDigit(peek(lexer)))
+    while (isAlpha(peek(lexer, state)) || isDigit(peek(lexer, state)))
     {
         // printf("\n!![Lexer] Current token: %s\n", cur_token);
-        advance(lexer);
+        advance(lexer, state);
     }
-    if (peek(lexer) == '[')
+    if (peek(lexer, state) == '[')
     {
         // Peek next character for a number specificly for array indexing
-        if (isDigit(peekNext(lexer)))
+        if (isDigit(peekNext(lexer, state)))
         {
             // printf("\n!![Lexer] Current token: %s\n", cur_token);
-            advance(lexer);
-            while (isDigit(peek(lexer)))
+            advance(lexer, state);
+            while (isDigit(peek(lexer, state)))
             {
                 // printf("\n!![Lexer] Current token: %s\n", cur_token);
-                advance(lexer);
+                advance(lexer, state);
             }
         }
         else
@@ -585,7 +590,7 @@ Token identifier(Lexer *lexer)
         }
     }
     // printf("\n!![Lexer] Current token: %s\n", cur_token);
-    Token token = makeToken(lexer, TOKEN_IDENTIFIER);
+    Token token = makeToken(lexer, TOKEN_IDENTIFIER, state);
     // printf("[Lexer] Identifier token: %.*s\n", token.length, token.start);
     return token;
 }
@@ -595,10 +600,10 @@ Token identifier(Lexer *lexer)
 /* @Data_Types */
 
 // <checkKeyword>
-Token checkKeyword(Lexer *lexer)
+Token checkKeyword(Lexer *lexer, CompilerState *state)
 {
-    while (isAlpha(peek(lexer)))
-        advance(lexer);
+    while (isAlpha(peek(lexer, state)))
+        advance(lexer, state);
 
     int length = (int)(lexer->current - lexer->start);
     const char *keyword = my_strndup(lexer->start, length);
@@ -632,8 +637,8 @@ Token checkKeyword(Lexer *lexer)
         free(typeStr);
         typeStr = arrayType;
 
-        advance(lexer);
-        advance(lexer);
+        advance(lexer, state);
+        advance(lexer, state);
     }
     else
     {
@@ -643,11 +648,11 @@ Token checkKeyword(Lexer *lexer)
     // printf("\n\n\nType String: %s\n\n\n", typeStr);
 
     // Check if the keyword is a data type
-    CryoTokenType type = checkDataType(lexer, typeStr, TOKEN_IDENTIFIER);
+    CryoTokenType type = checkDataType(lexer, typeStr, TOKEN_IDENTIFIER, state);
     if (type != TOKEN_IDENTIFIER)
     {
         free((char *)keyword); // Free allocated memory
-        return makeToken(lexer, type);
+        return makeToken(lexer, type, state);
     }
 
     for (int i = 0; keywords[i].keyword != NULL; i++)
@@ -655,40 +660,40 @@ Token checkKeyword(Lexer *lexer)
         if (strcmp(keywords[i].keyword, keyword) == 0)
         {
             free((char *)keyword); // Free allocated memory
-            return makeToken(lexer, keywords[i].type);
+            return makeToken(lexer, keywords[i].type, state);
         }
     }
 
     free((char *)keyword); // Free allocated memory
-    return makeToken(lexer, TOKEN_IDENTIFIER);
+    return makeToken(lexer, TOKEN_IDENTIFIER, state);
 }
 // </checkKeyword>
 
 // <checkDataType>
-CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type)
+CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type, CompilerState *state)
 {
     // printf("[Lexer] Checking data type: %s\n", dataType);
     // Check if the next token is the `[` character to determine if it is an array type
-    if (peek(lexer) == '[')
+    if (peek(lexer, state) == '[')
     {
-        if (peekNext(lexer) == ']')
+        if (peekNext(lexer, state) == ']')
         {
             logMessage("INFO", __LINE__, "Lexer", "Parsing array type...");
-            advance(lexer);
+            advance(lexer, state);
             // append the `[]` to the data type
             char *arrayType = (char *)malloc(strlen(dataType) + 2);
             strcpy(arrayType, dataType);
             strcat(arrayType, "[]");
             // Consuming the `]` character
-            advance(lexer);
-            return checkDataType(lexer, arrayType, type);
+            advance(lexer, state);
+            return checkDataType(lexer, arrayType, type, state);
         }
-        if (isDigit(peekNext(lexer)))
+        if (isDigit(peekNext(lexer, state)))
         {
             logMessage("INFO", __LINE__, "Lexer", "Parsing array index...");
-            while (isDigit(peek(lexer)))
+            while (isDigit(peek(lexer, state)))
             {
-                advance(lexer);
+                advance(lexer, state);
             }
         }
     }
@@ -722,33 +727,4 @@ bool isDigit(char c)
 bool isType(char c)
 {
     return c == '[' || c == ']';
-}
-
-/* =========================================================== */
-/* @DEBUG | Used to debug the parser in a different executable */
-
-int lexer(int argc, char *argv[])
-{
-    if (argc < 2)
-    {
-        fprintf(stderr, "{lexer} Usage: %s <path_to_file>\n", argv[0]);
-        return 1;
-    }
-
-    char *source = readFile(argv[1]);
-    if (source == NULL)
-        return 1;
-
-    Lexer lexer;
-    initLexer(&lexer, source);
-
-    Token token;
-    do
-    {
-        nextToken(&lexer, &token);
-    } while (token.type != TOKEN_EOF);
-
-    freeLexer(&lexer);
-    free(source);
-    return 0;
 }

@@ -124,7 +124,7 @@ namespace Cryo
         if (!leftValue || !rightValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Invalid operands for binary expression");
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         CryoOperatorType operatorType = node->data.bin_op->op;
@@ -158,7 +158,7 @@ namespace Cryo
             return compiler.getContext().builder.CreateICmpNE(leftValue, rightValue, "neqcmp");
         default:
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown operator type");
-            return nullptr;
+            CONDITION_FAILED;
         }
     }
 
@@ -174,7 +174,7 @@ namespace Cryo
         if (!leftValue || !rightValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate values for comparison expression");
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         // // Load value if right is a pointer (a variable)
@@ -223,7 +223,7 @@ namespace Cryo
             else
             {
                 debugger.logMessage("ERROR", __LINE__, "BinExp", "Unable to cast operands to matching types");
-                return nullptr;
+                CONDITION_FAILED;
             }
         }
 
@@ -250,7 +250,7 @@ namespace Cryo
             break;
         default:
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown comparison operator");
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         return compiler.getContext().builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");

@@ -123,6 +123,8 @@ llvm-link cryolib.ll output.ll -o bin.ll
 # Compile the object file
 llc -filetype=obj -relocation-model=static bin.ll -o bin.o
 
+# llc -filetype=asm bin.ll -o bin.s
+
 # Change back to the original directory
 cd ../../
 

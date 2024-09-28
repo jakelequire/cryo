@@ -33,6 +33,12 @@ namespace Cryo
 {
     class CryoDebugger;
 
+    struct StructValue
+    {
+        StructNode ASTStruct;
+        llvm::StructType *LLVMStruct;
+    };
+
     // -----------------------------------------------------------------------------------------------
 
     // For each file, we will have a SymTable that contains all the variables and functions
@@ -43,7 +49,7 @@ namespace Cryo
         std::unordered_map<std::string, CryoParameterNode> parameters;
         std::unordered_map<std::string, FunctionDeclNode> functions;
         std::unordered_map<std::string, ExternFunctionNode> externFunctions;
-        
+        std::unordered_map<std::string, StructValue> structs;
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program
@@ -69,11 +75,16 @@ namespace Cryo
         void initModule(ASTNode *root, std::string namespaceName);
         void traverseASTNode(ASTNode *node, SymTableNode &program);
 
+        // Getters
         ASTNode *getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName);
         CryoVariableNode *getVariableNode(std::string namespaceName, std::string varName);
         SymTableNode getSymTableNode(std::string namespaceName);
         SymTable getSymTable();
 
+        // Setters
+        void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode);
+
+        // Debugging
         void printTable(std::string namespaceName);
 
     private:

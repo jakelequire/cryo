@@ -16,70 +16,155 @@
  ********************************************************************************/
 #include "common/common.h"
 
-// Export the `globalCompiler` function to be used in C++
+// -------------------------------------------------------------------
+// @Compiler Errors
 
-int globalCompiler(const char *source)
+CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName)
 {
-    if (source == NULL || strlen(source) == 0)
-    {
-        fprintf(stderr, "Source code is empty.\n");
-        return 1;
-    }
+    CompilerState state;
+    state.arena = arena;
+    state.lexer = lexer;
+    state.table = table;
+    state.programNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+    state.currentNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+    state.fileName = fileName;
+    state.lineNumber = 0;
+    state.columnNumber = 0;
+    state.errorCount = 0;
+    state.errors = NULL;
 
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the call stack
-    initCallStack(&callStack, 10);
-
-    // Initialize the lexer
-    Lexer lexer;
-    initLexer(&lexer, source);
-    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
-
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
-    // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena);
-    if (programNode == NULL)
-    {
-        fprintf(stderr, "Failed to parse source code.\n");
-        return 1;
-    }
-
-    return 0;
+    logMessage("INFO", __LINE__, "CompilerState", "Compiler state initialized");
+    return state;
 }
 
-ASTNode *getProgramNode(const char *source)
+void updateCompilerLineNumber(Lexer *lexer, CompilerState *state)
 {
-    if (source == NULL || strlen(source) == 0)
+    state->lineNumber = lexer->line;
+    state->columnNumber = lexer->column;
+}
+
+void updateCompilerColumnNumber(Lexer *lexer, CompilerState *state)
+{
+    state->columnNumber = lexer->column;
+}
+
+CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode)
+{
+    state.programNode = programNode;
+    return state;
+}
+
+InternalDebug captureInternalDebug(const char *functionName, const char *fileName, int lineNumber)
+{
+    InternalDebug debug;
+    debug.functionName = functionName;
+    debug.fileName = fileName;
+    debug.lineNumber = lineNumber;
+    return debug;
+}
+
+CompilerError initNewError(InternalDebug debug)
+{
+    CompilerError error;
+    error.type = UNKNOWN;
+    error.debug = debug;
+    error.message = NULL;
+    error.detail = NULL;
+    error.lineNumber = 0;
+    error.column = 0;
+    error.fileName = NULL;
+    error.functionName = NULL;
+    return error;
+}
+
+CompilerError createError(InternalDebug internals, const char *type, const char *message, const char *detail, int lineNumber, int column, const char *fileName)
+{
+    CompilerError error;
+    if (strcmp(type, "ERROR") == 0)
     {
-        fprintf(stderr, "Source code is empty.\n");
-        return NULL;
+        error.type = ERROR;
+    }
+    else if (strcmp(type, "WARNING") == 0)
+    {
+        error.type = WARNING;
+    }
+    else if (strcmp(type, "INFO") == 0)
+    {
+        error.type = INFO;
+    }
+    else
+    {
+        error.type = UNKNOWN;
+    }
+    error.debug = internals;
+    error.message = (char *)message;
+    error.detail = (char *)detail;
+    error.lineNumber = lineNumber;
+    error.fileName = (char *)fileName;
+    error.functionName = (char *)internals.functionName;
+    return error;
+}
+
+// -------------------------------------------------------------------
+
+void errorReport(CompilerState state)
+{
+    if (state.errorCount == 0)
+    {
+        logMessage("INFO", __LINE__, "CompilerState", "No errors found.");
+        return;
     }
 
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the call stack
-    initCallStack(&callStack, 10);
-
-    // Initialize the lexer
-    Lexer lexer;
-    initLexer(&lexer, source);
-    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
-
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
-    // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena);
-    if (programNode == NULL)
+    for (int i = 0; i < state.errorCount; ++i)
     {
-        fprintf(stderr, "Failed to parse source code.\n");
-        return NULL;
+        logCompilerError(state.errors[i]);
     }
+}
 
-    return programNode;
+void logCompilerError(CompilerError *error)
+{
+    char *type = getErrorTypeString(error->type);
+    fprintf(stderr, "[%s] %s\n", type, error->message);
+    if (error->detail != NULL)
+    {
+        fprintf(stderr, "Details: %s\n", error->detail);
+    }
+    fprintf(stderr, "Location: %s:%d\n", error->fileName, error->lineNumber);
+    fprintf(stderr, "Function: %s\n", error->functionName);
+}
+
+char *getErrorTypeString(ErrorType type)
+{
+    switch (type)
+    {
+    case ERROR:
+        return "ERROR";
+    case WARNING:
+        return "WARNING";
+    case INFO:
+        return "INFO";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+// -------------------------------------------------------------------
+
+void dumpCompilerState(CompilerState state)
+{
+    printf("\n\n!# ==================== Compiler State ==================== #!\n");
+    fprintf(stderr, "  - Arena: %p\n", state.arena);
+    fprintf(stderr, "  - Lexer: %p\n", state.lexer);
+    fprintf(stderr, "  - Symbol Table: %p\n", state.table);
+    fprintf(stderr, "  - Program Node: %p\n", state.programNode);
+    fprintf(stderr, "  - Current Node: %p\n", state.currentNode);
+    fprintf(stderr, "  - File Name: %s\n", state.fileName);
+    fprintf(stderr, "  - Line Number: %d\n", state.lineNumber);
+    fprintf(stderr, "  - Column Number: %d\n", state.columnNumber);
+    fprintf(stderr, "  - Error Count: %d\n", state.errorCount);
+    for (int i = 0; i < state.errorCount; ++i)
+    {
+        logCompilerError(state.errors[i]);
+    }
+    printf("!# ======================================================== #!\n\n");
 }

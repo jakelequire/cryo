@@ -390,7 +390,6 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
 
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
-        error("Unsupported node type", "createCryoSymbol", table, arena);
         return NULL;
     }
 

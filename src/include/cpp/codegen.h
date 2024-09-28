@@ -116,6 +116,7 @@ namespace Cryo
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
         std::unordered_map<std::string, llvm::Value *> namedValues;
+        std::unordered_map<std::string, llvm::StructType *> structTypes;
         std::string currentNamespace;
         // Current Function
         llvm::Function *currentFunction;
@@ -513,6 +514,11 @@ namespace Cryo
          * @brief Handles struct declarations in the AST.
          */
         void handleStructDeclaration(ASTNode *node);
+
+        /**
+         * @brief Returns the LLVM type for the given property.
+         */
+        llvm::Type *getStructFieldType(PropertyNode *property);
 
     private:
         CryoCompiler &compiler;

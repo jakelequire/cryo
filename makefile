@@ -105,7 +105,7 @@ CPP_DIR = $(SRC_DIR)cpp/
 # Source files
 COMPILER_SRC = 	$(COMPILER_DIR)containers.c $(COMPILER_DIR)ast.c $(COMPILER_DIR)semantics.c $(COMPILER_DIR)lexer.c  \
 				$(COMPILER_DIR)parser.c $(COMPILER_DIR)token.c $(COMPILER_DIR)symtable.c \
-				$(COMPILER_DIR)error.c
+				$(COMPILER_DIR)error.c $(COMPILER_DIR)typedefs.c
 
 # CLI files
 CLI_SRC = $(CLI_DIR)compiler.c $(CLI_DIR)cli.c $(CLI_COMMANDS_DIR)cmd_build.c $(CLI_COMMANDS_DIR)cmd_init.c \
@@ -119,7 +119,7 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)co
 		$(CPP_DIR)generator.cpp $(CPP_DIR)types.cpp $(CPP_UTILS_DIR)debugger.cpp \
 		$(CPP_SEMANTICS_DIR)variables.cpp $(CPP_SEMANTICS_DIR)functions.cpp \
 		$(CPP_SEMANTICS_DIR)arrays.cpp $(CPP_DIR)declarations.cpp $(CPP_DIR)ifstatement.cpp \
-		$(CPP_SEMANTICS_DIR)forloop.cpp $(CPP_SEMANTICS_DIR)binaryExpression.cpp
+		$(CPP_SEMANTICS_DIR)forloop.cpp $(CPP_SEMANTICS_DIR)binaryExpression.cpp $(CPP_SEMANTICS_DIR)structs.cpp
 
 # Common Files
 COMMON_SRC = $(COMMON_DIR)common.c
@@ -128,9 +128,6 @@ COMMON_SRC = $(COMMON_DIR)common.c
 MAIN_SRC = $(SRC_DIR)main.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
-# Library Files
-LIB_FILES = $(LIB_DIR)visualDebug/visualDebug.cpp
-
 # --------------------------------------------------------------------------------- #
 
 # Cryo Lib Files
@@ -138,13 +135,13 @@ CRYO_SRC = $(CRYO_DIR)cryolib.c
 
 # Object files
 COMPILER_OBJ =  $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
-				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o
+				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o $(OBJ_DIR)typedefs.o
 
 # CPP Object files
 CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)backend_symtable.o $(OBJ_DIR)codegen.o \
 		$(OBJ_DIR)cppmain.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o $(OBJ_DIR)arrays.o \
 		$(OBJ_DIR)generator.o $(OBJ_DIR)types.o $(OBJ_DIR)declarations.o $(OBJ_DIR)ifstatement.o \
-		$(OBJ_DIR)forloop.o $(OBJ_DIR)binaryExpression.o
+		$(OBJ_DIR)forloop.o $(OBJ_DIR)binaryExpression.o $(OBJ_DIR)structs.o
 
 # Utils Object files
 UTILS_OBJ = $(OBJ_DIR)fs.o $(OBJ_DIR)supportlibs.o $(OBJ_DIR)arena.o $(OBJ_DIR)utility.o
@@ -164,9 +161,6 @@ TEST_OBJ = $(OBJ_DIR)test.o
 # Cryo Lib Object files
 CRYO_OBJ = $(OBJ_DIR)cryolib.o
 
-# Library Object files
-LIB_OBJ = $(OBJ_DIR)visualDebug.o
-
 # --------------------------------------------------------------------------------- #
 
 # Define the target binaries
@@ -175,9 +169,7 @@ CLI_BIN_EXE = $(BIN_DIR)cryo$(BIN_SUFFIX)
 VISUAL_DEBUG_BIN = $(BIN_DIR)visualDebug$(BIN_SUFFIX)
 
 # Default target
-all: $(MAIN_BIN) $(CLI_BIN_EXE) $(VISUAL_DEBUG_BIN)
-
-libs: $(VISUAL_DEBUG_BIN)
+all: $(MAIN_BIN) $(CLI_BIN_EXE)
 
 # Ensure the object directory exists
 $(OBJ_DIR):
@@ -224,6 +216,9 @@ $(OBJ_DIR)symtable.o : $(COMPILER_DIR)symtable.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)error.o : $(COMPILER_DIR)error.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)typedefs.o : $(COMPILER_DIR)typedefs.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # ---------------------------------------------
@@ -290,10 +285,8 @@ $(OBJ_DIR)forloop.o: $(CPP_SEMANTICS_DIR)forloop.cpp | $(OBJ_DIR)
 $(OBJ_DIR)binaryExpression.o: $(CPP_SEMANTICS_DIR)binaryExpression.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# ---------------------------------------------
-# Library Compilation rules
-$(OBJ_DIR)visualDebug.o: $(LIB_DIR)visualDebug/visualDebug.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) $(SFML_CFLAGS) -c $< -o $@
+$(OBJ_DIR)structs.o: $(CPP_SEMANTICS_DIR)structs.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # ---------------------------------------------
 # Common Compilation rules
@@ -312,9 +305,6 @@ $(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $
 
 $(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
-
-$(VISUAL_DEBUG_BIN): $(COMMON_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(LIB_OBJ) | $(BIN_DIR)
-	$(CXX) -o $@ $^ $(LDFLAGS) $(SFML_LIBS)
 
 $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)

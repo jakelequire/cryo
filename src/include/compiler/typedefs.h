@@ -14,49 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef VISUAL_DEBUG_H
-#define VISUAL_DEBUG_H
-#include <iostream>
-#include <string>
-#include <vector>
-#include <queue>
-#include <cmath>
-#include <fstream>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
-#include <stdint.h>
+#ifndef TYPEDEFS_H
+#define TYPEDEFS_H
 
-#include <SFML/Graphics.hpp>
-
-#include "compiler/ast.h"
-#include "compiler/token.h"
-#include "common/common.h"
-#include "utils/fs.h"
-
-typedef struct ASTNode ASTNode;
-
-struct VisualNode
-{
-    sf::RectangleShape shape;
-    sf::Text text;
-    float x;
-    float y;
-    std::vector<VisualNode *> children;
-};
-
-typedef struct iNode
-{
-    CryoNodeType nodeType;
-    CryoDataType dataType;
-    std::string name;
-    std::string value;
-} iNode;
-
-VisualNode* createVisualTree(ASTNode* astNode, sf::Font& font, int depth);
-void layoutTree(VisualNode *root, float x, float y, float availableWidth);
-void drawTree(sf::RenderWindow &window, VisualNode *root);
-void renderWindow(ASTNode *programNode);
-
-#endif // VISUAL_DEBUG_H
+#endif // TYPEDEFS_H

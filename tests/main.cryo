@@ -1,12 +1,25 @@
 namespace test;
 
+extern function printInt(integer: int) -> void;
+extern function printStr(str: string) -> void;
+extern function strLength(str: string) -> int;
+
+
 struct Array {
     data: int[];
     length: int;
 }
 
-extern function printInt(integer: int) -> void;
-extern function printStr(str: string) -> void;
+struct String {
+    data: string;
+    length: int;
+}
+
+public function createArray() -> void 
+{
+
+    return;
+}
 
 
 public function test(numberIterator: int) -> void {

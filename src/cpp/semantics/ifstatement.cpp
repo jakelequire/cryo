@@ -150,7 +150,7 @@ namespace Cryo
             if (!varValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "IfStatements", "Variable value not found");
-                exit(1);
+                CONDITION_FAILED;
             }
             // Create the condition
             condition = compiler.getContext().builder.CreateICmpNE(varValue, llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, 0, true)), "ifCondition");
@@ -202,7 +202,7 @@ namespace Cryo
             default:
             {
                 debugger.logMessage("ERROR", __LINE__, "IfStatements", "Unknown operator");
-                exit(1);
+                CONDITION_FAILED;
             }
             }
 

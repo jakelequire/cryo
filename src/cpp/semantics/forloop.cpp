@@ -138,7 +138,7 @@ namespace Cryo
                 if (!varNode)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Loops", "Variable not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 if (incrementNode->metaData->type == NODE_UNARY_EXPR)
                 {

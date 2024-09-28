@@ -54,6 +54,12 @@ namespace Cryo
         std::cout << "\n\n";
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    ///
+    /// Getters
+    ///
+
     ASTNode *BackendSymTable::getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName)
     {
         CryoDebugger &debugger = getDebugger();
@@ -115,6 +121,41 @@ namespace Cryo
         SymTableNode symNode = symTable.namespaces[namespaceName];
         return symNode;
     }
+
+    // -----------------------------------------------------------------------------------------------
+
+    ///
+    /// Setters
+    ///
+
+    void BackendSymTable::addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Struct to SymTable");
+
+        // Add the struct to the SymTable
+        std::string structName = structTy->getName().str();
+        std::cout << "Struct Name: " << structName << std::endl;
+
+        StructValue structValue;
+        structValue.ASTStruct = *structNode;
+        structValue.LLVMStruct = structTy;
+
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        symNode.structs[structName] = structValue;
+
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Struct Added" << std::endl;
+
+        return;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    ///
+    /// Debugging
+    ///
 
     void BackendSymTable::printTable(std::string namespaceName)
     {
@@ -201,7 +242,7 @@ namespace Cryo
         return program;
     }
 
-    void BackendSymTable::traverseASTNode(ASTNode *node, SymTableNode &program)
+    void BackendSymTable::traverseASTNode(ASTNode *node, SymTableNode &symTable)
     {
         if (!node)
             return;
@@ -246,7 +287,7 @@ namespace Cryo
                 externFuncNode.paramCount = node->data.externFunction->paramCount;
                 externFuncNode.params = node->data.externFunction->params;
                 std::string externFuncNameStr = std::string(node->data.externFunction->name);
-                program.externFunctions.insert({externFuncNameStr, externFuncNode});
+                symTable.externFunctions.insert({externFuncNameStr, externFuncNode});
             }
             break;
 
@@ -261,7 +302,7 @@ namespace Cryo
                 funcNode.params = node->data.functionDecl->params;
                 funcNode.body = node->data.functionDecl->body;
                 std::string funcNameStr = std::string(node->data.functionDecl->name);
-                program.functions.insert({funcNameStr, funcNode});
+                symTable.functions.insert({funcNameStr, funcNode});
             }
             break;
 
@@ -286,7 +327,7 @@ namespace Cryo
                 varNode.hasIndexExpr = node->data.varDecl->hasIndexExpr;
                 varNode.indexExpr = node->data.varDecl->indexExpr;
                 std::string varNameStr = std::string(node->data.varDecl->name);
-                program.variables.insert({varNameStr, varNode});
+                symTable.variables.insert({varNameStr, varNode});
             }
             break;
 
@@ -342,9 +383,16 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing VAR_REASSIGNMENT node");
             break;
 
-        default:
-            debugger.logMessage("WARNING", __LINE__, "BackendSymTable", "Unknown node type: " + std::to_string(node->metaData->type));
+        case NODE_STRUCT_DECLARATION:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing STRUCT_DECLARATION node");
             break;
+
+        default:
+        {
+            CryoNodeType nodeType = node->metaData->type;
+            debugger.logMessage("ERROR", __LINE__, "BackendSymTable", "Unknown node type: " + std::to_string(nodeType));
+            break;
+        }
         }
 
         // Recursively traverse child nodes
@@ -355,7 +403,7 @@ namespace Cryo
             {
                 for (size_t i = 0; i < node->data.program->statementCount; i++)
                 {
-                    traverseASTNode(node->data.program->statements[i], program);
+                    traverseASTNode(node->data.program->statements[i], symTable);
                 }
             }
             break;
@@ -365,7 +413,7 @@ namespace Cryo
             {
                 for (int i = 0; i < node->data.block->statementCount; i++)
                 {
-                    traverseASTNode(node->data.block->statements[i], program);
+                    traverseASTNode(node->data.block->statements[i], symTable);
                 }
             }
             break;
@@ -375,7 +423,7 @@ namespace Cryo
             {
                 for (int i = 0; i < node->data.functionBlock->statementCount; i++)
                 {
-                    traverseASTNode(node->data.functionBlock->statements[i], program);
+                    traverseASTNode(node->data.functionBlock->statements[i], symTable);
                 }
             }
             break;
@@ -385,9 +433,9 @@ namespace Cryo
             {
                 for (int i = 0; i < node->data.functionDecl->paramCount; i++)
                 {
-                    traverseASTNode(node->data.functionDecl->params[i], program);
+                    traverseASTNode(node->data.functionDecl->params[i], symTable);
                 }
-                traverseASTNode(node->data.functionDecl->body, program);
+                traverseASTNode(node->data.functionDecl->body, symTable);
             }
             break;
 
@@ -396,7 +444,7 @@ namespace Cryo
             {
                 for (int i = 0; i < node->data.functionCall->argCount; i++)
                 {
-                    traverseASTNode(node->data.functionCall->args[i], program);
+                    traverseASTNode(node->data.functionCall->args[i], symTable);
                 }
             }
             break;
@@ -404,10 +452,10 @@ namespace Cryo
         case NODE_VAR_DECLARATION:
             if (node->data.varDecl)
             {
-                traverseASTNode(node->data.varDecl->initializer, program);
+                traverseASTNode(node->data.varDecl->initializer, symTable);
                 if (node->data.varDecl->hasIndexExpr)
                 {
-                    traverseASTNode(reinterpret_cast<ASTNode *>(node->data.varDecl->indexExpr), program);
+                    traverseASTNode(reinterpret_cast<ASTNode *>(node->data.varDecl->indexExpr), symTable);
                 }
             }
             break;
@@ -415,51 +463,51 @@ namespace Cryo
         case NODE_IF_STATEMENT:
             if (node->data.ifStatement)
             {
-                traverseASTNode(node->data.ifStatement->condition, program);
-                traverseASTNode(node->data.ifStatement->thenBranch, program);
-                traverseASTNode(node->data.ifStatement->elseBranch, program);
+                traverseASTNode(node->data.ifStatement->condition, symTable);
+                traverseASTNode(node->data.ifStatement->thenBranch, symTable);
+                traverseASTNode(node->data.ifStatement->elseBranch, symTable);
             }
             break;
 
         case NODE_FOR_STATEMENT:
             if (node->data.forStatement)
             {
-                traverseASTNode(node->data.forStatement->initializer, program);
-                traverseASTNode(node->data.forStatement->condition, program);
-                traverseASTNode(node->data.forStatement->increment, program);
-                traverseASTNode(node->data.forStatement->body, program);
+                traverseASTNode(node->data.forStatement->initializer, symTable);
+                traverseASTNode(node->data.forStatement->condition, symTable);
+                traverseASTNode(node->data.forStatement->increment, symTable);
+                traverseASTNode(node->data.forStatement->body, symTable);
             }
             break;
 
         case NODE_WHILE_STATEMENT:
             if (node->data.whileStatement)
             {
-                traverseASTNode(node->data.whileStatement->condition, program);
-                traverseASTNode(node->data.whileStatement->body, program);
+                traverseASTNode(node->data.whileStatement->condition, symTable);
+                traverseASTNode(node->data.whileStatement->body, symTable);
             }
             break;
 
         case NODE_BINARY_EXPR:
             if (node->data.bin_op)
             {
-                traverseASTNode(node->data.bin_op->left, program);
-                traverseASTNode(node->data.bin_op->right, program);
+                traverseASTNode(node->data.bin_op->left, symTable);
+                traverseASTNode(node->data.bin_op->right, symTable);
             }
             break;
 
         case NODE_UNARY_EXPR:
             if (node->data.unary_op)
             {
-                traverseASTNode(node->data.unary_op->operand, program);
-                traverseASTNode(node->data.unary_op->expression, program);
+                traverseASTNode(node->data.unary_op->operand, symTable);
+                traverseASTNode(node->data.unary_op->expression, symTable);
             }
             break;
 
         case NODE_RETURN_STATEMENT:
             if (node->data.returnStatement)
             {
-                traverseASTNode(node->data.returnStatement->returnValue, program);
-                traverseASTNode(node->data.returnStatement->expression, program);
+                traverseASTNode(node->data.returnStatement->returnValue, symTable);
+                traverseASTNode(node->data.returnStatement->expression, symTable);
             }
             break;
 
@@ -468,7 +516,7 @@ namespace Cryo
             {
                 for (int i = 0; i < node->data.array->elementCount; i++)
                 {
-                    traverseASTNode(node->data.array->elements[i], program);
+                    traverseASTNode(node->data.array->elements[i], symTable);
                 }
             }
             break;
@@ -476,18 +524,30 @@ namespace Cryo
         case NODE_INDEX_EXPR:
             if (node->data.indexExpr)
             {
-                traverseASTNode(node->data.indexExpr->array, program);
-                traverseASTNode(node->data.indexExpr->index, program);
+                traverseASTNode(node->data.indexExpr->array, symTable);
+                traverseASTNode(node->data.indexExpr->index, symTable);
             }
             break;
 
         case NODE_VAR_REASSIGN:
             if (node->data.varReassignment)
             {
-                traverseASTNode(node->data.varReassignment->existingVarNode, program);
-                traverseASTNode(node->data.varReassignment->newVarNode, program);
+                traverseASTNode(node->data.varReassignment->existingVarNode, symTable);
+                traverseASTNode(node->data.varReassignment->newVarNode, symTable);
             }
             break;
+
+        case NODE_STRUCT_DECLARATION:
+        {
+            if (node->data.structNode)
+            {
+                for (int i = 0; i < node->data.structNode->propertyCount; i++)
+                {
+                    traverseASTNode(node->data.structNode->properties[i], symTable);
+                }
+            }
+            break;
+        }
 
         // For node types that don't have child nodes or have been fully processed
         case NODE_NAMESPACE:

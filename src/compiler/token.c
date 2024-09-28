@@ -152,6 +152,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "VAR_REASSIGN";
     case NODE_STRUCT_DECLARATION:
         return "STRUCT_DECLARATION";
+    case NODE_PROPERTY:
+        return "PROPERTY";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

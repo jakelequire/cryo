@@ -42,41 +42,66 @@ int main(int argc, char *argv[])
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    const char *filePath = argv[1];
-    char *source = readFile(filePath);
-    if (source == NULL)
+    const char *fileName;
+    char *source;
+    if (strcmp(argv[1], "-s") == 0)
     {
-        fprintf(stderr, "Failed to read source file.\n");
-        return 1;
+        if (argc < 3)
+        {
+            fprintf(stderr, "Error: No source text provided after -s flag\n");
+            return 1;
+        }
+        source = argv[2];
+    }
+    else
+    {
+        const char *filePath = argv[1];
+        // Set the filename to the path but trim everything up until the filename
+
+        fileName = strrchr(filePath, '/');
+        if (fileName == NULL)
+        {
+            fileName = filePath;
+        }
+        else
+        {
+            fileName++;
+        }
+
+        printf("[Main] Reading source file: %s\n", fileName);
+
+        source = readFile(filePath);
+        if (source == NULL)
+        {
+            fprintf(stderr, "Failed to read source file.\n");
+            return 1;
+        }
     }
 
     // Initialize the call stack
     initCallStack(&callStack, 10);
 
-    // Initialize the lexer
-    Lexer lexer;
-    initLexer(&lexer, source);
-    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
-
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
 
+    // Initialize the lexer
+    Lexer lexer;
+    CompilerState state = initCompilerState(arena, &lexer, table, fileName);
+    initLexer(&lexer, source, fileName, &state);
+    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
+
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena);
+    ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
 
     if (programNode != NULL)
     {
-        printf("\n\n>===------- AST Tree -------===<\n\n");
+        dumpCompilerState(state);
         int size = programNode->data.program->statementCount;
         ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
         memcpy(nodeCpy, programNode, sizeof(ASTNode));
 
         printSymbolTable(table, arena);
-
         printAST(nodeCpy, 0, arena);
-
-        printf("\n>===------- End Tree ------===<\n\n");
-
         DEBUG_ARENA_PRINT(arena);
 
         printf("[Main] Generating IR code...\n");

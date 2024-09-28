@@ -14,43 +14,4 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef ERROR_H
-#define ERROR_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <malloc.h>
-
-#include "ast.h"
-
-#define MAX_STACK_SIZE 10
-
-typedef struct
-{
-    char *functionName;
-    int lineNumber;
-} CryoStackFrame;
-
-typedef struct
-{
-    CryoStackFrame *stack;
-    int size;
-    int capacity;
-} CryoCallStack;
-
-typedef struct
-{
-    CryoCallStack callStack;
-} CryoInterpreter;
-
-extern CryoCallStack callStack;
-
-/* @Call_Stack */
-void initCallStack(CryoCallStack *callStack, int initialCapacity);
-void freeCallStack(CryoCallStack *callStack);
-void resizeCallStack(CryoCallStack *callStack);
-void pushCallStack(CryoCallStack *callStack, const char *functionName, int lineNumber);
-void popCallStack(CryoCallStack *callStack);
-void printStackTrace(CryoCallStack *callStack);
-
-#endif // ERROR_H
+#include "compiler/typedefs.h"

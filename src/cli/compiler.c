@@ -30,15 +30,19 @@ int cryoCompiler(const char *source)
 
     initCallStack(&callStack, 10);
 
+    const char *fileName = "source_code";
+    CryoSymbolTable *table = createSymbolTable(arena);
+
     Lexer lexer;
-    initLexer(&lexer, source);
+    CompilerState state = initCompilerState(arena, &lexer, table, "main.cryo");
+
+    initLexer(&lexer, source, fileName, &state);
     printf("\n[DEBUG] Lexer initialized\n\n");
 
     // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena);
+    ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
 
     if (programNode != NULL)
     {

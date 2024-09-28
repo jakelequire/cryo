@@ -27,16 +27,91 @@
 #include "utils/arena.h"
 #include "utils/fs.h"
 
+typedef struct CryoSymbolTable CryoSymbolTable;
+typedef struct Lexer Lexer;
+typedef struct Token Token;
+typedef struct Arena Arena;
+typedef struct ASTNode ASTNode;
+
+/*================================*/
+
+typedef enum ErrorType
+{
+    ERROR,
+    WARNING,
+    INFO,
+    UNKNOWN
+} ErrorType;
+
+typedef struct InternalDebug
+{
+    const char *functionName;
+    const char *fileName;
+    int lineNumber;
+} InternalDebug;
+
+#define INTERAL_DEBUG_INFO \
+    (InternalDebug) { __FUNCTION__, __FILE__, __LINE__ }
+
+#define CAPTURE_INTERNAL_DEBUG \
+    captureInternalDebug(__FUNCTION__, __FILE__, __LINE__)
+
+typedef struct CompilerError
+{
+    ErrorType type;
+    InternalDebug debug;
+    char *message;
+    char *detail;
+    int lineNumber;
+    int column;
+    char *fileName;
+    char *functionName;
+} CompilerError;
+
+typedef struct CompilerState
+{
+    struct Arena *arena;
+    struct Lexer *lexer;
+    struct CryoSymbolTable *table;
+    struct ASTNode *programNode;
+    struct ASTNode *currentNode;
+    const char *fileName;
+    int lineNumber;
+    int columnNumber;
+    int errorCount;
+    CompilerError **errors;
+} CompilerState;
+
+#define GET_SOURCE_INFO \
+    lexer->line, lexer->column, lexer->fileName
+
+#define NEW_COMPILER_ERROR(type, message, detail) \
+    createError(CAPTURE_INTERNAL_DEBUG, type, message, detail, GET_SOURCE_INFO)
+
+CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName);
+void updateCompilerLineNumber(Lexer *lexer, CompilerState *state);
+void updateCompilerColumnNumber(Lexer *lexer, CompilerState *state);
+CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode);
+
+InternalDebug captureInternalDebug(const char *functionName, const char *fileName, int lineNumber);
+CompilerError initNewError(InternalDebug debug);
+CompilerError createError(InternalDebug internals, const char *type, const char *message, const char *detail, int lineNumber, int column, const char *fileName);
+
+void errorReport(CompilerState state);
+void logCompilerError(CompilerError *error);
+char *getErrorTypeString(ErrorType type);
+
+void dumpCompilerState(CompilerState state);
 /*================================*/
 // Macros
 
 /// @brief A macro to break the program at a specific point for debugging.
-#define DEBUG_BREAKPOINT                                                                      \
-    printf("\n#========================================================================#\n"); \
-    printf("\n<!> Debug Breakpoint! Exiting...");                                             \
-    printf("\n<!> Line: %i, Function: %s", __LINE__, __FUNCTION__);                           \
-    printf("\n<!> File: %s\n", __FILE__);                                                     \
-    printf("\n#========================================================================#\n"); \
+#define DEBUG_BREAKPOINT                                                                        \
+    printf("\n#========================================================================#\n");   \
+    printf("\n<!> Debug Breakpoint! Exiting...");                                               \
+    printf("\n<!> Line: %i, Function: %s", __LINE__, __FUNCTION__);                             \
+    printf("\n<!> File: %s\n", __FILE__);                                                       \
+    printf("\n#========================================================================#\n\n"); \
     exit(0)
 
 #define CONDITION_FAILED                                                                      \

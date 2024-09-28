@@ -1,3 +1,19 @@
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
 #include "cpp/codegen.h"
 
 namespace Cryo
@@ -49,7 +65,7 @@ namespace Cryo
         if (!varNode)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
-            exit(1);
+            CONDITION_FAILED;
         }
 
         // Get the new value
@@ -58,14 +74,14 @@ namespace Cryo
         if (!newVal)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "New value not found");
-            exit(1);
+            CONDITION_FAILED;
         }
 
         llvm::Value *varValue = compiler.getContext().namedValues[existingVarName];
         if (!varValue)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-            exit(1);
+            CONDITION_FAILED;
         }
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
         llvm::Instruction *inst = compiler.getContext().builder.CreateStore(newVal, varValue);
@@ -159,7 +175,7 @@ namespace Cryo
             if (!varValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                exit(1);
+                CONDITION_FAILED;
             }
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
             debugger.logLLVMValue(varValue);
@@ -189,7 +205,7 @@ namespace Cryo
                     std::cout << ">>-------------- <Module State> --------------<<" << std::endl;
                     compiler.dumpModule();
                     std::cout << ">>-------------- </Module State> --------------<<" << std::endl;
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 debugger.logMessage("INFO", __LINE__, "Variables", "Index Value Found");
                 debugger.logLLVMValue(indexValue);
@@ -203,7 +219,7 @@ namespace Cryo
                 if (!arrayNode)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
 
                 // We can't index the array via the AST Node. Since we cannot get the value of the index,
@@ -212,7 +228,7 @@ namespace Cryo
                 if (!arr)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 llvm::Type *arrType = arr->getType();
                 debugger.logMessage("INFO", __LINE__, "Variables", "Array Found");
@@ -224,7 +240,7 @@ namespace Cryo
                     if (!indexValue)
                     {
                         debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
-                        exit(1);
+                        CONDITION_FAILED;
                     }
                 }
 
@@ -232,7 +248,7 @@ namespace Cryo
                 if (!indexedValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 debugger.logMessage("INFO", __LINE__, "Variables", "Indexed Value Found");
                 debugger.logLLVMValue(indexedValue);
@@ -254,13 +270,13 @@ namespace Cryo
                 if (!arrNode)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 llvm::Value *indexedValue = arrays.indexArrayForValue(arrNode, indexValue);
                 if (!indexedValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 // Allocate the variable
                 llvmValue = compiler.getContext().builder.CreateAlloca(indexedValue->getType(), indexedValue, varName);
@@ -283,7 +299,7 @@ namespace Cryo
             if (!varValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                exit(1);
+                CONDITION_FAILED;
             }
             llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
             llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
@@ -305,7 +321,7 @@ namespace Cryo
                 std::cout << ">>-------------- <Module State> --------------<<" << std::endl;
                 compiler.dumpModule();
                 std::cout << ">>-------------- </Module State> --------------<<" << std::endl;
-                exit(1);
+                CONDITION_FAILED;
             }
             llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty->getInt32Ty(compiler.getContext().context), variableValue, varName);
             // llvm::Value *storeValue = compiler.getContext().builder.CreateStore(variableValue, ptrValue);
@@ -322,7 +338,7 @@ namespace Cryo
             if (!varValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                exit(1);
+                CONDITION_FAILED;
             }
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
             // llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, varValue, varName);
@@ -379,7 +395,7 @@ namespace Cryo
             if (!currentBlock)
             {
                 debugger.logMessage("ERROR", __LINE__, "Variables", "Current block not found");
-                exit(1);
+                CONDITION_FAILED;
             }
             debugger.logMessage("INFO", __LINE__, "Variables", "Current block found");
             // Set the insert point
@@ -449,7 +465,7 @@ namespace Cryo
                 }
                 default:
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown type");
-                    exit(1);
+                    CONDITION_FAILED;
                     break;
                 }
 
@@ -459,7 +475,7 @@ namespace Cryo
                 if (!llvmValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Failed to cast constant to value");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
 
                 llvm::GlobalVariable *var = new llvm::GlobalVariable(
@@ -557,7 +573,7 @@ namespace Cryo
                 }
                 default:
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown type");
-                    exit(1);
+                    CONDITION_FAILED;
                     break;
                 }
 
@@ -567,7 +583,7 @@ namespace Cryo
                 if (!llvmValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Failed to cast constant to value");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
 
                 llvm::GlobalVariable *var = new llvm::GlobalVariable(
@@ -697,7 +713,7 @@ namespace Cryo
             if (!argValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Variables", "Argument value not found");
-                exit(1);
+                CONDITION_FAILED;
             }
             if (argNodeType == NODE_VAR_DECLARATION)
             {
@@ -708,7 +724,7 @@ namespace Cryo
                 if (!varNode)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 CryoNodeType varNodeType = varNode->metaData->type;
                 std::cout << "Variable Node Type: " << CryoNodeTypeToString(varNodeType) << std::endl;
@@ -726,7 +742,7 @@ namespace Cryo
                     default:
                     {
                         debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
-                        exit(1);
+                        CONDITION_FAILED;
                     }
                     }
                 }
@@ -742,7 +758,7 @@ namespace Cryo
         if (!function)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "Function not found");
-            exit(1);
+            CONDITION_FAILED;
         }
         debugger.logMessage("INFO", __LINE__, "Variables", "Function Found");
 
@@ -751,7 +767,7 @@ namespace Cryo
         if (!functionCall)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "Function call not created");
-            exit(1);
+            CONDITION_FAILED;
         }
 
         // Store the call into the variable

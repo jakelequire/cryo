@@ -1,3 +1,19 @@
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
 #include "cpp/codegen.h"
 
 namespace Cryo
@@ -61,7 +77,7 @@ namespace Cryo
         if (!block)
         {
             debugger.logMessage("ERROR", __LINE__, "Arrays", "Block not found");
-            exit(1);
+            CONDITION_FAILED;
         }
 
         // Alloc the array without initializing it
@@ -125,7 +141,7 @@ namespace Cryo
             else
             {
                 debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown element type");
-                exit(1);
+                CONDITION_FAILED;
             }
         }
 
@@ -171,7 +187,7 @@ namespace Cryo
 
         default:
             debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown node type");
-            exit(1);
+            CONDITION_FAILED;
         }
 
         return llvmArrayType;
@@ -272,7 +288,7 @@ namespace Cryo
                 if (!arrayNode)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Arrays", "Array not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 int elementCount = getArrayLength(arrayNode);
                 std::cout << "Element Count: " << elementCount << std::endl;
@@ -285,7 +301,7 @@ namespace Cryo
                 if (!indexNodeVar)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Arrays", "Index variable not found");
-                    exit(1);
+                    CONDITION_FAILED;
                 }
                 ASTNode *indexedArrayValue = nullptr;
                 llvm::Value *indexedValue = nullptr;
@@ -362,7 +378,7 @@ namespace Cryo
         if (!array)
         {
             debugger.logMessage("ERROR", __LINE__, "Arrays", "Array not found");
-            exit(1);
+            CONDITION_FAILED;
         }
         int elementCount = getArrayLength(array);
 
@@ -374,7 +390,7 @@ namespace Cryo
             if (!indexNodeVar)
             {
                 debugger.logMessage("ERROR", __LINE__, "Arrays", "Index variable not found");
-                exit(1);
+                CONDITION_FAILED;
             }
             if (indexNodeVar->metaData->type == NODE_LITERAL_EXPR)
             {
@@ -404,7 +420,7 @@ namespace Cryo
             else
             {
                 debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown literal type");
-                exit(1);
+                CONDITION_FAILED;
             }
         }
 

@@ -1,3 +1,19 @@
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
 #include "cpp/codegen.h"
 
 namespace Cryo
@@ -80,6 +96,9 @@ namespace Cryo
         case DATA_TYPE_VOID:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting void to LLVM type");
             return llvm::Type::getVoidTy(CryoContext::getInstance().context);
+        case DATA_TYPE_INT_ARRAY:
+            debugger.logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
+            return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
         default:
             debugger.logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;
@@ -304,18 +323,6 @@ namespace Cryo
             return val;
         }
 
-        /*
-        // Currently changing both types from:
-        // `store i32 0, ptr %exampleIntOne, align 4` -> `ptr %exampleIntOne`
-        // &&                                             ^ This
-        // `call void @test(ptr %exampleIntOne)`  -> (ptr %exampleIntOne)
-        //                                             ^ This
-        //
-        // We only want to change the top of the function call, not the store instruction
-            %exampleIntOne = alloca i32, align 4, addrspace(32)
-            store i32 0, ptr %exampleIntOne, align 4
-            call void @test(ptr %exampleIntOne)
-        */
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(val);
         if (inst)
         {
@@ -344,3 +351,66 @@ namespace Cryo
     }
 
 } // namespace Cryo
+
+/*
+
+LLVM Type System Reference
+---
+
+Structs IR Representation:
+```
+%T1 = type { <type list> }     ; Identified normal struct type
+%T2 = type <{ <type list> }>   ; Identified packed struct type
+```
+Examples of struct types:
+{ i32, i32, i32 }   - A triple of three i32 values
+{ float, ptr }      - A pair, where the first element is a float and the second element is a pointer.
+<{ i8, i32 }>       - A packed struct known to be 5 bytes in size.
+
+~~~~~~~~~~
+
+
+Integer Types:
+<4 x i32> Vector of 4 32-bit integer values.
+<8 x float> Vector of 8 32-bit floating-point values.
+<2 x i64> Vector of 2 64-bit integer values.
+<4 x ptr> Vector of 4 pointers
+<vscale x 4 x i32> Vector with a multiple of 4 32-bit integer values.
+
+
+~~~~~~~~~~
+
+
+Floating-Point Types:
+
+Type        - Description
+--------------------------------
+half        - 16-bit floating-point value
+bfloat      - 16-bit “brain” floating-point value (7-bit significand). Provides the same number of exponent bits as float,
+            so that it matches its dynamic range, but with greatly reduced precision.
+            Used in Intel’s AVX-512 BF16 extensions and Arm’s ARMv8.6-A extensions, among others.
+float       - 32-bit floating-point value
+double      - 64-bit floating-point value
+fp128       - 128-bit floating-point value (113-bit significand)
+x86_fp80    - 80-bit floating-point value (X87)
+ppc_fp128   - 128-bit floating-point value (two 64-bits)
+
+
+~~~~~~~~~~
+
+
+Bitcasting:
+%val = bitcast <4 x i4> <i4 1, i4 2, i4 3, i4 5> to i16
+
+; Bitcasting from a vector to an integral type can be seen as
+; concatenating the values:
+;   %val now has the hexadecimal value 0x5321.
+
+store i16 %val, ptr %ptr
+
+; In memory the content will be (8-bit addressing):
+;
+;    [%ptr + 0]: 00100001  (0x21)
+;    [%ptr + 1]: 01010011  (0x53)
+
+*/
