@@ -15,3 +15,22 @@
  *                                                                              *
  ********************************************************************************/
 #include "compiler/typedefs.h"
+
+char *TypeofDataTypeToString(TypeofDataType type)
+{
+    switch (type)
+    {
+    case PRIMITIVE_TYPE:
+        return "PRIMITIVE_TYPE";
+    case STRUCT_TYPE:
+        return "STRUCT_TYPE";
+    case ENUM_TYPE:
+        return "ENUM_TYPE";
+    case FUNCTION_TYPE:
+        return "FUNCTION_TYPE";
+    case UNKNOWN_TYPE:
+        return "UNKNOWN_TYPE";
+    default:
+        return "<TYPE UNKNOWN>";
+    }
+}

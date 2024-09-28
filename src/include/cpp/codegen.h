@@ -302,6 +302,11 @@ namespace Cryo
         llvm::ConstantInt *getLiteralIntValue(int value);
 
         /**
+         * @brief Returns the LLVM string constant value of a string.
+         */
+        llvm::Constant *getLiteralStringValue(std::string value);
+
+        /**
          * @brief Evaluates a boolean expression and returns the CryoBoolean result.
          */
         CryoBoolean *evalBooleanExpression(ASTNode *node);

@@ -29,10 +29,13 @@
 #include "compiler/token.h"
 #include "compiler/lexer.h"
 #include "compiler/symtable.h"
+#include "compiler/typedefs.h"
 #include "utils/support.h"
 #include "utils/arena.h"
 #include "common/common.h"
 /*---------<end>---------*/
+
+// typedef struct DataType DataType;
 
 // strdup
 extern char *strdup(const char *__s);
@@ -664,6 +667,13 @@ typedef struct StructNode
     int propertyCount;
     int propertyCapacity;
 } StructNode;
+
+// typedef struct CustomTypeNode
+// {
+//     DataType type;
+//     char *typeString;
+//
+// } CustomTypeNode;
 
 typedef struct ASTNode
 {

@@ -16,5 +16,33 @@
  ********************************************************************************/
 #ifndef TYPEDEFS_H
 #define TYPEDEFS_H
+#include "compiler/token.h"
+#include "compiler/ast.h"
+
+typedef enum TypeofDataType
+{
+    PRIMITIVE_TYPE, // `int`, `float`, `string`, `boolean`, `void`
+    STRUCT_TYPE,    // `struct ... { ... }`
+    ENUM_TYPE,      // `enum ... { ... }`
+    FUNCTION_TYPE,  // `function (...) -> ...`
+    UNKNOWN_TYPE    // `<UNKNOWN>`
+} TypeofDataType;
+
+typedef struct DataType
+{
+    TypeofDataType typeOf;
+    union
+    {
+        CryoDataType primitiveType;
+        // Points to a struct node (StructNode)
+        ASTNode *structType;
+        // Unimplemented
+        ASTNode *enumType;
+        // Unimplemented
+        ASTNode *functionType;
+    };
+} DataType;
+
+char *TypeofDataTypeToString(TypeofDataType type);
 
 #endif // TYPEDEFS_H

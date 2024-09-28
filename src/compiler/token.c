@@ -154,6 +154,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "STRUCT_DECLARATION";
     case NODE_PROPERTY:
         return "PROPERTY";
+    case NODE_CUSTOM_TYPE:
+        return "CUSTOM_TYPE";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -556,7 +558,6 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_INCREMENT";
     case TOKEN_DECREMENT:
         return "TOKEN_DECREMENT";
-
     case TOKEN_ITER_VAR:
         return "TOKEN_ITER_VAR";
     case TOKEN_ITER_STEP:

@@ -227,6 +227,14 @@ namespace Cryo
         return llvm::ConstantInt::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), value);
     }
 
+    // getLiteralStringValue
+    llvm::Constant *Types::getLiteralStringValue(std::string value)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Getting string literal value");
+        return llvm::ConstantDataArray::getString(CryoContext::getInstance().context, value);
+    }
+
     CryoBoolean *Types::evalBooleanExpression(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();

@@ -257,6 +257,7 @@ CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *t
         break;
 
     case TOKEN_IDENTIFIER:
+        // This is a custom type such as a struct or enum (TODO: Implement)
         type = getCryoDataType(strndup(currentToken.start, currentToken.length), arena, state);
         break;
 
@@ -988,6 +989,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     {
         logMessage("ERROR", __LINE__, "Parser", "Function not found or is not a function.");
         logMessage("ERROR", __LINE__, "Parser", "Function name: %s", functionName);
+        NEW_COMPILER_ERROR(state, "ERROR", "Function not found or is not a function.", "parseFunctionCall");
         error("Function not found or is not a function.", "parseFunctionCall", table, arena, state);
         return NULL;
     }

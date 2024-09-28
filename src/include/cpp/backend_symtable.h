@@ -27,10 +27,6 @@
 
 namespace Cryo
 {
-}
-
-namespace Cryo
-{
     class CryoDebugger;
 
     struct StructValue
