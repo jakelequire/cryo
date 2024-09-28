@@ -85,8 +85,8 @@ typedef struct CompilerState
 #define GET_SOURCE_INFO \
     lexer->line, lexer->column, lexer->fileName
 
-#define NEW_COMPILER_ERROR(type, message, detail) \
-    createError(CAPTURE_INTERNAL_DEBUG, type, message, detail, GET_SOURCE_INFO)
+#define NEW_COMPILER_ERROR(state, type, message, detail) \
+    createError(CAPTURE_INTERNAL_DEBUG, state, type, message, detail, GET_SOURCE_INFO)
 
 CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName);
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state);
@@ -95,7 +95,7 @@ CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode);
 
 InternalDebug captureInternalDebug(const char *functionName, const char *fileName, int lineNumber);
 CompilerError initNewError(InternalDebug debug);
-CompilerError createError(InternalDebug internals, const char *type, const char *message, const char *detail, int lineNumber, int column, const char *fileName);
+CompilerError createError(InternalDebug internals, CompilerState *state, const char *type, const char *message, const char *detail, int lineNumber, int column, const char *fileName);
 
 void errorReport(CompilerState state);
 void logCompilerError(CompilerError *error);

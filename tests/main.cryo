@@ -17,7 +17,8 @@ struct String {
 
 public function createArray() -> void 
 {
-
+    const anotherFoo: int = 10;
+    const anotherBar: int = ;
     return;
 }
 

@@ -173,6 +173,8 @@ void error(char *message, char *functionName, CryoSymbolTable *table, Arena *are
     printf("\n\n");
     printStackTrace(&callStack);
 
+    dumpCompilerState(*state);
+
     printf("\n<!> [Parser] Error: %s at line %d, column %d\n", message, line, column);
     printf("@Function: <%s>\n", functionName);
     printf("------------------------------------------------------------------------\n\n");
@@ -526,6 +528,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         return parseUnaryExpression(lexer, table, context, arena, state);
 
     default:
+        NEW_COMPILER_ERROR(state, "ERROR", "Expected an expression or statement.", "parsePrimaryExpression");
         error("Expected an expression", "parsePrimaryExpression", table, arena, state);
         return NULL;
     }

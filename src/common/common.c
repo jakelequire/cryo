@@ -31,7 +31,7 @@ CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *tab
     state.lineNumber = 0;
     state.columnNumber = 0;
     state.errorCount = 0;
-    state.errors = NULL;
+    state.errors = (CompilerError **)malloc(sizeof(CompilerError *));
 
     logMessage("INFO", __LINE__, "CompilerState", "Compiler state initialized");
     return state;
@@ -77,7 +77,7 @@ CompilerError initNewError(InternalDebug debug)
     return error;
 }
 
-CompilerError createError(InternalDebug internals, const char *type, const char *message, const char *detail, int lineNumber, int column, const char *fileName)
+CompilerError createError(InternalDebug internals, CompilerState *state, const char *type, const char *message, const char *detail, int lineNumber, int column, const char *fileName)
 {
     CompilerError error;
     if (strcmp(type, "ERROR") == 0)
@@ -100,8 +100,12 @@ CompilerError createError(InternalDebug internals, const char *type, const char 
     error.message = (char *)message;
     error.detail = (char *)detail;
     error.lineNumber = lineNumber;
+    error.column = column;
     error.fileName = (char *)fileName;
     error.functionName = (char *)internals.functionName;
+    state->errorCount++;
+    state->errors = (CompilerError **)realloc(state->errors, sizeof(CompilerError *) * state->errorCount);
+    state->errors[state->errorCount - 1] = &error;
     return error;
 }
 
@@ -124,13 +128,19 @@ void errorReport(CompilerState state)
 void logCompilerError(CompilerError *error)
 {
     char *type = getErrorTypeString(error->type);
-    fprintf(stderr, "[%s] %s\n", type, error->message);
+    fprintf(stderr, "\n#COMPILATION_ERROR\n\n");
+    fprintf(stderr, "File: %s\n", error->fileName);
+    fprintf(stderr, "Type: [%s]\n", type);
+    fprintf(stderr, "Message: %s\n", error->message);
     if (error->detail != NULL)
     {
         fprintf(stderr, "Details: %s\n", error->detail);
     }
-    fprintf(stderr, "Location: %s:%d\n", error->fileName, error->lineNumber);
+    fprintf(stderr, "Location: %s:%d:%d\n", error->fileName, error->lineNumber, error->column);
+    fprintf(stderr, "Line: %d\n", error->lineNumber);
+    fprintf(stderr, "Column: %d\n", error->column);
     fprintf(stderr, "Function: %s\n", error->functionName);
+    fprintf(stderr, "\n#END_COMPILATION_ERROR\n\n");
 }
 
 char *getErrorTypeString(ErrorType type)
@@ -158,7 +168,6 @@ void dumpCompilerState(CompilerState state)
     fprintf(stderr, "  - Symbol Table: %p\n", state.table);
     fprintf(stderr, "  - Program Node: %p\n", state.programNode);
     fprintf(stderr, "  - Current Node: %p\n", state.currentNode);
-    fprintf(stderr, "  - File Name: %s\n", state.fileName);
     fprintf(stderr, "  - Line Number: %d\n", state.lineNumber);
     fprintf(stderr, "  - Column Number: %d\n", state.columnNumber);
     fprintf(stderr, "  - Error Count: %d\n", state.errorCount);
