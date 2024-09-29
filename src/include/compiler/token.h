@@ -288,23 +288,40 @@ extern "C"
 
     typedef enum CryoDataType
     {
-        DATA_TYPE_UNKNOWN = -1,        // `<UNKNOWN>`         -1
-        DATA_TYPE_INT,                 // `int`               0
-        NODE_LITERAL_INT,              // `123`               1
-        DATA_TYPE_FLOAT,               // `float`             2
-        DATA_TYPE_STRING,              // `string`            3
-        DATA_TYPE_BOOLEAN,             // `boolean`           4
-        DATA_TYPE_FUNCTION,            // `function`          5
-        DATA_TYPE_EXTERN_FUNCTION,     // `extern function`   6
-        DATA_TYPE_VOID,                // `void`              7
-        DATA_TYPE_NULL,                // `null`              8
-        DATA_TYPE_ARRAY,               // `[]`                9
-        DATA_TYPE_INT_ARRAY,           // `int[]`             10
-        DATA_TYPE_FLOAT_ARRAY,         // `float[]`           11
-        DATA_TYPE_STRING_ARRAY,        // `string[]`          12
-        DATA_TYPE_BOOLEAN_ARRAY,       // `boolean[]`         13
-        DATA_TYPE_VOID_ARRAY,          // `void[]`            14
-        INTERNAL_DATA_TYPE_EXPRESSION, // `expression`        15
+        DATA_TYPE_UNKNOWN = -1,    // `<UNKNOWN>`         -1
+        DATA_TYPE_INT,             // `int`               0
+        DATA_TYPE_FLOAT,           // `float`             2
+        DATA_TYPE_STRING,          // `string`            3
+        DATA_TYPE_BOOLEAN,         // `boolean`           4
+        DATA_TYPE_FUNCTION,        // `function`          5
+        DATA_TYPE_EXTERN_FUNCTION, // `extern function`   6
+        DATA_TYPE_VOID,            // `void`              7
+        DATA_TYPE_NULL,            // `null`              8
+        DATA_TYPE_ARRAY,           // `[]`                9
+        DATA_TYPE_INT_ARRAY,       // `int[]`             10
+        DATA_TYPE_FLOAT_ARRAY,     // `float[]`           11
+        DATA_TYPE_STRING_ARRAY,    // `string[]`          12
+        DATA_TYPE_BOOLEAN_ARRAY,   // `boolean[]`         13
+        DATA_TYPE_VOID_ARRAY,      // `void[]`            14
+
+        // Integers
+        DATA_TYPE_SINT8,  // `sint8`  15
+        DATA_TYPE_SINT16, // `sint16` 16
+        DATA_TYPE_SINT32, // `sint32` 17
+        DATA_TYPE_SINT64, // `sint64` 18
+        DATA_TYPE_UINT8,  // `uint8`  19
+        DATA_TYPE_UINT16, // `uint16` 20
+        DATA_TYPE_UINT32, // `uint32` 21
+        DATA_TYPE_UINT64, // `uint64` 22
+
+        // Arrays
+        DATA_TYPE_INT8_ARRAY,  // `int8[]`  23
+        DATA_TYPE_INT16_ARRAY, // `int16[]` 24
+        DATA_TYPE_INT32_ARRAY, // `int32[]` 25
+        DATA_TYPE_INT64_ARRAY, // `int64[]` 26
+
+        // Vectors
+        DATA_TYPE_DYN_VEC, // `dyn_vec` 27
     } CryoDataType;
 
     typedef enum CryoVisibilityType

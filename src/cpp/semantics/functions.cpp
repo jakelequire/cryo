@@ -454,7 +454,7 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    void Functions::createFunctionCall(ASTNode *node)
+    llvm::Value *Functions::createFunctionCall(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Generator &generator = compiler.getGenerator();
@@ -600,11 +600,10 @@ namespace Cryo
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Argument");
                 std::string argName = std::string(argNode->data.varDecl->name);
-                argName = types.trimStrQuotes(argName);
+                // argName = types.trimStrQuotes(argName);
                 argNode->data.varDecl->name = (char *)argName.c_str();
-                int _len = compiler.getTypes().getLiteralValLength(argNode);
+                std::cout << "Argument Name: " << argName << std::endl;
 
-                llvm::Type *argType = compiler.getTypes().getType(DATA_TYPE_STRING, _len);
                 llvm::Value *argValue = nullptr;
                 llvm::Value *localVar = variables.getVariable(argName);
                 if (!localVar)
@@ -632,6 +631,9 @@ namespace Cryo
             default:
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
+                std::cout << "Received: " << CryoDataTypeToString(argTypeData) << std::endl;
+
+                DUMP_COMPILER_STATE
                 CONDITION_FAILED;
             }
             }
@@ -715,8 +717,28 @@ namespace Cryo
 
             debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
 
-            return;
+            return functionCall;
         }
+
+        // If there are no arguments, just create the function call
+        llvm::Function *function = compiler.getContext().module->getFunction(functionName);
+        if (!function)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+
+        if (!functionCall)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
+            CONDITION_FAILED;
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
+
+        return functionCall;
     }
 
     llvm::Value *Functions::createParameter(llvm::Argument *param, llvm::Type *argTypes)

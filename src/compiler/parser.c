@@ -230,7 +230,7 @@ char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state)
 CryoDataType getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state)
 {
     logMessage("INFO", __LINE__, "Parser", "Getting data typestring: %s", typeStr);
-    CryoDataType type = CryoDataTypeStringToType((char *)typeStr);
+    CryoDataType type = parseDataType(typeStr);
     if (type == DATA_TYPE_UNKNOWN)
     {
         error("Unknown data type", "getCryoDataType", NULL, arena, state);
@@ -989,7 +989,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     {
         logMessage("ERROR", __LINE__, "Parser", "Function not found or is not a function.");
         logMessage("ERROR", __LINE__, "Parser", "Function name: %s", functionName);
-        NEW_COMPILER_ERROR(state, "ERROR", "Function not found or is not a function.", "parseFunctionCall");
+        NEW_COMPILER_ERROR(state, "ERROR", "Function not found.", "parseFunctionCall");
         error("Function not found or is not a function.", "parseFunctionCall", table, arena, state);
         return NULL;
     }

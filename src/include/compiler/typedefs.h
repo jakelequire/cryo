@@ -44,5 +44,7 @@ typedef struct DataType
 } DataType;
 
 char *TypeofDataTypeToString(TypeofDataType type);
+CryoDataType parseDataType(const char *typeStr);
+CryoDataType getPrimativeTypeFromString(const char *typeStr);
 
 #endif // TYPEDEFS_H

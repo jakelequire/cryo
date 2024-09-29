@@ -80,6 +80,10 @@ typedef struct CompilerState
     int columnNumber;
     int errorCount;
     CompilerError **errors;
+    // Functions for debugging
+    void (*errorReport)(struct CompilerState);
+    void (*logCompilerError)(CompilerError *);
+    void (*dumpCompilerState)(struct CompilerState);
 } CompilerState;
 
 #define GET_SOURCE_INFO \
@@ -102,6 +106,15 @@ void logCompilerError(CompilerError *error);
 char *getErrorTypeString(ErrorType type);
 
 void dumpCompilerState(CompilerState state);
+
+// Function Prototypes for C++ Calls
+#ifdef __cplusplus
+extern "C"
+{
+    void dumpCompilerStateCXX(CompilerState state);
+}
+#endif
+
 /*================================*/
 // Macros
 

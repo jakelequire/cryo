@@ -19,12 +19,13 @@
 
 using namespace Cryo;
 
-int generateCodeWrapper(ASTNode *node)
+int generateCodeWrapper(ASTNode *node, CompilerState *state)
 {
     std::cout << ">===------------- CPP Code Generation -------------===<\n"
               << std::endl;
 
     Cryo::CryoCompiler compiler;
+    compiler.setCompilerState(*state);
     compiler.compile(node);
 
     return 1;

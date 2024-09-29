@@ -6,10 +6,11 @@
 #include "cpp/codegen.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-int generateCodeWrapper(ASTNode* node);
+    int generateCodeWrapper(ASTNode *node, CompilerState *state);
 
 #ifdef __cplusplus
 }

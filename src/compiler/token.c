@@ -171,8 +171,6 @@ char *CryoDataTypeToString(CryoDataType type)
     {
     case DATA_TYPE_INT:
         return "TYPE_INT";
-    case NODE_LITERAL_INT:
-        return "LITERAL_INT";
     case DATA_TYPE_FLOAT:
         return "TYPE_FLOAT";
     case DATA_TYPE_STRING:
@@ -197,10 +195,34 @@ char *CryoDataTypeToString(CryoDataType type)
         return "TYPE_BOOLEAN_ARRAY";
     case DATA_TYPE_VOID_ARRAY:
         return "TYPE_VOID_ARRAY";
+    case DATA_TYPE_SINT8:
+        return "TYPE_SINT8";
+    case DATA_TYPE_SINT16:
+        return "TYPE_SINT16";
+    case DATA_TYPE_SINT32:
+        return "TYPE_SINT32";
+    case DATA_TYPE_SINT64:
+        return "TYPE_SINT64";
+    case DATA_TYPE_UINT8:
+        return "TYPE_UINT8";
+    case DATA_TYPE_UINT16:
+        return "TYPE_UINT16";
+    case DATA_TYPE_UINT32:
+        return "TYPE_UINT32";
+    case DATA_TYPE_UINT64:
+        return "TYPE_UINT64";
+    case DATA_TYPE_INT8_ARRAY:
+        return "TYPE_INT8_ARRAY";
+    case DATA_TYPE_INT16_ARRAY:
+        return "TYPE_INT16_ARRAY";
+    case DATA_TYPE_INT32_ARRAY:
+        return "TYPE_INT32_ARRAY";
+    case DATA_TYPE_INT64_ARRAY:
+        return "TYPE_INT64_ARRAY";
+    case DATA_TYPE_DYN_VEC:
+        return "TYPE_DYN_VEC";
     case DATA_TYPE_UNKNOWN:
         return "TYPE_UNKNOWN";
-    case INTERNAL_DATA_TYPE_EXPRESSION:
-        return "INTERNAL_DATA_TYPE_EXPRESSION";
     default:
         return "<TYPE UNKNOWN>";
     }

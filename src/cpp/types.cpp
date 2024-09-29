@@ -235,46 +235,6 @@ namespace Cryo
         return llvm::ConstantDataArray::getString(CryoContext::getInstance().context, value);
     }
 
-    CryoBoolean *Types::evalBooleanExpression(ASTNode *node)
-    {
-        CryoDebugger &debugger = compiler.getDebugger();
-        debugger.logMessage("INFO", __LINE__, "Types", "Evaluating boolean expression");
-
-        CryoBoolean *result = new CryoBoolean();
-        CryoNodeType nodeType = node->metaData->type;
-        CryoDataType nodeDataType;
-
-        switch (nodeType)
-        {
-        case NODE_LITERAL_EXPR:
-        {
-            nodeDataType = node->data.literal->dataType;
-            assert(nodeDataType != DATA_TYPE_UNKNOWN);
-            switch (nodeDataType)
-            {
-            case DATA_TYPE_BOOLEAN:
-            {
-                bool boolValue = node->data.literal->value.booleanValue ? true : false;
-                debugger.logMessage("INFO", __LINE__, "Types", "Boolean value: " + std::to_string(boolValue));
-                result->result = boolValue;
-                if (boolValue)
-                {
-                    result->truthy = TRUTHY_TRUE;
-                }
-                else
-                {
-                    result->falsey = FALSEY_FALSE;
-                }
-                return result;
-            }
-            }
-        }
-        }
-
-        debugger.logMessage("ERROR", __LINE__, "Types", "Unknown node type");
-        return nullptr;
-    }
-
     llvm::Value *Types::ptrToExplicitType(llvm::Value *value)
     {
         CryoDebugger &debugger = compiler.getDebugger();

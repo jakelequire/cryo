@@ -112,16 +112,16 @@ log "Copying files to the out directory..."
 cp $SRC_FILE $OUT_DIR/output.ll || error "Failed to copy $SRC_FILE"
 
 # Compile the standard library
-clang-18 -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll
+clang -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll
 
 # Change to the out directory
 cd $OUT_DIR
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file
-llvm-link-18 cryolib.ll output.ll -o bin.ll 
+llvm-link cryolib.ll output.ll -o bin.ll 
 
 # Compile the object file
-llc-18 -filetype=obj -relocation-model=static bin.ll -o bin.o
+llc -filetype=obj -relocation-model=static bin.ll -o bin.o
 
 # llc -filetype=asm bin.ll -o bin.s
 
@@ -129,7 +129,7 @@ llc-18 -filetype=obj -relocation-model=static bin.ll -o bin.o
 cd ../../
 
 # Link the object files and place the output in the build directory
-clang++-18 -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$OUTPUT_FILE
+clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$OUTPUT_FILE
 
 # Cleanup
 cleanup

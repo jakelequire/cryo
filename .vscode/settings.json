@@ -230,7 +230,8 @@
     "print": "cpp",
     "__node_handle": "cpp",
     "execution": "cpp",
-    "common.h": "c"
+    "common.h": "c",
+    "typedefs.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

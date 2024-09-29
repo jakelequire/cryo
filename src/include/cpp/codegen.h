@@ -70,29 +70,9 @@ namespace Cryo
     class BinaryExpressions;
     class Structs;
 
-    typedef struct VariableIR
-    {
-        llvm::Value *value;
-        llvm::Type *type;
-        std::string name;
-        CryoDataType dataType;
-    } VariableIR;
-
-    typedef struct ExpressionIR
-    {
-        llvm::Value *value;
-        llvm::Type *type;
-        CryoDataType dataType;
-    } ExpressionIR;
-
-    typedef struct FunctionIR
-    {
-        llvm::Function *function;
-        llvm::Type *returnType;
-        std::vector<llvm::Type *> argTypes;
-        std::vector<llvm::Value *> argValues;
-        std::string name;
-    } FunctionIR;
+#define DUMP_COMPILER_STATE                            \
+    CompilerState state = compiler.getCompilerState(); \
+    dumpCompilerStateCXX(state);
 
     /// -----------------------------------------------------------------------------------------------
     /**
@@ -115,6 +95,7 @@ namespace Cryo
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
+        CompilerState state;
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
         std::string currentNamespace;
@@ -138,6 +119,9 @@ namespace Cryo
     public:
         CryoCompiler();
         ~CryoCompiler() = default;
+
+        void setCompilerState(CompilerState state) { CryoContext::getInstance().state = state; }
+        CompilerState getCompilerState() { return CryoContext::getInstance().state; }
 
         CryoContext &getContext() { return CryoContext::getInstance(); }
         CodeGen &getCodeGen() { return *codeGen; }
@@ -245,29 +229,6 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
-    enum BooleanFalsey
-    {
-        FALSEY_NONE = 0,
-        FALSEY_ZERO = 1,
-        FALSEY_EMPTY = 2,
-        FALSEY_NULL = 3,
-        FALSEY_FALSE = 4
-    };
-
-    enum BooleanTruthy
-    {
-        TRUTHY_NON_ZERO = 0,
-        TRUTHY_NON_EMPTY = 1,
-        TRUTHY_NON_NULL = 2,
-        TRUTHY_TRUE = 3
-    };
-
-    typedef struct CryoBoolean
-    {
-        BooleanFalsey falsey;
-        BooleanTruthy truthy;
-        bool result;
-    } CryoBoolean;
 
     class Types
     {
@@ -305,11 +266,6 @@ namespace Cryo
          * @brief Returns the LLVM string constant value of a string.
          */
         llvm::Constant *getLiteralStringValue(std::string value);
-
-        /**
-         * @brief Evaluates a boolean expression and returns the CryoBoolean result.
-         */
-        CryoBoolean *evalBooleanExpression(ASTNode *node);
 
         /**
          * @brief Mutates a value to a pointer to the explicit type.
@@ -359,7 +315,6 @@ namespace Cryo
         void handleMutableVariable(ASTNode *node);
         void handleVariableReassignment(ASTNode *node);
         llvm::Value *createLocalVariable(ASTNode *node);
-        VariableIR *createNewLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
         llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
@@ -408,6 +363,8 @@ namespace Cryo
     public:
         Functions(CryoCompiler &compiler) : compiler(compiler) {}
         llvm::Value *createParameter(llvm::Argument *param, llvm::Type *argTypes);
+        llvm::Value *createFunctionCall(ASTNode *node);
+
         void handleFunction(ASTNode *node);
 
     private:
@@ -417,7 +374,6 @@ namespace Cryo
         void createFunctionBlock(ASTNode *node);
         void createReturnStatement(ASTNode *node);
         void createExternFunction(ASTNode *node);
-        void createFunctionCall(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
     };
 

@@ -25,7 +25,7 @@ extern "C"
 {
 #endif
 
-    void generateCodeWrapper(ASTNode *node);
+    void generateCodeWrapper(ASTNode *node, CompilerState *state);
 
 #ifdef __cplusplus
 }
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
         DEBUG_ARENA_PRINT(arena);
 
         printf("[Main] Generating IR code...\n");
-        generateCodeWrapper(nodeCpy); // <- The C++ wrapper function
+        generateCodeWrapper(nodeCpy, &state); // <- The C++ wrapper function
         printf(">===------------- CPP End Code Generation -------------===<\n");
         printf("[Main] IR code generated, freeing AST.\n");
 

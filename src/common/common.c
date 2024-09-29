@@ -170,10 +170,16 @@ void dumpCompilerState(CompilerState state)
     fprintf(stderr, "  - Current Node: %p\n", state.currentNode);
     fprintf(stderr, "  - Line Number: %d\n", state.lineNumber);
     fprintf(stderr, "  - Column Number: %d\n", state.columnNumber);
+    fprintf(stdout, "  - File Name: %s\n", state.fileName);
     fprintf(stderr, "  - Error Count: %d\n", state.errorCount);
     for (int i = 0; i < state.errorCount; ++i)
     {
         logCompilerError(state.errors[i]);
     }
     printf("!# ======================================================== #!\n\n");
+}
+
+void dumpCompilerStateCXX(CompilerState state)
+{
+    dumpCompilerState(state);
 }

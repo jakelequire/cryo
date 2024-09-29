@@ -34,7 +34,7 @@ extern "C"
 {
 #endif
 
-    void generateCodeWrapper(ASTNode *node);
+    void generateCodeWrapper(ASTNode *node, CompilerState *state);
 
 #ifdef __cplusplus
 }

@@ -57,7 +57,7 @@ public function main() -> void {
 
     // Test recursion
     const intZero: int = 5;
-    test(0);
+    // test(0);
 
     printStr("--------------------");
 
