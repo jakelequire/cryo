@@ -88,6 +88,7 @@ namespace Cryo
         }
         else
         {
+            addWhitespaceAfterLoadStore(*cryoContext.module);
             std::error_code EC;
             llvm::raw_fd_ostream dest("output.ll", EC, llvm::sys::fs::OF_None);
 
@@ -99,8 +100,12 @@ namespace Cryo
             {
                 std::cout << "\n>===------- LLVM IR Code -------===<\n"
                           << std::endl;
-                cryoContext.module->print(dest, nullptr);
-                cryoContext.module->print(llvm::outs(), nullptr);
+                // Create our custom annotator
+                LoadStoreWhitespaceAnnotator LSWA;
+
+                // Use the custom annotator when printing
+                cryoContext.module->print(dest, &LSWA);
+                cryoContext.module->print(llvm::outs(), &LSWA);
                 std::cout << "\n>===------- End IR Code ------===<\n"
                           << std::endl;
                 dest.flush();

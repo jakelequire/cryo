@@ -748,7 +748,7 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
 
         llvm::Value *resultParam = nullptr;
-        std::string paramName = param->getName().str();
+        std::string paramName = param->getName().str() + ".addr";
         std::cout << "Parameter Name: " << param->getName().str() << std::endl;
         std::cout << "Parameter Type: " << std::endl;
         std::cout << "Argument Type: " << std::endl;

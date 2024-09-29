@@ -301,6 +301,7 @@ namespace Cryo
             }
         }
 
+        debugger.logMessage("ERROR", __LINE__, "Types", "Failed to cast type to value");
         return nullptr;
     }
 

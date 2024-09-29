@@ -1,5 +1,7 @@
 namespace test;
 
+// import std::lib;
+
 extern function printInt(integer: int) -> void;
 extern function printStr(str: string) -> void;
 extern function strLength(stri: string) -> int;
@@ -28,12 +30,14 @@ public function test(numberIterator: int) -> void {
     const indexArrNew: int = intArrTwo[numberIterator];
     // const foo: int = indexArrNew;
 
+    printStr("----------");
     printStr("Param value: ");
     printInt(numberIterator);
 
     printStr("Array value: ");
     printInt(indexArrNew);
 
+    printStr("----------");
     printStr(" ");
 
     if(pleasework < 5) {
@@ -45,6 +49,7 @@ public function test(numberIterator: int) -> void {
 }
 
 public function main() -> void {
-    getStringLength();
+    //getStringLength();
+    test(0);
     return;
 }

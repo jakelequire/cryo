@@ -38,9 +38,9 @@
 // typedef struct DataType DataType;
 
 // strdup
-extern char *strdup(const char *__s);
+// extern char *strdup(const char *__s);
 // strndup
-extern char *strndup(const char *__string, size_t __n);
+// extern char *strndup(const char *__string, size_t __n);
 
 /// ### The position struct represents the line and column number of a token in the source code.
 typedef struct Position

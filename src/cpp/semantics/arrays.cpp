@@ -228,109 +228,68 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Arrays", "Variable is an index expression");
             CryoNodeType indexNodeType = node->data.indexExpr->index->metaData->type;
 
+            // Get the array type
+            ASTNode *arrayNode = symTable.getASTNode(context.currentNamespace, NODE_VAR_DECLARATION, arrayName);
+            if (!arrayNode)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Arrays", "Array not found");
+                CONDITION_FAILED;
+            }
+            llvm::Type *arrayType = getArrayType(arrayNode);
+            llvm::Type *elementType = arrayType->getArrayElementType();
+
             // Check if it's a literal `foo[5]`
             if (indexNodeType == NODE_LITERAL_EXPR)
             {
                 debugger.logMessage("INFO", __LINE__, "Arrays", "Index is a literal");
-                std::cout << "Array Name: " << indexNode->name << std::endl;
                 int indexValue = indexNode->index->data.literal->value.intValue;
-                std::cout << "Index Value: " << indexValue << std::endl;
-                std::cout << "Test Index Value " << indexNode->index->data.varName->varName << std::endl;
-                ASTNode *arrayNode = symTable.getASTNode(context.currentNamespace, NODE_VAR_DECLARATION, arrayName);
-                ASTNode *indexArrayNode = arrayNode->data.array->elements[indexValue];
-                CryoNodeType indexArrayNodeType = indexArrayNode->metaData->type;
-                if (indexArrayNodeType == NODE_LITERAL_EXPR)
-                {
-                    debugger.logMessage("INFO", __LINE__, "Arrays", "Index Array is a literal");
-                    std::cout << "Index Array Node Type: " << CryoNodeTypeToString(indexArrayNodeType) << std::endl;
-                    std::cout << "Element Type: " << CryoDataTypeToString(indexArrayNode->data.literal->dataType) << std::endl;
-                    std::cout << "Element Value: " << indexArrayNode->data.literal->value.intValue << std::endl;
-                    // Creat the variable from the literal expression
-                    llvm::Type *llvmType = compiler.getTypes().getType(indexArrayNode->data.literal->dataType, 0);
-                    llvm::Constant *llvmConstant = llvm::ConstantInt::get(llvmType, indexArrayNode->data.literal->value.intValue);
-                    // Create the global variable
-                    llvm::GlobalVariable *var = new llvm::GlobalVariable(
-                        *context.module,
-                        llvmType,
-                        false,
-                        llvm::GlobalValue::ExternalLinkage,
-                        llvmConstant,
-                        llvm::Twine(varName));
-                }
-                else
-                {
-                    std::cout << "Index Array Node Type: Unknown" << std::endl;
-                    std::cout << "Received: " << CryoNodeTypeToString(indexArrayNodeType) << std::endl;
-                    exit(0);
-                }
-                return;
-            }
-            // Check if it's a variable `foo[bar]`
-            if (indexNodeType == NODE_VAR_NAME)
-            {
-                // The variable name of the index `[bar]`
-                std::string indexVarName = indexNode->index->data.varName->varName;
-                // The array it's indexing `foo: int[] = [1, 2, 3]`
-                std::string arrayName = indexNode->name;
-                // Get the variable value
-                llvm::Value *varValuePtr = variables.getVariable(indexVarName);
-                if (!varValuePtr)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Arrays", "Variable value not found");
-                    // Create a new local variable
-                    llvm::Value *localVar = variables.createLocalVariable(indexNode->index);
-                    varValuePtr = localVar;
-                }
-                std::cout << "Variable Value: " << varValuePtr << std::endl;
 
-                // Look up the array in the symbol table
-                ASTNode *arrayNode = symTable.getASTNode(context.currentNamespace, NODE_VAR_DECLARATION, arrayName);
-                if (!arrayNode)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Arrays", "Array not found");
-                    CONDITION_FAILED;
-                }
-                int elementCount = getArrayLength(arrayNode);
-                std::cout << "Element Count: " << elementCount << std::endl;
-                // Get the literal value from the index variable
-                // int indexValue = types.getLiteralIntValue(indexNode->index);
-                std::cout << "Node Type: " << CryoNodeTypeToString(indexNode->index->metaData->type) << std::endl;
-                std::cout << "Var Name: " << indexNode->index->data.varName->varName << std::endl;
-                ASTNode *indexNodeVar = symTable.getASTNode(context.currentNamespace, NODE_VAR_DECLARATION, indexNode->index->data.varName->varName);
-                std::cout << "Index Node Var: " << indexNodeVar << std::endl;
-                if (!indexNodeVar)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Arrays", "Index variable not found");
-                    CONDITION_FAILED;
-                }
-                ASTNode *indexedArrayValue = nullptr;
-                llvm::Value *indexedValue = nullptr;
-                if (indexNodeVar->metaData->type == NODE_LITERAL_EXPR)
-                {
-                    debugger.logMessage("INFO", __LINE__, "Arrays", "Index variable is a literal");
-                    int _indexValue = types.getLiteralIntValue(indexNodeVar->data.literal);
-                    indexedArrayValue = arrayNode->data.array->elements[_indexValue];
-                    indexedValue = compiler.getGenerator().getInitilizerValue(indexedArrayValue);
-                }
+                // Multiply the index by the element size
+                llvm::Value *scaledIndex = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context.context), indexValue);
 
-                llvm::Constant *constValue = llvm::dyn_cast<llvm::Constant>(indexedValue);
+                llvm::Value *arrayPtr = context.builder.CreateGEP(arrayType, context.namedValues[arrayName], scaledIndex);
+                llvm::Value *loadedValue = context.builder.CreateLoad(elementType, arrayPtr);
 
                 // Create the global variable
                 llvm::GlobalVariable *var = new llvm::GlobalVariable(
                     *context.module,
-                    llvm::Type::getInt32Ty(context.context),
+                    elementType,
                     false,
                     llvm::GlobalValue::ExternalLinkage,
-                    constValue,
+                    llvm::dyn_cast<llvm::Constant>(loadedValue),
                     llvm::Twine(varName));
+            }
+            // Check if it's a variable `foo[bar]`
+            else if (indexNodeType == NODE_VAR_NAME)
+            {
+                std::string indexVarName = indexNode->index->data.varName->varName;
+                llvm::Value *indexValue = variables.getVariable(indexVarName);
+                if (!indexValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Arrays", "Index variable not found");
+                    CONDITION_FAILED;
+                }
 
+                llvm::Value *arrayRef = context.namedValues[arrayName];
+                llvm::Value *arrayPtr = context.builder.CreateGEP(arrayType, arrayRef, indexValue);
+                llvm::Value *loadedValue = context.builder.CreateLoad(elementType, arrayPtr);
+
+                // Create the local variable
+                llvm::Value *var = context.builder.CreateAlloca(elementType, loadedValue, varName);
+
+                context.namedValues[varName] = var;
+            }
+            else
+            {
+                debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown index type");
                 return;
             }
-            debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown index type");
+        }
+        else
+        {
+            debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown node type");
             return;
         }
-        debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown node type");
-        return;
     }
 
     llvm::Value *Arrays::indexArrayForValue(ASTNode *array, int index)

@@ -227,6 +227,7 @@ namespace Cryo
                     CONDITION_FAILED;
                 }
                 llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+                llvmValue->setName("str");
                 llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
                 compiler.getContext().namedValues[varName] = llvmValue;
 
@@ -267,6 +268,7 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "Variables", "Index is a variable");
                 std::string indexVarName = std::string(initializer->data.indexExpr->index->data.varName->varName);
                 std::cout << "Index Variable Name: " << indexVarName << std::endl;
+
                 // Get the variable value
                 llvm::Value *indexValue = compiler.getVariables().getVariable(indexVarName);
                 if (!indexValue)
@@ -277,11 +279,23 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "Variables", "Index Value Found");
                 debugger.logLLVMValue(indexValue);
 
+                std::string llvmVarName = indexValue->getName().str();
+                std::cout << "LLVM Variable Name: " << llvmVarName << std::endl;
+
+                // Get the address of the index variable "exampleName.addr"
+                llvm::Value *llvmIndexValue = compiler.getContext().namedValues[llvmVarName];
+                if (!llvmIndexValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
+                    CONDITION_FAILED;
+                }
+                debugger.logLLVMValue(llvmIndexValue);
+
                 // Get the array name
                 std::string arrayName = std::string(initializer->data.indexExpr->name);
                 std::cout << "Array Name: " << arrayName << std::endl;
 
-                // Get the array node
+                // Get the array
                 ASTNode *arrayNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
                 if (!arrayNode)
                 {
@@ -289,40 +303,27 @@ namespace Cryo
                     CONDITION_FAILED;
                 }
 
-                // We can't index the array via the AST Node. Since we cannot get the value of the index,
-                // We will have to index the array via the LLVM value
-                llvm::Value *arr = compiler.getContext().namedValues[arrayName];
-                if (!arr)
+                // Get the array type
+                llvm::Type *arrayType = arrays.getArrayType(arrayNode);
+                llvm::Type *elementType = arrayType->getArrayElementType();
+
+                // Get the Index Type
+                llvm::Type *indexType = llvmIndexValue->getType();
+                if (indexType->isPointerTy())
                 {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
-                    CONDITION_FAILED;
-                }
-                llvm::Type *arrType = arr->getType();
-                debugger.logMessage("INFO", __LINE__, "Variables", "Array Found");
-                // Make sure the index is an integer
-                if (indexValue->getType()->isPointerTy())
-                {
-                    // Transform the pointer to an integer
-                    indexValue = compiler.getContext().builder.CreatePtrToInt(indexValue, llvm::Type::getInt32Ty(compiler.getContext().context));
-                    if (!indexValue)
-                    {
-                        debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
-                        CONDITION_FAILED;
-                    }
+                    indexType = indexType->getWithNewType(llvm::Type::getInt32Ty(compiler.getContext().context));
                 }
 
-                llvm::Value *indexedValue = compiler.getContext().builder.CreateGEP(arrType, arr, indexValue, varName);
-                if (!indexedValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
-                    CONDITION_FAILED;
-                }
-                debugger.logMessage("INFO", __LINE__, "Variables", "Indexed Value Found");
-                debugger.logLLVMValue(indexedValue);
+                llvm::Value *arrayPtr = compiler.getContext().builder.CreateGEP(indexType, compiler.getContext().namedValues[arrayName], llvmIndexValue);
+                llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(elementType, arrayPtr);
 
-                compiler.getContext().namedValues[varName] = indexedValue;
+                // Store the value in the variable
+                llvm::Value *var = compiler.getContext().builder.CreateAlloca(elementType, loadedValue, varName);
+                compiler.getContext().builder.CreateStore(loadedValue, var);
 
-                return indexedValue;
+                compiler.getContext().namedValues[varName] = var;
+
+                return var;
             }
             else
             {

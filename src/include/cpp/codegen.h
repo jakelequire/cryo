@@ -44,6 +44,8 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/IR/AssemblyAnnotationWriter.h"
+#include "llvm/Support/FormattedStream.h"
 
 #include "cpp/debugger.h"
 #include "compiler/ast.h"
@@ -227,9 +229,48 @@ namespace Cryo
         void handleParam(ASTNode *node);
         void handleStruct(ASTNode *node);
 
+        // Function to add a no-op instruction for whitespace
+        void addWhitespaceAfter(llvm::Instruction *Inst, llvm::IRBuilder<> &Builder)
+        {
+            llvm::MDNode *Node = llvm::MDNode::get(Inst->getContext(), llvm::MDString::get(Inst->getContext(), "whitespace"));
+            Inst->setMetadata("whitespace", Node);
+        }
+
+        // Function to add whitespace after load and store operations
+        void addWhitespaceAfterLoadStore(llvm::Module &M)
+        {
+            llvm::IRBuilder<> Builder(M.getContext());
+
+            for (auto &F : M)
+            {
+                for (auto &BB : F)
+                {
+                    for (auto &I : BB)
+                    {
+                        if (llvm::isa<llvm::LoadInst>(I) || llvm::isa<llvm::StoreInst>(I))
+                        {
+                            // addWhitespaceAfter(&I, Builder);
+                        }
+                    }
+                }
+            }
+        }
+
     private:
         CryoCompiler &compiler;
         void preprocess(ASTNode *root);
+    };
+
+    class LoadStoreWhitespaceAnnotator : public llvm::AssemblyAnnotationWriter
+    {
+    public:
+        void emitInstructionAnnot(const llvm::Instruction *I, llvm::formatted_raw_ostream &OS) override
+        {
+            if (I->getMetadata("whitespace"))
+            {
+                OS << "\n";
+            }
+        }
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -519,6 +560,7 @@ namespace Cryo
     {
         context.module->print(llvm::outs(), nullptr);
     }
+
 }
 
 #endif // SANDBOX_H

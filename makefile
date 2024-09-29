@@ -65,9 +65,10 @@ else
     CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
 			-I./src/include/utils -I./src/include/tests
     CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
-			-I./src/include/utils -I./src/include/tests
+			-I./src/include/utils -I./src/include/tests $(LLVM_CXXFLAGS)
     LLVM_CONFIG = llvm-config
     LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
+	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
     LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
     LDFLAGS = $(LLVM_LDFLAGS) -lpthread -v
 	STD_LIBS = -lstdc++ -lm -lc -lgcc -lgcc_eh -lstdc++fs
@@ -93,9 +94,6 @@ CPP_SEMANTICS_DIR = $(SRC_DIR)cpp/semantics/
 CPP_UTILS_DIR = $(SRC_DIR)cpp/utils/
 COMMON_DIR = $(SRC_DIR)common/
 LIB_DIR = $(SRC_DIR)libs/
-
-SFML_LIBS := $(shell pkg-config --libs sfml-all)
-SFML_CFLAGS := $(shell pkg-config --cflags sfml-all)
 
 # --------------------------------------------------------------------------------- #
 
