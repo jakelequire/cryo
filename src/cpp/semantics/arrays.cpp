@@ -388,4 +388,63 @@ namespace Cryo
         return indexedValue;
     }
 
+    void Arrays::isOutOfBoundsException(llvm::Value *array, llvm::Value *index)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        CryoContext &context = compiler.getContext();
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Checking for out of bounds exception");
+
+        std::string arrName = array->getName().str();
+        ASTNode *arrayNode = compiler.getSymTable().getASTNode(context.currentNamespace, NODE_VAR_DECLARATION, arrName);
+        if (!arrayNode)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Arrays", "Array not found");
+            CONDITION_FAILED;
+        }
+
+        int ASTarraySize = getArrayLength(arrayNode);
+        std::cout << "Array Size: " << ASTarraySize << std::endl;
+
+        llvm::Value *arrSize = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.context), ASTarraySize);
+        debugger.logLLVMValue(arrSize);
+
+        // Create basic blocks for in-bounds and out-of-bounds cases
+        llvm::Function *currentFunction = context.builder.GetInsertBlock()->getParent();
+        llvm::BasicBlock *inBoundsBlock = llvm::BasicBlock::Create(context.context, "in_bounds", currentFunction);
+        llvm::BasicBlock *outOfBoundsBlock = llvm::BasicBlock::Create(context.context, "out_of_bounds", currentFunction);
+        llvm::BasicBlock *mergeBlock = llvm::BasicBlock::Create(context.context, "merge", currentFunction);
+
+        // Check if index is less than array size
+        llvm::Value *cmp = context.builder.CreateICmpULT(index, arrSize);
+        context.builder.CreateCondBr(cmp, inBoundsBlock, outOfBoundsBlock);
+
+        // Out-of-bounds block
+        context.builder.SetInsertPoint(outOfBoundsBlock);
+        llvm::Value *undefinedStr = context.builder.CreateGlobalStringPtr("undefined");
+        llvm::Function *func = context.module->getFunction("printStr");
+        if (func)
+        {
+            context.builder.CreateCall(func, {undefinedStr});
+        }
+        llvm::Type *elementType = array->getType();
+        // Create an "undefined" value of the appropriate type
+        llvm::Value *undefinedValue = llvm::UndefValue::get(elementType);
+        context.builder.CreateBr(mergeBlock);
+        // In-bounds block
+        context.builder.SetInsertPoint(inBoundsBlock);
+        llvm::Value *arrayPtr = context.builder.CreateGEP(elementType, array, index);
+        llvm::Value *loadedValue = context.builder.CreateLoad(elementType, arrayPtr);
+        context.builder.CreateBr(mergeBlock);
+
+        // Merge block
+        context.builder.SetInsertPoint(mergeBlock);
+        llvm::PHINode *result = context.builder.CreatePHI(elementType, 2);
+        result->addIncoming(loadedValue, inBoundsBlock);
+        result->addIncoming(undefinedValue, outOfBoundsBlock);
+
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Out of Bounds Exception Checked");
+
+        return;
+    }
+
 } // namespace Cryo

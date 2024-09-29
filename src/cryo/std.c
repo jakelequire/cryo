@@ -40,3 +40,36 @@ int strLength(char *str)
     }
     return length;
 }
+
+void builtInError(char *type)
+{
+    if (strcmp(type, "invalid") == 0)
+    {
+        fprintf(stderr, "Error: Invalid operation exception\n");
+        exit(1);
+    }
+    else if (strcmp(type, "null") == 0)
+    {
+        fprintf(stderr, "Error: Null pointer exception\n");
+        exit(1);
+    }
+    else if (strcmp(type, "indexoutofbounds") == 0)
+    {
+        fprintf(stderr, "Error: Index out of bounds exception\n");
+        exit(1);
+    }
+    else if (strcmp(type, "invalidcast") == 0)
+    {
+        fprintf(stderr, "Error: Invalid cast exception\n");
+        exit(1);
+    }
+    else if (strcmp(type, "invalidoperation") == 0)
+    {
+        fprintf(stderr, "Error: Invalid operation exception\n");
+        exit(1);
+    }
+    else
+    {
+        printf("Error: Unknown exception\n");
+    }
+}

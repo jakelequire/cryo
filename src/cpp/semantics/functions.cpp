@@ -479,12 +479,14 @@ namespace Cryo
 
         // Get the function arguments
         int argCount = functionCallNode->argCount;
-        debugger.logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Argument Count: " + std::to_string(argCount));
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Callee Name: " + std::string(functionName));
 
         // Get the argument values
         std::vector<llvm::Value *> argValues;
         for (int i = 0; i < argCount; ++i)
         {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Processing Argument " + std::to_string(i + 1) + " of " + std::to_string(argCount));
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argType = argNode->metaData->type;
             CryoDataType argTypeData = argNode->data.varDecl->type;
@@ -575,13 +577,13 @@ namespace Cryo
                         CONDITION_FAILED;
                     }
                     debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
-
-                    // argValue = types.ptrToExplicitType(newVar);
-                    // argValue = newVar;
                     assert(newVar != nullptr);
+
                     debugger.logLLVMValue(newVar);
+
                     compiler.getContext().namedValues[argName] = newVar;
                     argValues.push_back(newVar);
+
                     std::cout << "Logging value at index " << i << std::endl;
                     debugger.logLLVMValue(argValues[i]);
                     break;
@@ -590,9 +592,6 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "Functions", "Argument being pushed to argValues");
                 llvm::Type *literalInt = compiler.getTypes().getType(DATA_TYPE_INT, 0);
                 debugger.logMessage("INFO", __LINE__, "Functions", "Got Literal Int Type");
-                // argValue->mutateType(literalInt);
-                llvm::Value *_tempValue = argValue;
-                debugger.logLLVMValue(_tempValue);
                 argValues.push_back(argValue);
                 break;
             }
@@ -617,6 +616,7 @@ namespace Cryo
                     }
                     debugger.logMessage("INFO", __LINE__, "Functions", "Local Variable created");
                     argValue = newVar;
+                    compiler.getDebugger().logLLVMValue(argValue);
                 }
                 else
                 {
@@ -651,6 +651,7 @@ namespace Cryo
             // Loop through the arguments and assign the values to the expected types
             for (int i = 0; i < argCount; ++i)
             {
+                std::cout << "\n\nArgument #: " << i + 1 << std::endl;
                 llvm::Value *argValue = argValues[i];
                 debugger.logLLVMValue(argValue);
                 llvm::Type *expectedType = expectedTypes[i];
@@ -661,7 +662,17 @@ namespace Cryo
                 if (!argValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
+                    std::cout << "Argument Name: " << argName << std::endl;
+                    std::cout << "Argument Node Type: " << CryoNodeTypeToString(argType) << std::endl;
+                    // Try to find the variable in the local scope
+                    llvm::Value *localVar = variables.getVariable(argName);
+                    if (!localVar)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Local Variable not found");
+                        CONDITION_FAILED;
+                    }
+                    argValue = localVar;
+                    argValues[i] = argValue;
                 }
 
                 // If the argument is not the expected type, cast it
@@ -704,19 +715,6 @@ namespace Cryo
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
                 CONDITION_FAILED;
             }
-
-            // Create the function call
-            llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
-
-            if (!functionCall)
-            {
-                debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
-                CONDITION_FAILED;
-            }
-
-            debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
-
-            return functionCall;
         }
 
         // If there are no arguments, just create the function call

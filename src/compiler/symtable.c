@@ -22,7 +22,7 @@ CryoSymbolTable *createSymbolTable(Arena *arena)
 {
     CryoSymbolTable *table = (CryoSymbolTable *)ARENA_ALLOC(arena, sizeof(CryoSymbolTable));
     table->count = 0;
-    table->capacity = 32;
+    table->capacity = 512;
     table->symbols = (CryoSymbol **)ARENA_ALLOC(arena, table->capacity * sizeof(CryoSymbol *));
     table->scopeDepth = 0;
     return table;

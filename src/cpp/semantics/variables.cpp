@@ -314,12 +314,14 @@ namespace Cryo
                     indexType = indexType->getWithNewType(llvm::Type::getInt32Ty(compiler.getContext().context));
                 }
 
+                arrays.isOutOfBoundsException(compiler.getContext().namedValues[arrayName], llvmIndexValue);
+
                 llvm::Value *arrayPtr = compiler.getContext().builder.CreateGEP(indexType, compiler.getContext().namedValues[arrayName], llvmIndexValue);
                 llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(elementType, arrayPtr);
 
                 // Store the value in the variable
                 llvm::Value *var = compiler.getContext().builder.CreateAlloca(elementType, loadedValue, varName);
-                compiler.getContext().builder.CreateStore(loadedValue, var);
+                compiler.getContext().builder.CreateStore(loadedValue, var); // This was the solution to the undefined behavior
 
                 compiler.getContext().namedValues[varName] = var;
 

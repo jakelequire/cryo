@@ -397,6 +397,7 @@ namespace Cryo
         void handleIndexExpression(ASTNode *node, std::string varName);
         llvm::Value *indexArrayForValue(ASTNode *array, int index);
         llvm::Value *getIndexExpressionValue(ASTNode *node);
+        void isOutOfBoundsException(llvm::Value *array, llvm::Value *index);
 
     private:
         CryoCompiler &compiler;
