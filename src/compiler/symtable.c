@@ -42,7 +42,7 @@ void freeSymbolTable(CryoSymbolTable *table, Arena *arena)
 // </freeSymbolTable>
 
 // <printSymbolTable>
-void printSymbolTable(CryoSymbolTable *table, Arena *arena)
+void printSymbolTable(CryoSymbolTable *table)
 {
     printf("\n\n-------------------------------------------------------------------------------------------------\n");
     printf("[SymTable] Symbol count: %d\n", table->count);
@@ -50,7 +50,7 @@ void printSymbolTable(CryoSymbolTable *table, Arena *arena)
     printf("[SymTable] Table capacity: %d\n", table->capacity);
     printf("\n-------------------------------------------------------------------------------------------------\n");
     printf("Symbol Table:\n\n");
-    printf("Name                 Type                 Val/RetType          Scope        Const       ArgCount\n");
+    printf("Name                 Type                 Val/RetType          Scope        L:C       ArgCount\n");
     printf("-------------------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++)
     {
@@ -64,17 +64,30 @@ void printSymbolTable(CryoSymbolTable *table, Arena *arena)
             printf("Error: node in symbol at index %d is null\n", i);
             continue;
         }
+
+        char locationStr[16];
+
+        // Create the "L:C" string
+        snprintf(locationStr, sizeof(locationStr), "%d:%d",
+                 table->symbols[i]->line,
+                 table->symbols[i]->column);
+
         printf("%-20s %-24s %-18s %-10d %-14s %-10d\n",
                table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                CryoNodeTypeToString(table->symbols[i]->nodeType),
                CryoDataTypeToString(table->symbols[i]->valueType),
                table->symbols[i]->scopeLevel,
-               table->symbols[i]->isConstant ? "true" : "false",
+               locationStr,
                table->symbols[i]->argCount);
     }
     printf("-------------------------------------------------------------------------------------------------\n");
 }
 // </printSymbolTable>
+
+void printSymbolTableCXX(CryoSymbolTable *table)
+{
+    printSymbolTable(table);
+}
 
 // <enterScope>
 void enterScope(CryoSymbolTable *table, Arena *arena)
@@ -307,6 +320,8 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
     symbolNode->scopeLevel = table->scopeDepth;
     symbolNode->isConstant = false;
     symbolNode->argCount = 0;
+    symbolNode->line = node->metaData->position.line;
+    symbolNode->column = node->metaData->position.column;
 
     switch (node->metaData->type)
     {
@@ -322,6 +337,8 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
         symbolNode->isConstant = !isMutable;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
     }
 
@@ -330,6 +347,8 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.functionDecl->returnType;
         symbolNode->argCount = node->data.functionDecl->paramCount;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_EXTERN_FUNCTION:
@@ -337,55 +356,75 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.externFunction->returnType;
         symbolNode->argCount = node->data.externFunction->paramCount;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_PARAM_LIST:
         symbolNode->name = strdup(node->data.varDecl->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_VAR_NAME:
         symbolNode->name = strdup(node->data.varName->varName);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varName->refType;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_FUNCTION_CALL:
         symbolNode->name = strdup(node->data.functionCall->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->argCount = node->data.functionCall->argCount;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_ARRAY_LITERAL:
         symbolNode->name = strdup(node->data.varDecl->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varDecl->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_VAR_REASSIGN:
         symbolNode->name = strdup(node->data.varReassignment->existingVarName);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.varReassignment->existingVarType;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_PARAM:
         symbolNode->name = strdup(node->data.param->name);
         symbolNode->nodeType = node->metaData->type;
         symbolNode->valueType = node->data.param->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_STRUCT_DECLARATION:
         symbolNode->name = strdup(node->data.structNode->name);
         symbolNode->nodeType = node->metaData->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_PROPERTY:
         symbolNode->name = strdup(node->data.property->name);
         symbolNode->nodeType = node->metaData->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     case NODE_RETURN_STATEMENT:
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
         break;
 
     default:

@@ -15,9 +15,9 @@ struct String {
 }
 
 public function getStringLength() -> void {
-    const stringlength: int = strLength(strTest);
+    const testStrLength: int = strLength("strTest");
     printStr("String length:");
-    printInt(stringlength);
+    printInt(testStrLength);
     return;
 }
 

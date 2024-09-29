@@ -176,10 +176,22 @@ void dumpCompilerState(CompilerState state)
     {
         logCompilerError(state.errors[i]);
     }
+    printf("!# ========================================================= #!\n\n");
+}
+
+void dumpSymbolTable(CompilerState state)
+{
+    printf("\n\n!# ==================== Symbol Table ==================== #!\n");
+    printSymbolTable(state.table);
     printf("!# ======================================================== #!\n\n");
 }
 
 void dumpCompilerStateCXX(CompilerState state)
 {
     dumpCompilerState(state);
+}
+
+void dumpSymbolTableCXX(CompilerState state)
+{
+    dumpSymbolTable(state);
 }

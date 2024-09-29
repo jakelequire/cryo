@@ -50,6 +50,20 @@ void printLine(const char *source, int line, Arena *arena, CompilerState *state)
     printf("%.*s\n", (int)(lineEnd - lineStart), lineStart);
 }
 
+Position getPosition(Lexer *lexer)
+{
+    // Set the position of the lexer
+    Position position;
+    position.line = lexer->line;
+    position.column = lexer->column;
+    return position;
+}
+
+void printPosition(Position position)
+{
+    printf("Line: %d, Column: %d\n", position.line, position.column);
+}
+
 /* ====================================================================== */
 // Scope-Declared Current Token
 Token currentToken;
@@ -92,7 +106,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
             printAST(statement, 0, arena);
             printf("\n\n--------------------------------------------------\n\n");
             // addASTNodeSymbol(table, statement, arena);
-            // printSymbolTable(table, arena);
+            // printSymbolTable(table);
             dumpCompilerState(*state);
         }
         else
@@ -168,7 +182,7 @@ void error(char *message, char *functionName, CryoSymbolTable *table, Arena *are
     int line = currentToken.line;
     int column = currentToken.column;
 
-    printSymbolTable(table, arena);
+    printSymbolTable(table);
 
     printf("\n\n");
     printStackTrace(&callStack);

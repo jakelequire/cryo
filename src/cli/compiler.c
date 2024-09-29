@@ -51,7 +51,7 @@ int cryoCompiler(const char *source)
         ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
         memcpy(nodeCpy, programNode, sizeof(ASTNode));
 
-        printSymbolTable(table, arena);
+        printSymbolTable(table);
 
         printAST(nodeCpy, 0, arena);
 

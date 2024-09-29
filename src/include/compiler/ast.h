@@ -42,6 +42,13 @@ extern char *strdup(const char *__s);
 // strndup
 extern char *strndup(const char *__string, size_t __n);
 
+/// ### The position struct represents the line and column number of a token in the source code.
+typedef struct Position
+{
+    int line;
+    int column;
+} Position;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 /// ---
 /// ```
@@ -71,6 +78,7 @@ typedef struct CryoModule
 typedef struct CryoNamespace
 {
     char *name;
+    Position position;
 } CryoNamespace;
 
 /// #### The CryoProgram struct represents the overall structure of a Cryo program.
@@ -115,6 +123,7 @@ typedef struct CryoMetaData
     struct ASTNode *firstChild;  // First child node (for linked list structure)
     struct ASTNode *nextSibling; // Next sibling node (for linked list structure)
     char *moduleName;            // Current Module
+    Position position;
 } CryoMetaData;
 
 /// #### The CryoScope struct represents the scope of a block of code.

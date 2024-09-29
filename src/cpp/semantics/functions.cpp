@@ -633,7 +633,6 @@ namespace Cryo
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
                 std::cout << "Received: " << CryoDataTypeToString(argTypeData) << std::endl;
 
-                DUMP_COMPILER_STATE
                 CONDITION_FAILED;
             }
             }

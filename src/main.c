@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
         memcpy(nodeCpy, programNode, sizeof(ASTNode));
 
-        printSymbolTable(table, arena);
+        printSymbolTable(table);
         printAST(nodeCpy, 0, arena);
         DEBUG_ARENA_PRINT(arena);
 

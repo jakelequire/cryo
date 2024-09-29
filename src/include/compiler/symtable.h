@@ -41,6 +41,8 @@ typedef struct
     int scopeLevel;
     bool isConstant;
     int argCount;
+    int line;
+    int column;
 } CryoSymbol;
 
 typedef struct CryoSymbolTable
@@ -49,11 +51,12 @@ typedef struct CryoSymbolTable
     int count;
     int capacity;
     int scopeDepth;
+    void (*printSymbolTable)(struct CryoSymbolTable *table);
 } CryoSymbolTable;
 
 CryoSymbolTable *createSymbolTable(Arena *arena);
 void freeSymbolTable(CryoSymbolTable *table, Arena *arena);
-void printSymbolTable(CryoSymbolTable *table, Arena *arena);
+void printSymbolTable(CryoSymbolTable *table);
 void enterScope(CryoSymbolTable *table, Arena *arena);
 void jumpScope(CryoSymbolTable *table, Arena *arena);
 void exitScope(CryoSymbolTable *table, Arena *arena);
@@ -69,5 +72,13 @@ void addDefinitionToSymbolTable(CryoSymbolTable *table, ASTNode *node, Arena *ar
 void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 
 bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena);
+
+// C++ Accessable Functions
+#ifdef __cplusplus
+extern "C"
+{
+    void printSymbolTableCXX(CryoSymbolTable *table);
+}
+#endif
 
 #endif // SYMTABLE_H

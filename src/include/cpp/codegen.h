@@ -72,7 +72,11 @@ namespace Cryo
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
-    dumpCompilerStateCXX(state);
+    dumpCompilerStateCXX(state)
+
+#define DUMP_COMPILER_SYMBOL_TABLE                     \
+    CompilerState state = compiler.getCompilerState(); \
+    dumpSymbolTableCXX(state)
 
     /// -----------------------------------------------------------------------------------------------
     /**

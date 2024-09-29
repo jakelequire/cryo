@@ -106,12 +106,14 @@ void logCompilerError(CompilerError *error);
 char *getErrorTypeString(ErrorType type);
 
 void dumpCompilerState(CompilerState state);
+void dumpSymbolTable(CompilerState state);
 
 // Function Prototypes for C++ Calls
 #ifdef __cplusplus
 extern "C"
 {
     void dumpCompilerStateCXX(CompilerState state);
+    void dumpSymbolTableCXX(CompilerState state);
 }
 #endif
 
@@ -134,26 +136,5 @@ extern "C"
     printf("\n<!> File: %s\n", __FILE__);                                                     \
     printf("\n#========================================================================#\n"); \
     exit(1)
-
-/*================================*/
-// Function Prototypes
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-    typedef struct ASTNode ASTNode;
-
-    int globalCompiler(const char *source);
-    ASTNode *getProgramNode(const char *source);
-
-#ifdef __cplusplus
-}
-#endif
-
-typedef struct ASTNode ASTNode;
-
-int globalCompiler(const char *source);
-ASTNode *getProgramNode(const char *source);
 
 #endif // COMMON_H

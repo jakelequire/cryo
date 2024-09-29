@@ -49,25 +49,6 @@ KeywordToken keywords[] = {
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
-/*
-    // Integers
-    DATA_TYPE_SINT8,  // `sint8`  15
-    DATA_TYPE_SINT16, // `sint16` 16
-    DATA_TYPE_SINT32, // `sint32` 17
-    DATA_TYPE_SINT64, // `sint64` 18
-    DATA_TYPE_UINT8,  // `uint8`  19
-    DATA_TYPE_UINT16, // `uint16` 20
-    DATA_TYPE_UINT32, // `uint32` 21
-    DATA_TYPE_UINT64, // `uint64` 22
-    // Arrays
-    DATA_TYPE_INT8_ARRAY,  // `int8[]`  23
-    DATA_TYPE_INT16_ARRAY, // `int16[]` 24
-    DATA_TYPE_INT32_ARRAY, // `int32[]` 25
-    DATA_TYPE_INT64_ARRAY, // `int64[]` 26
-    // Vectors
-    DATA_TYPE_DYN_VEC, // `dyn_vec` 27
-*/
-
 // #################################//
 //        DataType Dictionary.      //
 // #################################//
@@ -133,6 +114,20 @@ void freeLexer(Lexer *lexer)
 
 /* =========================================================== */
 /* @Lexer_Utils */
+
+// <getLPos>
+int getLPos(Lexer *lexer)
+{
+    return lexer->current - lexer->start;
+}
+// </getLPos>
+
+// <getCPos>
+int getCPos(Lexer *lexer)
+{
+    return lexer->column;
+}
+// </getCPos>
 
 // <advance>
 char advance(Lexer *lexer, CompilerState *state)

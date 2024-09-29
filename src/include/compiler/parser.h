@@ -41,6 +41,7 @@ typedef struct ASTNode ASTNode;
 typedef struct Token Token;
 typedef struct CryoSymbolTable CryoSymbolTable;
 typedef struct CompilerState CompilerState;
+typedef struct Position Position;
 
 typedef struct
 {
@@ -60,6 +61,9 @@ typedef struct
 
 /* =========================================================== */
 /* @Function_Prototypes                                        */
+
+Position getPosition(Lexer *lexer);
+void printPosition(Position position);
 
 void printLine(const char *source, int line, Arena *arena, CompilerState *state);
 

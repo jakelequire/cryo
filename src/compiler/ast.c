@@ -327,6 +327,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state)
     }
 
     node->metaData->type = type;
+    node->metaData->position = getPosition(state->lexer);
 
     switch (type)
     {
