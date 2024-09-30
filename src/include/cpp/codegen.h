@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdint.h>
+#include <fstream>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -71,6 +72,7 @@ namespace Cryo
     class Loops;
     class BinaryExpressions;
     class Structs;
+    class Imports;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -98,20 +100,25 @@ namespace Cryo
 
         void operator=(CryoContext const &) = delete;
 
+        CompilerState state;
+
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
-        CompilerState state;
+
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
+
         std::string currentNamespace;
-        // Current Function
         llvm::Function *currentFunction;
+
         bool inGlobalScope = true;
 
         void initializeContext()
         {
-            module = std::make_unique<llvm::Module>("main", context);
+            // Get the filename from the CompilerState
+            std::string moduleName = "CryoModule";
+            module = std::make_unique<llvm::Module>(moduleName, context);
             module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128");
             std::cout << "[CPP.h] Module Initialized" << std::endl;
         }
@@ -143,6 +150,7 @@ namespace Cryo
         BinaryExpressions &getBinaryExpressions() { return *binaryExpressions; }
         Loops &getLoops() { return *loops; }
         Structs &getStructs() { return *structs; }
+        Imports &getImports() { return *imports; }
 
         void compile(ASTNode *root);
         void dumpModule(void);
@@ -162,6 +170,7 @@ namespace Cryo
         std::unique_ptr<BinaryExpressions> binaryExpressions;
         std::unique_ptr<Loops> loops;
         std::unique_ptr<Structs> structs;
+        std::unique_ptr<Imports> imports;
     };
 
     /**
@@ -214,6 +223,7 @@ namespace Cryo
         void handleProgram(ASTNode *node);
         llvm::Value *handleLiteralExpression(ASTNode *node);
 
+        void handleImportStatement(ASTNode *node);
         void handleExternFunction(ASTNode *node);
         void handleFunctionDeclaration(ASTNode *node);
         void handleFunctionBlock(ASTNode *node);
@@ -532,6 +542,29 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
+
+    class Imports
+    {
+    public:
+        Imports(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Handles import statements in the AST.
+         */
+        void handleImportStatement(ASTNode *node);
+
+        /**
+         * @brief Imports the Cryo Standard Library.
+         */
+        void importCryoSTD(std::string subModuleName);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
+    // -----------------------------------------------------------------------------------------------
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
           debugger(std::make_unique<CryoDebugger>(context)),
@@ -546,6 +579,7 @@ namespace Cryo
           loops(std::make_unique<Loops>(*this)),
           binaryExpressions(std::make_unique<BinaryExpressions>(*this)),
           structs(std::make_unique<Structs>(*this)),
+          imports(std::make_unique<Imports>(*this)),
           symTable(std::make_unique<BackendSymTable>())
 
     {

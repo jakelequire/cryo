@@ -35,6 +35,15 @@ typedef struct ASTNode ASTNode;
 
 /*================================*/
 
+typedef struct CompiledFile
+{
+    const char *fileName;
+    const char *filePath;
+    const char *outputPath;
+} CompiledFile;
+
+/*================================*/
+
 typedef enum ErrorType
 {
     ERROR,

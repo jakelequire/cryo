@@ -285,4 +285,15 @@ namespace Cryo
         return;
     }
 
+    void Generator::handleImportStatement(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Imports &imports = compiler.getImports();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Import Statement");
+
+        imports.handleImportStatement(node);
+
+        return;
+    }
+
 } // namespace Cryo

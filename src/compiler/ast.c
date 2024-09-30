@@ -295,6 +295,17 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         break;
     }
 
+    case NODE_IMPORT_STATEMENT:
+    {
+        printf("\nImport Statement Node: \n");
+        printf("Is STD Module: %s\n", node->data.import->isStdModule ? "true" : "false");
+        printf("Module Name: %s\n", node->data.import->moduleName);
+        if (node->data.import->subModuleName)
+        {
+            printf("Submodule Name: %s\n", node->data.import->subModuleName);
+        }
+    }
+
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");
         break;
@@ -336,6 +347,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state)
         break;
     case NODE_PROGRAM:
         node->data.program = createCryoProgramContainer(arena, state);
+        break;
+    case NODE_IMPORT_STATEMENT:
+        node->data.import = createCryoImportNodeContainer(arena, state);
         break;
     case NODE_BLOCK:
         node->data.block = createCryoBlockNodeContainer(arena, state);
@@ -1058,7 +1072,11 @@ ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerS
     ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT, arena, state);
     if (!node)
         return NULL;
-    // node->data.importStatement->modulePath = strdup(importPath);
+
+    node->data.import->moduleName = strdup(module);
+    node->data.import->subModuleName = subModule ? strdup(subModule) : NULL;
+    node->data.import->isStdModule = false;
+
     return node;
 }
 

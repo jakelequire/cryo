@@ -16,6 +16,17 @@
  ********************************************************************************/
 #include "common/common.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+    void generateCodeWrapper(ASTNode *node, CompilerState *state);
+
+#ifdef __cplusplus
+}
+#endif
+
 // -------------------------------------------------------------------
 // @Compiler Errors
 
@@ -195,3 +206,78 @@ void dumpSymbolTableCXX(CompilerState state)
 {
     dumpSymbolTable(state);
 }
+
+// -------------------------------------------------------------------
+
+CompiledFile compileFile(const char *filePath)
+{
+    CompiledFile *compiledFile = (CompiledFile *)malloc(sizeof(CompiledFile));
+    char *base = strrchr(filePath, '/');
+    if (base == NULL)
+    {
+        compiledFile->fileName = filePath;
+        compiledFile->filePath = filePath;
+    }
+    else
+    {
+        compiledFile->fileName = base + 1;
+        compiledFile->filePath = filePath;
+    }
+    compiledFile->outputPath = NULL;
+
+    char *fileName = compiledFile->fileName;
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    char *source;
+    source = readFile(filePath);
+    if (source == NULL)
+    {
+        fprintf(stderr, "Failed to read source file.\n");
+        CONDITION_FAILED;
+    }
+
+    // Initialize the call stack
+    initCallStack(&callStack, 10);
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
+
+    // Initialize the lexer
+    Lexer lexer;
+    CompilerState state = initCompilerState(arena, &lexer, table, fileName);
+    initLexer(&lexer, source, fileName, &state);
+    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
+
+    // Parse the source code
+    ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
+    if (programNode != NULL)
+    {
+        dumpCompilerState(state);
+        int size = programNode->data.program->statementCount;
+        ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
+        memcpy(nodeCpy, programNode, sizeof(ASTNode));
+
+        printSymbolTable(table);
+        printAST(nodeCpy, 0, arena);
+        DEBUG_ARENA_PRINT(arena);
+
+        printf("[Main] Generating IR code...\n");
+        generateCodeWrapper(nodeCpy, &state); // <- The C++ wrapper function
+        printf(">===------------- CPP End Code Generation -------------===<\n");
+        printf("[Main] IR code generated, freeing AST.\n");
+
+        // Free the Arena
+        freeArena(arena);
+    }
+    else
+    {
+        fprintf(stderr, "[Main] Failed to parse program.\n");
+        freeArena(arena);
+    }
+
+    printf("[DEBUG] Program parsed\n");
+}
+
+// -------------------------------------------------------------------

@@ -90,7 +90,8 @@ namespace Cryo
         {
             addWhitespaceAfterLoadStore(*cryoContext.module);
             std::error_code EC;
-            llvm::raw_fd_ostream dest("output.ll", EC, llvm::sys::fs::OF_None);
+            std::string outputFilename = cryoContext.module->getModuleIdentifier() + ".ll";
+            llvm::raw_fd_ostream dest(outputFilename, EC, llvm::sys::fs::OF_None);
 
             if (EC)
             {
@@ -142,6 +143,10 @@ namespace Cryo
         case NODE_PROGRAM:
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Program");
             generator.handleProgram(root);
+            break;
+        case NODE_IMPORT_STATEMENT:
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Import Statement");
+            generator.handleImportStatement(root);
             break;
         case NODE_FUNCTION_DECLARATION:
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Function Declaration");

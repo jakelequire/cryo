@@ -1433,22 +1433,6 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
     logMessage("INFO", __LINE__, "Parser", "Parsing import...");
     consume(lexer, TOKEN_KW_IMPORT, "Expected `import` keyword.", "parseImport", table, arena, state);
 
-    /*
-
-    import std::Math;
-    ^ This will be the new syntax for import statements
-    --------------------------------------------------------------------
-    std     ::      Math;
-    ^               ^ The submodule name will be extracted from the token
-    ^ The module name will be extracted from the token
-typedef struct CryoImportNode
-{
-    char *moduleName;
-    char *subModuleName;
-    bool isStdModule;
-} CryoImportNode;
-    */
-
     if (currentToken.type != TOKEN_IDENTIFIER)
     {
         error("Expected an identifier.", "parseImport", table, arena, state);
@@ -1456,7 +1440,8 @@ typedef struct CryoImportNode
     }
 
     char *moduleName = strndup(currentToken.start, currentToken.length);
-    getNextToken(lexer, arena, state);
+
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseImport", table, arena, state);
 
     if (currentToken.type == TOKEN_DOUBLE_COLON)
     {
@@ -1468,12 +1453,33 @@ typedef struct CryoImportNode
         }
 
         char *subModuleName = strndup(currentToken.start, currentToken.length);
-        getNextToken(lexer, arena, state);
-        return createImportNode(moduleName, subModuleName, arena, state);
+
+        printf("\n<!> Module: %s\n", moduleName);
+        printf("\n<!> Submodule: %s\n", subModuleName);
+
+        consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseImport", table, arena, state);
+
+        ASTNode *importNode = createImportNode(moduleName, subModuleName, arena, state);
+
+        consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", table, arena, state);
+
+        if (strcmp(moduleName, "std") == 0)
+        {
+            importNode->data.import->isStdModule = true;
+        }
+
+        return importNode;
+    }
+
+    ASTNode *importNode = createImportNode(moduleName, NULL, arena, state);
+
+    if (strcmp(moduleName, "std") == 0)
+    {
+        importNode->data.import->isStdModule = true;
     }
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", table, arena, state);
-    return createImportNode(moduleName, NULL, arena, state);
+    return importNode;
 }
 // </parseImport>
 
