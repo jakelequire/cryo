@@ -1433,13 +1433,24 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
     logMessage("INFO", __LINE__, "Parser", "Parsing import...");
     consume(lexer, TOKEN_KW_IMPORT, "Expected `import` keyword.", "parseImport", table, arena, state);
 
-    if (currentToken.type != TOKEN_STRING_LITERAL)
+    /*
+
+    import std::Math;
+    ^ This will be the new syntax for import statements
+    --------------------------------------------------------------------
+    std     ::      Math;
+    ^               ^ The submodule name will be extracted from the token
+    ^ The module name will be extracted from the token
+
+    */
+
+    if (currentToken.type != TOKEN_IDENTIFIER)
     {
-        error("Expected a string literal", "parseImport", table, arena, state);
+        error("Expected an identifier.", "parseImport", table, arena, state);
         return NULL;
     }
 
-    char *moduleName = strndup(currentToken.start + 1, currentToken.length - 2);
+    char *moduleName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer, arena, state);
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", table, arena, state);

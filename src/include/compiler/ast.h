@@ -126,6 +126,25 @@ typedef struct CryoMetaData
     Position position;
 } CryoMetaData;
 
+/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
+/// ---
+/// ```
+///
+/// typedef struct CryoImportNode
+/// {
+///     char *moduleName;
+///     char *subModuleName;
+///     bool isStdModule;
+/// } CryoImportNode;
+///
+/// ```
+typedef struct CryoImportNode
+{
+    char *moduleName;
+    char *subModuleName;
+    bool isStdModule;
+} CryoImportNode;
+
 /// #### The CryoScope struct represents the scope of a block of code.
 /// ---
 /// ```
