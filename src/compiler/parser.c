@@ -1441,7 +1441,12 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
     std     ::      Math;
     ^               ^ The submodule name will be extracted from the token
     ^ The module name will be extracted from the token
-
+typedef struct CryoImportNode
+{
+    char *moduleName;
+    char *subModuleName;
+    bool isStdModule;
+} CryoImportNode;
     */
 
     if (currentToken.type != TOKEN_IDENTIFIER)
@@ -1453,8 +1458,22 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
     char *moduleName = strndup(currentToken.start, currentToken.length);
     getNextToken(lexer, arena, state);
 
+    if (currentToken.type == TOKEN_DOUBLE_COLON)
+    {
+        getNextToken(lexer, arena, state);
+        if (currentToken.type != TOKEN_IDENTIFIER)
+        {
+            error("Expected an identifier.", "parseImport", table, arena, state);
+            return NULL;
+        }
+
+        char *subModuleName = strndup(currentToken.start, currentToken.length);
+        getNextToken(lexer, arena, state);
+        return createImportNode(moduleName, subModuleName, arena, state);
+    }
+
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", table, arena, state);
-    return createImportNode(moduleName, arena, state);
+    return createImportNode(moduleName, NULL, arena, state);
 }
 // </parseImport>
 

@@ -191,6 +191,33 @@ CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state)
 /// ---
 /// ### Structure
 ///```
+/// typedef struct CryoImportNode
+/// {
+///     char *moduleName;
+///     char *subModuleName;
+///     bool isStdModule;
+/// } CryoImportNode;
+///```
+///
+CryoImportNode *createCryoImportNodeContainer(Arena *arena, CompilerState *state)
+{
+    CryoImportNode *node = (CryoImportNode *)ARENA_ALLOC(arena, sizeof(CryoImportNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate CryoImportNode node.");
+        return NULL;
+    }
+
+    node->moduleName = (char *)calloc(1, sizeof(char));
+    node->subModuleName = (char *)calloc(1, sizeof(char));
+    node->isStdModule = false;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
 /// typedef struct CryoScope
 /// {
 ///     int scopeLevel;

@@ -713,6 +713,8 @@ typedef struct ASTNode
         CryoNamespace *cryoNamespace;
         // For the main program
         CryoProgram *program;
+        // For Import Statements
+        CryoImportNode *import;
         // For Blocks
         CryoBlockNode *block;
         // For Functions
@@ -772,6 +774,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state);
 CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState *state);
 CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state);
 CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state);
+CryoImportNode *createCryoImportNodeContainer(Arena *arena, CompilerState *state);
 CryoScope *createCryoScopeContainer(Arena *arena, CompilerState *state);
 ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerState *state);
 FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state);
@@ -855,7 +858,7 @@ extern "C"
     ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *arena, CompilerState *state);
 
     /* @Node_Creation - Modules & Externals */
-    ASTNode *createImportNode(char *importPath, Arena *arena, CompilerState *state);
+    ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state);
     ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *state);
 
     /* @Node_Creation - Conditionals */

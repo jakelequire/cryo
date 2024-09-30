@@ -1053,7 +1053,7 @@ ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *ar
 }
 
 /* @Node_Creation - Modules & Externals */
-ASTNode *createImportNode(char *importPath, Arena *arena, CompilerState *state)
+ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state)
 {
     ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT, arena, state);
     if (!node)
