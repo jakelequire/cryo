@@ -75,6 +75,7 @@ typedef struct CompilerError
     int column;
     char *fileName;
     char *functionName;
+    bool isActiveBuild;
 } CompilerError;
 
 typedef struct CompilerState
@@ -87,6 +88,7 @@ typedef struct CompilerState
     const char *fileName;
     int lineNumber;
     int columnNumber;
+    bool isActiveBuild;
     int errorCount;
     CompilerError **errors;
     // Functions for debugging
@@ -121,8 +123,21 @@ void dumpSymbolTable(CompilerState state);
 #ifdef __cplusplus
 extern "C"
 {
+    struct CompiledFile;
     void dumpCompilerStateCXX(CompilerState state);
     void dumpSymbolTableCXX(CompilerState state);
+    CompiledFile compileFileCXX(const char *filePath, const char *compilerFlags);
+}
+#endif
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+    CompiledFile compileFile(const char *filePath, const char *compilerFlags);
+
+#ifdef __cplusplus
 }
 #endif
 

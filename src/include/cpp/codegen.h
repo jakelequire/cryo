@@ -24,6 +24,8 @@
 #include <assert.h>
 #include <stdint.h>
 #include <fstream>
+#include <sstream>
+#include <filesystem>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -53,11 +55,13 @@
 #include "cpp/backend_symtable.h"
 #include "common/common.h"
 
+extern "C" CompiledFile compileFile(const char *filePath, const char *compilerFlags);
+
 namespace Cryo
 {
-    struct SymTable;       // Forward declaration
-    class BackendSymTable; // Forward declaration if needed
+    struct SymTable;
 
+    class BackendSymTable;
     class CodeGen;
     class CryoCompiler;
     class Generator;
@@ -117,10 +121,16 @@ namespace Cryo
         void initializeContext()
         {
             // Get the filename from the CompilerState
-            std::string moduleName = "CryoModule";
+            std::string moduleName = "CryoModuleDefaulted";
             module = std::make_unique<llvm::Module>(moduleName, context);
             module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128");
             std::cout << "[CPP.h] Module Initialized" << std::endl;
+        }
+
+        void setModuleIdentifier(std::string name)
+        {
+            module->setModuleIdentifier(name);
+            module->setSourceFileName(name);
         }
 
     private:
@@ -154,6 +164,11 @@ namespace Cryo
 
         void compile(ASTNode *root);
         void dumpModule(void);
+
+        void setModuleIdentifier(std::string name)
+        {
+            CryoContext::getInstance().setModuleIdentifier(name);
+        }
 
     private:
         CryoContext &context;

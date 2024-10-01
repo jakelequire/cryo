@@ -23,7 +23,7 @@ namespace Cryo
             importCryoSTD(importNode->subModuleName);
         }
 
-        DEBUG_BREAKPOINT;
+        return;
     }
 
     void Imports::importCryoSTD(std::string subModuleName)
@@ -40,18 +40,20 @@ namespace Cryo
             return;
         }
 
-        std::string cryoSTDPath = cryoPath + "cryo/std/" + subModuleName + ".cryo";
+        std::string cryoSTDPath = cryoPath + "/cryo/std/" + subModuleName + ".cryo";
         std::cout << "Cryo STD Path: " << cryoSTDPath << std::endl;
 
         // Check if the file exists
         std::ifstream file(cryoSTDPath); // This function is from the <fstream> library
-        if (!file.good())
-        {
-            debugger.logMessage("ERROR", __LINE__, "Imports", "Cryo STD file not found.");
-            return;
-        }
         debugger.logMessage("INFO", __LINE__, "Imports", "Cryo STD file found.");
+        const char *cryoSTDPathCStr = cryoSTDPath.c_str();
+        const char *compilerFlags = "-a";
 
-        //
+        std::cout << "\n\n\n\n\n\n";
+        compileFile(cryoSTDPathCStr, compilerFlags);
+
+        DEBUG_BREAKPOINT;
+
+        return;
     }
 }

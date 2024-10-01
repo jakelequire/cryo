@@ -1,57 +1,19 @@
-namespace test;
-extern function printStr(s: string) -> void;
-extern function printInt(i: int) -> void;
+namespace Test;
 
-// const intOne: int = 32;
-// const intTwo: int = 64;
-// const intThree: int = 128;
-// 
-// const strOne: string = "Hello, World!";
-// const strTwo: string = "Goodbye, World!";
-// 
-// const boolTrue: boolean = true;
-// const boolFalse: boolean = false;
-// 
-// const arrOne: int[] = [1, 2, 69, 4, 5];
-// const arrIndexZero: int = arrOne[0];
-// const arrIndexOne: int = arrOne[1];
-// const arrIndexTwo: int = arrOne[2];
-// const arrIndexThree: int = arrOne[3];
-// 
-// mut mutInt: int = 420;
+import std::Math;
 
+extern function printStr(str: string) -> void;
 
-const debugArrayOutter: int[] = [1, 2, 3, 4, 5];
-const debugIndexArrayOutter: int = debugArrayOutter[2];
-
-public function main() -> void 
-{
-    const cap: int = 5;
-    printStr("Starting For Loop...");
-    for($index: int = 0; index < cap; ++index)
-    {
-        const refOutterArray: int = debugArrayOutter[index];
-        printInt(refOutterArray);
+public function test(a: int) -> void {
+    if(a < 5) {
+        test(a);
+    } else {
+        return;
     }
-    printStr("Ending For Loop...");
-
     return;
 }
 
-// public function testNumRet() -> int
-// {
-//     if(10 != 10)
-//     {
-//         printStr("10 is not equal to 10");
-//     }
-//     else
-//     {
-//         printStr("10 is equal to 10");
-//     }
-//     return 42;
-// }
-
-// public function testStrRet() -> string
-// {
-//     return "Hello, World!";
-// }
+public function main() -> void {
+    printStr("Hello, World!");
+    return;
+}

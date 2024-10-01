@@ -41,6 +41,7 @@ CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *tab
     state.fileName = fileName;
     state.lineNumber = 0;
     state.columnNumber = 0;
+    state.isActiveBuild = false;
     state.errorCount = 0;
     state.errors = (CompilerError **)malloc(sizeof(CompilerError *));
 
@@ -85,6 +86,7 @@ CompilerError initNewError(InternalDebug debug)
     error.column = 0;
     error.fileName = NULL;
     error.functionName = NULL;
+    error.isActiveBuild = false;
     return error;
 }
 
@@ -114,6 +116,7 @@ CompilerError createError(InternalDebug internals, CompilerState *state, const c
     error.column = column;
     error.fileName = (char *)fileName;
     error.functionName = (char *)internals.functionName;
+    error.isActiveBuild = state->isActiveBuild;
     state->errorCount++;
     state->errors = (CompilerError **)realloc(state->errors, sizeof(CompilerError *) * state->errorCount);
     state->errors[state->errorCount - 1] = &error;
@@ -151,6 +154,7 @@ void logCompilerError(CompilerError *error)
     fprintf(stderr, "Line: %d\n", error->lineNumber);
     fprintf(stderr, "Column: %d\n", error->column);
     fprintf(stderr, "Function: %s\n", error->functionName);
+    fprintf(stderr, "Is Active Build: %s\n", error->isActiveBuild ? "true" : "false");
     fprintf(stderr, "\n#END_COMPILATION_ERROR\n\n");
 }
 
@@ -181,6 +185,7 @@ void dumpCompilerState(CompilerState state)
     fprintf(stderr, "  - Current Node: %p\n", state.currentNode);
     fprintf(stderr, "  - Line Number: %d\n", state.lineNumber);
     fprintf(stderr, "  - Column Number: %d\n", state.columnNumber);
+    fprintf(stderr, "  - Active Build: %s\n", state.isActiveBuild ? "true" : "false");
     fprintf(stdout, "  - File Name: %s\n", state.fileName);
     fprintf(stderr, "  - Error Count: %d\n", state.errorCount);
     for (int i = 0; i < state.errorCount; ++i)
@@ -209,75 +214,70 @@ void dumpSymbolTableCXX(CompilerState state)
 
 // -------------------------------------------------------------------
 
-CompiledFile compileFile(const char *filePath)
+CompiledFile compileFile(const char *filePath, const char *compilerFlags)
 {
-    CompiledFile *compiledFile = (CompiledFile *)malloc(sizeof(CompiledFile));
-    char *base = strrchr(filePath, '/');
-    if (base == NULL)
+    logMessage("INFO", __LINE__, "Common", "Compiling file...");
+    // Get the cryo ENV variable
+    const char *cryoEnv = getenv("CRYO_PATH");
+    if (cryoEnv == NULL)
     {
-        compiledFile->fileName = filePath;
-        compiledFile->filePath = filePath;
-    }
-    else
-    {
-        compiledFile->fileName = base + 1;
-        compiledFile->filePath = filePath;
-    }
-    compiledFile->outputPath = NULL;
-
-    char *fileName = compiledFile->fileName;
-
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    char *source;
-    source = readFile(filePath);
-    if (source == NULL)
-    {
-        fprintf(stderr, "Failed to read source file.\n");
-        CONDITION_FAILED;
+        fprintf(stderr, "Error: CRYO_PATH environment variable not set.\n");
+        exit(1);
     }
 
-    // Initialize the call stack
-    initCallStack(&callStack, 10);
+    // Get the executable path (CRYO_PATH/src/bin/main)
+    char *executablePath = (char *)malloc(strlen(cryoEnv) + 32);
+    strcpy(executablePath, cryoEnv);
+    strcat(executablePath, "/src/bin/main");
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
-    // Initialize the lexer
-    Lexer lexer;
-    CompilerState state = initCompilerState(arena, &lexer, table, fileName);
-    initLexer(&lexer, source, fileName, &state);
-    logMessage("INFO", __LINE__, "Main", "Lexer Initialized... ");
-
-    // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
-    if (programNode != NULL)
+    // Check if the file exists
+    FILE *file = fopen(filePath, "r");
+    if (file == NULL)
     {
-        dumpCompilerState(state);
-        int size = programNode->data.program->statementCount;
-        ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
-        memcpy(nodeCpy, programNode, sizeof(ASTNode));
-
-        printSymbolTable(table);
-        printAST(nodeCpy, 0, arena);
-        DEBUG_ARENA_PRINT(arena);
-
-        printf("[Main] Generating IR code...\n");
-        generateCodeWrapper(nodeCpy, &state); // <- The C++ wrapper function
-        printf(">===------------- CPP End Code Generation -------------===<\n");
-        printf("[Main] IR code generated, freeing AST.\n");
-
-        // Free the Arena
-        freeArena(arena);
+        fprintf(stderr, "Error: File not found: %s\n", filePath);
+        exit(1);
     }
-    else
+    // Close the file
+    fclose(file);
+
+    // Create the command string
+    char *command = (char *)malloc(strlen(executablePath) + strlen(filePath) + 32);
+    strcpy(command, executablePath);
+    strcat(command, " -f ");
+    strcat(command, filePath);
+
+    // Check if the compiler flags are set
+    if (compilerFlags != NULL)
     {
-        fprintf(stderr, "[Main] Failed to parse program.\n");
-        freeArena(arena);
+        logMessage("INFO", __LINE__, "Common", "Compiler flags detected: %s", strdup(compilerFlags));
+        strcat(command, " ");
+        strcat(command, strdup(compilerFlags));
     }
 
-    printf("[DEBUG] Program parsed\n");
+    printf("\n\n Executing command: %s\n\n", command);
+
+    // Execute the command
+    system(command);
+
+    logMessage("INFO", __LINE__, "Common", "File compiled successfully.");
+
+    // Free the memory
+    free(executablePath);
+    free(command);
+
+    // Return the compiled file
+    CompiledFile compiledFile;
+    compiledFile.fileName = "output";
+    compiledFile.filePath = "output";
+    compiledFile.outputPath = "output";
+
+    logMessage("INFO", __LINE__, "Common", "File compiled successfully.");
+    return compiledFile;
+}
+
+CompiledFile compileFileCXX(const char *filePath, const char *compilerFlags)
+{
+    return compileFile(filePath, compilerFlags);
 }
 
 // -------------------------------------------------------------------

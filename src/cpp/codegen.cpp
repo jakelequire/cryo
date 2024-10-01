@@ -90,8 +90,12 @@ namespace Cryo
         {
             addWhitespaceAfterLoadStore(*cryoContext.module);
             std::error_code EC;
-            std::string outputFilename = cryoContext.module->getModuleIdentifier() + ".ll";
-            llvm::raw_fd_ostream dest(outputFilename, EC, llvm::sys::fs::OF_None);
+            std::string outputFileName = cryoContext.module->getSourceFileName();
+            // Trim out the file extension
+            outputFileName = outputFileName.substr(0, outputFileName.find_last_of("."));
+            outputFileName += ".ll";
+            // std::string outputFilename = cryoContext.module->getModuleIdentifier() + ".ll";
+            llvm::raw_fd_ostream dest(outputFileName, EC, llvm::sys::fs::OF_None);
 
             if (EC)
             {
@@ -109,6 +113,38 @@ namespace Cryo
                 cryoContext.module->print(llvm::outs(), &LSWA);
                 std::cout << "\n>===------- End IR Code ------===<\n"
                           << std::endl;
+
+                bool isActiveBuild = compiler.getCompilerState().isActiveBuild;
+                if (isActiveBuild)
+                {
+                    debugger.logMessage("INFO", __LINE__, "CodeGen", "Active Build");
+                    // Create the IR File
+                    std::string _irFileName = cryoContext.state.fileName;
+                    std::string irFileName = _irFileName.substr(0, _irFileName.find_last_of("."));
+                    // Trim the directory path
+                    irFileName = irFileName.substr(irFileName.find_last_of("/") + 1);
+                    irFileName += ".ll";
+                    std::cout << "IR File Name: " << irFileName << std::endl;
+                    // Current working directory
+                    std::string cwd = std::filesystem::current_path().string();
+                    std::string irFilePath = cwd + "/" + irFileName;
+                    std::cout << "IR File Path: " << irFilePath << std::endl;
+
+                    std::error_code EC;
+                    llvm::raw_fd_ostream irFile(irFilePath, EC, llvm::sys::fs::OF_None);
+                    if (EC)
+                    {
+                        std::cerr << "Could not open file: " << EC.message() << "\n";
+                        return;
+                    }
+
+                    // Write to irFile directly
+                    llvm::raw_fd_ostream irFileOut(irFilePath, EC, llvm::sys::fs::OF_None);
+                    cryoContext.module->print(irFileOut, nullptr);
+                    irFileOut.flush();
+                    irFileOut.close();
+                }
+
                 dest.flush();
                 dest.close();
 
