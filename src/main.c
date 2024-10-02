@@ -14,12 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <getopt.h>
 
 #include "main.h"
+#include "build.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -31,28 +28,6 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-void moveBuildFile(char *fileName, char *cwd)
-{
-    printf("\nMoving build file: %s\n", fileName);
-    printf("Current working directory: %s\n", cwd);
-    char *command = (char *)malloc(strlen(fileName) + 50);
-
-    // Validate the current working directory
-    if (cwd == NULL)
-    {
-        fprintf(stderr, "Error: Current working directory is NULL\n");
-        return;
-    }
-
-    // Move the file to the build directory (cwd)/build/out/
-    printf("%s %s/build/out/", fileName, cwd);
-    sprintf(command, "mv %s %s/build/out/", fileName, cwd);
-    system(command);
-
-    // Free the command string
-    free(command);
-}
 
 void printUsage(const char *programName)
 {

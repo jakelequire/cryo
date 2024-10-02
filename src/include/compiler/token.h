@@ -283,7 +283,9 @@ extern "C"
         NODE_STRUCT_DECLARATION,   // 32
         NODE_PROPERTY,             // 33
         NODE_CUSTOM_TYPE,          // 34
-        NODE_UNKNOWN,              // 35
+        NODE_SCOPED_FUNCTION_CALL, // 35
+        NODE_EXTERNAL_SYMBOL,      // 36
+        NODE_UNKNOWN,              // 37
     } CryoNodeType;
 
     typedef enum CryoDataType

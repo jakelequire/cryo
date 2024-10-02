@@ -14,52 +14,17 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "utils/utility.h"
+#ifndef BUILD_H
+#define BUILD_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <getopt.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <sys/types.h>
 
-void logMessage(const char *type, int line, const char *module, const char *message, ...)
-{
-    va_list args;
-    va_start(args, message);
-    printf("[%-5s] \t@%-4d { %-7s}  ", type, line, module);
-    vprintf(message, args);
-    printf("\n");
-    va_end(args);
-    return;
-}
+void moveBuildFile(char *fileName, char *cwd);
+void compileBuildFile(char *fileName);
 
-const char *intToConstChar(int num)
-{
-    static char buffer[12];
-    snprintf(buffer, sizeof(buffer), "%d", num);
-    return buffer;
-}
-
-char *intToChar(int num)
-{
-    char buffer[12];
-    snprintf(buffer, sizeof(buffer), "%d", num);
-    return buffer;
-}
-
-int charToInt(char *str)
-{
-    int num = 0;
-    for (int i = 0; str[i] != '\0'; i++)
-    {
-        num = num * 10 + str[i] - '0';
-    }
-    return num;
-}
-
-char *concatStrings(const char *str1, const char *str2)
-{
-    char *result = (char *)malloc(strlen(str1) + strlen(str2) + 1);
-    if (result == NULL)
-    {
-        perror("Failed to allocate memory for concatenated string");
-        return NULL;
-    }
-    strcpy(result, str1);
-    strcat(result, str2);
-    return result;
-}
+#endif // BUILD_H

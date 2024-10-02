@@ -65,7 +65,7 @@ else
     CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
 			-I./src/include/utils -I./src/include/tests
     CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
-			-I./src/include/utils -I./src/include/tests $(LLVM_CXXFLAGS)
+			-I./src/include/utils -I./src/include/tests $(LLVM_CXXFLAGS) -fexceptions
     LLVM_CONFIG = llvm-config
     LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
 	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
@@ -124,7 +124,7 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)co
 COMMON_SRC = $(COMMON_DIR)common.c
 
 # Main files
-MAIN_SRC = $(SRC_DIR)main.c
+MAIN_SRC = $(SRC_DIR)main.c $(SRC_DIR)build.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # --------------------------------------------------------------------------------- #
@@ -153,7 +153,7 @@ CLI_OBJ = $(OBJ_DIR)compiler.o $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)c
 			$(OBJ_DIR)cmd_devWatch.o $(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o 
 
 # Main Object files
-MAIN_OBJ = $(OBJ_DIR)main.o
+MAIN_OBJ = $(OBJ_DIR)main.o $(OBJ_DIR)build.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
@@ -203,6 +203,9 @@ $(OBJ_DIR)%.o: $(COMPILER_DIR)%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)main.o: $(SRC_DIR)main.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)build.o: $(SRC_DIR)build.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)runtime.o: $(RUNTIME_DIR)runtime.c | $(OBJ_DIR)

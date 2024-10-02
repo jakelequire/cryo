@@ -23,6 +23,7 @@
 #include "parser.h"
 #include "utils/utility.h"
 #include "utils/arena.h"
+#include "common/common.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -32,7 +33,7 @@
 
 typedef struct ASTNode ASTNode;
 
-typedef struct
+typedef struct CryoSymbol
 {
     ASTNode *node;
     char *name;
@@ -43,6 +44,7 @@ typedef struct
     int argCount;
     int line;
     int column;
+    char *module;
 } CryoSymbol;
 
 typedef struct CryoSymbolTable
@@ -51,6 +53,7 @@ typedef struct CryoSymbolTable
     int count;
     int capacity;
     int scopeDepth;
+    char *namespaceName;
     void (*printSymbolTable)(struct CryoSymbolTable *table);
 } CryoSymbolTable;
 
@@ -70,6 +73,12 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 
 void addDefinitionToSymbolTable(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
+
+char *getCurrentNamespace(CryoSymbolTable *table);
+CryoSymbol *findImportedSymbol(CryoSymbolTable *table, const char *name, const char *module, Arena *arena);
+void importAstTreeDefs(ASTNode *root, CryoSymbolTable *table, Arena *arena, CompilerState *state);
+
+void setNamespace(CryoSymbolTable *table, const char *name);
 
 bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena);
 

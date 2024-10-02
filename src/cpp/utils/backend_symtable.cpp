@@ -386,7 +386,9 @@ namespace Cryo
         case NODE_STRUCT_DECLARATION:
             debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing STRUCT_DECLARATION node");
             break;
-
+        case NODE_SCOPED_FUNCTION_CALL:
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing SCOPED_FUNCTION_CALL node");
+            break;
         default:
         {
             CryoNodeType nodeType = node->metaData->type;
@@ -547,6 +549,10 @@ namespace Cryo
                 }
             }
             break;
+        }
+
+        case NODE_SCOPED_FUNCTION_CALL:
+        {
         }
 
         // For node types that don't have child nodes or have been fully processed

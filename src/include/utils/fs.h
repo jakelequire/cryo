@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/types.h>
 /*---------<end>---------*/
 #ifdef __cplusplus
@@ -28,12 +29,14 @@ extern "C"
 #endif
 
     char *readFile(const char *path);
+    bool fileExists(const char *path);
 
 #ifdef __cplusplus
 }
 #endif
 
 char *readFile(const char *path);
+bool fileExists(const char *path);
 
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL

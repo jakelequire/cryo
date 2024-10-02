@@ -1,4 +1,4 @@
-namespace Std;
+namespace std;
 
 public function add(a: int, b: int) -> int {
     return a + b;

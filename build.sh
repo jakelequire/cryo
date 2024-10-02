@@ -143,6 +143,59 @@ mkdir -p $OUT_DIR
 log "Compiling the project..."
 $COMPILER_EXE "-f" $INPUT_FILE || error "Compilation failed"
 
+# Check if the /build/out/imports directory exists from the compiler
+if [ -d $OUT_DIR/imports ]; then
+    log "Processing the imports..."
+    
+    # Create a temporary directory for intermediate files
+    TEMP_DIR="$OUT_DIR/imports/temp"
+    mkdir -p "$TEMP_DIR"
+
+    # Array to store valid .ll files
+    valid_files=()
+
+    # Process each .ll file individually
+    for file in $OUT_DIR/imports/*.ll; do
+        base_name=$(basename "$file" .ll)
+        log "Processing $file..."
+
+        # Check for external dependencies
+        external_deps=$(grep -E "^declare|^@.*= external" "$file" | awk '{print $2}' | tr -d '@')
+        if [ ! -z "$external_deps" ]; then
+            log "External dependencies found in $file: $external_deps"
+            # Here you might want to ensure these dependencies are available
+            # For example, you could check if they're in a specific library or another .ll file
+        fi
+    done
+
+    # Combine all the valid .ll files
+    if [ ${#valid_files[@]} -gt 0 ]; then
+        log "Combining the .ll files..."
+        llvm-link "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
+
+        # Optimize the combined IR
+        log "Optimizing the combined IR..."
+        opt -O3 "$OUT_DIR/imports/combined.ll" -S -o "$OUT_DIR/imports/optimized.ll"
+
+        # Generate final object file
+        log "Generating final object file..."
+        llc -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
+
+        # Check if the combined object file was created successfully
+        if [ -f "$OUT_DIR/imports/combined.o" ]; then
+            log "Combined object file created successfully."
+        else
+            log "Failed to create combined object file. Please check the LLVM IR files and the compilation process."
+            exit 1
+        fi
+    else
+        log "No valid .ll files found to process."
+        exit 1
+    fi
+
+    # Clean up temporary directory
+    rm -rf "$TEMP_DIR"
+fi
 # Build the project
 log "Building the project..."
 

@@ -505,12 +505,14 @@ Token symbolChar(Lexer *lexer, char symbol, CompilerState *state)
         }
     }
     case ':':
+    {
         if (peek(lexer, state) == ':')
         {
             advance(lexer, state);
             return makeToken(lexer, TOKEN_DOUBLE_COLON, state);
         }
         return makeToken(lexer, TOKEN_COLON, state);
+    }
     case '-':
         if (peek(lexer, state) == '>')
         {

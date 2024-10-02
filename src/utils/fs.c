@@ -16,7 +16,8 @@
  ********************************************************************************/
 #include "utils/fs.h"
 
-// <readFile> *might rename to fsreadFile*
+// <readFile>
+/// @brief Takes in a file path and reads the contents of the file into a buffer
 char *readFile(const char *path)
 {
     printf("[FS] Reading file: %s\n", path);
@@ -61,3 +62,26 @@ char *readFile(const char *path)
     return buffer;
 }
 // </readFile>
+
+// <fileExists>
+/// @brief Checks if a file exists at the given path
+bool fileExists(const char *path)
+{
+    // Make sure the string isn't empty
+    if (path == NULL)
+    {
+        return false;
+    }
+
+    // Open the file
+    FILE *file = fopen(path, "r");
+    if (file)
+    {
+        fclose(file);
+        return true;
+    }
+
+    fclose(file);
+    return false;
+}
+// </fileExists>

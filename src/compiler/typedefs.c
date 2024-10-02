@@ -189,42 +189,126 @@ CryoDataType getPrimativeTypeFromString(const char *typeStr)
 
 // -----------------------------------------------------------------------------------------------
 
-/*
-    typedef enum CryoDataType
+ExternalSymbol *createExternalSymbol(const char *name, CryoDataType type, Arena *arena)
+{
+    ExternalSymbol *symbol = (ExternalSymbol *)ARENA_ALLOC(arena, sizeof(ExternalSymbol));
+    if (!symbol)
     {
-        DATA_TYPE_UNKNOWN = -1,    // `<UNKNOWN>`         -1
-        DATA_TYPE_INT,             // `int`               0
-        DATA_TYPE_FLOAT,           // `float`             2
-        DATA_TYPE_STRING,          // `string`            3
-        DATA_TYPE_BOOLEAN,         // `boolean`           4
-        DATA_TYPE_FUNCTION,        // `function`          5
-        DATA_TYPE_EXTERN_FUNCTION, // `extern function`   6
-        DATA_TYPE_VOID,            // `void`              7
-        DATA_TYPE_NULL,            // `null`              8
-        DATA_TYPE_ARRAY,           // `[]`                9
-        DATA_TYPE_INT_ARRAY,       // `int[]`             10
-        DATA_TYPE_FLOAT_ARRAY,     // `float[]`           11
-        DATA_TYPE_STRING_ARRAY,    // `string[]`          12
-        DATA_TYPE_BOOLEAN_ARRAY,   // `boolean[]`         13
-        DATA_TYPE_VOID_ARRAY,      // `void[]`            14
+        logMessage("ERROR", __LINE__, "TypeDefs", "Failed to allocate memory for ExternalSymbol");
+        return NULL;
+    }
 
-        // Integers
-        DATA_TYPE_SINT8,  // `sint8`  15
-        DATA_TYPE_SINT16, // `sint16` 16
-        DATA_TYPE_SINT32, // `sint32` 17
-        DATA_TYPE_SINT64, // `sint64` 18
-        DATA_TYPE_UINT8,  // `uint8`  19
-        DATA_TYPE_UINT16, // `uint16` 20
-        DATA_TYPE_UINT32, // `uint32` 21
-        DATA_TYPE_UINT64, // `uint64` 22
+    symbol->name = strdup(name);
+    symbol->dataType = type;
+    symbol->nodeType = NODE_EXTERNAL_SYMBOL;
+    symbol->node = NULL;
+    return symbol;
+}
 
-        // Arrays
-        DATA_TYPE_INT8_ARRAY,  // `int8[]`  23
-        DATA_TYPE_INT16_ARRAY, // `int16[]` 24
-        DATA_TYPE_INT32_ARRAY, // `int32[]` 25
-        DATA_TYPE_INT64_ARRAY, // `int64[]` 26
+ExternalSymbolTable *createExternalSymbolTable(Arena *arena)
+{
+    ExternalSymbolTable *table = (ExternalSymbolTable *)ARENA_ALLOC(arena, sizeof(ExternalSymbolTable));
+    if (!table)
+    {
+        logMessage("ERROR", __LINE__, "TypeDefs", "Failed to allocate memory for ExternalSymbolTable");
+        return NULL;
+    }
 
-        // Vectors
-        DATA_TYPE_DYN_VEC, // `dyn_vec` 27
-    } CryoDataType;
-*/
+    table->count = 0;
+    table->capacity = 64;
+    table->symbols = (ExternalSymbol **)ARENA_ALLOC(arena, table->capacity * sizeof(ExternalSymbol *));
+    if (!table->symbols)
+    {
+        logMessage("ERROR", __LINE__, "TypeDefs", "Failed to allocate memory for ExternalSymbolTable symbols");
+        return NULL;
+    }
+
+    return table;
+}
+
+ASTNode *createExternalAstTree(Arena *arena, CompilerState *state, const char *module, const char *subModule)
+{
+    // Check if it's the std module
+    bool isStdModule = strcmp(module, "std") == 0;
+    if (isStdModule)
+    {
+        // Find the std library path from the environment (CRYO_PATH)
+        const char *cryoPath = getenv("CRYO_PATH");
+        if (!cryoPath)
+        {
+            logMessage("ERROR", __LINE__, "TypeDefs", "CRYO_PATH environment variable not set.");
+            return NULL;
+        }
+
+        // The std library path will be $CRYO_PATH/cryo/std/{subModule}.cryo
+        char *stdPath = (char *)malloc(strlen(cryoPath) + 16 + strlen(subModule) + 6);
+        sprintf(stdPath, "%s/cryo/std/%s.cryo", cryoPath, subModule);
+
+        // Parse the std module
+        ASTNode *stdModule = parseExternal(stdPath);
+
+        // Check if the std module was parsed successfully
+        if (!stdModule)
+        {
+            logMessage("ERROR", __LINE__, "TypeDefs", "Failed to parse std module: %s", stdPath);
+            return NULL;
+        }
+
+        // Free the std path
+        free(stdPath);
+
+        return stdModule;
+    }
+}
+
+ASTNode *parseExternal(const char *filePath)
+{
+    // Check if the file exists
+    if (!fileExists(filePath))
+    {
+        logMessage("ERROR", __LINE__, "TypeDefs", "File does not exist: %s", filePath);
+        return NULL;
+    }
+
+    // Trim the file path
+    char *fileName = strrchr(filePath, '/');
+
+    // Read the file
+    char *source = readFile(filePath);
+    if (!source)
+    {
+        logMessage("ERROR", __LINE__, "TypeDefs", "Failed to read file: %s", filePath);
+        return NULL;
+    }
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
+
+    // Initialize the lexer
+    Lexer lexer;
+    CompilerState state = initCompilerState(arena, &lexer, table, fileName);
+
+    initLexer(&lexer, source, fileName, &state);
+
+    // Parse the source code
+    ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
+    if (programNode == NULL)
+    {
+        logMessage("ERROR", __LINE__, "TypeDefs", "Failed to parse external file: %s", filePath);
+
+        freeArena(arena);
+        free(source);
+        return NULL;
+    }
+
+    ASTNode *nodeCpy;
+    memcpy(nodeCpy, programNode, sizeof(ASTNode));
+
+    freeArena(arena);
+    free(source);
+
+    return nodeCpy;
+}

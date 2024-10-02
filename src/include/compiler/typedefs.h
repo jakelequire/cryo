@@ -16,9 +16,34 @@
  ********************************************************************************/
 #ifndef TYPEDEFS_H
 #define TYPEDEFS_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include "compiler/token.h"
 #include "compiler/ast.h"
+#include "utils/fs.h"
+#include "common/common.h"
 
+typedef struct ExternalSymbol
+{
+    CryoNodeType nodeType;
+    CryoDataType dataType;
+    char *name;
+    ASTNode *node;
+} ExternalSymbol;
+
+typedef struct ExternalSymbolTable
+{
+    ExternalSymbol **symbols;
+    int count;
+    int capacity;
+} ExternalSymbolTable;
+
+// Unimplemented
 typedef enum TypeofDataType
 {
     PRIMITIVE_TYPE, // `int`, `float`, `string`, `boolean`, `void`
@@ -28,6 +53,7 @@ typedef enum TypeofDataType
     UNKNOWN_TYPE    // `<UNKNOWN>`
 } TypeofDataType;
 
+// Unimplemented
 typedef struct DataType
 {
     TypeofDataType typeOf;
@@ -46,5 +72,7 @@ typedef struct DataType
 char *TypeofDataTypeToString(TypeofDataType type);
 CryoDataType parseDataType(const char *typeStr);
 CryoDataType getPrimativeTypeFromString(const char *typeStr);
+ASTNode *createExternalAstTree(Arena *arena, CompilerState *state, const char *module, const char *subModule);
+ASTNode *parseExternal(const char *filePath);
 
 #endif // TYPEDEFS_H

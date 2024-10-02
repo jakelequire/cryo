@@ -14,52 +14,43 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "utils/utility.h"
+#include "build.h"
 
-void logMessage(const char *type, int line, const char *module, const char *message, ...)
+void moveBuildFile(char *fileName, char *cwd)
 {
-    va_list args;
-    va_start(args, message);
-    printf("[%-5s] \t@%-4d { %-7s}  ", type, line, module);
-    vprintf(message, args);
-    printf("\n");
-    va_end(args);
-    return;
-}
+    printf("\nMoving build file: %s\n", fileName);
+    printf("Current working directory: %s\n", cwd);
+    char *command = (char *)malloc(strlen(fileName) + 50);
 
-const char *intToConstChar(int num)
-{
-    static char buffer[12];
-    snprintf(buffer, sizeof(buffer), "%d", num);
-    return buffer;
-}
-
-char *intToChar(int num)
-{
-    char buffer[12];
-    snprintf(buffer, sizeof(buffer), "%d", num);
-    return buffer;
-}
-
-int charToInt(char *str)
-{
-    int num = 0;
-    for (int i = 0; str[i] != '\0'; i++)
+    // Validate the current working directory
+    if (cwd == NULL)
     {
-        num = num * 10 + str[i] - '0';
+        fprintf(stderr, "Error: Current working directory is NULL\n");
+        return;
     }
-    return num;
+
+    // Check if /build/out/imports exists, if not, create it
+    sprintf(command, "mkdir -p %s/build/out/imports/", cwd);
+    system(command);
+
+    // Move the file to the build directory (cwd)/build/out/
+    printf("%s %s/build/out/", fileName, cwd);
+    sprintf(command, "mv %s %s/build/out/imports/", fileName, cwd);
+    system(command);
+
+    // Free the command string
+    free(command);
 }
 
-char *concatStrings(const char *str1, const char *str2)
+void compileBuildFile(char *fileName)
 {
-    char *result = (char *)malloc(strlen(str1) + strlen(str2) + 1);
-    if (result == NULL)
-    {
-        perror("Failed to allocate memory for concatenated string");
-        return NULL;
-    }
-    strcpy(result, str1);
-    strcat(result, str2);
-    return result;
+    printf("\nCompiling build file: %s\n", fileName);
+    char *command = (char *)malloc(strlen(fileName) + 50);
+
+    // Compile the file
+    sprintf(command, "clang -o %s %s", fileName, fileName);
+    system(command);
+
+    // Free the command string
+    free(command);
 }

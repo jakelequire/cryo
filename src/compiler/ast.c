@@ -306,6 +306,9 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         }
     }
 
+    case NODE_EXTERNAL_SYMBOL:
+        printf("\nExternal Symbol Node (UNIMPLEMENTED)\n");
+
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");
         break;
@@ -337,6 +340,11 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state)
         return NULL;
     }
 
+    char *moduleName = getCurrentNamespace(state->table);
+    if (moduleName)
+    {
+        node->metaData->moduleName = strdup(moduleName);
+    }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);
 

@@ -48,10 +48,11 @@ void printSymbolTable(CryoSymbolTable *table)
     printf("[SymTable] Symbol count: %d\n", table->count);
     printf("[SymTable] Scope depth: %d\n", table->scopeDepth);
     printf("[SymTable] Table capacity: %d\n", table->capacity);
-    printf("\n-------------------------------------------------------------------------------------------------\n");
-    printf("Symbol Table:\n\n");
-    printf("Name                 Type                 Val/RetType          Scope        L:C       ArgCount\n");
-    printf("-------------------------------------------------------------------------------------------------\n");
+    printf("\n\n");
+    printf("Namespace: %s\n", table->namespaceName ? table->namespaceName : "Unnamed");
+    printf("\n");
+    printf("Name                 Node Type                Data Type        Scope        L:C      Args     Module\n");
+    printf("-----------------------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++)
     {
         if (table->symbols[i] == NULL)
@@ -72,15 +73,16 @@ void printSymbolTable(CryoSymbolTable *table)
                  table->symbols[i]->line,
                  table->symbols[i]->column);
 
-        printf("%-20s %-24s %-18s %-10d %-14s %-10d\n",
+        printf("%-20s %-24s %-18s %-10d %-10s %-7d %-15s\n",
                table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                CryoNodeTypeToString(table->symbols[i]->nodeType),
                CryoDataTypeToString(table->symbols[i]->valueType),
                table->symbols[i]->scopeLevel,
                locationStr,
-               table->symbols[i]->argCount);
+               table->symbols[i]->argCount,
+               table->symbols[i]->module ? table->symbols[i]->module : "Unnamed");
     }
-    printf("-------------------------------------------------------------------------------------------------\n");
+    printf("-----------------------------------------------------------------------------------------------------\n");
 }
 // </printSymbolTable>
 
@@ -289,6 +291,8 @@ char *getNameOfNode(ASTNode *node)
         break;
     case NODE_STRUCT_DECLARATION:
         return strdup(node->data.structNode->name);
+    case NODE_IMPORT_STATEMENT:
+        return strdup(node->data.import->moduleName);
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %s", CryoNodeTypeToString(node->metaData->type));
         return NULL;
@@ -358,6 +362,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->argCount = node->data.externFunction->paramCount;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_PARAM_LIST:
@@ -427,6 +432,20 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->column = node->metaData->position.column;
         break;
 
+    case NODE_IMPORT_STATEMENT:
+        symbolNode->name = strdup(node->data.import->moduleName);
+        if (node->data.import->subModuleName)
+        {
+            symbolNode->module = strdup(node->data.import->subModuleName);
+            symbolNode->name = (char *)realloc(symbolNode->name, strlen(symbolNode->name) + strlen(strdup(node->data.import->subModuleName)) + 2);
+            strcat(symbolNode->name, "::");
+            strcat(symbolNode->name, strdup(node->data.import->subModuleName));
+        }
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
+        break;
+
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
         return NULL;
@@ -449,7 +468,65 @@ CryoSymbol *findSymbol(CryoSymbolTable *table, const char *name, Arena *arena)
 }
 // </findSymbol>
 
-// Main Entry Point
+// <findImportedSymbol>
+CryoSymbol *findImportedSymbol(CryoSymbolTable *table, const char *name, const char *module, Arena *arena)
+{
+    for (int i = table->count - 1; i >= 0; i--)
+    {
+        if (strcmp(table->symbols[i]->name, name) == 0 && strcmp(table->symbols[i]->module, module) == 0)
+        {
+            return table->symbols[i];
+        }
+    }
+    return NULL;
+}
+// </findImportedSymbol>
+
+// <getCurrentNamespace>
+char *getCurrentNamespace(CryoSymbolTable *table)
+{
+    for (int i = table->count - 1; i >= 0; i--)
+    {
+        if (table->symbols[i]->node->metaData->type == NODE_NAMESPACE)
+        {
+            return table->symbols[i]->name;
+        }
+    }
+    return NULL;
+}
+// </getCurrentNamespace>
+
+void importAstTreeDefs(ASTNode *root, CryoSymbolTable *table, Arena *arena, CompilerState *state)
+{
+    if (!root)
+    {
+        logMessage("ERROR", __LINE__, "SymTable", "Root is null in importAstTree");
+        return;
+    }
+
+    if (root->metaData->type == NODE_NAMESPACE)
+    {
+        // Do not add the namespace to the symbol table, only its children
+    }
+
+    logMessage("INFO", __LINE__, "SymTable", "Importing AST tree definitions...");
+    printAST(root, 0, arena);
+
+    for (int i = 0; i < root->data.program->statementCount; i++)
+    {
+        logMessage("INFO", __LINE__, "SymTable", "Adding import statement to symbol table");
+        addASTNodeSymbol(table, root->data.program->statements[i], arena);
+    }
+
+    return;
+}
+
+void setNamespace(CryoSymbolTable *table, const char *name)
+{
+    if (table->namespaceName == NULL)
+        table->namespaceName = strdup(name);
+}
+
 // <analyzeNode>
 bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena)
 {

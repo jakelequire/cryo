@@ -472,6 +472,8 @@ namespace Cryo
         case NODE_VAR_REASSIGN:
         case NODE_PROPERTY:
         case NODE_STRUCT_DECLARATION:
+        case NODE_CUSTOM_TYPE:
+        case NODE_SCOPED_FUNCTION_CALL:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -690,6 +692,10 @@ namespace Cryo
             {
                 lintTree(node->data.param->defaultValue);
             }
+            break;
+
+        case NODE_SCOPED_FUNCTION_CALL:
+            assertNode(node);
             break;
 
         case NODE_UNKNOWN:
@@ -1115,6 +1121,40 @@ namespace Cryo
                 return false;
             }
             logMessage("INFO", __LINE__, "Debugger", "Variable reassign passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_PARAM:
+        {
+            if (node->data.param->name == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Parameter has no name");
+                return false;
+            }
+            if (node->data.param->functionName == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Parameter has no function name");
+                return false;
+            }
+            if (node->data.param->type == DATA_TYPE_UNKNOWN)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Parameter has no type");
+                return false;
+            }
+            if (node->data.param->hasDefaultValue && node->data.param->defaultValue == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "Parameter has no default value");
+                return false;
+            }
+            logMessage("INFO", __LINE__, "Debugger", "Parameter passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_SCOPED_FUNCTION_CALL:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Scoped function call passed assertion.");
             logNode(node);
             break;
         }

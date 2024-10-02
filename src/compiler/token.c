@@ -156,6 +156,10 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "PROPERTY";
     case NODE_CUSTOM_TYPE:
         return "CUSTOM_TYPE";
+    case NODE_SCOPED_FUNCTION_CALL:
+        return "SCOPED_FUNCTION_CALL";
+    case NODE_EXTERNAL_SYMBOL:
+        return "EXTERNAL_SYMBOL";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

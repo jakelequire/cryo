@@ -20,11 +20,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
 #else // UNIX
 #include <aio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
 
 // >==------ Prototypes ------==< //
@@ -59,5 +64,13 @@ char *intToChar(int num);
 /// @return         The integer
 ///
 int charToInt(char *str);
+
+///
+/// @brief          Concatenates two strings together.
+/// @param str1     The first string
+/// @param str2     The second string
+/// @return         The concatenated string
+///
+char *concatStrings(const char *str1, const char *str2);
 
 #endif // UTILITY_H

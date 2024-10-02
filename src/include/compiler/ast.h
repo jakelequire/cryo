@@ -703,6 +703,26 @@ typedef struct StructNode
 //
 // } CustomTypeNode;
 
+/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
+/// ---
+/// ```
+/// typedef struct ScopedFunctionCallNode {
+///     char *scopeName;           // e.g., "Math"
+///     char *functionName;        // e.g., "add"
+///     struct ASTNode **args;     // Array of argument nodes
+///     int argCount;
+///     int argCapacity;
+/// } ScopedFunctionCallNode;
+/// ```
+typedef struct ScopedFunctionCallNode
+{
+    char *scopeName;       // e.g., "Math"
+    char *functionName;    // e.g., "add"
+    struct ASTNode **args; // Array of argument nodes
+    int argCount;
+    int argCapacity;
+} ScopedFunctionCallNode;
+
 typedef struct ASTNode
 {
     CryoMetaData *metaData;
@@ -717,6 +737,8 @@ typedef struct ASTNode
         CryoImportNode *import;
         // For Blocks
         CryoBlockNode *block;
+        // For Scoped Function Calls
+        ScopedFunctionCallNode *scopedFunctionCall;
         // For Functions
         CryoFunctionBlock *functionBlock;
         // For Externs

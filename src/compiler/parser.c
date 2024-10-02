@@ -170,8 +170,7 @@ Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena, CompilerState *state)
     {
         return currentToken;
     }
-    Lexer tempLexer = *lexer;
-    Token nextToken = peekNextToken(&tempLexer, state);
+    Token nextToken = peekNextToken(lexer, state);
     return nextToken;
 }
 // </peekNextUnconsumedToken>
@@ -405,6 +404,12 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
             char *functionName = strndup(currentToken.start, currentToken.length);
             return parseFunctionCall(lexer, table, context, functionName, arena, state);
         }
+        if (currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DOUBLE_COLON)
+        {
+            printf("Scope Call Token String: %.*s\n", currentToken.length, currentToken.start);
+            logMessage("INFO", __LINE__, "Parser", "Parsing Scope Call...");
+            return parseScopeCall(lexer, table, context, arena, state);
+        }
         else
         {
             logMessage("INFO", __LINE__, "Parser", "Parsing identifier...");
@@ -426,6 +431,19 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
 }
 // </parseStatement>
+
+// <parseScopeCall>
+ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing scope call...");
+
+    char *scopeName = strndup(currentToken.start, currentToken.length);
+    printf("Scope Name: %s\n", scopeName);
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", table, arena, state);
+
+    DEBUG_BREAKPOINT;
+}
+// </parseScopeCall>
 
 /// @brief This function handles the `debugger` keyword. Which is used to pause the program execution.
 void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state)
@@ -458,6 +476,9 @@ ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     {
         error("Expected a namespace name", "parseNamespace", table, arena, state);
     }
+
+    setNamespace(table, namespaceName);
+    addASTNodeSymbol(table, node, arena);
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseNamespace", table, arena, state);
 
@@ -1454,34 +1475,91 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
 
         char *subModuleName = strndup(currentToken.start, currentToken.length);
 
-        printf("\n<!> Module: %s\n", moduleName);
-        printf("\n<!> Submodule: %s\n", subModuleName);
+        printf("\n<!> Module: %s\n", strdup(moduleName));
+        printf("\n<!> Submodule: %s\n", strdup(subModuleName));
 
         consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseImport", table, arena, state);
 
-        ASTNode *importNode = createImportNode(moduleName, subModuleName, arena, state);
+        ASTNode *importNode = createImportNode(strdup(moduleName), strdup(subModuleName), arena, state);
 
         consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", table, arena, state);
 
-        if (strcmp(moduleName, "std") == 0)
+        if (strcmp(strdup(moduleName), "std") == 0)
         {
             importNode->data.import->isStdModule = true;
         }
+
+        addASTNodeSymbol(table, importNode, arena);
+
+        printSymbolTable(table);
+
+        importTypeDefinitions(moduleName, subModuleName, table, arena, state);
 
         return importNode;
     }
 
     ASTNode *importNode = createImportNode(moduleName, NULL, arena, state);
 
+    addASTNodeSymbol(table, importNode, arena);
+
     if (strcmp(moduleName, "std") == 0)
     {
         importNode->data.import->isStdModule = true;
     }
 
+    importTypeDefinitions(moduleName, NULL, table, arena, state);
+
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", table, arena, state);
     return importNode;
 }
 // </parseImport>
+
+// <importTypeDefinitions>
+void importTypeDefinitions(const char *module, const char *subModule, CryoSymbolTable *table, Arena *arena, CompilerState *state)
+{
+    logMessage("INFO", __LINE__, "Parser", "Importing type definitions...");
+    // Cryo Symbol Name: {module}::{subModule} || {module}
+    char *symbolName = subModule ? concatStrings(module, concatStrings("::", subModule)) : strdup(module);
+    char *_subModule = subModule ? strdup(subModule) : NULL;
+    CryoSymbol *symbol = findImportedSymbol(table, symbolName, _subModule, arena);
+    if (!symbol)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to find imported symbol.");
+        return;
+    }
+
+    bool isStdModule = strcmp(module, "std") == 0;
+    if (isStdModule && subModule != NULL)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Importing standard module definitions...");
+        ASTNode *externRoot = createExternalAstTree(arena, state, module, subModule);
+        if (!externRoot)
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Failed to create external AST tree.");
+            return;
+        }
+        importAstTreeDefs(externRoot, table, arena, state);
+
+        return;
+    }
+    else
+    {
+        logMessage("INFO", __LINE__, "Parser", "Importing module definitions...");
+        ASTNode *externRoot = createExternalAstTree(arena, state, module, NULL);
+        if (!externRoot)
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Failed to create external AST tree.");
+            return;
+        }
+        importAstTreeDefs(externRoot, table, arena, state);
+
+        return;
+    }
+
+    logMessage("ERROR", __LINE__, "Parser", "Failed to import type definitions.");
+    return;
+}
+// </importTypeDefinitions>
 
 // <parseExtern>
 ASTNode *parseExtern(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state)
