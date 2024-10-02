@@ -237,6 +237,7 @@ ASTNode *createExternalAstTree(Arena *arena, CompilerState *state, const char *m
         if (!cryoPath)
         {
             logMessage("ERROR", __LINE__, "TypeDefs", "CRYO_PATH environment variable not set.");
+            DEBUG_BREAKPOINT;
             return NULL;
         }
 
@@ -281,16 +282,18 @@ ASTNode *parseExternal(const char *filePath)
         return NULL;
     }
 
+    logMessage("INFO", __LINE__, "TypeDefs", "Parsing external file: %s", filePath);
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
+    logMessage("INFO", __LINE__, "TypeDefs", "Symbol table created.");
 
     // Initialize the lexer
     Lexer lexer;
     CompilerState state = initCompilerState(arena, &lexer, table, fileName);
-
+    logMessage("INFO", __LINE__, "TypeDefs", "Compiler state initialized.");
     initLexer(&lexer, source, fileName, &state);
 
     // Parse the source code
@@ -304,11 +307,5 @@ ASTNode *parseExternal(const char *filePath)
         return NULL;
     }
 
-    ASTNode *nodeCpy;
-    memcpy(nodeCpy, programNode, sizeof(ASTNode));
-
-    freeArena(arena);
-    free(source);
-
-    return nodeCpy;
+    return programNode;
 }

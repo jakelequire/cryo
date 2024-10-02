@@ -332,6 +332,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
     case NODE_NAMESPACE:
         symbolNode->name = strdup(node->data.cryoNamespace->name);
         symbolNode->nodeType = node->metaData->type;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_VAR_DECLARATION:
@@ -504,18 +505,19 @@ void importAstTreeDefs(ASTNode *root, CryoSymbolTable *table, Arena *arena, Comp
         return;
     }
 
-    if (root->metaData->type == NODE_NAMESPACE)
-    {
-        // Do not add the namespace to the symbol table, only its children
-    }
-
     logMessage("INFO", __LINE__, "SymTable", "Importing AST tree definitions...");
     printAST(root, 0, arena);
 
     for (int i = 0; i < root->data.program->statementCount; i++)
     {
-        logMessage("INFO", __LINE__, "SymTable", "Adding import statement to symbol table");
-        addASTNodeSymbol(table, root->data.program->statements[i], arena);
+        if (root->data.program->statements[i]->metaData->type == NODE_NAMESPACE)
+        {
+        }
+        else
+        {
+            logMessage("INFO", __LINE__, "SymTable", "Adding import statement to symbol table");
+            addASTNodeSymbol(table, root->data.program->statements[i], arena);
+        }
     }
 
     return;

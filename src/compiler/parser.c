@@ -1490,11 +1490,7 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
         }
 
         addASTNodeSymbol(table, importNode, arena);
-
-        printSymbolTable(table);
-
         importTypeDefinitions(moduleName, subModuleName, table, arena, state);
-
         return importNode;
     }
 
@@ -1521,12 +1517,16 @@ void importTypeDefinitions(const char *module, const char *subModule, CryoSymbol
     // Cryo Symbol Name: {module}::{subModule} || {module}
     char *symbolName = subModule ? concatStrings(module, concatStrings("::", subModule)) : strdup(module);
     char *_subModule = subModule ? strdup(subModule) : NULL;
+    printf("\n<!> Importing type definitions for: %s\n", symbolName);
+    printf("\n<!> Submodule: %s\n", _subModule);
     CryoSymbol *symbol = findImportedSymbol(table, symbolName, _subModule, arena);
     if (!symbol)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to find imported symbol.");
         return;
     }
+
+    logMessage("INFO", __LINE__, "Parser", "Found imported symbol.");
 
     bool isStdModule = strcmp(module, "std") == 0;
     if (isStdModule && subModule != NULL)
@@ -1538,7 +1538,10 @@ void importTypeDefinitions(const char *module, const char *subModule, CryoSymbol
             logMessage("ERROR", __LINE__, "Parser", "Failed to create external AST tree.");
             return;
         }
+        logMessage("INFO", __LINE__, "Parser", "Importing module definitions...");
         importAstTreeDefs(externRoot, table, arena, state);
+        logMessage("INFO", __LINE__, "Parser", "Importing module definitions (submodule)...");
+        printSymbolTable(table);
 
         return;
     }
@@ -1551,10 +1554,13 @@ void importTypeDefinitions(const char *module, const char *subModule, CryoSymbol
             logMessage("ERROR", __LINE__, "Parser", "Failed to create external AST tree.");
             return;
         }
+        logMessage("INFO", __LINE__, "Parser", "Importing module definitions (no submodule)...");
         importAstTreeDefs(externRoot, table, arena, state);
 
         return;
     }
+
+    printSymbolTable(table);
 
     logMessage("ERROR", __LINE__, "Parser", "Failed to import type definitions.");
     return;

@@ -49,6 +49,9 @@
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"
 #include "llvm/Support/FormattedStream.h"
+#include "llvm/Linker/IRMover.h"
+#include "llvm/Linker/Linker.h"
+#include "llvm/Target/TargetMachine.h"
 
 #include "cpp/debugger.h"
 #include "compiler/ast.h"
@@ -162,6 +165,8 @@ namespace Cryo
         Structs &getStructs() { return *structs; }
         Imports &getImports() { return *imports; }
 
+        llvm::Module &getModule() { return *CryoContext::getInstance().module; }
+
         void compile(ASTNode *root);
         void dumpModule(void);
 
@@ -253,6 +258,7 @@ namespace Cryo
         void handleReassignment(ASTNode *node);
         void handleParam(ASTNode *node);
         void handleStruct(ASTNode *node);
+        void handleScopedFunctionCall(ASTNode *node);
 
         // Function to add a no-op instruction for whitespace
         void addWhitespaceAfter(llvm::Instruction *Inst, llvm::IRBuilder<> &Builder)
@@ -445,6 +451,7 @@ namespace Cryo
         void createFunctionBlock(ASTNode *node);
         void createReturnStatement(ASTNode *node);
         void createExternFunction(ASTNode *node);
+        void createScopedFunctionCall(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
     };
 
@@ -574,6 +581,11 @@ namespace Cryo
          * @brief Imports the Cryo Standard Library.
          */
         void importCryoSTD(std::string subModuleName);
+
+        /**
+         * @brief Finds the IR build file for the given file name.
+         */
+        std::string findIRBuildFile(std::string fileName);
 
     private:
         CryoCompiler &compiler;

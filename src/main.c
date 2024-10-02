@@ -110,6 +110,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    printf("\n\n\n");
+    printf("<!> ### =============================================================== ### <!>\n");
+    printf("<!> ### - - - - - - - - - - - - Start of Compilation - - - - - - - - -  ### <!>\n");
+    printf("<!> ### =============================================================== ### <!>\n");
+    printf("\n\n\n");
+
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
@@ -134,6 +140,8 @@ int main(int argc, char *argv[])
             return 1;
         }
     }
+
+
 
     // Initialize the call stack
     initCallStack(&callStack, 10);
@@ -223,7 +231,11 @@ int main(int argc, char *argv[])
         freeArena(arena);
     }
 
-    printf("[DEBUG] Program parsed\n");
+    printf("\n\n\n");
+    printf("<!> ### =============================================================== ### <!>\n");
+    printf("<!> ### - - - - - - - - - - - - End of Compilation - - - - - - - - - -  ### <!>\n");
+    printf("<!> ### =============================================================== ### <!>\n");
+    printf("\n\n\n");
 
     free(source);
     return 0;

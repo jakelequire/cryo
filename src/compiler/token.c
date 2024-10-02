@@ -590,6 +590,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_ITER_STEP";
     case TOKEN_EMPTY_ARRAY:
         return "TOKEN_EMPTY_ARRAY";
+    case TOKEN_DOUBLE_COLON:
+        return "TOKEN_DOUBLE_COLON";
 
     default:
         return "<TOKEN UNKNOWN>";

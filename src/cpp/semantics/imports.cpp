@@ -57,8 +57,20 @@ namespace Cryo
 
             const char *cryoSTDPathCStr = cryoSTDPath.c_str();
             const char *compilerFlags = "-a";
+
             std::cout << "\n\n\n\n\n\n";
-            compileFile(cryoSTDPathCStr, compilerFlags);
+            debugger.logMessage("INFO", __LINE__, "Imports", "Compiling Cryo STD file...");
+            CompiledFile compiledFile = compileFile(cryoSTDPathCStr, compilerFlags);
+            debugger.logMessage("INFO", __LINE__, "Imports", "Cryo STD file compilation compiled.");
+
+            std::string irFileName = compiledFile.fileName;
+            std::cout << "IR File Name: " << irFileName << std::endl;
+            std::string irFilePath = compiledFile.filePath;
+            std::cout << "IR File Path: " << irFilePath << std::endl;
+
+            // Find the IR build file
+            std::string compiledIRFile = findIRBuildFile(irFileName);
+            std::cout << "Compiled IR File Path: " << compiledIRFile << std::endl;
 
             return;
         }
@@ -66,8 +78,47 @@ namespace Cryo
         {
             debugger.logMessage("ERROR", __LINE__, "Imports", e.what());
             // Handle the error appropriately, e.g., set a default path or exit the program
+            DEBUG_BREAKPOINT;
         }
 
         return;
     }
+
+    std::string Imports::findIRBuildFile(std::string fileName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Imports", "Finding IR Build File");
+
+        // Get the cryo ENV variable
+        const char *cryoEnv = std::getenv("CRYO_PATH");
+        if (cryoEnv == nullptr || cryoEnv == "")
+        {
+            debugger.logMessage("ERROR", __LINE__, "Imports", "CRYO_PATH environment variable not set.");
+            return nullptr;
+        }
+
+        // Get the executable path (CRYO_PATH/build/out/imports)
+        std::string executablePath = std::string(cryoEnv) + "/build/out/imports/";
+        std::cout << "Executable Path: " << executablePath << std::endl;
+
+        // Change the file extension from `.cryo` to `.ll`
+        std::string irFileName = fileName.substr(0, fileName.find_last_of("."));
+        irFileName += ".ll";
+        std::cout << "IR File Name: " << irFileName << std::endl;
+
+        std::string fullFilePath = executablePath + irFileName;
+        std::cout << "Full File Path: " << fullFilePath << std::endl;
+
+        // Check if the file exists
+        std::ifstream file(fullFilePath); // This function is from the <fstream> library
+        if (!file)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Imports", "File does not exist.");
+            return nullptr;
+        }
+        debugger.logMessage("INFO", __LINE__, "Imports", "File found.");
+
+        return fullFilePath;
+    }
+
 }

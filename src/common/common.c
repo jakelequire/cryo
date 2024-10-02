@@ -265,11 +265,26 @@ CompiledFile compileFile(const char *filePath, const char *compilerFlags)
     free(executablePath);
     free(command);
 
+    char *fileName = (char *)malloc(strlen(filePath) + 1);
+    // Trim the file path
+    char *trimmedFileName = strrchr(filePath, '/');
+    if (trimmedFileName == NULL)
+    {
+        // If there's no '/' in the path, use the whole fileName
+        trimmedFileName = (char *)filePath;
+    }
+    else
+    {
+        // Skip the '/' character
+        trimmedFileName++;
+    }
+    strcpy(fileName, trimmedFileName);
+
     // Return the compiled file
     CompiledFile compiledFile;
-    compiledFile.fileName = "output";
-    compiledFile.filePath = "output";
-    compiledFile.outputPath = "output";
+    compiledFile.fileName = fileName;
+    compiledFile.filePath = filePath;
+    compiledFile.outputPath = "unknown";
 
     logMessage("INFO", __LINE__, "Common", "File compiled successfully.");
     return compiledFile;

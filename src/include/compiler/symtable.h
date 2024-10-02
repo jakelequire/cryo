@@ -32,6 +32,7 @@
 #include <sys/types.h>
 
 typedef struct ASTNode ASTNode;
+typedef struct CompilerState CompilerState;
 
 typedef struct CryoSymbol
 {

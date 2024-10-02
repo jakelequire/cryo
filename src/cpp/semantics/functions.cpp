@@ -56,6 +56,12 @@ namespace Cryo
             createExternFunction(node);
             break;
         }
+        case NODE_SCOPED_FUNCTION_CALL:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Handling Scoped Function Call");
+            createScopedFunctionCall(node);
+            break;
+        }
         default:
             debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown node type");
             CONDITION_FAILED;
@@ -763,4 +769,20 @@ namespace Cryo
 
         return resultParam;
     }
+
+    void Functions::createScopedFunctionCall(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Functions", "Creating Scoped Function Call");
+
+        ScopedFunctionCallNode *functionCallNode = node->data.scopedFunctionCall;
+        assert(functionCallNode != nullptr);
+
+        // Get the function name
+        char *functionName = functionCallNode->functionName;
+        debugger.logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
+
+        DEBUG_BREAKPOINT;
+    }
+
 } // namespace Cryo

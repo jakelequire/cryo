@@ -164,6 +164,7 @@ namespace Cryo
     void Generator::parseTree(ASTNode *root)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logNode(root);
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
 
         if (!root)
@@ -273,6 +274,12 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Struct Declaration");
             generator.handleStruct(root);
+            break;
+        }
+        case NODE_SCOPED_FUNCTION_CALL:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Scoped Function Call");
+            generator.handleScopedFunctionCall(root);
             break;
         }
         default:

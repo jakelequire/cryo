@@ -38,8 +38,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang
-	CXX_COMPILER = clang++
+	C_COMPILER = clang-18
+	CXX_COMPILER = clang++-18
 endif
 
 # OS-specific settings
@@ -66,7 +66,7 @@ else
 			-I./src/include/utils -I./src/include/tests
     CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
 			-I./src/include/utils -I./src/include/tests $(LLVM_CXXFLAGS) -fexceptions
-    LLVM_CONFIG = llvm-config
+    LLVM_CONFIG = llvm-config-18
     LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
 	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
     LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
@@ -93,7 +93,9 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_SEMANTICS_DIR = $(SRC_DIR)cpp/semantics/
 CPP_UTILS_DIR = $(SRC_DIR)cpp/utils/
 COMMON_DIR = $(SRC_DIR)common/
-LIB_DIR = $(SRC_DIR)libs/
+LIB_DIR = $(SRC_DIR)library/
+C_LIBS_DIR = $(LIB_DIR)C/
+CXX_LIBS_DIR = $(LIB_DIR)CXX/
 
 # --------------------------------------------------------------------------------- #
 
@@ -123,8 +125,13 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)co
 # Common Files
 COMMON_SRC = $(COMMON_DIR)common.c
 
+# Compiler Lib Files
+C_COMPILER_LIBS = $(C_LIBS_DIR)logger.c 
+CXX_COMPILER_LIBS =
+COMPILER_LIB_OBJ = $(OBJ_DIR)lib_logger.o
+
 # Main files
-MAIN_SRC = $(SRC_DIR)main.c $(SRC_DIR)build.c
+MAIN_SRC = $(SRC_DIR)main.c $(SRC_DIR)build.c $(SRC_DIR)compiler.c $(SRC_DIR)settings.c
 RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 
 # --------------------------------------------------------------------------------- #
@@ -153,7 +160,7 @@ CLI_OBJ = $(OBJ_DIR)compiler.o $(OBJ_DIR)cli.o $(OBJ_DIR)cmd_build.o $(OBJ_DIR)c
 			$(OBJ_DIR)cmd_devWatch.o $(OBJ_DIR)cmd_help.o $(OBJ_DIR)cmd_version.o 
 
 # Main Object files
-MAIN_OBJ = $(OBJ_DIR)main.o $(OBJ_DIR)build.o
+MAIN_OBJ = $(OBJ_DIR)main.o $(OBJ_DIR)build.o $(OBJ_DIR)global_compiler.o  $(OBJ_DIR)settings.o
 RUNTIME_OBJ = $(OBJ_DIR)runtime.o
 TEST_OBJ = $(OBJ_DIR)test.o
 
@@ -223,6 +230,12 @@ $(OBJ_DIR)error.o : $(COMPILER_DIR)error.c | $(OBJ_DIR)
 $(OBJ_DIR)typedefs.o : $(COMPILER_DIR)typedefs.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)global_compiler.o: $(SRC_DIR)compiler.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)settings.o: $(SRC_DIR)settings.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+	
 # ---------------------------------------------
 # CLI Compilation rules
 $(OBJ_DIR)compiler.o : $(CLI_DIR)compiler.c | $(OBJ_DIR)
@@ -294,6 +307,12 @@ $(OBJ_DIR)imports.o: $(CPP_SEMANTICS_DIR)imports.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # ---------------------------------------------
+# Cryo Lib Compilation rules
+$(OBJ_DIR)lib_logger.o: $(C_LIBS_DIR)logger.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+	
+
+# ---------------------------------------------
 # Common Compilation rules
 $(OBJ_DIR)common.o: $(COMMON_DIR)common.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -305,7 +324,7 @@ $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
 
 # ---------------------------------------------
 # Linking binaries
-$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)
+$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) $(COMMON_OBJ) $(COMPILER_LIB_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)

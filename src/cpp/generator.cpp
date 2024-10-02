@@ -296,4 +296,15 @@ namespace Cryo
         return;
     }
 
+    void Generator::handleScopedFunctionCall(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Functions &functions = compiler.getFunctions();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling Scoped Function Call");
+
+        functions.handleFunction(node);
+
+        return;
+    }
+
 } // namespace Cryo
