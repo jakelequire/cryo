@@ -233,7 +233,8 @@
     "common.h": "c",
     "typedefs.h": "c",
     "getopt.h": "c",
-    "codecvt": "cpp"
+    "codecvt": "cpp",
+    "settings.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

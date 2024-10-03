@@ -23,7 +23,7 @@
 
 #include "ast.h"
 
-#define MAX_STACK_SIZE 10
+#define MAX_STACK_SIZE 64
 
 typedef struct
 {

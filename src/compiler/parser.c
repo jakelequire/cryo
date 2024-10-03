@@ -129,7 +129,7 @@ void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *
 {
     logMessage("CRITICAL", __LINE__, "Parser", "Consuming Token: %s", CryoTokenToString(type));
 
-    pushCallStack(&callStack, functionName, currentToken.line);
+    // pushCallStack(&callStack, functionName, currentToken.line);
 
     if (currentToken.type == type)
     {

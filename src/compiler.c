@@ -16,6 +16,40 @@
  ********************************************************************************/
 #include "compiler.h"
 
-int mainCompiler(char *filePath)
+int standardCryoCompiler(CompilerSettings settings, CompilerState *state, Arena *arena)
 {
+
+    char *source = readFile(settings.inputFilePath);
+    // Initialize the lexer
+    Lexer lexer;
+    initLexer(&lexer, source, state->fileName, state);
+
+    // Set the lexer in the compiler state
+    state->lexer = &lexer;
+
+    // Initialize the parser
+    ASTNode *programNode = parseProgram(&lexer, state->table, arena, state);
+
+    if (programNode != NULL)
+    {
+        dumpCompilerState(*state);
+        int size = programNode->data.program->statementCount;
+        ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
+        memcpy(nodeCpy, programNode, sizeof(ASTNode));
+
+        printSymbolTable(state->table);
+        printAST(nodeCpy, 0, arena);
+
+        printf("[Main] Generating IR code...\n");
+        if (generateCodeWrapper(nodeCpy, state) == 0)
+        {
+            printf("Compilation completed successfully.\n");
+        }
+        else
+        {
+            printf("Compilation failed.\n");
+        }
+    }
+
+    return 0;
 }

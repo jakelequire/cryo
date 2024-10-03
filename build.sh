@@ -15,6 +15,8 @@ trap cleanup ERR
 # Set the trap to cleanup on termination
 trap cleanup SIGTERM
 
+clear
+
 ## Variables
 
 # BASE_FILE is the main file of the project
@@ -31,6 +33,13 @@ OBJ_FILE="output.o"
 OUT_DIR="$BUILD_DIR/out"
 # The compiler executable
 COMPILER_EXE="./src/bin/main"
+
+# Cryo Compiler Arguments
+compiler_args=()
+# Debug Level
+DEBUG_LEVEL=0
+# Enable Specific Logs
+ENABLE_LOGS=""
 
 
 # Base File
@@ -103,14 +112,34 @@ function setFileName {
     log "Setting the file name to $OUTPUT_FILE"
 }
 
-clear
-
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -f|--file)
             if [[ -n "$2" && "$2" != -* ]]; then
                 setFileName $2
+                # Append the file argument to the compiler arguments array
+                compiler_args+=("-f" "$2")
+                shift 2
+            else
+                error "Argument for $1 is missing or invalid"
+            fi
+            ;;
+        -d|--debug-level)
+            if [[ -n "$2" && "$2" != -* ]]; then
+                DEBUG_LEVEL=$2
+                # Append the debug level to the compiler arguments array
+                compiler_args+=("-d" "$DEBUG_LEVEL")
+                shift 2
+            else
+                error "Argument for $1 is missing or invalid"
+            fi
+            ;;
+        -L|--enable-logs)
+            if [[ -n "$2" && "$2" != -* ]]; then
+                ENABLE_LOGS=$2
+                # Append the enable logs to the compiler arguments array
+                compiler_args+=("-L" "$ENABLE_LOGS")
                 shift 2
             else
                 error "Argument for $1 is missing or invalid"
@@ -124,6 +153,11 @@ while [[ "$#" -gt 0 ]]; do
             ;;
     esac
 done
+
+# Convert the array to a string for passing to the compiler
+COMPILER_ARGS=${compiler_args[@]}
+echo "Compiler Args: " $COMPILER_ARGS
+
 
 # Check if the file exists
 if [ ! -f $INPUT_FILE ]; then
@@ -141,9 +175,18 @@ make all || error "Failed to build the project"
 mkdir -p $BUILD_DIR
 mkdir -p $OUT_DIR
 
+echo " "
+echo " "
+
+# Print the compiler arguments for debugging
+echo "[Build] Compiler Arguments: $COMPILER_ARGS"
+
 # Compile the project
 log "Compiling the project..."
-$COMPILER_EXE "-f" $INPUT_FILE || error "Compilation failed"
+$COMPILER_EXE -f $INPUT_FILE $COMPILER_ARGS || error "Failed to compile the project"
+
+# Print the whole compiler command
+log "Command: $COMPILER_EXE -f $INPUT_FILE $COMPILER_ARGS"
 
 # Check if the /build/out/imports directory exists from the compiler
 if [ -d $OUT_DIR/imports ]; then

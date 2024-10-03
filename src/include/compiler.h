@@ -27,6 +27,7 @@
 #include "compiler/token.h"
 #include "compiler/symtable.h"
 #include "compiler/typedefs.h"
+#include "settings.h"
 
 // C++ headers
 #ifdef __cplusplus
@@ -39,5 +40,7 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+int standardCryoCompiler(CompilerSettings settings, CompilerState *state, Arena *arena);
 
 #endif // GLOBAL_COMPILER_H

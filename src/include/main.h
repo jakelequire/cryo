@@ -30,6 +30,8 @@
 #include "utils/logger.h"
 #include "utils/arena.h"
 #include "common/common.h"
+#include "settings.h"
+#include "compiler.h"
 
 // C++ headers
 #ifdef __cplusplus

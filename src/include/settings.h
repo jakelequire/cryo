@@ -21,18 +21,13 @@
 #include <string.h>
 #include <stdbool.h>
 #include <getopt.h>
+#include <unistd.h>
+#include <sys/types.h>
 
-int DEBUG_LEVEL = 0;
+#include "common/common.h"
+
 #define CURRENT_DEBUG_LEVEL DEBUG_LEVEL
 #define SET_DEBUG_LEVEL(level) DEBUG_LEVEL = level
-
-typedef struct CompilerSettings
-{
-    const char *cwd;
-    const char *customOutputPath;
-    bool activeBuild;
-    int debugLevel;
-} CompilerSettings;
 
 typedef enum DebugLevel
 {
@@ -41,5 +36,56 @@ typedef enum DebugLevel
     DEBUG_MEDIUM = 2,
     DEBUG_HIGH = 3
 } DebugLevel;
+
+typedef enum BuildType
+{
+    BUILD_NONE = 0,
+    BUILD_DEBUG = 1,
+    BUILD_RELEASE = 2
+} BuildType;
+
+typedef struct EnabledLogs
+{
+    bool logLexer;
+    bool logParser;
+    bool logAST;
+    bool logSymtable;
+    bool logCompiler;
+    bool logUtility;
+    bool logArena;
+    bool logCommon;
+    bool logSettings;
+} EnabledLogs;
+
+typedef struct CompilerSettings
+{
+    const char *rootDir;
+    const char *customOutputPath;
+    const char *inputFile;
+    const char *inputFilePath;
+    bool activeBuild;
+    bool isSource;
+    bool verbose;
+    EnabledLogs enabledLogs;
+    DebugLevel debugLevel;
+    BuildType buildType;
+} CompilerSettings;
+
+// ==============================
+// Function Prototypes
+void printUsage(const char *programName);
+CompilerSettings getCompilerSettings(int argc, char *argv[]);
+
+// ==============================
+// Utility Functions
+void logCompilerSettings(CompilerSettings *settings);
+const char *DebugLevelToString(DebugLevel level);
+const char *BuildTypeToString(BuildType type);
+
+EnabledLogs createEnabledLogs();
+EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs);
+CompilerSettings createCompilerSettings();
+
+void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings);
 
 #endif // SETTINGS_H
