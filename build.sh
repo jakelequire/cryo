@@ -112,13 +112,12 @@ function setFileName {
     log "Setting the file name to $OUTPUT_FILE"
 }
 
-# Parse command-line arguments
+# Parsing arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -f|--file)
             if [[ -n "$2" && "$2" != -* ]]; then
                 setFileName $2
-                # Append the file argument to the compiler arguments array
                 compiler_args+=("-f" "$2")
                 shift 2
             else
@@ -128,7 +127,6 @@ while [[ "$#" -gt 0 ]]; do
         -d|--debug-level)
             if [[ -n "$2" && "$2" != -* ]]; then
                 DEBUG_LEVEL=$2
-                # Append the debug level to the compiler arguments array
                 compiler_args+=("-d" "$DEBUG_LEVEL")
                 shift 2
             else
@@ -138,7 +136,6 @@ while [[ "$#" -gt 0 ]]; do
         -L|--enable-logs)
             if [[ -n "$2" && "$2" != -* ]]; then
                 ENABLE_LOGS=$2
-                # Append the enable logs to the compiler arguments array
                 compiler_args+=("-L" "$ENABLE_LOGS")
                 shift 2
             else
@@ -153,11 +150,6 @@ while [[ "$#" -gt 0 ]]; do
             ;;
     esac
 done
-
-# Convert the array to a string for passing to the compiler
-COMPILER_ARGS=${compiler_args[@]}
-echo "Compiler Args: " $COMPILER_ARGS
-
 
 # Check if the file exists
 if [ ! -f $INPUT_FILE ]; then
@@ -178,12 +170,12 @@ mkdir -p $OUT_DIR
 echo " "
 echo " "
 
-# Print the compiler arguments for debugging
-echo "[Build] Compiler Arguments: $COMPILER_ARGS"
+# For debugging, you can print the arguments like this:
+echo "Compiler Args:" "${compiler_args[@]}"
 
 # Compile the project
 log "Compiling the project..."
-$COMPILER_EXE -f $INPUT_FILE $COMPILER_ARGS || error "Failed to compile the project"
+$COMPILER_EXE "${compiler_args[@]}"|| error "Failed to compile the project"
 
 # Print the whole compiler command
 log "Command: $COMPILER_EXE -f $INPUT_FILE $COMPILER_ARGS"
@@ -216,7 +208,7 @@ if [ -d $OUT_DIR/imports ]; then
     # Combine all the valid .ll files
     if [ ${#valid_files[@]} -gt 0 ]; then
         log "Combining the .ll files..."
-        llvm-link-18 "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
+        llvm-link  "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
 
         # Optimize the combined IR
         log "Optimizing the combined IR..."
@@ -224,7 +216,7 @@ if [ -d $OUT_DIR/imports ]; then
 
         # Generate final object file
         log "Generating final object file..."
-        llc-18 -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
+        llc  -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
 
         # Check if the combined object file was created successfully
         if [ -f "$OUT_DIR/imports/combined.o" ]; then
@@ -249,16 +241,16 @@ log "Copying files to the out directory..."
 cp $FILE_NAME.ll $OUT_DIR/$FILE_NAME.ll || error "Failed to copy the source file to the out directory"
 
 # Compile the standard library
-clang-18 -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+clang  -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
 
 # Change to the out directory
 cd $OUT_DIR
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file
-llvm-link-18 cryolib.ll $FILE_NAME.ll -S -o bin.ll
+llvm-link  cryolib.ll $FILE_NAME.ll -S -o bin.ll
 
 # Compile the object file
-llc-18 -filetype=obj -relocation-model=static bin.ll -o bin.o
+llc  -filetype=obj -relocation-model=static bin.ll -o bin.o
 
 # llc -filetype=asm bin.ll -o bin.s
 
@@ -266,7 +258,7 @@ llc-18 -filetype=obj -relocation-model=static bin.ll -o bin.o
 cd ../../
 
 # Link the object files and place the output in the build directory
-clang++-18 -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
+clang++  -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
 
 # Turn it into an executable with no extension
 
