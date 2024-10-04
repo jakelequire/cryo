@@ -32,6 +32,7 @@
 #include "common/common.h"
 #include "settings.h"
 #include "compiler.h"
+#include "build.h"
 
 // C++ headers
 #ifdef __cplusplus

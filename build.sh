@@ -15,8 +15,6 @@ trap cleanup ERR
 # Set the trap to cleanup on termination
 trap cleanup SIGTERM
 
-clear
-
 ## Variables
 
 # BASE_FILE is the main file of the project
@@ -161,6 +159,8 @@ fi
 
 # Build from make
 make all || error "Failed to build the project"
+
+clear
 
 
 # Create the necessary directories if they don't exist

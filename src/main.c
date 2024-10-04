@@ -16,26 +16,10 @@
  ********************************************************************************/
 
 #include "main.h"
-#include "build.h"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-    int generateCodeWrapper(ASTNode *node, CompilerState *state);
-
-#ifdef __cplusplus
-}
-#endif
 
 int main(int argc, char *argv[])
 {
-    printf("\n\n\n");
-    printf("<!> ### =============================================================== ### <!>\n");
-    printf("<!> ### - - - - - - - - - - - - Start of Compilation - - - - - - - - -  ### <!>\n");
-    printf("<!> ### =============================================================== ### <!>\n");
-    printf("\n\n\n");
+    START_COMPILATION_MESSAGE;
 
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
@@ -50,12 +34,15 @@ int main(int argc, char *argv[])
     // Initialize the compiler state
     CompilerState state = initCompilerState(arena, NULL, table, settings.inputFilePath);
 
+    // Compile the file
     int compilerResult = standardCryoCompiler(settings, &state, arena);
     if (compilerResult != 0)
     {
         fprintf(stderr, "Compilation failed.\n");
         return 1;
     }
+
+    END_COMPILATION_MESSAGE;
 
     return 0;
 }
