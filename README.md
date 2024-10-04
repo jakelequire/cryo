@@ -1,4 +1,4 @@
-# <img src="./assets/cryo-logo.svg" width="75" height="75" alt="Cryo Logo" align="center"> Cryo
+# <img src="./assets/cryo-logo.svg" width="90" height="90" alt="Cryo Logo" align="center"> Cryo
 
 General Purpose, Strongly Typed, OOP, programming language witten in C & C++.
 
