@@ -102,13 +102,18 @@ namespace Cryo
             std::cout << "Output Directory: " << outputDir << std::endl;
             std::cout << "Output File: " << outputFile << std::endl;
 
-            outputFile = outputDir.substr(0, outputDir.find_last_of("/"));
+            outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
+            outputFile = outputFile.substr(0, outputFile.find_last_of("."));
             std::cout << "Output File: " << outputFile << std::endl;
             outputFile += ".ll";
 
             std::cout << "Output File: " << outputFile << std::endl;
 
-            llvm::raw_fd_ostream dest(outputDir + "/" + outputFileName, EC, llvm::sys::fs::OF_None);
+            std::cout << "Full output File Path: " << outputDir + "/" + outputFile << std::endl;
+
+            std::string outputPath = outputDir + "/" + outputFile;
+
+            llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
             if (EC)
             {
                 debugger.logMessage("ERROR", __LINE__, "CodeGen", "Error opening file for writing");
