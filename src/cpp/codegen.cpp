@@ -55,7 +55,6 @@ namespace Cryo
 
         // Declare all functions in the AST tree
         // declarations.preprocessDeclare(root); <- TODO: Implement this function
-
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
         return;
     }
@@ -91,27 +90,32 @@ namespace Cryo
             addWhitespaceAfterLoadStore(*cryoContext.module);
             std::error_code EC;
             std::string outputFileName = cryoContext.module->getSourceFileName();
-            // Trim out the file extension
-            outputFileName = outputFileName.substr(0, outputFileName.find_last_of("."));
-            outputFileName += ".ll";
-            // std::string outputFilename = cryoContext.module->getModuleIdentifier() + ".ll";
+            std::string _irFileName = cryoContext.state->fileName;
+            std::string irFileName = _irFileName.substr(0, _irFileName.find_last_of("."));
+            // Trim the directory path
+            irFileName = irFileName.substr(irFileName.find_last_of("/") + 1);
+            irFileName += ".ll";
+            
+            Compilation compileCode = Compilation(compiler);
+
+            compileCode.compileIRFile(outputFileName, irFileName);
 
             // Get the output destination
-            std::string outputDir = compiler.getCompilerState().settings->rootDir;
-            std::string outputFile = compiler.getCompilerState().settings->inputFile;
-            std::cout << "Output Directory: " << outputDir << std::endl;
-            std::cout << "Output File: " << outputFile << std::endl;
-
+            std::string outputDir = compiler.getCompilerState()->settings->rootDir;
+            std::string outputFile = compiler.getCompilerState()->settings->inputFile;
+            // Trim the directory path from the file name
             outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
             outputFile = outputFile.substr(0, outputFile.find_last_of("."));
-            std::cout << "Output File: " << outputFile << std::endl;
             outputFile += ".ll";
-
-            std::cout << "Output File: " << outputFile << std::endl;
-
-            std::cout << "Full output File Path: " << outputDir + "/" + outputFile << std::endl;
-
             std::string outputPath = outputDir + "/" + outputFile;
+
+            std::string customOutputDir = compiler.getCompilerState()->settings->customOutputPath;
+            if (customOutputDir != "")
+            {
+                outputPath = customOutputDir + "/" + outputFile;
+                std::cout << "Custom Output Directory: " << customOutputDir << std::endl;
+            }
+            std::cout << "Custom Output Path: " << outputPath << std::endl;
 
             llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
             if (EC)
@@ -131,12 +135,12 @@ namespace Cryo
                 std::cout << "\n>===------- End IR Code ------===<\n"
                           << std::endl;
 
-                bool isActiveBuild = compiler.getCompilerState().isActiveBuild;
+                bool isActiveBuild = compiler.getCompilerState()->isActiveBuild;
                 if (isActiveBuild)
                 {
                     debugger.logMessage("INFO", __LINE__, "CodeGen", "Active Build");
                     // Create the IR File
-                    std::string _irFileName = cryoContext.state.fileName;
+                    std::string _irFileName = cryoContext.state->fileName;
                     std::string irFileName = _irFileName.substr(0, _irFileName.find_last_of("."));
                     // Trim the directory path
                     irFileName = irFileName.substr(irFileName.find_last_of("/") + 1);

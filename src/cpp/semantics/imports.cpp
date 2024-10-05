@@ -50,16 +50,18 @@ namespace Cryo
             std::string cryoSTDPath = cryoPath + "/cryo/std/" + subModuleName + ".cryo";
             std::cout << "Cryo STD Path: " << cryoSTDPath << std::endl;
 
+            std::string relativePath = "./cryo/std/" + subModuleName + ".cryo";
+
             // Check if the file exists
-            std::ifstream file(cryoSTDPath); // This function is from the <fstream> library
+            std::ifstream file(relativePath); // This function is from the <fstream> library
             debugger.logMessage("INFO", __LINE__, "Imports", "Cryo STD file found.");
 
-            const char *cryoSTDPathCStr = cryoSTDPath.c_str();
-            const char *compilerFlags = "-a";
+            const char *compilerFlags = "-a -o ./build/out/imports";
 
             std::cout << "\n\n\n\n\n\n";
             debugger.logMessage("INFO", __LINE__, "Imports", "Compiling Cryo STD file...");
-            CompiledFile compiledFile = compileFile(cryoSTDPathCStr, compilerFlags);
+            std::cout << "File Path passed to `compileFile` in @imports: " << relativePath << std::endl;
+            CompiledFile compiledFile = compileFile(relativePath.c_str(), compilerFlags);
             debugger.logMessage("INFO", __LINE__, "Imports", "Cryo STD file compilation compiled.");
 
             std::string irFileName = compiledFile.fileName;

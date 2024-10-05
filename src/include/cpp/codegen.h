@@ -107,7 +107,7 @@ namespace Cryo
 
         void operator=(CryoContext const &) = delete;
 
-        CompilerState state;
+        CompilerState *state;
 
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
@@ -146,8 +146,8 @@ namespace Cryo
         CryoCompiler();
         ~CryoCompiler() = default;
 
-        void setCompilerState(CompilerState state) { CryoContext::getInstance().state = state; }
-        CompilerState getCompilerState() { return CryoContext::getInstance().state; }
+        void setCompilerState(CompilerState *state) { CryoContext::getInstance().state = state; }
+        CompilerState *getCompilerState() { return CryoContext::getInstance().state; }
 
         CryoContext &getContext() { return CryoContext::getInstance(); }
         CodeGen &getCodeGen() { return *codeGen; }
@@ -589,6 +589,22 @@ namespace Cryo
 
     private:
         CryoCompiler &compiler;
+    };
+    // -----------------------------------------------------------------------------------------------
+
+    class Compilation
+    {
+    public:
+        Compilation(CryoCompiler &compiler) : compiler(compiler) {}
+
+        void compileIRFile(std::string irFilePath, std::string irFileName);
+
+    private:
+        CryoCompiler &compiler;
+
+        void isValidDir(std::string dirPath);
+        void makeOutputDir(std::string dirPath);
+        void compile(std::string outputPath);
     };
 
     // -----------------------------------------------------------------------------------------------

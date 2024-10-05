@@ -1,6 +1,6 @@
 namespace Test;
 
-// import std::IO;
+import std::IO;
 
 public function main() -> void {
     // IO::printStr("Hello, World!");
