@@ -43,6 +43,7 @@ CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *tab
     state.columnNumber = 0;
     state.isActiveBuild = false;
     state.errorCount = 0;
+    state.settings = (CompilerSettings *)malloc(sizeof(CompilerSettings));
     state.errors = (CompilerError **)malloc(sizeof(CompilerError *));
 
     logMessage("INFO", __LINE__, "CompilerState", "Compiler state initialized");

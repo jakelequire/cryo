@@ -13,7 +13,6 @@ std::string getCryoPath()
 
 namespace Cryo
 {
-
     void Imports::handleImportStatement(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();

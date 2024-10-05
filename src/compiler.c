@@ -53,3 +53,20 @@ int standardCryoCompiler(CompilerSettings settings, CompilerState *state, Arena 
 
     return 0;
 }
+
+int compileExternalFile(const char *fileName, const char *rootDir, CompilerState *state)
+{
+    char *source = readFile(fileName);
+
+    // Initialize the lexer
+    Lexer lexer;
+    initLexer(&lexer, source, fileName, state);
+
+    // Set the lexer in the compiler state
+    state->lexer = &lexer;
+
+    // Initialize the parser
+    ASTNode *programNode = parseProgram(&lexer, state->table, state->arena, state);
+
+    // Need to add support to compile external files
+}

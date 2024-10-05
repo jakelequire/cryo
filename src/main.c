@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 
     // Initialize the compiler state
     CompilerState state = initCompilerState(arena, NULL, table, settings.inputFilePath);
+    state.settings = &settings;
 
     // Compile the file
     int compilerResult = standardCryoCompiler(settings, &state, arena);

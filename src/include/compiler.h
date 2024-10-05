@@ -42,5 +42,6 @@ extern "C"
 #endif
 
 int standardCryoCompiler(CompilerSettings settings, CompilerState *state, Arena *arena);
+int compileExternalFile(const char *fileName, const char *rootDir, CompilerState *state);
 
 #endif // GLOBAL_COMPILER_H

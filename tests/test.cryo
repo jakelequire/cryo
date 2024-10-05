@@ -1,19 +1,9 @@
 namespace Test;
 
 // import std::IO;
-// import std::Math;
-
-public function test(a: int) -> void {
-    // Math::add(34, 35);
-    if(a < 5) {
-        test(a);
-    } else {
-        return;
-    }
-    return;
-}
 
 public function main() -> void {
     // IO::printStr("Hello, World!");
+    const intOne: int = 34;
     return;
 }

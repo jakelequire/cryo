@@ -27,7 +27,10 @@
 #include "utils/arena.h"
 #include "utils/fs.h"
 
+#include "settings.h"
+
 typedef struct CryoSymbolTable CryoSymbolTable;
+typedef struct CompilerSettings CompilerSettings;
 typedef struct Lexer Lexer;
 typedef struct Token Token;
 typedef struct Arena Arena;
@@ -89,6 +92,7 @@ typedef struct CompilerState
     int lineNumber;
     int columnNumber;
     bool isActiveBuild;
+    CompilerSettings *settings;
     int errorCount;
     CompilerError **errors;
     // Functions for debugging

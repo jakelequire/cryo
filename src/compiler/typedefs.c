@@ -245,6 +245,8 @@ ASTNode *createExternalAstTree(Arena *arena, CompilerState *state, const char *m
         char *stdPath = (char *)malloc(strlen(cryoPath) + 16 + strlen(subModule) + 6);
         sprintf(stdPath, "%s/cryo/std/%s.cryo", cryoPath, subModule);
 
+        printf("<!> Std Path: %s\n", stdPath);
+
         // Parse the std module
         ASTNode *stdModule = parseExternal(stdPath);
 

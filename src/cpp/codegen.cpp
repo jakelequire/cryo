@@ -95,8 +95,20 @@ namespace Cryo
             outputFileName = outputFileName.substr(0, outputFileName.find_last_of("."));
             outputFileName += ".ll";
             // std::string outputFilename = cryoContext.module->getModuleIdentifier() + ".ll";
-            llvm::raw_fd_ostream dest(outputFileName, EC, llvm::sys::fs::OF_None);
 
+            // Get the output destination
+            std::string outputDir = compiler.getCompilerState().settings->rootDir;
+            std::string outputFile = compiler.getCompilerState().settings->inputFile;
+            std::cout << "Output Directory: " << outputDir << std::endl;
+            std::cout << "Output File: " << outputFile << std::endl;
+
+            outputFile = outputDir.substr(0, outputDir.find_last_of("/"));
+            std::cout << "Output File: " << outputFile << std::endl;
+            outputFile += ".ll";
+
+            std::cout << "Output File: " << outputFile << std::endl;
+
+            llvm::raw_fd_ostream dest(outputDir + "/" + outputFileName, EC, llvm::sys::fs::OF_None);
             if (EC)
             {
                 debugger.logMessage("ERROR", __LINE__, "CodeGen", "Error opening file for writing");
