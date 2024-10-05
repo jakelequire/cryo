@@ -22,27 +22,61 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
-        std::cout << "[Compilation] Params passed: " << irFilePath << ", " << irFileName << std::endl;
-        std::string _irFilePath;
-        std::string customOutputPath = compiler.getCompilerState()->settings->customOutputPath;
-        if (customOutputPath != "")
+        if (compiler.getCompilerState()->settings->customOutputPath == nullptr)
         {
-            _irFilePath = customOutputPath + "/" + irFilePath;
+            std::cout << "[Compilation] No custom output path provided" << std::endl;
 
+            std::string outputDir = std::string(compiler.getCompilerState()->settings->rootDir);
+            std::string outputFile = std::string(compiler.getCompilerState()->settings->inputFile);
+            // Trim the directory path from the file name
+            outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
+            outputFile = outputFile.substr(0, outputFile.find_last_of("."));
+            outputFile += ".ll";
+            std::string outputPath = outputDir + "/" + outputFile;
+
+            std::cout << "[Compilation] Output Path: " << outputPath << std::endl;
+            // Check if the directory exists
+            isValidDir(outputDir);
+
+            // Get the input file
+            std::string inputFile = std::string(compiler.getCompilerState()->settings->inputFile);
+
+            // Compile the file
+            compile(inputFile, outputPath);
+
+            return;
+        }
+        std::string customOutputPath = std::string(compiler.getCompilerState()->settings->customOutputPath);
+        if (!customOutputPath.empty())
+        {
             std::cout << "[Compilation] Output Path: " << customOutputPath << std::endl;
             // Check if the directory exists
             isValidDir(customOutputPath);
 
+            // Get the input file
+            std::string inputFile = std::string(compiler.getCompilerState()->settings->inputFile);
+
             // Compile the file
-            compile(_irFilePath);
+            compile(inputFile, customOutputPath);
+
+            return;
         }
+        else
+        {
+            debugger.logMessage("ERROR", __LINE__, "Compilation", "No output path provided");
+            CONDITION_FAILED;
+        }
+
+        return;
     }
 
-    void Compilation::compile(std::string outputPath)
+    /// @private
+    void Compilation::compile(std::string inputFile, std::string outputPath)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Compilation", "Compiling Source File");
 
+        debugger.logMessage("INFO", __LINE__, "Compilation", "outputPath: " + outputPath);
         // Check if the file exists
         std::ifstream file(outputPath);
         if (!file)
@@ -61,12 +95,16 @@ namespace Cryo
         {
             std::cout << "\n>===------- LLVM IR Code -------===<\n"
                       << std::endl;
+
+            compiler.getContext().getModules()->back()->print(dest, nullptr);
+
             // Create our custom annotator
             LoadStoreWhitespaceAnnotator LSWA;
 
             // Use the custom annotator when printing
             compiler.getModule().print(dest, &LSWA);
             compiler.getModule().print(llvm::outs(), &LSWA);
+
             std::cout << "\n>===------- End IR Code ------===<\n"
                       << std::endl;
         }
@@ -84,6 +122,21 @@ namespace Cryo
             debugger.logMessage("ERROR", __LINE__, "Compilation", "Directory does not exist, creating one...");
             makeOutputDir(dirPath);
             return;
+        }
+
+        return;
+    }
+
+    void Compilation::isValidFile(std::string filePath)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Compilation", "Checking if file exists");
+
+        std::ifstream file(filePath);
+        if (!file)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Compilation", "File does not exist");
+            CONDITION_FAILED;
         }
 
         return;

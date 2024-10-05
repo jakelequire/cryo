@@ -112,12 +112,15 @@ namespace Cryo
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
+        std::unique_ptr<std::vector<llvm::Module *>> modules;
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
 
         std::string currentNamespace;
         llvm::Function *currentFunction;
+
+        std::vector<llvm::Module *> *getModules() { return modules.get(); }
 
         bool inGlobalScope = true;
 
@@ -603,8 +606,9 @@ namespace Cryo
         CryoCompiler &compiler;
 
         void isValidDir(std::string dirPath);
+        void isValidFile(std::string filePath);
         void makeOutputDir(std::string dirPath);
-        void compile(std::string outputPath);
+        void compile(std::string inputFile, std::string outputPath);
     };
 
     // -----------------------------------------------------------------------------------------------

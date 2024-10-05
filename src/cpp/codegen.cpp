@@ -95,7 +95,7 @@ namespace Cryo
             // Trim the directory path
             irFileName = irFileName.substr(irFileName.find_last_of("/") + 1);
             irFileName += ".ll";
-            
+
             Compilation compileCode = Compilation(compiler);
 
             compileCode.compileIRFile(outputFileName, irFileName);

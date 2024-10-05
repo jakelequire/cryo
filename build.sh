@@ -187,10 +187,6 @@ log "Command: $COMPILER_EXE -f $INPUT_FILE $COMPILER_ARGS"
 if [ -d $OUT_DIR/imports ]; then
     log "Processing the imports..."
     
-    # Create a temporary directory for intermediate files
-    TEMP_DIR="$OUT_DIR/imports/temp"
-    mkdir -p "$TEMP_DIR"
-
     # Array to store valid .ll files
     valid_files=()
 
@@ -211,7 +207,7 @@ if [ -d $OUT_DIR/imports ]; then
     # Combine all the valid .ll files
     if [ ${#valid_files[@]} -gt 0 ]; then
         log "Combining the .ll files..."
-        llvm-link-18 "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
+        llvm-link "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
 
         # Optimize the combined IR
         log "Optimizing the combined IR..."
@@ -219,7 +215,7 @@ if [ -d $OUT_DIR/imports ]; then
 
         # Generate final object file
         log "Generating final object file..."
-        llc-18  -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
+        llc  -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
 
         # Check if the combined object file was created successfully
         if [ -f "$OUT_DIR/imports/combined.o" ]; then
@@ -254,16 +250,16 @@ else
 fi
 
 # Compile the standard library
-clang-18 -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+clang -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
 
 # Change to the out directory
 cd $OUT_DIR
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file
-llvm-link-18  cryolib.ll $FILE_NAME.ll -S -o bin.ll
+llvm-link  cryolib.ll $FILE_NAME.ll -S -o bin.ll
 
 # Compile the object file
-llc-18  -filetype=obj -relocation-model=static bin.ll -o bin.o
+llc -filetype=obj -relocation-model=static bin.ll -o bin.o
 
 # llc -filetype=asm bin.ll -o bin.s
 
@@ -271,7 +267,7 @@ llc-18  -filetype=obj -relocation-model=static bin.ll -o bin.o
 cd ../../
 
 # Link the object files and place the output in the build directory
-clang++-18 -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
+clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
 
 # Turn it into an executable with no extension
 
