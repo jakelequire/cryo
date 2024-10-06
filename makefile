@@ -93,9 +93,6 @@ CRYO_DIR = $(SRC_DIR)cryo/
 CPP_SEMANTICS_DIR = $(SRC_DIR)cpp/semantics/
 CPP_UTILS_DIR = $(SRC_DIR)cpp/utils/
 COMMON_DIR = $(SRC_DIR)common/
-LIB_DIR = $(SRC_DIR)library/
-C_LIBS_DIR = $(LIB_DIR)C/
-CXX_LIBS_DIR = $(LIB_DIR)CXX/
 
 # --------------------------------------------------------------------------------- #
 
@@ -124,11 +121,6 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)co
 
 # Common Files
 COMMON_SRC = $(COMMON_DIR)common.c
-
-# Compiler Lib Files
-C_COMPILER_LIBS = $(C_LIBS_DIR)logger.c 
-CXX_COMPILER_LIBS =
-COMPILER_LIB_OBJ = $(OBJ_DIR)lib_logger.o
 
 # Main files
 MAIN_SRC = $(SRC_DIR)main.c $(SRC_DIR)build.c $(SRC_DIR)compiler.c $(SRC_DIR)settings.c
@@ -311,11 +303,6 @@ $(OBJ_DIR)compilation.o: $(CPP_DIR)compilation.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # ---------------------------------------------
-# Cryo Lib Compilation rules
-$(OBJ_DIR)lib_logger.o: $(C_LIBS_DIR)logger.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-	
-# ---------------------------------------------
 # Common Compilation rules
 $(OBJ_DIR)common.o: $(COMMON_DIR)common.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -327,7 +314,7 @@ $(OBJ_DIR)cryolib.o: $(CRYO_DIR)cryolib.c | $(OBJ_DIR)
 
 # ---------------------------------------------
 # Linking binaries
-$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) $(COMMON_OBJ) $(COMPILER_LIB_OBJ) | $(BIN_DIR)
+$(MAIN_BIN): $(MAIN_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(RUNTIME_OBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(CLI_BIN_EXE): $(CLI_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) $(CPPOBJ) $(CRYO_OBJ) $(COMMON_OBJ) | $(BIN_DIR)

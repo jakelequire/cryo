@@ -101,13 +101,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
         {
             // traverseAST(statement, table);
             addStatementToProgram(program, table, statement, arena, state);
-            printf("\n\n--------------------------------------------------\n\n");
-            printf("Adding Statement: ");
-            printAST(statement, 0, arena);
-            printf("\n\n--------------------------------------------------\n\n");
-            // addASTNodeSymbol(table, statement, arena);
-            // printSymbolTable(table);
-            dumpCompilerState(*state);
+            logMessage("INFO", __LINE__, "Parser", "Statement added to program");
         }
         else
         {
@@ -115,6 +109,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
             error("Failed to parse statement.", "parseProgram", table, arena, state);
             return NULL;
         }
+        logMessage("INFO", __LINE__, "Parser", "Next token after statement: %s", CryoTokenToString(currentToken.type));
     }
 
     return program;
@@ -1457,7 +1452,7 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
     if (currentToken.type != TOKEN_IDENTIFIER)
     {
         error("Expected an identifier.", "parseImport", table, arena, state);
-        return NULL;
+        CONDITION_FAILED;
     }
 
     char *moduleName = strndup(currentToken.start, currentToken.length);
@@ -1470,7 +1465,7 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
         if (currentToken.type != TOKEN_IDENTIFIER)
         {
             error("Expected an identifier.", "parseImport", table, arena, state);
-            return NULL;
+            CONDITION_FAILED;
         }
 
         char *subModuleName = strndup(currentToken.start, currentToken.length);
@@ -1495,14 +1490,11 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
     }
 
     ASTNode *importNode = createImportNode(moduleName, NULL, arena, state);
-
     addASTNodeSymbol(table, importNode, arena);
-
     if (strcmp(moduleName, "std") == 0)
     {
         importNode->data.import->isStdModule = true;
     }
-
     importTypeDefinitions(moduleName, NULL, table, arena, state);
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", table, arena, state);
@@ -1542,7 +1534,6 @@ void importTypeDefinitions(const char *module, const char *subModule, CryoSymbol
         importAstTreeDefs(externRoot, table, arena, state);
         logMessage("INFO", __LINE__, "Parser", "Importing module definitions (submodule)...");
         printSymbolTable(table);
-
         return;
     }
     else
@@ -1556,7 +1547,6 @@ void importTypeDefinitions(const char *module, const char *subModule, CryoSymbol
         }
         logMessage("INFO", __LINE__, "Parser", "Importing module definitions (no submodule)...");
         importAstTreeDefs(externRoot, table, arena, state);
-
         return;
     }
 
@@ -1672,7 +1662,6 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
 
     printf("\n\nDataType in ForLoop init: %s\n\n", CryoDataTypeToString(dataType));
     ASTNode *init = createVarDeclarationNode(iterableName, dataType, iterable, false, false, false, true, arena, state);
-    printAST(init, 0, arena);
 
     addASTNodeSymbol(table, init, arena);
 
@@ -1834,7 +1823,6 @@ ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *c
         error("Variable not found.", "parseAssignment", table, arena, state);
         return NULL;
     }
-    printAST(symbol->node, 0, arena);
     ASTNode *oldValue = symbol->node;
     ASTNode *newValue = parseExpression(lexer, table, context, arena, state);
 

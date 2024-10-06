@@ -66,112 +66,24 @@ namespace Cryo
      */
     void Generator::generateCode(ASTNode *root)
     {
-        std::cout << "[CPP] Generating Code" << std::endl;
         CryoDebugger &debugger = compiler.getDebugger();
         CryoContext &cryoContext = compiler.getContext();
+        Compilation compileCode = Compilation(compiler);
+
+        // Check if the module is initialized
         assert(cryoContext.module != nullptr);
 
         // Preprocess the AST tree
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Code Generation");
         preprocess(root);
 
+        // Parse the AST tree
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
         parseTree(root);
 
-        if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
-        {
-            std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
-            cryoContext.module->print(llvm::errs(), nullptr);
-            std::cout << "\n>===----------------- End Error -----------------===<\n";
-            debugger.logMessage("ERROR", __LINE__, "CodeGen", "LLVM module verification failed");
-            exit(1);
-        }
-        else
-        {
-            addWhitespaceAfterLoadStore(*cryoContext.module);
-            std::error_code EC;
-            std::string outputFileName = cryoContext.module->getSourceFileName();
-            std::string _irFileName = cryoContext.state->fileName;
-            std::string irFileName = _irFileName.substr(0, _irFileName.find_last_of("."));
-            // Trim the directory path
-            irFileName = irFileName.substr(irFileName.find_last_of("/") + 1);
-            irFileName += ".ll";
-
-            Compilation compileCode = Compilation(compiler);
-
-            compileCode.compileIRFile(outputFileName, irFileName);
-
-            // Get the output destination
-            std::string outputDir = compiler.getCompilerState()->settings->rootDir;
-            std::string outputFile = compiler.getCompilerState()->settings->inputFile;
-            // Trim the directory path from the file name
-            outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
-            outputFile = outputFile.substr(0, outputFile.find_last_of("."));
-            outputFile += ".ll";
-            std::string outputPath = outputDir + "/" + outputFile;
-
-            std::string customOutputDir = compiler.getCompilerState()->settings->customOutputPath;
-            if (customOutputDir != "")
-            {
-                outputPath = customOutputDir + "/" + outputFile;
-                std::cout << "Custom Output Directory: " << customOutputDir << std::endl;
-            }
-            std::cout << "Custom Output Path: " << outputPath << std::endl;
-
-            llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
-            if (EC)
-            {
-                debugger.logMessage("ERROR", __LINE__, "CodeGen", "Error opening file for writing");
-            }
-            else
-            {
-                std::cout << "\n>===------- LLVM IR Code -------===<\n"
-                          << std::endl;
-                // Create our custom annotator
-                LoadStoreWhitespaceAnnotator LSWA;
-
-                // Use the custom annotator when printing
-                cryoContext.module->print(dest, &LSWA);
-                cryoContext.module->print(llvm::outs(), &LSWA);
-                std::cout << "\n>===------- End IR Code ------===<\n"
-                          << std::endl;
-
-                bool isActiveBuild = compiler.getCompilerState()->isActiveBuild;
-                if (isActiveBuild)
-                {
-                    debugger.logMessage("INFO", __LINE__, "CodeGen", "Active Build");
-                    // Create the IR File
-                    std::string _irFileName = cryoContext.state->fileName;
-                    std::string irFileName = _irFileName.substr(0, _irFileName.find_last_of("."));
-                    // Trim the directory path
-                    irFileName = irFileName.substr(irFileName.find_last_of("/") + 1);
-                    irFileName += ".ll";
-                    std::cout << "IR File Name: " << irFileName << std::endl;
-                    // Current working directory
-                    std::string cwd = std::filesystem::current_path().string();
-                    std::string irFilePath = cwd + "/" + irFileName;
-                    std::cout << "IR File Path: " << irFilePath << std::endl;
-
-                    std::error_code EC;
-                    llvm::raw_fd_ostream irFile(irFilePath, EC, llvm::sys::fs::OF_None);
-                    if (EC)
-                    {
-                        std::cerr << "Could not open file: " << EC.message() << "\n";
-                        return;
-                    }
-
-                    // Write to irFile directly
-                    llvm::raw_fd_ostream irFileOut(irFilePath, EC, llvm::sys::fs::OF_None);
-                    cryoContext.module->print(irFileOut, nullptr);
-                    irFileOut.flush();
-                    irFileOut.close();
-                }
-
-                dest.flush();
-                dest.close();
-
-                debugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
-            }
-        }
+        // Compile the IR file
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Compiling IR File");
+        compileCode.compileIRFile();
 
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
         return;

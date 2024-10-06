@@ -264,7 +264,7 @@ ASTNode *createExternalAstTree(Arena *arena, CompilerState *state, const char *m
     }
 }
 
-ASTNode *parseExternal(const char *filePath)
+static const ASTNode *parseExternal(const char *filePath)
 {
     // Check if the file exists
     if (!fileExists(filePath))
@@ -297,8 +297,8 @@ ASTNode *parseExternal(const char *filePath)
     CompilerState state = initCompilerState(arena, &lexer, table, fileName);
     logMessage("INFO", __LINE__, "TypeDefs", "Compiler state initialized.");
     initLexer(&lexer, source, fileName, &state);
-
     // Parse the source code
+    START_STDOUT_REDIRECT;
     ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
     if (programNode == NULL)
     {
@@ -308,6 +308,7 @@ ASTNode *parseExternal(const char *filePath)
         free(source);
         return NULL;
     }
+    END_STDOUT_REDIRECT;
 
     return programNode;
 }

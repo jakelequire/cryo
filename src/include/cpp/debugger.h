@@ -48,6 +48,9 @@ namespace Cryo
         void logLLVMStruct(llvm::StructType *structTy);
         std::string LLVMTypeIDToString(llvm::Type *type);
 
+        // Module Debugging
+        void addCommentToIR(llvm::IRBuilder<> &Builder, const std::string &comment);
+
         // Macro Implementations
         void checkNode(ASTNode *node);
         void debugPanic(std::string funcName);

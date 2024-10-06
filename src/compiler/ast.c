@@ -304,10 +304,23 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         {
             printf("Submodule Name: %s\n", node->data.import->subModuleName);
         }
+        break;
     }
 
     case NODE_EXTERNAL_SYMBOL:
-        printf("\nExternal Symbol Node (UNIMPLEMENTED)\n");
+        printf("\nExternal Symbol Node\n");
+        break;
+
+    case NODE_SCOPED_FUNCTION_CALL:
+        printf("\nScoped Function Call Node\n");
+        printf("Function Name: %s\n", node->data.scopedFunctionCall->functionName);
+        printf("Scope Name: %s\n", node->data.scopedFunctionCall->scopeName);
+        printf("Arguments:\n");
+        for (int i = 0; i < node->data.scopedFunctionCall->argCount; i++)
+        {
+            printAST(node->data.scopedFunctionCall->args[i], indent + 2, arena);
+        }
+        break;
 
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");

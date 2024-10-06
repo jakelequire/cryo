@@ -63,3 +63,43 @@ char *concatStrings(const char *str1, const char *str2)
     strcat(result, str2);
     return result;
 }
+
+FILE *tempStdout = NULL;
+FILE *tempStderr = NULL;
+FILE *tempStdin = NULL;
+
+void redirectStdout()
+{
+    tempStdout = stdout;
+    stdout = fopen("/dev/null", "w");
+
+    tempStderr = stderr;
+    stderr = fopen("/dev/null", "w");
+
+    tempStdin = stdin;
+    stdin = fopen("/dev/null", "r");
+}
+
+void restoreStdout()
+{
+    if (tempStdout)
+    {
+        fclose(stdout);
+        stdout = tempStdout;
+        tempStdout = NULL;
+    }
+
+    if (tempStderr)
+    {
+        fclose(stderr);
+        stderr = tempStderr;
+        tempStderr = NULL;
+    }
+
+    if (tempStdin)
+    {
+        fclose(stdin);
+        stdin = tempStdin;
+        tempStdin = NULL;
+    }
+}

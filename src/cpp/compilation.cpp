@@ -18,55 +18,81 @@
 
 namespace Cryo
 {
-    void Compilation::compileIRFile(std::string irFilePath, std::string irFileName)
+    void Compilation::compileIRFile(void)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        CryoContext &cryoContext = compiler.getContext();
+        CompilerSettings *settings = compiler.getCompilerState()->settings;
+
         debugger.logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
-        if (compiler.getCompilerState()->settings->customOutputPath == nullptr)
+
+        if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {
-            std::cout << "[Compilation] No custom output path provided" << std::endl;
+            LLVM_MODULE_FAILED_MESSAGE_START;
+            cryoContext.module->print(llvm::errs(), nullptr);
+            LLVM_MODULE_FAILED_MESSAGE_END;
+            debugger.logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
+            exit(1);
+        }
 
-            std::string outputDir = std::string(compiler.getCompilerState()->settings->rootDir);
-            std::string outputFile = std::string(compiler.getCompilerState()->settings->inputFile);
-            // Trim the directory path from the file name
-            outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
-            outputFile = outputFile.substr(0, outputFile.find_last_of("."));
-            outputFile += ".ll";
-            std::string outputPath = outputDir + "/" + outputFile;
+        std::string outputDir = settings->rootDir ? settings->rootDir : ".";
+        std::string outputFile = settings->inputFile ? std::string(settings->inputFile) : "output";
 
-            std::cout << "[Compilation] Output Path: " << outputPath << std::endl;
-            // Check if the directory exists
-            isValidDir(outputDir);
+        // Trim the directory path from the file name
+        outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
+        outputFile = outputFile.substr(0, outputFile.find_last_of(".")) + ".ll";
 
-            // Get the input file
-            std::string inputFile = std::string(compiler.getCompilerState()->settings->inputFile);
+        std::string outputPath = outputDir + "/build/out/" + outputFile;
 
-            // Compile the file
-            compile(inputFile, outputPath);
+        if (settings->customOutputPath)
+        {
+            outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
+        }
 
+        // Ensure the output directory exists
+        std::filesystem::create_directories(std::filesystem::path(outputPath).parent_path());
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
             return;
         }
-        std::string customOutputPath = std::string(compiler.getCompilerState()->settings->customOutputPath);
-        if (!customOutputPath.empty())
+
+        LLVM_MODULE_COMPLETE_START;
+        LoadStoreWhitespaceAnnotator LSWA;
+
+        // Use the custom annotator when printing
+        cryoContext.module->print(dest, &LSWA);
+        cryoContext.module->print(llvm::outs(), &LSWA);
+
+        LLVM_MODULE_COMPLETE_END;
+
+        if (settings->activeBuild)
         {
-            std::cout << "[Compilation] Output Path: " << customOutputPath << std::endl;
-            // Check if the directory exists
-            isValidDir(customOutputPath);
+            debugger.logMessage("INFO", __LINE__, "Compilation", "Active Build");
+            // Create the IR File in the current working directory
+            std::string irFileName = outputFile;
+            std::string cwd = std::filesystem::current_path().string();
+            std::string irFilePath = cwd + "/" + irFileName;
 
-            // Get the input file
-            std::string inputFile = std::string(compiler.getCompilerState()->settings->inputFile);
-
-            // Compile the file
-            compile(inputFile, customOutputPath);
-
-            return;
+            std::error_code EC;
+            llvm::raw_fd_ostream irFile(irFilePath, EC, llvm::sys::fs::OF_None);
+            if (EC)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Compilation", "Could not open file: " + EC.message());
+            }
+            else
+            {
+                cryoContext.module->print(irFile, nullptr);
+                irFile.close();
+            }
         }
-        else
-        {
-            debugger.logMessage("ERROR", __LINE__, "Compilation", "No output path provided");
-            CONDITION_FAILED;
-        }
 
+        dest.close();
+
+        debugger.logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
         return;
     }
 
@@ -74,16 +100,14 @@ namespace Cryo
     void Compilation::compile(std::string inputFile, std::string outputPath)
     {
         CryoDebugger &debugger = compiler.getDebugger();
-        debugger.logMessage("INFO", __LINE__, "Compilation", "Compiling Source File");
-
         debugger.logMessage("INFO", __LINE__, "Compilation", "outputPath: " + outputPath);
         // Check if the file exists
-        std::ifstream file(outputPath);
-        if (!file)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Compilation", "Source file not found");
-            CONDITION_FAILED;
-        }
+        // std::ifstream file(outputPath);
+        // if (!file)
+        // {
+        //     debugger.logMessage("ERROR", __LINE__, "Compilation", "Source file not found");
+        //     CONDITION_FAILED;
+        // }
 
         std::error_code EC;
         llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
@@ -107,6 +131,13 @@ namespace Cryo
 
             std::cout << "\n>===------- End IR Code ------===<\n"
                       << std::endl;
+
+            dest.flush();
+            dest.close();
+
+            debugger.logMessage("INFO", __LINE__, "Compilation", "Code CodeGen Complete");
+
+            return;
         }
     }
 

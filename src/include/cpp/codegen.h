@@ -52,6 +52,10 @@
 #include "llvm/Linker/IRMover.h"
 #include "llvm/Linker/Linker.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/IRReader/IRReader.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/IR/Metadata.h"
+#include "llvm/IR/DebugInfoMetadata.h"
 
 #include "cpp/debugger.h"
 #include "compiler/ast.h"
@@ -262,6 +266,8 @@ namespace Cryo
         void handleParam(ASTNode *node);
         void handleStruct(ASTNode *node);
         void handleScopedFunctionCall(ASTNode *node);
+
+        void addCommentToIR(const std::string &comment);
 
         // Function to add a no-op instruction for whitespace
         void addWhitespaceAfter(llvm::Instruction *Inst, llvm::IRBuilder<> &Builder)
@@ -600,7 +606,7 @@ namespace Cryo
     public:
         Compilation(CryoCompiler &compiler) : compiler(compiler) {}
 
-        void compileIRFile(std::string irFilePath, std::string irFileName);
+        void compileIRFile(void);
 
     private:
         CryoCompiler &compiler;
@@ -643,6 +649,37 @@ namespace Cryo
         context.module->print(llvm::outs(), nullptr);
     }
 
+    ///
+    /// Just some macros for logging. Felt more cluttered to have them in the main code.
+    ///
+
+#define LLVM_MODULE_FAILED_MESSAGE_START                                                                           \
+    std::cerr << "\n\n";                                                                                           \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "<!> =======------------! LLVM Module Verification Failed !------------======= <!>" << std::endl; \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_FAILED_MESSAGE_END                                                                             \
+    std::cerr << "\n";                                                                                             \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "<!> =======---------------! Module Verification FAILED !--------------======= <!>" << std::endl; \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_COMPLETE_START                                                                                \
+    std::cout << "\n\n";                                                                                          \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "<*> ==========--------------- LLVM Module Complete ---------------========== <*>" << std::endl; \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "\n";
+
+#define LLVM_MODULE_COMPLETE_END                                                                                  \
+    std::cout << "\n";                                                                                            \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "<*> ==========----------- Module Successfully Verified -----------========== <*>" << std::endl; \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "\n";
 }
 
 #endif // SANDBOX_H

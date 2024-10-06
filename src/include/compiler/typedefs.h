@@ -26,6 +26,7 @@
 #include "compiler/token.h"
 #include "compiler/ast.h"
 #include "utils/fs.h"
+#include "utils/utility.h"
 #include "common/common.h"
 
 typedef struct ExternalSymbol
@@ -73,6 +74,6 @@ char *TypeofDataTypeToString(TypeofDataType type);
 CryoDataType parseDataType(const char *typeStr);
 CryoDataType getPrimativeTypeFromString(const char *typeStr);
 ASTNode *createExternalAstTree(Arena *arena, CompilerState *state, const char *module, const char *subModule);
-ASTNode *parseExternal(const char *filePath);
+static const ASTNode *parseExternal(const char *filePath);
 
 #endif // TYPEDEFS_H

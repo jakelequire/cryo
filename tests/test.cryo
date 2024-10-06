@@ -1,6 +1,11 @@
 namespace Test;
 
 import std::IO;
+import std::Math;
+
+public function foo() -> void {
+    return;
+}
 
 public function main() -> void {
     // IO::printStr("Hello, World!");

@@ -7,3 +7,10 @@ extern function strLength(stri: string) -> int;
 public function print() -> void {
     return;
 }
+
+public function getStringLength() -> void {
+    const testStrLength: int = strLength("strTest");
+    printStr("String length:");
+    printInt(testStrLength);
+    return;
+}
