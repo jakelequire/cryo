@@ -315,6 +315,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         printf("\nScoped Function Call Node\n");
         printf("Function Name: %s\n", node->data.scopedFunctionCall->functionName);
         printf("Scope Name: %s\n", node->data.scopedFunctionCall->scopeName);
+        printf("Arg Count: %d\n", node->data.scopedFunctionCall->argCount);
         printf("Arguments:\n");
         for (int i = 0; i < node->data.scopedFunctionCall->argCount; i++)
         {
@@ -440,6 +441,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state)
         break;
     case NODE_STRUCT_DECLARATION:
         node->data.structNode = createStructNodeContainer(arena, state);
+        break;
+    case NODE_SCOPED_FUNCTION_CALL:
+        node->data.scopedFunctionCall = createScopedFunctionCallNode(arena, state);
         break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
@@ -1194,6 +1198,21 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
     node->data.structNode->properties = properties;
     node->data.structNode->propertyCount = propertyCount;
     node->data.structNode->propertyCapacity = 64;
+
+    return node;
+}
+
+/* @Node_Creation - Scoped Calls */
+ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName)
+{
+    ASTNode *node = createASTNode(NODE_SCOPED_FUNCTION_CALL, arena, state);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create scoped function call node");
+        return NULL;
+    }
+
+    node->data.scopedFunctionCall->functionName = strdup(functionName);
 
     return node;
 }

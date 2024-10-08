@@ -819,6 +819,7 @@ IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state);
 VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, CompilerState *state);
 StructNode *createStructNodeContainer(Arena *arena, CompilerState *state);
 PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state);
+ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state);
 
 #ifdef __cplusplus
 extern "C"
@@ -899,6 +900,9 @@ extern "C"
     ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena, CompilerState *state);
     ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, Arena *arena, CompilerState *state);
 
+    /* @Node_Creation - Scoped Calls */
+    ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName);
+    
 #ifdef __cplusplus
 }
 #endif

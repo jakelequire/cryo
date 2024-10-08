@@ -8,7 +8,7 @@ public function testFilePlease() -> void {
 }
 
 public function main() -> void {
-    // IO::printStr("Hello, World!");
+    IO::print("Hello, World!");
     const intOne: int = 34;
     return;
 }

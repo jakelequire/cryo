@@ -455,9 +455,84 @@ ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     printf("Scope Name: %s\n", scopeName);
     consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", table, arena, state);
 
-    DEBUG_BREAKPOINT;
+    // Consume the double colon
+    consume(lexer, TOKEN_DOUBLE_COLON, "Expected a double colon", "parseScopeCall", table, arena, state);
+
+    char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    printf("Function Name: %s\n", functionName);
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", table, arena, state);
+
+    // Check the symbol table for the identifier and find what kind of symbol it is.
+    CryoSymbol *symbol = findSymbol(table, functionName, arena);
+    if (!symbol)
+    {
+        error("Symbol not found", "parseScopeCall", table, arena, state);
+    }
+    logMessage("INFO", __LINE__, "Parser", "Symbol found: %s", symbol->name);
+
+    CryoNodeType nodeType = symbol->nodeType;
+    printf("Node Type: %s\n", CryoNodeTypeToString(nodeType));
+    ASTNode *node = NULL;
+    switch (nodeType)
+    {
+    case NODE_FUNCTION_DECLARATION:
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing function call @parseScopeCall...");
+        node = parseScopedFunctionCall(lexer, table, context, arena, state, strdup(functionName), scopeName);
+        break;
+    }
+    default:
+        CONDITION_FAILED;
+        break;
+    }
+
+    logMessage("INFO", __LINE__, "Parser", "Scope call parsed.");
+    return node;
 }
 // </parseScopeCall>
+
+ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, const char *functionName, const char *scopeName)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing scoped function call...");
+
+    consume(lexer, TOKEN_LPAREN, "Expected a left parenthesis", "parseScopedFunctionCall", table, arena, state);
+
+    ASTNode *node = createScopedFunctionCall(arena, state, strdup(functionName));
+
+    // Get the arguments
+    int argCount = 0;
+    ASTNode **args = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
+    while (lexer->currentToken.type != TOKEN_RPAREN)
+    {
+        ASTNode *arg = parseExpression(lexer, table, context, arena, state);
+        if (arg)
+        {
+            args[argCount++] = arg;
+        }
+        else
+        {
+            error("Failed to parse argument", "parseScopedFunctionCall", table, arena, state);
+        }
+
+        if (lexer->currentToken.type != TOKEN_RPAREN)
+        {
+            consume(lexer, TOKEN_COMMA, "Expected a comma", "parseScopedFunctionCall", table, arena, state);
+        }
+    }
+
+    consume(lexer, TOKEN_RPAREN, "Expected a right parenthesis", "parseScopedFunctionCall", table, arena, state);
+    consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseScopedFunctionCall", table, arena, state);
+
+    node->data.scopedFunctionCall->args = args;
+    node->data.scopedFunctionCall->argCount = argCount;
+    node->data.scopedFunctionCall->scopeName = strdup(scopeName);
+
+    printAST(node, 0, arena);
+
+    logMessage("INFO", __LINE__, "Parser", "Scoped function call parsed.");
+
+    return node;
+}
 
 /// @brief This function handles the `debugger` keyword. Which is used to pause the program execution.
 void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state)
@@ -517,7 +592,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
     case TOKEN_STRING_LITERAL:
         logMessage("INFO", __LINE__, "Parser", "Parsing string literal");
-        char *str = strndup(lexer->currentToken.start + 1, lexer->currentToken.length - 2);
+        char *str = strndup(lexer->currentToken.start, lexer->currentToken.length);
         printf("String: %s\n", str);
         node = createStringLiteralNode(str, arena, state);
         getNextToken(lexer, arena, state);

@@ -757,11 +757,12 @@ namespace Cryo
         std::cout << "Parameter Type: " << std::endl;
         std::cout << "Argument Type: " << std::endl;
 
-        llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, param, paramName);
-        compiler.getContext().namedValues[paramName] = alloca;
+        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(argTypes, param, paramName);
+
+        compiler.getContext().namedValues[paramName] = loadInst;
         // compiler.getContext().builder.CreateStore(param, alloca);
 
-        resultParam = alloca;
+        resultParam = loadInst;
 
         debugger.logLLVMValue(resultParam);
 
@@ -782,7 +783,69 @@ namespace Cryo
         char *functionName = functionCallNode->functionName;
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
 
-        DEBUG_BREAKPOINT;
+        // Get the function arguments
+        int argCount = functionCallNode->argCount;
+        std::cout << "Argument Count: " << argCount << std::endl;
+
+        // Get the argument values
+        std::vector<llvm::Value *> argValues;
+        for (int i = 0; i < argCount; ++i)
+        {
+            ASTNode *argNode = functionCallNode->args[i];
+            CryoNodeType argType = argNode->metaData->type;
+            switch (argType)
+            {
+            case NODE_VAR_DECLARATION:
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Variable Declaration");
+                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+                if (!argValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+                argValues.push_back(argValue);
+                break;
+            }
+            case NODE_LITERAL_EXPR:
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Literal Expression");
+                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+                if (!argValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+                argValues.push_back(argValue);
+                break;
+            }
+            default:
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
+                CONDITION_FAILED;
+            }
+            }
+        }
+
+        // Get the function
+        llvm::Function *function = compiler.getContext().module->getFunction(functionName);
+        if (!function)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            CONDITION_FAILED;
+        }
+
+        // If there are no arguments, just create the function call
+        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+        if (!functionCall)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
+            CONDITION_FAILED;
+        }
+
+        debugger.logMessage("INFO", __LINE__, "Functions", "Scoped Function Call Created");
+
+        return;
     }
 
 } // namespace Cryo

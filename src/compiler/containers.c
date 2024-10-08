@@ -909,3 +909,32 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
 
     return node;
 }
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct ScopedFunctionCallNode 
+/// {
+///     char *functionName;
+///     struct ASTNode **args;
+///     int argCount;
+///     int argCapacity;
+/// } ScopedFunctionCallNode;
+///```
+///
+ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state)
+{
+    ScopedFunctionCallNode *node = (ScopedFunctionCallNode *)ARENA_ALLOC(arena, sizeof(ScopedFunctionCallNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ScopedFunctionCallNode node.");
+        return NULL;
+    }
+
+    node->functionName = (char *)calloc(1, sizeof(char));
+    node->args = NULL;
+    node->argCount = 0;
+    node->argCapacity = 128;
+
+    return node;
+}

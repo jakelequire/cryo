@@ -379,6 +379,20 @@ namespace Cryo
             break;
         }
 
+        case NODE_SCOPED_FUNCTION_CALL:
+        {
+            std::cout << ">>==----------------{ Scoped Function Call Node }----------------==<<" << std::endl;
+            std::cout << "Function Name: " << strdup(node->data.scopedFunctionCall->functionName) << std::endl;
+            std::cout << "Scope Name: " << node->data.scopedFunctionCall->scopeName << std::endl;
+            std::cout << "Argument Count: " << node->data.scopedFunctionCall->argCount << std::endl;
+            for (int i = 0; i < node->data.scopedFunctionCall->argCount; ++i)
+            {
+                logNode(node->data.scopedFunctionCall->args[i]);
+            }
+            std::cout << ">>==--------------{ ^ Scoped Function Call Node ^ }--------------==<<" << std::endl;
+            break;
+        }
+
         default:
             std::cout << "\n\n";
             std::cout << "<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>" << std::endl;
