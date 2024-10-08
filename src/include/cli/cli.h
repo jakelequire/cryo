@@ -25,7 +25,6 @@
 #include "cli/build.h"
 #include "cli/devWatch.h"
 #include "cli/version.h"
-#include "cli/compiler.h"
 
 #include "utils/fs.h"
 

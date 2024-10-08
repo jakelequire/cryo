@@ -27,7 +27,11 @@
 #include "compiler/token.h"
 #include "compiler/symtable.h"
 #include "compiler/typedefs.h"
+#include "common/common.h"
 #include "settings.h"
+
+typedef struct CompilerSettings CompilerSettings;
+typedef struct CompilerState CompilerState;
 
 // C++ headers
 #ifdef __cplusplus
@@ -41,7 +45,7 @@ extern "C"
 }
 #endif
 
-int standardCryoCompiler(CompilerSettings settings, CompilerState *state, Arena *arena);
-int compileExternalFile(const char *fileName, const char *rootDir, CompilerState *state);
+int cryoCompiler(const char *filePath, CompilerSettings *settings);
+ASTNode *compileForProgramNode(const char *filePath);
 
 #endif // GLOBAL_COMPILER_H

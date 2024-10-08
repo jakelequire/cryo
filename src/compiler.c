@@ -16,57 +16,85 @@
  ********************************************************************************/
 #include "compiler.h"
 
-int standardCryoCompiler(CompilerSettings settings, CompilerState *state, Arena *arena)
+int cryoCompiler(const char *filePath, CompilerSettings *settings)
 {
+    START_COMPILATION_MESSAGE;
 
-    char *source = readFile(settings.inputFilePath);
+    const char *source = readFile(filePath);
+    if (!source)
+    {
+        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        return 1;
+    }
+    const char *fileName = trimFilePath(filePath);
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
+
     // Initialize the lexer
-    Lexer lexer;
-    initLexer(&lexer, source, state->fileName, state);
-
-    // Set the lexer in the compiler state
-    state->lexer = &lexer;
+    Lexer lex;
+    CompilerState state = initCompilerState(arena, &lex, table, fileName);
+    initLexer(&lex, source, fileName, &state);
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lexer, state->table, arena, state);
+    ASTNode *programNode = parseProgram(&lex, table, arena, &state);
 
-    if (programNode != NULL)
+    if (programNode == NULL)
     {
-        dumpCompilerState(*state);
-        int size = programNode->data.program->statementCount;
-        ASTNode *nodeCpy = (ASTNode *)malloc(sizeof(ASTNode) * size);
-        memcpy(nodeCpy, programNode, sizeof(ASTNode));
-
-        printSymbolTable(state->table);
-        printAST(nodeCpy, 0, arena);
-
-        printf("[Main] Generating IR code...\n");
-        if (generateCodeWrapper(nodeCpy, state) == 0)
-        {
-            printf("Compilation completed successfully.\n");
-        }
-        else
-        {
-            printf("Compilation failed.\n");
-        }
+        CONDITION_FAILED;
+        return 1;
     }
+
+    PRINT_AST_START;
+    printAST(programNode, 0, arena);
+    PRINT_AST_END;
+
+    // Generate code
+    int result = generateCodeWrapper(programNode, &state);
+    if (result != 0)
+    {
+        CONDITION_FAILED;
+        return 1;
+    }
+
+    END_COMPILATION_MESSAGE;
 
     return 0;
 }
 
-int compileExternalFile(const char *fileName, const char *rootDir, CompilerState *state)
+ASTNode *compileForProgramNode(const char *filePath)
 {
-    char *source = readFile(fileName);
+    // This needs to create a whole separate compiler state & arena for each program node
+    // This is because the program node is the root of the AST and needs to be compiled separately
+    char *source = readFile(filePath);
+    if (!source)
+    {
+        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        return NULL;
+    }
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
 
     // Initialize the lexer
     Lexer lexer;
-    initLexer(&lexer, source, fileName, state);
+    CompilerState state = initCompilerState(arena, &lexer, table, filePath);
+    initLexer(&lexer, source, filePath, &state);
 
-    // Set the lexer in the compiler state
-    state->lexer = &lexer;
+    // Parse the source code
+    ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
 
-    // Initialize the parser
-    ASTNode *programNode = parseProgram(&lexer, state->table, state->arena, state);
+    if (programNode == NULL)
+    {
+        fprintf(stderr, "Error: Failed to parse program node\n");
+        return NULL;
+    }
 
-    // Need to add support to compile external files
+    return programNode;
 }

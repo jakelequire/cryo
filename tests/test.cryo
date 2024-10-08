@@ -1,9 +1,9 @@
 namespace Test;
 
 import std::IO;
-import std::Math;
+// import std::Math;
 
-public function foo() -> void {
+public function testFilePlease() -> void {
     return;
 }
 

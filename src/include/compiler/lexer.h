@@ -84,6 +84,7 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
 void freeLexer(Lexer *lexer);
 
 /* @Lexer_Utils */
+Lexer *freezeLexer(Lexer *lexer);
 int getLPos(Lexer *lexer);
 int getCPos(Lexer *lexer);
 char advance(Lexer *lexer, CompilerState *state);

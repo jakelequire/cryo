@@ -1,6 +1,6 @@
 /********************************************************************************
  *  Copyright 2024 Jacob LeQuire                                                *
- *  SPDX-License-Identifier: Apache-2.0                                         * 
+ *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
@@ -16,61 +16,66 @@
  ********************************************************************************/
 #include "cli/build.h"
 
-
 // <getBuildArgs>
-BuildArgs getBuildArgs(char* arg) {
-    if (strcmp(arg, "-s")  == 0)          return BUILD_ARG;
-    if (strcmp(arg, "-dir") == 0)         return BUILD_ARG_DIR;
+BuildArgs getBuildArgs(char *arg)
+{
+    if (strcmp(arg, "-s") == 0)
+        return BUILD_ARG;
+    if (strcmp(arg, "-dir") == 0)
+        return BUILD_ARG_DIR;
 
     return BUILD_ARG_UNKNOWN;
 }
 // </getBuildArgs>
 
-
 // <executeBuildCmd>
-void executeBuildCmd(char* argv[]) {
+void executeBuildCmd(char *argv[])
+{
     printf("Building Cryo project...\n");
 
     // Arg 0 is the file path
-    char* argument = argv[0];
+    char *argument = argv[0];
 
     BuildArgs arg = getBuildArgs(argument);
-    switch (arg) {
-        case BUILD_ARG:
-            // Execute Command
-            break;
-        case BUILD_ARG_DIR:
-            // Execute Command
-            break;
-        
-        case BUILD_ARG_UNKNOWN:
-            // Execute Command
-            printf("Unknown Build Args, Building Single File...\n");
-            executeSingleFileBuild(argument);
-            break;
+    switch (arg)
+    {
+    case BUILD_ARG:
+        // Execute Command
+        break;
+    case BUILD_ARG_DIR:
+        // Execute Command
+        break;
 
-        default:
-            // Do something
+    case BUILD_ARG_UNKNOWN:
+        // Execute Command
+        printf("Unknown Build Args, Building Single File...\n");
+        executeSingleFileBuild(argument);
+        break;
+
+    default:
+        // Do something
     }
     exit(EXIT_SUCCESS);
 }
 // </executeBuildCmd>
 
-
 /* =========================================================== */
 
 // <executeSingleFileBuild>
-void executeSingleFileBuild(char* filePath) {
-    char* source = readSourceFile(filePath);
+void executeSingleFileBuild(char *filePath)
+{
+    char *source = readSourceFile(filePath);
     compileSource(source);
 }
 
 // <readSourceFile>
-char* readSourceFile(const char* filePath) {
-    char* fullPath = getFullPath(filePath);
+char *readSourceFile(const char *filePath)
+{
+    char *fullPath = getFullPath(filePath);
 
-    char* source = readFile(fullPath);
-    if (source == NULL) {
+    char *source = readFile(fullPath);
+    if (source == NULL)
+    {
         fprintf(stderr, "Failed to read source file.\n");
         return NULL;
     }
@@ -80,18 +85,20 @@ char* readSourceFile(const char* filePath) {
 }
 // </readSourceFile>
 
-
 // <getFullPath>
-const char* getFullPath(const char* filePath) {
-    char* fullPath = malloc(sizeof(char) * MAX_PATH_LENGTH);
-    if (fullPath == NULL) {
+const char *getFullPath(const char *filePath)
+{
+    char *fullPath = malloc(sizeof(char) * MAX_PATH_LENGTH);
+    if (fullPath == NULL)
+    {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
 
     // Get the current working directory
     char cwd[MAX_PATH_LENGTH];
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    if (getcwd(cwd, sizeof(cwd)) == NULL)
+    {
         perror("getcwd");
         exit(EXIT_FAILURE);
     }
@@ -107,10 +114,11 @@ const char* getFullPath(const char* filePath) {
 // </getFullPath>
 
 // <compileSource>
-void compileSource(const char* source) {
-    int compile = cryoCompiler(source);
-    if (compile == 1) {
-        fprintf(stderr, "Error in compilation");
-    }
+void compileSource(const char *source)
+{
+    // int compile = cryoCompiler(source);
+    // if (compile == 1) {
+    //     fprintf(stderr, "Error in compilation");
+    // }
 }
 // </compileSource>

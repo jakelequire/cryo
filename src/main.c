@@ -19,31 +19,25 @@
 
 int main(int argc, char *argv[])
 {
-    START_COMPILATION_MESSAGE;
-
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
     logCompilerSettings(&settings);
 
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
-    // Initialize the compiler state
-    CompilerState state = initCompilerState(arena, NULL, table, settings.inputFilePath);
-    state.settings = &settings;
-
-    // Compile the file
-    int compilerResult = standardCryoCompiler(settings, &state, arena);
-    if (compilerResult != 0)
+    // Check if the input file exists
+    const char *filePath = settings.inputFilePath;
+    if (!fileExists(filePath))
     {
-        fprintf(stderr, "Compilation failed.\n");
+        fprintf(stderr, "Error: File not found: %s\n", filePath);
         return 1;
     }
 
-    END_COMPILATION_MESSAGE;
+    // Compile the file
+    int compilerResult = cryoCompiler(filePath, &settings);
+    if (compilerResult != 0)
+    {
+        CONDITION_FAILED;
+        return 1;
+    }
 
     return 0;
 }

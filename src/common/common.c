@@ -21,7 +21,7 @@ extern "C"
 {
 #endif
 
-    void generateCodeWrapper(ASTNode *node, CompilerState *state);
+    int generateCodeWrapper(ASTNode *node, CompilerState *state);
 
 #ifdef __cplusplus
 }

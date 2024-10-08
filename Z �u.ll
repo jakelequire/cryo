@@ -1,12 +1,6 @@
-; ModuleID = 'std'
-source_filename = "/home/phock/Programming/apps/cryo/cryo/std/IO.cryo"
+; ModuleID = 'Test'
+source_filename = "/test.cryo"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
-
-declare void @printInt(i32)
-
-declare void @printStr(ptr)
-
-declare i32 @strLength(ptr)
 
 define void @print() {
 entry:
@@ -26,3 +20,24 @@ entry:
   call void @printInt(i32 %0)
   ret void
 }
+
+declare i32 @strLength(ptr)
+
+declare void @printStr(ptr)
+
+declare void @printInt(i32)
+
+define void @testFilePlease() {
+entry:
+  ret void
+}
+
+define void @main() {
+entry:
+  %intOne = alloca i32, i32 34, align 4
+  ret void
+}
+
+!comments = !{!0}
+
+!0 = !{!"Importing Cryo Standard Library"}
