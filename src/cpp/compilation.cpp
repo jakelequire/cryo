@@ -48,6 +48,10 @@ namespace Cryo
         {
             outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
         }
+        else
+        {
+            outputPath = outputDir + "/build/out/" + outputFile;
+        }
 
         // Ensure the output directory exists
         std::filesystem::create_directories(std::filesystem::path(outputPath).parent_path());

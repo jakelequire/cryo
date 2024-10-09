@@ -38,8 +38,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang-18
-	CXX_COMPILER = clang++-18
+	C_COMPILER = clang
+	CXX_COMPILER = clang++
 endif
 
 # OS-specific settings
@@ -66,7 +66,7 @@ else
 			-I./src/include/utils -I./src/include/tests
     CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
 			-I./src/include/utils -I./src/include/tests $(LLVM_CXXFLAGS) -fexceptions
-    LLVM_CONFIG = llvm-config-18
+    LLVM_CONFIG = llvm-config
     LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
 	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
     LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
@@ -132,8 +132,8 @@ RUNTIME_SRC = $(RUNTIME_DIR)runtime.c
 CRYO_SRC = $(CRYO_DIR)cryolib.c
 
 # Object files
-COMPILER_OBJ =  $(OBJ_DIR)global_compiler.o $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o \
-				$(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o $(OBJ_DIR)typedefs.o
+COMPILER_OBJ =  $(OBJ_DIR)global_compiler.o $(OBJ_DIR)settings.o $(OBJ_DIR)containers.o $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o \
+				$(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o $(OBJ_DIR)token.o $(OBJ_DIR)symtable.o $(OBJ_DIR)error.o $(OBJ_DIR)typedefs.o \
 
 # CPP Object files
 CPPOBJ = $(OBJ_DIR)debugger.o $(OBJ_DIR)backend_symtable.o $(OBJ_DIR)codegen.o \
