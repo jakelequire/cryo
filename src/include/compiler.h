@@ -48,5 +48,18 @@ extern "C"
 
 int cryoCompiler(const char *filePath, CompilerSettings *settings);
 ASTNode *compileForProgramNode(const char *filePath);
+int compileImportFile(const char *filePath, CompilerSettings *settings);
+
+// C++ Accessable Functions
+#ifdef __cplusplus
+extern "C"
+{
+    typedef struct CompilerSettings CompilerSettings;
+    typedef struct CompilerState CompilerState;
+    typedef struct ASTNode ASTNode;
+
+    int compileImportFileCXX(const char *filePath, CompilerSettings *settings);
+}
+#endif
 
 #endif // GLOBAL_COMPILER_H

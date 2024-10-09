@@ -26,6 +26,7 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state)
 
     Cryo::CryoCompiler compiler;
     compiler.setCompilerState(state);
+    compiler.setCompilerSettings(state->settings);
 
     std::string moduleName = state->fileName;
     std::cout << "Module Name: " << moduleName << std::endl;

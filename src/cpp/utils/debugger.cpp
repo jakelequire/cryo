@@ -1389,4 +1389,29 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
+    bool CryoDebugger::isValidString(const char *unsafe_string)
+    {
+        // Null check
+        if (unsafe_string == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "String is null");
+            return false;
+        }
+
+        // Empty check
+        if (strlen(unsafe_string) == 0)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "String is empty");
+            return false;
+        }
+
+        // Invalid Character check
+        if (strpbrk(unsafe_string, VALID_CHARACTERS) == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "String contains invalid characters");
+            return false;
+        }
+
+        return true;
+    }
 } // namespace Cryo

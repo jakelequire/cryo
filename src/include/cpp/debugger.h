@@ -20,6 +20,10 @@
 #include "compiler/ast.h"
 
 #include <iomanip>
+#include <iostream>
+#include <string>
+
+#define VALID_CHARACTERS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
 
 namespace Cryo
 {
@@ -50,6 +54,9 @@ namespace Cryo
 
         // Module Debugging
         void addCommentToIR(llvm::IRBuilder<> &Builder, const std::string &comment);
+
+        // Safety Checks
+        bool isValidString(const char *unsafe_string);
 
         // Macro Implementations
         void checkNode(ASTNode *node);

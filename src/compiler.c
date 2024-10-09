@@ -103,3 +103,51 @@ ASTNode *compileForProgramNode(const char *filePath)
 
     return programNode;
 }
+
+int compileImportFile(const char *filePath, CompilerSettings *settings)
+{
+    // This needs to create a whole separate compiler state & arena for each program node
+    // This is because the program node is the root of the AST and needs to be compiled separately
+    char *source = readFile(filePath);
+    if (!source)
+    {
+        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        return 1;
+    }
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
+
+    // Initialize the lexer
+    Lexer lexer;
+    CompilerState state = initCompilerState(arena, &lexer, table, filePath);
+    state.settings = settings;
+    initLexer(&lexer, source, filePath, &state);
+
+    // Parse the source code
+    ASTNode *programNode = parseProgram(&lexer, table, arena, &state);
+
+    if (programNode == NULL)
+    {
+        fprintf(stderr, "Error: Failed to parse program node\n");
+        return 1;
+    }
+
+    // Generate code
+    int result = generateCodeWrapper(programNode, &state);
+    if (result != 0)
+    {
+        CONDITION_FAILED;
+        return 1;
+    }
+
+    return 0;
+}
+
+    int compileImportFileCXX(const char *filePath, CompilerSettings *settings)
+    {
+        return compileImportFile(filePath, settings);
+    }

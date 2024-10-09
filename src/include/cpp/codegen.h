@@ -61,6 +61,7 @@
 #include "compiler/ast.h"
 #include "cpp/backend_symtable.h"
 #include "common/common.h"
+#include "compiler.h"
 
 extern "C" CompiledFile compileFile(const char *filePath, const char *compilerFlags);
 
@@ -124,6 +125,8 @@ namespace Cryo
         std::string currentNamespace;
         llvm::Function *currentFunction;
 
+        std::vector<CompiledFile> compiledFiles;
+
         std::vector<llvm::Module *> *getModules() { return modules.get(); }
 
         bool inGlobalScope = true;
@@ -143,6 +146,11 @@ namespace Cryo
             module->setSourceFileName(name);
         }
 
+        void addCompiledFileInfo(CompiledFile file)
+        {
+            compiledFiles.push_back(file);
+        }
+
     private:
         CryoContext() : builder(context) {}
     };
@@ -155,6 +163,9 @@ namespace Cryo
 
         void setCompilerState(CompilerState *state) { CryoContext::getInstance().state = state; }
         CompilerState *getCompilerState() { return CryoContext::getInstance().state; }
+        
+        void setCompilerSettings (CompilerSettings *settings) { CryoContext::getInstance().state->settings = settings; }
+        CompilerSettings *getCompilerSettings() { return CryoContext::getInstance().state->settings; }
 
         CryoContext &getContext() { return CryoContext::getInstance(); }
         CodeGen &getCodeGen() { return *codeGen; }
@@ -594,7 +605,7 @@ namespace Cryo
         /**
          * @brief Finds the IR build file for the given file name.
          */
-        std::string findIRBuildFile(std::string fileName);
+        std::string findIRBuildFile(std::string filePath);
 
     private:
         CryoCompiler &compiler;

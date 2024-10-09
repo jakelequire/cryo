@@ -28,6 +28,7 @@ namespace Cryo
 
         if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {
+            std::cout << "\n\n\n <!> <!> <!> \n\n\n";
             LLVM_MODULE_FAILED_MESSAGE_START;
             cryoContext.module->print(llvm::errs(), nullptr);
             LLVM_MODULE_FAILED_MESSAGE_END;
@@ -35,8 +36,27 @@ namespace Cryo
             exit(1);
         }
 
-        std::string outputDir = settings->rootDir ? settings->rootDir : ".";
-        std::string outputFile = settings->inputFile ? std::string(settings->inputFile) : "output";
+        std::cout << "\n Getting the output path\n";
+
+        const char *unsafe_outputDir = settings->rootDir;
+        const char *unsafe_outputFile = settings->inputFile;
+        const char *unsafe_customOutputPath = settings->customOutputPath;
+
+        std::cout << "\n Getting the output path\n";
+        std::cout << "\n\n\n <!> <!> <!> \nOUTPUT PATH: " << unsafe_outputDir << "\n\n\n";
+        std::cout << "\n\n\n <!> <!> <!> \nOUTPUT FILE: " << unsafe_outputFile << "\n\n\n";
+        std::cout << "\n\n\n <!> <!> <!> \nCUSTOM OUTPUT PATH: " << unsafe_customOutputPath << "\n\n\n";
+
+        // Check for valid strings
+        if (!debugger.isValidString(unsafe_outputDir) || !debugger.isValidString(unsafe_outputFile) || !debugger.isValidString(unsafe_customOutputPath))
+        {
+            debugger.logMessage("ERROR", __LINE__, "Compilation", "Invalid output path");
+            CONDITION_FAILED;
+        }
+
+        std::string outputDir(unsafe_outputDir);
+        std::string outputFile(unsafe_outputFile);
+        std::string customOutputPath(unsafe_customOutputPath);
 
         // Trim the directory path from the file name
         outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
@@ -52,6 +72,15 @@ namespace Cryo
         {
             outputPath = outputDir + "/build/out/" + outputFile;
         }
+
+        // Check the output path if it's a valid string (non-utf8 characters)
+        if (outputPath.empty())
+        {
+            debugger.logMessage("ERROR", __LINE__, "Compilation", "Invalid output path");
+            return;
+        }
+
+        std::cout << "\n\n\n <!> <!> <!> \nFINAL OUTPUT PATH: " << outputPath << "\n\n\n";
 
         // Ensure the output directory exists
         std::filesystem::create_directories(std::filesystem::path(outputPath).parent_path());
@@ -72,27 +101,6 @@ namespace Cryo
         cryoContext.module->print(llvm::outs(), &LSWA);
 
         LLVM_MODULE_COMPLETE_END;
-
-        if (settings->activeBuild)
-        {
-            debugger.logMessage("INFO", __LINE__, "Compilation", "Active Build");
-            // Create the IR File in the current working directory
-            std::string irFileName = outputFile;
-            std::string cwd = std::filesystem::current_path().string();
-            std::string irFilePath = cwd + "/" + irFileName;
-
-            std::error_code EC;
-            llvm::raw_fd_ostream irFile(irFilePath, EC, llvm::sys::fs::OF_None);
-            if (EC)
-            {
-                debugger.logMessage("ERROR", __LINE__, "Compilation", "Could not open file: " + EC.message());
-            }
-            else
-            {
-                cryoContext.module->print(irFile, nullptr);
-                irFile.close();
-            }
-        }
 
         dest.close();
 

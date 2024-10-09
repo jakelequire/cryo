@@ -228,7 +228,16 @@ EnabledLogs createEnabledLogs()
     return logs;
 }
 
-CompilerSettings createCompilerSettings()
+CompiledFile createCompiledFile(void)
+{
+    CompiledFile file;
+    file.fileName = NULL;
+    file.filePath = NULL;
+    file.outputPath = NULL;
+    return file;
+}
+
+CompilerSettings createCompilerSettings(void)
 {
     CompilerSettings settings;
     settings.rootDir = getcwd(NULL, 0);
@@ -240,7 +249,20 @@ CompilerSettings createCompilerSettings()
     settings.debugLevel = DEBUG_NONE;
     settings.buildType = BUILD_NONE;
     settings.enabledLogs = createEnabledLogs();
+    settings.compiledFiles = (CompiledFile **)malloc(sizeof(CompiledFile *) * 64);
     return settings;
+}
+
+void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file)
+{
+    for (int i = 0; i < 64; ++i)
+    {
+        if (settings->compiledFiles[i] == NULL)
+        {
+            settings->compiledFiles[i] = file;
+            break;
+        }
+    }
 }
 
 EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs)

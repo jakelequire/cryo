@@ -61,34 +61,62 @@ namespace Cryo
             }
             debugger.logMessage("INFO", __LINE__, "Imports", "Cryo STD file found.");
 
-            const char *compilerFlags = "-a -o ./build/out/imports";
+            CompiledFile _compiledFile;
+            _compiledFile.fileName = subModuleName.c_str();
+            _compiledFile.filePath = relativePath.c_str();
+            _compiledFile.outputPath = "./build/out/imports";
+            compiler.getContext().addCompiledFileInfo(_compiledFile);
+
+            CompilerSettings *importSettings = (CompilerSettings *)malloc(sizeof(CompilerSettings));
+            importSettings->rootDir = cryoPath.c_str();
+            importSettings->inputFile = relativePath.c_str();
+            importSettings->customOutputPath = "./build/out/imports";
+            importSettings->activeBuild = true;
+
+            // Get the current module
+            llvm::Module *currentModule = &compiler.getModule();
+            compiler.dumpModule();
 
             debugger.logMessage("INFO", __LINE__, "Imports", "Compiling Cryo STD file...");
-            CompiledFile compiledFile = compileFile(relativePath.c_str(), compilerFlags);
-            debugger.logMessage("INFO", __LINE__, "Imports", "Cryo STD file compilation completed.");
+            int compiledFile = compileImportFileCXX(relativePath.c_str(), importSettings);
+            if (compiledFile != 0)
+            {
+                throw std::runtime_error("Failed to compile Cryo STD file: " + relativePath);
+            }
+            debugger.logMessage("INFO", __LINE__, "Imports", "Cryo STD file compiled successfully.");
 
-            std::string compiledIRFile = findIRBuildFile(compiledFile.fileName);
+            // Find the compiled IR file
+            std::string IRFilePath = "./build/out/imports/" + subModuleName + ".ll";
+            std::string compiledIRFile = findIRBuildFile(IRFilePath);
             if (compiledIRFile.empty())
             {
-                throw std::runtime_error("Compiled IR file not found for " + std::string(compiledFile.fileName));
+                throw std::runtime_error("Failed to find compiled IR file for Cryo STD file: " + relativePath);
             }
+
+            debugger.logMessage("INFO", __LINE__, "Imports", "Found compiled IR file.");
+            std::cout << "Compiled IR File: " << compiledIRFile << std::endl;
 
             // Load and link the compiled IR file
             llvm::SMDiagnostic Err;
-            llvm::LLVMContext &Context = compiler.getContext().context;
-            std::unique_ptr<llvm::Module> ImportedModule = llvm::parseIRFile(compiledIRFile, Err, Context);
-
-            if (!ImportedModule)
-            {
-                throw std::runtime_error("Failed to load IR file: " + compiledIRFile);
-            }
-
-            // Link the imported module with the main module
-            llvm::Linker Linker(*compiler.getContext().module);
-            if (Linker.linkInModule(std::move(ImportedModule)))
-            {
-                throw std::runtime_error("Failed to link imported module");
-            }
+            // std::unique_ptr<llvm::Module> ImportedModule = llvm::parseIRFile(compiledIRFile, Err, compiler.getContext().context);
+            // if (!ImportedModule)
+            // {
+            //     std::cerr << "Failed to load IR file: " << compiledIRFile << std::endl;
+            //     throw std::runtime_error("Failed to load IR file: " + compiledIRFile);
+            // }
+            //
+            // debugger.logMessage("INFO", __LINE__, "Imports", "Successfully loaded IR file.");
+            //
+            // compiler.dumpModule();
+            //
+            // // Link the imported module with the main module
+            // llvm::Linker Linker(*currentModule);
+            // bool isLinked = Linker.linkInModule(std::move(ImportedModule));
+            // if (isLinked)
+            // {
+            //     std::cerr << "\n\n\n <!> Failed to link module, aborting compilation <!> \n\n\n";
+            //     throw std::runtime_error("Failed to link imported module.");
+            // }
 
             debugger.logMessage("INFO", __LINE__, "Imports", "Successfully linked imported module.");
 
@@ -108,39 +136,20 @@ namespace Cryo
         return;
     }
 
-    std::string Imports::findIRBuildFile(std::string fileName)
+    std::string Imports::findIRBuildFile(std::string filePath)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Imports", "Finding IR Build File");
 
-        // Get the cryo ENV variable
-        const char *cryoEnv = std::getenv("CRYO_PATH");
-        if (cryoEnv == nullptr || std::strcmp(cryoEnv, "") == 0)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Imports", "CRYO_PATH environment variable not set.");
-            return "";
-        }
-
-        // Get the executable path (CRYO_PATH/build/out/imports)
-        std::string executablePath = std::string(cryoEnv) + "/build/out/imports/";
-        std::cout << "Executable Path: " << executablePath << std::endl;
-
-        // Change the file extension from `.cryo` to `.ll`
-        std::string irFileName = fileName.substr(0, fileName.find_last_of(".")) + ".ll";
-        std::cout << "IR File Name: " << irFileName << std::endl;
-
-        std::string fullFilePath = executablePath + irFileName;
-        std::cout << "Full File Path: " << fullFilePath << std::endl;
-
         // Check if the file exists
-        if (!std::filesystem::exists(fullFilePath))
+        if (!std::filesystem::exists(filePath))
         {
             debugger.logMessage("ERROR", __LINE__, "Imports", "File does not exist.");
             return "";
         }
         debugger.logMessage("INFO", __LINE__, "Imports", "File found.");
 
-        return fullFilePath;
+        return filePath;
     }
 
 }
