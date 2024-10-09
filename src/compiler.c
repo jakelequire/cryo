@@ -76,6 +76,10 @@ ASTNode *compileForProgramNode(const char *filePath)
         return NULL;
     }
 
+    CompilerSettings settings = createCompilerSettings();
+    settings.inputFile = trimFilePath(filePath);
+    settings.inputFilePath = filePath;
+
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
@@ -85,6 +89,7 @@ ASTNode *compileForProgramNode(const char *filePath)
     // Initialize the lexer
     Lexer lexer;
     CompilerState state = initCompilerState(arena, &lexer, table, filePath);
+    state.settings = &settings;
     initLexer(&lexer, source, filePath, &state);
 
     // Parse the source code

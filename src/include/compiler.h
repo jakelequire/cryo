@@ -27,6 +27,7 @@
 #include "compiler/token.h"
 #include "compiler/symtable.h"
 #include "compiler/typedefs.h"
+#include "utils/fs.h"
 #include "common/common.h"
 #include "settings.h"
 
