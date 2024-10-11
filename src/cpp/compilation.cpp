@@ -38,30 +38,28 @@ namespace Cryo
 
         std::cout << "\n Getting the output path\n";
 
-        const char *unsafe_outputDir = settings->rootDir;
-        const char *unsafe_outputFile = settings->inputFile;
-        const char *unsafe_customOutputPath = settings->customOutputPath;
+        const char *unsafe_outputDir = strdup(settings->rootDir);
+        const char *unsafe_outputFile = strdup(settings->inputFile);
+        // const char *unsafe_customOutputPath = strdup(settings->customOutputPath);
 
         std::cout << "\n Getting the output path\n";
         std::cout << "\n\n\n <!> <!> <!> \nOUTPUT PATH: " << unsafe_outputDir << "\n\n\n";
         std::cout << "\n\n\n <!> <!> <!> \nOUTPUT FILE: " << unsafe_outputFile << "\n\n\n";
-        std::cout << "\n\n\n <!> <!> <!> \nCUSTOM OUTPUT PATH: " << unsafe_customOutputPath << "\n\n\n";
+        // std::cout << "\n\n\n <!> <!> <!> \nCUSTOM OUTPUT PATH: " << unsafe_customOutputPath << "\n\n\n";
 
         // Check for valid strings
-        if (
-            !debugger.isValidString(unsafe_outputDir) ||
-            !debugger.isValidString(unsafe_outputFile) ||
-            !debugger.isValidString(unsafe_customOutputPath))
-        {
-            debugger.logMessage("ERROR", __LINE__, "Compilation", "Invalid output path");
-            CONDITION_FAILED;
-        }
-
-        DEBUG_BREAKPOINT;
+        // if (
+        //     !debugger.isValidString(unsafe_outputDir) ||
+        //     !debugger.isValidString(unsafe_outputFile) ||
+        //     !debugger.isValidString(unsafe_customOutputPath))
+        // {
+        //     debugger.logMessage("ERROR", __LINE__, "Compilation", "Invalid output path");
+        //     CONDITION_FAILED;
+        // }
 
         std::string outputDir(unsafe_outputDir);
         std::string outputFile(unsafe_outputFile);
-        std::string customOutputPath(unsafe_customOutputPath);
+        // std::string customOutputPath(unsafe_customOutputPath);
 
         // Trim the directory path from the file name
         outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
