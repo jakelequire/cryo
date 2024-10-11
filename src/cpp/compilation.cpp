@@ -22,7 +22,7 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         CryoContext &cryoContext = compiler.getContext();
-        CompilerSettings *settings = compiler.getCompilerState()->settings;
+        CompilerSettings *settings = compiler.getCompilerSettings();
 
         debugger.logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
 
@@ -48,11 +48,16 @@ namespace Cryo
         std::cout << "\n\n\n <!> <!> <!> \nCUSTOM OUTPUT PATH: " << unsafe_customOutputPath << "\n\n\n";
 
         // Check for valid strings
-        if (!debugger.isValidString(unsafe_outputDir) || !debugger.isValidString(unsafe_outputFile) || !debugger.isValidString(unsafe_customOutputPath))
+        if (
+            !debugger.isValidString(unsafe_outputDir) ||
+            !debugger.isValidString(unsafe_outputFile) ||
+            !debugger.isValidString(unsafe_customOutputPath))
         {
             debugger.logMessage("ERROR", __LINE__, "Compilation", "Invalid output path");
             CONDITION_FAILED;
         }
+
+        DEBUG_BREAKPOINT;
 
         std::string outputDir(unsafe_outputDir);
         std::string outputFile(unsafe_outputFile);

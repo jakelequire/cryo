@@ -294,7 +294,7 @@ static const ASTNode *parseExternal(const char *filePath)
 
     // Initialize the lexer
     Lexer lexer;
-    CompilerState state = initCompilerState(arena, &lexer, table, fileName);
+    CompilerState *state = initCompilerState(arena, &lexer, table, fileName);
     logMessage("INFO", __LINE__, "TypeDefs", "Compiler state initialized.");
     initLexer(&lexer, source, fileName, &state);
     // Parse the source code

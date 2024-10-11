@@ -23,7 +23,9 @@
 #include <iostream>
 #include <string>
 
-#define VALID_CHARACTERS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+// All ASCII characters that are valid for Cryo
+#define VALID_CHARACTERS \
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_!@#$%^&*()-+=[]{}|;:,.<>?/~`"
 
 namespace Cryo
 {

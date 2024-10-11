@@ -1,14 +1,10 @@
 namespace Test;
 
-import std::IO;
-// import std::Math;
-
 public function testFilePlease() -> void {
     return;
 }
 
 public function main() -> void {
-    // IO::print("Hello, World!");
     const intOne: int = 34;
     return;
 }

@@ -107,7 +107,7 @@ typedef struct CompilerState
 #define NEW_COMPILER_ERROR(state, type, message, detail) \
     createError(CAPTURE_INTERNAL_DEBUG, state, type, message, detail, GET_SOURCE_INFO)
 
-CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName);
+CompilerState *initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName);
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state);
 void updateCompilerColumnNumber(Lexer *lexer, CompilerState *state);
 CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode);
