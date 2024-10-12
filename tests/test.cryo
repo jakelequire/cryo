@@ -12,11 +12,15 @@ public function main() -> void {
     
     const fooStr: string = "Hello, World!";
     printStr(fooStr);
+
+    const varNameTest: string = fooStr;
     
     const intOne: int = 34;
     const intTwo: int = 35;
     const intThree: int = intOne + intTwo;
     printInt(intThree);
+
+    const intArray: int[] = [1, 2, 3, 4, 5];
 
     return;
 }

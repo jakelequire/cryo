@@ -360,6 +360,59 @@ namespace Cryo
         return llvmValue;
     }
 
+    llvm::Value *Generator::getLiteralValue(LiteralNode *literalNode)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Getting Literal Value");
+
+        llvm::Value *llvmValue = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+
+        CryoDataType dataType = literalNode->dataType;
+        switch (dataType)
+        {
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Integer Literal");
+            llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, literalNode->value.intValue, true));
+            break;
+        }
+        case DATA_TYPE_FLOAT:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Float Literal");
+            llvmValue = llvm::ConstantFP::get(compiler.getContext().context, llvm::APFloat(literalNode->value.floatValue));
+            break;
+        }
+        case DATA_TYPE_BOOLEAN:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Boolean Literal");
+            llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(1, literalNode->value.booleanValue, true));
+            break;
+        }
+        case DATA_TYPE_STRING:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling String Literal");
+            llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, literalNode->value.stringValue);
+            break;
+        }
+        case DATA_TYPE_VOID:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Void Literal");
+            llvmValue = llvm::UndefValue::get(llvm::Type::getVoidTy(compiler.getContext().context));
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown data type");
+            std::cout << "Received: " << CryoDataTypeToString(dataType) << std::endl;
+            exit(1);
+        }
+        }
+
+        return llvmValue;
+    }
+
     std::string Generator::getNamespace(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();

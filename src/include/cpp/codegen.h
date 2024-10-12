@@ -260,6 +260,7 @@ namespace Cryo
 
         void handleProgram(ASTNode *node);
         llvm::Value *handleLiteralExpression(ASTNode *node);
+        llvm::Value *getLiteralValue(LiteralNode *literalNode);
 
         void handleImportStatement(ASTNode *node);
         void handleExternFunction(ASTNode *node);
@@ -347,6 +348,7 @@ namespace Cryo
          * All other types return `0`.
          */
         int getLiteralValLength(ASTNode *node);
+        int getLiteralValLength(LiteralNode *node);
 
         /**
          * @brief Returns the integer value of a literal node.
@@ -429,6 +431,12 @@ namespace Cryo
         void createMutableVariable(ASTNode *node);
 
     private:
+        // Specialized variable creation functions
+        llvm::Value *createLiteralExprVariable(LiteralNode *literalNode, std::string varName);
+        llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName);
+        llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, CryoDataType dataType, std::string varName);
+        llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
+
         CryoCompiler &compiler;
     };
 
@@ -452,6 +460,7 @@ namespace Cryo
 
         // Prototypes
         llvm::Value *createArrayLiteral(ASTNode *node, std::string varName = "array");
+        llvm::Value *createArrayLiteral(CryoArrayNode *array, std::string varName = "array");
         void handleArrayLiteral(ASTNode *node);
         llvm::ArrayType *getArrayType(ASTNode *node);
         int getArrayLength(ASTNode *node);

@@ -216,6 +216,17 @@ namespace Cryo
         return 0;
     }
 
+    int Types::getLiteralValLength(LiteralNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        if (node->dataType == DATA_TYPE_STRING)
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
+            return strlen(node->value.stringValue);
+        }
+        return 0;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     int Types::getLiteralIntValue(LiteralNode *node)
