@@ -41,21 +41,14 @@ namespace Cryo
         const char *unsafe_outputDir = strdup(settings->rootDir);
         const char *unsafe_outputFile = strdup(settings->inputFile);
         // const char *unsafe_customOutputPath = strdup(settings->customOutputPath);
+        // ^
+        // Note: The customOutputPath was causing the segmentation fault, will need
+        // to find a better way to handle this string since it can be undefined.
 
         std::cout << "\n Getting the output path\n";
         std::cout << "\n\n\n <!> <!> <!> \nOUTPUT PATH: " << unsafe_outputDir << "\n\n\n";
         std::cout << "\n\n\n <!> <!> <!> \nOUTPUT FILE: " << unsafe_outputFile << "\n\n\n";
         // std::cout << "\n\n\n <!> <!> <!> \nCUSTOM OUTPUT PATH: " << unsafe_customOutputPath << "\n\n\n";
-
-        // Check for valid strings
-        // if (
-        //     !debugger.isValidString(unsafe_outputDir) ||
-        //     !debugger.isValidString(unsafe_outputFile) ||
-        //     !debugger.isValidString(unsafe_customOutputPath))
-        // {
-        //     debugger.logMessage("ERROR", __LINE__, "Compilation", "Invalid output path");
-        //     CONDITION_FAILED;
-        // }
 
         std::string outputDir(unsafe_outputDir);
         std::string outputFile(unsafe_outputFile);

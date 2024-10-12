@@ -84,21 +84,27 @@ namespace Cryo
         case DATA_TYPE_INT:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting int to LLVM type");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+
         case DATA_TYPE_STRING:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting string to LLVM type");
             return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
+
         case DATA_TYPE_FLOAT:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting float to LLVM type");
             return llvm::Type::getFloatTy(CryoContext::getInstance().context);
+
         case DATA_TYPE_BOOLEAN:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting boolean to LLVM type");
             return llvm::Type::getInt1Ty(CryoContext::getInstance().context);
+
         case DATA_TYPE_VOID:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting void to LLVM type");
             return llvm::Type::getVoidTy(CryoContext::getInstance().context);
+
         case DATA_TYPE_INT_ARRAY:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
             return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
+
         default:
             debugger.logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;
@@ -120,12 +126,15 @@ namespace Cryo
         case DATA_TYPE_ARRAY:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting array to LLVM type");
             return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), length);
+
         case DATA_TYPE_INT_ARRAY:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
             return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), length);
+
         case DATA_TYPE_STRING_ARRAY:
             debugger.logMessage("INFO", __LINE__, "Types", "Converting string array to LLVM type");
             return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), length);
+
         default:
             debugger.logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;
@@ -303,6 +312,50 @@ namespace Cryo
 
         debugger.logMessage("ERROR", __LINE__, "Types", "Failed to cast type to value");
         return nullptr;
+    }
+
+    llvm::Type *Types::getInstType(llvm::Value *val)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Getting instruction type");
+
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(val);
+        if (inst)
+        {
+            debugger.logLLVMInst(inst);
+            return parseInstForType(inst);
+        }
+
+        debugger.logMessage("ERROR", __LINE__, "Types", "Failed to get instruction type");
+        return nullptr;
+    }
+
+    llvm::Type *Types::parseInstForType(llvm::Instruction *inst)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Parsing instruction for type");
+
+        if (!inst)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Types", "Instruction is null");
+            return nullptr;
+        }
+
+        llvm::Value *op = inst->getOperand(0);
+        if (!op)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Types", "Operand is null");
+            return nullptr;
+        }
+
+        llvm::Type *ty = op->getType();
+        if (!ty)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Types", "Type is null");
+            return nullptr;
+        }
+
+        return ty;
     }
 
     // -----------------------------------------------------------------------------------------------

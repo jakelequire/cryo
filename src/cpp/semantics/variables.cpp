@@ -84,9 +84,8 @@ namespace Cryo
             CONDITION_FAILED;
         }
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
+
         llvm::Instruction *inst = compiler.getContext().builder.CreateStore(newVal, varValue);
-        // Set the insert point
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
         llvm::GlobalVariable *key = inst->getModule()->getNamedGlobal(existingVarName);
         if (key)
         {
@@ -145,11 +144,8 @@ namespace Cryo
         case NODE_BINARY_EXPR:
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a binary expression");
-            // We will have to walk though the binary expression if it has multiple expressions within it
-            std::cout << "Name being passed (very start): " << varName << std::endl;
             llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
             compiler.getContext().namedValues[varName] = llvmValue;
-            // set the name of the `llvmValue` to the variable name
             llvmValue->setName(varName);
 
             return llvmValue;
@@ -165,11 +161,7 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a variable");
 
             std::string varDeclName = std::string(varDecl->name);
-            std::cout << "Variable Declaration Name: " << varDeclName << std::endl;
-
             std::string varNameRef = std::string(initializer->data.varName->varName);
-            std::cout << "Variable Name: " << varNameRef << std::endl;
-
             llvm::Value *varValue = compiler.getVariables().getVariable(varNameRef);
             if (!varValue)
             {
@@ -177,8 +169,6 @@ namespace Cryo
                 CONDITION_FAILED;
             }
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
-            debugger.logLLVMValue(varValue);
-
             llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(varValue->getType(), varValue, varDeclName);
             llvmValue->setName(varDeclName);
             llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
@@ -196,19 +186,12 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "Variables", "Variable is an int literal");
                 int intValue = initializer->data.literal->value.intValue;
                 llvm::Type *ty = compiler.getTypes().getType(varType, 0);
-                llvm::Value *variableValue = llvm::ConstantInt::get(ty, intValue);
-
                 llvm::Value *varValue = compiler.getGenerator().getInitilizerValue(initializer);
                 if (!varValue)
                 {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                    std::cout << ">>-------------- <Module State> --------------<<" << std::endl;
-                    compiler.dumpModule();
-                    std::cout << ">>-------------- </Module State> --------------<<" << std::endl;
                     CONDITION_FAILED;
                 }
-                llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty->getInt32Ty(compiler.getContext().context), variableValue, varName);
-                // llvm::Value *storeValue = compiler.getContext().builder.CreateStore(variableValue, ptrValue);
+                llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, varValue, varName);
                 compiler.getContext().namedValues[varName] = ptrValue;
 
                 return ptrValue;

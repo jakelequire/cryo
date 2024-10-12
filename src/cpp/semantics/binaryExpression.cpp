@@ -52,31 +52,92 @@ namespace Cryo
             ASTNode *leftNode = currentNode->data.bin_op->left;
             ASTNode *rightNode = currentNode->data.bin_op->right;
 
+            // The left value:
             llvm::Value *leftValue;
-            if (leftNode->metaData->type == NODE_BINARY_EXPR)
+            CryoNodeType leftNodeType = leftNode->metaData->type;
+            switch (leftNodeType)
             {
-                // If left node is a binary expression, recursively handle it
-                debugger.logMessage("INFO", __LINE__, "BinExp", "Handling left binary expression");
-                leftValue = handleComplexBinOp(leftNode);
-            }
-            else
+            case NODE_VAR_NAME:
             {
-                // Otherwise, get the value
                 debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
-                leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+                std::string varName = leftNode->data.varName->varName;
+                std::cout << "<!> (left) Variable Name: " << varName << std::endl;
+                leftValue = compiler.getVariables().getVariable(varName);
+                if (!leftValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                    CONDITION_FAILED;
+                }
                 if (leftValue->getType()->isPointerTy())
                 {
-                    // Manually set the type to a literal type if it's a pointer
-                    leftValue = compiler.getTypes().ptrToExplicitType(leftValue);
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+                    leftValue = createTempValueForPointer(leftValue, varName);
+                    if (!leftValue)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
+                        CONDITION_FAILED;
+                    }
+                }
+                else
+                {
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Left value is not a pointer");
+                }
+                break;
+            }
+            default:
+            {
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
+                std::cout << "Unknown node type: " << CryoNodeTypeToString(leftNodeType) << std::endl;
+
+                leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+                if (!leftValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                    CONDITION_FAILED;
                 }
             }
+            }
 
-            llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
-
-            if (rightValue->getType()->isPointerTy())
+            // The right value:
+            llvm::Value *rightValue;
+            CryoNodeType rightNodeType = rightNode->metaData->type;
+            switch (rightNodeType)
             {
-                // Manually set the type to a literal type if it's a pointer
-                rightValue = compiler.getTypes().ptrToExplicitType(rightValue);
+            case NODE_VAR_NAME:
+            {
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Getting right value");
+                std::string varName = rightNode->data.varName->varName;
+                std::cout << "<!> (right) VarName: " << varName << std::endl;
+                rightValue = compiler.getVariables().getVariable(varName);
+                if (!rightValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                    CONDITION_FAILED;
+                }
+                if (rightValue->getType()->isPointerTy())
+                {
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+                    rightValue = createTempValueForPointer(rightValue, varName);
+                    if (!rightValue)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
+                        CONDITION_FAILED;
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Getting right value");
+                std::cout << "Unknown node type: " << CryoNodeTypeToString(rightNodeType) << std::endl;
+
+                rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
+                if (!rightValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                    CONDITION_FAILED;
+                }
+            }
             }
 
             if (!result)
@@ -97,7 +158,7 @@ namespace Cryo
                 debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create binary expression");
                 return nullptr;
             }
-
+            // -----------------------
             // Move to the next node (if any)
             if (rightNode->metaData->type == NODE_BINARY_EXPR)
             {
@@ -160,6 +221,32 @@ namespace Cryo
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown operator type");
             CONDITION_FAILED;
         }
+    }
+
+    llvm::Value *BinaryExpressions::createTempValueForPointer(llvm::Value *value, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+
+        // For these temporary variables, this is how the naming convention will work:
+        // (varName) + ".temp"
+        std::string tempVarName = varName + ".temp";
+        std::cout << "Temp Var Name: " << tempVarName << std::endl;
+        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(value->getType(), nullptr, tempVarName);
+        if (!tempValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value");
+            CONDITION_FAILED;
+        }
+
+        // Store the value in the temporary variable
+        compiler.getContext().builder.CreateStore(value, tempValue);
+
+        // Add the temporary variable to the named values
+        compiler.getContext().namedValues[tempVarName] = tempValue;
+
+        return tempValue;
     }
 
     llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op)

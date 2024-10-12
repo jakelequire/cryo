@@ -1,10 +1,22 @@
-namespace Test;
+namespace Main;
+
+extern function printStr(str: string) -> void;
+extern function printInt(num: int) -> void;
 
 public function testFilePlease() -> void {
     return;
 }
 
 public function main() -> void {
+    printStr("Hello, World!");
+    
+    const fooStr: string = "Hello, World!";
+    printStr(fooStr);
+    
     const intOne: int = 34;
+    const intTwo: int = 35;
+    const intThree: int = intOne + intTwo;
+    printInt(intThree);
+
     return;
 }

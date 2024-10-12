@@ -1253,6 +1253,58 @@ namespace Cryo
         std::cout << ">>===-------------------------------------------===<<" << std::endl;
     }
 
+    void CryoDebugger::logLLVMType(llvm::Type *type)
+    {
+        if (type == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Type is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Type Node>-----------===<<" << std::endl;
+
+        // Print out the name of the type
+        std::string typeName = LLVMTypeIDToString(type);
+        std::cout << "Name: " << typeName << std::endl;
+
+        // Print out the instruction of the type
+        std::string typeInst;
+        llvm::raw_string_ostream rso(typeInst);
+        type->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the type
+        std::cout << "Address: " << type << std::endl;
+        std::cout << ">>===--------------------------------------===<<" << std::endl;
+    }
+
+    void CryoDebugger::logLLVMInst(llvm::Instruction *inst)
+    {
+        if (inst == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Instruction is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Instruction Node>-----------===<<" << std::endl;
+
+        // Print out the name of the instruction
+        std::string instName = inst->getName().str();
+        std::cout << "Name: " << instName << std::endl;
+
+        // Print out the instruction of the instruction
+        std::string instInst;
+        llvm::raw_string_ostream rso(instInst);
+        inst->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the instruction
+        std::cout << "Address: " << inst << std::endl;
+        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     std::string CryoDebugger::LLVMTypeIDToString(llvm::Type *type)

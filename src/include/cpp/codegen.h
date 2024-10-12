@@ -163,8 +163,8 @@ namespace Cryo
 
         void setCompilerState(CompilerState *state) { CryoContext::getInstance().state = state; }
         CompilerState *getCompilerState() { return CryoContext::getInstance().state; }
-        
-        void setCompilerSettings (CompilerSettings *settings) { CryoContext::getInstance().state->settings = settings; }
+
+        void setCompilerSettings(CompilerSettings *settings) { CryoContext::getInstance().state->settings = settings; }
         CompilerSettings *getCompilerSettings() { return CryoContext::getInstance().state->settings; }
 
         CryoContext &getContext() { return CryoContext::getInstance(); }
@@ -379,6 +379,16 @@ namespace Cryo
         llvm::Value *castTyToVal(llvm::Value *val, llvm::Type *ty);
 
         /**
+         * @brief Get the type of an instruction.
+         */
+        llvm::Type *getInstType(llvm::Value *val);
+
+        /**
+         * @brief Parse an instruction for its type.
+         */
+        llvm::Type *parseInstForType(llvm::Instruction *inst);
+
+        /**
          * @brief Trims the quotes from a string.
          */
         std::string trimStrQuotes(std::string str);
@@ -552,8 +562,8 @@ namespace Cryo
          */
         llvm::Value *createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue);
 
+        llvm::Value *createTempValueForPointer(llvm::Value *value, std::string varName);
         llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
-
         llvm::Value *handleComplexBinOp(ASTNode *node);
 
     private:

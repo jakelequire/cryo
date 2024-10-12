@@ -52,6 +52,8 @@ namespace Cryo
         bool isValidNodeType(CryoNodeType type);
         void logLLVMValue(llvm::Value *valueNode);
         void logLLVMStruct(llvm::StructType *structTy);
+        void logLLVMType(llvm::Type *type);
+        void logLLVMInst(llvm::Instruction *inst);
         std::string LLVMTypeIDToString(llvm::Type *type);
 
         // Module Debugging
