@@ -33,6 +33,50 @@ namespace Cryo
         }
     }
 
+    llvm::Type *Types::getLiteralType(LiteralNode *literal)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Types", "Getting literal type");
+
+        if (literal->dataType == DATA_TYPE_UNKNOWN)
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Unknown type");
+            CONDITION_FAILED;
+        }
+
+        CryoDataType type = literal->dataType;
+        int len = literal->length;
+        switch (type)
+        {
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Returning int type");
+            return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        }
+        case DATA_TYPE_STRING:
+        {
+            // [i8 x len]
+            debugger.logMessage("INFO", __LINE__, "Types", "Returning string type");
+            return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), len);
+        }
+        case DATA_TYPE_FLOAT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Returning float type");
+            return llvm::Type::getFloatTy(CryoContext::getInstance().context);
+        }
+        case DATA_TYPE_BOOLEAN:
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Returning boolean type");
+            return llvm::Type::getInt1Ty(CryoContext::getInstance().context);
+        }
+        default:
+        {
+            debugger.logMessage("INFO", __LINE__, "Types", "Unknown type");
+            return nullptr;
+        }
+        }
+    }
+
     llvm::Type *Types::getReturnType(CryoDataType type)
     {
         CryoDebugger &debugger = compiler.getDebugger();

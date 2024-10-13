@@ -768,6 +768,7 @@ ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state
 
     node->data.literal->dataType = DATA_TYPE_STRING;
     node->data.literal->value.stringValue = strdup(trimmedString);
+    node->data.literal->length = strlen(trimmedString);
 
     return node;
 }

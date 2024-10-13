@@ -398,6 +398,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->dataType = DATA_TYPE_UNKNOWN;
+    node->length = 0;
     node->value.intValue = 0;
     node->value.floatValue = 0;
     node->value.stringValue = (char *)ARENA_ALLOC(arena, sizeof(char));
@@ -913,7 +914,7 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
 /// ---
 /// ### Structure
 ///```
-/// typedef struct ScopedFunctionCallNode 
+/// typedef struct ScopedFunctionCallNode
 /// {
 ///     char *functionName;
 ///     struct ASTNode **args;

@@ -341,6 +341,12 @@ namespace Cryo
         llvm::Type *getType(CryoDataType type, int length);
 
         /**
+         * @brief Returns the LLVM type for the given LiteralNode.
+         * This should replace the `getType` function for all literal nodes.
+         */
+        llvm::Type *getLiteralType(LiteralNode *literal);
+
+        /**
          * @brief Returns the LLVM return type for the given CryoDataType.
          * Used for non-initalized variables.
          */

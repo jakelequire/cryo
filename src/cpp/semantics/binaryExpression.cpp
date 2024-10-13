@@ -226,6 +226,7 @@ namespace Cryo
     llvm::Value *BinaryExpressions::createTempValueForPointer(llvm::Value *value, std::string varName)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
         Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
 
@@ -233,7 +234,20 @@ namespace Cryo
         // (varName) + ".temp"
         std::string tempVarName = varName + ".temp";
         std::cout << "Temp Var Name: " << tempVarName << std::endl;
-        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(value->getType(), nullptr, tempVarName);
+
+        STVariable *symTableNode = symTable.getVariable(compiler.getContext().currentNamespace, varName);
+        if (!symTableNode)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable node from symtable");
+            CONDITION_FAILED;
+        }
+
+        llvm::Type *varType = symTableNode->LLVMType;
+        llvm::Value *varValue = symTableNode->LLVMValue;
+        CryoDataType varDataType = symTableNode->dataType;
+        llvm::Type *varPointerType = types.getType(varDataType, 0);
+
+        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(varPointerType, nullptr, tempVarName);
         if (!tempValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value");
@@ -241,7 +255,7 @@ namespace Cryo
         }
 
         // Store the value in the temporary variable
-        compiler.getContext().builder.CreateStore(value, tempValue);
+        compiler.getContext().builder.CreateStore(varValue, tempValue);
 
         // Add the temporary variable to the named values
         compiler.getContext().namedValues[tempVarName] = tempValue;

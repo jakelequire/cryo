@@ -113,6 +113,8 @@ namespace Cryo
         SymTableNode getSymTableNode(std::string namespaceName);
         SymTable getSymTable();
 
+        STVariable *getVariable(std::string namespaceName, std::string varName);
+
         // Setters
         void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode);
         void addVariable(std::string namespaceName, std::string varName, CryoVariableNode varNode);

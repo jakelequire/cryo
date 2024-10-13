@@ -312,6 +312,7 @@ typedef struct FunctionCallNode
 typedef struct LiteralNode
 {
     CryoDataType dataType; // Data type of the literal
+    int length;
     union
     {
         int intValue;
@@ -902,7 +903,7 @@ extern "C"
 
     /* @Node_Creation - Scoped Calls */
     ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName);
-    
+
 #ifdef __cplusplus
 }
 #endif

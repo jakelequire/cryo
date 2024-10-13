@@ -122,6 +122,15 @@ namespace Cryo
         return symNode;
     }
 
+    STVariable *BackendSymTable::getVariable(std::string namespaceName, std::string varName)
+    {
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the variable in the SymTable
+        STVariable *varNode = &symNode.variableNode[varName];
+        return varNode;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     /// Struct Containers
