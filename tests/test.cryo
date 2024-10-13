@@ -3,7 +3,7 @@ namespace Main;
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
 
-public function testFilePlease() -> void {
+public function please() -> void {
     return;
 }
 

@@ -28,10 +28,18 @@ namespace Cryo
 
         if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {
-            std::cout << "\n\n\n <!> <!> <!> \n\n\n";
             LLVM_MODULE_FAILED_MESSAGE_START;
             cryoContext.module->print(llvm::errs(), nullptr);
             LLVM_MODULE_FAILED_MESSAGE_END;
+            // Get the error itself without the module showing up
+            std::string errorMessage = getErrorMessage();
+            if (!errorMessage.empty())
+            {
+                llvm::errs() << errorMessage;
+                std::cout << "\n\n";
+            }
+            std::cout << "\n\n";
+
             debugger.logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
             exit(1);
         }
@@ -102,6 +110,21 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
         return;
+    }
+
+    std::string Compilation::getErrorMessage(void)
+    {
+        CryoContext &cryoContext = compiler.getContext();
+        std::string ErrorMsg;
+        llvm::raw_string_ostream ErrorStream(ErrorMsg);
+
+        bool Err = llvm::verifyModule(*cryoContext.module, &llvm::errs());
+        if (Err)
+        {
+            llvm::errs() << "Error message: " << ErrorStream.str() << "\n";
+        }
+
+        return ErrorStream.str();
     }
 
     /// @private

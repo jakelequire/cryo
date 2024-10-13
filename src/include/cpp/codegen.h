@@ -26,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <functional>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -56,6 +57,8 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/IR/DiagnosticInfo.h"
+#include "llvm/IR/DiagnosticPrinter.h"
 
 #include "cpp/debugger.h"
 #include "compiler/ast.h"
@@ -641,6 +644,7 @@ namespace Cryo
     private:
         CryoCompiler &compiler;
 
+        std::string getErrorMessage(void);
         void isValidDir(std::string dirPath);
         void isValidFile(std::string filePath);
         void makeOutputDir(std::string dirPath);
