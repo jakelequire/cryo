@@ -359,6 +359,12 @@ namespace Cryo
         if (inst)
         {
             llvm::Value *op = inst->getOperand(0);
+            if (!op)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Types", "Operand is null");
+                CONDITION_FAILED;
+                return nullptr;
+            }
             if (op->getType()->getTypeID() == ty->getTypeID())
             {
                 return op;

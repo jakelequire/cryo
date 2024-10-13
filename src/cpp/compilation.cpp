@@ -25,12 +25,13 @@ namespace Cryo
         CompilerSettings *settings = compiler.getCompilerSettings();
 
         debugger.logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
-
+        std::cout << "\n\n";
         if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {
             LLVM_MODULE_FAILED_MESSAGE_START;
             cryoContext.module->print(llvm::errs(), nullptr);
             LLVM_MODULE_FAILED_MESSAGE_END;
+            LLVM_MODULE_ERROR_START;
             // Get the error itself without the module showing up
             std::string errorMessage = getErrorMessage();
             if (!errorMessage.empty())
@@ -38,6 +39,7 @@ namespace Cryo
                 llvm::errs() << errorMessage;
                 std::cout << "\n\n";
             }
+            LLVM_MODULE_ERROR_END;
             std::cout << "\n\n";
 
             debugger.logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
@@ -119,10 +121,6 @@ namespace Cryo
         llvm::raw_string_ostream ErrorStream(ErrorMsg);
 
         bool Err = llvm::verifyModule(*cryoContext.module, &llvm::errs());
-        if (Err)
-        {
-            llvm::errs() << "Error message: " << ErrorStream.str() << "\n";
-        }
 
         return ErrorStream.str();
     }

@@ -401,7 +401,7 @@ namespace Cryo
         case NODE_PARAM:
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a parameter");
-
+            // TODO: Implement
             DEBUG_BREAKPOINT;
         }
         case NODE_VAR_NAME:
@@ -433,6 +433,7 @@ namespace Cryo
         default:
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is of unknown type");
+            std::cout << "Unknown node type: " << CryoNodeTypeToString(initializerNodeType) << std::endl;
             CONDITION_FAILED;
         }
         }
@@ -481,13 +482,15 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is an int literal");
             int intValue = literalNode->value.intValue;
-            llvm::Type *ty = compiler.getTypes().getType(dataType, 0);
+            // llvm::Type *ty = compiler.getTypes().getType(dataType, 0);
+            llvm::Type *ty = compiler.getTypes().getLiteralType(literalNode);
             llvm::Value *varValue = compiler.getGenerator().getLiteralValue(literalNode);
             if (!varValue)
             {
                 CONDITION_FAILED;
             }
-            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, varValue, varName);
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, nullptr, varName);
+            llvm::Value *storeValue = compiler.getContext().builder.CreateStore(varValue, ptrValue);
             compiler.getContext().namedValues[varName] = ptrValue;
 
             symTable.updateVariableNode(namespaceName, varName, ptrValue, ty);
@@ -529,7 +532,7 @@ namespace Cryo
             compiler.getContext().namedValues[varName] = llvmValue;
 
             llvm::Type *strType = types.getType(DATA_TYPE_STRING, _len + 1);
-            symTable.updateVariableNode(namespaceName, varName, llvmValue, strType);
+            symTable.updateVariableNode(namespaceName, varName, ptrValue, strType);
 
             return llvmValue;
         }
@@ -563,20 +566,29 @@ namespace Cryo
     llvm::Value *Variables::createVarNameInitializer(VariableNameNode *varNameNode, std::string varName)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable Name Initializer");
 
+        // This is the name of the variable that is being referenced
         std::string varNameRef = std::string(varNameNode->varName);
-        llvm::Value *varValue = compiler.getVariables().getVariable(varNameRef);
-        if (!varValue)
+        // Find the referenced variable in the symbol table:
+        STVariable *symTableNode = symTable.getVariable(namespaceName, varNameRef);
+        if (!symTableNode)
         {
-            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable node not found");
             CONDITION_FAILED;
         }
-        llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(varValue->getType(), varValue, varName);
-        llvmValue->setName(varName);
-        llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
-        compiler.getContext().namedValues[varName] = llvmValue;
 
+        llvm::Type *ty = symTableNode->LLVMType;
+        llvm::Value *llvmVarValue = symTableNode->LLVMValue;
+
+        llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(ty, nullptr, varName);
+        llvmValue->setName(varName);
+        llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(llvmVarValue, llvmValue);
+
+        compiler.getContext().namedValues[varName] = llvmValue;
         return llvmValue;
     }
 
@@ -736,8 +748,12 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created, Storing in Variable");
+
+        compiler.dumpModule();
+
         // Store the call into the variable
-        llvm::Instruction *inst = compiler.getContext().builder.CreateStore(functionCall, varValue);
+        compiler.getContext().builder.CreateStore(functionCall, varValue);
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created");
 

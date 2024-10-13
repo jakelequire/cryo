@@ -81,6 +81,8 @@ namespace Cryo
                 else
                 {
                     debugger.logMessage("INFO", __LINE__, "BinExp", "Left value is not a pointer");
+
+                    llvm::Value *tempValue = compiler.getGenerator().getInitilizerValue(leftNode);
                 }
                 break;
             }
@@ -180,6 +182,7 @@ namespace Cryo
     llvm::Value *BinaryExpressions::createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Binary Expression");
 
         if (!leftValue || !rightValue)
@@ -188,39 +191,73 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        CryoDataType leftDataType = node->data.bin_op->left->data.literal->dataType;
+        CryoDataType rightDataType = node->data.bin_op->right->data.literal->dataType;
+        llvm::Type *leftType = types.getType(leftDataType, 0);
+        llvm::Type *rightType = types.getType(rightDataType, 0);
+        bool sameType = leftType == rightType;
+
+        if (!leftType || !rightType)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get types for binary expression");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *result = nullptr;
         CryoOperatorType operatorType = node->data.bin_op->op;
         switch (operatorType)
         {
         case OPERATOR_ADD:
-            return compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
+            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
+            break;
         case OPERATOR_SUB:
-            return compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
+            result = compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
+            break;
         case OPERATOR_MUL:
-            return compiler.getContext().builder.CreateMul(leftValue, rightValue, "multmp");
+            result = compiler.getContext().builder.CreateMul(leftValue, rightValue, "multmp");
+            break;
         case OPERATOR_DIV:
-            return compiler.getContext().builder.CreateSDiv(leftValue, rightValue, "divtmp");
+            result = compiler.getContext().builder.CreateSDiv(leftValue, rightValue, "divtmp");
+            break;
         case OPERATOR_MOD:
-            return compiler.getContext().builder.CreateSRem(leftValue, rightValue, "modtmp");
+            result = compiler.getContext().builder.CreateSRem(leftValue, rightValue, "modtmp");
+            break;
         case OPERATOR_AND:
-            return compiler.getContext().builder.CreateAnd(leftValue, rightValue, "andtmp");
+            result = compiler.getContext().builder.CreateAnd(leftValue, rightValue, "andtmp");
+            break;
         case OPERATOR_OR:
-            return compiler.getContext().builder.CreateOr(leftValue, rightValue, "ortmp");
+            result = compiler.getContext().builder.CreateOr(leftValue, rightValue, "ortmp");
+            break;
         case OPERATOR_LT:
-            return compiler.getContext().builder.CreateICmpSLT(leftValue, rightValue, "ltcmp");
+            result = compiler.getContext().builder.CreateICmpSLT(leftValue, rightValue, "ltcmp");
+            break;
         case OPERATOR_LTE:
-            return compiler.getContext().builder.CreateICmpSLE(leftValue, rightValue, "ltecmp");
+            result = compiler.getContext().builder.CreateICmpSLE(leftValue, rightValue, "ltecmp");
+            break;
         case OPERATOR_GT:
-            return compiler.getContext().builder.CreateICmpSGT(leftValue, rightValue, "gtcmp");
+            result = compiler.getContext().builder.CreateICmpSGT(leftValue, rightValue, "gtcmp");
+            break;
         case OPERATOR_GTE:
-            return compiler.getContext().builder.CreateICmpSGE(leftValue, rightValue, "gtecmp");
+            result = compiler.getContext().builder.CreateICmpSGE(leftValue, rightValue, "gtecmp");
+            break;
         case OPERATOR_EQ:
-            return compiler.getContext().builder.CreateICmpEQ(leftValue, rightValue, "eqcmp");
+            result = compiler.getContext().builder.CreateICmpEQ(leftValue, rightValue, "eqcmp");
+            break;
         case OPERATOR_NEQ:
-            return compiler.getContext().builder.CreateICmpNE(leftValue, rightValue, "neqcmp");
+            result = compiler.getContext().builder.CreateICmpNE(leftValue, rightValue, "neqcmp");
+            break;
         default:
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown operator type");
             CONDITION_FAILED;
         }
+
+        if (!result)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create binary expression");
+            CONDITION_FAILED;
+        }
+
+        return result;
     }
 
     llvm::Value *BinaryExpressions::createTempValueForPointer(llvm::Value *value, std::string varName)
@@ -247,7 +284,7 @@ namespace Cryo
         CryoDataType varDataType = symTableNode->dataType;
         llvm::Type *varPointerType = types.getType(varDataType, 0);
 
-        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(varPointerType, nullptr, tempVarName);
+        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(varPointerType, varValue, tempVarName);
         if (!tempValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value");

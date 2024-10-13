@@ -501,6 +501,16 @@ namespace Cryo
         void createExternFunction(ASTNode *node);
         void createScopedFunctionCall(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
+
+        llvm::Value *createVarNameCall(VariableNameNode *varNameNode);
+        llvm::Value *createLiteralCall(LiteralNode *literalNode);
+        llvm::Value *createVarDeclCall(CryoVariableNode *varDeclNode);
+        llvm::Value *createFunctionCallCall(FunctionCallNode *functionCallNode);
+        llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
+        llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
+
+        std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
+        llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -707,6 +717,18 @@ namespace Cryo
     std::cerr << "<!> ========================================================================= <!>" << std::endl; \
     std::cerr << "\n";
 
+#define LLVM_MODULE_ERROR_START                                                               \
+    std::cerr << "\n";                                                                        \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "<!> *** Error: Module Verification Failed, errors: " << std::endl;          \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_ERROR_END                                                                 \
+    std::cerr << "\n";                                                                        \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "\n";
+
 #define LLVM_MODULE_COMPLETE_START                                                                                \
     std::cout << "\n\n";                                                                                          \
     std::cout << "<*> ======================================================================== <*>" << std::endl; \
@@ -720,6 +742,7 @@ namespace Cryo
     std::cout << "<*> ==========----------- Module Successfully Verified -----------========== <*>" << std::endl; \
     std::cout << "<*> ======================================================================== <*>" << std::endl; \
     std::cout << "\n";
+
 }
 
 #endif // SANDBOX_H

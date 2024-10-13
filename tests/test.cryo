@@ -3,24 +3,27 @@ namespace Main;
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
 
-public function please() -> void {
-    return;
-}
+public function add(numOne: int, numTwo: int) -> int {
+    const sum: int = numOne + numTwo;
+    return sum;
+}    
 
 public function main() -> void {
+    const intArray: int[] = [1, 2, 3, 4, 5];
+
     printStr("Hello, World!");
     
-    const fooStr: string = "Hello, World!";
-    printStr(fooStr);
-
-    const varNameTest: string = fooStr;
-    
-    const intOne: int = 34;
-    const intTwo: int = 35;
-    const intThree: int = intOne + intTwo;
-    printInt(intThree);
-
-    const intArray: int[] = [1, 2, 3, 4, 5];
+    // const fooStr: string = "Hello, World!";
+    // printStr(fooStr);
+// 
+    // const varNameTest: string = fooStr;
+    // 
+    // const intOne: int = 34;
+    // const intTwo: int = 35;
+    // // const intThree: int = intOne + intTwo;
+    // // printInt(intThree);
+    // const addResult: int = add(intOne, intTwo);
+    // printInt(addResult);
 
     return;
 }
