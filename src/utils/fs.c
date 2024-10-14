@@ -85,3 +85,32 @@ bool fileExists(const char *path)
     return false;
 }
 // </fileExists>
+
+// <getSTDFilePath>
+const char *getSTDFilePath(const char *subModule)
+{
+    // Find the std library path from the environment (CRYO_PATH)
+    const char *cryoPath = getenv("CRYO_PATH");
+    if (!cryoPath)
+    {
+        logMessage("ERROR", __LINE__, "TypeDefs", "CRYO_PATH environment variable not set.");
+        DEBUG_BREAKPOINT;
+        return NULL;
+    }
+
+    // The std library path will be $CRYO_PATH/cryo/std/{subModule}.cryo
+    char *stdPath = (char *)malloc(strlen(cryoPath) + 16 + strlen(subModule) + 6);
+    sprintf(stdPath, "%s/cryo/std/%s.cryo", cryoPath, subModule);
+
+    return stdPath;
+}
+// </getSTDFilePath>
+
+// <trimFilePath>
+const char *trimFilePath(const char *filePath)
+{
+    // Trim the file path
+    char *fileName = strrchr(filePath, '/');
+    return fileName;
+}
+// </trimFilePath>

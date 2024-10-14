@@ -1,19 +1,33 @@
-namespace Test;
+namespace Main;
 
-// import std::IO;
-// import std::Math;
+extern function printStr(str: string) -> void;
+extern function printInt(num: int) -> void;
 
-public function test(a: int) -> void {
-    // Math::add(34, 35);
-    if(a < 5) {
-        test(a);
-    } else {
-        return;
-    }
-    return;
-}
+public function add(numOne: int, numTwo: int) -> int {
+    const sum: int = numOne + numTwo;
+    return sum;
+}    
 
 public function main() -> void {
-    // IO::printStr("Hello, World!");
+    const intArray: int[] = [1, 2, 3, 4, 5];
+    const intOne: int = 34;
+    const intTwo: int = 35;
+
+    // String literal in function call
+    printStr("Hello, World!");
+
+    // String literal in variable assignment
+    const fooStr: string = "Hello, World!";
+    printStr(fooStr);
+
+    const varNameTest: string = fooStr;
+    printStr(varNameTest);
+
+    const addResult: int = add(intOne, intTwo);
+    printInt(addResult);
+
+    const intThree: int = intOne + intTwo;
+    printInt(intThree);
+
     return;
 }

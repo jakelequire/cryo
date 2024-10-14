@@ -73,4 +73,10 @@ int charToInt(char *str);
 ///
 char *concatStrings(const char *str1, const char *str2);
 
+#define START_STDOUT_REDIRECT redirectStdout();
+#define END_STDOUT_REDIRECT restoreStdout();
+
+void redirectStdout();
+void restoreStdout();
+
 #endif // UTILITY_H

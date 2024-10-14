@@ -26,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <functional>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
@@ -52,11 +53,18 @@
 #include "llvm/Linker/IRMover.h"
 #include "llvm/Linker/Linker.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/IRReader/IRReader.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/IR/Metadata.h"
+#include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/IR/DiagnosticInfo.h"
+#include "llvm/IR/DiagnosticPrinter.h"
 
-#include "cpp/debugger.h"
+#include "cpp/debugger.hpp"
 #include "compiler/ast.h"
-#include "cpp/backend_symtable.h"
+#include "cpp/backend_symtable.hpp"
 #include "common/common.h"
+#include "compiler.h"
 
 extern "C" CompiledFile compileFile(const char *filePath, const char *compilerFlags);
 
@@ -107,17 +115,22 @@ namespace Cryo
 
         void operator=(CryoContext const &) = delete;
 
-        CompilerState state;
+        CompilerState *state;
 
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
+        std::unique_ptr<std::vector<llvm::Module *>> modules;
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
 
         std::string currentNamespace;
         llvm::Function *currentFunction;
+
+        std::vector<CompiledFile> compiledFiles;
+
+        std::vector<llvm::Module *> *getModules() { return modules.get(); }
 
         bool inGlobalScope = true;
 
@@ -136,6 +149,11 @@ namespace Cryo
             module->setSourceFileName(name);
         }
 
+        void addCompiledFileInfo(CompiledFile file)
+        {
+            compiledFiles.push_back(file);
+        }
+
     private:
         CryoContext() : builder(context) {}
     };
@@ -146,8 +164,11 @@ namespace Cryo
         CryoCompiler();
         ~CryoCompiler() = default;
 
-        void setCompilerState(CompilerState state) { CryoContext::getInstance().state = state; }
-        CompilerState getCompilerState() { return CryoContext::getInstance().state; }
+        void setCompilerState(CompilerState *state) { CryoContext::getInstance().state = state; }
+        CompilerState *getCompilerState() { return CryoContext::getInstance().state; }
+
+        void setCompilerSettings(CompilerSettings *settings) { CryoContext::getInstance().state->settings = settings; }
+        CompilerSettings *getCompilerSettings() { return CryoContext::getInstance().state->settings; }
 
         CryoContext &getContext() { return CryoContext::getInstance(); }
         CodeGen &getCodeGen() { return *codeGen; }
@@ -242,6 +263,7 @@ namespace Cryo
 
         void handleProgram(ASTNode *node);
         llvm::Value *handleLiteralExpression(ASTNode *node);
+        llvm::Value *getLiteralValue(LiteralNode *literalNode);
 
         void handleImportStatement(ASTNode *node);
         void handleExternFunction(ASTNode *node);
@@ -259,6 +281,8 @@ namespace Cryo
         void handleParam(ASTNode *node);
         void handleStruct(ASTNode *node);
         void handleScopedFunctionCall(ASTNode *node);
+
+        void addCommentToIR(const std::string &comment);
 
         // Function to add a no-op instruction for whitespace
         void addWhitespaceAfter(llvm::Instruction *Inst, llvm::IRBuilder<> &Builder)
@@ -317,6 +341,12 @@ namespace Cryo
         llvm::Type *getType(CryoDataType type, int length);
 
         /**
+         * @brief Returns the LLVM type for the given LiteralNode.
+         * This should replace the `getType` function for all literal nodes.
+         */
+        llvm::Type *getLiteralType(LiteralNode *literal);
+
+        /**
          * @brief Returns the LLVM return type for the given CryoDataType.
          * Used for non-initalized variables.
          */
@@ -327,6 +357,7 @@ namespace Cryo
          * All other types return `0`.
          */
         int getLiteralValLength(ASTNode *node);
+        int getLiteralValLength(LiteralNode *node);
 
         /**
          * @brief Returns the integer value of a literal node.
@@ -357,6 +388,16 @@ namespace Cryo
          * @brief Mutate a values type to the given type.
          */
         llvm::Value *castTyToVal(llvm::Value *val, llvm::Type *ty);
+
+        /**
+         * @brief Get the type of an instruction.
+         */
+        llvm::Type *getInstType(llvm::Value *val);
+
+        /**
+         * @brief Parse an instruction for its type.
+         */
+        llvm::Type *parseInstForType(llvm::Instruction *inst);
 
         /**
          * @brief Trims the quotes from a string.
@@ -393,12 +434,19 @@ namespace Cryo
         llvm::Value *createLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
-        llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
 
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
 
     private:
+        // Specialized variable creation functions
+        llvm::Value *createLiteralExprVariable(LiteralNode *literalNode, std::string varName);
+        llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName);
+        llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, CryoDataType dataType, std::string varName);
+        llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
+        llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
+        llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);
+
         CryoCompiler &compiler;
     };
 
@@ -422,6 +470,7 @@ namespace Cryo
 
         // Prototypes
         llvm::Value *createArrayLiteral(ASTNode *node, std::string varName = "array");
+        llvm::Value *createArrayLiteral(CryoArrayNode *array, std::string varName = "array");
         void handleArrayLiteral(ASTNode *node);
         llvm::ArrayType *getArrayType(ASTNode *node);
         int getArrayLength(ASTNode *node);
@@ -453,6 +502,16 @@ namespace Cryo
         void createExternFunction(ASTNode *node);
         void createScopedFunctionCall(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
+
+        llvm::Value *createVarNameCall(VariableNameNode *varNameNode);
+        llvm::Value *createLiteralCall(LiteralNode *literalNode);
+        llvm::Value *createVarDeclCall(CryoVariableNode *varDeclNode);
+        llvm::Value *createFunctionCallCall(FunctionCallNode *functionCallNode);
+        llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
+        llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
+
+        std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
+        llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -532,9 +591,10 @@ namespace Cryo
          */
         llvm::Value *createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue);
 
+        llvm::Value *createTempValueForPointer(llvm::Value *value, std::string varName);
         llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
-
         llvm::Value *handleComplexBinOp(ASTNode *node);
+        llvm::Value *dereferenceElPointer(llvm::Value *value, std::string varName = "unknown");
 
     private:
         CryoCompiler &compiler;
@@ -585,10 +645,28 @@ namespace Cryo
         /**
          * @brief Finds the IR build file for the given file name.
          */
-        std::string findIRBuildFile(std::string fileName);
+        std::string findIRBuildFile(std::string filePath);
 
     private:
         CryoCompiler &compiler;
+    };
+    // -----------------------------------------------------------------------------------------------
+
+    class Compilation
+    {
+    public:
+        Compilation(CryoCompiler &compiler) : compiler(compiler) {}
+
+        void compileIRFile(void);
+
+    private:
+        CryoCompiler &compiler;
+
+        std::string getErrorMessage(void);
+        void isValidDir(std::string dirPath);
+        void isValidFile(std::string filePath);
+        void makeOutputDir(std::string dirPath);
+        void compile(std::string inputFile, std::string outputPath);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -622,6 +700,50 @@ namespace Cryo
     {
         context.module->print(llvm::outs(), nullptr);
     }
+
+    ///
+    /// Just some macros for logging. Felt more cluttered to have them in the main code.
+    ///
+
+#define LLVM_MODULE_FAILED_MESSAGE_START                                                                           \
+    std::cerr << "\n\n";                                                                                           \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "<!> =======------------! LLVM Module Verification Failed !------------======= <!>" << std::endl; \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_FAILED_MESSAGE_END                                                                             \
+    std::cerr << "\n";                                                                                             \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "<!> =======---------------! Module Verification FAILED !--------------======= <!>" << std::endl; \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_ERROR_START                                                               \
+    std::cerr << "\n";                                                                        \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "<!> *** Error: Module Verification Failed, errors: " << std::endl;          \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_ERROR_END                                                                 \
+    std::cerr << "\n";                                                                        \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_COMPLETE_START                                                                                \
+    std::cout << "\n\n";                                                                                          \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "<*> ==========--------------- LLVM Module Complete ---------------========== <*>" << std::endl; \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "\n";
+
+#define LLVM_MODULE_COMPLETE_END                                                                                  \
+    std::cout << "\n";                                                                                            \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "<*> ==========----------- Module Successfully Verified -----------========== <*>" << std::endl; \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "\n";
 
 }
 

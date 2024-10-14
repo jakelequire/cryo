@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/debugger.h"
+#include "cpp/debugger.hpp"
 
 namespace Cryo
 {
@@ -376,6 +376,20 @@ namespace Cryo
                 logNode(node->data.structNode->properties[i]);
             }
             std::cout << ">>==---------------{ ^ Struct Declaration Node ^ }----------------==<<" << std::endl;
+            break;
+        }
+
+        case NODE_SCOPED_FUNCTION_CALL:
+        {
+            std::cout << ">>==----------------{ Scoped Function Call Node }----------------==<<" << std::endl;
+            std::cout << "Function Name: " << strdup(node->data.scopedFunctionCall->functionName) << std::endl;
+            std::cout << "Scope Name: " << node->data.scopedFunctionCall->scopeName << std::endl;
+            std::cout << "Argument Count: " << node->data.scopedFunctionCall->argCount << std::endl;
+            for (int i = 0; i < node->data.scopedFunctionCall->argCount; ++i)
+            {
+                logNode(node->data.scopedFunctionCall->args[i]);
+            }
+            std::cout << ">>==--------------{ ^ Scoped Function Call Node ^ }--------------==<<" << std::endl;
             break;
         }
 
@@ -1239,6 +1253,58 @@ namespace Cryo
         std::cout << ">>===-------------------------------------------===<<" << std::endl;
     }
 
+    void CryoDebugger::logLLVMType(llvm::Type *type)
+    {
+        if (type == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Type is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Type Node>-----------===<<" << std::endl;
+
+        // Print out the name of the type
+        std::string typeName = LLVMTypeIDToString(type);
+        std::cout << "Name: " << typeName << std::endl;
+
+        // Print out the instruction of the type
+        std::string typeInst;
+        llvm::raw_string_ostream rso(typeInst);
+        type->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the type
+        std::cout << "Address: " << type << std::endl;
+        std::cout << ">>===--------------------------------------===<<" << std::endl;
+    }
+
+    void CryoDebugger::logLLVMInst(llvm::Instruction *inst)
+    {
+        if (inst == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Instruction is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Instruction Node>-----------===<<" << std::endl;
+
+        // Print out the name of the instruction
+        std::string instName = inst->getName().str();
+        std::cout << "Name: " << instName << std::endl;
+
+        // Print out the instruction of the instruction
+        std::string instInst;
+        llvm::raw_string_ostream rso(instInst);
+        inst->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the instruction
+        std::cout << "Address: " << inst << std::endl;
+        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     std::string CryoDebugger::LLVMTypeIDToString(llvm::Type *type)
@@ -1373,4 +1439,31 @@ namespace Cryo
         return typeStr;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    bool CryoDebugger::isValidString(const char *unsafe_string)
+    {
+        // Null check
+        if (unsafe_string == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "String is null");
+            return false;
+        }
+
+        // Empty check
+        if (strlen(unsafe_string) == 0)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "String is empty");
+            return false;
+        }
+
+        // Invalid Character check
+        if (strpbrk(unsafe_string, VALID_CHARACTERS) == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "String contains invalid characters");
+            return false;
+        }
+
+        return true;
+    }
 } // namespace Cryo

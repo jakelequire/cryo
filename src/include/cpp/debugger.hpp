@@ -16,10 +16,16 @@
  ********************************************************************************/
 #ifndef CRYO_DEBUGGER
 #define CRYO_DEBUGGER
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 #include "compiler/ast.h"
 
 #include <iomanip>
+#include <iostream>
+#include <string>
+
+// All ASCII characters that are valid for Cryo
+#define VALID_CHARACTERS \
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_!@#$%^&*()-+=[]{}|;:,.<>?/~`"
 
 namespace Cryo
 {
@@ -46,7 +52,15 @@ namespace Cryo
         bool isValidNodeType(CryoNodeType type);
         void logLLVMValue(llvm::Value *valueNode);
         void logLLVMStruct(llvm::StructType *structTy);
+        void logLLVMType(llvm::Type *type);
+        void logLLVMInst(llvm::Instruction *inst);
         std::string LLVMTypeIDToString(llvm::Type *type);
+
+        // Module Debugging
+        void addCommentToIR(llvm::IRBuilder<> &Builder, const std::string &comment);
+
+        // Safety Checks
+        bool isValidString(const char *unsafe_string);
 
         // Macro Implementations
         void checkNode(ASTNode *node);

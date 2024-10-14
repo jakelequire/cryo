@@ -22,6 +22,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <sys/types.h>
+
+#include "common/common.h"
 /*---------<end>---------*/
 #ifdef __cplusplus
 extern "C"
@@ -37,6 +39,8 @@ extern "C"
 
 char *readFile(const char *path);
 bool fileExists(const char *path);
+const char *getSTDFilePath(const char *subModule);
+const char *trimFilePath(const char *filePath);
 
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL

@@ -115,6 +115,19 @@ void freeLexer(Lexer *lexer)
 /* =========================================================== */
 /* @Lexer_Utils */
 
+Lexer *freezeLexer(Lexer *lexer)
+{
+    Lexer *frozenLexer = (Lexer *)malloc(sizeof(Lexer));
+    frozenLexer->start = lexer->start;
+    frozenLexer->current = lexer->current;
+    frozenLexer->end = lexer->end;
+    frozenLexer->line = lexer->line;
+    frozenLexer->column = lexer->column;
+    frozenLexer->hasPeeked = lexer->hasPeeked;
+    frozenLexer->fileName = lexer->fileName;
+    return frozenLexer;
+}
+
 // <getLPos>
 int getLPos(Lexer *lexer)
 {
@@ -143,7 +156,7 @@ char advance(Lexer *lexer, CompilerState *state)
 // <isAtEnd>
 bool isAtEnd(Lexer *lexer, CompilerState *state)
 {
-    return *lexer->current == '\0' || *lexer->current == NULL || lexer->current >= lexer->end;
+    return *lexer->current == '\0' || lexer->current >= lexer->end;
 }
 // </isAtEnd>
 
@@ -152,7 +165,7 @@ char peek(Lexer *lexer, CompilerState *state)
 {
     return *lexer->current;
 }
-// </peek>c
+// </peek>
 
 // <peekNext>
 char peekNext(Lexer *lexer, CompilerState *state)

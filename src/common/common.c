@@ -21,7 +21,7 @@ extern "C"
 {
 #endif
 
-    void generateCodeWrapper(ASTNode *node, CompilerState *state);
+    int generateCodeWrapper(ASTNode *node, CompilerState *state);
 
 #ifdef __cplusplus
 }
@@ -30,20 +30,21 @@ extern "C"
 // -------------------------------------------------------------------
 // @Compiler Errors
 
-CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName)
+CompilerState *initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName)
 {
-    CompilerState state;
-    state.arena = arena;
-    state.lexer = lexer;
-    state.table = table;
-    state.programNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
-    state.currentNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
-    state.fileName = fileName;
-    state.lineNumber = 0;
-    state.columnNumber = 0;
-    state.isActiveBuild = false;
-    state.errorCount = 0;
-    state.errors = (CompilerError **)malloc(sizeof(CompilerError *));
+    CompilerState *state = (CompilerState *)malloc(sizeof(CompilerState));
+    state->arena = arena;
+    state->lexer = lexer;
+    state->table = table;
+    state->programNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+    state->currentNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+    state->fileName = fileName;
+    state->lineNumber = 0;
+    state->columnNumber = 0;
+    state->isActiveBuild = false;
+    state->errorCount = 0;
+    state->settings = (CompilerSettings *)malloc(sizeof(CompilerSettings));
+    state->errors = (CompilerError **)malloc(sizeof(CompilerError *));
 
     logMessage("INFO", __LINE__, "CompilerState", "Compiler state initialized");
     return state;

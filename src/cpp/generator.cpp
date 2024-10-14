@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 namespace Cryo
 {
@@ -31,14 +31,30 @@ namespace Cryo
             return;
         }
 
+        // First, process all import statements
         for (int i = 0; i < node->data.program->statementCount; ++i)
         {
-            std::cout << "Processing Statement " << i + 1 << " of " << node->data.program->statementCount << std::endl;
-            parseTree(node->data.program->statements[i]);
+            ASTNode *statement = node->data.program->statements[i];
+            if (statement->metaData->type == NODE_IMPORT_STATEMENT)
+            {
+                std::cout << "Processing Import Statement " << i + 1 << std::endl;
+
+                parseTree(statement);
+            }
+        }
+
+        // Then, process all other statements
+        for (int i = 0; i < node->data.program->statementCount; ++i)
+        {
+            ASTNode *statement = node->data.program->statements[i];
+            if (statement->metaData->type != NODE_IMPORT_STATEMENT)
+            {
+                std::cout << "Processing Statement " << i + 1 << " of " << node->data.program->statementCount << std::endl;
+                parseTree(statement);
+            }
         }
 
         debugger.logMessage("INFO", __LINE__, "Generator", "Program Handled");
-        return;
     }
     // -----------------------------------------------------------------------------------------------
 
@@ -171,7 +187,8 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
             int intValue = literalNode->value.intValue;
             std::cout << "\n\nLiteral Int Value:" << node->data.literal->value.intValue << std::endl;
-            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, intValue, true));
+            llvm::Type *ty = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+            llvmConstant = llvm::ConstantInt::get(ty, intValue);
             std::cout << "\n";
 
             break;
@@ -293,6 +310,8 @@ namespace Cryo
 
         imports.handleImportStatement(node);
 
+        debugger.logMessage("INFO", __LINE__, "Generator", "Import Statement Handled");
+
         return;
     }
 
@@ -305,6 +324,24 @@ namespace Cryo
         functions.handleFunction(node);
 
         return;
+    }
+
+    void Generator::addCommentToIR(const std::string &comment)
+    {
+        llvm::IRBuilder<> &Builder = compiler.getContext().builder;
+        llvm::LLVMContext &Context = Builder.getContext();
+
+        // Create a metadata string
+        llvm::MDString *commentMD = llvm::MDString::get(Context, comment);
+
+        // Create a metadata node
+        llvm::MDNode *node = llvm::MDNode::get(Context, commentMD);
+
+        // Create a named metadata node in the module
+        llvm::NamedMDNode *namedNode = compiler.getContext().module->getOrInsertNamedMetadata("comments");
+
+        // Add the comment metadata to the named node
+        namedNode->addOperand(node);
     }
 
 } // namespace Cryo

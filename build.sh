@@ -2,16 +2,12 @@
 
 # Exit immediately if a command exits with a non-zero status
 set -e
-
 # Set the IFS to only split on newlines and tabs
 IFS=$'\n\t'
-
 # Set the shell options
 shopt -s nullglob
-
 # Set the trap to cleanup on error
 trap cleanup ERR
-
 # Set the trap to cleanup on termination
 trap cleanup SIGTERM
 
@@ -67,7 +63,6 @@ function checkBuildDir {
         log "The build directory does not exist"
     fi
 }
-
 
 # Functions
 function log {
@@ -140,6 +135,15 @@ while [[ "$#" -gt 0 ]]; do
                 error "Argument for $1 is missing or invalid"
             fi
             ;;
+        -o|--output)
+            if [[ -n "$2" && "$2" != -* ]]; then
+                OUTPUT_FILE=$2
+                compiler_args+=("-o" "$OUTPUT_FILE")
+                shift 2
+            else
+                error "Argument for $1 is missing or invalid"
+            fi
+            ;;
         -h|--help)
             usage
             ;;
@@ -162,7 +166,6 @@ make all || error "Failed to build the project"
 
 clear
 
-
 # Create the necessary directories if they don't exist
 mkdir -p $BUILD_DIR
 mkdir -p $OUT_DIR
@@ -184,10 +187,6 @@ log "Command: $COMPILER_EXE -f $INPUT_FILE $COMPILER_ARGS"
 if [ -d $OUT_DIR/imports ]; then
     log "Processing the imports..."
     
-    # Create a temporary directory for intermediate files
-    TEMP_DIR="$OUT_DIR/imports/temp"
-    mkdir -p "$TEMP_DIR"
-
     # Array to store valid .ll files
     valid_files=()
 
@@ -208,7 +207,7 @@ if [ -d $OUT_DIR/imports ]; then
     # Combine all the valid .ll files
     if [ ${#valid_files[@]} -gt 0 ]; then
         log "Combining the .ll files..."
-        llvm-link  "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
+        llvm-link "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
 
         # Optimize the combined IR
         log "Optimizing the combined IR..."
@@ -238,10 +237,20 @@ log "Building the project..."
 
 # Copy the source file to the out directory
 log "Copying files to the out directory..."
-cp $FILE_NAME.ll $OUT_DIR/$FILE_NAME.ll || error "Failed to copy the source file to the out directory"
+
+# Check if the compiler moved the file to the out directory
+if [ -f $OUT_DIR/$FILE_NAME.ll ]; then
+    log "The compiler moved the $FILE_NAME.ll file to the out directory"
+    # Set the input file to the out directory
+    INPUT_FILE=$OUT_DIR/$FILE_NAME.ll
+else
+    log "The compiler did not move the $FILE_NAME.ll file to the out directory"
+    # Set the input file to the base file
+    INPUT_FILE=$BASE_FILE
+fi
 
 # Compile the standard library
-clang  -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+clang -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
 
 # Change to the out directory
 cd $OUT_DIR
@@ -250,7 +259,7 @@ cd $OUT_DIR
 llvm-link  cryolib.ll $FILE_NAME.ll -S -o bin.ll
 
 # Compile the object file
-llc  -filetype=obj -relocation-model=static bin.ll -o bin.o
+llc -filetype=obj -relocation-model=static bin.ll -o bin.o
 
 # llc -filetype=asm bin.ll -o bin.s
 
@@ -258,7 +267,7 @@ llc  -filetype=obj -relocation-model=static bin.ll -o bin.o
 cd ../../
 
 # Link the object files and place the output in the build directory
-clang++  -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
+clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
 
 # Turn it into an executable with no extension
 

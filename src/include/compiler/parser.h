@@ -35,6 +35,7 @@
 #include "utils/utility.h"
 #include "utils/arena.h"
 #include "common/common.h"
+#include "compiler.h"
 /*---------<end>---------*/
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
@@ -73,13 +74,13 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
 /* @Helper_Functions | Debugging, Errors, Walkers */
 void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state);
 void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state);
-void error(char *message, char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state);
-void debugCurrentToken(Arena *arena, CompilerState *state);
+void error(char *message, char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, Lexer *lexer);
+void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state);
 char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state);
 Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena, CompilerState *state);
 
 /* @DataType_Management */
-CryoDataType getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state);
+CryoDataType getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer);
 CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table, Arena *arena, CompilerState *state);
 int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *state);
 
@@ -89,6 +90,7 @@ void addStatementToProgram(ASTNode *program, CryoSymbolTable *table, ASTNode *st
 /* @ASTNode_Parsing - Expressions & Statements*/
 void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
 ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
+ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, const char *functionName, const char *scopeName);
 ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
 ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
 ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);

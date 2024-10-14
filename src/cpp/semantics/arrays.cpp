@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 namespace Cryo
 {
@@ -89,6 +89,75 @@ namespace Cryo
 
         debugger.logMessage("INFO", __LINE__, "Arrays", "Array Literal Created");
 
+        return llvmAlloc;
+    }
+
+    llvm::Value *Arrays::createArrayLiteral(CryoArrayNode *array, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Creating Array Literal");
+
+        llvm::Type *llvmType = nullptr;
+        llvm::Value *llvmValue = nullptr;
+        llvm::ArrayType *llvmArrayType = nullptr;
+
+        // Get the type of the array
+        std::vector<llvm::Constant *> elements;
+        for (int i = 0; i < array->elementCount; ++i)
+        {
+            ASTNode *element = array->elements[i];
+            if (element->metaData->type == NODE_LITERAL_EXPR)
+            {
+                // Note to self, might need to get the length of each element
+                CryoDataType dataType = element->data.literal->dataType;
+                switch (dataType)
+                {
+                case DATA_TYPE_INT:
+                {
+                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, 0);
+                    int index = element->data.literal->value.intValue;
+                    llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
+                    elements.push_back(llvmElement);
+                    break;
+                }
+                case DATA_TYPE_STRING:
+                {
+                    int _len = compiler.getTypes().getLiteralValLength(element);
+                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, _len + 1);
+                    llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
+                    elements.push_back(llvmElement);
+                    break;
+                }
+                }
+            }
+            else
+            {
+                debugger.logMessage("ERROR", __LINE__, "Arrays", "Unknown element type");
+                DEBUG_BREAKPOINT;
+            }
+        }
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Finished processing elements");
+
+        // Create the array
+        llvmArrayType = llvm::ArrayType::get(llvmType, array->elementCount);
+        llvmValue = llvm::ConstantArray::get(llvmArrayType, elements);
+
+        // Get the current block that we are in
+        llvm::BasicBlock *block = compiler.getContext().builder.GetInsertBlock();
+        if (!block)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Arrays", "Block not found");
+            CONDITION_FAILED;
+        }
+
+        // Alloc the array without initializing it
+        llvm::Value *llvmAlloc = compiler.getContext().builder.CreateAlloca(llvmArrayType, nullptr, varName);
+        // Store the array in the variable
+        llvm::Value *llvmStore = compiler.getContext().builder.CreateStore(llvmValue, llvmAlloc);
+        // Add the variable to the named values
+        compiler.getContext().namedValues[varName] = llvmAlloc;
+
+        debugger.logMessage("INFO", __LINE__, "Arrays", "Array Literal Created");
         return llvmAlloc;
     }
 

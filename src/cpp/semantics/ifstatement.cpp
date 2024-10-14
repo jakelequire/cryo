@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 namespace Cryo
 {

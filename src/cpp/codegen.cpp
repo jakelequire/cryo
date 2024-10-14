@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 namespace Cryo
 {
@@ -55,7 +55,6 @@ namespace Cryo
 
         // Declare all functions in the AST tree
         // declarations.preprocessDeclare(root); <- TODO: Implement this function
-
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
         return;
     }
@@ -67,90 +66,24 @@ namespace Cryo
      */
     void Generator::generateCode(ASTNode *root)
     {
-        std::cout << "[CPP] Generating Code" << std::endl;
         CryoDebugger &debugger = compiler.getDebugger();
         CryoContext &cryoContext = compiler.getContext();
+        Compilation compileCode = Compilation(compiler);
+
+        // Check if the module is initialized
         assert(cryoContext.module != nullptr);
 
         // Preprocess the AST tree
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Code Generation");
         preprocess(root);
 
+        // Parse the AST tree
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
         parseTree(root);
 
-        if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
-        {
-            std::cout << "\n>===------- Error: LLVM module verification failed -------===<\n";
-            cryoContext.module->print(llvm::errs(), nullptr);
-            std::cout << "\n>===----------------- End Error -----------------===<\n";
-            debugger.logMessage("ERROR", __LINE__, "CodeGen", "LLVM module verification failed");
-            exit(1);
-        }
-        else
-        {
-            addWhitespaceAfterLoadStore(*cryoContext.module);
-            std::error_code EC;
-            std::string outputFileName = cryoContext.module->getSourceFileName();
-            // Trim out the file extension
-            outputFileName = outputFileName.substr(0, outputFileName.find_last_of("."));
-            outputFileName += ".ll";
-            // std::string outputFilename = cryoContext.module->getModuleIdentifier() + ".ll";
-            llvm::raw_fd_ostream dest(outputFileName, EC, llvm::sys::fs::OF_None);
-
-            if (EC)
-            {
-                debugger.logMessage("ERROR", __LINE__, "CodeGen", "Error opening file for writing");
-            }
-            else
-            {
-                std::cout << "\n>===------- LLVM IR Code -------===<\n"
-                          << std::endl;
-                // Create our custom annotator
-                LoadStoreWhitespaceAnnotator LSWA;
-
-                // Use the custom annotator when printing
-                cryoContext.module->print(dest, &LSWA);
-                cryoContext.module->print(llvm::outs(), &LSWA);
-                std::cout << "\n>===------- End IR Code ------===<\n"
-                          << std::endl;
-
-                bool isActiveBuild = compiler.getCompilerState().isActiveBuild;
-                if (isActiveBuild)
-                {
-                    debugger.logMessage("INFO", __LINE__, "CodeGen", "Active Build");
-                    // Create the IR File
-                    std::string _irFileName = cryoContext.state.fileName;
-                    std::string irFileName = _irFileName.substr(0, _irFileName.find_last_of("."));
-                    // Trim the directory path
-                    irFileName = irFileName.substr(irFileName.find_last_of("/") + 1);
-                    irFileName += ".ll";
-                    std::cout << "IR File Name: " << irFileName << std::endl;
-                    // Current working directory
-                    std::string cwd = std::filesystem::current_path().string();
-                    std::string irFilePath = cwd + "/" + irFileName;
-                    std::cout << "IR File Path: " << irFilePath << std::endl;
-
-                    std::error_code EC;
-                    llvm::raw_fd_ostream irFile(irFilePath, EC, llvm::sys::fs::OF_None);
-                    if (EC)
-                    {
-                        std::cerr << "Could not open file: " << EC.message() << "\n";
-                        return;
-                    }
-
-                    // Write to irFile directly
-                    llvm::raw_fd_ostream irFileOut(irFilePath, EC, llvm::sys::fs::OF_None);
-                    cryoContext.module->print(irFileOut, nullptr);
-                    irFileOut.flush();
-                    irFileOut.close();
-                }
-
-                dest.flush();
-                dest.close();
-
-                debugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
-            }
-        }
+        // Compile the IR file
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Compiling IR File");
+        compileCode.compileIRFile();
 
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
         return;
@@ -422,6 +355,59 @@ namespace Cryo
             debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown node type");
             std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
             exit(1);
+        }
+
+        return llvmValue;
+    }
+
+    llvm::Value *Generator::getLiteralValue(LiteralNode *literalNode)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "CodeGen", "Getting Literal Value");
+
+        llvm::Value *llvmValue = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+
+        CryoDataType dataType = literalNode->dataType;
+        switch (dataType)
+        {
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Integer Literal");
+            llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, literalNode->value.intValue, true));
+            break;
+        }
+        case DATA_TYPE_FLOAT:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Float Literal");
+            llvmValue = llvm::ConstantFP::get(compiler.getContext().context, llvm::APFloat(literalNode->value.floatValue));
+            break;
+        }
+        case DATA_TYPE_BOOLEAN:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Boolean Literal");
+            llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(1, literalNode->value.booleanValue, true));
+            break;
+        }
+        case DATA_TYPE_STRING:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling String Literal");
+            llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, literalNode->value.stringValue);
+            break;
+        }
+        case DATA_TYPE_VOID:
+        {
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Void Literal");
+            llvmValue = llvm::UndefValue::get(llvm::Type::getVoidTy(compiler.getContext().context));
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown data type");
+            std::cout << "Received: " << CryoDataTypeToString(dataType) << std::endl;
+            exit(1);
+        }
         }
 
         return llvmValue;

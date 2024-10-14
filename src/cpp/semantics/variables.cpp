@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 namespace Cryo
 {
@@ -51,6 +51,13 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
+    /// ### ============================================================================= ###
+    /// ###
+    /// ### Type of Variables to Handle
+    /// ### These functions handle the different types of variables that can be declared.
+    /// ###
+    /// ### ============================================================================= ###
+
     void Variables::handleVariableReassignment(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
@@ -84,9 +91,8 @@ namespace Cryo
             CONDITION_FAILED;
         }
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
+
         llvm::Instruction *inst = compiler.getContext().builder.CreateStore(newVal, varValue);
-        // Set the insert point
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
         llvm::GlobalVariable *key = inst->getModule()->getNamedGlobal(existingVarName);
         if (key)
         {
@@ -104,263 +110,110 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    llvm::Value *Variables::createLocalVariable(ASTNode *node)
+    void Variables::createMutableVariable(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
-        Types &types = compiler.getTypes();
+        CryoContext &cryoContext = compiler.getContext();
         Arrays &arrays = compiler.getArrays();
-        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
 
-        std::string _varName = std::string(node->data.varDecl->name);
-
-        CryoVariableNode *varDecl = node->data.varDecl;
-        assert(varDecl != nullptr);
-
-        CryoDataType varType = varDecl->type;
-        ASTNode *initializer = varDecl->initializer;
-        assert(initializer != nullptr);
-        CryoNodeType initializerNodeType = initializer->metaData->type;
-        std::string varName = std::string(varDecl->name);
-        llvm::Value *llvmValue = nullptr;
-        llvm::Type *llvmType = nullptr;
-
-        // Check if it already exists
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Processing Const Variable");
+        CryoVariableNode *varNode = node->data.varDecl;
+        char *varName = varNode->name;
         std::cout << "Variable Name: " << varName << std::endl;
-        llvmValue = compiler.getContext().namedValues[varName];
-        if (llvmValue)
-        {
-            debugger.logMessage("WARN", __LINE__, "Variables", "Variable already exists");
-            return llvmValue;
-        }
+        CryoDataType type = varNode->type;
+        ASTNode *initializer = varNode->initializer;
 
-        switch (initializerNodeType)
-        {
-        case NODE_FUNCTION_CALL:
-        {
-            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a function call");
-            llvmValue = createVarWithFuncCallInitilizer(node);
-            compiler.getContext().namedValues[varName] = llvmValue;
-            return llvmValue;
-        }
-        case NODE_BINARY_EXPR:
-        {
-            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a binary expression");
-            // We will have to walk though the binary expression if it has multiple expressions within it
-            std::cout << "Name being passed (very start): " << varName << std::endl;
-            llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
-            compiler.getContext().namedValues[varName] = llvmValue;
-            // set the name of the `llvmValue` to the variable name
-            llvmValue->setName(varName);
+        llvm::Type *llvmType = nullptr;
+        llvm::Value *llvmValue = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+        llvm::ArrayType *llvmArrayType = nullptr;
 
-            return llvmValue;
-        }
-        case NODE_PARAM:
+        if (initializer)
         {
-            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a parameter");
-
-            DEBUG_BREAKPOINT;
-        }
-        case NODE_VAR_NAME:
-        {
-            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a variable");
-
-            std::string varDeclName = std::string(varDecl->name);
-            std::cout << "Variable Declaration Name: " << varDeclName << std::endl;
-
-            std::string varNameRef = std::string(initializer->data.varName->varName);
-            std::cout << "Variable Name: " << varNameRef << std::endl;
-
-            llvm::Value *varValue = compiler.getVariables().getVariable(varNameRef);
-            if (!varValue)
+            if (initializer->metaData->type == NODE_INDEX_EXPR)
             {
-                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                CONDITION_FAILED;
-            }
-            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
-            debugger.logLLVMValue(varValue);
-
-            llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(varValue->getType(), varValue, varDeclName);
-            llvmValue->setName(varDeclName);
-            llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
-            compiler.getContext().namedValues[varDeclName] = llvmValue;
-
-            return llvmValue;
-        }
-        case NODE_LITERAL_EXPR:
-        {
-            CryoDataType dataType = initializer->data.literal->dataType;
-            switch (dataType)
-            {
-            case DATA_TYPE_INT:
-            {
-                debugger.logMessage("INFO", __LINE__, "Variables", "Variable is an int literal");
-                int intValue = initializer->data.literal->value.intValue;
-                llvm::Type *ty = compiler.getTypes().getType(varType, 0);
-                llvm::Value *variableValue = llvm::ConstantInt::get(ty, intValue);
-
-                llvm::Value *varValue = compiler.getGenerator().getInitilizerValue(initializer);
-                if (!varValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                    std::cout << ">>-------------- <Module State> --------------<<" << std::endl;
-                    compiler.dumpModule();
-                    std::cout << ">>-------------- </Module State> --------------<<" << std::endl;
-                    CONDITION_FAILED;
-                }
-                llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty->getInt32Ty(compiler.getContext().context), variableValue, varName);
-                // llvm::Value *storeValue = compiler.getContext().builder.CreateStore(variableValue, ptrValue);
-                compiler.getContext().namedValues[varName] = ptrValue;
-
-                return ptrValue;
-            }
-            case DATA_TYPE_STRING:
-            {
-                debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a string literal");
-                int _len = compiler.getTypes().getLiteralValLength(initializer);
-                llvmType = compiler.getTypes().getType(varType, _len + 1);
-                debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(varType)));
-
-                llvm::Value *varValue = compiler.getGenerator().getInitilizerValue(initializer);
-                if (!varValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                    CONDITION_FAILED;
-                }
-                llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
-                llvmValue->setName("str");
-                llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
-                compiler.getContext().namedValues[varName] = llvmValue;
-
-                return llvmValue;
-            }
-            default:
-            {
-                debugger.logMessage("ERROR", __LINE__, "Variables", "Literal Variable has unknown data type");
-                CONDITION_FAILED;
-            }
-            }
-        }
-        case NODE_ARRAY_LITERAL:
-        {
-            if (varType == DATA_TYPE_INT_ARRAY)
-            {
-                debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Array Variable");
-                llvm::Type *ty = compiler.getTypes().getType(varType, 0);
-                llvm::Value *varValue = arrays.createArrayLiteral(varDecl->initializer, varName);
-                if (!varValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                    CONDITION_FAILED;
-                }
-                debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
-                // llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, varValue, varName);
-                compiler.getContext().namedValues[varName] = varValue;
-
-                return varValue;
-            }
-        }
-        case NODE_INDEX_EXPR:
-        {
-            debugger.logNode(initializer);
-            CryoNodeType indexNodeType = initializer->data.indexExpr->index->metaData->type;
-            if (indexNodeType == NODE_VAR_NAME)
-            {
-                debugger.logMessage("INFO", __LINE__, "Variables", "Index is a variable");
-                std::string indexVarName = std::string(initializer->data.indexExpr->index->data.varName->varName);
-                std::cout << "Index Variable Name: " << indexVarName << std::endl;
-
-                // Get the variable value
-                llvm::Value *indexValue = compiler.getVariables().getVariable(indexVarName);
-                if (!indexValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
-                    CONDITION_FAILED;
-                }
-                debugger.logMessage("INFO", __LINE__, "Variables", "Index Value Found");
-                debugger.logLLVMValue(indexValue);
-
-                std::string llvmVarName = indexValue->getName().str();
-                std::cout << "LLVM Variable Name: " << llvmVarName << std::endl;
-
-                // Get the address of the index variable "exampleName.addr"
-                llvm::Value *llvmIndexValue = compiler.getContext().namedValues[llvmVarName];
-                if (!llvmIndexValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
-                    CONDITION_FAILED;
-                }
-                debugger.logLLVMValue(llvmIndexValue);
-
-                // Get the array name
-                std::string arrayName = std::string(initializer->data.indexExpr->name);
+                debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Index");
+                char *arrayName = initializer->data.indexExpr->name;
                 std::cout << "Array Name: " << arrayName << std::endl;
+                arrays.handleIndexExpression(initializer, varName);
+                debugger.logMessage("INFO", __LINE__, "Variables", "Array Index Processed");
+                return;
+            }
+            // Check if the initializer is an array
+            if (initializer->metaData->type == NODE_ARRAY_LITERAL)
+            {
+                debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Literal");
 
-                // Get the array
-                ASTNode *arrayNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
-                if (!arrayNode)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
-                    CONDITION_FAILED;
-                }
+                arrays.handleArrayLiteral(initializer);
 
-                // Get the array type
-                llvm::Type *arrayType = arrays.getArrayType(arrayNode);
-                llvm::Type *elementType = arrayType->getArrayElementType();
-
-                // Get the Index Type
-                llvm::Type *indexType = llvmIndexValue->getType();
-                if (indexType->isPointerTy())
-                {
-                    indexType = indexType->getWithNewType(llvm::Type::getInt32Ty(compiler.getContext().context));
-                }
-
-                arrays.isOutOfBoundsException(compiler.getContext().namedValues[arrayName], llvmIndexValue);
-
-                llvm::Value *arrayPtr = compiler.getContext().builder.CreateGEP(indexType, compiler.getContext().namedValues[arrayName], llvmIndexValue);
-                llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(elementType, arrayPtr);
-
-                // Store the value in the variable
-                llvm::Value *var = compiler.getContext().builder.CreateAlloca(elementType, loadedValue, varName);
-                compiler.getContext().builder.CreateStore(loadedValue, var); // This was the solution to the undefined behavior
-
-                compiler.getContext().namedValues[varName] = var;
-
-                return var;
+                debugger.logMessage("INFO", __LINE__, "Variables", "Array Literal Processed");
             }
             else
             {
-                std::cout << "Index Node Type: " << CryoNodeTypeToString(indexNodeType) << std::endl;
-                debugger.logMessage("INFO", __LINE__, "Variables", "Variable is an index expression");
-                int indexValue = initializer->data.indexExpr->index->data.literal->value.intValue;
-                std::cout << "Index Value: " << indexValue << std::endl;
-                std::string arrayName = std::string(initializer->data.indexExpr->name);
-                std::cout << "Array Name: " << arrayName << std::endl;
+                int _len = types.getLiteralValLength(initializer);
+                if (type == DATA_TYPE_STRING)
+                    _len += 1; // Add one for the null terminator
+                debugger.logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
+                llvmType = types.getType(type, _len);
+                char *typeNode = CryoDataTypeToString(type);
+                debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(typeNode));
 
-                ASTNode *arrNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
-                if (!arrNode)
+                switch (type)
                 {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
+                case DATA_TYPE_INT:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Constant");
+                    llvmConstant = llvm::ConstantInt::get(llvmType, initializer->data.literal->value.intValue);
+                    break;
+                }
+                case DATA_TYPE_FLOAT:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Float Constant");
+                    llvmConstant = llvm::ConstantFP::get(llvmType, initializer->data.literal->value.floatValue);
+                    break;
+                }
+                case DATA_TYPE_BOOLEAN:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Boolean Constant");
+                    llvmConstant = llvm::ConstantInt::get(llvmType, initializer->data.literal->value.booleanValue);
+                    break;
+                }
+                case DATA_TYPE_STRING:
+                {
+                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Constant");
+                    llvmConstant = llvm::ConstantDataArray::getString(cryoContext.context, initializer->data.literal->value.stringValue);
+                    break;
+                }
+                default:
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown type");
+                    CONDITION_FAILED;
+                    break;
+                }
+
+                debugger.logMessage("INFO", __LINE__, "Variables", "Constant Created");
+                llvmValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
+
+                if (!llvmValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Variables", "Failed to cast constant to value");
                     CONDITION_FAILED;
                 }
-                llvm::Value *indexedValue = arrays.indexArrayForValue(arrNode, indexValue);
-                if (!indexedValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
-                    CONDITION_FAILED;
-                }
-                // Allocate the variable
-                llvmValue = compiler.getContext().builder.CreateAlloca(indexedValue->getType(), indexedValue, varName);
-                compiler.getContext().namedValues[varName] = llvmValue;
 
-                return indexedValue;
+                llvm::GlobalVariable *var = new llvm::GlobalVariable(
+                    *cryoContext.module,
+                    llvmType,
+                    false,
+                    llvm::GlobalValue::WeakAnyLinkage,
+                    llvmConstant,
+                    llvm::Twine(varName));
+
+                compiler.getContext().namedValues[varName] = var;
             }
         }
-        default:
-        {
-            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is of unknown type");
-            CONDITION_FAILED;
-        }
-        }
+        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
+
+        return;
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -492,115 +345,517 @@ namespace Cryo
         return;
     }
 
-    // -----------------------------------------------------------------------------------------------
-
-    void Variables::createMutableVariable(ASTNode *node)
+    /**
+     * @brief Main entry point to creating a localized variable.
+     * This is triggered when a variable is declared within a function block specifically.
+     *
+     * The functions inside this are handling the creation of the variable with the given initializer (literal, function call, etc.)
+     *
+     * @param node The AST node
+     * @return `llvm::Value *` The LLVM value of the variable
+     */
+    llvm::Value *Variables::createLocalVariable(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
-        CryoContext &cryoContext = compiler.getContext();
-        Arrays &arrays = compiler.getArrays();
-
         Types &types = compiler.getTypes();
-        debugger.logMessage("INFO", __LINE__, "Variables", "Processing Const Variable");
-        CryoVariableNode *varNode = node->data.varDecl;
-        char *varName = varNode->name;
-        std::cout << "Variable Name: " << varName << std::endl;
-        CryoDataType type = varNode->type;
-        ASTNode *initializer = varNode->initializer;
+        Arrays &arrays = compiler.getArrays();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
 
-        llvm::Type *llvmType = nullptr;
+        CryoVariableNode *varDecl = node->data.varDecl;
+        assert(varDecl != nullptr);
+
+        CryoDataType varType = varDecl->type;
+        ASTNode *initializer = varDecl->initializer;
+        assert(initializer != nullptr);
+
+        CryoNodeType initializerNodeType = initializer->metaData->type;
+        std::string varName = std::string(varDecl->name);
         llvm::Value *llvmValue = nullptr;
-        llvm::Constant *llvmConstant = nullptr;
-        llvm::ArrayType *llvmArrayType = nullptr;
 
-        if (initializer)
+        // Check if it already exists
+        std::cout << "Variable Name: " << varName << std::endl;
+        llvmValue = compiler.getContext().namedValues[varName];
+        if (llvmValue)
         {
-            if (initializer->metaData->type == NODE_INDEX_EXPR)
-            {
-                debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Index");
-                char *arrayName = initializer->data.indexExpr->name;
-                std::cout << "Array Name: " << arrayName << std::endl;
-                arrays.handleIndexExpression(initializer, varName);
-                debugger.logMessage("INFO", __LINE__, "Variables", "Array Index Processed");
-                return;
-            }
-            // Check if the initializer is an array
-            if (initializer->metaData->type == NODE_ARRAY_LITERAL)
-            {
-                debugger.logMessage("INFO", __LINE__, "Variables", "Processing Array Literal");
-
-                arrays.handleArrayLiteral(initializer);
-
-                debugger.logMessage("INFO", __LINE__, "Variables", "Array Literal Processed");
-            }
-            else
-            {
-                int _len = types.getLiteralValLength(initializer);
-                if (type == DATA_TYPE_STRING)
-                    _len += 1; // Add one for the null terminator
-                debugger.logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
-                llvmType = types.getType(type, _len);
-                char *typeNode = CryoDataTypeToString(type);
-                debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(typeNode));
-
-                switch (type)
-                {
-                case DATA_TYPE_INT:
-                {
-                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Constant");
-                    llvmConstant = llvm::ConstantInt::get(llvmType, initializer->data.literal->value.intValue);
-                    break;
-                }
-                case DATA_TYPE_FLOAT:
-                {
-                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Float Constant");
-                    llvmConstant = llvm::ConstantFP::get(llvmType, initializer->data.literal->value.floatValue);
-                    break;
-                }
-                case DATA_TYPE_BOOLEAN:
-                {
-                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating Boolean Constant");
-                    llvmConstant = llvm::ConstantInt::get(llvmType, initializer->data.literal->value.booleanValue);
-                    break;
-                }
-                case DATA_TYPE_STRING:
-                {
-                    debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Constant");
-                    llvmConstant = llvm::ConstantDataArray::getString(cryoContext.context, initializer->data.literal->value.stringValue);
-                    break;
-                }
-                default:
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown type");
-                    CONDITION_FAILED;
-                    break;
-                }
-
-                debugger.logMessage("INFO", __LINE__, "Variables", "Constant Created");
-                llvmValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
-
-                if (!llvmValue)
-                {
-                    debugger.logMessage("ERROR", __LINE__, "Variables", "Failed to cast constant to value");
-                    CONDITION_FAILED;
-                }
-
-                llvm::GlobalVariable *var = new llvm::GlobalVariable(
-                    *cryoContext.module,
-                    llvmType,
-                    false,
-                    llvm::GlobalValue::WeakAnyLinkage,
-                    llvmConstant,
-                    llvm::Twine(varName));
-
-                compiler.getContext().namedValues[varName] = var;
-            }
+            debugger.logMessage("WARN", __LINE__, "Variables", "Variable already exists");
+            return llvmValue;
         }
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Created");
 
-        return;
+        switch (initializerNodeType)
+        {
+        case NODE_FUNCTION_CALL:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a function call");
+            llvmValue = createVarWithFuncCallInitilizer(node);
+            compiler.getContext().namedValues[varName] = llvmValue;
+            return llvmValue;
+        }
+        case NODE_BINARY_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a binary expression");
+            std::string varDeclName = std::string(varDecl->name);
+            return createVarWithBinOpInitilizer(initializer, varDeclName);
+        }
+        case NODE_PARAM:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a parameter");
+            // TODO: Implement
+            DEBUG_BREAKPOINT;
+        }
+        case NODE_VAR_NAME:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable initializer is a VariableNameNode.");
+            std::string varDeclName = std::string(varDecl->name);
+            std::string refVarName = std::string(initializer->data.varName->varName);
+            VariableNameNode *varNameNode = initializer->data.varName;
+            return createVarNameInitializer(varNameNode, varDeclName, refVarName);
+        }
+        case NODE_LITERAL_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable initializer is a LiteralNode.");
+            LiteralNode *literal = initializer->data.literal;
+            return createLiteralExprVariable(literal, varName);
+        }
+        case NODE_ARRAY_LITERAL:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable initializer is an ArrayLiteralNode.");
+            CryoArrayNode *arrayNode = initializer->data.array;
+            return createArrayLiteralInitializer(arrayNode, varType, varName);
+        }
+        case NODE_INDEX_EXPR:
+        {
+            IndexExprNode *indexNode = initializer->data.indexExpr;
+            CryoNodeType indexNodeType = initializer->data.indexExpr->index->metaData->type;
+            std::string varName = std::string(initializer->data.indexExpr->name);
+            return createIndexExprInitializer(indexNode, indexNodeType, varName);
+        }
+        default:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is of unknown type");
+            std::cout << "Unknown node type: " << CryoNodeTypeToString(initializerNodeType) << std::endl;
+            CONDITION_FAILED;
+        }
+        }
+    }
+
+    /// ### ============================================================================= ###
+    /// ###
+    /// ### Specialized Functions
+    /// ### These functions are used to create variables with specific initializers
+    /// ###
+    /// ### ============================================================================= ###
+
+    ///
+    /// @brief Create a variable with a literal expression initializer
+    /// @param literalNode The literal node
+    /// @param varName The name of the variable
+    /// @return `llvm::Value *` The LLVM value of the variable
+    ///
+    /// ---
+    ///
+    /// ```cryo
+    ///
+    /// \// Example
+    ///
+    /// const foo: int = 10;
+    ///
+    /// const bar: string = "Hello, World!";
+    ///
+    /// ```
+    llvm::Value *Variables::createLiteralExprVariable(LiteralNode *literalNode, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Literal Expression Variable");
+
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        llvm::Value *llvmValue = nullptr;
+        llvm::Type *llvmType = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+
+        CryoDataType dataType = literalNode->dataType;
+        switch (dataType)
+        {
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is an int literal");
+            int intValue = literalNode->value.intValue;
+            // llvm::Type *ty = compiler.getTypes().getType(dataType, 0);
+            llvm::Type *ty = compiler.getTypes().getLiteralType(literalNode);
+            llvm::Value *varValue = compiler.getGenerator().getLiteralValue(literalNode);
+            if (!varValue)
+            {
+                CONDITION_FAILED;
+            }
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, nullptr, varName);
+            llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(varValue, ptrValue);
+            compiler.getContext().namedValues[varName] = ptrValue;
+
+            symTable.updateVariableNode(namespaceName, varName, ptrValue, ty);
+            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+
+            return ptrValue;
+        }
+        case DATA_TYPE_FLOAT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating Float Variable");
+            llvmType = types.getType(dataType, 0);
+            llvmConstant = llvm::ConstantFP::get(llvmType, literalNode->value.floatValue);
+            llvmValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
+            break;
+        }
+        case DATA_TYPE_BOOLEAN:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating Boolean Variable");
+            llvmType = types.getType(dataType, 0);
+            llvmConstant = llvm::ConstantInt::get(llvmType, literalNode->value.booleanValue);
+            llvmValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
+            break;
+        }
+        case DATA_TYPE_STRING:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a string literal");
+            int _len = compiler.getTypes().getLiteralValLength(literalNode);
+            llvmType = compiler.getTypes().getType(dataType, _len + 1);
+            debugger.logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(CryoDataTypeToString(dataType)));
+
+            llvm::Value *varValue = compiler.getGenerator().getLiteralValue(literalNode);
+            if (!varValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                CONDITION_FAILED;
+            }
+            llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+            llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(varValue, llvmValue);
+            compiler.getContext().namedValues[varName] = llvmValue;
+
+            llvm::Type *strType = types.getType(DATA_TYPE_STRING, _len + 1);
+            symTable.updateVariableNode(namespaceName, varName, llvmValue, strType);
+            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+
+            return llvmValue;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+            CONDITION_FAILED;
+        }
+        }
+
+        return llvmValue;
+    }
+
+    ///
+    /// @brief Create a variable with a variable name / reference initializer
+    /// @param node The AST node
+    /// @param varName The name of the variable
+    /// @param refVarName The name of the variable being referenced
+    /// @return `llvm::Value *` The LLVM value of the variable
+    ///
+    /// ---
+    ///
+    /// ```cryo
+    ///
+    /// \// Example
+    ///
+    /// const foo: int = 34;
+    ///
+    /// const bar: int = foo;
+    ///
+    /// ```
+    ///
+    llvm::Value *Variables::createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable Name Initializer");
+        std::cout << "Variable Name: " << varName << std::endl;
+        std::cout << "Referenced Variable Name: " << refVarName << std::endl;
+
+        CryoDataType nodeDataType = varNameNode->refType;
+        std::cout << "Node Type: " << CryoDataTypeToString(nodeDataType) << std::endl;
+
+        // Create the variable alloca
+        llvm::Value *llvmValue = nullptr;
+        llvm::Type *llvmType = nullptr;
+
+        switch (nodeDataType)
+        {
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Variable");
+            llvmType = types.getType(nodeDataType, 0);
+            llvmValue = compiler.getVariables().getVariable(varName);
+            break;
+        }
+        case DATA_TYPE_STRING:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
+            llvmValue = compiler.getContext().namedValues[refVarName];
+            if (!llvmValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                CONDITION_FAILED;
+            }
+
+            STVariable *var = symTable.getVariable(namespaceName, refVarName);
+            if (!var)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *ST_Value = var->LLVMValue;
+            if (!ST_Value)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::StoreInst *storeInst = var->LLVMStoreInst;
+            if (!storeInst)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
+                CONDITION_FAILED;
+            }
+
+            // We get the store instruction and the type of the store instruction
+            // This is because `alloc` just returns a pointer, and we need the type of the pointer
+            llvm::Instruction *storeInstruction = llvm::dyn_cast<llvm::Instruction>(storeInst);
+            llvm::Type *storeType = types.parseInstForType(storeInstruction);
+
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(storeType, nullptr, varName);
+            llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(storeType, llvmValue, varName + ".load");
+            llvm::Value *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
+
+            // Add the variable to the named values map & symbol table
+            compiler.getContext().namedValues[varName] = ptrValue;
+            symTable.updateVariableNode(namespaceName, varName, ptrValue, storeType);
+            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+            CONDITION_FAILED;
+        }
+        }
+
+        return llvmValue;
+    }
+
+    ///
+    /// @brief Create a variable with an array literal initializer. (e.g. [1, 2, 3])
+    /// @param node The AST node
+    /// @return `llvm::Value *` The LLVM value of the variable
+    ///
+    /// ---
+    ///
+    /// ```cryo
+    ///
+    /// \// Example
+    ///
+    /// const foo: int[] = [1, 2, 3];
+    ///
+    /// ```
+    ///
+    llvm::Value *Variables::createArrayLiteralInitializer(CryoArrayNode *arrayNode, CryoDataType dataType, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Array Literal Initializer");
+
+        llvm::Value *llvmValue = nullptr;
+        llvm::Type *llvmType = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+
+        switch (dataType)
+        {
+        case DATA_TYPE_INT_ARRAY:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Array Literal");
+            llvmType = compiler.getTypes().getType(dataType, 0);
+            llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
+            break;
+        }
+        case DATA_TYPE_STRING_ARRAY:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Array Literal");
+            llvmType = compiler.getTypes().getType(dataType, 0);
+            llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+            CONDITION_FAILED;
+        }
+        }
+
+        return llvmValue;
+    }
+
+    ///
+    /// @brief Creates a variable that has an index expression in its initializer.
+    /// @param indexExprNode The index expression node
+    /// @param nodeType The node type
+    /// @param varName The name of the variable
+    /// @return `llvm::Value *` A pointer to the LLVM Value representing the newly created variable
+    ///
+    /// @note UNTESTED
+    ///
+    /// ---
+    ///
+    /// ```cryo
+    ///
+    /// \// Example
+    ///
+    /// const foo: int = bar[0];
+    ///
+    /// ```
+    ///
+    llvm::Value *Variables::createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Index Expression Initializer");
+
+        llvm::Value *llvmValue = nullptr;
+        llvm::Type *llvmType = nullptr;
+        llvm::Constant *llvmConstant = nullptr;
+
+        std::string arrayName = std::string(indexExprNode->name);
+        std::cout << "Array Name: " << arrayName << std::endl;
+        ASTNode *arrayNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
+        if (!arrayNode)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Array not found");
+            CONDITION_FAILED;
+        }
+
+        std::string indexVarName = std::string(indexExprNode->index->data.varName->varName);
+        llvm::Value *indexValue = compiler.getVariables().getVariable(indexVarName);
+        if (!indexValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Index value not found");
+            CONDITION_FAILED;
+        }
+        int indexNumValue = indexExprNode->index->data.literal->value.intValue;
+        llvmValue = compiler.getArrays().indexArrayForValue(arrayNode, indexNumValue);
+        if (!llvmValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
+            CONDITION_FAILED;
+        }
+
+        return llvmValue;
+    }
+
+    ///
+    /// @brief Creates a variable with a function call initializer.
+    /// @param node The AST node
+    /// @return `llvm::Value *` The LLVM value of the variable
+    ///
+    /// ---
+    ///
+    /// ```cryo
+    ///
+    /// \// Example
+    ///
+    /// const foo: int = bar();
+    ///
+    /// ```
+    ///
+    llvm::Value *Variables::createVarWithFuncCallInitilizer(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Functions &functions = compiler.getFunctions();
+        BackendSymTable &symTable = compiler.getSymTable();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable with Function Call Initializer");
+
+        // Should be the function call node
+        ASTNode *initializer = node->data.varDecl->initializer;
+        // The variable node
+        ASTNode *variable = node;
+        assert(initializer != nullptr);
+
+        std::string moduleName = compiler.getContext().currentNamespace;
+
+        // Create the variable
+        std::string varName = std::string(variable->data.varDecl->name);
+        llvm::Type *varType = compiler.getTypes().getType(variable->data.varDecl->type, 0);
+        llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(varType, nullptr, varName);
+
+        // Get the function call
+        if (initializer->metaData->type != NODE_FUNCTION_CALL)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Initializer is not a function call");
+            DEBUG_BREAKPOINT;
+        }
+
+        std::string functionName = std::string(initializer->data.functionCall->name);
+        std::cout << "Function Name: " << functionName << std::endl;
+
+        llvm::Value *functionCall = functions.createFunctionCall(initializer);
+        if (!functionCall)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Function call not created");
+            CONDITION_FAILED;
+        }
+        debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created, Storing in Variable");
+
+        // Store the call into the variable
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(functionCall, varValue);
+
+        // Add the variable to the named values map & symbol table
+        compiler.getContext().namedValues[varName] = varValue;
+        symTable.updateVariableNode(moduleName, varName, varValue, varType);
+        symTable.addStoreInstToVar(moduleName, varName, storeInst);
+
+        debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created");
+        return functionCall;
+    }
+
+    llvm::Value *Variables::createVarWithBinOpInitilizer(ASTNode *node, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        BackendSymTable &symTable = compiler.getSymTable();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable with Binary Operation Initializer");
+
+        // llvm::Value * llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
+        // compiler.getContext().namedValues[varName] = llvmValue;
+        // llvmValue->setName(varName);
+
+        std::cout << "Variable Name: " << varName << std::endl;
+        llvm::Value *initValue = compiler.getBinaryExpressions().handleComplexBinOp(node);
+        if (!initValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Initializer value not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *initializer = compiler.getContext().builder.CreateAlloca(initValue->getType(), nullptr, varName);
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(initValue, initializer);
+        compiler.getContext().namedValues[varName] = initializer;
+
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        symTable.updateVariableNode(namespaceName, varName, initializer, initValue->getType());
+        symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+
+        return initializer;
     }
 
     // -----------------------------------------------------------------------------------------------
+
+    /// ### ============================================================================= ###
+    /// ###
+    /// ### Utility Functions
+    /// ### These functions are used to access and manipulate variables
+    /// ###
+    /// ### ============================================================================= ###
 
     llvm::Value *Variables::getVariable(std::string name)
     {
@@ -633,8 +888,6 @@ namespace Cryo
 
         return llvmValue;
     }
-
-    // -----------------------------------------------------------------------------------------------
 
     llvm::Value *Variables::getLocalScopedVariable(std::string name)
     {
@@ -672,49 +925,5 @@ namespace Cryo
     }
 
     // -----------------------------------------------------------------------------------------------
-
-    llvm::Value *Variables::createVarWithFuncCallInitilizer(ASTNode *node)
-    {
-        CryoDebugger &debugger = compiler.getDebugger();
-        Functions &functions = compiler.getFunctions();
-        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable with Function Call Initializer");
-
-        // Should be the function call node
-        ASTNode *initializer = node->data.varDecl->initializer;
-        // The variable node
-        ASTNode *variable = node;
-        assert(initializer != nullptr);
-
-        std::string moduleName = compiler.getContext().currentNamespace;
-
-        // Create the variable
-        std::string varName = std::string(variable->data.varDecl->name);
-        llvm::Type *varType = compiler.getTypes().getType(variable->data.varDecl->type, 0);
-        llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(varType, nullptr, varName);
-
-        // Get the function call
-        if (initializer->metaData->type != NODE_FUNCTION_CALL)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Variables", "Initializer is not a function call");
-            DEBUG_BREAKPOINT;
-        }
-
-        std::string functionName = std::string(initializer->data.functionCall->name);
-        std::cout << "Function Name: " << functionName << std::endl;
-
-        llvm::Value *functionCall = functions.createFunctionCall(initializer);
-        if (!functionCall)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Variables", "Function call not created");
-            CONDITION_FAILED;
-        }
-
-        // Store the call into the variable
-        llvm::Instruction *inst = compiler.getContext().builder.CreateStore(functionCall, varValue);
-
-        debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created");
-
-        return functionCall;
-    }
 
 } // namespace Cryo

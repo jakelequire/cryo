@@ -26,6 +26,8 @@
 
 #include "common/common.h"
 
+typedef struct CompiledFile CompiledFile;
+
 #define CURRENT_DEBUG_LEVEL DEBUG_LEVEL
 #define SET_DEBUG_LEVEL(level) DEBUG_LEVEL = level
 
@@ -69,6 +71,7 @@ typedef struct CompilerSettings
     EnabledLogs enabledLogs;
     DebugLevel debugLevel;
     BuildType buildType;
+    CompiledFile **compiledFiles;
 } CompilerSettings;
 
 // ==============================
@@ -81,8 +84,9 @@ CompilerSettings getCompilerSettings(int argc, char *argv[]);
 void logCompilerSettings(CompilerSettings *settings);
 const char *DebugLevelToString(DebugLevel level);
 const char *BuildTypeToString(BuildType type);
-
-EnabledLogs createEnabledLogs();
+void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file);
+EnabledLogs createEnabledLogs(void);
+CompiledFile createCompiledFile(void);
 EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs);
 CompilerSettings createCompilerSettings();
 

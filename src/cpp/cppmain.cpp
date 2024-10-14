@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/cppmain.h"
+#include "cpp/cppmain.hpp"
 #include <iostream>
 
 using namespace Cryo;
@@ -25,7 +25,8 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state)
               << std::endl;
 
     Cryo::CryoCompiler compiler;
-    compiler.setCompilerState(*state);
+    compiler.setCompilerState(state);
+    compiler.setCompilerSettings(state->settings);
 
     std::string moduleName = state->fileName;
     std::cout << "Module Name: " << moduleName << std::endl;

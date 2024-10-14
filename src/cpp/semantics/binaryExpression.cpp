@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 namespace Cryo
 {
@@ -33,6 +33,9 @@ namespace Cryo
     llvm::Value *BinaryExpressions::handleComplexBinOp(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "BinExp", "Handling Complex Binary Operation");
 
         if (node->metaData->type != NODE_BINARY_EXPR)
@@ -52,31 +55,94 @@ namespace Cryo
             ASTNode *leftNode = currentNode->data.bin_op->left;
             ASTNode *rightNode = currentNode->data.bin_op->right;
 
+            // The left value:
             llvm::Value *leftValue;
-            if (leftNode->metaData->type == NODE_BINARY_EXPR)
+            CryoNodeType leftNodeType = leftNode->metaData->type;
+            switch (leftNodeType)
             {
-                // If left node is a binary expression, recursively handle it
-                debugger.logMessage("INFO", __LINE__, "BinExp", "Handling left binary expression");
-                leftValue = handleComplexBinOp(leftNode);
-            }
-            else
+            case NODE_VAR_NAME:
             {
-                // Otherwise, get the value
                 debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
-                leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+                std::string varName = leftNode->data.varName->varName;
+                std::cout << "<!> (left) Variable Name: " << varName << std::endl;
+                leftValue = compiler.getVariables().getVariable(varName);
+                if (!leftValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                    CONDITION_FAILED;
+                }
                 if (leftValue->getType()->isPointerTy())
                 {
-                    // Manually set the type to a literal type if it's a pointer
-                    leftValue = compiler.getTypes().ptrToExplicitType(leftValue);
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+                    leftValue = dereferenceElPointer(leftValue, varName);
+                    if (!leftValue)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
+                        CONDITION_FAILED;
+                    }
+                }
+                else
+                {
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Left value is not a pointer");
+
+                    llvm::Value *tempValue = compiler.getGenerator().getInitilizerValue(leftNode);
+                }
+                break;
+            }
+            default:
+            {
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
+                std::cout << "Unknown node type: " << CryoNodeTypeToString(leftNodeType) << std::endl;
+
+                leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+                if (!leftValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                    CONDITION_FAILED;
                 }
             }
+            }
 
-            llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
-
-            if (rightValue->getType()->isPointerTy())
+            // The right value:
+            llvm::Value *rightValue;
+            CryoNodeType rightNodeType = rightNode->metaData->type;
+            switch (rightNodeType)
             {
-                // Manually set the type to a literal type if it's a pointer
-                rightValue = compiler.getTypes().ptrToExplicitType(rightValue);
+            case NODE_VAR_NAME:
+            {
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Getting right value");
+                std::string varName = rightNode->data.varName->varName;
+                std::cout << "<!> (right) VarName: " << varName << std::endl;
+                rightValue = compiler.getVariables().getVariable(varName);
+                if (!rightValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                    CONDITION_FAILED;
+                }
+                if (rightValue->getType()->isPointerTy())
+                {
+                    debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+                    rightValue = dereferenceElPointer(rightValue, varName);
+                    if (!rightValue)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
+                        CONDITION_FAILED;
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                debugger.logMessage("INFO", __LINE__, "BinExp", "Getting right value");
+                std::cout << "Unknown node type: " << CryoNodeTypeToString(rightNodeType) << std::endl;
+
+                rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
+                if (!rightValue)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                    CONDITION_FAILED;
+                }
+            }
             }
 
             if (!result)
@@ -97,7 +163,7 @@ namespace Cryo
                 debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create binary expression");
                 return nullptr;
             }
-
+            // -----------------------
             // Move to the next node (if any)
             if (rightNode->metaData->type == NODE_BINARY_EXPR)
             {
@@ -119,6 +185,7 @@ namespace Cryo
     llvm::Value *BinaryExpressions::createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "BinExp", "Creating Binary Expression");
 
         if (!leftValue || !rightValue)
@@ -127,39 +194,160 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        CryoDataType leftDataType = node->data.bin_op->left->data.literal->dataType;
+        CryoDataType rightDataType = node->data.bin_op->right->data.literal->dataType;
+        llvm::Type *leftType = types.getType(leftDataType, 0);
+        llvm::Type *rightType = types.getType(rightDataType, 0);
+        bool sameType = leftType == rightType;
+
+        if (!leftType || !rightType)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get types for binary expression");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *result = nullptr;
         CryoOperatorType operatorType = node->data.bin_op->op;
         switch (operatorType)
         {
         case OPERATOR_ADD:
-            return compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
+            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
+            break;
         case OPERATOR_SUB:
-            return compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
+            result = compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
+            break;
         case OPERATOR_MUL:
-            return compiler.getContext().builder.CreateMul(leftValue, rightValue, "multmp");
+            result = compiler.getContext().builder.CreateMul(leftValue, rightValue, "multmp");
+            break;
         case OPERATOR_DIV:
-            return compiler.getContext().builder.CreateSDiv(leftValue, rightValue, "divtmp");
+            result = compiler.getContext().builder.CreateSDiv(leftValue, rightValue, "divtmp");
+            break;
         case OPERATOR_MOD:
-            return compiler.getContext().builder.CreateSRem(leftValue, rightValue, "modtmp");
+            result = compiler.getContext().builder.CreateSRem(leftValue, rightValue, "modtmp");
+            break;
         case OPERATOR_AND:
-            return compiler.getContext().builder.CreateAnd(leftValue, rightValue, "andtmp");
+            result = compiler.getContext().builder.CreateAnd(leftValue, rightValue, "andtmp");
+            break;
         case OPERATOR_OR:
-            return compiler.getContext().builder.CreateOr(leftValue, rightValue, "ortmp");
+            result = compiler.getContext().builder.CreateOr(leftValue, rightValue, "ortmp");
+            break;
         case OPERATOR_LT:
-            return compiler.getContext().builder.CreateICmpSLT(leftValue, rightValue, "ltcmp");
+            result = compiler.getContext().builder.CreateICmpSLT(leftValue, rightValue, "ltcmp");
+            break;
         case OPERATOR_LTE:
-            return compiler.getContext().builder.CreateICmpSLE(leftValue, rightValue, "ltecmp");
+            result = compiler.getContext().builder.CreateICmpSLE(leftValue, rightValue, "ltecmp");
+            break;
         case OPERATOR_GT:
-            return compiler.getContext().builder.CreateICmpSGT(leftValue, rightValue, "gtcmp");
+            result = compiler.getContext().builder.CreateICmpSGT(leftValue, rightValue, "gtcmp");
+            break;
         case OPERATOR_GTE:
-            return compiler.getContext().builder.CreateICmpSGE(leftValue, rightValue, "gtecmp");
+            result = compiler.getContext().builder.CreateICmpSGE(leftValue, rightValue, "gtecmp");
+            break;
         case OPERATOR_EQ:
-            return compiler.getContext().builder.CreateICmpEQ(leftValue, rightValue, "eqcmp");
+            result = compiler.getContext().builder.CreateICmpEQ(leftValue, rightValue, "eqcmp");
+            break;
         case OPERATOR_NEQ:
-            return compiler.getContext().builder.CreateICmpNE(leftValue, rightValue, "neqcmp");
+            result = compiler.getContext().builder.CreateICmpNE(leftValue, rightValue, "neqcmp");
+            break;
         default:
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown operator type");
             CONDITION_FAILED;
         }
+
+        if (!result)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create binary expression");
+            CONDITION_FAILED;
+        }
+
+        return result;
+    }
+
+    llvm::Value *BinaryExpressions::dereferenceElPointer(llvm::Value *value, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Dereferencing pointer");
+
+        STVariable *symTableNode = symTable.getVariable(namespaceName, varName);
+        if (!symTableNode)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable node from symtable");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *stValue = symTableNode->LLVMValue;
+        if (!stValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable value from symtable");
+            CONDITION_FAILED;
+        }
+
+        llvm::StoreInst *stStoreInst = symTableNode->LLVMStoreInst;
+        if (!stStoreInst)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get store instruction from symtable");
+            CONDITION_FAILED;
+        }
+
+        // If the value is a pointer, we need to load the value
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
+        llvm::Type *instTy = types.parseInstForType(inst);
+
+        llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(instTy, value, varName + ".load");
+        if (!loadValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to load value from pointer");
+            CONDITION_FAILED;
+        }
+
+        return loadValue;
+    }
+
+    llvm::Value *BinaryExpressions::createTempValueForPointer(llvm::Value *value, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+
+        // For these temporary variables, this is how the naming convention will work:
+        // (varName) + ".temp"
+        std::string tempVarName = varName + ".temp";
+
+        STVariable *symTableNode = symTable.getVariable(namespaceName, varName);
+        if (!symTableNode)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable node from symtable");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *stValue = symTableNode->LLVMValue;
+        if (!stValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable value from symtable");
+            CONDITION_FAILED;
+        }
+        debugger.logLLVMValue(stValue);
+
+        llvm::StoreInst *stStoreInst = symTableNode->LLVMStoreInst;
+        if (!stStoreInst)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get store instruction from symtable");
+            CONDITION_FAILED;
+        }
+
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
+        llvm::Type *instTy = types.parseInstForType(inst);
+
+        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(instTy, nullptr, tempVarName);
+        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".load");
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadInst, tempValue);
+
+        return tempValue;
     }
 
     llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op)

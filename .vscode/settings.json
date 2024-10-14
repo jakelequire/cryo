@@ -234,7 +234,8 @@
     "typedefs.h": "c",
     "getopt.h": "c",
     "codecvt": "cpp",
-    "settings.h": "c"
+    "settings.h": "c",
+    "filesystem": "cpp"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

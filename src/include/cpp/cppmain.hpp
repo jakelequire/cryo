@@ -3,7 +3,7 @@
 
 #include "compiler/token.h"
 #include "compiler/ast.h"
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 #ifdef __cplusplus
 extern "C"

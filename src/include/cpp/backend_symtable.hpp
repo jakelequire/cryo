@@ -21,8 +21,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "cpp/codegen.h"
-#include "cpp/debugger.h"
+#include "cpp/codegen.hpp"
+#include "cpp/debugger.hpp"
 #include "compiler/ast.h"
 
 namespace Cryo
@@ -35,6 +35,34 @@ namespace Cryo
         llvm::StructType *LLVMStruct;
     };
 
+    struct STVariable
+    {
+        llvm::Value *LLVMValue;
+        llvm::Type *LLVMType;
+        llvm::StoreInst *LLVMStoreInst;
+        ASTNode *ASTNode;
+        CryoNodeType nodeType;
+        CryoDataType dataType;
+    };
+
+    struct STFunction
+    {
+        llvm::Function *LLVMFunction;
+        llvm::Type *LLVMReturnType;
+        std::vector<llvm::Type *> LLVMParamTypes;
+        FunctionDeclNode *ASTNode;
+        CryoDataType returnType;
+    };
+
+    struct STExternFunction
+    {
+        llvm::Function *LLVMFunction;
+        llvm::Type *LLVMReturnType;
+        std::vector<llvm::Type *> LLVMParamTypes;
+        ExternFunctionNode *ASTNode;
+        CryoDataType returnType;
+    };
+
     // -----------------------------------------------------------------------------------------------
 
     // For each file, we will have a SymTable that contains all the variables and functions
@@ -45,7 +73,12 @@ namespace Cryo
         std::unordered_map<std::string, CryoParameterNode> parameters;
         std::unordered_map<std::string, FunctionDeclNode> functions;
         std::unordered_map<std::string, ExternFunctionNode> externFunctions;
+
+        // Migrate to these when ready
         std::unordered_map<std::string, StructValue> structs;
+        std::unordered_map<std::string, STVariable> variableNode;
+        std::unordered_map<std::string, STFunction> functionNode;
+        std::unordered_map<std::string, STExternFunction> externFunctionNode;
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program
@@ -71,14 +104,30 @@ namespace Cryo
         void initModule(ASTNode *root, std::string namespaceName);
         void traverseASTNode(ASTNode *node, SymTableNode &program);
 
+        // Containers
+        STVariable createVarContainer(ASTNode *varNode);
+        STFunction createFuncContainer(FunctionDeclNode *funcNode);
+        STExternFunction createExternFuncContainer(ExternFunctionNode *externNode);
+
         // Getters
         ASTNode *getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName);
         CryoVariableNode *getVariableNode(std::string namespaceName, std::string varName);
         SymTableNode getSymTableNode(std::string namespaceName);
         SymTable getSymTable();
 
+        STVariable *getVariable(std::string namespaceName, std::string varName);
+
         // Setters
         void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode);
+        void addVariable(std::string namespaceName, std::string varName, ASTNode *varNode);
+        void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode);
+        void addExternFunciton(std::string namespaceName, std::string funcName, ExternFunctionNode externNode);
+
+        // Updates
+        void updateVariableNode(std::string namespaceName, std::string varName, llvm::Value *llvmValue, llvm::Type *llvmType);
+        void addStoreInstToVar(std::string namespaceName, std::string varName, llvm::StoreInst *storeInst);
+        void updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
+        void updateExternFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
 
         // Debugging
         void printTable(std::string namespaceName);

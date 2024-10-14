@@ -27,7 +27,10 @@
 #include "utils/arena.h"
 #include "utils/fs.h"
 
+#include "settings.h"
+
 typedef struct CryoSymbolTable CryoSymbolTable;
+typedef struct CompilerSettings CompilerSettings;
 typedef struct Lexer Lexer;
 typedef struct Token Token;
 typedef struct Arena Arena;
@@ -89,6 +92,7 @@ typedef struct CompilerState
     int lineNumber;
     int columnNumber;
     bool isActiveBuild;
+    CompilerSettings *settings;
     int errorCount;
     CompilerError **errors;
     // Functions for debugging
@@ -103,7 +107,7 @@ typedef struct CompilerState
 #define NEW_COMPILER_ERROR(state, type, message, detail) \
     createError(CAPTURE_INTERNAL_DEBUG, state, type, message, detail, GET_SOURCE_INFO)
 
-CompilerState initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName);
+CompilerState *initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName);
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state);
 void updateCompilerColumnNumber(Lexer *lexer, CompilerState *state);
 CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode);
@@ -175,4 +179,17 @@ extern "C"
     printf("<!> ### ============================================================= ### <!>\n"); \
     printf("\n\n\n");
 
+#define PRINT_AST_START                                                                \
+    printf("\n\n\n");                                                                  \
+    printf("<> ~~~ ======================================================= ~~~ <>\n"); \
+    printf("<> ~~~                     AST Tree Output                     ~~~ <>\n"); \
+    printf("<> ~~~ ======================================================= ~~~ <>\n"); \
+    printf("\n");
+
+#define PRINT_AST_END                                                                  \
+    printf("\n");                                                                      \
+    printf("<> ~~~ ======================================================= ~~~ <>\n"); \
+    printf("<> ~~~                 End of AST Tree Output                  ~~~ <>\n"); \
+    printf("<> ~~~ ======================================================= ~~~ <>\n"); \
+    printf("\n");
 #endif // COMMON_H

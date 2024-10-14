@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/backend_symtable.h"
+#include "cpp/backend_symtable.hpp"
 
 namespace Cryo
 {
@@ -122,6 +122,55 @@ namespace Cryo
         return symNode;
     }
 
+    STVariable *BackendSymTable::getVariable(std::string namespaceName, std::string varName)
+    {
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the variable in the SymTable
+        STVariable *varNode = &symNode.variableNode[varName];
+        return varNode;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    /// Struct Containers
+    STVariable BackendSymTable::createVarContainer(ASTNode *varNode)
+    {
+        STVariable varContainer;
+        varContainer.ASTNode = varNode;
+        varContainer.nodeType = varNode->metaData->type;
+        varContainer.dataType = DATA_TYPE_UNKNOWN;
+        varContainer.LLVMValue = nullptr;
+        varContainer.LLVMType = nullptr;
+        varContainer.LLVMStoreInst = nullptr;
+
+        return varContainer;
+    }
+
+    STFunction BackendSymTable::createFuncContainer(FunctionDeclNode *funcNode)
+    {
+        STFunction funcContainer;
+        funcContainer.ASTNode = funcNode;
+        funcContainer.LLVMFunction = nullptr;
+        funcContainer.LLVMReturnType = nullptr;
+        funcContainer.LLVMParamTypes.clear();
+        funcContainer.returnType = funcNode->returnType;
+
+        return funcContainer;
+    }
+
+    STExternFunction BackendSymTable::createExternFuncContainer(ExternFunctionNode *externNode)
+    {
+        STExternFunction externFuncContainer;
+        externFuncContainer.ASTNode = externNode;
+        externFuncContainer.LLVMFunction = nullptr;
+        externFuncContainer.LLVMReturnType = nullptr;
+        externFuncContainer.LLVMParamTypes.clear();
+        externFuncContainer.returnType = externNode->returnType;
+
+        return externFuncContainer;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     ///
@@ -147,6 +196,172 @@ namespace Cryo
         symTable.namespaces[namespaceName] = symNode;
 
         std::cout << "[BackendSymTable] Struct Added" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addVariable(std::string namespaceName, std::string varName, ASTNode *varNode)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Variable to SymTable");
+
+        // Add the variable to the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Create the variable container
+        STVariable varContainer = createVarContainer(varNode);
+
+        // Add the variable to the SymTable
+        symNode.variableNode[varName] = varContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Variable Added" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Function to SymTable");
+
+        // Add the function to the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Create the function container
+        STFunction funcContainer = createFuncContainer(&funcNode);
+
+        // Add the function to the SymTable
+        symNode.functionNode[funcName] = funcContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Function Added" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addExternFunciton(std::string namespaceName, std::string funcName, ExternFunctionNode externNode)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Extern Function to SymTable");
+
+        // Add the extern function to the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Create the extern function container
+        STExternFunction externFuncContainer = createExternFuncContainer(&externNode);
+
+        // Add the extern function to the SymTable
+        symNode.externFunctionNode[funcName] = externFuncContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Extern Function Added" << std::endl;
+
+        return;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
+    /// ### ============================================================================= ###
+    /// ###
+    /// ### Update Functions
+    /// ### These functions are used to update existing nodes in the SymTable
+    /// ###
+    /// ### ============================================================================= ###
+
+    void BackendSymTable::updateVariableNode(std::string namespaceName, std::string varName, llvm::Value *llvmValue, llvm::Type *llvmType)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Updating Variable Node");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+
+        // Update the variable node
+        varNode.LLVMValue = llvmValue;
+        varNode.LLVMType = llvmType;
+
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Variable Node Updated" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addStoreInstToVar(std::string namespaceName, std::string varName, llvm::StoreInst *storeInst)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Store Instruction to Variable");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+
+        // Add the store instruction to the variable node
+        varNode.LLVMStoreInst = storeInst;
+
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Store Instruction Added to Variable" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Updating Function Node");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the function in the SymTable
+        STFunction funcNode = symNode.functionNode[funcName];
+
+        // Update the function node
+        funcNode.LLVMFunction = llvmFunction;
+        funcNode.LLVMReturnType = llvmReturnType;
+        funcNode.LLVMParamTypes = llvmParamTypes;
+
+        // Update the function in the SymTable
+        symNode.functionNode[funcName] = funcNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Function Node Updated" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::updateExternFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Updating Extern Function Node");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the extern function in the SymTable
+        STExternFunction externFuncNode = symNode.externFunctionNode[funcName];
+
+        // Update the extern function node
+        externFuncNode.LLVMFunction = llvmFunction;
+        externFuncNode.LLVMReturnType = llvmReturnType;
+        externFuncNode.LLVMParamTypes = llvmParamTypes;
+
+        // Update the extern function in the SymTable
+        symNode.externFunctionNode[funcName] = externFuncNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Extern Function Node Updated" << std::endl;
 
         return;
     }
@@ -288,6 +503,10 @@ namespace Cryo
                 externFuncNode.params = node->data.externFunction->params;
                 std::string externFuncNameStr = std::string(node->data.externFunction->name);
                 symTable.externFunctions.insert({externFuncNameStr, externFuncNode});
+
+                // New Implementation
+                STExternFunction externFuncContainer = createExternFuncContainer(&externFuncNode);
+                symTable.externFunctionNode[externFuncNameStr] = externFuncContainer;
             }
             break;
 
@@ -303,6 +522,10 @@ namespace Cryo
                 funcNode.body = node->data.functionDecl->body;
                 std::string funcNameStr = std::string(node->data.functionDecl->name);
                 symTable.functions.insert({funcNameStr, funcNode});
+
+                // New Implementation
+                STFunction funcContainer = createFuncContainer(&funcNode);
+                symTable.functionNode[funcNameStr] = funcContainer;
             }
             break;
 
@@ -328,11 +551,21 @@ namespace Cryo
                 varNode.indexExpr = node->data.varDecl->indexExpr;
                 std::string varNameStr = std::string(node->data.varDecl->name);
                 symTable.variables.insert({varNameStr, varNode});
+
+                // New Implementation
+                STVariable varContainer = createVarContainer(node);
+                symTable.variableNode[varNameStr] = varContainer;
             }
             break;
 
         case NODE_VAR_NAME:
             debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing VAR_NAME node");
+            if (node->data.varName)
+            {
+                STVariable varContainer = createVarContainer(node);
+                std::string varNameStr = std::string(node->data.varName->varName);
+                symTable.variableNode[varNameStr] = varContainer;
+            }
             break;
 
         case NODE_EXPRESSION:

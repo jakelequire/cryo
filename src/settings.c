@@ -77,8 +77,30 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             settings->inputFile = optarg;
             break;
         case 'o':
-            settings->customOutputPath = optarg;
+        {
+            // Get the current working directory that the program was run from
+            char *cwd = getcwd(NULL, 0);
+            // Get the length of the current working directory
+            size_t cwdLen = strlen(cwd);
+            // Get the length of the custom output path
+            size_t outLen = strlen(optarg);
+            // Allocate memory for the full output path
+            char *outPath = (char *)malloc(cwdLen + outLen + 2);
+            // Copy the current working directory to the full output path
+            strcpy(outPath, cwd);
+            // Concatenate the output path to the full output path
+            char *providedPath = optarg;
+            if (providedPath[0] == '.')
+            {
+                providedPath += 2;
+            }
+            strcat(outPath, "/");
+            strcat(outPath, providedPath);
+            // Set the custom output path
+            printf("<!> Output Path: %s\n", strdup(outPath));
+            settings->customOutputPath = outPath;
             break;
+        }
         case 'a':
             settings->activeBuild = true;
             break;
@@ -206,7 +228,16 @@ EnabledLogs createEnabledLogs()
     return logs;
 }
 
-CompilerSettings createCompilerSettings()
+CompiledFile createCompiledFile(void)
+{
+    CompiledFile file;
+    file.fileName = NULL;
+    file.filePath = NULL;
+    file.outputPath = NULL;
+    return file;
+}
+
+CompilerSettings createCompilerSettings(void)
 {
     CompilerSettings settings;
     settings.rootDir = getcwd(NULL, 0);
@@ -218,7 +249,20 @@ CompilerSettings createCompilerSettings()
     settings.debugLevel = DEBUG_NONE;
     settings.buildType = BUILD_NONE;
     settings.enabledLogs = createEnabledLogs();
+    settings.compiledFiles = (CompiledFile **)malloc(sizeof(CompiledFile *) * 64);
     return settings;
+}
+
+void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file)
+{
+    for (int i = 0; i < 64; ++i)
+    {
+        if (settings->compiledFiles[i] == NULL)
+        {
+            settings->compiledFiles[i] = file;
+            break;
+        }
+    }
 }
 
 EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs)

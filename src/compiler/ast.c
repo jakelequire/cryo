@@ -304,10 +304,24 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         {
             printf("Submodule Name: %s\n", node->data.import->subModuleName);
         }
+        break;
     }
 
     case NODE_EXTERNAL_SYMBOL:
-        printf("\nExternal Symbol Node (UNIMPLEMENTED)\n");
+        printf("\nExternal Symbol Node\n");
+        break;
+
+    case NODE_SCOPED_FUNCTION_CALL:
+        printf("\nScoped Function Call Node\n");
+        printf("Function Name: %s\n", node->data.scopedFunctionCall->functionName);
+        printf("Scope Name: %s\n", node->data.scopedFunctionCall->scopeName);
+        printf("Arg Count: %d\n", node->data.scopedFunctionCall->argCount);
+        printf("Arguments:\n");
+        for (int i = 0; i < node->data.scopedFunctionCall->argCount; i++)
+        {
+            printAST(node->data.scopedFunctionCall->args[i], indent + 2, arena);
+        }
+        break;
 
     case NODE_UNKNOWN:
         printf("\n<Unknown Node>\n");
@@ -427,6 +441,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state)
         break;
     case NODE_STRUCT_DECLARATION:
         node->data.structNode = createStructNodeContainer(arena, state);
+        break;
+    case NODE_SCOPED_FUNCTION_CALL:
+        node->data.scopedFunctionCall = createScopedFunctionCallNode(arena, state);
         break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
@@ -751,6 +768,7 @@ ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state
 
     node->data.literal->dataType = DATA_TYPE_STRING;
     node->data.literal->value.stringValue = strdup(trimmedString);
+    node->data.literal->length = strlen(trimmedString);
 
     return node;
 }
@@ -1033,44 +1051,53 @@ ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Aren
     return node;
 }
 
-ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *arena, CompilerState *state)
+ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state)
 {
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state);
+    ASTNode *node = createASTNode(nodeType, arena, state);
     if (!node)
     {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create args node");
         return NULL;
     }
 
-    ASTNode *initVal = NULL;
-    if (isLiteral && type == DATA_TYPE_INT)
+    switch (nodeType)
     {
-        // Transform the string to an integer
-        int value = atoi(name);
-        initVal = createIntLiteralNode(value, arena, state);
+    case NODE_LITERAL_EXPR:
+    {
+        node->data.literal->dataType = type;
+        switch (type)
+        {
+        case DATA_TYPE_INT:
+            node->data.literal->value.intValue = atoi(name);
+            break;
+        case DATA_TYPE_FLOAT:
+            node->data.literal->value.floatValue = atof(name);
+            break;
+        case DATA_TYPE_STRING:
+            node->data.literal->value.stringValue = strdup(name);
+            break;
+        case DATA_TYPE_BOOLEAN:
+            node->data.literal->value.booleanValue = strcmp(name, "true") == 0 ? true : false;
+            break;
+        case DATA_TYPE_VOID:
+            break;
+        default:
+            logMessage("ERROR", __LINE__, "AST", "Unknown data type: %s", CryoDataTypeToString(type));
+            CONDITION_FAILED;
+        }
+        break;
     }
-    if (isLiteral && type == DATA_TYPE_FLOAT)
+    case NODE_VAR_NAME:
     {
-        // Transform the string to a float
-        float value = atof(name);
-        initVal = createFloatLiteralNode(value, arena, state);
+        node->data.varName->varName = strdup(name);
+        node->data.varName->isRef = false;
+        break;
     }
-    if (isLiteral && type == DATA_TYPE_STRING)
-    {
-        // Just use the string as the initializer
-        initVal = createStringLiteralNode(name, arena, state);
-    }
-    if (isLiteral && type == DATA_TYPE_BOOLEAN)
-    {
-        // Transform the string to a boolean
-        int value = strcmp(name, "true") == 0 ? 1 : 0;
-        initVal = createBooleanLiteralNode(value, arena, state);
+    default:
+        logMessage("ERROR", __LINE__, "AST", "Unknown node type: %s", CryoNodeTypeToString(nodeType));
+        CONDITION_FAILED;
     }
 
-    node->data.varDecl->name = strdup(name);
-    node->data.varDecl->type = type;
-    node->data.varDecl->isGlobal = false;
-    node->data.varDecl->isReference = true;
-    node->data.varDecl->initializer = initVal;
     return node;
 }
 
@@ -1181,6 +1208,21 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
     node->data.structNode->properties = properties;
     node->data.structNode->propertyCount = propertyCount;
     node->data.structNode->propertyCapacity = 64;
+
+    return node;
+}
+
+/* @Node_Creation - Scoped Calls */
+ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName)
+{
+    ASTNode *node = createASTNode(NODE_SCOPED_FUNCTION_CALL, arena, state);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create scoped function call node");
+        return NULL;
+    }
+
+    node->data.scopedFunctionCall->functionName = strdup(functionName);
 
     return node;
 }

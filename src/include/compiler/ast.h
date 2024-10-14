@@ -312,6 +312,7 @@ typedef struct FunctionCallNode
 typedef struct LiteralNode
 {
     CryoDataType dataType; // Data type of the literal
+    int length;
     union
     {
         int intValue;
@@ -819,6 +820,7 @@ IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state);
 VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, CompilerState *state);
 StructNode *createStructNodeContainer(Arena *arena, CompilerState *state);
 PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state);
+ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state);
 
 #ifdef __cplusplus
 extern "C"
@@ -877,7 +879,7 @@ extern "C"
     ASTNode *createParamListNode(Arena *arena, CompilerState *state);
     ASTNode *createArgumentListNode(Arena *arena, CompilerState *state);
     ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena, CompilerState *state);
-    ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *arena, CompilerState *state);
+    ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state);
 
     /* @Node_Creation - Modules & Externals */
     ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state);
@@ -898,6 +900,9 @@ extern "C"
     /* @Node_Creation - Structs */
     ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena, CompilerState *state);
     ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, Arena *arena, CompilerState *state);
+
+    /* @Node_Creation - Scoped Calls */
+    ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName);
 
 #ifdef __cplusplus
 }

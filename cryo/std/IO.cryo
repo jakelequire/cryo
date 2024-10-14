@@ -4,6 +4,7 @@ extern function printInt(integer: int) -> void;
 extern function printStr(str: string) -> void;
 extern function strLength(stri: string) -> int;
 
-public function print(str: string) -> void {
-    printStr(str);
+public function print(message: string) -> void {
+    printStr(message);
+    return;
 }

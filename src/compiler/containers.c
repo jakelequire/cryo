@@ -398,6 +398,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->dataType = DATA_TYPE_UNKNOWN;
+    node->length = 0;
     node->value.intValue = 0;
     node->value.floatValue = 0;
     node->value.stringValue = (char *)ARENA_ALLOC(arena, sizeof(char));
@@ -906,6 +907,35 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
     node->name = (char *)calloc(1, sizeof(char));
     node->value = NULL;
     node->type = DATA_TYPE_UNKNOWN;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct ScopedFunctionCallNode
+/// {
+///     char *functionName;
+///     struct ASTNode **args;
+///     int argCount;
+///     int argCapacity;
+/// } ScopedFunctionCallNode;
+///```
+///
+ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state)
+{
+    ScopedFunctionCallNode *node = (ScopedFunctionCallNode *)ARENA_ALLOC(arena, sizeof(ScopedFunctionCallNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ScopedFunctionCallNode node.");
+        return NULL;
+    }
+
+    node->functionName = (char *)calloc(1, sizeof(char));
+    node->args = NULL;
+    node->argCount = 0;
+    node->argCapacity = 128;
 
     return node;
 }
