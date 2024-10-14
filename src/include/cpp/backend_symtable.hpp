@@ -39,7 +39,9 @@ namespace Cryo
     {
         llvm::Value *LLVMValue;
         llvm::Type *LLVMType;
-        CryoVariableNode *ASTNode;
+        llvm::StoreInst *LLVMStoreInst;
+        ASTNode *ASTNode;
+        CryoNodeType nodeType;
         CryoDataType dataType;
     };
 
@@ -103,7 +105,7 @@ namespace Cryo
         void traverseASTNode(ASTNode *node, SymTableNode &program);
 
         // Containers
-        STVariable createVarContainer(CryoVariableNode *varNode);
+        STVariable createVarContainer(ASTNode *varNode);
         STFunction createFuncContainer(FunctionDeclNode *funcNode);
         STExternFunction createExternFuncContainer(ExternFunctionNode *externNode);
 
@@ -117,12 +119,13 @@ namespace Cryo
 
         // Setters
         void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode);
-        void addVariable(std::string namespaceName, std::string varName, CryoVariableNode varNode);
+        void addVariable(std::string namespaceName, std::string varName, ASTNode *varNode);
         void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode);
         void addExternFunciton(std::string namespaceName, std::string funcName, ExternFunctionNode externNode);
 
         // Updates
         void updateVariableNode(std::string namespaceName, std::string varName, llvm::Value *llvmValue, llvm::Type *llvmType);
+        void addStoreInstToVar(std::string namespaceName, std::string varName, llvm::StoreInst *storeInst);
         void updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
         void updateExternFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
 

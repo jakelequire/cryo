@@ -33,6 +33,9 @@ namespace Cryo
     llvm::Value *BinaryExpressions::handleComplexBinOp(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "BinExp", "Handling Complex Binary Operation");
 
         if (node->metaData->type != NODE_BINARY_EXPR)
@@ -71,7 +74,7 @@ namespace Cryo
                 if (leftValue->getType()->isPointerTy())
                 {
                     debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
-                    leftValue = createTempValueForPointer(leftValue, varName);
+                    leftValue = dereferenceElPointer(leftValue, varName);
                     if (!leftValue)
                     {
                         debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
@@ -119,7 +122,7 @@ namespace Cryo
                 if (rightValue->getType()->isPointerTy())
                 {
                     debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
-                    rightValue = createTempValueForPointer(rightValue, varName);
+                    rightValue = dereferenceElPointer(rightValue, varName);
                     if (!rightValue)
                     {
                         debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
@@ -260,42 +263,89 @@ namespace Cryo
         return result;
     }
 
-    llvm::Value *BinaryExpressions::createTempValueForPointer(llvm::Value *value, std::string varName)
+    llvm::Value *BinaryExpressions::dereferenceElPointer(llvm::Value *value, std::string varName)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         BackendSymTable &symTable = compiler.getSymTable();
         Types &types = compiler.getTypes();
-        debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Dereferencing pointer");
 
-        // For these temporary variables, this is how the naming convention will work:
-        // (varName) + ".temp"
-        std::string tempVarName = varName + ".temp";
-        std::cout << "Temp Var Name: " << tempVarName << std::endl;
-
-        STVariable *symTableNode = symTable.getVariable(compiler.getContext().currentNamespace, varName);
+        STVariable *symTableNode = symTable.getVariable(namespaceName, varName);
         if (!symTableNode)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable node from symtable");
             CONDITION_FAILED;
         }
 
-        llvm::Type *varType = symTableNode->LLVMType;
-        llvm::Value *varValue = symTableNode->LLVMValue;
-        CryoDataType varDataType = symTableNode->dataType;
-        llvm::Type *varPointerType = types.getType(varDataType, 0);
-
-        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(varPointerType, varValue, tempVarName);
-        if (!tempValue)
+        llvm::Value *stValue = symTableNode->LLVMValue;
+        if (!stValue)
         {
-            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value");
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable value from symtable");
             CONDITION_FAILED;
         }
 
-        // Store the value in the temporary variable
-        compiler.getContext().builder.CreateStore(varValue, tempValue);
+        llvm::StoreInst *stStoreInst = symTableNode->LLVMStoreInst;
+        if (!stStoreInst)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get store instruction from symtable");
+            CONDITION_FAILED;
+        }
 
-        // Add the temporary variable to the named values
-        compiler.getContext().namedValues[tempVarName] = tempValue;
+        // If the value is a pointer, we need to load the value
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
+        llvm::Type *instTy = types.parseInstForType(inst);
+
+        llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(instTy, value, varName + ".load");
+        if (!loadValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to load value from pointer");
+            CONDITION_FAILED;
+        }
+
+        return loadValue;
+    }
+
+    llvm::Value *BinaryExpressions::createTempValueForPointer(llvm::Value *value, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        Types &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+
+        // For these temporary variables, this is how the naming convention will work:
+        // (varName) + ".temp"
+        std::string tempVarName = varName + ".temp";
+
+        STVariable *symTableNode = symTable.getVariable(namespaceName, varName);
+        if (!symTableNode)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable node from symtable");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *stValue = symTableNode->LLVMValue;
+        if (!stValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable value from symtable");
+            CONDITION_FAILED;
+        }
+        debugger.logLLVMValue(stValue);
+
+        llvm::StoreInst *stStoreInst = symTableNode->LLVMStoreInst;
+        if (!stStoreInst)
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get store instruction from symtable");
+            CONDITION_FAILED;
+        }
+
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
+        llvm::Type *instTy = types.parseInstForType(inst);
+
+        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(instTy, nullptr, tempVarName);
+        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".load");
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadInst, tempValue);
 
         return tempValue;
     }

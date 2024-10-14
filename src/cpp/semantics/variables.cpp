@@ -393,10 +393,8 @@ namespace Cryo
         case NODE_BINARY_EXPR:
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable is a binary expression");
-            llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
-            compiler.getContext().namedValues[varName] = llvmValue;
-            llvmValue->setName(varName);
-            return llvmValue;
+            std::string varDeclName = std::string(varDecl->name);
+            return createVarWithBinOpInitilizer(initializer, varDeclName);
         }
         case NODE_PARAM:
         {
@@ -491,10 +489,11 @@ namespace Cryo
                 CONDITION_FAILED;
             }
             llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, nullptr, varName);
-            llvm::Value *storeValue = compiler.getContext().builder.CreateStore(varValue, ptrValue);
+            llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(varValue, ptrValue);
             compiler.getContext().namedValues[varName] = ptrValue;
 
             symTable.updateVariableNode(namespaceName, varName, ptrValue, ty);
+            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
 
             return ptrValue;
         }
@@ -528,11 +527,12 @@ namespace Cryo
                 CONDITION_FAILED;
             }
             llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
-            llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
+            llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(varValue, llvmValue);
             compiler.getContext().namedValues[varName] = llvmValue;
 
             llvm::Type *strType = types.getType(DATA_TYPE_STRING, _len + 1);
-            symTable.updateVariableNode(namespaceName, varName, ptrValue, strType);
+            symTable.updateVariableNode(namespaceName, varName, llvmValue, strType);
+            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
 
             return llvmValue;
         }
@@ -594,8 +594,6 @@ namespace Cryo
         case DATA_TYPE_STRING:
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
-            llvmType = types.getType(nodeDataType, 0);
-            // llvmValue = compiler.getVariables().getVariable(varName);
             llvmValue = compiler.getContext().namedValues[refVarName];
             if (!llvmValue)
             {
@@ -603,9 +601,40 @@ namespace Cryo
                 CONDITION_FAILED;
             }
 
-            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
-            llvm::Value *storeValue = compiler.getContext().builder.CreateStore(llvmValue, ptrValue);
+            STVariable *var = symTable.getVariable(namespaceName, refVarName);
+            if (!var)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *ST_Value = var->LLVMValue;
+            if (!ST_Value)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::StoreInst *storeInst = var->LLVMStoreInst;
+            if (!storeInst)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
+                CONDITION_FAILED;
+            }
+
+            // We get the store instruction and the type of the store instruction
+            // This is because `alloc` just returns a pointer, and we need the type of the pointer
+            llvm::Instruction *storeInstruction = llvm::dyn_cast<llvm::Instruction>(storeInst);
+            llvm::Type *storeType = types.parseInstForType(storeInstruction);
+
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(storeType, nullptr, varName);
+            llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(storeType, llvmValue, varName + ".load");
+            llvm::Value *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
+
+            // Add the variable to the named values map & symbol table
             compiler.getContext().namedValues[varName] = ptrValue;
+            symTable.updateVariableNode(namespaceName, varName, ptrValue, storeType);
+            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
 
             break;
         }
@@ -743,6 +772,7 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Functions &functions = compiler.getFunctions();
+        BackendSymTable &symTable = compiler.getSymTable();
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable with Function Call Initializer");
 
         // Should be the function call node
@@ -774,17 +804,48 @@ namespace Cryo
             debugger.logMessage("ERROR", __LINE__, "Variables", "Function call not created");
             CONDITION_FAILED;
         }
-
         debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created, Storing in Variable");
 
-        compiler.dumpModule();
-
         // Store the call into the variable
-        compiler.getContext().builder.CreateStore(functionCall, varValue);
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(functionCall, varValue);
+
+        // Add the variable to the named values map & symbol table
+        compiler.getContext().namedValues[varName] = varValue;
+        symTable.updateVariableNode(moduleName, varName, varValue, varType);
+        symTable.addStoreInstToVar(moduleName, varName, storeInst);
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Function Call Created");
-
         return functionCall;
+    }
+
+    llvm::Value *Variables::createVarWithBinOpInitilizer(ASTNode *node, std::string varName)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        Types &types = compiler.getTypes();
+        BackendSymTable &symTable = compiler.getSymTable();
+        debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable with Binary Operation Initializer");
+
+        // llvm::Value * llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
+        // compiler.getContext().namedValues[varName] = llvmValue;
+        // llvmValue->setName(varName);
+
+        std::cout << "Variable Name: " << varName << std::endl;
+        llvm::Value *initValue = compiler.getBinaryExpressions().handleComplexBinOp(node);
+        if (!initValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Initializer value not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *initializer = compiler.getContext().builder.CreateAlloca(initValue->getType(), nullptr, varName);
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(initValue, initializer);
+        compiler.getContext().namedValues[varName] = initializer;
+
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        symTable.updateVariableNode(namespaceName, varName, initializer, initValue->getType());
+        symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+
+        return initializer;
     }
 
     // -----------------------------------------------------------------------------------------------

@@ -10,21 +10,24 @@ public function add(numOne: int, numTwo: int) -> int {
 
 public function main() -> void {
     const intArray: int[] = [1, 2, 3, 4, 5];
+    const intOne: int = 34;
+    const intTwo: int = 35;
 
+    // String literal in function call
     printStr("Hello, World!");
-    
+
+    // String literal in variable assignment
     const fooStr: string = "Hello, World!";
     printStr(fooStr);
-    
+
     const varNameTest: string = fooStr;
     printStr(varNameTest);
-    // 
-    // const intOne: int = 34;
-    // const intTwo: int = 35;
-    // // const intThree: int = intOne + intTwo;
-    // // printInt(intThree);
-    // const addResult: int = add(intOne, intTwo);
-    // printInt(addResult);
+
+    const addResult: int = add(intOne, intTwo);
+    printInt(addResult);
+
+    const intThree: int = intOne + intTwo;
+    printInt(intThree);
 
     return;
 }

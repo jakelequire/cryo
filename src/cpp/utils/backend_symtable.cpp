@@ -134,13 +134,15 @@ namespace Cryo
     // -----------------------------------------------------------------------------------------------
 
     /// Struct Containers
-    STVariable BackendSymTable::createVarContainer(CryoVariableNode *varNode)
+    STVariable BackendSymTable::createVarContainer(ASTNode *varNode)
     {
         STVariable varContainer;
         varContainer.ASTNode = varNode;
-        varContainer.dataType = varNode->type;
+        varContainer.nodeType = varNode->metaData->type;
+        varContainer.dataType = DATA_TYPE_UNKNOWN;
         varContainer.LLVMValue = nullptr;
         varContainer.LLVMType = nullptr;
+        varContainer.LLVMStoreInst = nullptr;
 
         return varContainer;
     }
@@ -198,7 +200,7 @@ namespace Cryo
         return;
     }
 
-    void BackendSymTable::addVariable(std::string namespaceName, std::string varName, CryoVariableNode varNode)
+    void BackendSymTable::addVariable(std::string namespaceName, std::string varName, ASTNode *varNode)
     {
         CryoDebugger &debugger = getDebugger();
         debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Variable to SymTable");
@@ -207,7 +209,7 @@ namespace Cryo
         SymTableNode symNode = getSymTableNode(namespaceName);
 
         // Create the variable container
-        STVariable varContainer = createVarContainer(&varNode);
+        STVariable varContainer = createVarContainer(varNode);
 
         // Add the variable to the SymTable
         symNode.variableNode[varName] = varContainer;
@@ -260,7 +262,12 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    /// Update Nodes (This should be to update the structs with the LLVM types/struct info)
+    /// ### ============================================================================= ###
+    /// ###
+    /// ### Update Functions
+    /// ### These functions are used to update existing nodes in the SymTable
+    /// ###
+    /// ### ============================================================================= ###
 
     void BackendSymTable::updateVariableNode(std::string namespaceName, std::string varName, llvm::Value *llvmValue, llvm::Type *llvmType)
     {
@@ -282,6 +289,29 @@ namespace Cryo
         symTable.namespaces[namespaceName] = symNode;
 
         std::cout << "[BackendSymTable] Variable Node Updated" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addStoreInstToVar(std::string namespaceName, std::string varName, llvm::StoreInst *storeInst)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Store Instruction to Variable");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+
+        // Add the store instruction to the variable node
+        varNode.LLVMStoreInst = storeInst;
+
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Store Instruction Added to Variable" << std::endl;
 
         return;
     }
@@ -523,13 +553,19 @@ namespace Cryo
                 symTable.variables.insert({varNameStr, varNode});
 
                 // New Implementation
-                STVariable varContainer = createVarContainer(&varNode);
+                STVariable varContainer = createVarContainer(node);
                 symTable.variableNode[varNameStr] = varContainer;
             }
             break;
 
         case NODE_VAR_NAME:
             debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing VAR_NAME node");
+            if (node->data.varName)
+            {
+                STVariable varContainer = createVarContainer(node);
+                std::string varNameStr = std::string(node->data.varName->varName);
+                symTable.variableNode[varNameStr] = varContainer;
+            }
             break;
 
         case NODE_EXPRESSION:

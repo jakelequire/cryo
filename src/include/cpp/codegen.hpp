@@ -434,7 +434,6 @@ namespace Cryo
         llvm::Value *createLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
-        llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
 
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
@@ -445,6 +444,8 @@ namespace Cryo
         llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName);
         llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, CryoDataType dataType, std::string varName);
         llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
+        llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
+        llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);
 
         CryoCompiler &compiler;
     };
@@ -593,6 +594,7 @@ namespace Cryo
         llvm::Value *createTempValueForPointer(llvm::Value *value, std::string varName);
         llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
         llvm::Value *handleComplexBinOp(ASTNode *node);
+        llvm::Value *dereferenceElPointer(llvm::Value *value, std::string varName = "unknown");
 
     private:
         CryoCompiler &compiler;

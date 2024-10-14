@@ -209,6 +209,11 @@ namespace Cryo
                     debugger.logMessage("INFO", __LINE__, "Functions", "Returning int");
                     ASTNode *returnStatement = statement->data.returnStatement->expression;
                     llvm::Value *returnValue = generator.getInitilizerValue(returnStatement);
+                    if (returnValue->getType()->isPointerTy())
+                    {
+                        llvm::Type *returnType = types.getType(DATA_TYPE_INT, 0);
+                        returnValue = compiler.getContext().builder.CreateLoad(returnType, returnValue);
+                    }
                     compiler.getContext().builder.CreateRet(returnValue);
                     break;
                 }
@@ -775,16 +780,60 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Variables &variables = compiler.getVariables();
+        Types &types = compiler.getTypes();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Variable Name Call");
 
         std::string varName = std::string(varNameNode->varName);
         std::string namespaceName = compiler.getContext().currentNamespace;
 
-        llvm::Value *varValue = variables.getVariable(varName);
-        if (!varValue)
+        STVariable *var = compiler.getSymTable().getVariable(namespaceName, varName);
+        if (!var)
         {
             debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
             CONDITION_FAILED;
+        }
+
+        std::cout << "@createVarNameCall Variable Name: " << varName << std::endl;
+        llvm::Value *varValue = var->LLVMValue;
+        if (!varValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::StoreInst *storeInst = var->LLVMStoreInst;
+        if (!storeInst)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Store instruction not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(storeInst);
+        std::cout << "Instruction: " << std::endl;
+        debugger.logLLVMInst(inst);
+
+        llvm::Type *varInstType = types.parseInstForType(inst);
+        debugger.logLLVMType(varInstType);
+
+        std::cout << "Variable Value: " << std::endl;
+        debugger.logLLVMValue(varValue);
+
+        // This is to dereference an integer type
+        bool isIntType = varInstType->isIntegerTy();
+        if (varValue->getType()->isPointerTy() && isIntType)
+        {
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(storeInst);
+            std::cout << "Instruction: " << std::endl;
+            debugger.logLLVMInst(inst);
+            llvm::Type *varInstType = types.parseInstForType(inst);
+            llvm::Value *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load");
+            if (!varLoadValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Variable value not loaded");
+                CONDITION_FAILED;
+            }
+
+            return varLoadValue;
         }
 
         return varValue;
