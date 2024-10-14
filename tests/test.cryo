@@ -13,10 +13,10 @@ public function main() -> void {
 
     printStr("Hello, World!");
     
-    // const fooStr: string = "Hello, World!";
-    // printStr(fooStr);
-// 
-    // const varNameTest: string = fooStr;
+    const fooStr: string = "Hello, World!";
+    printStr(fooStr);
+    
+    const varNameTest: string = fooStr;
     // 
     // const intOne: int = 34;
     // const intTwo: int = 35;

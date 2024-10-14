@@ -1304,6 +1304,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 
     char *argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     bool isLiteral = false;
+    CryoNodeType nodeType = NODE_UNKNOWN;
 
     // Resolve the type if it's not a literal
     // Check if `argName` is a literal number
@@ -1311,16 +1312,28 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is an integer literal");
         isLiteral = true;
+        nodeType = NODE_LITERAL_EXPR;
     }
     else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a string literal");
         isLiteral = true;
+        nodeType = NODE_LITERAL_EXPR;
     }
     else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a boolean literal");
         isLiteral = true;
+        nodeType = NODE_LITERAL_EXPR;
+    }
+    else if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Argument is an identifier");
+        nodeType = NODE_VAR_DECLARATION;
+    }
+    else
+    {
+        logMessage("INFO", __LINE__, "Parser", "Argument is not a literal");
     }
 
     // Resolve the type using the symbol table
@@ -1330,7 +1343,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     // Consume the argument name
     getNextToken(lexer, arena, state);
 
-    return createArgsNode(argName, argType, isLiteral, arena, state);
+    return createArgsNode(argName, argType, nodeType, isLiteral, arena, state);
 }
 // </parseArguments>
 
@@ -1382,6 +1395,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
 
     char *argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     bool isLiteral = false;
+    CryoNodeType nodeType = NODE_UNKNOWN;
 
     // Resolve the type if it's not a literal
     // Check if `argName` is a literal number
@@ -1390,18 +1404,42 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
         logMessage("INFO", __LINE__, "Parser", "Argument is an integer literal");
         expectedType = DATA_TYPE_INT;
         isLiteral = true;
+        nodeType = NODE_LITERAL_EXPR;
     }
     else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a string literal");
         expectedType = DATA_TYPE_STRING;
         isLiteral = true;
+        nodeType = NODE_LITERAL_EXPR;
+
+        // Trim the quotes from the string literal
+        argName = strndup(lexer->currentToken.start + 1, lexer->currentToken.length - 2);
     }
     else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a boolean literal");
         expectedType = DATA_TYPE_BOOLEAN;
         isLiteral = true;
+        nodeType = NODE_LITERAL_EXPR;
+    }
+    else if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Argument is an identifier");
+        nodeType = NODE_VAR_NAME;
+        // Try to find the symbol in the symbol table
+        CryoSymbol *symbol = findSymbol(table, argName, arena);
+        if (symbol)
+        {
+            expectedType = symbol->valueType;
+        }
+        else
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the symbol table.");
+            error("Symbol not found in the symbol table.", "parseArgumentsWithExpectedType", table, arena, state, lexer);
+            CONDITION_FAILED;
+            return NULL;
+        }
     }
     else
     {
@@ -1419,7 +1457,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     logMessage("INFO", __LINE__, "Parser", "Creating argument node with expected type: %s", CryoDataTypeToString(expectedType));
     logMessage("INFO", __LINE__, "Parser", "Argument name: %s", strdup(argName));
 
-    return createArgsNode(argName, expectedType, isLiteral, arena, state);
+    return createArgsNode(argName, expectedType, nodeType, isLiteral, arena, state);
 }
 // </parseArgumentsWithExpectedType>
 

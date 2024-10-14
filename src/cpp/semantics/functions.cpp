@@ -496,26 +496,15 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Functions", "Processing Argument " + std::to_string(i + 1) + " of " + std::to_string(argCount));
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argNodeType = argNode->metaData->type;
-            CryoDataType argTypeData = argNode->data.varDecl->type;
-            std::string argName = std::string(argNode->data.varDecl->name);
-            STVariable *retreivedVar = compiler.getSymTable().getVariable(moduleName, argName);
-            if (!retreivedVar)
-            {
-                debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-                CONDITION_FAILED;
-            }
 
             std::cout << "===----------------------===" << std::endl;
             std::cout << "Argument #: " << i + 1 << std::endl;
             std::cout << "Function Name: " << functionName << std::endl;
             std::cout << "Argument Node Type: " << CryoNodeTypeToString(argNodeType) << std::endl;
-            std::cout << "Argument Data Type: " << CryoDataTypeToString(argTypeData) << std::endl;
-            std::cout << "Argument Name: " << argNode->data.varDecl->name << std::endl;
             std::cout << "===----------------------===" << std::endl;
 
             std::string funcName = std::string(functionName);
-            std::cout << "\n\nFunction Name: " << funcName << "\n"
-                      << std::endl;
+            std::cout << "\n\nFunction Name: " << funcName << "\n";
 
             // Callee's name:
             llvm::Function *calleeF = compiler.getContext().module->getFunction(funcName);
@@ -733,7 +722,17 @@ namespace Cryo
                     debugger.logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
                     CONDITION_FAILED;
                 }
-                argValues.push_back(argValue);
+                // Create a new variable for the literal
+                llvm::Value *literalVar = compiler.getVariables().createLocalVariable(argNode);
+                if (!literalVar)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                // Store the literal value in the variable
+                compiler.getContext().builder.CreateStore(argValue, literalVar);
+                argValues.push_back(literalVar);
                 break;
             }
             default:
@@ -779,25 +778,12 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Variable Name Call");
 
         std::string varName = std::string(varNameNode->varName);
-        STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().module->getName().str(), varName);
-        if (!var)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-            CONDITION_FAILED;
-        }
-
         std::string namespaceName = compiler.getContext().currentNamespace;
-        STVariable *varValueNode = compiler.getSymTable().getVariable(namespaceName, varName);
-        if (!varValueNode)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-            CONDITION_FAILED;
-        }
 
-        llvm::Value *varValue = varValueNode->LLVMValue;
+        llvm::Value *varValue = variables.getVariable(varName);
         if (!varValue)
         {
-            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Variable not found");
             CONDITION_FAILED;
         }
 
@@ -859,7 +845,28 @@ namespace Cryo
         CryoDebugger &debugger = compiler.getDebugger();
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Literal Call");
 
-        DEBUG_BREAKPOINT;
+        llvm::Value *literalValue = compiler.getGenerator().getLiteralValue(literalNode);
+        if (!literalValue)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Literal value not found");
+            CONDITION_FAILED;
+        }
+
+        // Allocate a new variable for the literal
+        llvm::Value *literalVar = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal");
+        if (!literalVar)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+            CONDITION_FAILED;
+        }
+        // Store the literal value in the variable
+        compiler.getContext().builder.CreateStore(literalValue, literalVar);
+
+        // Add the literal variable to the named values map
+        std::string literalName = literalVar->getName().str();
+        compiler.getContext().namedValues[literalName] = literalVar;
+
+        return literalVar;
     }
 
     llvm::Value *Functions::createIndexExprCall(IndexExprNode *indexNode)
@@ -941,19 +948,61 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Argument Cast");
 
         llvm::Value *castValue = nullptr;
-        if (argValue->getType()->getTypeID() != expectedType->getTypeID())
+        llvm::Type *sourceType = argValue->getType();
+
+        if (sourceType == expectedType)
         {
-            debugger.logMessage("INFO", __LINE__, "Functions", "Casting argument");
-            castValue = compiler.getContext().builder.CreateBitCast(argValue, expectedType);
+            debugger.logMessage("INFO", __LINE__, "Functions", "Argument type matches expected type");
+            return argValue;
+        }
+
+        llvm::IRBuilder<> &builder = compiler.getContext().builder;
+
+        if (sourceType->isIntegerTy() && expectedType->isIntegerTy())
+        {
+            // Integer to integer cast
+            if (sourceType->getIntegerBitWidth() < expectedType->getIntegerBitWidth())
+            {
+                castValue = builder.CreateZExt(argValue, expectedType, "zext_cast");
+            }
+            else
+            {
+                castValue = builder.CreateTrunc(argValue, expectedType, "trunc_cast");
+            }
+        }
+        else if (sourceType->isFloatingPointTy() && expectedType->isFloatingPointTy())
+        {
+            // Float to float cast
+            castValue = builder.CreateFPCast(argValue, expectedType, "fp_cast");
+        }
+        else if (sourceType->isIntegerTy() && expectedType->isFloatingPointTy())
+        {
+            // Integer to float cast
+            castValue = builder.CreateSIToFP(argValue, expectedType, "int_to_fp_cast");
+        }
+        else if (sourceType->isFloatingPointTy() && expectedType->isIntegerTy())
+        {
+            // Float to integer cast
+            castValue = builder.CreateFPToSI(argValue, expectedType, "fp_to_int_cast");
+        }
+        else if (sourceType->isPointerTy() && expectedType->isPointerTy())
+        {
+            // Pointer to pointer cast
+            castValue = builder.CreatePointerCast(argValue, expectedType, "ptr_cast");
+        }
+        else if (sourceType->isArrayTy() && expectedType->isPointerTy())
+        {
+            // Array to pointer cast
+            castValue = builder.CreatePointerCast(argValue, expectedType, "array_to_ptr_cast");
         }
         else
         {
-            debugger.logMessage("INFO", __LINE__, "Functions", "Argument type matches expected type");
+            // Fallback to bitcast for other cases
+            debugger.logMessage("WARNING", __LINE__, "Functions", "Using bitcast as fallback");
             castValue = argValue;
         }
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Argument Cast Created");
-
         return castValue;
     }
 

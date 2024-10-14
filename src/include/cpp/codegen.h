@@ -442,7 +442,7 @@ namespace Cryo
     private:
         // Specialized variable creation functions
         llvm::Value *createLiteralExprVariable(LiteralNode *literalNode, std::string varName);
-        llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName);
+        llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName);
         llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, CryoDataType dataType, std::string varName);
         llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
 

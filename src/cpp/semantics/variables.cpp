@@ -408,8 +408,9 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Variable initializer is a VariableNameNode.");
             std::string varDeclName = std::string(varDecl->name);
+            std::string refVarName = std::string(initializer->data.varName->varName);
             VariableNameNode *varNameNode = initializer->data.varName;
-            return createVarNameInitializer(varNameNode, varDeclName);
+            return createVarNameInitializer(varNameNode, varDeclName, refVarName);
         }
         case NODE_LITERAL_EXPR:
         {
@@ -527,7 +528,6 @@ namespace Cryo
                 CONDITION_FAILED;
             }
             llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
-            llvmValue->setName("str");
             llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(varValue, llvmValue);
             compiler.getContext().namedValues[varName] = llvmValue;
 
@@ -549,6 +549,8 @@ namespace Cryo
     ///
     /// @brief Create a variable with a variable name / reference initializer
     /// @param node The AST node
+    /// @param varName The name of the variable
+    /// @param refVarName The name of the variable being referenced
     /// @return `llvm::Value *` The LLVM value of the variable
     ///
     /// ---
@@ -563,32 +565,46 @@ namespace Cryo
     ///
     /// ```
     ///
-    llvm::Value *Variables::createVarNameInitializer(VariableNameNode *varNameNode, std::string varName)
+    llvm::Value *Variables::createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         BackendSymTable &symTable = compiler.getSymTable();
         Types &types = compiler.getTypes();
         std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "Variables", "Creating Variable Name Initializer");
+        std::cout << "Variable Name: " << varName << std::endl;
+        std::cout << "Referenced Variable Name: " << refVarName << std::endl;
 
-        // This is the name of the variable that is being referenced
-        std::string varNameRef = std::string(varNameNode->varName);
-        // Find the referenced variable in the symbol table:
-        STVariable *symTableNode = symTable.getVariable(namespaceName, varNameRef);
-        if (!symTableNode)
+        CryoDataType nodeDataType = varNameNode->refType;
+        std::cout << "Node Type: " << CryoDataTypeToString(nodeDataType) << std::endl;
+
+        // Create the variable alloca
+        llvm::Value *llvmValue = nullptr;
+        llvm::Type *llvmType = nullptr;
+
+        switch (nodeDataType)
         {
-            debugger.logMessage("ERROR", __LINE__, "Variables", "Variable node not found");
+        case DATA_TYPE_INT:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Variable");
+            llvmType = types.getType(nodeDataType, 0);
+            llvmValue = compiler.getVariables().getVariable(varName);
+            break;
+        }
+        case DATA_TYPE_STRING:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
+            llvmType = types.getType(nodeDataType, 0);
+            llvmValue = compiler.getVariables().getVariable(varName);
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
             CONDITION_FAILED;
         }
+        }
 
-        llvm::Type *ty = symTableNode->LLVMType;
-        llvm::Value *llvmVarValue = symTableNode->LLVMValue;
-
-        llvm::Value *llvmValue = compiler.getContext().builder.CreateAlloca(ty, nullptr, varName);
-        llvmValue->setName(varName);
-        llvm::Value *ptrValue = compiler.getContext().builder.CreateStore(llvmVarValue, llvmValue);
-
-        compiler.getContext().namedValues[varName] = llvmValue;
         return llvmValue;
     }
 

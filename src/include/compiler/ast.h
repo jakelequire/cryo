@@ -879,7 +879,7 @@ extern "C"
     ASTNode *createParamListNode(Arena *arena, CompilerState *state);
     ASTNode *createArgumentListNode(Arena *arena, CompilerState *state);
     ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena, CompilerState *state);
-    ASTNode *createArgsNode(char *name, CryoDataType type, bool isLiteral, Arena *arena, CompilerState *state);
+    ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state);
 
     /* @Node_Creation - Modules & Externals */
     ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state);
