@@ -17,6 +17,7 @@ public function main() -> void {
     printStr(fooStr);
     
     const varNameTest: string = fooStr;
+    printStr(varNameTest);
     // 
     // const intOne: int = 34;
     // const intTwo: int = 35;

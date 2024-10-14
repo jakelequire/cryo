@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 
 namespace Cryo
 {
@@ -595,7 +595,18 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
             llvmType = types.getType(nodeDataType, 0);
-            llvmValue = compiler.getVariables().getVariable(varName);
+            // llvmValue = compiler.getVariables().getVariable(varName);
+            llvmValue = compiler.getContext().namedValues[refVarName];
+            if (!llvmValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+            llvm::Value *storeValue = compiler.getContext().builder.CreateStore(llvmValue, ptrValue);
+            compiler.getContext().namedValues[varName] = ptrValue;
+
             break;
         }
         default:

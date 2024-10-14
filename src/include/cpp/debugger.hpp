@@ -16,7 +16,7 @@
  ********************************************************************************/
 #ifndef CRYO_DEBUGGER
 #define CRYO_DEBUGGER
-#include "cpp/codegen.h"
+#include "cpp/codegen.hpp"
 #include "compiler/ast.h"
 
 #include <iomanip>

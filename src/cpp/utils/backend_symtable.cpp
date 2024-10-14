@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/backend_symtable.h"
+#include "cpp/backend_symtable.hpp"
 
 namespace Cryo
 {

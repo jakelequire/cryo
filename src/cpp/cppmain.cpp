@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/cppmain.h"
+#include "cpp/cppmain.hpp"
 #include <iostream>
 
 using namespace Cryo;

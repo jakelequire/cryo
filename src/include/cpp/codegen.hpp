@@ -60,9 +60,9 @@
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 
-#include "cpp/debugger.h"
+#include "cpp/debugger.hpp"
 #include "compiler/ast.h"
-#include "cpp/backend_symtable.h"
+#include "cpp/backend_symtable.hpp"
 #include "common/common.h"
 #include "compiler.h"
 

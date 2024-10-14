@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cpp/debugger.h"
+#include "cpp/debugger.hpp"
 
 namespace Cryo
 {

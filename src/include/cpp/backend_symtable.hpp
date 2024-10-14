@@ -21,8 +21,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "cpp/codegen.h"
-#include "cpp/debugger.h"
+#include "cpp/codegen.hpp"
+#include "cpp/debugger.hpp"
 #include "compiler/ast.h"
 
 namespace Cryo
