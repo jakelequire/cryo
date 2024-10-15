@@ -1481,7 +1481,7 @@ void addParameterToList(CryoSymbolTable *table, ASTNode *paramListNode, ASTNode 
                 return;
             }
         }
-
+        param->data.varDecl->isMutable = true;
         paramList->params[paramList->paramCount++] = param->data.varDecl;
     }
     else
@@ -1954,8 +1954,31 @@ ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *c
     ASTNode *oldValue = symbol->node;
     ASTNode *newValue = parseExpression(lexer, table, context, arena, state);
 
+    bool isMutable = false;
+    CryoNodeType oldType = oldValue->metaData->type;
+    switch (oldType)
+    {
+    case NODE_VAR_DECLARATION:
+    {
+        logMessage("INFO", __LINE__, "Parser", "Old value is a variable declaration.");
+        isMutable = oldValue->data.varDecl->isMutable;
+        break;
+    }
+    case NODE_PARAM:
+    {
+        logMessage("INFO", __LINE__, "Parser", "Old value is a parameter.");
+        isMutable = true;
+        break;
+    }
+    default:
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Old value is not a variable declaration.");
+        error("Old value is not a variable declaration.", "parseAssignment", table, arena, state, lexer);
+        return NULL;
+    }
+    }
+
     // Check if the symbol is mutable
-    bool isMutable = oldValue->data.varDecl->isMutable;
     if (!isMutable)
     {
         logMessage("ERROR", __LINE__, "Parser", "Variable is not mutable.");

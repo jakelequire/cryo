@@ -1,20 +1,26 @@
-
+#include <stdio.h>
 // clang -S -emit-llvm foo.c
 
-char *test(char *string)
+void fib2(int n)
 {
-    return string;
-}
+    int a = 0;
+    int b = 1;
+    int c;
 
-char *foo(char *string)
-{
-    string = "Reassigned!";
-    return string;
+    while (n > 0)
+    {
+        c = a + b;
+        a = b;
+        b = c;
+        printf("%d\n", a);
+        n = n - 1;
+    }
+
+    return;
 }
 
 int main()
 {
-    char *string = "Hello, World!";
-    char *result = test(string);
+    fib2(10);
     return 0;
 }

@@ -140,7 +140,6 @@ namespace Cryo
             // Get the filename from the CompilerState
             std::string moduleName = "CryoModuleDefaulted";
             module = std::make_unique<llvm::Module>(moduleName, context);
-            module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128");
             std::cout << "[CPP.h] Module Initialized" << std::endl;
         }
 

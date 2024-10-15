@@ -598,6 +598,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
 ///     enum CryoDataType type;
 ///     char *name;
 ///     bool hasDefaultValue;
+///     bool isMutable;
 ///     struct ASTNode *defaultValue;
 /// } CryoParameterNode;
 ///```
@@ -615,6 +616,7 @@ CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *sta
     node->name = (char *)calloc(1, sizeof(char));
     node->functionName = (char *)calloc(1, sizeof(char));
     node->hasDefaultValue = false;
+    node->isMutable = true;
     node->defaultValue = NULL;
 
     return node;

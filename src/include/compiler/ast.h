@@ -482,6 +482,7 @@ typedef struct CryoVariableNode
 ///     CryoDataType type;
 ///     char *name;
 ///     bool hasDefaultValue;
+///     bool isMutable;
 ///     struct ASTNode *defaultValue;
 /// } CryoParameterNode;
 ///
@@ -492,6 +493,7 @@ typedef struct CryoParameterNode
     char *name;
     char *functionName;
     bool hasDefaultValue;
+    bool isMutable;
     struct ASTNode *defaultValue;
 } CryoParameterNode;
 

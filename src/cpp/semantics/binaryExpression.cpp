@@ -65,12 +65,21 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
                 std::string varName = leftNode->data.varName->varName;
                 std::cout << "<!> (left) Variable Name: " << varName << std::endl;
-                leftValue = compiler.getVariables().getVariable(varName);
+
+                STVariable *symTableVar = symTable.getVariable(namespaceName, varName);
+                if (!symTableVar)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable from symtable");
+                    CONDITION_FAILED;
+                }
+
+                leftValue = symTableVar->LLVMValue;
                 if (!leftValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
                     CONDITION_FAILED;
                 }
+
                 if (leftValue->getType()->isPointerTy())
                 {
                     debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
@@ -211,7 +220,7 @@ namespace Cryo
         switch (operatorType)
         {
         case OPERATOR_ADD:
-            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
+            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp", false, true);
             break;
         case OPERATOR_SUB:
             result = compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
@@ -295,8 +304,9 @@ namespace Cryo
         // If the value is a pointer, we need to load the value
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
         llvm::Type *instTy = types.parseInstForType(inst);
-
-        llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(instTy, value, varName + ".load");
+        std::string loadVarName = varName + ".load";
+        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, loadVarName);
+        llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
         if (!loadValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to load value from pointer");
@@ -342,8 +352,11 @@ namespace Cryo
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
         llvm::Type *instTy = types.parseInstForType(inst);
 
-        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(instTy, nullptr, tempVarName);
+        llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(instTy, nullptr, tempVarName);
+
+        llvm::Value *tempValue = llvm::dyn_cast<llvm::Value>(allocaInst);
         llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".load");
+
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadInst, tempValue);
 
         return tempValue;

@@ -1046,6 +1046,7 @@ ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Aren
     node->data.param->name = strdup(name);
     node->data.param->type = type;
     node->data.param->hasDefaultValue = false;
+    node->data.param->isMutable = true;
     node->data.param->functionName = functionName;
     node->data.param->defaultValue = NULL;
     return node;

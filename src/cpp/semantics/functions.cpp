@@ -647,6 +647,8 @@ namespace Cryo
                 VariableNameNode *varNameNode = argNode->data.varName;
                 assert(varNameNode != nullptr);
 
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument Variable Name: " + std::string(varNameNode->varName));
+
                 llvm::Value *argNode = createVarNameCall(varNameNode);
                 if (!argNode)
                 {
@@ -788,7 +790,7 @@ namespace Cryo
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(param, alloca);
 
         // Load the value of the parameter
-        llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
+        // llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
 
         std::string _paramName = param->getName().str();
         compiler.getContext().namedValues[param->getName().str()] = alloca;
@@ -944,9 +946,11 @@ namespace Cryo
                 CONDITION_FAILED;
             }
 
+            debugger.logMessage("INFO", __LINE__, "Functions", "Var Name Call Created with dereference. For Variable: " + varName);
             return varLoadValue;
         }
 
+        debugger.logMessage("INFO", __LINE__, "Functions", "Var Name Call Created without dereference. For Variable: " + varName);
         return varValue;
     }
 
