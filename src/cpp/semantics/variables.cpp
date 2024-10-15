@@ -62,49 +62,57 @@ namespace Cryo
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Types &types = compiler.getTypes();
+        BackendSymTable &symTable = compiler.getSymTable();
         debugger.logMessage("INFO", __LINE__, "Variables", "Handling Variable Reassignment");
         std::string currentModuleName = compiler.getContext().currentNamespace;
 
         // Find the variable in the symbol table
         std::string existingVarName = std::string(node->data.varReassignment->existingVarName);
         std::cout << "Variable Name: " << existingVarName << std::endl;
-        ASTNode *varNode = compiler.getSymTable().getASTNode(currentModuleName, NODE_VAR_DECLARATION, existingVarName);
-        if (!varNode)
+
+        STVariable *var = compiler.getSymTable().getVariable(currentModuleName, existingVarName);
+        if (!var)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
             CONDITION_FAILED;
         }
 
-        // Get the new value
-        ASTNode *newValue = node->data.varReassignment->newVarNode;
-        llvm::Value *newVal = compiler.getGenerator().getInitilizerValue(newValue);
-        if (!newVal)
-        {
-            debugger.logMessage("ERROR", __LINE__, "Variables", "New value not found");
-            CONDITION_FAILED;
-        }
-
-        llvm::Value *varValue = compiler.getContext().namedValues[existingVarName];
+        llvm::Value *varValue = var->LLVMValue;
         if (!varValue)
         {
             debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
             CONDITION_FAILED;
         }
-        debugger.logMessage("INFO", __LINE__, "Variables", "Variable Value Found");
 
-        llvm::Instruction *inst = compiler.getContext().builder.CreateStore(newVal, varValue);
-        llvm::GlobalVariable *key = inst->getModule()->getNamedGlobal(existingVarName);
-        if (key)
+        // Get the new value
+        ASTNode *newValue = node->data.varReassignment->newVarNode;
+        CryoNodeType newVarType = newValue->metaData->type;
+        switch (newVarType)
         {
-            debugger.logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
-            key->setInitializer(llvm::dyn_cast<llvm::Constant>(newVal));
+        case NODE_LITERAL_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "Variables", "Handling Literal Expression");
+            llvm::Value *newVarValue = compiler.getGenerator().getInitilizerValue(newValue);
+            if (!newVarValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "New Variable value not found");
+                CONDITION_FAILED;
+            }
+
+            // Store the new value in the existing variable
+            compiler.getContext().builder.CreateStore(newVarValue, varValue);
+            break;
         }
-        else
+        default:
         {
-            DEBUG_BREAKPOINT;
+            debugger.logMessage("ERROR", __LINE__, "Variables", "Unknown node type");
+            CONDITION_FAILED;
+            break;
+        }
         }
 
         debugger.logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
+
         return;
     }
 
@@ -587,8 +595,32 @@ namespace Cryo
         case DATA_TYPE_INT:
         {
             debugger.logMessage("INFO", __LINE__, "Variables", "Creating Int Variable");
+            std::cout << "Variable Name (Int): " << varName << std::endl;
             llvmType = types.getType(nodeDataType, 0);
-            llvmValue = compiler.getVariables().getVariable(varName);
+
+            STVariable *var = symTable.getVariable(namespaceName, refVarName);
+            if (!var)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                CONDITION_FAILED;
+            }
+            llvm::Value *stValue = var->LLVMValue;
+            if (!stValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                compiler.dumpModule();
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+            llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(llvmType, stValue, varName + ".load");
+            llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
+
+            // Add the variable to the named values map & symbol table
+            compiler.getContext().namedValues[varName] = ptrValue;
+            symTable.updateVariableNode(namespaceName, varName, ptrValue, llvmType);
+            symTable.addStoreInstToVar(namespaceName, varName, storeValue);
+
             break;
         }
         case DATA_TYPE_STRING:

@@ -25,3 +25,4 @@ void printInt(int value);
 void printIntPtr(int *value);
 void printStr(char *value);
 void builtInError(char *type);
+void sys_exit(int code);

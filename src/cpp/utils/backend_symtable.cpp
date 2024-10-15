@@ -316,6 +316,29 @@ namespace Cryo
         return;
     }
 
+    void BackendSymTable::addParamAsVariable(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Parameter as Variable");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Create the variable container
+        STVariable varContainer;
+        varContainer.LLVMValue = llvmValue;
+        varContainer.LLVMType = llvmType;
+        varContainer.LLVMStoreInst = storeInst;
+
+        // Add the variable to the SymTable
+        symNode.variableNode[paramName] = varContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Parameter Added as Variable" << std::endl;
+
+        return;
+    }
+
     void BackendSymTable::updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes)
     {
         CryoDebugger &debugger = getDebugger();

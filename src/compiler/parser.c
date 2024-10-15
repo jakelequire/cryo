@@ -436,6 +436,9 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     case TOKEN_KW_IF:
         return parseIfStatement(lexer, table, context, arena, state);
 
+    case TOKEN_KW_WHILE:
+        return parseWhileStatement(lexer, table, context, arena, state);
+
     case TOKEN_EOF:
         return NULL;
 

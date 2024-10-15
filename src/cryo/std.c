@@ -41,6 +41,11 @@ int strLength(char *str)
     return length;
 }
 
+void sys_exit(int code)
+{
+    exit(code);
+}
+
 void builtInError(char *type)
 {
     if (strcmp(type, "invalid") == 0)
@@ -71,5 +76,17 @@ void builtInError(char *type)
     else
     {
         printf("Error: Unknown exception\n");
+    }
+}
+
+void fib(int n)
+{
+    int a = 0, b = 1, c;
+    for (int i = 0; i < n; i++)
+    {
+        c = a + b;
+        a = b;
+        b = c;
+        printf("%d\n", a);
     }
 }

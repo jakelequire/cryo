@@ -88,6 +88,7 @@ namespace Cryo
     class BinaryExpressions;
     class Structs;
     class Imports;
+    class WhileStatements;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -185,6 +186,7 @@ namespace Cryo
         Loops &getLoops() { return *loops; }
         Structs &getStructs() { return *structs; }
         Imports &getImports() { return *imports; }
+        WhileStatements &getWhileStatements() { return *whileStatements; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
 
@@ -212,6 +214,7 @@ namespace Cryo
         std::unique_ptr<Loops> loops;
         std::unique_ptr<Structs> structs;
         std::unique_ptr<Imports> imports;
+        std::unique_ptr<WhileStatements> whileStatements;
     };
 
     /**
@@ -491,6 +494,8 @@ namespace Cryo
         llvm::Value *createParameter(llvm::Argument *param, llvm::Type *argTypes);
         llvm::Value *createFunctionCall(ASTNode *node);
 
+        llvm::Value *createReturnNode(ASTNode *node);
+
         void handleFunction(ASTNode *node);
 
     private:
@@ -652,6 +657,24 @@ namespace Cryo
     };
     // -----------------------------------------------------------------------------------------------
 
+    class WhileStatements
+    {
+    public:
+        WhileStatements(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief The main entry point to handle while loops.
+         */
+        void handleWhileLoop(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
+    // -----------------------------------------------------------------------------------------------
+
     class Compilation
     {
     public:
@@ -685,6 +708,7 @@ namespace Cryo
           binaryExpressions(std::make_unique<BinaryExpressions>(*this)),
           structs(std::make_unique<Structs>(*this)),
           imports(std::make_unique<Imports>(*this)),
+          whileStatements(std::make_unique<WhileStatements>(*this)),
           symTable(std::make_unique<BackendSymTable>())
 
     {

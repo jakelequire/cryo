@@ -2,32 +2,34 @@ namespace Main;
 
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
+extern function sys_exit(code: int) -> void;
 
-public function add(numOne: int, numTwo: int) -> int {
-    const sum: int = numOne + numTwo;
-    return sum;
-}    
+public function fibbonacci(n: int) -> void {
+    mut a: int = 0;
+    mut b: int = 1;
+    mut c: int = 0;
+    mut num: int = n;
+
+    while (num > 0) {
+        c = a + b;
+        a = b;
+        b = c;
+        num = num - 1;
+    }
+
+    printInt(c);
+    return;
+}
+
 
 public function main() -> void {
-    const intArray: int[] = [1, 2, 3, 4, 5];
-    const intOne: int = 34;
-    const intTwo: int = 35;
-
-    // String literal in function call
     printStr("Hello, World!");
 
-    // String literal in variable assignment
-    const fooStr: string = "Hello, World!";
-    printStr(fooStr);
+    mut intValue: int = 69;
+    printInt(intValue);
 
-    const varNameTest: string = fooStr;
-    printStr(varNameTest);
-
-    const addResult: int = add(intOne, intTwo);
-    printInt(addResult);
-
-    const intThree: int = intOne + intTwo;
-    printInt(intThree);
+    intValue = 420;
+    printInt(intValue);
 
     return;
 }
