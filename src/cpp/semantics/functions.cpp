@@ -162,10 +162,14 @@ namespace Cryo
         for (auto &arg : function->args())
         {
             // We are storing the aguments in the named values map
-            std::string paramName = functionNode->params[i]->data.param->name;
+            std::string paramName = std::string(functionNode->params[i]->data.param->name);
+            std::cout << "Function Param Name: " << paramName << std::endl;
+            ASTNode *paramNode = functionNode->params[i];
             arg.setName(paramName);
-            llvm::Value *param = createParameter(&arg, argTypes[i]);
+            llvm::Value *param = createParameter(&arg, argTypes[i], paramNode);
             compiler.getContext().namedValues[paramName] = &arg;
+
+            symTable.addParameter(currentNamespace, paramName, paramNode);
             ++i;
         }
 
@@ -517,6 +521,8 @@ namespace Cryo
     void Functions::createExternFunction(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Extern Function");
 
         ExternFunctionNode *functionNode = node->data.externFunction;
@@ -566,7 +572,10 @@ namespace Cryo
         int i = 0;
         for (auto &arg : function->args())
         {
-            arg.setName(functionNode->params[i]->data.param->name);
+            std::string paramName = functionNode->params[i]->data.param->name;
+            ASTNode *paramNode = functionNode->params[i];
+            arg.setName(paramName);
+            symTable.addParameter(namespaceName, paramName, paramNode);
             ++i;
         }
 
@@ -604,6 +613,8 @@ namespace Cryo
         int argCount = functionCallNode->argCount;
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Argument Count: " + std::to_string(argCount));
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Callee Name: " + std::string(functionName));
+
+        // STFunction *stFunction = compiler.getSymTable().getFunction(compiler.getContext().currentNamespace, functionName);
 
         // Get the argument values
         std::vector<llvm::Value *> argValues;
@@ -771,7 +782,7 @@ namespace Cryo
         return functionCall;
     }
 
-    llvm::Value *Functions::createParameter(llvm::Argument *param, llvm::Type *argTypes)
+    llvm::Value *Functions::createParameter(llvm::Argument *param, llvm::Type *argTypes, ASTNode *paramNode)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Types &types = compiler.getTypes();
@@ -788,7 +799,7 @@ namespace Cryo
         // llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(argTypes, param, paramName);
         llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, paramName);
         alloca->setAlignment(llvm::Align(8));
-        
+
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(param, alloca);
         storeInst->setAlignment(llvm::Align(8));
         // Load the value of the parameter
@@ -802,6 +813,11 @@ namespace Cryo
         debugger.logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
         return alloca;
+    }
+
+    llvm::Value *Functions::anyTypeParam(std::string functionName, llvm::Value *argValue)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
     }
 
     void Functions::createScopedFunctionCall(ASTNode *node)
@@ -941,12 +957,13 @@ namespace Cryo
             std::cout << "Instruction: " << std::endl;
             debugger.logLLVMInst(inst);
             llvm::Type *varInstType = types.parseInstForType(inst);
-            llvm::Value *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load.funcCall");
+            llvm::LoadInst *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load.funcCall");
             if (!varLoadValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Variable value not loaded");
                 CONDITION_FAILED;
             }
+            varLoadValue->setAlignment(llvm::Align(8));
 
             debugger.logMessage("INFO", __LINE__, "Functions", "Var Name Call Created with dereference. For Variable: " + varName);
             return varLoadValue;
@@ -1041,6 +1058,11 @@ namespace Cryo
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
                 CONDITION_FAILED;
             }
+            literalVar->setAlignment(llvm::Align(8));
+
+            // Add the literal to the named values
+            std::string literalName = literalVarPtr->getName().str();
+            compiler.getContext().namedValues[literalName] = literalVarPtr;
 
             return literalVar;
         }
@@ -1061,6 +1083,35 @@ namespace Cryo
             }
 
             return literalVarPtr;
+        }
+        case DATA_TYPE_BOOLEAN:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
+            llvm::Type *literalType = compiler.getTypes().getType(DATA_TYPE_BOOLEAN, 0);
+            bool literalValue = literalNode->value.booleanValue;
+            llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
+            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
+            if (!literalVarPtr)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalBool, literalVarPtr);
+
+            llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.bool.load.funcCall");
+            if (!literalVar)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                CONDITION_FAILED;
+            }
+            literalVar->setAlignment(llvm::Align(8));
+
+            // Add the literal to the named values
+            std::string literalName = literalVarPtr->getName().str();
+            compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+            return literalVar;
         }
         default:
         {
@@ -1124,10 +1175,56 @@ namespace Cryo
             expectedTypes.push_back(expectedType);
         }
 
+        // Find the orginal parameter types
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
         for (int i = 0; i < argCount; ++i)
         {
+            std::string paramName = callee->getArg(i)->getName().str();
+            STParameter *paramNode = compiler.getSymTable().getParameter(namespaceName, paramName);
+            if (!paramNode)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Parameter not found");
+                CONDITION_FAILED;
+            }
+
             llvm::Value *argValue = argValues[i];
             llvm::Type *expectedType = expectedTypes[i];
+
+            if (paramNode->dataType == DATA_TYPE_ANY)
+            {
+                // With a function parameter being `any` type, it only accepts pointers to any type
+                llvm::Value *argValue = argValues[i];
+                llvm::Type *argType = argValue->getType();
+                if (!argType->isPointerTy())
+                {
+                    // If the argument isn't a pointer, we need to get the pointer of the variable
+                    // Not the load instruction
+                    // Check if it alreadyd exists in the variable symbol table:
+                    std::string argName = argValue->getName().str();
+                    std::cout << "Argument Name: " << argName << std::endl;
+                    llvm::LoadInst *loadInst = llvm::dyn_cast<llvm::LoadInst>(argValue);
+                    std::string argOperandName = loadInst->getOperand(0)->getName().str();
+                    std::cout << "Argument Operand Name: " << argOperandName << std::endl;
+                    llvm::Value *argPtr = compiler.getContext().namedValues[argOperandName];
+                    if (!argPtr)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Argument pointer not found");
+                        CONDITION_FAILED;
+                    }
+
+                    verifiedArgs.push_back(argPtr);
+
+                    continue;
+                }
+                else
+                {
+                    verifiedArgs.push_back(argValue);
+                }
+
+                continue;
+            }
+
             if (argValue->getType()->getTypeID() != expectedType->getTypeID())
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Argument type mismatch");

@@ -180,6 +180,10 @@ CryoDataType getPrimativeTypeFromString(const char *typeStr)
     {
         return DATA_TYPE_DYN_VEC;
     }
+    else if (strcmp(typeStr, "Any") == 0)
+    {
+        return DATA_TYPE_ANY;
+    }
     else
     {
         logMessage("ERROR", __LINE__, "TypeDefs", "Unknown data type: %s", typeStr);

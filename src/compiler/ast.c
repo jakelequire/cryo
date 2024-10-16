@@ -762,15 +762,53 @@ ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state
     logMessage("INFO", __LINE__, "AST", "Created string literal node with value: %s", value);
 
     // Trim the `"` characters from the string
-    char *trimmedString = strdup(value);
-    trimmedString++;
+    char *trimmedString = strdup(value + 1);
     trimmedString[strlen(trimmedString) - 1] = '\0';
+
+    // Handle any formatting characters
+    trimmedString = handleStringFormatting(strdup(trimmedString));
+
+    printf("Manipulated string: %s\n", strdup(trimmedString));
 
     node->data.literal->dataType = DATA_TYPE_STRING;
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
 
     return node;
+}
+
+char *handleStringFormatting(char *value)
+{
+    // Find the first instance of a format specifier
+    // i.e `\n`, `\t`, etc.
+    char *formatSpecifier = strchr(value, '\\');
+    if (!formatSpecifier)
+    {
+        return value;
+    }
+
+    // Find the character after the backslash
+    char *formatChar = formatSpecifier + 1;
+    switch (*formatChar)
+    {
+    case 'n':
+        *formatSpecifier = '\n';
+        break;
+    case 't':
+        *formatSpecifier = '\t';
+        break;
+    case 'r':
+        *formatSpecifier = '\r';
+        break;
+    case '0':
+        *formatSpecifier = '\0';
+        break;
+    default:
+        break;
+    }
+
+    // Recursively call the function to handle the next format specifier
+    return handleStringFormatting(formatSpecifier);
 }
 
 ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state)

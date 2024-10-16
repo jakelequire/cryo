@@ -370,7 +370,8 @@ namespace Cryo
         case DATA_TYPE_STRING:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling String Literal");
-            llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, literalNode->value.stringValue);
+            std::string formattedString = formatString(literalNode->value.stringValue);
+            llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, formattedString);
             break;
         }
         case DATA_TYPE_VOID:
@@ -388,6 +389,47 @@ namespace Cryo
         }
 
         return llvmValue;
+    }
+
+    std::string Generator::formatString(std::string str)
+    {
+        std::string formattedString = "";
+        for (int i = 0; i < str.length(); i++)
+        {
+            if (str[i] == '\\')
+            {
+                if (str[i + 1] == 'n')
+                {
+                    formattedString += '\n';
+                    i++;
+                }
+                else if (str[i + 1] == 't')
+                {
+                    formattedString += '\t';
+                    i++;
+                }
+                else if (str[i + 1] == 'r')
+                {
+                    formattedString += '\r';
+                    i++;
+                }
+                else if (str[i + 1] == '0')
+                {
+                    formattedString += '\0';
+                    i++;
+                }
+                else
+                {
+                    formattedString += str[i];
+                }
+            }
+            else
+            {
+                formattedString += str[i];
+            }
+        }
+
+        return formattedString;
     }
 
     std::string Generator::getNamespace(ASTNode *node)

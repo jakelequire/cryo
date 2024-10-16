@@ -46,6 +46,19 @@ namespace Cryo
         CryoDataType dataType;
     };
 
+    struct STParameter
+    {
+        llvm::Value *LLVMValue;
+        llvm::Type *LLVMType;
+        llvm::StoreInst *LLVMStoreInst;
+        llvm::LoadInst *LLVMLoadInst;
+        std::string paramName;
+        std::string functionName;
+        ASTNode *ASTNode;
+        CryoNodeType nodeType;
+        CryoDataType dataType;
+    };
+
     struct STFunction
     {
         llvm::Function *LLVMFunction;
@@ -80,6 +93,7 @@ namespace Cryo
         std::unordered_map<std::string, STVariable> variableNode;
         std::unordered_map<std::string, STFunction> functionNode;
         std::unordered_map<std::string, STExternFunction> externFunctionNode;
+        std::unordered_map<std::string, STParameter> parameterNode;
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program
@@ -109,20 +123,22 @@ namespace Cryo
         STVariable createVarContainer(ASTNode *varNode);
         STFunction createFuncContainer(FunctionDeclNode *funcNode);
         STExternFunction createExternFuncContainer(ExternFunctionNode *externNode);
+        STParameter createParamContainer(void);
 
         // Getters
+        SymTable getSymTable();
         ASTNode *getASTNode(std::string namespaceName, CryoNodeType nodeType, std::string nodeName);
         CryoVariableNode *getVariableNode(std::string namespaceName, std::string varName);
         SymTableNode getSymTableNode(std::string namespaceName);
-        SymTable getSymTable();
-
         STVariable *getVariable(std::string namespaceName, std::string varName);
+        STParameter *getParameter(std::string namespaceName, std::string paramName);
 
         // Setters
         void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode);
         void addVariable(std::string namespaceName, std::string varName, ASTNode *varNode);
-        void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode);
+        void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode, llvm::Function *llvmFunction, llvm::Type *llvmReturnType);
         void addExternFunciton(std::string namespaceName, std::string funcName, ExternFunctionNode externNode);
+        void addParameter(std::string namespaceName, std::string paramName, ASTNode *paramNode);
 
         // Updates
         void updateVariableNode(std::string namespaceName, std::string varName, llvm::Value *llvmValue, llvm::Type *llvmType);
@@ -132,6 +148,7 @@ namespace Cryo
 
         void updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
         void updateExternFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
+        void updateParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType);
 
         // Debugging
         void printTable(std::string namespaceName);

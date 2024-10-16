@@ -266,6 +266,7 @@ namespace Cryo
         void handleProgram(ASTNode *node);
         llvm::Value *handleLiteralExpression(ASTNode *node);
         llvm::Value *getLiteralValue(LiteralNode *literalNode);
+        std::string formatString(std::string str);
 
         void handleImportStatement(ASTNode *node);
         void handleExternFunction(ASTNode *node);
@@ -490,7 +491,7 @@ namespace Cryo
     {
     public:
         Functions(CryoCompiler &compiler) : compiler(compiler) {}
-        llvm::Value *createParameter(llvm::Argument *param, llvm::Type *argTypes);
+        llvm::Value *createParameter(llvm::Argument *param, llvm::Type *argTypes, ASTNode *paramNode);
         llvm::Value *createFunctionCall(ASTNode *node);
 
         llvm::Value *createReturnNode(ASTNode *node);
@@ -513,6 +514,8 @@ namespace Cryo
         llvm::Value *createFunctionCallCall(FunctionCallNode *functionCallNode);
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
+
+        llvm::Value *anyTypeParam(std::string functionName, llvm::Value *argValue);
 
         std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
         llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);

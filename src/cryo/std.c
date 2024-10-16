@@ -46,47 +46,40 @@ void sys_exit(int code)
     exit(code);
 }
 
-void builtInError(char *type)
+int sizeOf(void *ptr)
 {
-    if (strcmp(type, "invalid") == 0)
-    {
-        fprintf(stderr, "Error: Invalid operation exception\n");
-        exit(1);
-    }
-    else if (strcmp(type, "null") == 0)
-    {
-        fprintf(stderr, "Error: Null pointer exception\n");
-        exit(1);
-    }
-    else if (strcmp(type, "indexoutofbounds") == 0)
-    {
-        fprintf(stderr, "Error: Index out of bounds exception\n");
-        exit(1);
-    }
-    else if (strcmp(type, "invalidcast") == 0)
-    {
-        fprintf(stderr, "Error: Invalid cast exception\n");
-        exit(1);
-    }
-    else if (strcmp(type, "invalidoperation") == 0)
-    {
-        fprintf(stderr, "Error: Invalid operation exception\n");
-        exit(1);
-    }
-    else
-    {
-        printf("Error: Unknown exception\n");
-    }
+    return sizeof(ptr);
 }
 
-void fib(int n)
+#define typename(x) _Generic((x), /* Get the name of a type */ \
+    _Bool: "_Bool",                                            \
+    unsigned char: "unsigned char",                            \
+    char: "char",                                              \
+    signed char: "signed char",                                \
+    short int: "short int",                                    \
+    unsigned short int: "unsigned short int",                  \
+    int: "int",                                                \
+    unsigned int: "unsigned int",                              \
+    long int: "long int",                                      \
+    unsigned long int: "unsigned long int",                    \
+    long long int: "long long int",                            \
+    unsigned long long int: "unsigned long long int",          \
+    float: "float",                                            \
+    double: "double",                                          \
+    long double: "long double",                                \
+    char *: "pointer to char",                                 \
+    void *: "pointer to void",                                 \
+    int *: "pointer to int",                                   \
+    const char *: puts,                                        \
+    const char[sizeof(x)]: puts,                               \
+    default: "other")
+
+void cryoTypeToCType(void *cryoPtr)
 {
-    int a = 0, b = 1, c;
-    for (int i = 0; i < n; i++)
-    {
-        c = a + b;
-        a = b;
-        b = c;
-        printf("%d\n", a);
-    }
+}
+
+void type_of(void *ptr)
+{
+    // Get the memory block of the pointer
+    printf("%s\n", typename(*ptr));
 }

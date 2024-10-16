@@ -342,8 +342,8 @@ namespace Cryo
 
         case NODE_PARAM:
             std::cout << ">>==----------------------{ Parameter Node }---------------------==<<" << std::endl;
-            std::cout << "Parameter Name: " << node->data.param->name << std::endl;
-            std::cout << "Function Name: " << node->data.param->functionName << std::endl;
+            std::cout << "Parameter Name: " << strdup(node->data.param->name) << std::endl;
+            std::cout << "Function Name: " << strdup(node->data.param->functionName) << std::endl;
             std::cout << "Data Type: " << CryoDataTypeToString(node->data.param->type) << std::endl;
             std::cout << "Has Default Value: " << (node->data.param->hasDefaultValue ? "Yes" : "No") << std::endl;
             if (node->data.param->hasDefaultValue)

@@ -237,8 +237,12 @@ namespace Cryo
         switch (operatorType)
         {
         case OPERATOR_ADD:
+        {
             result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp", false, true);
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(result);
+            inst->setHasNoSignedWrap(true);
             break;
+        }
         case OPERATOR_SUB:
             result = compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
             break;

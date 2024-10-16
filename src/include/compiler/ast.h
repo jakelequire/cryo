@@ -851,6 +851,7 @@ extern "C"
     ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state);
     ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state);
     ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state);
+    char *handleStringFormatting(char *value);
     ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state);
     ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena, CompilerState *state);
 

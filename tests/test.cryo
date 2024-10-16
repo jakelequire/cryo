@@ -3,8 +3,7 @@ namespace Main;
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
 extern function sys_exit(code: int) -> void;
-extern function fib(n: int) -> void;
-
+extern function type_of(typeOf: Any) -> void;
 
 public function fibonacci(n: int) -> void {
     mut a: int = 0;
@@ -25,6 +24,18 @@ public function fibonacci(n: int) -> void {
 
 
 public function main() -> void {
-    fibonacci(10);
+    printStr("Fibonacci sequence up to 16:");
+    fibonacci(16);
+
+    printStr("This is a test\n Another Test\t");
+
+    const testString: string = "This is a test";
+    const testInt: int = 69;
+
+    type_of("Hello");
+    type_of(34);
+    type_of(true);
+
     return;
 }
+

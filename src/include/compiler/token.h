@@ -324,6 +324,9 @@ extern "C"
 
         // Vectors
         DATA_TYPE_DYN_VEC, // `dyn_vec` 27
+
+        // Custom types
+        DATA_TYPE_ANY, // `Any`    28
     } CryoDataType;
 
     typedef enum CryoVisibilityType
