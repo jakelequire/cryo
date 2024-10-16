@@ -3,51 +3,14 @@ namespace Main;
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
 extern function sys_exit(code: int) -> void;
-
-// public function loopTest() -> void  {
-//     mut i: int = 0;
-//     while (i < 10) {
-//         printInt(i);
-//         i = i + 1;
-//     }
-//     return;
-// }
-
-// public function secondLoopTest(number: int) -> void {
-//     mut numTest: int = number;
-//     mut aTest: int = 0;
-//     const foo: int = aTest + 1;
-//     
-//     while(numTest > 0) {
-//         aTest = foo;
-//     }
-// 
-//     printInt(aTest);
-// 
-//     return;
-// }
+extern function fib(n: int) -> void;
 
 
 public function fibonacci(n: int) -> void {
     mut a: int = 0;
     mut b: int = 1;
     mut c: int = 0;
-    const aValStr: string = "A Value: ";
-    const bValStr: string = "B Value: ";
-    const cValStr: string = "C Value: ";
 
-    printStr("Fibbonacci Sequence: ");
-    printStr("Variables State before loop: ");
-    printStr(aValStr);
-    printInt(a);
-    printStr(bValStr);
-    printInt(b);
-    printStr(cValStr);
-    printInt(c);
-
-    printStr(" ");
-    printStr(" ");
-    printStr("Going into loop");
     while (n > 0) {
         c = a + b;
         a = b;
@@ -56,24 +19,17 @@ public function fibonacci(n: int) -> void {
         printInt(a);
         n = n - 1;
     }
+
     return;
 }
 
 
 public function main() -> void {
-    // mut intValue: int = 69;
-    // printInt(intValue);
-
-    // intValue = 420;
-    // printInt(intValue);
-
-    // printStr("Loop test");
-    // loopTest();
-
-    // printStr("Second loop test");
-    // secondLoopTest(5);
-
     fibonacci(10);
+
+    printStr(" ");
+    printStr("Correct Output: ");
+    fib(10);
 
     return;
 }

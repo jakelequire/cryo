@@ -780,7 +780,7 @@ namespace Cryo
         std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
 
-        std::string paramName = param->getName().str() + ".addr";
+        std::string paramName = param->getName().str() + ".ptr";
         std::cout << "Parameter Name: " << param->getName().str() << std::endl;
         std::cout << "Parameter Type: " << std::endl;
         std::cout << "Argument Type: " << std::endl;
@@ -939,7 +939,7 @@ namespace Cryo
             std::cout << "Instruction: " << std::endl;
             debugger.logLLVMInst(inst);
             llvm::Type *varInstType = types.parseInstForType(inst);
-            llvm::Value *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load");
+            llvm::Value *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load.funcCall");
             if (!varLoadValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Variable value not loaded");
@@ -1024,7 +1024,7 @@ namespace Cryo
             llvm::Type *literalType = compiler.getTypes().getType(DATA_TYPE_INT, 0);
             int literalValue = literalNode->value.intValue;
             llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
-            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int");
+            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
             if (!literalVarPtr)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
@@ -1033,7 +1033,7 @@ namespace Cryo
 
             llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
 
-            llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "literal.int.load");
+            llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
             if (!literalVar)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
@@ -1045,7 +1045,7 @@ namespace Cryo
         case DATA_TYPE_STRING:
         {
             debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
-            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str");
+            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str.ptr");
             if (!literalVarPtr)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");

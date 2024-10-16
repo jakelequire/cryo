@@ -83,6 +83,23 @@ namespace Cryo
                 if (leftValue->getType()->isPointerTy())
                 {
                     debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+
+                    llvm::LoadInst *isLoadInst = symTableVar->LLVMLoadInst;
+                    if (isLoadInst)
+                    {
+                        leftValue = isLoadInst;
+
+                        debugger.logMessage("INFO", __LINE__, "BinExp", "Using LoadInst");
+
+                        if (!leftValue)
+                        {
+                            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
+                            CONDITION_FAILED;
+                        }
+
+                        break;
+                    }
+                    // -----------------------
                     leftValue = dereferenceElPointer(leftValue, varName);
                     if (!leftValue)
                     {
@@ -301,10 +318,17 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        llvm::LoadInst *stLoadInst = symTableNode->LLVMLoadInst;
+        if (stLoadInst)
+        {
+            debugger.logMessage("INFO", __LINE__, "BinExp", "Value is already loaded");
+            return stLoadInst;
+        }
+
         // If the value is a pointer, we need to load the value
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
         llvm::Type *instTy = types.parseInstForType(inst);
-        std::string loadVarName = varName + ".load";
+        std::string loadVarName = varName + ".load.binop";
         llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, loadVarName);
         llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
         if (!loadValue)
@@ -355,7 +379,7 @@ namespace Cryo
         llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(instTy, nullptr, tempVarName);
 
         llvm::Value *tempValue = llvm::dyn_cast<llvm::Value>(allocaInst);
-        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".load");
+        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".loadTest");
 
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadInst, tempValue);
 

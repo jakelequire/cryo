@@ -42,11 +42,11 @@ namespace Cryo
 
         // Create the loop
         llvm::Function *function = compiler.getContext().builder.GetInsertBlock()->getParent();
+        llvm::BasicBlock *conditionBlock = llvm::BasicBlock::Create(compiler.getContext().context, "condition", function);
         llvm::BasicBlock *loopBlock = llvm::BasicBlock::Create(compiler.getContext().context, "loop", function);
         llvm::BasicBlock *afterBlock = llvm::BasicBlock::Create(compiler.getContext().context, "afterloop", function);
 
         // Create the condition block
-        llvm::BasicBlock *conditionBlock = llvm::BasicBlock::Create(compiler.getContext().context, "condition", function);
         compiler.getContext().builder.CreateBr(conditionBlock);
         compiler.getContext().builder.SetInsertPoint(conditionBlock);
 

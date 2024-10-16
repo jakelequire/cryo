@@ -122,9 +122,9 @@ namespace Cryo
             }
 
             // Load the value of the new variable
-            std::string loadedVarName = newVarName + ".load";
+            std::string loadedVarName = newVarName + ".load.var";
             llvm::Type *newVarType = newVarValue->getType();
-            llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(newVarType, newVarValue, loadedVarName);
+            llvm::LoadInst *loadedValue = compiler.getContext().builder.CreateLoad(newVarType, newVarValue, loadedVarName);
             if (!loadedValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Variables", "Failed to load new variable value");
@@ -133,6 +133,10 @@ namespace Cryo
 
             // Store the new value in the existing variable
             compiler.getContext().builder.CreateStore(loadedValue, varValue);
+
+            // Update the variable in the symbol table
+            symTable.updateVariableNode(currentModuleName, existingVarName, varValue, newVarValue->getType());
+            symTable.addLoadInstToVar(currentModuleName, existingVarName, loadedValue);
 
             break;
         }
@@ -177,7 +181,7 @@ namespace Cryo
         Arrays &arrays = compiler.getArrays();
 
         Types &types = compiler.getTypes();
-        debugger.logMessage("INFO", __LINE__, "Variables", "Processing Const Variable");
+        debugger.logMessage("INFO", __LINE__, "Variables", "Processing Mutable Variable");
         CryoVariableNode *varNode = node->data.varDecl;
         char *varName = varNode->name;
         std::cout << "Variable Name: " << varName << std::endl;
@@ -548,7 +552,7 @@ namespace Cryo
             {
                 CONDITION_FAILED;
             }
-            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, nullptr, varName);
+            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(ty, nullptr, varName + ".ptr");
             llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(varValue, ptrValue);
 
             compiler.getContext().namedValues[varName] = ptrValue;
@@ -666,7 +670,7 @@ namespace Cryo
             }
 
             llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
-            llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(llvmType, stValue, varName + ".load");
+            llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(llvmType, stValue, varName + ".load.var");
             llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
             llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
 
@@ -714,7 +718,7 @@ namespace Cryo
             llvm::Type *storeType = types.parseInstForType(storeInstruction);
 
             llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(storeType, nullptr, varName);
-            llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(storeType, llvmValue, varName + ".load");
+            llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(storeType, llvmValue, varName + ".load.var");
             llvm::Value *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
 
             // Add the variable to the named values map & symbol table

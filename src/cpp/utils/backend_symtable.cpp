@@ -143,6 +143,7 @@ namespace Cryo
         varContainer.LLVMValue = nullptr;
         varContainer.LLVMType = nullptr;
         varContainer.LLVMStoreInst = nullptr;
+        varContainer.LLVMLoadInst = nullptr;
 
         return varContainer;
     }
@@ -312,6 +313,29 @@ namespace Cryo
         symTable.namespaces[namespaceName] = symNode;
 
         std::cout << "[BackendSymTable] Store Instruction Added to Variable" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addLoadInstToVar(std::string namespaceName, std::string varName, llvm::LoadInst *loadInst)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Load Instruction to Variable");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+
+        // Add the load instruction to the variable node
+        varNode.LLVMLoadInst = loadInst;
+
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Load Instruction Added to Variable" << std::endl;
 
         return;
     }
