@@ -787,8 +787,10 @@ namespace Cryo
 
         // llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(argTypes, param, paramName);
         llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, paramName);
+        alloca->setAlignment(llvm::Align(8));
+        
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(param, alloca);
-
+        storeInst->setAlignment(llvm::Align(8));
         // Load the value of the parameter
         // llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
 

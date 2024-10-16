@@ -26,10 +26,5 @@ public function fibonacci(n: int) -> void {
 
 public function main() -> void {
     fibonacci(10);
-
-    printStr(" ");
-    printStr("Correct Output: ");
-    fib(10);
-
     return;
 }

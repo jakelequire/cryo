@@ -330,6 +330,7 @@ namespace Cryo
         llvm::Type *instTy = types.parseInstForType(inst);
         std::string loadVarName = varName + ".load.binop";
         llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, loadVarName);
+        loadInst->setAlignment(llvm::Align(8));
         llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
         if (!loadValue)
         {
@@ -380,8 +381,8 @@ namespace Cryo
 
         llvm::Value *tempValue = llvm::dyn_cast<llvm::Value>(allocaInst);
         llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".loadTest");
-
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadInst, tempValue);
+        storeInst->setAlignment(llvm::Align(8));
 
         return tempValue;
     }
