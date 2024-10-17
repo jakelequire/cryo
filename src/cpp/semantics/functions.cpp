@@ -77,6 +77,8 @@ namespace Cryo
         Variables &variables = compiler.getVariables();
         Generator &generator = compiler.getGenerator();
         Types &types = compiler.getTypes();
+        BackendSymTable &symTable = compiler.getSymTable();
+        std::string currentNamespace = cryoContext.currentNamespace;
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Declaration");
 
         FunctionDeclNode *functionNode = node->data.functionDecl;
@@ -100,8 +102,8 @@ namespace Cryo
         {
             CryoParameterNode *argNode = functionNode->params[i]->data.param;
             assert(argNode != nullptr);
-            CryoDataType _argType = argNode->type;
 
+            CryoDataType _argType = argNode->type;
             if (_argType == DATA_TYPE_STRING)
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
@@ -160,10 +162,14 @@ namespace Cryo
         for (auto &arg : function->args())
         {
             // We are storing the aguments in the named values map
-            std::string paramName = functionNode->params[i]->data.param->name;
+            std::string paramName = std::string(functionNode->params[i]->data.param->name);
+            std::cout << "Function Param Name: " << paramName << std::endl;
+            ASTNode *paramNode = functionNode->params[i];
             arg.setName(paramName);
-            llvm::Value *param = createParameter(&arg, argTypes[i]);
+            llvm::Value *param = createParameter(&arg, argTypes[i], paramNode);
             compiler.getContext().namedValues[paramName] = &arg;
+
+            symTable.addParameter(currentNamespace, paramName, paramNode);
             ++i;
         }
 
@@ -179,22 +185,23 @@ namespace Cryo
             CryoNodeType nodeType = statement->metaData->type;
             std::cout << "Statement: " << CryoNodeTypeToString(statement->metaData->type) << std::endl;
 
-            if (nodeType == NODE_VAR_DECLARATION)
+            switch (nodeType)
+            {
+            case NODE_VAR_DECLARATION:
             {
                 debugger.logMessage("INFO", __LINE__, "Functions", "Creating Variable Declaration");
                 variables.createLocalVariable(statement);
-                continue;
+                break;
             }
-
-            // if (nodeType == NODE_FUNCTION_CALL)
-            // {
-            //     debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
-            //     createFunctionCall(statement);
-            //     continue;
-            // }
-
-            if (nodeType == NODE_RETURN_STATEMENT)
+            case NODE_FUNCTION_CALL:
             {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
+                createFunctionCall(statement);
+                break;
+            }
+            case NODE_RETURN_STATEMENT:
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
                 switch (returnType)
                 {
@@ -206,15 +213,53 @@ namespace Cryo
                 }
                 case DATA_TYPE_INT:
                 {
-                    debugger.logMessage("INFO", __LINE__, "Functions", "Returning int");
-                    ASTNode *returnStatement = statement->data.returnStatement->expression;
-                    llvm::Value *returnValue = generator.getInitilizerValue(returnStatement);
-                    if (returnValue->getType()->isPointerTy())
+                    CryoNodeType returnTypeNode = statement->data.returnStatement->expression->metaData->type;
+                    std::cout << "Return Type Node: " << CryoNodeTypeToString(returnTypeNode) << std::endl;
+                    switch (returnTypeNode)
                     {
-                        llvm::Type *returnType = types.getType(DATA_TYPE_INT, 0);
-                        returnValue = compiler.getContext().builder.CreateLoad(returnType, returnValue);
+                    case NODE_VAR_NAME:
+                    {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning Var Name with type int");
+                        std::string varName = statement->data.returnStatement->expression->data.varName->varName;
+                        STVariable *stVarNode = symTable.getVariable(currentNamespace, varName);
+                        if (!stVarNode)
+                        {
+                            debugger.logMessage("ERROR", __LINE__, "Functions", "Failed to get variable node");
+                            CONDITION_FAILED;
+                        }
+                        llvm::Value *varValue = stVarNode->LLVMValue;
+                        if (!varValue)
+                        {
+                            debugger.logMessage("ERROR", __LINE__, "Functions", "Failed to get variable value");
+                            CONDITION_FAILED;
+                        }
+                        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(varValue);
+                        llvm::Type *instTy = types.parseInstForType(inst);
+
+                        llvm::Value *returnValue = compiler.getContext().builder.CreateLoad(instTy, varValue, varName + ".retload");
+                        compiler.getContext().builder.CreateRet(returnValue);
+                        break;
                     }
-                    compiler.getContext().builder.CreateRet(returnValue);
+                    case NODE_LITERAL_EXPR:
+                    {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning Literal Expression with type int");
+                        llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                        compiler.getContext().builder.CreateRet(returnValue);
+                        break;
+                    }
+                    case NODE_BINARY_EXPR:
+                    {
+                        debugger.logMessage("INFO", __LINE__, "Functions", "Returning Binary Expression with type int");
+                        llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                        compiler.getContext().builder.CreateRet(returnValue);
+                        break;
+                    }
+                    default:
+                    {
+                        std::cout << "Unknown return type node: " << CryoNodeTypeToString(returnTypeNode) << std::endl;
+                        CONDITION_FAILED;
+                    }
+                    }
                     break;
                 }
                 case DATA_TYPE_STRING:
@@ -234,12 +279,13 @@ namespace Cryo
                     CONDITION_FAILED;
                 }
                 }
-                continue;
-            }
 
-            else
+                break;
+            }
+            default:
             {
                 compiler.getGenerator().parseTree(statement);
+            }
             }
         }
 
@@ -318,20 +364,89 @@ namespace Cryo
         CryoDataType returnType = returnNode->returnType;
         debugger.logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
 
-        switch (returnType)
+        CryoNodeType nodeType = returnNode->expression->metaData->type;
+        std::cout << "Return Node Type: " << CryoNodeTypeToString(nodeType) << std::endl;
+
+        switch (nodeType)
         {
-        case DATA_TYPE_VOID:
+        case NODE_LITERAL_EXPR:
         {
-            debugger.logMessage("INFO", __LINE__, "Functions", "Returning void");
-            cryoContext.builder.CreateRet(nullptr);
+            debugger.logMessage("INFO", __LINE__, "Functions", "Creating Literal Expression");
+            llvm::Value *returnValue = generator.getInitilizerValue(node);
+            cryoContext.builder.CreateRet(returnValue);
             break;
         }
-        }
-        // This is being handled in the function block
-        // Nothing to do in this function
-        // I might migrate the logic within the `createFunctionDeclaration` function to this function in the future.
+        case NODE_VAR_NAME:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Creating Var Name");
+            std::string varName = returnNode->expression->data.varName->varName;
+            STVariable *stVarNode = compiler.getSymTable().getVariable(cryoContext.currentNamespace, varName);
+            if (!stVarNode)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Failed to get variable node");
+                CONDITION_FAILED;
+            }
 
+            llvm::Value *varValue = stVarNode->LLVMValue;
+            if (!varValue)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Failed to get variable value");
+                CONDITION_FAILED;
+            }
+
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(varValue);
+            llvm::Type *instTy = types.parseInstForType(inst);
+
+            llvm::Value *returnValue = cryoContext.builder.CreateLoad(instTy, varValue, varName + ".retload");
+            cryoContext.builder.CreateRet(returnValue);
+
+            break;
+        }
+        case NODE_BINARY_EXPR:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Creating Binary Expression");
+            llvm::Value *returnValue = generator.getInitilizerValue(node);
+            cryoContext.builder.CreateRet(returnValue);
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown node type");
+            std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
+            CONDITION_FAILED;
+        }
+        }
         return;
+    }
+
+    llvm::Value *Functions::createReturnNode(ASTNode *node)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
+        debugger.logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
+
+        if (node->metaData->type != NODE_RETURN_STATEMENT)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Node is not a return statement");
+            CONDITION_FAILED;
+        }
+
+        CryoReturnNode *returnNode = node->data.returnStatement;
+        assert(returnNode != nullptr);
+
+        CryoDataType returnType = returnNode->returnType;
+        debugger.logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
+
+        ASTNode *returnExpression = returnNode->expression;
+        if (!returnExpression)
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Return expression is null");
+            CONDITION_FAILED;
+        }
+
+        std::cout << "\n\nReturn Expression: " << std::endl;
+        std::cout << "Return Type: " << CryoDataTypeToString(returnType) << std::endl;
+        std::cout << "Return Expression Type: " << CryoNodeTypeToString(returnExpression->metaData->type) << std::endl;
+        debugger.logNode(returnExpression);
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -406,6 +521,8 @@ namespace Cryo
     void Functions::createExternFunction(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        BackendSymTable &symTable = compiler.getSymTable();
+        std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Extern Function");
 
         ExternFunctionNode *functionNode = node->data.externFunction;
@@ -455,7 +572,10 @@ namespace Cryo
         int i = 0;
         for (auto &arg : function->args())
         {
-            arg.setName(functionNode->params[i]->data.param->name);
+            std::string paramName = functionNode->params[i]->data.param->name;
+            ASTNode *paramNode = functionNode->params[i];
+            arg.setName(paramName);
+            symTable.addParameter(namespaceName, paramName, paramNode);
             ++i;
         }
 
@@ -493,6 +613,8 @@ namespace Cryo
         int argCount = functionCallNode->argCount;
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Argument Count: " + std::to_string(argCount));
         debugger.logMessage("INFO", __LINE__, "Functions", "Function Callee Name: " + std::string(functionName));
+
+        // STFunction *stFunction = compiler.getSymTable().getFunction(compiler.getContext().currentNamespace, functionName);
 
         // Get the argument values
         std::vector<llvm::Value *> argValues;
@@ -535,6 +657,8 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "Functions", "Argument is a variable name");
                 VariableNameNode *varNameNode = argNode->data.varName;
                 assert(varNameNode != nullptr);
+
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument Variable Name: " + std::string(varNameNode->varName));
 
                 llvm::Value *argNode = createVarNameCall(varNameNode);
                 if (!argNode)
@@ -635,6 +759,10 @@ namespace Cryo
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Function call not created");
                 CONDITION_FAILED;
             }
+
+            debugger.logMessage("INFO", __LINE__, "Functions", "Function Call Created");
+
+            return functionCall;
         }
 
         // If there are arguments, create the function call with the arguments
@@ -654,32 +782,42 @@ namespace Cryo
         return functionCall;
     }
 
-    llvm::Value *Functions::createParameter(llvm::Argument *param, llvm::Type *argTypes)
+    llvm::Value *Functions::createParameter(llvm::Argument *param, llvm::Type *argTypes, ASTNode *paramNode)
     {
         CryoDebugger &debugger = compiler.getDebugger();
         Types &types = compiler.getTypes();
         Variables &variables = compiler.getVariables();
+        BackendSymTable &symTable = compiler.getSymTable();
+        std::string namespaceName = compiler.getContext().currentNamespace;
         debugger.logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
 
-        llvm::Value *resultParam = nullptr;
-        std::string paramName = param->getName().str() + ".addr";
+        std::string paramName = param->getName().str() + ".ptr";
         std::cout << "Parameter Name: " << param->getName().str() << std::endl;
         std::cout << "Parameter Type: " << std::endl;
         std::cout << "Argument Type: " << std::endl;
 
         // llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(argTypes, param, paramName);
         llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, paramName);
-        compiler.getContext().builder.CreateStore(param, alloca);
+        alloca->setAlignment(llvm::Align(8));
 
-        compiler.getContext().namedValues[paramName] = alloca;
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(param, alloca);
+        storeInst->setAlignment(llvm::Align(8));
+        // Load the value of the parameter
+        // llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
 
-        resultParam = alloca;
+        std::string _paramName = param->getName().str();
+        compiler.getContext().namedValues[param->getName().str()] = alloca;
 
-        debugger.logLLVMValue(resultParam);
+        symTable.addParamAsVariable(namespaceName, _paramName, alloca, argTypes, storeInst);
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
-        return resultParam;
+        return alloca;
+    }
+
+    llvm::Value *Functions::anyTypeParam(std::string functionName, llvm::Value *argValue)
+    {
+        CryoDebugger &debugger = compiler.getDebugger();
     }
 
     void Functions::createScopedFunctionCall(ASTNode *node)
@@ -809,14 +947,7 @@ namespace Cryo
         }
 
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(storeInst);
-        std::cout << "Instruction: " << std::endl;
-        debugger.logLLVMInst(inst);
-
         llvm::Type *varInstType = types.parseInstForType(inst);
-        debugger.logLLVMType(varInstType);
-
-        std::cout << "Variable Value: " << std::endl;
-        debugger.logLLVMValue(varValue);
 
         // This is to dereference an integer type
         bool isIntType = varInstType->isIntegerTy();
@@ -826,16 +957,19 @@ namespace Cryo
             std::cout << "Instruction: " << std::endl;
             debugger.logLLVMInst(inst);
             llvm::Type *varInstType = types.parseInstForType(inst);
-            llvm::Value *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load");
+            llvm::LoadInst *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load.funcCall");
             if (!varLoadValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Variable value not loaded");
                 CONDITION_FAILED;
             }
+            varLoadValue->setAlignment(llvm::Align(8));
 
+            debugger.logMessage("INFO", __LINE__, "Functions", "Var Name Call Created with dereference. For Variable: " + varName);
             return varLoadValue;
         }
 
+        debugger.logMessage("INFO", __LINE__, "Functions", "Var Name Call Created without dereference. For Variable: " + varName);
         return varValue;
     }
 
@@ -874,14 +1008,12 @@ namespace Cryo
 
             if (nodeType == NODE_LITERAL_EXPR)
             {
-                debugger.logNode(varDeclNode->initializer);
                 llvm::Value *varValue = compiler.getGenerator().getLiteralValue(varDeclNode->initializer->data.literal);
                 if (!varValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "Functions", "Variable value not created");
                     CONDITION_FAILED;
                 }
-                debugger.logLLVMValue(varValue);
                 return varValue;
             }
             return varValue;
@@ -901,21 +1033,94 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        // Allocate a new variable for the literal
-        llvm::Value *literalVar = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal");
-        if (!literalVar)
+        CryoDataType dataType = literalNode->dataType;
+        switch (dataType)
         {
-            debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+        case DATA_TYPE_INT:
+        {
+            // Create the integer literal
+            debugger.logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+            llvm::Type *literalType = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+            int literalValue = literalNode->value.intValue;
+            llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+            if (!literalVarPtr)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+            llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+            if (!literalVar)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                CONDITION_FAILED;
+            }
+            literalVar->setAlignment(llvm::Align(8));
+
+            // Add the literal to the named values
+            std::string literalName = literalVarPtr->getName().str();
+            compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+            return literalVar;
+        }
+        case DATA_TYPE_STRING:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
+            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str.ptr");
+            if (!literalVarPtr)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                CONDITION_FAILED;
+            }
+            llvm::Value *literalVar = compiler.getContext().builder.CreateStore(literalValue, literalVarPtr);
+            if (!literalVar)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not stored");
+                CONDITION_FAILED;
+            }
+
+            return literalVarPtr;
+        }
+        case DATA_TYPE_BOOLEAN:
+        {
+            debugger.logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
+            llvm::Type *literalType = compiler.getTypes().getType(DATA_TYPE_BOOLEAN, 0);
+            bool literalValue = literalNode->value.booleanValue;
+            llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
+            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
+            if (!literalVarPtr)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalBool, literalVarPtr);
+
+            llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.bool.load.funcCall");
+            if (!literalVar)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                CONDITION_FAILED;
+            }
+            literalVar->setAlignment(llvm::Align(8));
+
+            // Add the literal to the named values
+            std::string literalName = literalVarPtr->getName().str();
+            compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+            return literalVar;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "Functions", "Unknown literal type");
             CONDITION_FAILED;
         }
-        // Store the literal value in the variable
-        compiler.getContext().builder.CreateStore(literalValue, literalVar);
+        }
 
-        // Add the literal variable to the named values map
-        std::string literalName = literalVar->getName().str();
-        compiler.getContext().namedValues[literalName] = literalVar;
-
-        return literalVar;
+        return nullptr;
     }
 
     llvm::Value *Functions::createIndexExprCall(IndexExprNode *indexNode)
@@ -970,20 +1175,70 @@ namespace Cryo
             expectedTypes.push_back(expectedType);
         }
 
+        // Find the orginal parameter types
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
         for (int i = 0; i < argCount; ++i)
         {
+            std::string paramName = callee->getArg(i)->getName().str();
+            STParameter *paramNode = compiler.getSymTable().getParameter(namespaceName, paramName);
+            if (!paramNode)
+            {
+                debugger.logMessage("ERROR", __LINE__, "Functions", "Parameter not found");
+                CONDITION_FAILED;
+            }
+
             llvm::Value *argValue = argValues[i];
             llvm::Type *expectedType = expectedTypes[i];
+
+            if (paramNode->dataType == DATA_TYPE_ANY)
+            {
+                // With a function parameter being `any` type, it only accepts pointers to any type
+                llvm::Value *argValue = argValues[i];
+                llvm::Type *argType = argValue->getType();
+                if (!argType->isPointerTy())
+                {
+                    // If the argument isn't a pointer, we need to get the pointer of the variable
+                    // Not the load instruction
+                    // Check if it alreadyd exists in the variable symbol table:
+                    std::string argName = argValue->getName().str();
+                    std::cout << "Argument Name: " << argName << std::endl;
+                    llvm::LoadInst *loadInst = llvm::dyn_cast<llvm::LoadInst>(argValue);
+                    std::string argOperandName = loadInst->getOperand(0)->getName().str();
+                    std::cout << "Argument Operand Name: " << argOperandName << std::endl;
+                    llvm::Value *argPtr = compiler.getContext().namedValues[argOperandName];
+                    if (!argPtr)
+                    {
+                        debugger.logMessage("ERROR", __LINE__, "Functions", "Argument pointer not found");
+                        CONDITION_FAILED;
+                    }
+
+                    verifiedArgs.push_back(argPtr);
+
+                    continue;
+                }
+                else
+                {
+                    verifiedArgs.push_back(argValue);
+                }
+
+                continue;
+            }
+
             if (argValue->getType()->getTypeID() != expectedType->getTypeID())
             {
                 debugger.logMessage("ERROR", __LINE__, "Functions", "Argument type mismatch");
 
                 // Cast the argument to the expected type
-                llvm::Value *castValue = createArgCast(argValue, expectedType);
-                verifiedArgs.push_back(castValue);
+                // llvm::Value *castValue = createArgCast(argValue, expectedType);
+                verifiedArgs.push_back(argValue);
                 continue;
             }
-            verifiedArgs.push_back(argValue);
+            else
+            {
+                debugger.logMessage("INFO", __LINE__, "Functions", "Argument type matches expected type");
+                verifiedArgs.push_back(argValue);
+            }
         }
 
         debugger.logMessage("INFO", __LINE__, "Functions", "Callee Arguments Verified");

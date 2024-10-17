@@ -225,6 +225,8 @@ char *CryoDataTypeToString(CryoDataType type)
         return "TYPE_INT64_ARRAY";
     case DATA_TYPE_DYN_VEC:
         return "TYPE_DYN_VEC";
+    case DATA_TYPE_ANY:
+        return "TYPE_ANY";
     case DATA_TYPE_UNKNOWN:
         return "TYPE_UNKNOWN";
     default:

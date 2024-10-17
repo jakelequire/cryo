@@ -131,6 +131,15 @@ namespace Cryo
         return varNode;
     }
 
+    STParameter *BackendSymTable::getParameter(std::string namespaceName, std::string paramName)
+    {
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the parameter in the SymTable
+        STParameter *paramNode = &symNode.parameterNode[paramName];
+        return paramNode;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     /// Struct Containers
@@ -143,6 +152,7 @@ namespace Cryo
         varContainer.LLVMValue = nullptr;
         varContainer.LLVMType = nullptr;
         varContainer.LLVMStoreInst = nullptr;
+        varContainer.LLVMLoadInst = nullptr;
 
         return varContainer;
     }
@@ -169,6 +179,22 @@ namespace Cryo
         externFuncContainer.returnType = externNode->returnType;
 
         return externFuncContainer;
+    }
+
+    STParameter BackendSymTable::createParamContainer(void)
+    {
+        CryoDebugger &debugger = getDebugger();
+        STParameter paramContainer;
+        paramContainer.ASTNode = nullptr;
+        paramContainer.LLVMValue = nullptr;
+        paramContainer.LLVMType = nullptr;
+        paramContainer.LLVMStoreInst = nullptr;
+        paramContainer.paramName = "NULL";
+        paramContainer.functionName = "NULL";
+        paramContainer.nodeType = NODE_UNKNOWN;
+        paramContainer.dataType = DATA_TYPE_UNKNOWN;
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Parameter Container Created");
+        return paramContainer;
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -220,16 +246,22 @@ namespace Cryo
         return;
     }
 
-    void BackendSymTable::addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode)
+    void BackendSymTable::addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode, llvm::Function *llvmFunction, llvm::Type *llvmReturnType)
     {
         CryoDebugger &debugger = getDebugger();
         debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Function to SymTable");
+
+        std::cout << "Function Name: " << funcName << std::endl;
+        std::cout << "Namespace Name: " << namespaceName << std::endl;
 
         // Add the function to the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
 
         // Create the function container
         STFunction funcContainer = createFuncContainer(&funcNode);
+        funcContainer.LLVMFunction = llvmFunction;
+        funcContainer.LLVMReturnType = llvmReturnType;
+        funcContainer.ASTNode = &funcNode;
 
         // Add the function to the SymTable
         symNode.functionNode[funcName] = funcContainer;
@@ -256,6 +288,35 @@ namespace Cryo
         symTable.namespaces[namespaceName] = symNode;
 
         std::cout << "[BackendSymTable] Extern Function Added" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addParameter(std::string namespaceName, std::string paramName, ASTNode *paramNode)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Parameter to SymTable");
+
+        // Add the parameter to the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        std::cout << "Parameter Name: " << paramName << std::endl;
+        std::cout << "Namespace Name: " << namespaceName << std::endl;
+
+        // Create the parameter container
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Creating Parameter Container");
+        STParameter paramContainer = createParamContainer();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Parameter Container Created");
+        paramContainer.paramName = paramName;
+        paramContainer.ASTNode = paramNode;
+        paramContainer.dataType = paramNode->data.param->type;
+        paramContainer.nodeType = paramNode->metaData->type;
+
+        // Add the parameter to the SymTable
+        symNode.parameterNode[paramName] = paramContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Parameter Added" << std::endl;
 
         return;
     }
@@ -316,6 +377,53 @@ namespace Cryo
         return;
     }
 
+    void BackendSymTable::addLoadInstToVar(std::string namespaceName, std::string varName, llvm::LoadInst *loadInst)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Load Instruction to Variable");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+
+        // Add the load instruction to the variable node
+        varNode.LLVMLoadInst = loadInst;
+
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Load Instruction Added to Variable" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::addParamAsVariable(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Adding Parameter as Variable");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Create the variable container
+        STVariable varContainer;
+        varContainer.LLVMValue = llvmValue;
+        varContainer.LLVMType = llvmType;
+        varContainer.LLVMStoreInst = storeInst;
+        varContainer.ASTNode = nullptr;
+
+        // Add the variable to the SymTable
+        symNode.variableNode[paramName] = varContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Parameter Added as Variable" << std::endl;
+
+        return;
+    }
+
     void BackendSymTable::updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes)
     {
         CryoDebugger &debugger = getDebugger();
@@ -362,6 +470,30 @@ namespace Cryo
         symTable.namespaces[namespaceName] = symNode;
 
         std::cout << "[BackendSymTable] Extern Function Node Updated" << std::endl;
+
+        return;
+    }
+
+    void BackendSymTable::updateParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType)
+    {
+        CryoDebugger &debugger = getDebugger();
+        debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Updating Parameter");
+
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+
+        // Find the parameter in the SymTable
+        STParameter paramNode = symNode.parameterNode[paramName];
+
+        // Update the parameter
+        paramNode.LLVMValue = llvmValue;
+        paramNode.LLVMType = llvmType;
+
+        // Update the parameter in the SymTable
+        symNode.parameterNode[paramName] = paramNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        std::cout << "[BackendSymTable] Parameter Updated" << std::endl;
 
         return;
     }
@@ -619,9 +751,16 @@ namespace Cryo
         case NODE_STRUCT_DECLARATION:
             debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing STRUCT_DECLARATION node");
             break;
+
         case NODE_SCOPED_FUNCTION_CALL:
             debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing SCOPED_FUNCTION_CALL node");
             break;
+
+        case NODE_PARAM:
+        {
+            debugger.logMessage("INFO", __LINE__, "BackendSymTable", "Processing PARAM node");
+            break;
+        }
         default:
         {
             CryoNodeType nodeType = node->metaData->type;

@@ -65,15 +65,41 @@ namespace Cryo
                 debugger.logMessage("INFO", __LINE__, "BinExp", "Getting left value");
                 std::string varName = leftNode->data.varName->varName;
                 std::cout << "<!> (left) Variable Name: " << varName << std::endl;
-                leftValue = compiler.getVariables().getVariable(varName);
+
+                STVariable *symTableVar = symTable.getVariable(namespaceName, varName);
+                if (!symTableVar)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable from symtable");
+                    CONDITION_FAILED;
+                }
+
+                leftValue = symTableVar->LLVMValue;
                 if (!leftValue)
                 {
                     debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
                     CONDITION_FAILED;
                 }
+
                 if (leftValue->getType()->isPointerTy())
                 {
                     debugger.logMessage("INFO", __LINE__, "BinExp", "Creating temporary value for pointer");
+
+                    llvm::LoadInst *isLoadInst = symTableVar->LLVMLoadInst;
+                    if (isLoadInst)
+                    {
+                        leftValue = isLoadInst;
+
+                        debugger.logMessage("INFO", __LINE__, "BinExp", "Using LoadInst");
+
+                        if (!leftValue)
+                        {
+                            debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
+                            CONDITION_FAILED;
+                        }
+
+                        break;
+                    }
+                    // -----------------------
                     leftValue = dereferenceElPointer(leftValue, varName);
                     if (!leftValue)
                     {
@@ -211,8 +237,12 @@ namespace Cryo
         switch (operatorType)
         {
         case OPERATOR_ADD:
-            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
+        {
+            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp", false, true);
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(result);
+            inst->setHasNoSignedWrap(true);
             break;
+        }
         case OPERATOR_SUB:
             result = compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
             break;
@@ -292,11 +322,20 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        llvm::LoadInst *stLoadInst = symTableNode->LLVMLoadInst;
+        if (stLoadInst)
+        {
+            debugger.logMessage("INFO", __LINE__, "BinExp", "Value is already loaded");
+            return stLoadInst;
+        }
+
         // If the value is a pointer, we need to load the value
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
         llvm::Type *instTy = types.parseInstForType(inst);
-
-        llvm::Value *loadValue = compiler.getContext().builder.CreateLoad(instTy, value, varName + ".load");
+        std::string loadVarName = varName + ".load.binop";
+        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, loadVarName);
+        loadInst->setAlignment(llvm::Align(8));
+        llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
         if (!loadValue)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to load value from pointer");
@@ -331,7 +370,6 @@ namespace Cryo
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get variable value from symtable");
             CONDITION_FAILED;
         }
-        debugger.logLLVMValue(stValue);
 
         llvm::StoreInst *stStoreInst = symTableNode->LLVMStoreInst;
         if (!stStoreInst)
@@ -343,9 +381,12 @@ namespace Cryo
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
         llvm::Type *instTy = types.parseInstForType(inst);
 
-        llvm::Value *tempValue = compiler.getContext().builder.CreateAlloca(instTy, nullptr, tempVarName);
-        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".load");
+        llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(instTy, nullptr, tempVarName);
+
+        llvm::Value *tempValue = llvm::dyn_cast<llvm::Value>(allocaInst);
+        llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(instTy, value, tempVarName + ".loadTest");
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadInst, tempValue);
+        storeInst->setAlignment(llvm::Align(8));
 
         return tempValue;
     }
@@ -359,7 +400,96 @@ namespace Cryo
         llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(left);
         llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(right);
 
-        if (!leftValue || !rightValue)
+        CryoNodeType leftType = left->metaData->type;
+        CryoNodeType rightType = right->metaData->type;
+
+        std::cout << "Left Type: " << CryoNodeTypeToString(leftType) << std::endl;
+        std::cout << "Right Type: " << CryoNodeTypeToString(rightType) << std::endl;
+        std::cout << "Operator: " << CryoOperatorTypeToString(op) << std::endl;
+
+        llvm::Value *leftEval = nullptr;
+        llvm::Value *rightEval = nullptr;
+
+        switch (leftType)
+        {
+        case NODE_VAR_NAME:
+        {
+            std::string varName = left->data.varName->varName;
+            leftEval = compiler.getVariables().getVariable(varName);
+            if (!leftEval)
+            {
+                debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                compiler.dumpModule();
+                CONDITION_FAILED;
+            }
+            if (leftEval->getType()->isPointerTy())
+            {
+                leftEval = dereferenceElPointer(leftEval, varName);
+                if (!leftEval)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to dereference left pointer");
+                    CONDITION_FAILED;
+                }
+            }
+            break;
+        }
+        case NODE_LITERAL_EXPR:
+        {
+            leftEval = compiler.getGenerator().getInitilizerValue(left);
+            if (!leftEval)
+            {
+                debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                CONDITION_FAILED;
+            }
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown left node type");
+            CONDITION_FAILED;
+        }
+        }
+
+        switch (rightType)
+        {
+        case NODE_VAR_NAME:
+        {
+            std::string varName = right->data.varName->varName;
+            rightEval = compiler.getVariables().getVariable(varName);
+            if (!rightEval)
+            {
+                debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                CONDITION_FAILED;
+            }
+            if (rightEval->getType()->isPointerTy())
+            {
+                rightEval = dereferenceElPointer(rightEval, varName);
+                if (!rightEval)
+                {
+                    debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to dereference right pointer");
+                    CONDITION_FAILED;
+                }
+            }
+            break;
+        }
+        case NODE_LITERAL_EXPR:
+        {
+            rightEval = compiler.getGenerator().getInitilizerValue(right);
+            if (!rightEval)
+            {
+                debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                CONDITION_FAILED;
+            }
+            break;
+        }
+        default:
+        {
+            debugger.logMessage("ERROR", __LINE__, "BinExp", "Unknown right node type");
+            CONDITION_FAILED;
+        }
+        }
+
+        if (!leftEval || !rightEval)
         {
             debugger.logMessage("ERROR", __LINE__, "BinExp", "Failed to generate values for comparison expression");
             CONDITION_FAILED;

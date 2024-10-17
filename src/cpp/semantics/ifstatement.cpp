@@ -75,20 +75,32 @@ namespace Cryo
 
         // Generate code for the then block
         compiler.getContext().builder.SetInsertPoint(thenBlock);
-        compiler.getGenerator().parseTree(thenBranch);
-        if (!thenBlock->getTerminator())
+        if (!thenBranch)
         {
+            // Create a branch to the merge block
             compiler.getContext().builder.CreateBr(mergeBlock);
+        }
+        else
+        {
+            // compiler.getGenerator().parseTree(thenBranch);
+
+            // If the then block doesn't have a terminator, create a branch to the merge block
+            if (!thenBlock->getTerminator())
+            {
+                compiler.getContext().builder.CreateBr(mergeBlock);
+            }
         }
 
         // Generate code for the else block
         compiler.getContext().builder.SetInsertPoint(elseBlock);
         if (elseBranch)
         {
+            debugger.logMessage("INFO", __LINE__, "IfStatements", "Creating Else Block");
             compiler.getGenerator().parseTree(elseBranch);
         }
         if (!elseBlock->getTerminator())
         {
+            debugger.logMessage("INFO", __LINE__, "IfStatements", "Creating Branch in Else Block");
             compiler.getContext().builder.CreateBr(mergeBlock);
         }
 
@@ -106,6 +118,7 @@ namespace Cryo
     std::pair<llvm::BasicBlock *, llvm::Value *> IfStatements::createIfCondition(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();
+        BinaryExpressions &binExp = compiler.getBinaryExpressions();
         debugger.logMessage("INFO", __LINE__, "IfStatements", "Creating If Condition");
 
         assert(node != nullptr);
@@ -165,54 +178,8 @@ namespace Cryo
             ASTNode *rightOperand = node->data.bin_op->right;
             // Get the operator
             CryoOperatorType binaryOperator = node->data.bin_op->op;
-            // Get the operator value
-            llvm::CmpInst::Predicate operatorValue = llvm::CmpInst::Predicate::ICMP_NE;
-            switch (binaryOperator)
-            {
-            case OPERATOR_EQ:
-            {
-                operatorValue = llvm::CmpInst::Predicate::ICMP_EQ;
-                break;
-            }
-            case OPERATOR_NEQ:
-            {
-                operatorValue = llvm::CmpInst::Predicate::ICMP_NE;
-                break;
-            }
-            case OPERATOR_LT:
-            {
-                operatorValue = llvm::CmpInst::Predicate::ICMP_SLT;
-                break;
-            }
-            case OPERATOR_GT:
-            {
-                operatorValue = llvm::CmpInst::Predicate::ICMP_SGT;
-                break;
-            }
-            case OPERATOR_LTE:
-            {
-                operatorValue = llvm::CmpInst::Predicate::ICMP_SLE;
-                break;
-            }
-            case OPERATOR_GTE:
-            {
-                operatorValue = llvm::CmpInst::Predicate::ICMP_SGE;
-                break;
-            }
-            default:
-            {
-                debugger.logMessage("ERROR", __LINE__, "IfStatements", "Unknown operator");
-                CONDITION_FAILED;
-            }
-            }
 
-            // Get the left and right values
-            llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(leftOperand);
-            llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightOperand);
-            // Create the condition
-            condition = compiler.getContext().builder.CreateICmp(operatorValue, leftValue, rightValue, "ifCondition");
-
-            debugger.logMessage("INFO", __LINE__, "IfStatements", "Binary Expression Handled");
+            condition = binExp.createComparisonExpression(leftOperand, rightOperand, binaryOperator);
 
             break;
         }

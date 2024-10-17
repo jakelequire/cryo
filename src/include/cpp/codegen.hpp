@@ -88,6 +88,7 @@ namespace Cryo
     class BinaryExpressions;
     class Structs;
     class Imports;
+    class WhileStatements;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -139,7 +140,6 @@ namespace Cryo
             // Get the filename from the CompilerState
             std::string moduleName = "CryoModuleDefaulted";
             module = std::make_unique<llvm::Module>(moduleName, context);
-            module->setDataLayout("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128");
             std::cout << "[CPP.h] Module Initialized" << std::endl;
         }
 
@@ -185,6 +185,7 @@ namespace Cryo
         Loops &getLoops() { return *loops; }
         Structs &getStructs() { return *structs; }
         Imports &getImports() { return *imports; }
+        WhileStatements &getWhileStatements() { return *whileStatements; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
 
@@ -212,6 +213,7 @@ namespace Cryo
         std::unique_ptr<Loops> loops;
         std::unique_ptr<Structs> structs;
         std::unique_ptr<Imports> imports;
+        std::unique_ptr<WhileStatements> whileStatements;
     };
 
     /**
@@ -264,6 +266,7 @@ namespace Cryo
         void handleProgram(ASTNode *node);
         llvm::Value *handleLiteralExpression(ASTNode *node);
         llvm::Value *getLiteralValue(LiteralNode *literalNode);
+        std::string formatString(std::string str);
 
         void handleImportStatement(ASTNode *node);
         void handleExternFunction(ASTNode *node);
@@ -488,8 +491,10 @@ namespace Cryo
     {
     public:
         Functions(CryoCompiler &compiler) : compiler(compiler) {}
-        llvm::Value *createParameter(llvm::Argument *param, llvm::Type *argTypes);
+        llvm::Value *createParameter(llvm::Argument *param, llvm::Type *argTypes, ASTNode *paramNode);
         llvm::Value *createFunctionCall(ASTNode *node);
+
+        llvm::Value *createReturnNode(ASTNode *node);
 
         void handleFunction(ASTNode *node);
 
@@ -509,6 +514,8 @@ namespace Cryo
         llvm::Value *createFunctionCallCall(FunctionCallNode *functionCallNode);
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
+
+        llvm::Value *anyTypeParam(std::string functionName, llvm::Value *argValue);
 
         std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
         llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);
@@ -652,6 +659,24 @@ namespace Cryo
     };
     // -----------------------------------------------------------------------------------------------
 
+    class WhileStatements
+    {
+    public:
+        WhileStatements(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief The main entry point to handle while loops.
+         */
+        void handleWhileLoop(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
+    // -----------------------------------------------------------------------------------------------
+
     class Compilation
     {
     public:
@@ -685,6 +710,7 @@ namespace Cryo
           binaryExpressions(std::make_unique<BinaryExpressions>(*this)),
           structs(std::make_unique<Structs>(*this)),
           imports(std::make_unique<Imports>(*this)),
+          whileStatements(std::make_unique<WhileStatements>(*this)),
           symTable(std::make_unique<BackendSymTable>())
 
     {

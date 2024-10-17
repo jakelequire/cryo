@@ -117,7 +117,7 @@ CPPSRC = $(CPP_DIR)cppmain.cpp $(CPP_UTILS_DIR)backend_symtable.cpp $(CPP_DIR)co
 		$(CPP_SEMANTICS_DIR)variables.cpp $(CPP_SEMANTICS_DIR)functions.cpp \
 		$(CPP_SEMANTICS_DIR)arrays.cpp $(CPP_DIR)declarations.cpp $(CPP_DIR)ifstatement.cpp \
 		$(CPP_SEMANTICS_DIR)forloop.cpp $(CPP_SEMANTICS_DIR)binaryExpression.cpp $(CPP_SEMANTICS_DIR)structs.cpp \
-		$(CPP_SEMANTICS_DIR)imports.cpp $(CPP_DIR)compilation.cpp
+		$(CPP_SEMANTICS_DIR)imports.cpp $(CPP_DIR)compilation.cpp $(CPP_SEMANTICS_DIR)whileStatement.cpp
 
 # Common Files
 COMMON_SRC = $(COMMON_DIR)common.c
@@ -140,7 +140,7 @@ CPPOBJ =$(OBJ_DIR)global_compiler.o $(OBJ_DIR)debugger.o $(OBJ_DIR)backend_symta
 		$(OBJ_DIR)cppmain.o $(OBJ_DIR)variables.o $(OBJ_DIR)functions.o $(OBJ_DIR)arrays.o \
 		$(OBJ_DIR)generator.o $(OBJ_DIR)types.o $(OBJ_DIR)declarations.o $(OBJ_DIR)ifstatement.o \
 		$(OBJ_DIR)forloop.o $(OBJ_DIR)binaryExpression.o $(OBJ_DIR)structs.o $(OBJ_DIR)imports.o \
-		$(OBJ_DIR)compilation.o
+		$(OBJ_DIR)compilation.o $(OBJ_DIR)whileStatement.o
 
 # Utils Object files
 UTILS_OBJ = $(OBJ_DIR)fs.o $(OBJ_DIR)supportlibs.o $(OBJ_DIR)arena.o $(OBJ_DIR)utility.o
@@ -299,6 +299,9 @@ $(OBJ_DIR)imports.o: $(CPP_SEMANTICS_DIR)imports.cpp | $(OBJ_DIR)
 $(OBJ_DIR)compilation.o: $(CPP_DIR)compilation.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+$(OBJ_DIR)whileStatement.o: $(CPP_SEMANTICS_DIR)whileStatement.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+	
 # ---------------------------------------------
 # Common Compilation rules
 $(OBJ_DIR)common.o: $(COMMON_DIR)common.c | $(OBJ_DIR)

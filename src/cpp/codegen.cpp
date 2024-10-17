@@ -97,7 +97,6 @@ namespace Cryo
     void Generator::parseTree(ASTNode *root)
     {
         CryoDebugger &debugger = compiler.getDebugger();
-        debugger.logNode(root);
         debugger.logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
 
         if (!root)
@@ -256,36 +255,14 @@ namespace Cryo
             CryoDataType dataType = node->data.returnStatement->returnType;
             std::cout << "Data Type: " << CryoDataTypeToString(dataType) << std::endl;
 
-            switch (dataType)
+            llvmValue = functions.createReturnNode(node);
+            if (!llvmValue)
             {
-            case DATA_TYPE_INT:
-            case DATA_TYPE_FLOAT:
-            case DATA_TYPE_BOOLEAN:
-            {
-                debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression (int/float/boolean)");
-                llvmValue = generator.handleLiteralExpression(node->data.returnStatement->expression);
-                break;
-            }
-            case DATA_TYPE_STRING:
-            {
-                debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression (string)");
-                llvmValue = generator.handleLiteralExpression(node->data.returnStatement->expression);
-                break;
-            }
-            case DATA_TYPE_VOID:
-            {
-                debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling Literal Expression (void)");
-                llvmValue = llvm::UndefValue::get(llvm::Type::getVoidTy(cryoContext.context));
-                debugger.logMessage("INFO", __LINE__, "CodeGen", "Returning Constant");
-                break;
-            }
-            default:
-            {
-                debugger.logMessage("ERROR", __LINE__, "CodeGen", "Unknown data type");
-                std::cout << "Received: " << CryoDataTypeToString(dataType) << std::endl;
+                debugger.logMessage("ERROR", __LINE__, "CodeGen", "Return Statement Value not found");
                 exit(1);
             }
-            }
+
+            debugger.logMessage("INFO", __LINE__, "CodeGen", "Return Statement Value Found");
             break;
         }
         case NODE_VAR_DECLARATION:
@@ -393,7 +370,8 @@ namespace Cryo
         case DATA_TYPE_STRING:
         {
             debugger.logMessage("INFO", __LINE__, "CodeGen", "Handling String Literal");
-            llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, literalNode->value.stringValue);
+            std::string formattedString = formatString(literalNode->value.stringValue);
+            llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, formattedString);
             break;
         }
         case DATA_TYPE_VOID:
@@ -411,6 +389,47 @@ namespace Cryo
         }
 
         return llvmValue;
+    }
+
+    std::string Generator::formatString(std::string str)
+    {
+        std::string formattedString = "";
+        for (int i = 0; i < str.length(); i++)
+        {
+            if (str[i] == '\\')
+            {
+                if (str[i + 1] == 'n')
+                {
+                    formattedString += '\n';
+                    i++;
+                }
+                else if (str[i + 1] == 't')
+                {
+                    formattedString += '\t';
+                    i++;
+                }
+                else if (str[i + 1] == 'r')
+                {
+                    formattedString += '\r';
+                    i++;
+                }
+                else if (str[i + 1] == '0')
+                {
+                    formattedString += '\0';
+                    i++;
+                }
+                else
+                {
+                    formattedString += str[i];
+                }
+            }
+            else
+            {
+                formattedString += str[i];
+            }
+        }
+
+        return formattedString;
     }
 
     std::string Generator::getNamespace(ASTNode *node)

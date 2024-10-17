@@ -149,6 +149,10 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
             return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
 
+        case DATA_TYPE_ANY:
+            debugger.logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
+
         default:
             debugger.logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;

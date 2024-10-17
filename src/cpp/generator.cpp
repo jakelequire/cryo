@@ -144,7 +144,7 @@ namespace Cryo
         {
             debugger.logMessage("INFO", __LINE__, "Generator", "Constant Variable");
             // A Constant variable
-            variableInstance.handleConstVariable(node);
+            variableInstance.createLocalVariable(node);
         }
 
         // exit(1);
@@ -254,8 +254,14 @@ namespace Cryo
 
     void Generator::handleWhileStatement(ASTNode *node)
     {
-        std::cout << "[CPP] Handling While Statement" << std::endl;
-        // TODO: Implement
+        CryoDebugger &debugger = compiler.getDebugger();
+        WhileStatements &whileStatements = compiler.getWhileStatements();
+        debugger.logMessage("INFO", __LINE__, "Generator", "Handling While Statement");
+
+        whileStatements.handleWhileLoop(node);
+
+        debugger.logMessage("INFO", __LINE__, "Generator", "While Statement Handled");
+        return;
     }
 
     void Generator::handleForStatement(ASTNode *node)
