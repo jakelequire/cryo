@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "std.h"
+#include "stdint.h"
 
 void printInt(int value)
 {
@@ -51,35 +52,96 @@ int sizeOf(void *ptr)
     return sizeof(ptr);
 }
 
-#define typename(x) _Generic((x), /* Get the name of a type */ \
-    _Bool: "_Bool",                                            \
-    unsigned char: "unsigned char",                            \
-    char: "char",                                              \
-    signed char: "signed char",                                \
-    short int: "short int",                                    \
-    unsigned short int: "unsigned short int",                  \
-    int: "int",                                                \
-    unsigned int: "unsigned int",                              \
-    long int: "long int",                                      \
-    unsigned long int: "unsigned long int",                    \
-    long long int: "long long int",                            \
-    unsigned long long int: "unsigned long long int",          \
-    float: "float",                                            \
-    double: "double",                                          \
-    long double: "long double",                                \
-    char *: "pointer to char",                                 \
-    void *: "pointer to void",                                 \
-    int *: "pointer to int",                                   \
-    const char *: puts,                                        \
-    const char[sizeof(x)]: puts,                               \
-    default: "other")
-
-void cryoTypeToCType(void *cryoPtr)
+// Enum to represent different types
+typedef enum
 {
+    TYPE_INT,
+    TYPE_FLOAT,
+    TYPE_DOUBLE,
+    TYPE_BOOL,
+    TYPE_STRING,
+    TYPE_POINTER,
+    TYPE_UNKNOWN
+} ValueType;
+
+// Union to hold different types
+typedef union
+{
+    int64_t i;
+    float f;
+    double d;
+    int b;
+    const char *s;
+    void *p;
+} Value;
+
+// Struct to represent Any type
+typedef struct
+{
+    ValueType type;
+    Value value;
+} Any;
+
+void type_of(Any *any)
+{
+    switch (any->type)
+    {
+    case TYPE_INT:
+        printf("Type: int, Value: %lld\n", any->value.i);
+        break;
+    case TYPE_FLOAT:
+        printf("Type: float, Value: %f\n", any->value.f);
+        break;
+    case TYPE_DOUBLE:
+        printf("Type: double, Value: %f\n", any->value.d);
+        break;
+    case TYPE_BOOL:
+        printf("Type: bool, Value: %s\n", any->value.b ? "true" : "false");
+        break;
+    case TYPE_STRING:
+        printf("Type: string, Value: %s\n", any->value.s);
+        break;
+    case TYPE_POINTER:
+        printf("Type: pointer, Address: %p\n", any->value.p);
+        break;
+    default:
+        printf("Type: unknown\n");
+    }
 }
 
-void type_of(void *ptr)
+// Helper functions to create Any objects
+Any create_int_any(int64_t value)
 {
-    // Get the memory block of the pointer
-    printf("%s\n", typename(*ptr));
+    Any any = {TYPE_INT, {.i = value}};
+    return any;
+}
+
+Any create_float_any(float value)
+{
+    Any any = {TYPE_FLOAT, {.f = value}};
+    return any;
+}
+
+Any create_double_any(double value)
+{
+    Any any = {TYPE_DOUBLE, {.d = value}};
+    return any;
+}
+
+Any create_bool_any(int value)
+{
+    Any any = {TYPE_BOOL, {.b = value}};
+    return any;
+}
+
+Any create_string_any(const char *value)
+{
+    Any any = {TYPE_STRING, {.s = value}};
+    return any;
+}
+
+Any create_pointer_any(void *value)
+{
+    Any any = {TYPE_POINTER, {.p = value}};
+    return any;
 }
