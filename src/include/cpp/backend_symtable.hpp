@@ -145,7 +145,6 @@ namespace Cryo
         void addStoreInstToVar(std::string namespaceName, std::string varName, llvm::StoreInst *storeInst);
         void addLoadInstToVar(std::string namespaceName, std::string varName, llvm::LoadInst *loadInst);
         void addParamAsVariable(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst);
-
         void updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
         void updateExternFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
         void updateParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType);

@@ -397,6 +397,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_PRIVATE";
     case TOKEN_KW_STRUCT:
         return "TOKEN_KW_STRUCT";
+    case TOKEN_KW_DECLARE:
+        return "TOKEN_KW_DECLARE";
     case TOKEN_KW_ENUM:
         return "TOKEN_KW_ENUM";
     case TOKEN_KW_TRAIT:

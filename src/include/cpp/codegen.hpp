@@ -170,22 +170,22 @@ namespace Cryo
         void setCompilerSettings(CompilerSettings *settings) { CryoContext::getInstance().state->settings = settings; }
         CompilerSettings *getCompilerSettings() { return CryoContext::getInstance().state->settings; }
 
-        CryoContext &getContext() { return CryoContext::getInstance(); }
-        CodeGen &getCodeGen() { return *codeGen; }
-        Generator &getGenerator() { return *generator; }
-        CryoDebugger &getDebugger() { return *debugger; }
-        Types &getTypes() { return *types; }
-        Variables &getVariables() { return *variables; }
-        Arrays &getArrays() { return *arrays; }
-        Functions &getFunctions() { return *functions; }
-        IfStatements &getIfStatements() { return *ifStatements; }
-        Declarations &getDeclarations() { return *declarations; }
-        BackendSymTable &getSymTable() { return *symTable; }
-        BinaryExpressions &getBinaryExpressions() { return *binaryExpressions; }
-        Loops &getLoops() { return *loops; }
-        Structs &getStructs() { return *structs; }
-        Imports &getImports() { return *imports; }
-        WhileStatements &getWhileStatements() { return *whileStatements; }
+        CryoContext &getContext()                   { return CryoContext::getInstance(); }
+        CodeGen &getCodeGen()                       { return *codeGen; }
+        Generator &getGenerator()                   { return *generator; }
+        CryoDebugger &getDebugger()                 { return *debugger; }
+        Types &getTypes()                           { return *types; }
+        Variables &getVariables()                   { return *variables; }
+        Arrays &getArrays()                         { return *arrays; }
+        Functions &getFunctions()                   { return *functions; }
+        IfStatements &getIfStatements()             { return *ifStatements; }
+        Declarations &getDeclarations()             { return *declarations; }
+        BackendSymTable &getSymTable()              { return *symTable; }
+        BinaryExpressions &getBinaryExpressions()   { return *binaryExpressions; }
+        Loops &getLoops()                           { return *loops; }
+        Structs &getStructs()                       { return *structs; }
+        Imports &getImports()                       { return *imports; }
+        WhileStatements &getWhileStatements()       { return *whileStatements; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
 
@@ -199,21 +199,21 @@ namespace Cryo
 
     private:
         CryoContext &context;
-        std::unique_ptr<CryoDebugger> debugger;
-        std::unique_ptr<CodeGen> codeGen;
-        std::unique_ptr<Generator> generator;
-        std::unique_ptr<Types> types;
-        std::unique_ptr<Variables> variables;
-        std::unique_ptr<Arrays> arrays;
-        std::unique_ptr<Functions> functions;
-        std::unique_ptr<IfStatements> ifStatements;
-        std::unique_ptr<Declarations> declarations;
-        std::unique_ptr<BackendSymTable> symTable;
-        std::unique_ptr<BinaryExpressions> binaryExpressions;
-        std::unique_ptr<Loops> loops;
-        std::unique_ptr<Structs> structs;
-        std::unique_ptr<Imports> imports;
-        std::unique_ptr<WhileStatements> whileStatements;
+        std::unique_ptr<CryoDebugger>       debugger;
+        std::unique_ptr<CodeGen>            codeGen;
+        std::unique_ptr<Generator>          generator;
+        std::unique_ptr<Types>              types;
+        std::unique_ptr<Variables>          variables;
+        std::unique_ptr<Arrays>             arrays;
+        std::unique_ptr<Functions>          functions;
+        std::unique_ptr<IfStatements>       ifStatements;
+        std::unique_ptr<Declarations>       declarations;
+        std::unique_ptr<BackendSymTable>    symTable;
+        std::unique_ptr<BinaryExpressions>  binaryExpressions;
+        std::unique_ptr<Loops>              loops;
+        std::unique_ptr<Structs>            structs;
+        std::unique_ptr<Imports>            imports;
+        std::unique_ptr<WhileStatements>    whileStatements;
     };
 
     /**

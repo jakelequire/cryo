@@ -46,6 +46,7 @@ KeywordToken keywords[] = {
     {"namespace", TOKEN_KW_NAMESPACE},
     {"debugger", TOKEN_KW_DEBUGGER},
     {"struct", TOKEN_KW_STRUCT},
+    {"declare", TOKEN_KW_DECLARE},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
