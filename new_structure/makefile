@@ -25,11 +25,10 @@
 # `-Ofast` - Optimize for speed					#
 # `-Oz`    - Optimize for size					#
 # --------------------------------------------- #
-OPTIMIZATION = -O1
-DEBUG_FLAGS =  -v -D_CRT_SECURE_NO_WARNINGS 
-# C23
-C_STANDARD = -std=c23
-CXX_STANDARD = -std=c++23
+OPTIMIZATION =  -O1
+DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS 
+C_STANDARD =    -std=c23
+CXX_STANDARD =  -std=c++23
 
 # OS-specific settings for compilers
 ifeq ($(OS), Windows_NT)
@@ -42,49 +41,57 @@ else
 	CXX_COMPILER = clang++
 endif
 
-# >>=======--------------------------------------------------=======<<
-# >>=======       OS-specific settings for compilers         =======<<
-# >>=======--------------------------------------------------=======<<
+# >>=======--------------------------------------------------=======<< #
+# >>=======                 Include Paths                    =======<< #
+# >>=======--------------------------------------------------=======<< #
+
+# Include paths
+LINUX_INCLUDES =    -I./src/include -I./src/include/runtime -I./src/include/cli             \
+                    -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+
+WIN_INCLUDES =      -I"C:/msys64/mingw64/include" -I./src/include -I./src/include/runtime   \
+                    -I./src/include/cli -I./src/include/compiler -I./src/include/utils      \
+                    -I./src/include/tests
+
+# >>=======--------------------------------------------------=======<< #
+# >>=======       OS-specific settings for compilers         =======<< #
+# >>=======--------------------------------------------------=======<< #
 
 # OS-specific settings
 ifeq ($(OS), Windows_NT)
     # Windows settings
-    CC = $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
-    CXX = $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
-    CFLAGS = -I"C:/msys64/mingw64/include" -I./src/include -I./src/include/runtime -I./src/include/cli \
-			-I./src/include/compiler -I./src/include/utils -I./src/include/tests
-    CXXFLAGS = -I"C:/msys64/mingw64/include" -I./src/include -I./src/include/runtime -I./src/include/cli \
-			-I./src/include/compiler -I./src/include/utils -I./src/include/tests
-    LDFLAGS = -L"C:/msys64/mingw64/lib" $(LLVM_LIBS) $(STDLIBS) -v
-    LLVM_LIBS := -lLLVM 
-    STDLIBS := -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32 -Wl,-subsystem,console
-    MKDIR = if not exist
-    RMDIR = rmdir /S /Q
-    DEL = del /Q
-    BIN_SUFFIX = .exe
+    CC =            $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CXX =           $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CFLAGS =        $(WIN_INCLUDES) $(LLVM_CFLAGS) -fexceptions
+    CXXFLAGS =      $(WIN_INCLUDES) $(LLVM_CXXFLAGS) -fexceptions
+    LDFLAGS =       -L"C:/msys64/mingw64/lib" $(LLVM_LIBS) $(STDLIBS) -v
+    LLVM_LIBS :=    -lLLVM 
+    STDLIBS :=      -lmingw32 -lmingwex -lmsvcrt -lucrt -lpthread -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32 -Wl,-subsystem,console
+    MKDIR =         if not exist
+    RMDIR =         rmdir /S /Q
+    DEL =           del /Q
+    BIN_SUFFIX =    .exe
 else
     # Linux settings
-    CC = $(C_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
-    CXX = $(CXX_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
-    CFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
-			-I./src/include/utils -I./src/include/tests
-    CXXFLAGS = -I./src/include -I./src/include/runtime -I./src/include/cli -I./src/include/compiler \
-			-I./src/include/utils -I./src/include/tests $(LLVM_CXXFLAGS) -fexceptions
-    LLVM_CONFIG = llvm-config
-    LLVM_CFLAGS = $(shell $(LLVM_CONFIG) --cflags)
+    CC =            $(C_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CXX =           $(CXX_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CFLAGS =        $(LINUX_INCLUDES) $(LLVM_CFLAGS) -fexceptions
+    CXXFLAGS =      $(LINUX_INCLUDES) $(LLVM_CXXFLAGS) -fexceptions
+    LLVM_CONFIG =   llvm-config
+    LLVM_CFLAGS =   $(shell $(LLVM_CONFIG) --cflags)
 	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
-    LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
-    LDFLAGS = $(LLVM_LDFLAGS) -lpthread -v
-	STD_LIBS = -lstdc++ -lm -lc -lgcc -lgcc_eh -lstdc++fs
-    MKDIR = mkdir -p
-    RMDIR = rm -rf
-    DEL = rm -f
+    LLVM_LDFLAGS =  $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
+    LDFLAGS =       $(LLVM_LDFLAGS) -lpthread -v
+	STD_LIBS =      -lstdc++ -lm -lc -lgcc -lgcc_eh -lstdc++fs
+    MKDIR =         mkdir -p
+    RMDIR =         rm -rf
+    DEL =           rm -f
     BIN_SUFFIX =
 endif
 
-# >>=======--------------------------------------------------=======<<
-# >>=======                  Define Paths                    =======<<
-# >>=======--------------------------------------------------=======<<
+# >>=======--------------------------------------------------=======<< #
+# >>=======                  Define Paths                    =======<< #
+# >>=======--------------------------------------------------=======<< #
 
 # ---------------------------------------------
 # Binary directory
@@ -139,19 +146,29 @@ LINKER_DIR = $(SRC_DIR)linker/
 # Tools directory
 TOOLS_DIR = $(SRC_DIR)tools/
 
-# >>=======--------------------------------------------------=======<<
-# >>=======                  Source Files                    =======<<
-# >>=======--------------------------------------------------=======<<
+# >>=======--------------------------------------------------=======<< #
+# >>=======                  Source Files                    =======<< #
+# >>=======--------------------------------------------------=======<< #
 
 # ---------------------------------------------
 # Frontend source files
-FRONTEND_SRC =  $(MAIN_FILE) $(LEXER_DIR)lexer.c $(PARSER_DIR)parser.c $(AST_DIR)ast.c \
-                $(SEMANTICS_DIR)semantics.c $(SYMTABLE_DIR)symtable.c $(TOKENS_DIR)tokens.c
+AST_FILES =         $(AST_DIR)ast.c $(AST_DIR)ASTContainers.c $(AST_DIR)printAST.c
+LEXER_FILES =       $(LEXER_DIR)lexer.c
+PARSER_FILES =      $(PARSER_DIR)parser.c
+SYMTABLE_FILES =    $(SYMTABLE_DIR)symtable.c
+TOKENS_FILES =      $(TOKENS_DIR)tokens.c
+SEMANTICS_FILES =   $(SEMANTICS_DIR)semantics.c
+
+FRONTEND_SRC =  $(MAIN_FILE) $(LEXER_FILES) $(PARSER_FILES) $(AST_FILES) \
+                $(SEMANTICS_FILES) $(SYMTABLE_FILES) $(TOKENS_FILES)
 
 # ---------------------------------------------
 # Codegen source files
-CODEGEN_SRC =   $(CODEGEN_DIR)codegen.c $(CXX_GENERATION_DIR)generation.c $(CXX_TYPES_DIR)types.c \
-                $(CXX_SEMANTICS_DIR)semantics.c
+GENERATION_FILES =  $(CXX_GENERATION_DIR)generation.c
+TYPES_FILES =       $(CXX_TYPES_DIR)types.c
+SEMANTICS_FILES =   $(CXX_SEMANTICS_DIR)semantics.c
+
+CODEGEN_SRC =  $(GENERATION_FILES) $(TYPES_FILES) $(SEMANTICS_FILES)
 
 # ---------------------------------------------
 # Settings source files
@@ -177,15 +194,21 @@ LINKER_SRC = $(LINKER_DIR)linker.c
 # Tools source files
 TOOLS_SRC = $(TOOLS_DIR)tools.c
 
-# >>=======--------------------------------------------------=======<<
-# >>=======                  Object Files                    =======<<
-# >>=======--------------------------------------------------=======<<
+# >>=======--------------------------------------------------=======<< #
+# >>=======                  Object Files                    =======<< #
+# >>=======--------------------------------------------------=======<< #
 
 # ---------------------------------------------
 # Frontend object files
-FRONTEND_OBJ =  $(OBJ_DIR)main.o $(OBJ_DIR)lexer.o $(OBJ_DIR)parser.o       \
-                $(OBJ_DIR)ast.o $(OBJ_DIR)semantics.o $(OBJ_DIR)symtable.o  \
-                $(OBJ_DIR)tokens.o
+AST_OBJ =       $(OBJ_DIR)ast.o $(OBJ_DIR)ASTContainers.o $(OBJ_DIR)printAST.o
+LEXER_OBJ =     $(OBJ_DIR)lexer.o
+PARSER_OBJ =    $(OBJ_DIR)parser.o
+SYMTABLE_OBJ =  $(OBJ_DIR)symtable.o
+TOKENS_OBJ =    $(OBJ_DIR)tokens.o
+SEMANTICS_OBJ = $(OBJ_DIR)semantics.o
+
+FRONTEND_OBJ =  $(LEXER_OBJ) $(PARSER_OBJ) $(AST_OBJ)           \
+                $(SEMANTICS_OBJ) $(SYMTABLE_OBJ) $(TOKENS_OBJ)
 
 # ---------------------------------------------
 # Codegen object files
@@ -216,14 +239,17 @@ LINKER_OBJ = $(OBJ_DIR)linker.o
 # Tools object files
 TOOLS_OBJ = $(OBJ_DIR)tools.o
 
-# >>=======--------------------------------------------------=======<<
-# >>=======                 Compilation Rules                =======<<
-# >>=======--------------------------------------------------=======<<
+# >>=======--------------------------------------------------=======<< #
+# >>=======                 Compilation Rules                =======<< #
+# >>=======--------------------------------------------------=======<< #
 
 
-# >>=======--------------------------------------------------=======<<
-# >>=======                   Link Binaries                  =======<<
-# >>=======--------------------------------------------------=======<<
+# TODO: Add rules for each object file. Ideally, we can use a loop to generate these rules.
+
+
+# >>=======--------------------------------------------------=======<< #
+# >>=======                   Link Binaries                  =======<< #
+# >>=======--------------------------------------------------=======<< #
 
 # ---------------------------------------------
 # Link the main binary
@@ -235,9 +261,9 @@ $(MAIN_BIN): $(MAIN_OBJ) $(FRONTEND_OBJ) $(CODEGEN_OBJ) $(SETTINGS_OBJ) $(CLI_OB
 $(CLI_BIN): $(CLI_OBJ) $(COMMON_OBJ) $(DIAGNOSTIC_OBJ) $(TOOLS_OBJ)
     $(CXX) -o $@ $^ $(LDFLAGS)
 
-# >>=======--------------------------------------------------=======<<
-# >>=======                     Cleanup                      =======<<
-# >>=======--------------------------------------------------=======<<
+# >>=======--------------------------------------------------=======<< #
+# >>=======                     Cleanup                      =======<< #
+# >>=======--------------------------------------------------=======<< #
 clean:
 	python3 ./scripts/clean.py
 
