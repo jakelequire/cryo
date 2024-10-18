@@ -43,9 +43,9 @@ typedef enum TagType
     TAG_TYPE_UNKNOWN = -1,
     TAG_TYPE_INTERNAL,
     TAG_TYPE_EXTERNAL,
-};
+} TagType;
 
-typedef struct
+typedef struct TagToken
 {
     char *tag;
     TagType type;

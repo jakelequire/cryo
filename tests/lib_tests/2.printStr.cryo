@@ -1,5 +1,0 @@
-// Test 2: Print a string variable
-// Variable declaration and initialization
-const foo: string = "Hello, world!";
-// Print a string variable
-printStr(foo);

@@ -4,7 +4,7 @@
 
 <var-declaration> ::= ("const" | "mut") <type> <identifier> ["=" <expression>] ";"
 
-<function-declaration>  ::=  <visibility> "fn" <identifier> "(" [<param-list>] ")" ["->" <type>] <block>
+<function-declaration>  ::=  <visibility> "function" <identifier> "(" [<param-list>] ")" ["->" <type>] <block>
 <param-list>            ::=  <param> { "," <param> }
 <param>                 ::=  <type> <identifier>
 <block>                 ::=  "{" { <statement> } "}"
@@ -34,7 +34,7 @@
 <return-statement>    ::=  "return" [<expression>] ";"
 
 
-<type>           ::=  "int" | "float" | "bool" | "string" | "null" | "array" | "object"
+<type>           ::=  "int" | "float" | "boolean" | "string" | "void" | <identifier> | <type> "[]"
 <identifier>     ::=  <letter> { <letter> | <digit> }
 <number>         ::=  { <digit> } ["." { <digit> }]
 <string>         ::=  '"' { <any-character-except-quote> } '"'

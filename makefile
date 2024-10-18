@@ -16,14 +16,14 @@
 #*******************************************************************************/
 
 # --------------------------------------------- #
-# `-O0` - No optimization						#
-# `-O1` - Basic optimization					#
-# `-O2` - Further optimization					#
-# `-O3` - Maximum optimization					#
-# `-Og` - Optimize debugging experience			#
-# `-Os` - Optimize for size						#
+# `-O0`    - No optimization					#
+# `-O1`    - Basic optimization					#
+# `-O2`    - Further optimization				#
+# `-O3`    - Maximum optimization				#
+# `-Og`    - Optimize debugging experience		#
+# `-Os`    - Optimize for size					#
 # `-Ofast` - Optimize for speed					#
-# `-Oz` - Optimize for size						#
+# `-Oz`    - Optimize for size					#
 # --------------------------------------------- #
 OPTIMIZATION = -O1
 DEBUG_FLAGS =  -v -D_CRT_SECURE_NO_WARNINGS 
@@ -324,22 +324,8 @@ $(TEST_BIN): $(TEST_OBJ) $(RUNTIME_OBJ) $(COMPILER_OBJ) $(UTILS_OBJ) | $(DEBUG_B
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # ---------------------------------------------
-# Running executables
-runmain: $(MAIN_BIN)
-	$(MAIN_BIN) ./src/tests/data/test1.cy
-
-runcli: $(CLI_BIN_EXE)
-	$(CLI_BIN_EXE)
-
-runtest: $(TEST_BIN)
-	$(TEST_BIN)
-
-# ---------------------------------------------
 # Clean up - remove object files and executables
 clean:
 	python3 ./scripts/clean.py
-
-cleanlibs:
-	python3 ./scripts/cleanLibs.py
 
 .PHONY: all clean runlexer runparser runmain runcli runtest

@@ -18,7 +18,6 @@
 
 namespace Cryo
 {
-
     void BinaryExpressions::handleBinaryExpression(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();

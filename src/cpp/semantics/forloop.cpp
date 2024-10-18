@@ -18,7 +18,6 @@
 
 namespace Cryo
 {
-
     void Loops::handleForLoop(ASTNode *node)
     {
         CryoDebugger &debugger = compiler.getDebugger();

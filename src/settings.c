@@ -15,7 +15,6 @@
  *                                                                              *
  ********************************************************************************/
 #include "settings.h"
-
 int DEBUG_LEVEL = 0;
 
 void printUsage(const char *programName)

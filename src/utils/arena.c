@@ -15,7 +15,6 @@
  *                                                                              *
  ********************************************************************************/
 #include "arena.h"
-
 #define PRINT_WIDTH 80
 #define MEMORY_BAR_WIDTH 60
 

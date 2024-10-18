@@ -190,5 +190,3 @@ CryoDataType getPrimativeTypeFromString(const char *typeStr)
         return DATA_TYPE_UNKNOWN;
     }
 }
-
-

@@ -16,81 +16,82 @@
  ********************************************************************************/
 #include "cli/help.h"
 
-
-
 // <getHelpArg>
-HelpArgs getHelpArg(char* arg) {
-    if (strcmp(arg, "help") == 0)         return HELP_ARG_HELP;
-    if (strcmp(arg, "version") == 0)      return HELP_ARG_VERSION;
-    if (strcmp(arg, "build") == 0)        return HELP_ARG_BUILD;
-    if (strcmp(arg, "init") == 0)         return HELP_ARG_INIT;
-    
+HelpArgs getHelpArg(char *arg)
+{
+    if (strcmp(arg, "help") == 0)
+        return HELP_ARG_HELP;
+    if (strcmp(arg, "version") == 0)
+        return HELP_ARG_VERSION;
+    if (strcmp(arg, "build") == 0)
+        return HELP_ARG_BUILD;
+    if (strcmp(arg, "init") == 0)
+        return HELP_ARG_INIT;
+
     return HELP_ARG_UNKNOWN;
 }
 // </getHelpArg>
 
-
 // <executeHelpCmd>
-void executeHelpCmd(char* argv[]) {
-    char* argument = argv[2];
-    if(argument == NULL) {
+void executeHelpCmd(char *argv[])
+{
+    char *argument = argv[2];
+    if (argument == NULL)
+    {
         executeHelpMenuCmd();
     }
 
     HelpArgs arg = getHelpArg(argument);
-    switch (arg) {
-        case HELP_ARG_HELP:
-            // Execute Command
-            break;
-            
-        case HELP_ARG_VERSION:
-            // Execute Command
-            break;
+    switch (arg)
+    {
+    case HELP_ARG_HELP:
+        // Execute Command
+        break;
 
-        case HELP_ARG_BUILD:
-            // Execute Command
-            break;
+    case HELP_ARG_VERSION:
+        // Execute Command
+        break;
 
-        case HELP_ARG_INIT:
-            // Execute Command
-            break;
-        
-        case HELP_ARG_UNKNOWN:
-            printf("Unknown Argument\n");
-            executeHelpMenuCmd();
-            break;
+    case HELP_ARG_BUILD:
+        // Execute Command
+        break;
 
-        default:
-            printf("Default Argument\n");
-            executeHelpMenuCmd();
-            break;
+    case HELP_ARG_INIT:
+        // Execute Command
+        break;
+
+    case HELP_ARG_UNKNOWN:
+        printf("Unknown Argument\n");
+        executeHelpMenuCmd();
+        break;
+
+    default:
+        printf("Default Argument\n");
+        executeHelpMenuCmd();
+        break;
     }
 }
 // </executeHelpCmd>
 
-
-
 // <help_menu>
-char* cryo_help_menu =
-"\n"
-"+--------------------------------------------------------------------------------------------+\n"
-"| Command            | Alias         | Arguments                                             |\n"
-"+--------------------------------------------------------------------------------------------+\n"
-"| help               |               |                                                       |\n"
-"| version            | -v            |                                                       |\n"
-"| build              |               |                                                       |\n"
-"| init               |               |                                                       |\n"
-"| wdev               |               |                                                       |\n"
-"+--------------------------------------------------------------------------------------------+\n\n";
+char *cryo_help_menu =
+    "\n"
+    "+--------------------------------------------------------------------------------------------+\n"
+    "| Command            | Alias         | Arguments                                             |\n"
+    "+--------------------------------------------------------------------------------------------+\n"
+    "| help               |               |                                                       |\n"
+    "| version            | -v            |                                                       |\n"
+    "| build              |               |                                                       |\n"
+    "| init               |               |                                                       |\n"
+    "| wdev               |               |                                                       |\n"
+    "+--------------------------------------------------------------------------------------------+\n\n";
 // </help_menu>
 
-
 // <executeHelpCmd>
-void executeHelpMenuCmd() {
+void executeHelpMenuCmd()
+{
     printf("\n\n%s\n", cryo_logo);
     printf("%s\n", cryo_help_menu);
     exit(0);
 }
 // </executeHelpCmd>
-
-

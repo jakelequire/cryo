@@ -18,7 +18,6 @@
 
 namespace Cryo
 {
-
     llvm::Value *Arrays::createArrayLiteral(ASTNode *node, std::string varName)
     {
         CryoDebugger &debugger = compiler.getDebugger();

@@ -30,25 +30,21 @@
 #include <unistd.h>
 #endif
 
-
-typedef enum {
+typedef enum
+{
     INIT_ARG_DIR,
     INIT_ARG_UNKNOWN
 } InitArgs;
 
+InitArgs getInitArgs(char *arg);
+void executeInitCmd(char *argv[]);
 
-
-InitArgs getInitArgs        (char* arg);
-void executeInitCmd         (char* argv[]);
-
-void executeInit            (void);
-void create_cryo_config     (void);
-void create_cryo_main       (void);
-void create_cryo_init       (void);
-void create_directory       (const char* name);
-void open_root_dir          (void);
-void create_file            (char* filename, char* data);
-
-
+void executeInit(void);
+void create_cryo_config(void);
+void create_cryo_main(void);
+void create_cryo_init(void);
+void create_directory(const char *name);
+void open_root_dir(void);
+void create_file(char *filename, char *data);
 
 #endif // INIT_H

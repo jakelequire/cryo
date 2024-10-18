@@ -20,24 +20,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
-typedef struct {
+typedef struct
+{
     int major;
     int minor;
     int patch;
 } CompilerVersion;
 
-typedef struct {
+typedef struct
+{
     int major;
     int minor;
     int patch;
 } CLIVersion;
 
-
-CompilerVersion getCompilerVersion      (void);
-CLIVersion getCLIVersion                (void);
-void executeVersionCmd                  (void);
-
+CompilerVersion getCompilerVersion(void);
+CLIVersion getCLIVersion(void);
+void executeVersionCmd(void);
 
 #endif // VERSION_H

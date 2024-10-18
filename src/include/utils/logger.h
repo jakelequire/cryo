@@ -23,5 +23,4 @@
 #include "compiler/lexer.h"
 #include "parser.h"
 /*---------<end>---------*/
-
 #endif // LOGGER_H

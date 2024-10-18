@@ -28,5 +28,4 @@
 
 // extern char *strdup(const char *s);
 // extern char *strndup(const char *s, size_t n);
-
 #endif // SUPPORT_Hx

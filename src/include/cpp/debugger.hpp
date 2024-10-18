@@ -74,5 +74,4 @@ namespace Cryo
     };
 
 }
-
 #endif // CRYO_DEBUGGER

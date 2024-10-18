@@ -16,34 +16,32 @@
  ********************************************************************************/
 #include "cli/version.h"
 
-
-char* cryo_logo =
-"                                                                     \n"
-"                    ==                                               \n"
-"                   ==++                                              \n"
-"                  == ===                                             \n"
-"        +===     =+======                                            \n"
-"         = ===== == ==+=+==                                          \n"
-"         =+= =============+==                                        \n"
-"          ===+=+====++========+     :::::::::  :::   :::  ::::::::   \n"
-"         ==+==== ==    ==+====+=+   :+:    :+: :+:   :+: :+:    :+:  \n"
-"      === ==== ==        ========+  +:+    +:+  +:+ +:+  +:+    +:+  \n"
-"   +=== =======                     +#++:++#:    +#++:   +#+    +:+  \n"
-"      === ==+=+==        ========+  +#+    +#+    +#+    +#+    +#+  \n"
-"         +=+====+==    ==+====+=+   #+#    #+#    #+#    #+#    #+#  \n"
-"          ===+=+==+==+========+     ###    ###    ###     ########   \n"
-"         === =+==+======+====                                        \n"
-"         = ===== == ==+=+==                                          \n"
-"        +====+   = ====+=                                            \n"
-"                  == ===                                             \n"
-"                   ==++                                              \n"
-"                    ==                                               \n"
-"                                                                     \n";
-
-
+char *cryo_logo =
+    "                                                                     \n"
+    "                    ==                                               \n"
+    "                   ==++                                              \n"
+    "                  == ===                                             \n"
+    "        +===     =+======                                            \n"
+    "         = ===== == ==+=+==                                          \n"
+    "         =+= =============+==                                        \n"
+    "          ===+=+====++========+     :::::::::  :::   :::  ::::::::   \n"
+    "         ==+==== ==    ==+====+=+   :+:    :+: :+:   :+: :+:    :+:  \n"
+    "      === ==== ==        ========+  +:+    +:+  +:+ +:+  +:+    +:+  \n"
+    "   +=== =======                     +#++:++#:    +#++:   +#+    +:+  \n"
+    "      === ==+=+==        ========+  +#+    +#+    +#+    +#+    +#+  \n"
+    "         +=+====+==    ==+====+=+   #+#    #+#    #+#    #+#    #+#  \n"
+    "          ===+=+==+==+========+     ###    ###    ###     ########   \n"
+    "         === =+==+======+====                                        \n"
+    "         = ===== == ==+=+==                                          \n"
+    "        +====+   = ====+=                                            \n"
+    "                  == ===                                             \n"
+    "                   ==++                                              \n"
+    "                    ==                                               \n"
+    "                                                                     \n";
 
 // <getCompilerVersion>
-CompilerVersion getCompilerVersion() {
+CompilerVersion getCompilerVersion()
+{
     CompilerVersion version;
     version.major = 0;
     version.minor = 1;
@@ -54,7 +52,8 @@ CompilerVersion getCompilerVersion() {
 // </getCompilerVersion>
 
 // <getCLIVersion>
-CLIVersion getCLIVersion() {
+CLIVersion getCLIVersion()
+{
     CLIVersion version;
     version.major = 0;
     version.minor = 1;
@@ -64,9 +63,9 @@ CLIVersion getCLIVersion() {
 }
 // </getCLIVersion>
 
-
 // <executeVersionCmd>
-void executeVersionCmd() {
+void executeVersionCmd()
+{
     CompilerVersion compilerVersion = getCompilerVersion();
     CLIVersion cliVersion = getCLIVersion();
 

@@ -1,16 +1,20 @@
 # <img src="./assets/cryo-logo.svg" width="90" height="90" alt="Cryo Logo" align="center"> Cryo
 
-General Purpose, Strongly Typed, OOP, programming language witten in C & C++.
+General Purpose, Strongly Typed, OOP, Programming Language witten in C & C++.
 
-<i>[Apache 2.0 License](#license)</i>
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)]
+[![GitHub issues](https://img.shields.io/github/issues/jakelequire/cryo)]
+[![GitHub forks](https://img.shields.io/github/forks/jakelequire/cryo)]
+[![GitHub stars](https://img.shields.io/github/stars/jakelequire/cryo)]
+[![Version](https://img.shields.io/badge/Version-0.0.1-blue)]
 
-This is a fun side Project maintained and developed by me, [Jake LeQuire](https://github.com/jakelequire). Currently it is closed for PRs but when I have a more solid foundation of the project, I plan to open source the project completely.
+This is a fun side Project maintained and developed by me, [Jake LeQuire](https://github.com/jakelequire). The goal of this project is to create a general purpose programming language that is simple and easy to use. This project is not meant to be a serious project and is just for fun.
 
-**_Note: This is a side project and not a production ready product. There may be several critical issues, please be advised._**
+I started this project to learn more about compilers and programming languages.
 
-### Development Milestones
+## Development Milestones
 
-- [x] Compiles to native instruction set (only x86_64 for now)
+- [x] Compiles to native instruction set
 
 - [ ] [Turing Complete.](https://en.wikipedia.org/wiki/Rule_110)
 
@@ -22,159 +26,152 @@ This is a fun side Project maintained and developed by me, [Jake LeQuire](https:
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-  - [Installing the project.](#1-installing-the-project)
-  - [Building The code.](#2-building-the-code)
-  - [Using the Cryo Compiler.](#3-using-the-cryo-compiler)
-- [Basic Project Structure](#basic-project-structure)
-
-  - [Initialize a project](#initialize-a-project)
-
 - [Language Introduction](#language-introduction)
-  - [Keywords / Reserve Words](#keywords--reserve-words)
-  - [Data Types](#data-types)
+  - [Keywords / Reserve Words / Data Types](#keywords--reserve-words--data-types)
   - [Operators](#operators)
+  - [Hello, world!](#hello-world)
+  - [Fibonacci Sequence](#fibonacci-sequence)
+- [Compile & Run](#compile--run)
+  - [Dependencies](#dependencies)
+  - [Building](#building)
+  - [Environment Variables](#environment-variables)
+  - [Using the compiler](#using-the-compiler)
+  - [LSP](#lsp)
+- [Conclusion](#conclusion)
+- [License](#license)
 
----
+## Language Introduction
 
-### Getting Started
+This will be a basic overview of the language and its features. This will be updated as the language is developed. As of now, the language is still in the early stages of development and is not fully functional. However, there are some working features that I will outline below. 
 
-There are a few dependencies that are needed to compile Cryo that you will need on your machine.
+**<u><i>Note: This will only work and compile on a Debian-Linux based system.**</u></i>
 
-- make _(this project does not use cmake)_
-- clang
-- LLVM _(This will soon not be required to be a depenecy of the user)_
+### <u>Keywords / Reserve Words / Data Types</u>
 
-_Note: This has been developed on Windows and only has support for windows APIs internally, cross platform will be supported in the future._
+| Keywords      |          | Data Types | Reserved Words |
+| --------      | -------- | ---------- | -------------- |
+| `extern`      | `struct` | `int`      | `if`           |
+| `function`    | `return` | `string`   | `else`         |
+| `const`       | `true`   | `boolean`  | `while`        |
+| `mut`         | `false`  | `float`    | `for`          |
+| `namespace`   | `public` | `void`     |                |
+| `private`     |          |            |                |
 
-#### 1. Installing the project.
 
-However you prefer to install GitHub repos.
+### <u>Operators</u>
+| Arithmetic Operators | Logical Operators | Comparison Operators | Assignment Operators |
+| -------------------- | ----------------- | -------------------- | -------------------- |
+| `+`                  | `&&` - AND        | `==` - Strict EQ     | `=`                  |
+| `-`                  | `\|\|` - OR       | `!=` - NOT EQ        | `+=`                 |
+| `*`                  | `!` - NOT         | `>`  - GT            | `-=`                 |
+| `/`                  |                   | `<`  - LT            | `*=`                 |
+| `%`                  |                   | `>=` - GTE           | `/=`                 |
+|                      |                   | `<=` - LTE           | `%=`                 |
 
-**Github CLI**
+### <u>Hello, world!</u>
+Since there is no standard library yet, the language is very limited in what it can do. When the project builds, it will use a C file to borrow functions from. This is located in [`./src/cryo/std.c`](./src/cryo/std.c).
 
-```sh
-gh repo clone jakelequire/cryo
+Here is a simple hello world program in Cryo:
+
+```
+namespace Main;
+
+extern function printStr(str: string) -> void;
+
+public function main() -> void {
+    printStr("Hello, world!");
+
+    const example: string = "Hello, world!";
+    printStr(example);
+    
+    return;
+}
 ```
 
-**HTTPS**
+This will print `Hello, world!` to the console.
 
-```sh
-https://github.com/jakelequire/cryo.git
+### <u>Fibonacci Sequence</u>
+Here is a simple program that will print the first 16 numbers of the Fibonacci sequence.
+
+```
+namespace Fibonacci;
+
+extern function printStr(str: string) -> void;
+extern function printInt(num: int) -> void;
+
+public function fibonacci(n: int) -> void {
+    mut a: int = 0;
+    mut b: int = 1;
+    mut c: int = 0;
+
+    while (n > 0) {
+        c = a + b;
+        a = b;
+        b = c;
+
+        printInt(a);
+        n = n - 1;
+    }
+
+    return;
+}
+
+
+public function main() -> void {
+    fibonacci(16);
+    return;
+}
 ```
 
-#### 2. Building The code.
+**<u><i>
+Note: 
+There must be a `main` function in the program in order to execute.
+</i></u>**
 
-The makefile within the project will take care of the compilation of the project, simply just type in the terminal:
+**<u><i>
+`argc` and `argv` are not yet implemented.
+</i></u>**
 
-```sh
+## Compile & Run
+There are some dependencies that you will need to have installed on your system to compile the language.
+
+#### Dependencies
+- [Clang](https://clang.llvm.org/)
+- [Make](https://www.gnu.org/software/make/)
+- [LLVM 18](https://llvm.org/)
+
+
+To compile the language, you will need to have `clang` and `make` installed on your system. You can install it by running:
+```bash
+sudo apt-get install clang make
+```
+
+For the LLVM library might be a little more difficult to install. You can follow the instructions on the [LLVM website](https://llvm.org/) to install it on your system. The makefile should be able to find the library if it is installed correctly.
+
+#### Building
+
+To compile the project, you will first need to build it. You can do this by running:
+```bash
 make all
 ```
+This will build the source code of the project and create an executable file called `main` in [`./src/bin/`](./src/bin/).
 
-**\_Note:** There may be warnings but the project should build and produce a `main.exe` file in `./src/bin`\_
-
-#### 3. Using the Cryo Compiler.
-
-There are two ways you can compile a `.cryo` file. Manually passing it to the compiler (`main.exe`), and it will produce a single `.ll` file.
-
-The **reccomended** way to compile Cryo is to use the CLI provided within the repo. However, you will need to make sure your PATH Enviornmental Variables are able to view and execute the `cryo.exe` binary found within `./cli/bin/` in the project. To verify that the CLI is accessable, simply type in your terminal:
-
-```sh
-cryo -h
+#### Environment Variables
+There is only one environmental variable you need to set in order to run the program. This is something that I will fix in the future, but for now, you will need to set the `CRYO_PATH` variable for the program to work. You can set this by running:
+```bash
+export CRYO_PATH=<path-to-cryo-directory>
 ```
 
-and the help menu should display.
-
----
-
-### Basic Project Structure.
-
-#### Initialize a project
-
-With the CLI tools, you can initilize a barebone boilerplate project.
-
-```sh
-cryo --init
+#### Using the compiler
+There is a build script in the project directory that will compile and execute a Cryo file. As of right now, it can only compile one file at a time. You can run the build script by running:
+```bash
+./build.sh -f <file>
 ```
 
-This will create a few things, this is what the basic outline looks like:
+### LSP
+There is a small LSP within the project under the [`./src/assets/`](./src/assets/) directory. This is a VS Code Extension that will provide syntax highlighting for the Cryo language. You can just double click the `.vsix` file to install it in VS Code.
 
-```
-/cryo_project
-|    /src
-|    |  - main.cryo
-|    - cryo.config.json
-|    - cryo.init
-```
-
-There are a few required components in order to build a full project and not just a single file. Let's look at each one.
-
-- `cryo.config.json` - This is the project configurations, dependencies, and compiler options.
-- `cryo.init` - This is a file that shouldn't be modified and will automatically be updated. **This is for the compiler.**
-- `/src` - The source code directory. All files / folders must be placed within here. Configurations and other external things may be played outside of the src directory.
-- `main.cryo` - This is the entry point of the program. Having a main file & function is required. The main function may be passed `void` or `argv, argc` parameters.
-
-When building a cryo project, you can do
-
-```
-cryo build ./
-```
-
-The compiler will look for the `cryo.init` file and set it's configurations. Next, it will compile your code to the root directory into a folder called `./build`.
-
-**_Note: The build output will be a development build, in the future, a `release` flag will be avaliable and for an optimized production build._**
-
----
-
-### Language Introduction
-
-This will be a light overview of the language. There is additional resources that can be found to have a deeper look in the documentation of Cryo.
-
-#### Keywords / Reserve Words
-
-|       |          |            |           |        |          |
-| ----- | -------- | ---------- | --------- | ------ | -------- |
-| any   | const    | if         | map       | return | union    |
-| array | continue | impl       | match     | self   | unsafe   |
-| as    | else     | import     | module    | static | use      |
-| async | enum     | instanceof | mut       | string | volatile |
-| await | extern   | int        | namespace | struct | while    |
-| break | false    | interface  | new       | super  |          |
-| byte  | float    | let        | null      | true   |          |
-| case  | fn       | long       | private   | type   |          |
-| class | for      | loop       | public    | typeof |          |
-
-#### Data Types
-
-Cryo provides a set of fundamental data types that serve as the building blocks for more complex structures. These core data types will be expanded in the future to enhance the language's capabilities.
-
-- **`int`**: Represents integer values. Used for arithmetic operations, counting, and other scenarios where whole numbers are required. Example: `42`.
-- **`string`**: Represents sequences of characters. Used for text manipulation, messages, and other scenarios requiring textual data. Example: `"Hello, World!"`.
-- **`boolean`**: Represents truth values, with only two possible values: `true` and `false`. Used for conditional statements and logic operations.
-- **`symbol`**: Represents unique identifiers. Useful for cases where a distinct and immutable identifier is required, such as keys in dictionaries or enums.
-- **`void`**: Represents the absence of a value. Typically used for functions that do not return a value.
-- **`null`**: Represents a null value or an absence of an object. Used to signify that a variable has not been initialized or that an object is missing.
-
-These data types provide a solid foundation for programming in Cryo. Future releases will introduce additional types and enhancements to support a wider range of programming paradigms and applications.
-
-#### Operators
-
-- `+` Addition operator.
-- `-` Subtraction operator.
-- `*` Multiplication operator.
-- `/` Division operator.
-- `%` Modulus operator.
-- `==` Equality operator.
-- `!=` Inequality operator.
-- `>` Greater than operator.
-- `<` Less than operator.
-- `>=` Greater than or equal to operator.
-- `<=` Less than or equal to operator.
-- `&&` Logical AND operator.
-- `||` Logical OR operator.
-- `!` Logical NOT operator.
-
-### Conclusion
+## Conclusion
 
 Once again, this is just a side project that I wanted to build for fun and to learn new things. The only real goal of this project is to have a very minimalistic general purpose programming language. I have no intention on a serious roadmap and just adding things as I see fit.
 

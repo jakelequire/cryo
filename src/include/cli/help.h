@@ -25,22 +25,21 @@
 /* =========================================================== */
 // Help Args
 
-typedef enum {
-    HELP_ARG_HELP,      // help
-    HELP_ARG_VERSION,   // version
-    HELP_ARG_BUILD,     // build
-    HELP_ARG_INIT,      // init
-    HELP_ARG_UNKNOWN    // unknown
+typedef enum
+{
+    HELP_ARG_HELP,    // help
+    HELP_ARG_VERSION, // version
+    HELP_ARG_BUILD,   // build
+    HELP_ARG_INIT,    // init
+    HELP_ARG_UNKNOWN  // unknown
 } HelpArgs;
-
-
 
 /* =========================================================== */
 // @Prototypes
 
-HelpArgs getHelpArg             (char* arg);
-void executeHelpCmd             (char* argv[]);
+HelpArgs getHelpArg(char *arg);
+void executeHelpCmd(char *argv[]);
 
-void executeHelpMenuCmd         (void);
+void executeHelpMenuCmd(void);
 
 #endif // HELP_H

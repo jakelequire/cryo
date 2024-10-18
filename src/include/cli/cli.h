@@ -31,13 +31,13 @@
 #define MAX_ARGS 10
 #define MAX_ARG_LENGTH 50
 
-extern char* cryo_logo;
-
+extern char *cryo_logo;
 
 /* =========================================================== */
 // @Primary_Command
 
-typedef enum {
+typedef enum
+{
     CMD_HELP,
     CMD_VERSION,
     CMD_BUILD,
@@ -46,19 +46,19 @@ typedef enum {
     CMD_UNKNOWN
 } CommandType;
 
-
-typedef struct {
-    const char* command;
-    char* args[MAX_ARGS];
+typedef struct
+{
+    const char *command;
+    char *args[MAX_ARGS];
     int argCount;
 } CommandArgs;
 
 /* =========================================================== */
 // @Prototypes
 
-CommandType getCommandType          (const char* command);
-void executeCommand                 (CommandType command, char* argv);
+CommandType getCommandType(const char *command);
+void executeCommand(CommandType command, char *argv);
 
-CommandArgs parseCommandLine        (int argc, char* argv[]);
-void freeCommandArgs                (CommandArgs* cmdArgs);
+CommandArgs parseCommandLine(int argc, char *argv[]);
+void freeCommandArgs(CommandArgs *cmdArgs);
 #endif

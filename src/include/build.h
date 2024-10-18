@@ -23,7 +23,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/types.h>
-
 void moveBuildFile(char *fileName, char *cwd);
 void compileBuildFile(char *fileName);
 

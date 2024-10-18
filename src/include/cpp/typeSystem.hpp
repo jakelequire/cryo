@@ -606,22 +606,3 @@ public:
 private:
     TypeSystem &typeSystem;
 };
-
-// ----------------------------------------------------------------
-// Testing Stuff
-
-struct Int
-{
-    int value;
-    Int(int v) : value(v) {};
-
-    std::string toString()
-    {
-        return std::to_string(value);
-    }
-};
-
-void fooTest(void)
-{
-    Int i = 34;
-}

@@ -1,6 +1,4 @@
-namespace test;
-
-// import std::Math;
+namespace Main;
 
 extern function printInt(integer: int) -> void;
 extern function printStr(str: string) -> void;
@@ -12,30 +10,6 @@ public function getStringLength() -> void {
     printInt(testStrLength);
     return;
 }
-
-public function test(numberIterator: int) -> void {
-    const pleasework: int = numberIterator + 1;
-    const intArrTwo: int[] = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
-    //                         0    1    2    3    4    5    6    7    8    9
-
-    printStr("----------");
-    printStr("Param value: ");
-    // printInt(numberIterator);
-
-    printStr("Array value: ");
-    // printInt(indexArrNew);
-
-    printStr("----------");
-    printStr(" ");
-
-    // if(pleasework < 5) {
-    //     test(pleasework);
-    // } else {
-    //     return;
-    // }
-    return;
-}
-
 
 public function add(a: int, b: int) -> int {
     return a + b;

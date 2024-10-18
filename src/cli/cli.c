@@ -16,55 +16,70 @@
  ********************************************************************************/
 #include "cli/cli.h"
 
-
 // <getCommandType>
-CommandType getCommandType(const char* command) {
+CommandType getCommandType(const char *command)
+{
     printf("Command: %s\n", command);
-    if (strcmp(command, "help") == 0)     return CMD_HELP;
-    if (strcmp(command, "version") == 0)  return CMD_VERSION;
-    if (strcmp(command, "-v") == 0)       return CMD_VERSION;
-    if (strcmp(command, "build") == 0)    return CMD_BUILD;
-    if (strcmp(command, "init") == 0)     return CMD_INIT;
-    if (strcmp(command, "wdev") == 0)     return CMD_DEV_WATCH;
+    if (strcmp(command, "help") == 0)
+        return CMD_HELP;
+    if (strcmp(command, "version") == 0)
+        return CMD_VERSION;
+    if (strcmp(command, "-v") == 0)
+        return CMD_VERSION;
+    if (strcmp(command, "build") == 0)
+        return CMD_BUILD;
+    if (strcmp(command, "init") == 0)
+        return CMD_INIT;
+    if (strcmp(command, "wdev") == 0)
+        return CMD_DEV_WATCH;
 
     return CMD_UNKNOWN;
 }
 // </getCommandType>
 
-
 // <executeCommand>
-void executeCommand(CommandType command, char* argv) {
-    //printf("Executing Command: %d\n", command);
-    // printf("Arguments: %s\n", argv);
-    switch(command) {
-        case CMD_HELP:          executeHelpCmd(argv);
-        case CMD_VERSION:       executeVersionCmd();
-        case CMD_BUILD:         executeBuildCmd(argv);
-        case CMD_INIT:          executeInitCmd(argv);
-        case CMD_DEV_WATCH:     executeDevWatchCmd(argv);
+void executeCommand(CommandType command, char *argv)
+{
+    // printf("Executing Command: %d\n", command);
+    //  printf("Arguments: %s\n", argv);
+    switch (command)
+    {
+    case CMD_HELP:
+        executeHelpCmd(argv);
+    case CMD_VERSION:
+        executeVersionCmd();
+    case CMD_BUILD:
+        executeBuildCmd(argv);
+    case CMD_INIT:
+        executeInitCmd(argv);
+    case CMD_DEV_WATCH:
+        executeDevWatchCmd(argv);
 
-        default:                // executeUnknownCmd();
+    default: // executeUnknownCmd();
     }
 }
 // </executeCommand>
 
-
 // <parseCommandLine>
-CommandArgs parseCommandLine(int argc, char* argv[]) {
+CommandArgs parseCommandLine(int argc, char *argv[])
+{
     CommandArgs cmdArgs;
     memset(&cmdArgs, 0, sizeof(CommandArgs));
 
-    if(argc < 2) {
+    if (argc < 2)
+    {
         fprintf(stderr, "No Command Provided.\n");
         exit(EXIT_FAILURE);
     }
     // printf("[DEBUG] Command: %s\n", argv[1]);
     cmdArgs.command = argv[1];
 
-    for(int i = 2; i < argc && i - 2 < MAX_ARGS; i++) {
+    for (int i = 2; i < argc && i - 2 < MAX_ARGS; i++)
+    {
         cmdArgs.args[i - 2] = malloc(MAX_ARG_LENGTH * sizeof(char));
         // printf("[DEBUG] Malloc: %p\n", cmdArgs.args[i - 2]);
-        if(cmdArgs.args[i - 2] == NULL) {
+        if (cmdArgs.args[i - 2] == NULL)
+        {
             perror("malloc");
             exit(EXIT_FAILURE);
         }
@@ -78,21 +93,22 @@ CommandArgs parseCommandLine(int argc, char* argv[]) {
 }
 // </parseCommandLine>
 
-
 // <freeCommandArgs>
-void freeCommandArgs(CommandArgs* cmdArgs) {
-    for(int i = 0; i < cmdArgs->argCount; i++) {
+void freeCommandArgs(CommandArgs *cmdArgs)
+{
+    for (int i = 0; i < cmdArgs->argCount; i++)
+    {
         free(cmdArgs->args[i]);
     }
 }
 // </freeCommandArgs>
 
-
-
 /* =========================================================== */
 // <main>
-int main(int argc, char** argv) {
-    if (argc < 2) {
+int main(int argc, char **argv)
+{
+    if (argc < 2)
+    {
         executeHelpCmd(argv);
         return 1;
     }

@@ -82,7 +82,7 @@ namespace Cryo
         }
         else
         {
-            // compiler.getGenerator().parseTree(thenBranch);
+            compiler.getGenerator().parseTree(thenBranch);
 
             // If the then block doesn't have a terminator, create a branch to the merge block
             if (!thenBlock->getTerminator())
@@ -98,7 +98,7 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "IfStatements", "Creating Else Block");
             compiler.getGenerator().parseTree(elseBranch);
         }
-        if (!elseBlock->getTerminator())
+        if (!elseBlock->getTerminator() || elseBranch == nullptr)
         {
             debugger.logMessage("INFO", __LINE__, "IfStatements", "Creating Branch in Else Block");
             compiler.getContext().builder.CreateBr(mergeBlock);
@@ -151,20 +151,20 @@ namespace Cryo
             char *varName = node->data.varName->varName;
             // Get the current namespace
             std::string namespaceName = compiler.getContext().currentNamespace;
-            // Find the variable in the symbol table
-            ASTNode *varNode = compiler.getSymTable().getASTNode(namespaceName, NODE_VAR_DECLARATION, varName);
-            if (!varNode)
+            STVariable *stVarNode = compiler.getSymTable().getVariable(namespaceName, varName);
+            if (!stVarNode)
             {
                 debugger.logMessage("ERROR", __LINE__, "IfStatements", "Variable not found");
                 exit(0);
             }
-            // Get the variable value
-            llvm::Value *varValue = compiler.getGenerator().getInitilizerValue(varNode);
+
+            llvm::Value *varValue = stVarNode->LLVMValue;
             if (!varValue)
             {
                 debugger.logMessage("ERROR", __LINE__, "IfStatements", "Variable value not found");
-                CONDITION_FAILED;
+                exit(0);
             }
+
             // Create the condition
             condition = compiler.getContext().builder.CreateICmpNE(varValue, llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, 0, true)), "ifCondition");
 

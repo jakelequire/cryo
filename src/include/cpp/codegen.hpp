@@ -772,5 +772,4 @@ namespace Cryo
     std::cout << "\n";
 
 }
-
 #endif // SANDBOX_H

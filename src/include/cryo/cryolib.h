@@ -31,5 +31,4 @@ void printFloat(float value);
 void printStr(char *value);
 void printConstStr(const char *value);
 void printStrU(char value);
-
 #endif // CRYO_LIB_H

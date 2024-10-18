@@ -15,5 +15,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
 #endif // CPP_MAIN_H

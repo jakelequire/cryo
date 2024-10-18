@@ -1,8 +1,0 @@
-//
-// Variable Test Case #4
-// Variable Expression Declaration.
-// 
-// This will evaluate a simple <addition> expression in a variable.
-//
-
-const exampleAddExpr: int = 34 + 35;

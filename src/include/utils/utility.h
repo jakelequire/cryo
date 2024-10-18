@@ -78,5 +78,4 @@ char *concatStrings(const char *str1, const char *str2);
 
 void redirectStdout();
 void restoreStdout();
-
 #endif // UTILITY_H

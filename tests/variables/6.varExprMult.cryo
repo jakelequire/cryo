@@ -1,8 +1,0 @@
-//
-// Variable Test Case #6
-// Variable Expression Declaration.
-// 
-// This will evaluate a simple <multiplication> expression in a variable.
-//
-
-const exampleMultExpr: int = 12 * 35;

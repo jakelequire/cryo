@@ -6,6 +6,4 @@
 /*---<custom_includes>---*/
 /*---------<end>---------*/
 
-
-
 #endif // RUNTIME_H
