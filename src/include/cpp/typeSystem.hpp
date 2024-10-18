@@ -81,6 +81,9 @@ public:
     TypePtr clone() const override { return std::make_shared<PrimitiveType>(*this); }
 
 private:
+    // The private members are implementation details
+
+    // These are the sizes in bytes
     size_t size;
 };
 
@@ -603,3 +606,22 @@ public:
 private:
     TypeSystem &typeSystem;
 };
+
+// ----------------------------------------------------------------
+// Testing Stuff
+
+struct Int
+{
+    int value;
+    Int(int v) : value(v) {};
+
+    std::string toString()
+    {
+        return std::to_string(value);
+    }
+};
+
+void fooTest(void)
+{
+    Int i = 34;
+}

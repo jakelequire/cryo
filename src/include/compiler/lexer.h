@@ -38,6 +38,19 @@ typedef struct
     CryoTokenType type;
 } KeywordToken;
 
+typedef enum TagType
+{
+    TAG_TYPE_UNKNOWN = -1,
+    TAG_TYPE_INTERNAL,
+    TAG_TYPE_EXTERNAL,
+};
+
+typedef struct
+{
+    char *tag;
+    TagType type;
+} TagToken;
+
 typedef struct
 {
     char *baseType;

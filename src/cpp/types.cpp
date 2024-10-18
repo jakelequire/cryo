@@ -153,6 +153,28 @@ namespace Cryo
             debugger.logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
             return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
 
+        // ================================
+        // New Types
+
+        // Integer Types
+        case DATA_TYPE_SINT8:
+        case DATA_TYPE_SINT16:
+        case DATA_TYPE_SINT32:
+        case DATA_TYPE_SINT64:
+        case DATA_TYPE_UINT8:
+        case DATA_TYPE_UINT16:
+        case DATA_TYPE_UINT32:
+        case DATA_TYPE_UINT64:
+
+        // Arrays
+        case DATA_TYPE_INT8_ARRAY:
+        case DATA_TYPE_INT16_ARRAY:
+        case DATA_TYPE_INT32_ARRAY:
+        case DATA_TYPE_INT64_ARRAY:
+
+        // Vectors
+        case DATA_TYPE_DYN_VEC:
+
         default:
             debugger.logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;

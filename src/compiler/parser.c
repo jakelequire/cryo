@@ -1667,15 +1667,7 @@ void importTypeDefinitions(const char *module, const char *subModule, CryoSymbol
     else
     {
         logMessage("INFO", __LINE__, "Parser", "Importing module definitions...");
-        ASTNode *externRoot = createExternalAstTree(arena, state, module, NULL);
-        if (!externRoot)
-        {
-            logMessage("ERROR", __LINE__, "Parser", "Failed to create external AST tree.");
-            return;
-        }
-        logMessage("INFO", __LINE__, "Parser", "Importing module definitions (no submodule)...");
-        importAstTreeDefs(externRoot, table, arena, state);
-        return;
+        importAstTreeDefs(symbol->node, table, arena, state);
     }
 
     printSymbolTable(table);

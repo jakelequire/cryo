@@ -2,28 +2,31 @@ namespace Main;
 
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
+extern function sys_exit(code: int) -> void;
 
-public function fibonacci(n: int) -> void {
-    mut a: int = 0;
-    mut b: int = 1;
-    mut c: int = 0;
-
-    while (n > 0) {
-        c = a + b;
-        a = b;
-        b = c;
-
-        printInt(a);
-        n = n - 1;
+/// This is the Cryo Integer struct that is used to represent integers in Cryo
+/// The struct should be defined in the standard library, but for now it is defined here.
+/// This should not be altered by the user.
+/// Also, this is just a draft for the syntax. The compiler is not able to parse this yet.
+#internal struct Interal_Int {
+    value: int;                         // The value of the integer
+    constructor(value: int) -> void {   // Constructor
+        this.value = value;
     }
 
-    return;
+    // Methods
+    toString(this) -> string       // Convert the integer to a string
+    { return "{this.value}"; }
+    valueOf(this) -> Int           // Return the integer itself
+    { return this; }
 }
+
+// This is the client-facing struct that is used to represent integers in Cryo.
+declare struct Int = Interal_Int;
 
 
 public function main() -> void {
-    fibonacci(16);
-
+    const testInt: Int = 42;
     return;
 }
-
+    

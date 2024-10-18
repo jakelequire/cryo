@@ -104,6 +104,7 @@ extern "C"
         TOKEN_KW_PUBLIC,       // `public`
         TOKEN_KW_PRIVATE,      // `private`
         TOKEN_KW_STRUCT,       // `struct`
+        TOKEN_KW_DECLARE,      // `declare`
         TOKEN_KW_ENUM,         // `enum`
         TOKEN_KW_TRAIT,        // `trait`
         TOKEN_KW_IMPL,         // `impl`
@@ -307,14 +308,14 @@ extern "C"
         DATA_TYPE_VOID_ARRAY,      // `void[]`            14
 
         // Integers
-        DATA_TYPE_SINT8,  // `sint8`  15
-        DATA_TYPE_SINT16, // `sint16` 16
-        DATA_TYPE_SINT32, // `sint32` 17
-        DATA_TYPE_SINT64, // `sint64` 18
-        DATA_TYPE_UINT8,  // `uint8`  19
-        DATA_TYPE_UINT16, // `uint16` 20
-        DATA_TYPE_UINT32, // `uint32` 21
-        DATA_TYPE_UINT64, // `uint64` 22
+        DATA_TYPE_SINT8,  // `int8`  15
+        DATA_TYPE_SINT16, // `int16` 16
+        DATA_TYPE_SINT32, // `int32` 17
+        DATA_TYPE_SINT64, // `int64` 18
+        DATA_TYPE_UINT8,  // `u_int8`  19
+        DATA_TYPE_UINT16, // `u_int16` 20
+        DATA_TYPE_UINT32, // `u_int32` 21
+        DATA_TYPE_UINT64, // `u_int64` 22
 
         // Arrays
         DATA_TYPE_INT8_ARRAY,  // `int8[]`  23

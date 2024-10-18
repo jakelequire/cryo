@@ -67,13 +67,13 @@ typedef struct DataType
         ASTNode *enumType;
         // Unimplemented
         ASTNode *functionType;
+        // Built-in type
+        CryoDataType builtInType;
     };
 } DataType;
 
 char *TypeofDataTypeToString(TypeofDataType type);
 CryoDataType parseDataType(const char *typeStr);
 CryoDataType getPrimativeTypeFromString(const char *typeStr);
-ASTNode *createExternalAstTree(Arena *arena, CompilerState *state, const char *module, const char *subModule);
-static const ASTNode *parseExternal(const char *filePath);
 
 #endif // TYPEDEFS_H
