@@ -15,9 +15,32 @@
  *                                                                              *
  ********************************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "settings/compilerSettings.h"
+#include "compiler/compiler.h"
 
 int main(int argc, char *argv[])
 {
-    printf("Hello, World!\n");
+    // Initialize the compiler settings
+    CompilerSettings settings = getCompilerSettings(argc, argv);
+    logCompilerSettings(&settings);
+
+    // Check if the input file exists
+    const char *filePath = settings.inputFilePath;
+    if (!fileExists(filePath))
+    {
+        fprintf(stderr, "Error: File not found: %s\n", filePath);
+        return 1;
+    }
+
+    // Compile the file
+    int compilerResult = cryoCompiler(filePath, &settings);
+    if (compilerResult != 0)
+    {
+        CONDITION_FAILED;
+        return 1;
+    }
+
     return 0;
 }

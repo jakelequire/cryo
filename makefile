@@ -26,7 +26,8 @@
 # `-Oz`    - Optimize for size					#
 # --------------------------------------------- #
 OPTIMIZATION =  -O1
-DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS 
+NO_WARNINGS =   -w
+DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS  $(NO_WARNINGS)
 C_STANDARD =    -std=c23
 CXX_STANDARD =  -std=c++23
 
@@ -113,7 +114,7 @@ MAIN_FILE = $(SRC_DIR)main.c
 
 # ---------------------------------------------
 # Main binary
-MAIN_BIN = $(BIN_DIR)main$(BIN_SUFFIX)
+MAIN_BIN = $(BIN_DIR)compiler$(BIN_SUFFIX)
 
 # ---------------------------------------------
 # Ensure OBJ_DIR exists

@@ -235,7 +235,12 @@
     "getopt.h": "c",
     "codecvt": "cpp",
     "settings.h": "c",
-    "filesystem": "cpp"
+    "filesystem": "cpp",
+    "tokens.h": "c",
+    "c_logger.h": "c",
+    "compilersettings.h": "c",
+    "printmacros.h": "c",
+    "debugmacros.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

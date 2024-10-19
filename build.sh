@@ -26,7 +26,7 @@ OBJ_FILE="output.o"
 # The out directory
 OUT_DIR="$BUILD_DIR/out"
 # The compiler executable
-COMPILER_EXE="./bin/main"
+COMPILER_EXE="./bin/compiler"
 
 # Cryo Compiler Arguments
 compiler_args=()
