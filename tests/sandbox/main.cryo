@@ -1,0 +1,9 @@
+namespace Main;
+
+extern function printInt(i: int) -> void;
+
+public function main() -> void {
+    printInt(42);
+
+    return;
+}
