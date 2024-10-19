@@ -14,29 +14,10 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "main.h"
+#include <stdio.h>
 
 int main(int argc, char *argv[])
 {
-    // Initialize the compiler settings
-    CompilerSettings settings = getCompilerSettings(argc, argv);
-    logCompilerSettings(&settings);
-
-    // Check if the input file exists
-    const char *filePath = settings.inputFilePath;
-    if (!fileExists(filePath))
-    {
-        fprintf(stderr, "Error: File not found: %s\n", filePath);
-        return 1;
-    }
-
-    // Compile the file
-    int compilerResult = cryoCompiler(filePath, &settings);
-    if (compilerResult != 0)
-    {
-        CONDITION_FAILED;
-        return 1;
-    }
-
+    printf("Hello, World!\n");
     return 0;
 }
