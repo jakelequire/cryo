@@ -18,7 +18,7 @@ BASE_FILE="./tests/main.cryo"
 # SRC_FILE is produced by the compiler at the top level of the project
 SRC_FILE="output.ll"
 # The object file for the standard library
-LIB_OBJ="./src/bin/.o/cryolib.o"
+LIB_OBJ="./bin/.o/cryolib.o"
 # The build directory
 BUILD_DIR="build"
 # The object file
@@ -26,7 +26,7 @@ OBJ_FILE="output.o"
 # The out directory
 OUT_DIR="$BUILD_DIR/out"
 # The compiler executable
-COMPILER_EXE="./src/bin/main"
+COMPILER_EXE="./bin/main"
 
 # Cryo Compiler Arguments
 compiler_args=()
@@ -148,7 +148,6 @@ while [[ "$#" -gt 0 ]]; do
             usage
             ;;
         *)
-            error "Unknown argument: $1"
             ;;
     esac
 done
@@ -250,7 +249,7 @@ else
 fi
 
 # Compile the standard library
-clang -S -emit-llvm ./src/cryo/std.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+clang -S -emit-llvm ./cryo/c_support.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
 
 # Change to the out directory
 cd $OUT_DIR
@@ -264,7 +263,7 @@ llc -filetype=obj -relocation-model=static bin.ll -o bin.o
 # llc -filetype=asm bin.ll -o bin.s
 
 # Change back to the original directory
-cd ../../
+cd ../
 
 # Link the object files and place the output in the build directory
 clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME

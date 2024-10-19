@@ -46,12 +46,15 @@ endif
 # >>=======--------------------------------------------------=======<< #
 
 # Include paths
-LINUX_INCLUDES =    -I./src/include -I./src/include/runtime -I./src/include/cli             \
-                    -I./src/include/compiler -I./src/include/utils -I./src/include/tests
+LINUX_INCLUDES =    -I./include -I./include/codegen -I./include/cli  -I./include/common     \
+                    -I./include/diagnostics -I./include/linker -I./include/settings         \
+                    -I./include/tools -I./include/tools/macros -I./include/tools/utils      \
+                    -I./include/frontend
 
-WIN_INCLUDES =      -I"C:/msys64/mingw64/include" -I./src/include -I./src/include/runtime   \
-                    -I./src/include/cli -I./src/include/compiler -I./src/include/utils      \
-                    -I./src/include/tests
+WIN_INCLUDES =      -I"C:/msys64/mingw64/include" -I./include -I./include/codegen -I./include/cli       \
+                    -I./include/common -I./include/diagnostics -I./include/linker -I./include/settings  \
+                    -I./include/tools -I./include/tools/macros -I./include/tools/utils                  \
+                    -I./include/frontend
 
 # >>=======--------------------------------------------------=======<< #
 # >>=======       OS-specific settings for compilers         =======<< #
