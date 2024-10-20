@@ -14,34 +14,42 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
-
+#ifndef LITERAL_EXPR_HPP
+#define LITERAL_EXPR_HPP
+#include <iostream>
 #include <string>
-#include "common/common.h"
+#include <vector>
+
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Type.h"
+
+#include "codegen/generation/codegen.hpp"
 
 namespace llvm
 {
-    class LLVMContext;
-    class IRBuilder;
-    class Module;
+    class Value;
 }
 
 namespace Cryo
 {
 
-    class CompilerState;
-    class ASTNode;
-
-    class IRGenerator
+    class Expression : public CodeGen
     {
     public:
-        IRGenerator() = default;
-        ~IRGenerator() = default;
+        Expression();
+        virtual ~Expression() = default;
 
-        int generateIR(ASTNode *node, CompilerState *state);
+        virtual llvm::Value *codegen() = 0;
 
-    private:
-        // Add private members as needed
+    protected:
+        // If you need to store a reference to a parent CodeGen object,
+        // consider using a raw pointer or std::weak_ptr to avoid circular references
+        CodeGen *parentGen;
     };
 
 } // namespace Cryo
+
+#endif // LITERAL_EXPR_HPP

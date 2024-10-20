@@ -14,34 +14,56 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
-
+#ifndef MODULECONTEXT_HPP
+#define MODULECONTEXT_HPP
+#include <iostream>
 #include <string>
-#include "common/common.h"
+#include <vector>
+#include <unordered_map>
+#include <memory>
 
-namespace llvm
-{
-    class LLVMContext;
-    class IRBuilder;
-    class Module;
-}
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Verifier.h>
+
+#include "common/common.h"
 
 namespace Cryo
 {
-
-    class CompilerState;
-    class ASTNode;
-
-    class IRGenerator
+    class ModuleContext
     {
     public:
-        IRGenerator() = default;
-        ~IRGenerator() = default;
+        static ModuleContext &getInstance();
 
-        int generateIR(ASTNode *node, CompilerState *state);
+        ModuleContext(const ModuleContext &) = delete;
+        ModuleContext &operator=(const ModuleContext &) = delete;
+
+        CompilerState *state;
+
+        llvm::LLVMContext context;
+        llvm::IRBuilder<> builder;
+        std::unique_ptr<llvm::Module> module;
+        std::unique_ptr<std::vector<llvm::Module *>> modules;
+
+        std::unordered_map<std::string, llvm::Value *> namedValues;
+        std::unordered_map<std::string, llvm::StructType *> structTypes;
+
+        std::string currentNamespace;
+        llvm::Function *currentFunction;
+        std::vector<CompiledFile> compiledFiles;
+
+        std::vector<llvm::Module *> *getModules() { return modules.get(); }
+
+        bool inGlobalScope = true;
+
+        void initializeContext();
+        void setModuleIdentifier(const std::string &name);
+        void addCompiledFileInfo(CompiledFile file);
 
     private:
-        // Add private members as needed
+        ModuleContext();
     };
+}
 
-} // namespace Cryo
+#endif // MODULECONTEXT_HPP

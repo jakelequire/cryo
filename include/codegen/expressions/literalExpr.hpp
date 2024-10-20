@@ -14,4 +14,40 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/semantics/semantics.hpp"
+#ifndef LITERAL_EXPR_HPP
+#define LITERAL_EXPR_HPP
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Type.h"
+
+#include "codegen/expressions/expressions.hpp"
+
+namespace llvm
+{
+    class Value;
+}
+
+namespace Cryo
+{
+
+    class LiteralExpr : public Expression
+    {
+    public:
+        LiteralExpr();
+        ~LiteralExpr() override = default;
+
+        llvm::Value *codegen() override;
+
+    private:
+        // Add private members as needed, e.g., to store the literal value
+    };
+
+} // namespace Cryo
+
+#endif // LITERAL_EXPR_HPP

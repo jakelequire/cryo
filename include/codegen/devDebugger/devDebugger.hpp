@@ -14,34 +14,44 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
-
+#ifndef CRYO_DEBUGGER
+#define CRYO_DEBUGGER
+#include <iomanip>
+#include <iostream>
 #include <string>
-#include "common/common.h"
 
-namespace llvm
-{
-    class LLVMContext;
-    class IRBuilder;
-    class Module;
-}
+#include "llvm/IR/Value.h"
+#include "llvm/IR/IRBuilder.h"
+
+#include "frontend/AST.h"
 
 namespace Cryo
 {
+#define VALIDATE_ASTNODE(node) checkNode(node)
 
-    class CompilerState;
-    class ASTNode;
-
-    class IRGenerator
+    class DevDebugger
     {
     public:
-        IRGenerator() = default;
-        ~IRGenerator() = default;
+        void logNode(ASTNode *node);
+        void logMessage(const char *type, int line, const std::string &category, const std::string &message);
 
-        int generateIR(ASTNode *node, CompilerState *state);
+        bool lintTree(ASTNode *node);
+        bool assertNode(ASTNode *node);
+        bool isValidNodeType(CryoNodeType type);
+        void logLLVMValue(llvm::Value *valueNode);
+        void logLLVMStruct(llvm::StructType *structTy);
+        void logLLVMType(llvm::Type *type);
+        void logLLVMInst(llvm::Instruction *inst);
+        std::string LLVMTypeIDToString(llvm::Type *type);
+
+        // Macro Implementations
+        void checkNode(ASTNode *node);
 
     private:
-        // Add private members as needed
+        bool isNodeTypeValid(ASTNode *node);
+
+    protected:
     };
 
-} // namespace Cryo
+}
+#endif // CRYO_DEBUGGER

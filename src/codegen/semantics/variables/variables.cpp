@@ -14,34 +14,4 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
-
-#include <string>
-#include "common/common.h"
-
-namespace llvm
-{
-    class LLVMContext;
-    class IRBuilder;
-    class Module;
-}
-
-namespace Cryo
-{
-
-    class CompilerState;
-    class ASTNode;
-
-    class IRGenerator
-    {
-    public:
-        IRGenerator() = default;
-        ~IRGenerator() = default;
-
-        int generateIR(ASTNode *node, CompilerState *state);
-
-    private:
-        // Add private members as needed
-    };
-
-} // namespace Cryo
+#include "codegen/semantics/variables.hpp"
