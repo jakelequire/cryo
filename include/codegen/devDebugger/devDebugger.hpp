@@ -32,23 +32,23 @@ namespace Cryo
     class DevDebugger
     {
     public:
-        void logNode(ASTNode *node);
-        void logMessage(const char *type, int line, const std::string &category, const std::string &message);
+        static void logNode(ASTNode *node);
+        static void logMessage(const char *type, int line, const std::string &category, const std::string &message);
 
-        bool lintTree(ASTNode *node);
-        bool assertNode(ASTNode *node);
-        bool isValidNodeType(CryoNodeType type);
-        void logLLVMValue(llvm::Value *valueNode);
-        void logLLVMStruct(llvm::StructType *structTy);
-        void logLLVMType(llvm::Type *type);
-        void logLLVMInst(llvm::Instruction *inst);
-        std::string LLVMTypeIDToString(llvm::Type *type);
+        static bool lintTree(ASTNode *node);
+        static bool assertNode(ASTNode *node);
+        static bool isValidNodeType(CryoNodeType type);
+        static void logLLVMValue(llvm::Value *valueNode);
+        static void logLLVMStruct(llvm::StructType *structTy);
+        static void logLLVMType(llvm::Type *type);
+        static void logLLVMInst(llvm::Instruction *inst);
+        static std::string LLVMTypeIDToString(llvm::Type *type);
 
         // Macro Implementations
-        void checkNode(ASTNode *node);
+        static void checkNode(ASTNode *node);
 
     private:
-        bool isNodeTypeValid(ASTNode *node);
+        static bool isNodeTypeValid(ASTNode *node);
 
     protected:
     };

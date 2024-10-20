@@ -16,9 +16,33 @@
  ********************************************************************************/
 #include "codegen/IRGenerator.hpp"
 
-// using namespace Cryo;
+using namespace Cryo;
 
+/// @brief This is a C Interface function to generate IR from an ASTNode passed from the C API.
+/// This will initialize the IR Generation process and generate the IR for the ASTNode.
+/// @param node
+/// @param state
+/// @return
 int ASTModuleToIR(ASTNode *node, CompilerState *state)
 {
+    IRGenerator irGen;
+    int result = irGen.generateIR(node, state);
+
+    if (result != 0)
+    {
+        return 1;
+    }
+
     return 0;
+}
+
+namespace Cryo
+{
+    int IRGenerator::generateIR(ASTNode *node, CompilerState *state)
+    {
+        CodeGen codeGen(this->getInstance());
+        codeGen.generateModuleFromAST(node);
+
+        return 0;
+    }
 }

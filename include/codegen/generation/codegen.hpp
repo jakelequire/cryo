@@ -62,24 +62,29 @@
 
 #include "frontend/AST.h"
 #include "codegen/moduleContext.hpp"
+#include "codegen/devDebugger/devDebugger.hpp"
 
 namespace Cryo
 {
-    class CodeGen : public ModuleContext
+    class CodeGen
     {
     public:
-        CodeGen();
-        ~CodeGen();
+        CodeGen(ModuleContext &context) : context(context) {}
+        ~CodeGen() = default;
 
+        // Unimplemented
         void initCodeGen();
-        void initCodeGen(std::string moduleName);
-        void initCodeGen(std::string moduleName, std::string outputDir);
+        // Unimplemented
+        void initCodeGen(const std::string &moduleName);
+        // Unimplemented
+        void initCodeGen(const std::string &moduleName, const std::string &outputDir);
 
-        void generateCodeFromAST(ASTNode *root);
-        void generateCodeFromAST(ASTNode *root, std::string outputDir);
+        void generateModuleFromAST(ASTNode *root);
 
     private:
-        void ASTProgramToIR(ASTNode *node);
+        ModuleContext &context;
+
+        void recursiveASTTraversal(ASTNode *root);
     };
 }
 

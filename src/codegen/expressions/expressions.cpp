@@ -15,3 +15,8 @@
  *                                                                              *
  ********************************************************************************/
 #include "codegen/expressions/expressions.hpp"
+
+namespace Cryo
+{
+
+} // namespace Cryo

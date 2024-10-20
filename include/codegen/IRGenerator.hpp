@@ -19,23 +19,23 @@
 #include <string>
 #include "common/common.h"
 
+#include "codegen/moduleContext.hpp"
+#include "codegen/generation/codegen.hpp"
+#include "codegen/devDebugger/devDebugger.hpp"
+
 namespace llvm
 {
     class LLVMContext;
-    class IRBuilder;
     class Module;
 }
 
 namespace Cryo
 {
 
-    class CompilerState;
-    class ASTNode;
-
-    class IRGenerator
+    class IRGenerator : public ModuleContext
     {
     public:
-        IRGenerator() = default;
+        IRGenerator() {};
         ~IRGenerator() = default;
 
         int generateIR(ASTNode *node, CompilerState *state);

@@ -27,6 +27,7 @@
 #include "llvm/IR/Type.h"
 
 #include "codegen/generation/codegen.hpp"
+#include "codegen/moduleContext.hpp"
 
 namespace llvm
 {
@@ -36,18 +37,20 @@ namespace llvm
 namespace Cryo
 {
 
-    class Expression : public CodeGen
+    class Expression
     {
     public:
-        Expression();
-        virtual ~Expression() = default;
+        Expression(ModuleContext &context);
+        virtual ~Expression();
 
-        virtual llvm::Value *codegen() = 0;
+        // Disable copy and move
+        Expression(const Expression &) = delete;
+        Expression &operator=(const Expression &) = delete;
+        Expression(Expression &&) = delete;
+        Expression &operator=(Expression &&) = delete;
 
     protected:
-        // If you need to store a reference to a parent CodeGen object,
-        // consider using a raw pointer or std::weak_ptr to avoid circular references
-        CodeGen *parentGen;
+        ModuleContext &context;
     };
 
 } // namespace Cryo

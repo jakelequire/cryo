@@ -28,23 +28,26 @@
 #include <llvm/IR/Verifier.h>
 
 #include "common/common.h"
+#include "codegen/devDebugger/devDebugger.hpp"
+
 
 namespace Cryo
 {
     class ModuleContext
     {
     public:
-        static ModuleContext &getInstance();
+        ModuleContext();
+        ~ModuleContext() = default;
 
-        ModuleContext(const ModuleContext &) = delete;
-        ModuleContext &operator=(const ModuleContext &) = delete;
-
+        static ModuleContext &getInstance()
+        {
+            return instance;
+        }
         CompilerState *state;
 
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
-        std::unique_ptr<std::vector<llvm::Module *>> modules;
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
@@ -53,8 +56,6 @@ namespace Cryo
         llvm::Function *currentFunction;
         std::vector<CompiledFile> compiledFiles;
 
-        std::vector<llvm::Module *> *getModules() { return modules.get(); }
-
         bool inGlobalScope = true;
 
         void initializeContext();
@@ -62,7 +63,8 @@ namespace Cryo
         void addCompiledFileInfo(CompiledFile file);
 
     private:
-        ModuleContext();
+        // Current Instance
+        static ModuleContext instance;
     };
 }
 
