@@ -73,7 +73,7 @@ Since there is no standard library yet, the language is very limited in what it 
 
 Here is a simple hello world program in Cryo:
 
-```
+```cpp
 namespace Main;
 
 extern function printStr(str: string) -> void;
@@ -93,7 +93,7 @@ This will print `Hello, world!` to the console.
 ### <u>Fibonacci Sequence</u>
 Here is a simple program that will print the first 16 numbers of the Fibonacci sequence.
 
-```
+```cpp
 namespace Fibonacci;
 
 extern function printStr(str: string) -> void;
