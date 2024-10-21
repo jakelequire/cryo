@@ -18,5 +18,6 @@
 
 namespace Cryo
 {
+    ModuleContext ModuleContext::instance;
 
 } // namespace Cryo

@@ -14,34 +14,33 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef EXPRESSIONS_HPP
-#define EXPRESSIONS_HPP
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Value.h"
-#include "llvm/IR/Type.h"
-
 #include "codegen/generation/codegen.hpp"
-#include "codegen/moduleContext.hpp"
 
 namespace Cryo
 {
-
-    class Expression : public CodeGen
+    /// @private
+    int CodeGen::preprocess(ASTNode *root)
     {
-    public:
-        Expression(ModuleContext &context) : context(context), CodeGen(context) {}
-        ~Expression() = default;
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Code Generation");
 
-    protected:
-        ModuleContext &context;
-    };
+        // Get / Set the symbol table for the module and its state
+        std::string namespaceName = getGenUtils().getNamespaceFromAST(root);
+        getIRSymTable().initModule(root, namespaceName);
+        currentNamespace = namespaceName;
 
-} // namespace Cryo
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Linting Tree");
 
-#endif // EXPRESSIONS_HPP
+        bool validateTree = DevDebugger::lintTree(root);
+        if (validateTree == false)
+        {
+            std::cerr << "[CPP] Tree is invalid!" << std::endl;
+            CONDITION_FAILED;
+        }
+
+        // Declare all functions in the AST tree
+        // declarations.preprocessDeclare(root); <- TODO: Implement this function
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
+        return;
+    }
+
+}

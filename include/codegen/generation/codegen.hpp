@@ -62,11 +62,14 @@
 
 #include "frontend/AST.h"
 #include "codegen/moduleContext.hpp"
+#include "codegen/IRGenerator.hpp"
+#include "codegen/generation/genUtilities.hpp"
 #include "codegen/devDebugger/devDebugger.hpp"
+#include "codegen/IRSymTable/IRSymTable.hpp"
 
 namespace Cryo
 {
-    class CodeGen
+    class CodeGen : public IRGenerator
     {
     public:
         CodeGen(ModuleContext &context) : context(context) {}
@@ -78,11 +81,18 @@ namespace Cryo
         void initCodeGen(const std::string &moduleName);
         // Unimplemented
         void initCodeGen(const std::string &moduleName, const std::string &outputDir);
+        // -----------------------------------------------------------------------------------------------
 
+        GenUtilities &getGenUtils() { return *genUtils; }
+        IRSymTable &getIRSymTable() { return *irSymTable; }
+
+        int preprocess(ASTNode *root);
         void generateModuleFromAST(ASTNode *root);
 
     private:
         ModuleContext &context;
+        std::unique_ptr<GenUtilities> genUtils;
+        std::unique_ptr<IRSymTable> irSymTable;
 
         void recursiveASTTraversal(ASTNode *root);
     };

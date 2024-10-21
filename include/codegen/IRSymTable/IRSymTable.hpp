@@ -122,8 +122,7 @@ namespace Cryo
 
         // Properties
         SymTable symTable;
-        DevDebugger &getDebugger() { return *debugger; }
-
+        
         // Prototypes
         void initSymTable(void);
         void initModule(ASTNode *root, std::string namespaceName);
@@ -163,7 +162,6 @@ namespace Cryo
         void printTable(std::string namespaceName);
 
     private:
-        DevDebugger *debugger;
         SymTableNode traverseModule(ASTNode *root, std::string namespaceName);
     };
 }

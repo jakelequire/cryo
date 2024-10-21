@@ -20,16 +20,36 @@ namespace Cryo
 {
     void CodeGen::initCodeGen()
     {
+        DevDebugger::UNIMPLEMENTED_FUNCTION(FUNCTION_INFO);
     }
+
     void CodeGen::initCodeGen(const std::string &moduleName)
     {
+        DevDebugger::UNIMPLEMENTED_FUNCTION(FUNCTION_INFO);
     }
+
     void CodeGen::initCodeGen(const std::string &moduleName, const std::string &outputDir)
     {
+        DevDebugger::UNIMPLEMENTED_FUNCTION(FUNCTION_INFO);
     }
+
+    // -----------------------------------------------------------------------------------------------
+
     void CodeGen::generateModuleFromAST(ASTNode *root)
     {
         assert(root != nullptr && "Root ASTNode is null");
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Generating Module from AST");
+
+        // Preprocess the AST tree
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Code Generation");
+        preprocess(root);
+
+        // Parse the AST tree
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
+        recursiveASTTraversal(root);
+
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
+        return;
     }
 
     void CodeGen::recursiveASTTraversal(ASTNode *root)

@@ -25,7 +25,7 @@
 # `-Ofast` - Optimize for speed					#
 # `-Oz`    - Optimize for size					#
 # --------------------------------------------- #
-OPTIMIZATION =  -O1
+OPTIMIZATION =  -Og
 NO_WARNINGS =   -w
 DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS  $(NO_WARNINGS)
 C_STANDARD =    -std=c23

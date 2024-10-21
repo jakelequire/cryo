@@ -44,6 +44,8 @@ namespace Cryo
         static void logLLVMInst(llvm::Instruction *inst);
         static std::string LLVMTypeIDToString(llvm::Type *type);
 
+        static void UNIMPLEMENTED_FUNCTION(std::string functionName, std::string fileName, int lineNumber);
+
         // Macro Implementations
         static void checkNode(ASTNode *node);
 

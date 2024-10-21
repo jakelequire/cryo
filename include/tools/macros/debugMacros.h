@@ -39,4 +39,27 @@
     printf("\n#========================================================================#\n"); \
     exit(1)
 
+#define __UNIMPLEMENTED_FUNCTION__(functionName)                                              \
+    printf("\n#========================================================================#\n"); \
+    printf("\n<!> Unimplemented Function! Exiting...");                                       \
+    printf("\n<!> Function: %s", functionName);                                               \
+    printf("\n<!> Line: %i, Function: %s", __LINE__, __FUNCTION__);                           \
+    printf("\n<!> File: %s\n", __FILE__);                                                     \
+    printf("\n#========================================================================#\n"); \
+    exit(1)
+
+#define __UNIMPLEMENTED_FUNCTION_EX__(function, file, line)                                   \
+    printf("\n");                                                                             \
+    printf("\n#========================================================================#\n"); \
+    printf("\n<!> Unimplemented Function! Exiting...");                                       \
+    printf("\n<!> ");                                                                         \
+    printf("\n<!> Function: %s", function);                                                   \
+    printf("\n<!> Line: %i,", line);                                                          \
+    printf("\n<!> File: %s\n", file);                                                         \
+    printf("\n#========================================================================#\n"); \
+    printf("\n");                                                                             \
+    exit(1)
+
+#define FUNCTION_INFO __FUNCTION__, __FILE__, __LINE__
+
 #endif // DEBUG_MACROS_H

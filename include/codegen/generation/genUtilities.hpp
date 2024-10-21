@@ -14,34 +14,30 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef EXPRESSIONS_HPP
-#define EXPRESSIONS_HPP
+#ifndef GEN_UTILITIES_HPP
+#define GEN_UTILITIES_HPP
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Value.h"
-#include "llvm/IR/Type.h"
-
+#include "codegen/devDebugger/devDebugger.hpp"
 #include "codegen/generation/codegen.hpp"
-#include "codegen/moduleContext.hpp"
 
 namespace Cryo
 {
+    class CodeGen;
 
-    class Expression : public CodeGen
+    class GenUtilities : public CodeGen
     {
     public:
-        Expression(ModuleContext &context) : context(context), CodeGen(context) {}
-        ~Expression() = default;
+        GenUtilities(ModuleContext &context) : CodeGen(context) {}
+        ~GenUtilities() = default;
 
-    protected:
-        ModuleContext &context;
+        std::string getNamespaceFromAST(ASTNode *node);
+        std::string formatString(std::string str);
+
+    private:
     };
+}
 
-} // namespace Cryo
-
-#endif // EXPRESSIONS_HPP
+#endif // GEN_UTILITIES_HPP

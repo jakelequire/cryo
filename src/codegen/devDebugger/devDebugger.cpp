@@ -1408,4 +1408,11 @@ namespace Cryo
         return typeStr;
     }
 
+    void DevDebugger::UNIMPLEMENTED_FUNCTION(std::string functionName, std::string fileName, int lineNumber)
+    {
+        const char *cStr_funcName = functionName.c_str();
+        const char *cStr_fileName = fileName.c_str();
+        __UNIMPLEMENTED_FUNCTION_EX__(cStr_funcName, cStr_fileName, lineNumber);
+    }
+
 } // namespace Cryo

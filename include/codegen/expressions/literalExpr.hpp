@@ -26,28 +26,19 @@
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Type.h"
 
-#include "codegen/expressions/expressions.hpp"
 #include "codegen/moduleContext.hpp"
-
-namespace llvm
-{
-    class Value;
-}
+#include "codegen/expressions/expressions.hpp"
 
 namespace Cryo
 {
     class LiteralExpr : public Expression
     {
     public:
-        LiteralExpr(ModuleContext &context, const std::string &value);
-        ~LiteralExpr() override;
+        LiteralExpr(ModuleContext &context);
+        ~LiteralExpr() = default;
 
-        Expression(ModuleContext &context) : context(context) {}
-        ~Expression() = default;
-
-    private:
-        class Impl;
-        std::unique_ptr<Impl> pImpl;
+    protected:
+        ModuleContext &context;
     };
 
 } // namespace Cryos

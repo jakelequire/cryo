@@ -23,15 +23,22 @@ using namespace Cryo;
 /// @param node
 /// @param state
 /// @return
+extern "C"
+{
+    int ASTModuleToIR(ASTNode *node, CompilerState *state);
+}
+
 int ASTModuleToIR(ASTNode *node, CompilerState *state)
 {
-    IRGenerator irGen;
+    Cryo::IRGenerator irGen;
     int result = irGen.generateIR(node, state);
 
     if (result != 0)
     {
         return 1;
     }
+
+    DevDebugger::logMessage("INFO", __LINE__, "IRGenerator", "IR Generation Complete");
 
     return 0;
 }
@@ -40,7 +47,7 @@ namespace Cryo
 {
     int IRGenerator::generateIR(ASTNode *node, CompilerState *state)
     {
-        CodeGen codeGen(this->getInstance());
+        CodeGen codeGen(context);
         codeGen.generateModuleFromAST(node);
 
         return 0;

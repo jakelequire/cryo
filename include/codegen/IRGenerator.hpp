@@ -14,20 +14,24 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
-
+#ifndef IRGENERATOR_HPP
+#define IRGENERATOR_HPP
 #include <string>
 #include "common/common.h"
 
-#include "codegen/moduleContext.hpp"
-#include "codegen/generation/codegen.hpp"
 #include "codegen/devDebugger/devDebugger.hpp"
+#include "codegen/generation/codegen.hpp"
 
-namespace llvm
+#ifdef __cplusplus
+extern "C"
 {
-    class LLVMContext;
-    class Module;
+#endif
+
+    int ASTModuleToIR(ASTNode *node, CompilerState *state);
+
+#ifdef __cplusplus
 }
+#endif
 
 namespace Cryo
 {
@@ -35,13 +39,18 @@ namespace Cryo
     class IRGenerator : public ModuleContext
     {
     public:
-        IRGenerator() {};
+        IRGenerator() = default;
         ~IRGenerator() = default;
 
         int generateIR(ASTNode *node, CompilerState *state);
 
+        CodeGen &getCodeGen() { return *codeGen; }
+
     private:
-        // Add private members as needed
+        ModuleContext &context = ModuleContext::getInstance();
+        std::unique_ptr<CodeGen> codeGen;
     };
 
 } // namespace Cryo
+
+#endif // IRGENERATOR_HPP

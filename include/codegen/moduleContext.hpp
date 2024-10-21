@@ -30,13 +30,15 @@
 #include "common/common.h"
 #include "codegen/devDebugger/devDebugger.hpp"
 
-
 namespace Cryo
 {
     class ModuleContext
     {
     public:
-        ModuleContext();
+        ModuleContext() : builder(context)
+        {
+            initializeContext();
+        }
         ~ModuleContext() = default;
 
         static ModuleContext &getInstance()
@@ -58,7 +60,13 @@ namespace Cryo
 
         bool inGlobalScope = true;
 
-        void initializeContext();
+        void initializeContext()
+        {
+            std::string moduleName = "CryoModuleDefaulted";
+            module = std::make_unique<llvm::Module>(moduleName, context);
+            DevDebugger::logMessage("INFO", __LINE__, "ModuleContext", "Module Initialized");
+        }
+
         void setModuleIdentifier(const std::string &name);
         void addCompiledFileInfo(CompiledFile file);
 
@@ -66,6 +74,7 @@ namespace Cryo
         // Current Instance
         static ModuleContext instance;
     };
+
 }
 
 #endif // MODULECONTEXT_HPP
