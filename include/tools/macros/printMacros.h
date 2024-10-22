@@ -53,4 +53,44 @@
     printf("<> ~~~ ======================================================= ~~~ <>\n"); \
     printf("\n");
 
+#define LLVM_MODULE_FAILED_MESSAGE_START                                                                           \
+    std::cerr << "\n\n";                                                                                           \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "<!> =======------------! LLVM Module Verification Failed !------------======= <!>" << std::endl; \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_FAILED_MESSAGE_END                                                                             \
+    std::cerr << "\n";                                                                                             \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "<!> =======---------------! Module Verification FAILED !--------------======= <!>" << std::endl; \
+    std::cerr << "<!> ========================================================================= <!>" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_ERROR_START                                                               \
+    std::cerr << "\n";                                                                        \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "<!> *** Error: Module Verification Failed, errors: " << std::endl;          \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_ERROR_END                                                                 \
+    std::cerr << "\n";                                                                        \
+    std::cerr << "<!> ********************************************************" << std::endl; \
+    std::cerr << "\n";
+
+#define LLVM_MODULE_COMPLETE_START                                                                                \
+    std::cout << "\n\n";                                                                                          \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "<*> ==========--------------- LLVM Module Complete ---------------========== <*>" << std::endl; \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "\n";
+
+#define LLVM_MODULE_COMPLETE_END                                                                                  \
+    std::cout << "\n";                                                                                            \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "<*> ==========----------- Module Successfully Verified -----------========== <*>" << std::endl; \
+    std::cout << "<*> ======================================================================== <*>" << std::endl; \
+    std::cout << "\n";
+    
 #endif // PRINT_MACROS_H

@@ -241,7 +241,9 @@
     "compilersettings.h": "c",
     "printmacros.h": "c",
     "debugmacros.h": "c",
-    "datatypes.h": "c"
+    "datatypes.h": "c",
+    "__hash_table": "cpp",
+    "__tree": "cpp"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

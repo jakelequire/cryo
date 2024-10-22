@@ -40,7 +40,7 @@ extern "C"
 {
 #endif
 
-    int ASTModuleToIR(ASTNode *node, CompilerState *state);
+    int generateCodeWrapper(ASTNode *node, CompilerState *state);
 
 #ifdef __cplusplus
 }

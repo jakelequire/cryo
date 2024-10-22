@@ -54,7 +54,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     PRINT_AST_END;
 
     // Generate code
-    int result = ASTModuleToIR(programNode, state);
+    int result = generateCodeWrapper(programNode, state);
     if (result != 0)
     {
         CONDITION_FAILED;
@@ -99,7 +99,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     }
 
     // Generate code
-    int result = ASTModuleToIR(programNode, state);
+    int result = generateCodeWrapper(programNode, state);
     if (result != 0)
     {
         CONDITION_FAILED;

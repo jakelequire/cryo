@@ -33,7 +33,6 @@
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
-#include "codegen/IRGenerator.hpp"
 
 namespace Cryo
 {
@@ -115,14 +114,10 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    class IRGenerator;
-    class IRSymTable;
-    class ModuleContext;
-
-    class IRSymTable : public IRGenerator
+    class IRSymTable
     {
     public:
-        IRSymTable(ModuleContext &modContext);
+        IRSymTable() = default;
         ~IRSymTable() = default;
 
         // Properties

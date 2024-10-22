@@ -29,7 +29,7 @@ OPTIMIZATION =  -Og
 NO_WARNINGS =   -w
 DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS  $(NO_WARNINGS)
 C_STANDARD =    -std=c23
-CXX_STANDARD =  -std=c++23
+CXX_STANDARD =  -std=c++17
 
 # OS-specific settings for compilers
 ifeq ($(OS), Windows_NT)
@@ -38,8 +38,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang
-	CXX_COMPILER = clang++
+	C_COMPILER = clang-18
+	CXX_COMPILER = clang++-18
 endif
 
 # >>=======--------------------------------------------------=======<< #
@@ -47,7 +47,8 @@ endif
 # >>=======--------------------------------------------------=======<< #
 
 # Include paths
-LINUX_INCLUDES =    -I./include
+LINUX_INCLUDES =    -I./include -I./include/codegen -I./include/codegen/generation -I./include/codegen/IRSymTable \
+                    -I./include/codegen/generation/codegen.hpp -I./include/codegen/IRSymTable/IRSymTable.hpp \
 
 WIN_INCLUDES =      -I"C:/msys64/mingw64/include" -I./include -I./include/codegen -I./include/cli       \
                     -I./include/common -I./include/diagnostics -I./include/linker -I./include/settings  \
@@ -74,11 +75,11 @@ ifeq ($(OS), Windows_NT)
     BIN_SUFFIX =    .exe
 else
     # Linux settings
-    CC =            $(C_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
-    CXX =           $(CXX_COMPILER) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CC =            $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CXX =           $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CFLAGS =        $(LINUX_INCLUDES) $(LLVM_CFLAGS) -fexceptions
     CXXFLAGS =      $(LINUX_INCLUDES) $(LLVM_CXXFLAGS) -fexceptions
-    LLVM_CONFIG =   llvm-config
+    LLVM_CONFIG =   llvm-config-18
     LLVM_CFLAGS =   $(shell $(LLVM_CONFIG) --cflags)
 	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
     LLVM_LDFLAGS =  $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
