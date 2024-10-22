@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "codegen/IRGenerator.hpp"
+#include "codegen/generation/codegen.hpp"
 
 using namespace Cryo;
 
@@ -30,7 +31,7 @@ extern "C"
 
 int ASTModuleToIR(ASTNode *node, CompilerState *state)
 {
-    Cryo::IRGenerator irGen;
+    Cryo::IRGenerator irGen(Cryo::ModuleContext::getInstance());
     int result = irGen.generateIR(node, state);
 
     if (result != 0)
@@ -47,7 +48,7 @@ namespace Cryo
 {
     int IRGenerator::generateIR(ASTNode *node, CompilerState *state)
     {
-        CodeGen codeGen(context);
+        CodeGen codeGen(Cryo::ModuleContext::getInstance());
         codeGen.generateModuleFromAST(node);
 
         return 0;

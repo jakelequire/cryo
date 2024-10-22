@@ -21,22 +21,20 @@
 #include <vector>
 
 #include "codegen/devDebugger/devDebugger.hpp"
-#include "codegen/generation/codegen.hpp"
+#include "codegen/moduleContext.hpp"
+#include "frontend/AST.h" // for ASTNode
 
 namespace Cryo
 {
-    class CodeGen;
-
-    class GenUtilities : public CodeGen
+    class GenUtilities
     {
     public:
-        GenUtilities(ModuleContext &context) : CodeGen(context) {}
+        GenUtilities(ModuleContext &modContext);
+
         ~GenUtilities() = default;
 
-        std::string getNamespaceFromAST(ASTNode *node);
-        std::string formatString(std::string str);
-
     private:
+        ModuleContext &modContext;
     };
 }
 

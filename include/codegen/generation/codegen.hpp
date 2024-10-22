@@ -61,18 +61,21 @@
 #include "llvm/IR/DiagnosticPrinter.h"
 
 #include "frontend/AST.h"
-#include "codegen/moduleContext.hpp"
-#include "codegen/IRGenerator.hpp"
-#include "codegen/generation/genUtilities.hpp"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "codegen/IRSymTable/IRSymTable.hpp"
+#include "codegen/IRGenerator.hpp"
 
 namespace Cryo
 {
+    class IRSymTable;
+    class GenUtilities;
+    class CodeGen;
+    class ModuleContext;
+
     class CodeGen : public IRGenerator
     {
     public:
-        CodeGen(ModuleContext &context) : context(context) {}
+        CodeGen(ModuleContext &modContext);
         ~CodeGen() = default;
 
         // Unimplemented
@@ -83,19 +86,26 @@ namespace Cryo
         void initCodeGen(const std::string &moduleName, const std::string &outputDir);
         // -----------------------------------------------------------------------------------------------
 
-        GenUtilities &getGenUtils() { return *genUtils; }
+        ModuleContext &getContext() { return modContext; }
         IRSymTable &getIRSymTable() { return *irSymTable; }
 
         int preprocess(ASTNode *root);
         void generateModuleFromAST(ASTNode *root);
 
+        std::string getNamespaceFromAST(ASTNode *node);
+        std::string formatString(std::string str);
+
     private:
-        ModuleContext &context;
-        std::unique_ptr<GenUtilities> genUtils;
+        ModuleContext &modContext = ModuleContext::getInstance();
         std::unique_ptr<IRSymTable> irSymTable;
 
         void recursiveASTTraversal(ASTNode *root);
     };
+
+    CodeGen::CodeGen(ModuleContext &ctx) : IRGenerator(ctx), modContext(ctx)
+    {
+        irSymTable = std::make_unique<IRSymTable>(ctx);
+    }
 }
 
 #endif // CODEGEN_HPP

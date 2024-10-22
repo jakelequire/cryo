@@ -31,13 +31,14 @@
 #include "llvm/IR/Value.h"
 #include "llvm/IR/GlobalVariable.h"
 
-#include "codegen/generation/codegen.hpp"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
+#include "codegen/IRGenerator.hpp"
 
 namespace Cryo
 {
     class DevDebugger;
+    class ModuleContext;
 
     struct StructValue
     {
@@ -114,15 +115,19 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    class IRSymTable
+    class IRGenerator;
+    class IRSymTable;
+    class ModuleContext;
+
+    class IRSymTable : public IRGenerator
     {
     public:
-        IRSymTable() = default; // Add this line if it doesn't exist
+        IRSymTable(ModuleContext &modContext);
         ~IRSymTable() = default;
 
         // Properties
         SymTable symTable;
-        
+
         // Prototypes
         void initSymTable(void);
         void initModule(ASTNode *root, std::string namespaceName);

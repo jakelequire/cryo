@@ -34,11 +34,11 @@ namespace Cryo
     class LiteralExpr : public Expression
     {
     public:
-        LiteralExpr(ModuleContext &context);
+        LiteralExpr(ModuleContext &modContext);
         ~LiteralExpr() = default;
 
     protected:
-        ModuleContext &context;
+        ModuleContext &modContext;
     };
 
 } // namespace Cryos

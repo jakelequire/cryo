@@ -24,7 +24,7 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Code Generation");
 
         // Get / Set the symbol table for the module and its state
-        std::string namespaceName = getGenUtils().getNamespaceFromAST(root);
+        std::string namespaceName = getNamespaceFromAST(root);
         getIRSymTable().initModule(root, namespaceName);
         currentNamespace = namespaceName;
 
@@ -40,7 +40,7 @@ namespace Cryo
         // Declare all functions in the AST tree
         // declarations.preprocessDeclare(root); <- TODO: Implement this function
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
-        return;
+        return 0;
     }
 
 }

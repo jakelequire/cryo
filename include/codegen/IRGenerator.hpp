@@ -20,7 +20,7 @@
 #include "common/common.h"
 
 #include "codegen/devDebugger/devDebugger.hpp"
-#include "codegen/generation/codegen.hpp"
+#include "codegen/moduleContext.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -35,20 +35,15 @@ extern "C"
 
 namespace Cryo
 {
-
     class IRGenerator : public ModuleContext
     {
     public:
-        IRGenerator() = default;
-        ~IRGenerator() = default;
+        IRGenerator(ModuleContext &modContext);
+        virtual ~IRGenerator() = default;
 
         int generateIR(ASTNode *node, CompilerState *state);
 
-        CodeGen &getCodeGen() { return *codeGen; }
-
     private:
-        ModuleContext &context = ModuleContext::getInstance();
-        std::unique_ptr<CodeGen> codeGen;
     };
 
 } // namespace Cryo

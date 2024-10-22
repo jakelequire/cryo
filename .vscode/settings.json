@@ -240,7 +240,8 @@
     "c_logger.h": "c",
     "compilersettings.h": "c",
     "printmacros.h": "c",
-    "debugmacros.h": "c"
+    "debugmacros.h": "c",
+    "datatypes.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

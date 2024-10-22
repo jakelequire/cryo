@@ -35,11 +35,11 @@ namespace Cryo
     class Expression : public CodeGen
     {
     public:
-        Expression(ModuleContext &context) : context(context), CodeGen(context) {}
+        Expression(ModuleContext &modContext) : modContext(modContext), CodeGen(modContext) {}
         ~Expression() = default;
 
     protected:
-        ModuleContext &context;
+        ModuleContext &modContext;
     };
 
 } // namespace Cryo
