@@ -14,5 +14,5 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/semantics.h"
+#include "frontend/symTable.h"
 
