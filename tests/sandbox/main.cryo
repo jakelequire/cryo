@@ -7,21 +7,23 @@ struct Int {
     // value of the struct field. If `default` is not provided,
     // The constructor will need to be explicitly called with
     // the field value.
-    default value: int;
+    // default value: int;
+    value: int;
 
     // Constructor for the Int struct
-    constructor(value: int) {
-        this.value = value;
-    }
-
-    // Methods for the Int struct
-    toString() -> string {
-        const i: int = this.value;
-        return intToString(i);
-    }
+    // constructor(value: int) {
+    //     this.value = value;
+    // }
+// 
+    // // Methods for the Int struct
+    // toString() -> string {
+    //     const i: int = this.value;
+    //     return intToString(i);
+    // }
 }
 
 public function main() -> void {
     printInt(42);
+    const fooInt: int = 56;
     return;
 }

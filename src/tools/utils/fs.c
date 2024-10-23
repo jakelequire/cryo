@@ -86,6 +86,66 @@ bool fileExists(const char *path)
 }
 // </fileExists>
 
+// <dirExists>
+// @brief Checks if a directory exists at the given path
+bool dirExists(const char *path)
+{
+    // Make sure the string isn't empty
+    if (path == NULL)
+    {
+        return false;
+    }
+
+    // Open the file
+    DIR *dir = opendir(path);
+    if (dir)
+    {
+        closedir(dir);
+        return true;
+    }
+
+    closedir(dir);
+    return false;
+}
+// </dirExists>
+
+// <createDir>
+/// @brief Creates a directory at the given path
+void createDir(const char *path)
+{
+    if (!dirExists(path))
+    {
+        logMessage("INFO", __LINE__, "FS", "Directory doesn't exist, creating...");
+        int status = mkdir(path, 0777);
+        if (status == -1)
+        {
+            logMessage("ERROR", __LINE__, "FS", "Failed to create directory");
+            DEBUG_BREAKPOINT;
+        }
+    }
+
+    return;
+}
+// </createDir>
+
+// <removeFile>
+/// @brief Removes a file at the given path
+void removeFile(const char *filePath)
+{
+    if (fileExists(filePath))
+    {
+        int status = remove(filePath);
+        if (status == -1)
+        {
+            logMessage("ERROR", __LINE__, "FS", "Failed to remove file");
+            DEBUG_BREAKPOINT;
+        }
+    }
+
+    return;
+}
+// </removeFile>
+
 // <getSTDFilePath>
 const char *getSTDFilePath(const char *subModule)
 {

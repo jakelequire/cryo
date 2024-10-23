@@ -783,6 +783,9 @@ typedef struct ASTNode
 
 #define INITIAL_CAPACITY 8
 
+// # ============================================================ #
+// # Node Containers (./src/frontend/AST/ASTContainers.c)         #
+// # ============================================================ #
 CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state);
 CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state);
 CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state);
@@ -813,6 +816,44 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
 StructNode *createStructNodeContainer(Arena *arena, CompilerState *state);
 PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state);
 ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state);
+
+// # ============================================================ #
+// # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
+// # ============================================================ #
+
+typedef struct ASTDebugNode
+{
+    const char *nodeType;
+    const char *nodeName;
+    CryoDataType dataType;
+    int line;
+    int column;
+    struct ASTDebugNode *children;
+    int childCount;
+    int indent;
+} ASTDebugNode;
+
+typedef struct DebugASTOutput
+{
+    const char *fileName;
+    const char *filePath;
+    const char *fileExt;
+    const char *cwd;
+    ASTDebugNode *nodes;
+    int nodeCount;
+} DebugASTOutput;
+
+DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
+ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column);
+int initASTDebugOutput(ASTNode *root, CompilerSettings *settings);
+void createASTDebugView(ASTNode *node, DebugASTOutput *output);
+DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
+char *getASTBuffer(DebugASTOutput *output);
+void createASTDebugOutputFile(DebugASTOutput *output);
+
+// # ============================================================ # //
+// # AST Creation (./src/frontend/AST/AST.c)                      # //
+// # ============================================================ # //
 
 #ifdef __cplusplus
 extern "C"

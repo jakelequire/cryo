@@ -53,6 +53,12 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     printAST(programNode, 0, arena);
     PRINT_AST_END;
 
+    // Outputs the SymTable into a file in the build directory.
+    outputSymTable(table, settings);
+    initASTDebugOutput(programNode, settings);
+
+    DEBUG_BREAKPOINT;
+
     // Generate code
     int result = generateCodeWrapper(programNode, state);
     if (result != 0)

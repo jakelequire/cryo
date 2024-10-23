@@ -28,7 +28,9 @@
 #include "frontend/parser.h"
 #include "tools/utils/utility.h"
 #include "tools/arena/arena.h"
+#include "tools/utils/fs.h"
 #include "common/common.h"
+#include "settings/compilerSettings.h"
 
 typedef struct ASTNode ASTNode;
 typedef struct CompilerState CompilerState;
@@ -89,5 +91,24 @@ extern "C"
     void printSymbolTableCXX(CryoSymbolTable *table);
 }
 #endif
+
+// # =================================================== #
+// # SymTable Output (./outputSymTable.c)                #
+// # =================================================== #
+
+typedef struct SymTableOutput
+{
+    FILE *file;
+    const char *fileName;
+    const char *filePath;
+    const char *fileExt;
+    const char *cwd;
+} SymTableOutput;
+
+SymTableOutput *createSymTableOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
+void outputSymTable(CryoSymbolTable *table, CompilerSettings *settings);
+char *symTableOutBuffer(CryoSymbolTable *table);
+void createSymTableOutputFile(const char *buffer, SymTableOutput *symTableOutput);
+void removePrevOutput(const char *filePath);
 
 #endif // SYMTABLE_H

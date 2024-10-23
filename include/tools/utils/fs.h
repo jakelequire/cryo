@@ -20,7 +20,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdbool.h>
+#include <dirent.h>
+#include <unistd.h>
+
 
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/c_logger.h"
@@ -39,6 +43,9 @@ extern "C"
 
 char *readFile(const char *path);
 bool fileExists(const char *path);
+bool dirExists(const char *path);
+void createDir(const char *path);
+void removeFile(const char *filePath);
 const char *getSTDFilePath(const char *subModule);
 const char *trimFilePath(const char *filePath);
 
