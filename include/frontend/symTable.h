@@ -109,6 +109,6 @@ SymTableOutput *createSymTableOutput(const char *fileName, const char *filePath,
 void outputSymTable(CryoSymbolTable *table, CompilerSettings *settings);
 char *symTableOutBuffer(CryoSymbolTable *table);
 void createSymTableOutputFile(const char *buffer, SymTableOutput *symTableOutput);
-void removePrevOutput(const char *filePath);
+void removePrevSymTableOutput(const char *filePath);
 
 #endif // SYMTABLE_H

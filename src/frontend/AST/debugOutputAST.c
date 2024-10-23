@@ -37,6 +37,7 @@ DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath,
     output->fileExt = strdup(fileExt);
     output->cwd = strdup(cwd);
     output->nodes = (ASTDebugNode *)malloc(sizeof(ASTDebugNode) * AST_DEBUG_VIEW_NODE_COUNT);
+    output->nodeCount = 0;
     return output;
 }
 
@@ -59,8 +60,12 @@ int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)
     const char *fileExt = ".txt";
     const char *cwd = settings->rootDir;
 
-    DebugASTOutput *output = createDebugASTOutput(settings->inputFile, settings->inputFilePath, fileExt, cwd);
+    const char *outDir = (char *)malloc(sizeof(char) * 1024);
+    sprintf((char *)outDir, "%s/%s", cwd, "build/debug");
+
+    DebugASTOutput *output = createDebugASTOutput(settings->inputFile, outDir, fileExt, cwd);
     createASTDebugView(root, output);
+    createASTDebugOutputFile(output);
     return 0;
 }
 
@@ -188,12 +193,50 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output)
         break;
     }
 
+    case NODE_PARAM:
+    {
+        ASTDebugNode *paramNode = createASTDebugNode("Param", "Param", DATA_TYPE_VOID, node->metaData->line, node->metaData->column);
+        output->nodes[output->nodeCount] = *paramNode;
+        output->nodeCount++;
+        break;
+    }
+
+    case NODE_STRUCT_DECLARATION:
+    {
+        ASTDebugNode *structNode = createASTDebugNode("StructDecl", "StructDecl", DATA_TYPE_VOID, node->metaData->line, node->metaData->column);
+        output->nodes[output->nodeCount] = *structNode;
+        output->nodeCount++;
+        for (int i = 0; i < node->data.structNode->propertyCount; i++)
+        {
+            createASTDebugView(node->data.structNode->properties[i], output);
+        }
+        break;
+    }
+
+    case NODE_PROPERTY:
+    {
+        ASTDebugNode *propertyNode = createASTDebugNode("Property", "Property", DATA_TYPE_VOID, node->metaData->line, node->metaData->column);
+        output->nodes[output->nodeCount] = *propertyNode;
+        output->nodeCount++;
+        break;
+    }
+
+    case NODE_FUNCTION_BLOCK:
+    {
+        ASTDebugNode *functionBlockNode = createASTDebugNode("FunctionBlock", "FunctionBlock", DATA_TYPE_VOID, node->metaData->line, node->metaData->column);
+        output->nodes[output->nodeCount] = *functionBlockNode;
+        output->nodeCount++;
+        break;
+    }
+
     default:
     {
         printf("Unknown Node Type @debugOutputAST.c | Node Type: %s\n", CryoNodeTypeToString(nodeType));
         break;
     }
     }
+
+    return;
 }
 
 DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output)
@@ -243,7 +286,7 @@ void createASTDebugOutputFile(DebugASTOutput *output)
 
     const char *fileName = "ast_debug";
     const char *ext = ".txt";
-    const char *filePath = output->filePath;
+    const char *filePath = output->cwd;
 
     if (!filePath)
     {
@@ -252,7 +295,7 @@ void createASTDebugOutputFile(DebugASTOutput *output)
     }
     if (!dirExists(filePath))
     {
-        logMessage("WARN", __LINE__, "AST", "Creating directory for AST debug output");
+        logMessage("WARN", __LINE__, "AST", "Creating directory for AST debug output: %s", filePath);
         createDir(filePath);
     }
 
@@ -261,6 +304,8 @@ void createASTDebugOutputFile(DebugASTOutput *output)
 
     const char *outputFilePath = (char *)malloc(sizeof(char) * 1024);
     sprintf((char *)outputFilePath, "%s/%s%s", outputPath, fileName, ext);
+
+    removePrevASTOutput(outputFilePath);
 
     FILE *file = fopen(outputFilePath, "w");
     if (!file)
@@ -271,4 +316,15 @@ void createASTDebugOutputFile(DebugASTOutput *output)
 
     fprintf(file, "%s", buffer);
     fclose(file);
+}
+
+void removePrevASTOutput(const char *filePath)
+{
+    // Remove the previous output file
+    if (fileExists(filePath))
+    {
+        removeFile(filePath);
+    }
+
+    return;
 }

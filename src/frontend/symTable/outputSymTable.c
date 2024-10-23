@@ -80,7 +80,7 @@ void createSymTableOutputFile(const char *buffer, SymTableOutput *symTableOutput
     logMessage("INFO", __LINE__, "SymTableOut", "Writing symbol table to file: %s", filePath);
 
     // Remove the previous output file
-    removePrevOutput(filePath);
+    removePrevSymTableOutput(filePath);
 
     // Open the file
     FILE *file = fopen(filePath, "w");
@@ -159,7 +159,7 @@ char *symTableOutBuffer(CryoSymbolTable *table)
     return buffer;
 }
 
-void removePrevOutput(const char *filePath)
+void removePrevSymTableOutput(const char *filePath)
 {
     // Remove the previous output file
     if (fileExists(filePath))

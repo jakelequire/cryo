@@ -850,6 +850,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output);
 DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
 char *getASTBuffer(DebugASTOutput *output);
 void createASTDebugOutputFile(DebugASTOutput *output);
+void removePrevASTOutput(const char *filePath);
 
 // # ============================================================ # //
 // # AST Creation (./src/frontend/AST/AST.c)                      # //
