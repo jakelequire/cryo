@@ -9,6 +9,7 @@ struct Int {
     // the field value.
     // default value: int;
     value: int;
+    foo: string;
 
     // Constructor for the Int struct
     // constructor(value: int) {
@@ -25,5 +26,9 @@ struct Int {
 public function main() -> void {
     printInt(42);
     const fooInt: int = 56;
+    return;
+}
+
+public function foo() -> void {
     return;
 }

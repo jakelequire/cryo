@@ -831,11 +831,13 @@ typedef struct ASTDebugNode
     struct ASTDebugNode *children;
     int childCount;
     int indent;
+    const char *namespaceName;
 } ASTDebugNode;
 
 typedef struct DebugASTOutput
 {
     const char *fileName;
+    const char *short_fileName;
     const char *filePath;
     const char *fileExt;
     const char *cwd;
@@ -844,13 +846,34 @@ typedef struct DebugASTOutput
 } DebugASTOutput;
 
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
-ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column);
+ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent);
 int initASTDebugOutput(ASTNode *root, CompilerSettings *settings);
-void createASTDebugView(ASTNode *node, DebugASTOutput *output);
+void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel);
 DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
-char *getASTBuffer(DebugASTOutput *output);
 void createASTDebugOutputFile(DebugASTOutput *output);
 void removePrevASTOutput(const char *filePath);
+char *seekNamespaceName(ASTNode *node);
+
+// Output File Buffer
+char *getASTBuffer(DebugASTOutput *output);
+
+// Formatting Functions
+char *formatASTNode             (ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
+char *formatProgramNode         (ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionDeclNode    (ASTDebugNode *node, DebugASTOutput *output);
+char *formatParamListNode       (ASTDebugNode *node, DebugASTOutput *output);
+char *formatBlockNode           (ASTDebugNode *node, DebugASTOutput *output);
+char *formatVarDeclNode         (ASTDebugNode *node, DebugASTOutput *output);
+char *formatExpressionNode      (ASTDebugNode *node, DebugASTOutput *output);
+char *formatLiteralExprNode     (ASTDebugNode *node, DebugASTOutput *output);
+char *formatReturnStatementNode (ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionCallNode    (ASTDebugNode *node, DebugASTOutput *output);
+char *formatParamNode           (ASTDebugNode *node, DebugASTOutput *output);
+char *formatPropertyNode        (ASTDebugNode *node, DebugASTOutput *output);
+char *formatVarNameNode         (ASTDebugNode *node, DebugASTOutput *output);
+char *formatStructNode          (ASTDebugNode *node, DebugASTOutput *output);
+char *formatExternFunctionNode  (ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionBlock       (ASTDebugNode *node, DebugASTOutput *output);
 
 // # ============================================================ # //
 // # AST Creation (./src/frontend/AST/AST.c)                      # //
