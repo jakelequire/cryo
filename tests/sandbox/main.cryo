@@ -1,21 +1,20 @@
 namespace Main;
 
 extern function printInt(i: int) -> void;
+extern function printStr(s: string) -> void;
 
 struct Int {
     // The default keyword is used to specify the default
     // value of the struct field. If `default` is not provided,
     // The constructor will need to be explicitly called with
     // the field value.
-    // default value: int;
     value: int;
-    foo: string;
 
     // Constructor for the Int struct
     // constructor(value: int) {
     //     this.value = value;
     // }
-// 
+    
     // // Methods for the Int struct
     // toString() -> string {
     //     const i: int = this.value;
@@ -24,11 +23,10 @@ struct Int {
 }
 
 public function main() -> void {
-    printInt(42);
     const fooInt: int = 56;
-    return;
-}
+    const fooStr: string = "Hello, World!";
 
-public function foo() -> void {
+    printStr(fooStr);
+
     return;
 }

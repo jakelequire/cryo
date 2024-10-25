@@ -161,11 +161,16 @@ char *symTableOutBuffer(CryoSymbolTable *table)
 
 void removePrevSymTableOutput(const char *filePath)
 {
+    printf("\nFile Path passed: %s\n", filePath);
     // Remove the previous output file
-    if (fileExists(filePath))
+    bool doesFileExist = fileExists(filePath);
+    if (doesFileExist)
     {
         removeFile(filePath);
     }
-
-    return;
+    else
+    {
+        logMessage("WARN", __LINE__, "SymTableOut", "No previous output file to remove");
+        return;
+    }
 }

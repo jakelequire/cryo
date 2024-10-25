@@ -317,7 +317,7 @@ char *formatParamListNode(ASTDebugNode *node, DebugASTOutput *output)
     // <ParamList> [NAME] [TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<ParamList> [%s] { Type: %s } <%i:%i>", node->nodeName, CryoDataTypeToString(node->dataType), node->line, node->column);
+    sprintf(buffer, "<ParamList> <%i:%i>", node->line, node->column);
 
     return buffer;
 }
@@ -387,7 +387,7 @@ char *formatParamNode(ASTDebugNode *node, DebugASTOutput *output)
     // <Param> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<Param> { Type: %s } <%i:%i>", node->dataType, node->line, node->column);
+    sprintf(buffer, "<Param> { Type: %s } <%i:%i>", CryoDataTypeToString(node->dataType), node->line, node->column);
 
     return buffer;
 }

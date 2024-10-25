@@ -687,6 +687,7 @@ typedef struct StructNode
     ASTNode **properties;
     int propertyCount;
     int propertyCapacity;
+    bool hasDefaultConstructor;
 } StructNode;
 
 // typedef struct CustomTypeNode

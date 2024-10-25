@@ -249,7 +249,8 @@ else
 fi
 
 # Compile the standard library
-clang-18 -S -emit-llvm ./cryo/c_support.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+# clang-18 -S -emit-llvm ./cryo/c_support.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+clang++-18 -S -emit-llvm ./cryo/cxx_support.cpp -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
 
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file

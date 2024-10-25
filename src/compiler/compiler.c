@@ -57,8 +57,6 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     outputSymTable(table, settings);
     initASTDebugOutput(programNode, settings);
 
-    DEBUG_BREAKPOINT;
-
     // Generate code
     int result = generateCodeWrapper(programNode, state);
     if (result != 0)

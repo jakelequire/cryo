@@ -14,37 +14,8 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "stdint.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "stdarg.h"
+#include <iostream>
+#include <string>
+#include <vector>
 
-void printInt(int value)
-{
-    printf("%d\n", value);
-}
-
-void printIntPtr(int *value)
-{
-    printf("%d\n", *value);
-}
-
-void printStr(char *value)
-{
-    printf("%s\n", value);
-}
-
-int strLength(char *str)
-{
-    int length = 0;
-    while (str[length] != '\0')
-    {
-        length++;
-    }
-    return length;
-}
-
-void sys_exit(int code)
-{
-    exit(code);
-}
+#define __EXTERN_C__ extern "C"

@@ -73,12 +73,30 @@ bool fileExists(const char *path)
         return false;
     }
 
+// Check if the file exists on Linux
+// Using `access` seems to be a safer way to check if a file exists
+#ifdef __linux__
+    if (access(path, F_OK) != -1)
+    {
+        return true;
+    }
+    else
+    {
+        logMessage("WARN", __LINE__, "FS", "File does not exist");
+    }
+    return false;
+#endif
+
     // Open the file
     FILE *file = fopen(path, "r");
     if (file)
     {
         fclose(file);
         return true;
+    }
+    else
+    {
+        logMessage("WARN", __LINE__, "FS", "File does not exist");
     }
 
     fclose(file);

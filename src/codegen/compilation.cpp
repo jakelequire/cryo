@@ -46,36 +46,29 @@ namespace Cryo
         }
 
         std::cout << "\n Getting the output path\n";
-
-        const char *unsafe_outputDir = strdup(settings->rootDir);
-        const char *unsafe_outputFile = strdup(settings->inputFile);
-        // const char *unsafe_customOutputPath = strdup(settings->customOutputPath);
-        // ^
-        // Note: The customOutputPath was causing the segmentation fault, will need
-        // to find a better way to handle this string since it can be undefined.
-
-        std::cout << "\n Getting the output path\n";
-        std::cout << "\n\n\n <!> <!> <!> \nOUTPUT PATH: " << unsafe_outputDir << "\n\n\n";
-        std::cout << "\n\n\n <!> <!> <!> \nOUTPUT FILE: " << unsafe_outputFile << "\n\n\n";
-        // std::cout << "\n\n\n <!> <!> <!> \nCUSTOM OUTPUT PATH: " << unsafe_customOutputPath << "\n\n\n";
-
-        std::string outputDir(unsafe_outputDir);
-        std::string outputFile(unsafe_outputFile);
-        // std::string customOutputPath(unsafe_customOutputPath);
+        const char *unsafe_filePath = strdup(settings->inputFile);
+        std::string outputFilePath(unsafe_filePath);
+        std::filesystem::path cwd = std::filesystem::current_path();
 
         // Trim the directory path from the file name
-        outputFile = outputFile.substr(outputFile.find_last_of("/") + 1);
-        outputFile = outputFile.substr(0, outputFile.find_last_of(".")) + ".ll";
+        std::string cwd_str = cwd.c_str();
+        std::string outputPath = cwd_str + "/build/out/";
+        // trimmedOutputFile = "main.cryo"
+        std::string trimmedOutputFile = outputFilePath.substr(outputFilePath.find_last_of("/\\") + 1);
+        // trimmedFileExt = "main"
+        std::string trimmedFileExt = trimmedOutputFile.substr(0, trimmedOutputFile.find_last_of("."));
+        std::string outputFileIR = trimmedFileExt + ".ll";
+        std::string outputFileDir = outputPath + outputFileIR;
 
-        std::string outputPath = outputDir + "/build/out/" + outputFile;
-
+        std::cout << "\n\n\n Output Path: " << outputPath << "\n\n\n";
+        std::cout << "\n\n\n Trimmed File: " << trimmedOutputFile << "\n\n\n";
+        std::cout << "\n\n\n Trimmed File Ext: " << trimmedFileExt << "\n\n\n";
+        std::cout << "\n\n\n Output File IR: " << outputFileIR << "\n\n\n";
+        std::cout << "\n\n\n Output File Dir: " << outputFileDir << "\n\n\n";
         if (settings->customOutputPath)
         {
-            outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
-        }
-        else
-        {
-            outputPath = outputDir + "/build/out/" + outputFile;
+            // outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
+            // std::cout << "\n\n\n <!> <!> <!> \nCUSTOM OUTPUT PATH: " << outputPath << "\n\n\n";
         }
 
         // Check the output path if it's a valid string (non-utf8 characters)
@@ -86,12 +79,19 @@ namespace Cryo
         }
 
         std::cout << "\n\n\n <!> <!> <!> \nFINAL OUTPUT PATH: " << outputPath << "\n\n\n";
-
         // Ensure the output directory exists
-        std::filesystem::create_directories(std::filesystem::path(outputPath).parent_path());
+        bool didMkDir = std::filesystem::create_directories(outputPath);
+        if (!didMkDir)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Output directory already exists");
+        }
+        else
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Output directory created");
+        }
 
         std::error_code EC;
-        llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
+        llvm::raw_fd_ostream dest(outputFileDir, EC, llvm::sys::fs::OF_None);
         if (EC)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
