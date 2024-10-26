@@ -66,26 +66,6 @@ DataTypeToken dataTypes[] = {
 };
 
 /* =========================================================== */
-/* @Util_Functions */
-
-// <my_strndup>
-char *my_strndup(const char *src, size_t len)
-{
-    char *dest = (char *)malloc(len + 1);
-    if (dest)
-    {
-        strncpy(dest, src, len);
-        dest[len] = '\0';
-    }
-    else
-    {
-        fprintf(stderr, "[Lexer] Error: Memory allocation failed in my_strndup\n");
-    }
-    return dest;
-}
-// </my_strndup>
-
-/* =========================================================== */
 /* @Lexer */
 
 // <initLexer>
@@ -390,7 +370,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
 {
     // printf("\n\nCreating Token: %s\n\n", CryoTokenToString(type));
     // current token
-    char *currentToken = my_strndup(lexer->start, lexer->current - lexer->start);
+    char *currentToken = strndup(lexer->start, lexer->current - lexer->start);
     // printf("Current Token: %s\n", currentToken);
 
     Token token;
@@ -601,7 +581,7 @@ Token symbolChar(Lexer *lexer, char symbol, CompilerState *state)
 // <identifier>
 Token identifier(Lexer *lexer, CompilerState *state)
 {
-    char *cur_token = my_strndup(lexer->start, lexer->current - lexer->start);
+    char *cur_token = strndup(lexer->start, lexer->current - lexer->start);
     // printf("\n!![Lexer] Current token: %s\n", cur_token);
     while (isAlpha(peek(lexer, state)) || isDigit(peek(lexer, state)))
     {
@@ -644,14 +624,14 @@ Token checkKeyword(Lexer *lexer, CompilerState *state)
         advance(lexer, state);
 
     int length = (int)(lexer->current - lexer->start);
-    const char *keyword = my_strndup(lexer->start, length);
+    const char *keyword = strndup(lexer->start, length);
     // printf("[Lexer] Checking keyword: %s\n", keyword);
-    char *nextChar = my_strndup(lexer->current, 1);
-    char *nextnextChar = my_strndup(lexer->current + 1, 1);
+    char *nextChar = strndup(lexer->current, 1);
+    char *nextnextChar = strndup(lexer->current + 1, 1);
     // printf("[Lexer] Next character: %s\n", nextChar);
     // printf("[Lexer] Next next character: %s\n", nextnextChar);
 
-    char *typeStr = my_strndup(lexer->start, length);
+    char *typeStr = strndup(lexer->start, length);
 
     // check if after the keyword is a `[` character and a `]` character immediately after
     if (strcmp(nextChar, "[") == 0 && strcmp(nextnextChar, "]") == 0)

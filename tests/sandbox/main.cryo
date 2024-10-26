@@ -8,12 +8,12 @@ struct Int {
     // value of the struct field. If `default` is not provided,
     // The constructor will need to be explicitly called with
     // the field value.
-    value: int;
+    default value: int;
 
     // Constructor for the Int struct
-    // constructor(value: int) {
-    //     this.value = value;
-    // }
+    constructor(value: int) {
+        this.value = value;
+    }
     
     // // Methods for the Int struct
     // toString() -> string {
