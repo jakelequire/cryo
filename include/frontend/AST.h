@@ -667,6 +667,7 @@ typedef struct PropertyNode
     char *name;
     ASTNode *value;
     CryoDataType type;
+    bool defaultProperty;
 } PropertyNode;
 
 /// #### The StructNode struct represents a struct in the AST.
@@ -677,6 +678,8 @@ typedef struct PropertyNode
 /// {
 ///     char *name;
 ///     PropertyNode **properties;
+///     ASTNode **methods;
+///     ASTNode *constructor;
 ///     int propertyCount;
 ///     int propertyCapacity;
 /// } StructNode;
@@ -685,6 +688,8 @@ typedef struct StructNode
 {
     char *name;
     ASTNode **properties;
+    ASTNode **methods;
+    ASTNode *constructor;
     int propertyCount;
     int propertyCapacity;
     bool hasDefaultConstructor;
@@ -717,6 +722,35 @@ typedef struct ScopedFunctionCallNode
     int argCapacity;
 } ScopedFunctionCallNode;
 
+typedef struct ConstructorMetaData
+{
+    CryoNodeType parentNodeType;
+    const char *parentName;
+    bool hasDefaultFlag;
+} ConstructorMetaData;
+
+/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
+/// ---
+/// ```
+/// typedef struct StructConstructorNode
+/// {
+///     char *name;
+///     struct ASTNode **args;
+///     int argCount;
+///     int argCapacity;
+///     const char *thisRef;
+/// } StructConstructorNode;
+/// ```
+typedef struct StructConstructorNode
+{
+    char *name;
+    struct ASTNode **args;
+    int argCount;
+    int argCapacity;
+    ConstructorMetaData *metaData;
+} StructConstructorNode;
+
+/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
     CryoMetaData *metaData;
@@ -779,6 +813,8 @@ typedef struct ASTNode
         StructNode *structNode;
         // For Properties
         PropertyNode *property;
+        // For Struct Constructors
+        StructConstructorNode *structConstructor;
     } data;
 } ASTNode;
 
@@ -817,7 +853,8 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
 StructNode *createStructNodeContainer(Arena *arena, CompilerState *state);
 PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state);
 ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state);
-
+StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, CompilerState *state);
+ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerState *state);
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
 // # ============================================================ #
@@ -859,22 +896,22 @@ char *seekNamespaceName(ASTNode *node);
 char *getASTBuffer(DebugASTOutput *output);
 
 // Formatting Functions
-char *formatASTNode             (ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
-char *formatProgramNode         (ASTDebugNode *node, DebugASTOutput *output);
-char *formatFunctionDeclNode    (ASTDebugNode *node, DebugASTOutput *output);
-char *formatParamListNode       (ASTDebugNode *node, DebugASTOutput *output);
-char *formatBlockNode           (ASTDebugNode *node, DebugASTOutput *output);
-char *formatVarDeclNode         (ASTDebugNode *node, DebugASTOutput *output);
-char *formatExpressionNode      (ASTDebugNode *node, DebugASTOutput *output);
-char *formatLiteralExprNode     (ASTDebugNode *node, DebugASTOutput *output);
-char *formatReturnStatementNode (ASTDebugNode *node, DebugASTOutput *output);
-char *formatFunctionCallNode    (ASTDebugNode *node, DebugASTOutput *output);
-char *formatParamNode           (ASTDebugNode *node, DebugASTOutput *output);
-char *formatPropertyNode        (ASTDebugNode *node, DebugASTOutput *output);
-char *formatVarNameNode         (ASTDebugNode *node, DebugASTOutput *output);
-char *formatStructNode          (ASTDebugNode *node, DebugASTOutput *output);
-char *formatExternFunctionNode  (ASTDebugNode *node, DebugASTOutput *output);
-char *formatFunctionBlock       (ASTDebugNode *node, DebugASTOutput *output);
+char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
+char *formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatParamListNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatBlockNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatParamNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatStructNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output);
 
 // # ============================================================ # //
 // # AST Creation (./src/frontend/AST/AST.c)                      # //

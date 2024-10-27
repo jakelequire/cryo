@@ -14,4 +14,27 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "tools/macros/debugMacros.h"
+#include "tools/utils/compileTimer.h"
+
+CompileTimer *createCompileTimer()
+{
+    CompileTimer *timer = (CompileTimer *)malloc(sizeof(CompileTimer));
+    if (!timer)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for CompileTimer\n");
+        return NULL;
+    }
+    return timer;
+}
+
+void startTimer(CompileTimer *timer)
+{
+    timer->start = clock();
+}
+
+double stopTimer(CompileTimer *timer)
+{
+    timer->end = clock();
+    timer->elapsed = ((double)(timer->end - timer->start)) / CLOCKS_PER_SEC;
+    return timer->elapsed;
+}

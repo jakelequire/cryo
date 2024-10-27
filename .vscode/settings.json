@@ -244,7 +244,11 @@
     "datatypes.h": "c",
     "__hash_table": "cpp",
     "__tree": "cpp",
-    "__config": "cpp"
+    "__config": "cpp",
+    "compiletimer.h": "c",
+    "buildstats.h": "c",
+    "consolecolors.h": "c",
+    "compilerargs.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

@@ -160,6 +160,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "SCOPED_FUNCTION_CALL";
     case NODE_EXTERNAL_SYMBOL:
         return "EXTERNAL_SYMBOL";
+    case NODE_STRUCT_CONSTRUCTOR:
+        return "STRUCT_CONSTRUCTOR";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -497,6 +499,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_EXPRESSION";
     case TOKEN_KW_EXTERN:
         return "TOKEN_KW_EXTERN";
+    case TOKEN_KW_CONSTRUCTOR:
+        return "TOKEN_KW_CONSTRUCTOR";
 
     case TOKEN_BANG:
         return "TOKEN_BANG";

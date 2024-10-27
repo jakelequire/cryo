@@ -156,6 +156,7 @@ extern "C"
         TOKEN_KW_EXPRESSION,   // `expression`
         TOKEN_KW_EXTERN,       // `extern`
         TOKEN_KW_DEBUGGER,     // `debugger`
+        TOKEN_KW_CONSTRUCTOR,  // `constructor`
                                // Add more keywords as needed
 
         // Operators and punctuations
@@ -287,7 +288,8 @@ extern "C"
         NODE_CUSTOM_TYPE,          // 34
         NODE_SCOPED_FUNCTION_CALL, // 35
         NODE_EXTERNAL_SYMBOL,      // 36
-        NODE_UNKNOWN,              // 37
+        NODE_STRUCT_CONSTRUCTOR,   // 37
+        NODE_UNKNOWN,              // 38
     } CryoNodeType;
 
     typedef enum CryoDataType

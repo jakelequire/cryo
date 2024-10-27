@@ -48,6 +48,7 @@ KeywordToken keywords[] = {
     {"struct", TOKEN_KW_STRUCT},
     {"declare", TOKEN_KW_DECLARE},
     {"default", TOKEN_KW_DEFAULT},
+    {"constructor", TOKEN_KW_CONSTRUCTOR},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

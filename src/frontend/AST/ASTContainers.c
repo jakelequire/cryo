@@ -894,6 +894,7 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
 ///     char *name;
 ///     struct ASTNode *value;
 ///     CryoDataType type;
+///     bool defaultProperty;
 /// } PropertyNode;
 ///```
 ///
@@ -909,6 +910,7 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
     node->name = (char *)calloc(1, sizeof(char));
     node->value = NULL;
     node->type = DATA_TYPE_UNKNOWN;
+    node->defaultProperty = false;
 
     return node;
 }
@@ -938,6 +940,40 @@ ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = 128;
+
+    return node;
+}
+
+StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, CompilerState *state)
+{
+    StructConstructorNode *node = (StructConstructorNode *)ARENA_ALLOC(arena, sizeof(StructConstructorNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate StructConstructorNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->args = NULL;
+    node->argCount = 0;
+    node->argCapacity = 128;
+    node->metaData = createConstructorMetaDataContainer(arena, state);
+
+    return node;
+}
+
+ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerState *state)
+{
+    ConstructorMetaData *node = (ConstructorMetaData *)ARENA_ALLOC(arena, sizeof(ConstructorMetaData));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ConstructorMetaData node.");
+        return NULL;
+    }
+
+    node->parentNodeType = NODE_UNKNOWN;
+    node->parentName = (char *)calloc(1, sizeof(char));
+    node->hasDefaultFlag = false;
 
     return node;
 }

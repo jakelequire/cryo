@@ -19,6 +19,7 @@ int DEBUG_LEVEL = 0;
 
 void printUsage(const char *programName)
 {
+    printf("\n");
     fprintf(stderr, "Usage: %s -f <file> [options]\n", programName);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -f, --file <path>    Specify input file path (required)\n");
@@ -28,18 +29,29 @@ void printUsage(const char *programName)
     fprintf(stderr, "  -v, --verbose        Enable verbose output\n");
     fprintf(stderr, "  -d, --debug-level    Set the debug level (0-3)\n");
     fprintf(stderr, "  -h, --help           Display this help message\n");
+    printf("\n");
+    printf("Advanced options:\n");
+    printf("      --ast-dump         Dump AST to stdout\n");
+    printf("      --ir-dump          Dump IR to stdout (UNIMPLEMENTED)\n");
+    printf("\n");
 }
 
-static struct option long_options[] = {
+static const struct option long_options[] = {
+    // Existing options with their short equivalents
     {"file", required_argument, 0, 'f'},
     {"source", required_argument, 0, 's'},
-    {"active-build", no_argument, 0, 'a'},
     {"output", required_argument, 0, 'o'},
+    {"active", no_argument, 0, 'a'},
     {"verbose", no_argument, 0, 'v'},
-    {"debug-level", required_argument, 0, 'd'},
-    {"enable-logs", required_argument, 0, 'L'},
+    {"debug", required_argument, 0, 'd'},
+    {"logs", required_argument, 0, 'L'},
     {"help", no_argument, 0, 'h'},
-    {0, 0, 0, 0}};
+
+    // Long-only options (no short equivalent)
+    {"ast-dump", no_argument, 0, OPT_AST_DUMP},
+    {"ir-dump", no_argument, 0, OPT_IR_DUMP},
+    {0, 0, 0, 0} // Required terminator
+};
 
 CompilerSettings getCompilerSettings(int argc, char *argv[])
 {
@@ -54,7 +66,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->isSource = false;
     settings->customOutputPath = NULL;
     settings->debugLevel = DEBUG_NONE;
-    settings->buildType = BUILD_NONE;
+    settings->buildType = BUILD_DEV;
     settings->enabledLogs = createEnabledLogs();
 
     printf("Parsing Command Line Arguments\n");
@@ -112,6 +124,24 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         case 'L':
             parseEnabledLogsArgs(optarg, &settings->enabledLogs);
             break;
+
+        // Long-only options
+        case OPT_AST_DUMP:
+            settings->astDump = true;
+            if (settings->verbose)
+            {
+                printf("AST dump enabled\n");
+            }
+            break;
+
+        case OPT_IR_DUMP:
+            settings->irDump = true;
+            if (settings->verbose)
+            {
+                printf("IR dump enabled\n");
+            }
+            break;
+
         case 'h':
             printUsage(argv[0]);
             exit(0);
@@ -218,14 +248,14 @@ const char *BuildTypeToString(BuildType type)
 {
     switch (type)
     {
-    case BUILD_NONE:
-        return "NONE";
+    case BUILD_DEV:
+        return "Development";
     case BUILD_DEBUG:
-        return "DEBUG";
+        return "Debug";
     case BUILD_RELEASE:
-        return "RELEASE";
+        return "Release";
     default:
-        return "UNKNOWN";
+        return "Unknown";
     }
 }
 
@@ -263,9 +293,13 @@ CompilerSettings createCompilerSettings(void)
     settings.isSource = false;
     settings.customOutputPath = NULL;
     settings.debugLevel = DEBUG_NONE;
-    settings.buildType = BUILD_NONE;
+    settings.buildType = BUILD_DEV;
     settings.enabledLogs = createEnabledLogs();
     settings.compiledFiles = (CompiledFile **)malloc(sizeof(CompiledFile *) * 64);
+    settings.version = COMPILER_VERSION;
+    settings.totalFiles = 0;
+    settings.astDump = false;
+    settings.irDump = false;
     return settings;
 }
 
@@ -341,4 +375,9 @@ EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs)
     free(logStr);
 
     return *logs;
+}
+
+bool isASTDumpEnabled(CompilerSettings *settings)
+{
+    return settings->astDump;
 }

@@ -26,6 +26,8 @@
 
 #include "common/common.h"
 
+#define COMPILER_VERSION "0.0.1"
+
 typedef struct CompiledFile CompiledFile;
 
 #define CURRENT_DEBUG_LEVEL DEBUG_LEVEL
@@ -41,7 +43,7 @@ typedef enum DebugLevel
 
 typedef enum BuildType
 {
-    BUILD_NONE = 0,
+    BUILD_DEV = 0,
     BUILD_DEBUG = 1,
     BUILD_RELEASE = 2
 } BuildType;
@@ -59,6 +61,12 @@ typedef struct EnabledLogs
     bool logSettings;
 } EnabledLogs;
 
+typedef enum
+{
+    OPT_AST_DUMP = 1000, // Start after ASCII range to avoid conflicts
+    OPT_IR_DUMP,
+} LongOnlyOptions;
+
 typedef struct CompilerSettings
 {
     const char *rootDir;
@@ -70,8 +78,24 @@ typedef struct CompilerSettings
     bool verbose;
     EnabledLogs enabledLogs;
     DebugLevel debugLevel;
+    /**
+     * typedef enum BuildType
+     * {
+     *     BUILD_DEV = 0, // Default
+     *     BUILD_DEBUG = 1,
+     *     BUILD_RELEASE = 2
+     * } BuildType;
+     */
     BuildType buildType;
     CompiledFile **compiledFiles;
+    int totalFiles;
+
+    // Flags
+    bool astDump;
+    bool irDump;
+
+    // Version
+    const char *version;
 } CompilerSettings;
 
 // ==============================
@@ -92,5 +116,7 @@ EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs);
 CompilerSettings createCompilerSettings();
 
 void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings);
+
+bool isASTDumpEnabled(CompilerSettings *settings);
 
 #endif // COMPILER_SETTINGS_H

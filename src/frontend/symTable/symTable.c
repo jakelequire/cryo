@@ -292,6 +292,8 @@ char *getNameOfNode(ASTNode *node)
         return strdup(node->data.structNode->name);
     case NODE_IMPORT_STATEMENT:
         return strdup(node->data.import->moduleName);
+    case NODE_PROPERTY:
+        return strdup(node->data.property->name);
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %s", CryoNodeTypeToString(node->metaData->type));
         return NULL;

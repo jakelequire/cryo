@@ -105,6 +105,28 @@ function setFileName {
     log "Setting the file name to $OUTPUT_FILE"
 }
 
+function startTime {
+    # Use date command with nanosecond precision
+    START_TIME=$(date +%s.%N)
+}
+
+function endTime {
+    # Get end time with nanosecond precision
+    END_TIME=$(date +%s.%N)
+    
+    # Calculate duration with bc for floating-point arithmetic
+    # Scale set to 3 for millisecond precision
+    TIME_TAKEN=$(echo "scale=3; $END_TIME - $START_TIME" | bc)
+    
+    echo " "
+    echo "<#> ----------------------------------- <#>"
+    echo " "
+    printf "     Build time: %.3f seconds\n" $TIME_TAKEN
+    echo " "
+    echo "<#> ----------------------------------- <#>"
+    echo " "
+}
+
 # Parsing arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -144,6 +166,10 @@ while [[ "$#" -gt 0 ]]; do
                 error "Argument for $1 is missing or invalid"
             fi
             ;;
+        --ast-dump)
+            compiler_args+=("--ast-dump")
+            shift
+            ;;
         -h|--help)
             usage
             ;;
@@ -157,13 +183,23 @@ if [ ! -f $INPUT_FILE ]; then
     error "The file $INPUT_FILE does not exist"
 fi
 
+
+# ============================================================ #
+# Building the project
+
 # Check the build directory
 # checkBuildDir 
 
-# Build from make
-make all || error "Failed to build the project"
+startTime # Start the timer
 
+make all || error "Failed to build the project"
 clear
+
+endTime # End the timer
+sleep 1 # Sleep for a second
+
+# ============================================================ #
+
 
 # Create the necessary directories if they don't exist
 mkdir -p $BUILD_DIR
@@ -206,7 +242,7 @@ if [ -d $OUT_DIR/imports ]; then
     # Combine all the valid .ll files
     if [ ${#valid_files[@]} -gt 0 ]; then
         log "Combining the .ll files..."
-        llvm-link-18 "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
+        llvm-link "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
 
         # Optimize the combined IR
         log "Optimizing the combined IR..."
@@ -214,7 +250,7 @@ if [ -d $OUT_DIR/imports ]; then
 
         # Generate final object file
         log "Generating final object file..."
-        llc-18  -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
+        llc  -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
 
         # Check if the combined object file was created successfully
         if [ -f "$OUT_DIR/imports/combined.o" ]; then
@@ -249,20 +285,21 @@ else
 fi
 
 # Compile the standard library
-# clang-18 -S -emit-llvm ./cryo/c_support.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
-clang++-18 -S -emit-llvm ./cryo/cxx_support.cpp -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+C_SUPPORT_IR="c_support.ll"
+# clang -S -emit-llvm ./cryo/c_support.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
+clang++ -S -emit-llvm ./cryo/cxx_support.cpp -o $OUT_DIR/$C_SUPPORT_IR || error "Failed to compile the standard library"
 
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file
-llvm-link-18  $OUT_DIR/cryolib.ll $OUT_DIR/$FILE_NAME.ll -S -o $OUT_DIR/bin.ll
+llvm-link  $OUT_DIR/$C_SUPPORT_IR $OUT_DIR/$FILE_NAME.ll -S -o $OUT_DIR/bin.ll
 
 # Compile the object file
-llc-18 -filetype=obj -relocation-model=static $OUT_DIR/bin.ll -o $OUT_DIR/bin.o
+llc -filetype=obj -relocation-model=static $OUT_DIR/bin.ll -o $OUT_DIR/bin.o
 
 # llc -filetype=asm bin.ll -o bin.s
 
 # Link the object files and place the output in the build directory
-clang++-18 -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
+clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
 
 # Turn it into an executable with no extension
 

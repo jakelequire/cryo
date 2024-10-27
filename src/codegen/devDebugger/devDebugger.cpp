@@ -377,6 +377,19 @@ namespace Cryo
             break;
         }
 
+        case NODE_STRUCT_CONSTRUCTOR:
+        {
+            std::cout << ">>==----------------{ Struct Constructor Node }----------------==<<" << std::endl;
+            std::cout << "Struct Name: " << node->data.structConstructor->name << std::endl;
+            std::cout << "Argument Count: " << node->data.structConstructor->argCount << std::endl;
+            for (int i = 0; i < node->data.structConstructor->argCount; ++i)
+            {
+                logNode(node->data.structConstructor->args[i]);
+            }
+            std::cout << ">>==------------{ ^ Struct Constructor Node ^ }----------------==<<" << std::endl;
+            break;
+        }
+
         default:
             std::cout << "\n\n";
             std::cout << "<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>" << std::endl;
@@ -457,6 +470,7 @@ namespace Cryo
         case NODE_STRUCT_DECLARATION:
         case NODE_CUSTOM_TYPE:
         case NODE_SCOPED_FUNCTION_CALL:
+        case NODE_STRUCT_CONSTRUCTOR:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -678,6 +692,10 @@ namespace Cryo
             break;
 
         case NODE_SCOPED_FUNCTION_CALL:
+            assertNode(node);
+            break;
+
+        case NODE_STRUCT_CONSTRUCTOR:
             assertNode(node);
             break;
 
@@ -1138,6 +1156,13 @@ namespace Cryo
         case NODE_SCOPED_FUNCTION_CALL:
         {
             logMessage("INFO", __LINE__, "Debugger", "Scoped function call passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_STRUCT_CONSTRUCTOR:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Struct constructor passed assertion.");
             logNode(node);
             break;
         }

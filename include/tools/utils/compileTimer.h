@@ -14,47 +14,26 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#ifndef COMPILE_TIMER_H
+#define COMPILE_TIMER_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
 
-#include "settings/compilerSettings.h"
-#include "compiler/compiler.h"
-#include "tools/utils/compileTimer.h"
-#include "tools/utils/buildStats.h"
+#include "tools/macros/consoleColors.h"
 
-int main(int argc, char *argv[])
+typedef struct CompileTimer
 {
-    // Initialize the compiler settings
-    CompilerSettings settings = getCompilerSettings(argc, argv);
-    logCompilerSettings(&settings);
+    clock_t start;
+    clock_t end;
+    double elapsed;
+} CompileTimer;
 
-    BuildStats *buildStats = createBuildStats();
-    addCompilerSettings(buildStats, &settings);
+CompileTimer *createCompileTimer();
+void startTimer(CompileTimer *timer);
+double stopTimer(CompileTimer *timer);
 
-    CompileTimer *compileTimer = createCompileTimer();
-    startTimer(compileTimer);
-
-    // Check if the input file exists
-    const char *filePath = settings.inputFilePath;
-    if (!fileExists(filePath))
-    {
-        fprintf(stderr, "Error: File not found: %s\n", filePath);
-        return 1;
-    }
-
-    // Compile the file
-    int compilerResult = cryoCompiler(filePath, &settings);
-    if (compilerResult != 0)
-    {
-        CONDITION_FAILED;
-        return 1;
-    }
-
-    double elapsed = stopTimer(compileTimer);
-
-    getSystemInfo(buildStats);
-    addElapsedTime(buildStats, elapsed);
-    printBuildStats(buildStats);
-
-    exit(EXIT_SUCCESS);
-}
+#endif // COMPILE_TIMER_H

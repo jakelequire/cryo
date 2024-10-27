@@ -42,6 +42,7 @@ typedef struct Token Token;
 typedef struct CryoSymbolTable CryoSymbolTable;
 typedef struct CompilerState CompilerState;
 typedef struct Position Position;
+typedef struct ConstructorMetaData ConstructorMetaData;
 
 typedef struct
 {
@@ -143,5 +144,8 @@ ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *c
 /* @ASTNode_Parsing - Structures */
 ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
 ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
+ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData);
+
+bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 
 #endif // PARSER_H

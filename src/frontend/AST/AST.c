@@ -20,7 +20,6 @@
 // @Global_Variables
 ASTNode *programNode = NULL;
 
-
 // -------------------------------------------------------------------
 
 ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state)
@@ -670,6 +669,22 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
     node->data.structNode->propertyCount = propertyCount;
     node->data.structNode->propertyCapacity = 64;
 
+    return node;
+}
+
+ASTNode *createStructConstructor(char *structName, ASTNode **fields, int argCount, Arena *arena, CompilerState *state)
+{
+    ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create struct constructor node");
+        return NULL;
+    }
+
+    node->data.structConstructor->name = strdup(structName);
+    node->data.structConstructor->args = fields;
+    node->data.structConstructor->argCount = argCount;
+    node->data.structConstructor->argCapacity = 64;
     return node;
 }
 

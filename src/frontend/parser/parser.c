@@ -1919,15 +1919,38 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     ASTNode **properties = (ASTNode **)ARENA_ALLOC(arena, PROPERTY_CAPACITY * sizeof(ASTNode *));
 
     int propertyCount = 0;
+    bool hasDefaultProperty = false;
+    int defaultPropertyCount = 0;
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
+        if (lexer->currentToken.type == TOKEN_KW_CONSTRUCTOR)
+        {
+            ConstructorMetaData *metaData = (ConstructorMetaData *)ARENA_ALLOC(arena, sizeof(ConstructorMetaData));
+            metaData->parentName = strdup(structName);
+            metaData->parentNodeType = NODE_STRUCT_DECLARATION;
+            metaData->hasDefaultFlag = hasDefaultProperty;
+
+            ASTNode *constructor = parseConstructor(lexer, table, context, arena, state, metaData);
+        }
+
         ASTNode *field = parseStructField(lexer, table, context, arena, state);
         if (field)
         {
             properties[propertyCount] = field;
             propertyCount++;
             addASTNodeSymbol(table, field, arena);
+
+            if (parsePropertyForDefaultFlag(field) && !hasDefaultProperty)
+            {
+                hasDefaultProperty = true;
+                defaultPropertyCount++;
+            }
+            if (defaultPropertyCount > 1)
+            {
+                logMessage("ERROR", __LINE__, "Parser", "Struct can only have one default property.");
+                return NULL;
+            }
         }
         else
         {
@@ -1943,15 +1966,63 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     return structNode;
 }
 
+bool parsePropertyForDefaultFlag(ASTNode *propertyNode)
+{
+    if (propertyNode->metaData->type == NODE_PROPERTY)
+    {
+        PropertyNode *property = propertyNode->data.property;
+        return property->defaultProperty;
+    }
+    return false;
+}
+
 // <parseStructField>
+/*
+```cryo
+// The Int struct is a simple struct that holds an integer value.
+// The struct has a default primary property value of 0.
+
+struct Int {
+
+    // The default keyword is used to specify the default primary property
+    // value of the struct field. If `default` is not provided,
+    // The constructor will need to be explicitly called with
+    // the field value.
+    default value: int;
+
+    // Constructor for the Int struct
+    constructor(value: int) {
+        this.value = value;
+    }
+
+    // Methods for the Int struct
+    toString() -> string {
+        const i: int = this.value;
+        return intToString(i);
+    }
+}
+```
+*/
 ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing struct field...");
+
+    int defaultCount = 0; // This should never be more than 1
+    CryoTokenType currentToken = lexer->currentToken.type;
+    if (currentToken == TOKEN_KW_DEFAULT)
+    {
+        defaultCount++;
+        // Consume the `default` keyword
+        getNextToken(lexer, arena, state);
+    }
+
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
         parsingError("Expected an identifier.", "parseStructField", table, arena, state, lexer, source);
         return NULL;
     }
+
+    printf("Default Count: %d\n", defaultCount);
 
     char *fieldName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Field name: %s", fieldName);
@@ -1971,3 +2042,47 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     return createFieldNode(fieldName, fieldType, NULL, arena, state);
 }
 // </parseStructField>
+
+ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing constructor...");
+    consume(lexer, TOKEN_KW_CONSTRUCTOR, "Expected `constructor` keyword.", "parseConstructor", table, arena, state);
+
+    char *consturctorName = (char *)calloc(strlen(metaData->parentName) + strlen("::") + strlen("constructor") + 1, sizeof(char));
+    strcat(consturctorName, (char *)metaData->parentName);
+    strcat(consturctorName, "::constructor");
+
+    ASTNode **params = parseParameterList(lexer, table, context, arena, consturctorName, state);
+
+    // Consume {
+    consume(lexer, TOKEN_LBRACE, "Expected `{` to start constructor.", "parseConstructor", table, arena, state);
+
+    DEBUG_BREAKPOINT;
+}
+
+// ASTNode *parseConstructorBody(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state)
+// {
+//     logMessage("INFO", __LINE__, "Parser", "Parsing constructor body...");
+//     ASTNode *constructorBody = createConstructorBodyNode(arena, state);
+//     if (constructorBody == NULL)
+//     {
+//         logMessage("ERROR", __LINE__, "Parser", "Failed to create constructor body node.");
+//         return NULL;
+//     }
+//
+//     while (lexer->currentToken.type != TOKEN_RBRACE)
+//     {
+//         ASTNode *statement = parseStatement(lexer, table, context, arena, state);
+//         if (statement)
+//         {
+//             addStatementToConstructorBody(table, constructorBody, statement, arena, state);
+//         }
+//         else
+//         {
+//             logMessage("ERROR", __LINE__, "Parser", "Failed to parse statement.");
+//             return NULL;
+//         }
+//     }
+//
+//     return constructorBody;
+// }
