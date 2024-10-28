@@ -160,17 +160,17 @@ void printBuildStats(BuildStats *stats)
 
     printf("\n");
     // Top border with title
-    printf(GREEN "╔═════════════════ BUILD SUMMARY ═════════════════╗\n" RESET);
+    printf(GREEN "╔═════════════════ BUILD SUMMARY ═════════════════╗\n" COLOR_RESET);
 
 // Helper macro for padding calculation
-#define PRINT_PADDED(label, value, format)                                  \
-    do                                                                      \
-    {                                                                       \
-        char temp[256];                                                     \
-        snprintf(temp, sizeof(temp), format, value);                        \
-        int padding = CONTENT_WIDTH - strlen(label) - strlen(temp);         \
-        printf(GREEN "║ " YELLOW "%s" RESET "%s%*s" GREEN "     ║\n" RESET, \
-               label, temp, padding, "");                                   \
+#define PRINT_PADDED(label, value, format)                                              \
+    do                                                                                  \
+    {                                                                                   \
+        char temp[256];                                                                 \
+        snprintf(temp, sizeof(temp), format, value);                                    \
+        int padding = CONTENT_WIDTH - strlen(label) - strlen(temp);                     \
+        printf(GREEN "║ " YELLOW "%s" COLOR_RESET "%s%*s" GREEN "     ║\n" COLOR_RESET, \
+               label, temp, padding, "");                                               \
     } while (0)
 
     // Timestamp
@@ -183,7 +183,7 @@ void printBuildStats(BuildStats *stats)
     PRINT_PADDED("Compiler Version: ", stats->compiler_version, "%s");
 
     // Metrics section
-    printf(GREEN "╠════════════════════ METRICS ════════════════════╣\n" RESET);
+    printf(GREEN "╠════════════════════ METRICS ════════════════════╣\n" COLOR_RESET);
 
     // Build time
     char time_str[64];
@@ -204,7 +204,7 @@ void printBuildStats(BuildStats *stats)
     snprintf(files_str, sizeof(files_str), "%ld", stats->files_compiled);
     PRINT_PADDED("Files compiled: ", files_str, "%s");
 
-    printf(GREEN "╚═════════════════════════════════════════════════╝\n" RESET);
+    printf(GREEN "╚═════════════════════════════════════════════════╝\n" COLOR_RESET);
     printf("\n");
 
 #undef PRINT_PADDED

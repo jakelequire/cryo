@@ -73,6 +73,8 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     printf("Argc: %i\n", argc);
     printf("Argv: %s\n", argv[0]);
 
+    const char *inputFilePath = (const char *)malloc(sizeof(char) * 256);
+
     int c;
     int option_index = 0;
     char *optstring = "f:s:o:avd:L:h";
@@ -82,6 +84,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         {
         case 'f':
             settings->inputFile = optarg;
+            inputFilePath = optarg;
             break;
         case 's':
             settings->isSource = true;
@@ -128,11 +131,13 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         // Long-only options
         case OPT_AST_DUMP:
             settings->astDump = true;
-            if (settings->verbose)
+            if(!inputFilePath)
             {
-                printf("AST dump enabled\n");
+                fprintf(stderr, "Error: No input file specified\n");
+                printUsage(argv[0]);
+                exit(1);
             }
-            executeASTDump(settings->inputFilePath);
+            executeASTDump(inputFilePath);
             break;
 
         case OPT_IR_DUMP:

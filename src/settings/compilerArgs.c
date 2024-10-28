@@ -18,5 +18,15 @@
 
 void executeASTDump(const char *filePath)
 {
+    printf("File Path Received @executeASTDump: %s\n", filePath);
     ASTNode *programNode = compileForProgramNode(filePath);
+    if (!programNode)
+    {
+        printf("Failed to compile program node\n");
+        return;
+    }
+
+    initASTConsoleOutput(programNode, filePath);
+
+    exit(EXIT_SUCCESS);
 }

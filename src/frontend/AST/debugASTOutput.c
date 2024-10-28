@@ -50,6 +50,19 @@ int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)
     return 0;
 }
 
+void initASTConsoleOutput(ASTNode *root, const char *filePath)
+{
+    DebugASTOutput *output = createDebugASTOutput(filePath, filePath, "txt", "console");
+    createASTDebugView(root, output, 0);
+    char *buffer = getASTBuffer(output, true);
+    if (!buffer)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to get AST buffer for debug output");
+        return;
+    }
+    printf("%s\n", buffer);
+}
+
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd)
 {
     DebugASTOutput *output = (DebugASTOutput *)malloc(sizeof(DebugASTOutput));
@@ -96,7 +109,7 @@ DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output
 
 void createASTDebugOutputFile(DebugASTOutput *output)
 {
-    char *buffer = getASTBuffer(output);
+    char *buffer = getASTBuffer(output, false);
     if (!buffer)
     {
         logMessage("ERROR", __LINE__, "AST", "Failed to get AST buffer for debug output");
@@ -166,7 +179,7 @@ char *seekNamespaceName(ASTNode *node)
 // # Output File Buffer                                           #
 // # ============================================================ #
 
-char *getASTBuffer(DebugASTOutput *output)
+char *getASTBuffer(DebugASTOutput *output, bool console)
 {
     char *buffer = MALLOC_AST_BUFFER;
     if (!buffer)
@@ -175,12 +188,13 @@ char *getASTBuffer(DebugASTOutput *output)
         return NULL;
     }
 
-    sprintf(buffer, "AST Debug Output for %s\n", output->fileName);
+    // Start the buffer with the AST Tree header
+    sprintf(buffer, GREEN "\n\n╔═══════════════════════════════ AST Tree ═══════════════════════════════╗" COLOR_RESET);
 
     for (int i = 0; i < output->nodeCount; i++)
     {
         ASTDebugNode *node = &output->nodes[i];
-        char *formattedNode = formatASTNode(node, output, node->indent);
+        char *formattedNode = formatASTNode(node, output, node->indent, console);
         if (formattedNode)
         {
             sprintf(buffer, "%s\n%s", buffer, formattedNode);
@@ -189,6 +203,9 @@ char *getASTBuffer(DebugASTOutput *output)
     }
     sprintf(buffer, "%s\n\n", buffer);
 
+    // End the buffer with the AST Tree footer
+    sprintf(buffer, "%s" GREEN "╚════════════════════════════════════════════════════════════════════════╝\n\n" COLOR_RESET, buffer);
+
     return buffer;
 }
 
@@ -196,7 +213,7 @@ char *getASTBuffer(DebugASTOutput *output)
 // # Formatting Functions                                         #
 // # ============================================================ #
 
-char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel)
+char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console)
 {
     const char *nodeType = node->nodeType;
     char *formattedNode = NULL;
@@ -206,7 +223,16 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel)
     memset(indent, 0, sizeof(indent));
     for (int i = 0; i < indentLevel; i++)
     {
-        strcat(indent, "|   ");
+        if (console)
+        {
+            char *coloredBar = (char *)malloc(sizeof(char) * 8);
+            sprintf(coloredBar, LIGHT_MAGENTA BOLD "|    " COLOR_RESET);
+            strcat(indent, coloredBar);
+        }
+        else
+        {
+            strcat(indent, "   ");
+        }
     }
     if (indentLevel == 0)
     {
@@ -215,63 +241,173 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel)
 
     if (strcmp(nodeType, "Program") == 0)
     {
-        formattedNode = formatProgramNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatProgramNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatProgramNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "FunctionDecl") == 0)
     {
-        formattedNode = formatFunctionDeclNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatFunctionDeclNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatFunctionDeclNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "ParamList") == 0)
     {
-        formattedNode = formatParamListNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatParamListNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatParamListNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "Block") == 0)
     {
-        formattedNode = formatBlockNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatBlockNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatBlockNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "VarDecl") == 0)
     {
-        formattedNode = formatVarDeclNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatVarDeclNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatVarDeclNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "Expression") == 0)
     {
-        formattedNode = formatExpressionNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatExpressionNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatExpressionNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "LiteralExpr") == 0)
     {
-        formattedNode = formatLiteralExprNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatLiteralExprNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatLiteralExprNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "ReturnStatement") == 0)
     {
-        formattedNode = formatReturnStatementNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatReturnStatementNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatReturnStatementNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "FunctionCall") == 0)
     {
-        formattedNode = formatFunctionCallNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatFunctionCallNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatFunctionCallNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "Param") == 0)
     {
-        formattedNode = formatParamNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatParamNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatParamNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "Property") == 0)
     {
-        formattedNode = formatPropertyNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatPropertyNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatPropertyNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "VarName") == 0)
     {
-        formattedNode = formatVarNameNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatVarNameNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatVarNameNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "StructDecl") == 0)
     {
-        formattedNode = formatStructNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatStructNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatStructNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "ExternFunction") == 0)
     {
-        formattedNode = formatExternFunctionNode(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatExternFunctionNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatExternFunctionNode(node, output);
+        }
     }
     else if (strcmp(nodeType, "FunctionBlock") == 0)
     {
-        formattedNode = formatFunctionBlock(node, output);
+        if (console)
+        {
+            formattedNode = CONSOLE_formatFunctionBlock(node, output);
+        }
+        else
+        {
+            formattedNode = formatFunctionBlock(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "Namespace") == 0)
+    {
+        // Skip namespace nodes
+        return NULL;
     }
     else
     {
@@ -292,156 +428,346 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel)
     return indentedNode;
 }
 
+// ============================================================
+// <ProgramNode>
 char *formatProgramNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <Program : [NAMESPACE]> { FILE_NAME }
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<Program : [%s]> { %s }", node->namespaceName, output->fileName);
-
     return buffer;
 }
-
+char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Program : [NAMESPACE]> { FILE_NAME }
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Program : %s>%s %s{ %s }%s",
+            BOLD, LIGHT_RED, node->namespaceName, COLOR_RESET,
+            YELLOW, output->fileName, COLOR_RESET);
+    return buffer;
+}
+// </ProgramNode>
+// ============================================================
+// ============================================================
+// <FunctionDecl>
 char *formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <FunctionDecl> [NAME] [RETURN_TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<FunctionDecl> [%s] { RetType: %s } <%i:%i>", node->nodeName, CryoDataTypeToString(node->dataType), node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<FunctionDecl>%s %s[%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET, YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, LIGHT_CYAN, CryoDataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
 
     return buffer;
 }
-
+// </FunctionDecl>
+// ============================================================
+// ============================================================
+// <ParamList>
 char *formatParamListNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <ParamList> [NAME] [TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<ParamList> <%i:%i>", node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatParamListNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <ParamList> [NAME] [TYPE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<ParamList>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </ParamList>
+// ============================================================
+// ============================================================
+// <Block>
 char *formatBlockNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <Block> [L:C]
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<Block> <%i:%i>", node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatBlockNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Block> [L:C]
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Block>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_GREEN, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </Block>
+// ============================================================
+// ============================================================
+// <VarDecl>
 char *formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <VarDecl> [NAME] [TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<VarDecl> [%s] { Type: %s } <%i:%i>", node->nodeName, CryoDataTypeToString(node->dataType), node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <VarDecl> [NAME] [TYPE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<VarDecl>%s %s[%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, LIGHT_CYAN, CryoDataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </VarDecl>
+// ============================================================
+// ============================================================
+// <Expression>
 char *formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <Expression> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<Expression> <%i:%i>", node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Expression> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Expression>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </Expression>
+// ============================================================
+// ============================================================
+// <LiteralExpr>
 char *formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <LiteralExpr> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<LiteralExpr> <%i:%i>", node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <LiteralExpr> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<LiteralExpr>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </LiteralExpr>
+// ============================================================
+// ============================================================
+// <ReturnStatement>
 char *formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <ReturnStatement> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<ReturnStatement> <%i:%i>", node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <ReturnStatement> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<ReturnStatement>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </ReturnStatement>
+// ============================================================
+// ============================================================
+// <FunctionCall>
 char *formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <FunctionCall> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<FunctionCall> <%i:%i>", node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <FunctionCall> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<FunctionCall>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </FunctionCall>
+// ============================================================
+// ============================================================
+// <Param>
 char *formatParamNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <Param> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<Param> { Type: %s } <%i:%i>", CryoDataTypeToString(node->dataType), node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatParamNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Param> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Param>%s %s%s{ %s }%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            BOLD, LIGHT_CYAN, CryoDataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </Param>
+// ============================================================
+// ============================================================
+// <Property>
 char *formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <Property> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<Property> [%s] { Type: %s } <%i:%i>", node->nodeName, CryoDataTypeToString(node->dataType), node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Property> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Property>%s %s[%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, LIGHT_CYAN, CryoDataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </Property>
+// ============================================================
+// ============================================================
+// <VarName>
 char *formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <VarName> [NAME] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<VarName> [%s] <%i:%i>", node->nodeName, node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <VarName> [NAME] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<VarName>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </VarName>
+// ============================================================
+// ============================================================
+// <StructDecl>
 char *formatStructNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <StructDecl> [NAME] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<StructDecl> [%s] <%i:%i>", node->nodeName, node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatStructNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <StructDecl> [NAME] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<StructDecl>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </StructDecl>
+// ============================================================
+// ============================================================
+// <ExternFunction>
 char *formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <ExternFunction> [NAME] [RETURN_TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<ExternFunction> [%s] { RetType: %s } <%i:%i>", node->nodeName, CryoDataTypeToString(node->dataType), node->line, node->column);
-
     return buffer;
 }
-
+char *CONSOLE_formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <ExternFunction> [NAME] [RETURN_TYPE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<ExternFunction>%s %s[%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, CYAN, CryoDataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </ExternFunction>
+// ============================================================
+// ============================================================
+// <FunctionBlock>
 char *formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output)
 {
     // <FunctionBlock> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-
     sprintf(buffer, "<FunctionBlock> <%i:%i>", node->line, node->column);
-
     return buffer;
 }
+char *CONSOLE_formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <FunctionBlock> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<FunctionBlock>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_GREEN, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </FunctionBlock>
+// ============================================================
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #

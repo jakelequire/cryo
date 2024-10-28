@@ -30,6 +30,7 @@
 #include "frontend/symTable.h"
 #include "tools/arena/arena.h"
 #include "tools/utils/c_logger.h"
+#include "tools/macros/consoleColors.h"
 #include "common/common.h"
 
 /// ### The position struct represents the line and column number of a token in the source code.
@@ -883,9 +884,11 @@ typedef struct DebugASTOutput
     int nodeCount;
 } DebugASTOutput;
 
+int initASTDebugOutput(ASTNode *root, CompilerSettings *settings);
+void initASTConsoleOutput(ASTNode *root, const char *filePath);
+
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
 ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent);
-int initASTDebugOutput(ASTNode *root, CompilerSettings *settings);
 void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel);
 DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
 void createASTDebugOutputFile(DebugASTOutput *output);
@@ -893,10 +896,10 @@ void removePrevASTOutput(const char *filePath);
 char *seekNamespaceName(ASTNode *node);
 
 // Output File Buffer
-char *getASTBuffer(DebugASTOutput *output);
+char *getASTBuffer(DebugASTOutput *output, bool console);
 
 // Formatting Functions
-char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
+char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console);
 char *formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatParamListNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -913,6 +916,22 @@ char *formatStructNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output);
 
+char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
+char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatParamListNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatBlockNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatParamNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatStructNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output);
 // # ============================================================ # //
 // # AST Creation (./src/frontend/AST/AST.c)                      # //
 // # ============================================================ # //
