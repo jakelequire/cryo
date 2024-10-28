@@ -23,5 +23,8 @@
 
 #include "settings/compilerSettings.h"
 #include "frontend/AST.h"
+#include "compiler/compiler.h"
+
+void executeASTDump(const char *filePath);
 
 #endif // COMPILER_ARGS_H

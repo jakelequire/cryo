@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "settings/compilerArgs.h"
 
-void executeASTDump(ASTNode *root)
+void executeASTDump(const char *filePath)
 {
+    ASTNode *programNode = compileForProgramNode(filePath);
 }

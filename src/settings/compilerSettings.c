@@ -132,6 +132,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             {
                 printf("AST dump enabled\n");
             }
+            executeASTDump(settings->inputFilePath);
             break;
 
         case OPT_IR_DUMP:

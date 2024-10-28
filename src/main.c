@@ -51,7 +51,6 @@ int main(int argc, char *argv[])
     }
 
     double elapsed = stopTimer(compileTimer);
-
     getSystemInfo(buildStats);
     addElapsedTime(buildStats, elapsed);
     printBuildStats(buildStats);

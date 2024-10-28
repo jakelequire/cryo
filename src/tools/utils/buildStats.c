@@ -123,7 +123,7 @@ void *getSystemInfo(BuildStats *stats)
     else
     {
         // Fallback if getrusage fails
-        stats->cpu_usage = 0.0;
+        stats->cpu_usage = -1.0;
         fprintf(stderr, "Warning: Could not determine CPU usage\n");
     }
 
@@ -160,7 +160,7 @@ void printBuildStats(BuildStats *stats)
 
     printf("\n");
     // Top border with title
-    printf(GREEN "╔═══════════════════ BUILD SUMMARY ═══════════════╗\n" RESET);
+    printf(GREEN "╔═════════════════ BUILD SUMMARY ═════════════════╗\n" RESET);
 
 // Helper macro for padding calculation
 #define PRINT_PADDED(label, value, format)                                  \
@@ -180,7 +180,7 @@ void printBuildStats(BuildStats *stats)
     PRINT_PADDED("Build type: ", stats->build_type, "%s");
 
     // Compiler version
-    PRINT_PADDED("Compiler: ", stats->compiler_version, "%s");
+    PRINT_PADDED("Compiler Version: ", stats->compiler_version, "%s");
 
     // Metrics section
     printf(GREEN "╠════════════════════ METRICS ════════════════════╣\n" RESET);

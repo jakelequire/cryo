@@ -25,6 +25,7 @@
 #include <sys/types.h>
 
 #include "common/common.h"
+#include "settings/compilerArgs.h"
 
 #define COMPILER_VERSION "0.0.1"
 
