@@ -35,6 +35,11 @@
 #include "common/common.h"
 #include "compiler/compiler.h"
 #include "settings/compilerSettings.h"
+#include "tools/macros/consoleColors.h"
+
+#define INITIAL_STATEMENT_CAPACITY 512
+#define INITIAL_PARAM_CAPACITY 8
+#define MAX_ARGUMENTS 255
 
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
@@ -44,21 +49,40 @@ typedef struct CompilerState CompilerState;
 typedef struct Position Position;
 typedef struct ConstructorMetaData ConstructorMetaData;
 
-typedef struct
+typedef struct ThisContext
+{
+    CryoNodeType nodeType;
+    const char *nodeName;
+    ASTNode **properties;
+    int propertyCount;
+    ASTNode **methods;
+    int methodCount;
+} ThisContext;
+
+/**
+ * @brief The ParsingContext struct is used to manage the state of the parser.
+ *
+ * ``` c
+ *
+ *  bool isParsingIfCondition;
+ *
+ *  int scopeLevel;
+ *
+ *  const char *currentNamespace;
+ *
+ *  ThisContext *thisContext;
+ *
+ * ```
+ *
+ */
+typedef struct ParsingContext
 {
     bool isParsingIfCondition;
     int scopeLevel;
+    const char *currentNamespace;
+    ThisContext *thisContext;
     // Add other context flags as needed
 } ParsingContext;
-
-/* @Macros */
-#define INITIAL_STATEMENT_CAPACITY 512
-#define INITIAL_PARAM_CAPACITY 8
-#define MAX_ARGUMENTS 255
-
-// #ifndef HAVE_STRNDUP
-// char* strndup(const char* s, size_t n);
-// #endif
 
 /* =========================================================== */
 /* @Function_Prototypes                                        */
@@ -146,6 +170,19 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
 ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData);
 
+ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state);
+
 bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 
+// # ============================================================ #
+
+void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType);
+void clearThisContext(ParsingContext *context);
+void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode);
+void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode);
+
+ASTNode *getPropertyByName(ParsingContext *context, const char *name);
+ASTNode *getMethodByName(ParsingContext *context, const char *name);
+
+void logThisContext(ParsingContext *context);
 #endif // PARSER_H

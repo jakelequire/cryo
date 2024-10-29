@@ -751,6 +751,18 @@ typedef struct StructConstructorNode
     ConstructorMetaData *metaData;
 } StructConstructorNode;
 
+typedef struct
+{
+    ASTNode *object;
+    const char *property;
+} PropertyAccessNode;
+
+typedef struct ThisNode
+{
+    const char *name;
+    const char *type;
+} ThisNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -816,6 +828,10 @@ typedef struct ASTNode
         PropertyNode *property;
         // For Struct Constructors
         StructConstructorNode *structConstructor;
+        // For Property Access
+        PropertyAccessNode *propertyAccess;
+        // For This Keyword
+        ThisNode *thisNode;
     } data;
 } ASTNode;
 
@@ -886,6 +902,7 @@ typedef struct DebugASTOutput
 
 int initASTDebugOutput(ASTNode *root, CompilerSettings *settings);
 void initASTConsoleOutput(ASTNode *root, const char *filePath);
+void logASTNodeDebugView(ASTNode *node);
 
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
 ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent);
@@ -897,6 +914,7 @@ char *seekNamespaceName(ASTNode *node);
 
 // Output File Buffer
 char *getASTBuffer(DebugASTOutput *output, bool console);
+char *logASTBuffer(DebugASTOutput *output, bool console);
 
 // Formatting Functions
 char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console);

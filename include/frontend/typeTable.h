@@ -14,39 +14,66 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef TYPEDEFS_H
-#define TYPEDEFS_H
-
+#ifndef TYPE_TABLE_H
+#define TYPE_TABLE_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include <assert.h>
 
 #include "frontend/tokens.h"
 #include "frontend/AST.h"
-#include "tools/utils/fs.h"
-#include "tools/utils/utility.h"
-#include "common/common.h"
 
-typedef struct ExternalSymbol
+typedef enum PrimitiveDataType
 {
-    CryoNodeType nodeType;
-    CryoDataType dataType;
-    char *name;
-    struct ASTNode *node;
-} ExternalSymbol;
+    PRIM_INT,
+    PRIM_FLOAT,
+    PRIM_STRING,
+    PRIM_BOOLEAN,
+    PRIM_VOID,
+    PRIM_NULL,
+    PRIM_UNKNOWN
+} PrimitiveDataType;
 
-typedef struct ExternalSymbolTable
+// Unimplemented
+typedef enum TypeofDataType
 {
-    ExternalSymbol **symbols;
-    int count;
-    int capacity;
-} ExternalSymbolTable;
+    PRIMITIVE_TYPE, // `int`, `float`, `string`, `boolean`, `void`
+    STRUCT_TYPE,    // `struct ... { ... }`
+    ENUM_TYPE,      // `enum ... { ... }`
+    FUNCTION_TYPE,  // `function (...) -> ...`
+    UNKNOWN_TYPE    // `<UNKNOWN>`
+} TypeofDataType;
 
+// Unimplemented
+typedef struct DataType
+{
+    TypeofDataType typeOf;
+    union
+    {
+        CryoDataType primitiveType;
+        // Points to a struct node (StructNode)
+        struct ASTNode *structType;
+        // Unimplemented
+        struct ASTNode *enumType;
+        // Unimplemented
+        struct ASTNode *functionType;
+        // Built-in type
+        CryoDataType builtInType;
+    };
+} DataType;
 
+typedef struct TypeTable
+{
 
-CryoDataType parseDataType(const char *typeStr);
-CryoDataType getPrimativeTypeFromString(const char *typeStr);
+} TypeTable;
 
-#endif // TYPEDEFS_H
+// # =========================================================================== #
+
+char *TypeofDataTypeToString(TypeofDataType type);
+
+#endif // TYPE_TABLE_H

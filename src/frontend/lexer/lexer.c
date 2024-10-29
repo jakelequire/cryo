@@ -49,6 +49,7 @@ KeywordToken keywords[] = {
     {"declare", TOKEN_KW_DECLARE},
     {"default", TOKEN_KW_DEFAULT},
     {"constructor", TOKEN_KW_CONSTRUCTOR},
+    {"this", TOKEN_KW_THIS},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

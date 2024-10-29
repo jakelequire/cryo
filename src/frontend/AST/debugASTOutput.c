@@ -63,6 +63,20 @@ void initASTConsoleOutput(ASTNode *root, const char *filePath)
     printf("%s\n", buffer);
 }
 
+void logASTNodeDebugView(ASTNode *node)
+{
+    // Log the specific AST node in the formatted debug view (console view)
+    DebugASTOutput *output = createDebugASTOutput("console", "console", "txt", "console");
+    createASTDebugView(node, output, 0);
+    char *buffer = logASTBuffer(output, true);
+    if (!buffer)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to get AST buffer for debug output");
+        return;
+    }
+    printf("%s\n", buffer);
+}
+
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd)
 {
     DebugASTOutput *output = (DebugASTOutput *)malloc(sizeof(DebugASTOutput));
@@ -205,6 +219,30 @@ char *getASTBuffer(DebugASTOutput *output, bool console)
 
     // End the buffer with the AST Tree footer
     sprintf(buffer, "%s" GREEN "╚════════════════════════════════════════════════════════════════════════╝\n\n" COLOR_RESET, buffer);
+
+    return buffer;
+}
+
+char *logASTBuffer(DebugASTOutput *output, bool console)
+{
+    char *buffer = MALLOC_AST_BUFFER;
+    if (!buffer)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST buffer");
+        return NULL;
+    }
+
+    for (int i = 0; i < output->nodeCount; i++)
+    {
+        ASTDebugNode *node = &output->nodes[i];
+        char *formattedNode = formatASTNode(node, output, node->indent, console);
+        if (formattedNode)
+        {
+            sprintf(buffer, "%s\n%s", buffer, formattedNode);
+            free(formattedNode);
+        }
+    }
+    sprintf(buffer, "%s\n", buffer);
 
     return buffer;
 }
@@ -772,7 +810,6 @@ char *CONSOLE_formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output)
 // # ============================================================ #
 // # AST Tree Traversal                                           #
 // # ============================================================ #
-
 void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 {
     if (output->nodeCount >= AST_DEBUG_VIEW_NODE_COUNT)

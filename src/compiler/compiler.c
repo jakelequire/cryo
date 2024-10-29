@@ -67,6 +67,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     END_COMPILATION_MESSAGE;
 
+    initASTConsoleOutput(programNode, filePath);
+
     return 0;
 }
 

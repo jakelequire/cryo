@@ -14,39 +14,23 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef TYPEDEFS_H
-#define TYPEDEFS_H
+#include "frontend/typeTable.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <sys/types.h>
-
-#include "frontend/tokens.h"
-#include "frontend/AST.h"
-#include "tools/utils/fs.h"
-#include "tools/utils/utility.h"
-#include "common/common.h"
-
-typedef struct ExternalSymbol
+char *TypeofDataTypeToString(TypeofDataType type)
 {
-    CryoNodeType nodeType;
-    CryoDataType dataType;
-    char *name;
-    struct ASTNode *node;
-} ExternalSymbol;
-
-typedef struct ExternalSymbolTable
-{
-    ExternalSymbol **symbols;
-    int count;
-    int capacity;
-} ExternalSymbolTable;
-
-
-
-CryoDataType parseDataType(const char *typeStr);
-CryoDataType getPrimativeTypeFromString(const char *typeStr);
-
-#endif // TYPEDEFS_H
+    switch (type)
+    {
+    case PRIMITIVE_TYPE:
+        return "PRIMITIVE_TYPE";
+    case STRUCT_TYPE:
+        return "STRUCT_TYPE";
+    case ENUM_TYPE:
+        return "ENUM_TYPE";
+    case FUNCTION_TYPE:
+        return "FUNCTION_TYPE";
+    case UNKNOWN_TYPE:
+        return "UNKNOWN_TYPE";
+    default:
+        return "<TYPE UNKNOWN>";
+    }
+}

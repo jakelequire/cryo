@@ -33,6 +33,7 @@
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
+typedef struct ASTNode ASTNode;
 
 // C++ headers
 #ifdef __cplusplus

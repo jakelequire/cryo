@@ -157,6 +157,7 @@ extern "C"
         TOKEN_KW_EXTERN,       // `extern`
         TOKEN_KW_DEBUGGER,     // `debugger`
         TOKEN_KW_CONSTRUCTOR,  // `constructor`
+        TOKEN_KW_THIS,         // `this`
                                // Add more keywords as needed
 
         // Operators and punctuations

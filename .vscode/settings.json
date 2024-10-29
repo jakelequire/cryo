@@ -248,7 +248,8 @@
     "compiletimer.h": "c",
     "buildstats.h": "c",
     "consolecolors.h": "c",
-    "compilerargs.h": "c"
+    "compilerargs.h": "c",
+    "typetable.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",
