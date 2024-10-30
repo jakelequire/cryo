@@ -22,13 +22,15 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include "tools/macros/consoleColors.h"
+
 /// @brief A macro to break the program at a specific point for debugging.
-#define DEBUG_BREAKPOINT                                                                        \
-    printf("\n#========================================================================#\n");   \
-    printf("\n<!> Debug Breakpoint! Exiting...");                                               \
-    printf("\n<!> Line: %i, Function: %s", __LINE__, __FUNCTION__);                             \
-    printf("\n<!> File: %s\n", __FILE__);                                                       \
-    printf("\n#========================================================================#\n\n"); \
+#define DEBUG_BREAKPOINT                                                                                             \
+    printf(BOLD RED "\n#========================================================================#\n" COLOR_RESET);   \
+    printf("\n<!> Debug Breakpoint! Exiting...");                                                                    \
+    printf("\n<!> Line: %i, Function: %s", __LINE__, __FUNCTION__);                                                  \
+    printf("\n<!> File: %s\n", __FILE__);                                                                            \
+    printf(BOLD RED "\n#========================================================================#\n\n" COLOR_RESET); \
     exit(0)
 
 #define CONDITION_FAILED                                                                      \

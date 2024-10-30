@@ -2057,7 +2057,13 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseStructField", table, arena, state);
 
-    return createFieldNode(fieldName, fieldType, NULL, arena, state);
+    ASTNode *propertyNode = createFieldNode(fieldName, fieldType, NULL, arena, state);
+    if (defaultCount > 0)
+    {
+        propertyNode->data.property->defaultProperty = true;
+    }
+
+    return propertyNode;
 }
 // </parseStructField>
 

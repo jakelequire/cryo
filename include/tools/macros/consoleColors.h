@@ -20,6 +20,7 @@
 // ANSI Color codes
 #define COLOR_RESET "\033[0m"
 #define BOLD "\033[1m"
+
 #define GREEN "\033[32m"
 #define CYAN "\033[36m"
 #define YELLOW "\033[33m"
@@ -61,50 +62,49 @@
 #define BG_RESET "\033[49m"
 #define ITALIC "\033[3m"
 
+// Makes text 2x larger
+#define FONT_LARGE "\x1b#3"
+// Makes text 1x (normal size)
+#define FONT_NORMAL "\x1b#5"
+
 /*
+    Box Drawing Characters Reference Table
+    ====================================
 
-│
-┤
-├
-┼
-┐
-└
-─
-┬
-┴
-┌
-┘
+    Basic Box Elements        Heavy/Double Elements
+    ------------------       -------------------
+    │  Single vertical      ║  Double vertical
+    ─  Single horizontal    ═  Double horizontal
 
-╡
-╢
-╖
-╕
-╣
-║
-╗
-╝
-╜
-╛
+    Corner Pieces           Double Corners
+    -------------          --------------
+    ┌  Top left            ╔  Top left
+    ┐  Top right           ╗  Top right
+    └  Bottom left         ╚  Bottom left
+    ┘  Bottom right        ╝  Bottom right
 
-╞
-╟
-╚
-╔
-╩
-╦
-╠
-═
-╬
-╧
-╨
-╤
-╥
-╙
-╘
-╒
-╓
-╫
-╪
+    T-Junctions            Double T-Junctions
+    ------------           -----------------
+    ├  Left T              ╠  Left T
+    ┤  Right T             ╣  Right T
+    ┬  Top T               ╦  Top T
+    ┴  Bottom T            ╩  Bottom T
+
+    Mixed Junctions        Special Junctions
+    ---------------        -----------------
+    ╞  Single-Double L     ╟  Heavy-Light L
+    ╡  Single-Double R     ╢  Heavy-Light R
+    ╥  Double-Single Up    ╫  Heavy vertical
+    ╨  Double-Single Down  ╪  Heavy horizontal
+    ╒  Single-Double TL    ╓  Heavy-Light TL
+    ╕  Single-Double TR    ╖  Heavy-Light TR
+    ╘  Single-Double BL    ╙  Heavy-Light BL
+    ╛  Single-Double BR    ╜  Heavy-Light BR
+
+    Intersections
+    ------------
+    ┼  Single cross
+    ╬  Double cross
 */
 
 #endif // CONSOLE_COLORS_H

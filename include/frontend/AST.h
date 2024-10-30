@@ -887,6 +887,7 @@ typedef struct ASTDebugNode
     int childCount;
     int indent;
     const char *namespaceName;
+    ASTNode *sourceNode;
 } ASTDebugNode;
 
 typedef struct DebugASTOutput
@@ -905,12 +906,13 @@ void initASTConsoleOutput(ASTNode *root, const char *filePath);
 void logASTNodeDebugView(ASTNode *node);
 
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
-ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent);
+ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent, ASTNode *sourceNode);
 void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel);
 DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
 void createASTDebugOutputFile(DebugASTOutput *output);
 void removePrevASTOutput(const char *filePath);
 char *seekNamespaceName(ASTNode *node);
+bool propHasDefault(PropertyNode *prop);
 
 // Output File Buffer
 char *getASTBuffer(DebugASTOutput *output, bool console);

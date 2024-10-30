@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
+
+#include "tools/macros/consoleColors.h"
 
 ///
 /// @brief          Replaces the printf function with a custom logMessage function that logs the message to the console.
@@ -29,5 +32,7 @@
 /// @param          ... The arguments to log
 ///
 void logMessage(const char *type, int line, const char *module, const char *message, ...);
+
+const char *typeBufferFormatter(const char *type);
 
 #endif // C_LOGGER_H

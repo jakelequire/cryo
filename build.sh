@@ -6,10 +6,8 @@ set -e
 IFS=$'\n\t'
 # Set the shell options
 shopt -s nullglob
-# Set the trap to cleanup on error
-trap cleanup ERR
 # Set the trap to cleanup on termination
-trap cleanup SIGTERM
+trap cleanup EXIT
 
 ## Variables
 
@@ -77,7 +75,7 @@ function error {
 function cleanup {
     echo ""
     echo ""
-    log "----------------------------------------"
+    echo -e "\e[36m\e[1m\x1b#3══════════════════════════════════════════════════════════════════════════\e[0m\x1b#5"
     log "Cleaning up..."
     # If the file exists check
     if [ -f "$FILE_NAME.ll" ]; then
@@ -304,15 +302,19 @@ clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
 # Turn it into an executable with no extension
 
 # Cleanup
-cleanup
 
 log "Build completed successfully, running the output file..."
-log ">===----------------<Output>----------------===<"
+echo ""
+echo ""
+echo -e "\e[36m\e[1m\x1b#3╔════════════════════════════════════════════════════════════════════════╗"
+echo -e "║                          Cryo Program Output                           ║"
+echo -e "╚════════════════════════════════════════════════════════════════════════╝\e[0m\x1b#5"
 echo ""
 echo ""
 # Run the output file
 $BUILD_DIR/$FILE_NAME
 
+log "----------------------------------------"
 
 # Exit successfully
 exit 0
