@@ -2093,7 +2093,7 @@ ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     if (currentToken == TOKEN_DOT)
     {
         getNextToken(lexer, arena, state);
-        return parseDotNotation(lexer, table, context, arena, state, createThisNode(arena, state));
+        // return parseDotNotation(lexer, table, context, arena, state, createThisNode(arena, state));
     }
 
     DEBUG_BREAKPOINT;
@@ -2115,13 +2115,13 @@ ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     getNextToken(lexer, arena, state);
 
-    ASTNode *propertyNode = createPropertyAccessNode(left, propertyName, arena, state);
+    /// ASTNode *propertyNode = createPropertyAccessNode(left, propertyName, arena, state);
 
     // Check if there is another dot for nested dot notation
     while (lexer->currentToken.type == TOKEN_DOT)
     {
-        propertyNode = parseDotNotation(lexer, table, context, arena, state, propertyNode);
+        // propertyNode = parseDotNotation(lexer, table, context, arena, state, propertyNode);
     }
 
-    return propertyNode;
+    // return propertyNode;
 }
