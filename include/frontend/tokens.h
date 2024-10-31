@@ -290,7 +290,11 @@ extern "C"
         NODE_SCOPED_FUNCTION_CALL, // 35
         NODE_EXTERNAL_SYMBOL,      // 36
         NODE_STRUCT_CONSTRUCTOR,   // 37
-        NODE_UNKNOWN,              // 38
+        NODE_PROPERTY_ACCESS,      // 38
+        NODE_THIS,                 // 39
+        NODE_THIS_ASSIGNMENT,      // 40
+        NODE_PROPERTY_REASSIGN,    // 41
+        NODE_UNKNOWN,              // 42
     } CryoNodeType;
 
     typedef enum CryoDataType

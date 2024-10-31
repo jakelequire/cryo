@@ -240,7 +240,7 @@ if [ -d $OUT_DIR/imports ]; then
     # Combine all the valid .ll files
     if [ ${#valid_files[@]} -gt 0 ]; then
         log "Combining the .ll files..."
-        llvm-link "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
+        llvm-link-18 "${valid_files[@]}" -S -o "$OUT_DIR/imports/combined.ll"
 
         # Optimize the combined IR
         log "Optimizing the combined IR..."
@@ -248,7 +248,7 @@ if [ -d $OUT_DIR/imports ]; then
 
         # Generate final object file
         log "Generating final object file..."
-        llc  -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
+        llc-18  -filetype=obj -relocation-model=pic "$OUT_DIR/imports/optimized.ll" -o "$OUT_DIR/imports/combined.o"
 
         # Check if the combined object file was created successfully
         if [ -f "$OUT_DIR/imports/combined.o" ]; then
@@ -285,19 +285,19 @@ fi
 # Compile the standard library
 C_SUPPORT_IR="c_support.ll"
 # clang -S -emit-llvm ./cryo/c_support.c -o $OUT_DIR/cryolib.ll || error "Failed to compile the standard library"
-clang++ -S -emit-llvm ./cryo/cxx_support.cpp -o $OUT_DIR/$C_SUPPORT_IR || error "Failed to compile the standard library"
+clang++-18 -S -emit-llvm ./cryo/cxx_support.cpp -o $OUT_DIR/$C_SUPPORT_IR || error "Failed to compile the standard library"
 
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file
-llvm-link  $OUT_DIR/$C_SUPPORT_IR $OUT_DIR/$FILE_NAME.ll -S -o $OUT_DIR/bin.ll
+llvm-link-18  $OUT_DIR/$C_SUPPORT_IR $OUT_DIR/$FILE_NAME.ll -S -o $OUT_DIR/bin.ll
 
 # Compile the object file
-llc -filetype=obj -relocation-model=static $OUT_DIR/bin.ll -o $OUT_DIR/bin.o
+llc-18 -filetype=obj -relocation-model=static $OUT_DIR/bin.ll -o $OUT_DIR/bin.o
 
 # llc -filetype=asm bin.ll -o bin.s
 
 # Link the object files and place the output in the build directory
-clang++ -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
+clang++-18 -fno-pie -no-pie  $OUT_DIR/bin.o -o $BUILD_DIR/$FILE_NAME
 
 # Turn it into an executable with no extension
 

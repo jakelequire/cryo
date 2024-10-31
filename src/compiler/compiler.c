@@ -34,6 +34,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
 
+    TypeTable *typeTable = initTypeTable();
+
     // Initialize the lexer
     Lexer lex;
     CompilerState *state = initCompilerState(arena, &lex, table, fileName);

@@ -33,6 +33,8 @@
 #include "tools/macros/consoleColors.h"
 #include "common/common.h"
 
+#define INITIAL_CAPACITY 8
+
 /// ### The position struct represents the line and column number of a token in the source code.
 typedef struct Position
 {
@@ -693,7 +695,10 @@ typedef struct StructNode
     ASTNode *constructor;
     int propertyCount;
     int propertyCapacity;
-    bool hasDefaultConstructor;
+    int methodCount;
+    int methodCapacity;
+    bool hasConstructor;
+    bool hasDefaultValue;
 } StructNode;
 
 // typedef struct CustomTypeNode
@@ -739,7 +744,8 @@ typedef struct ConstructorMetaData
 ///     struct ASTNode **args;
 ///     int argCount;
 ///     int argCapacity;
-///     const char *thisRef;
+///     ConstructorMetaData *metaData;
+///     ASTNode *constructorBody;
 /// } StructConstructorNode;
 /// ```
 typedef struct StructConstructorNode
@@ -749,6 +755,7 @@ typedef struct StructConstructorNode
     int argCount;
     int argCapacity;
     ConstructorMetaData *metaData;
+    ASTNode *constructorBody;
 } StructConstructorNode;
 
 typedef struct
@@ -760,8 +767,15 @@ typedef struct
 typedef struct ThisNode
 {
     const char *name;
-    const char *type;
+    ASTNode *object;
 } ThisNode;
+
+typedef struct PropertyReassignmentNode
+{
+    const char *name;
+    ASTNode *object;
+    ASTNode *value;
+} PropertyReassignmentNode;
 
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
@@ -832,130 +846,14 @@ typedef struct ASTNode
         PropertyAccessNode *propertyAccess;
         // For This Keyword
         ThisNode *thisNode;
+        // For Property Reassignment
+        PropertyReassignmentNode *propertyReassignment;
     } data;
 } ASTNode;
 
-#define INITIAL_CAPACITY 8
-
-// # ============================================================ #
-// # Node Containers (./src/frontend/AST/ASTContainers.c)         #
-// # ============================================================ #
-CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state);
-CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state);
-CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state);
-CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState *state);
-CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state);
-CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state);
-CryoImportNode *createCryoImportNodeContainer(Arena *arena, CompilerState *state);
-CryoScope *createCryoScopeContainer(Arena *arena, CompilerState *state);
-ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerState *state);
-FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state);
-FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *state);
-LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state);
-IfStatementNode *createIfStatementContainer(Arena *arena, CompilerState *state);
-ForStatementNode *createForStatementNodeContainer(Arena *arena, CompilerState *state);
-WhileStatementNode *createWhileStatementNodeContainer(Arena *arena, CompilerState *state);
-CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *state);
-CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state);
-VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, CompilerState *state);
-CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *state);
-ParamNode *createParamNodeContainer(Arena *arena, CompilerState *state);
-ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state);
-CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state);
-CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena, CompilerState *state);
-CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state);
-CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state);
-IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state);
-VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, CompilerState *state);
-StructNode *createStructNodeContainer(Arena *arena, CompilerState *state);
-PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state);
-ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state);
-StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, CompilerState *state);
-ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerState *state);
-// # ============================================================ #
-// # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
-// # ============================================================ #
-
-typedef struct ASTDebugNode
-{
-    const char *nodeType;
-    const char *nodeName;
-    CryoDataType dataType;
-    int line;
-    int column;
-    struct ASTDebugNode *children;
-    int childCount;
-    int indent;
-    const char *namespaceName;
-    ASTNode *sourceNode;
-} ASTDebugNode;
-
-typedef struct DebugASTOutput
-{
-    const char *fileName;
-    const char *short_fileName;
-    const char *filePath;
-    const char *fileExt;
-    const char *cwd;
-    ASTDebugNode *nodes;
-    int nodeCount;
-} DebugASTOutput;
-
-int initASTDebugOutput(ASTNode *root, CompilerSettings *settings);
-void initASTConsoleOutput(ASTNode *root, const char *filePath);
-void logASTNodeDebugView(ASTNode *node);
-
-DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
-ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent, ASTNode *sourceNode);
-void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel);
-DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
-void createASTDebugOutputFile(DebugASTOutput *output);
-void removePrevASTOutput(const char *filePath);
-char *seekNamespaceName(ASTNode *node);
-bool propHasDefault(PropertyNode *prop);
-
-// Output File Buffer
-char *getASTBuffer(DebugASTOutput *output, bool console);
-char *logASTBuffer(DebugASTOutput *output, bool console);
-
-// Formatting Functions
-char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console);
-char *formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatParamListNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatBlockNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatParamNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatStructNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output);
-char *formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output);
-
-char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
-char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatParamListNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatBlockNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatParamNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatStructNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output);
-char *CONSOLE_formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output);
 // # ============================================================ # //
 // # AST Creation (./src/frontend/AST/AST.c)                      # //
 // # ============================================================ # //
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -1034,13 +932,147 @@ extern "C"
 
     /* @Node_Creation - Structs */
     ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena, CompilerState *state);
-    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, Arena *arena, CompilerState *state);
+    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state);
+    ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state);
 
     /* @Node_Creation - Scoped Calls */
     ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName);
 
+    /* @Node_Creation - This Keyword */
+    ASTNode *createThisNode(Arena *arena, CompilerState *state);
+    ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state);
+    ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state);
+
 #ifdef __cplusplus
 }
 #endif
+
+// # ============================================================ #
+// # Node Containers (./src/frontend/AST/ASTContainers.c)         #
+// # ============================================================ #
+CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state);
+CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state);
+CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state);
+CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState *state);
+CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state);
+CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state);
+CryoImportNode *createCryoImportNodeContainer(Arena *arena, CompilerState *state);
+CryoScope *createCryoScopeContainer(Arena *arena, CompilerState *state);
+ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerState *state);
+FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state);
+FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *state);
+LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state);
+IfStatementNode *createIfStatementContainer(Arena *arena, CompilerState *state);
+ForStatementNode *createForStatementNodeContainer(Arena *arena, CompilerState *state);
+WhileStatementNode *createWhileStatementNodeContainer(Arena *arena, CompilerState *state);
+CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *state);
+CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state);
+VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, CompilerState *state);
+CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *state);
+ParamNode *createParamNodeContainer(Arena *arena, CompilerState *state);
+ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state);
+CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state);
+CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena, CompilerState *state);
+CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state);
+CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state);
+IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state);
+VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, CompilerState *state);
+StructNode *createStructNodeContainer(Arena *arena, CompilerState *state);
+PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state);
+ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state);
+StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, CompilerState *state);
+ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerState *state);
+PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerState *state);
+ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state);
+PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, CompilerState *state);
+
+// # ============================================================ #
+// # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
+// # ============================================================ #
+
+typedef struct ASTDebugNode
+{
+    const char *nodeType;
+    const char *nodeName;
+    CryoDataType dataType;
+    int line;
+    int column;
+    struct ASTDebugNode *children;
+    int childCount;
+    int indent;
+    const char *namespaceName;
+    ASTNode *sourceNode;
+} ASTDebugNode;
+
+typedef struct DebugASTOutput
+{
+    const char *fileName;
+    const char *short_fileName;
+    const char *filePath;
+    const char *fileExt;
+    const char *cwd;
+    ASTDebugNode *nodes;
+    int nodeCount;
+} DebugASTOutput;
+
+int initASTDebugOutput(ASTNode *root, CompilerSettings *settings);
+void initASTConsoleOutput(ASTNode *root, const char *filePath);
+void logASTNodeDebugView(ASTNode *node);
+
+DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
+ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent, ASTNode *sourceNode);
+void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel);
+DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
+void createASTDebugOutputFile(DebugASTOutput *output);
+void removePrevASTOutput(const char *filePath);
+char *seekNamespaceName(ASTNode *node);
+bool propHasDefault(PropertyNode *prop);
+
+// Output File Buffer
+char *getASTBuffer(DebugASTOutput *output, bool console);
+char *logASTBuffer(DebugASTOutput *output, bool console);
+
+// Formatting Functions
+char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console);
+char *formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatParamListNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatBlockNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatParamNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatStructNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output);
+char *formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output);
+char *formatThisNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
+
+char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
+char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatParamListNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatBlockNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatExpressionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatReturnStatementNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatParamNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatStructNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatThisNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

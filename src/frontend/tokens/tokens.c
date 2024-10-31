@@ -162,6 +162,14 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "EXTERNAL_SYMBOL";
     case NODE_STRUCT_CONSTRUCTOR:
         return "STRUCT_CONSTRUCTOR";
+    case NODE_PROPERTY_ACCESS:
+        return "PROPERTY_ACCESS";
+    case NODE_THIS:
+        return "THIS_NODE";
+    case NODE_THIS_ASSIGNMENT:
+        return "THIS_ASSIGNMENT";
+    case NODE_PROPERTY_REASSIGN:
+        return "PROPERTY_REASSIGN";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -501,6 +509,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_EXTERN";
     case TOKEN_KW_CONSTRUCTOR:
         return "TOKEN_KW_CONSTRUCTOR";
+    case TOKEN_KW_THIS:
+        return "TOKEN_KW_THIS";
 
     case TOKEN_BANG:
         return "TOKEN_BANG";

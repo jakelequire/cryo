@@ -390,6 +390,35 @@ namespace Cryo
             break;
         }
 
+        case NODE_PROPERTY_ACCESS:
+        {
+            std::cout << ">>==----------------{ Property Access Node }----------------==<<" << std::endl;
+            std::cout << "Object: " << std::endl;
+            logNode(node->data.propertyAccess->object);
+            std::cout << "Property: " << node->data.propertyAccess->property << std::endl;
+            std::cout << ">>==------------{ ^ Property Access Node ^ }----------------==<<" << std::endl;
+            break;
+        }
+
+        case NODE_PROPERTY_REASSIGN:
+        {
+            std::cout << ">>==----------------{ Property Reassignment Node }----------------==<<" << std::endl;
+            std::cout << "Object: " << std::endl;
+            logNode(node->data.propertyReassignment->object);
+            std::cout << "Property: " << node->data.propertyReassignment->object << std::endl;
+            std::cout << "New Value: " << std::endl;
+            logNode(node->data.propertyReassignment->value);
+            std::cout << ">>==------------{ ^ Property Reassignment Node ^ }----------------==<<" << std::endl;
+            break;
+        }
+
+        case NODE_THIS:
+        {
+            std::cout << ">>==----------------{ This Node }----------------==<<" << std::endl;
+            std::cout << ">>==------------{ ^ This Node ^ }----------------==<<" << std::endl;
+            break;
+        }
+
         default:
             std::cout << "\n\n";
             std::cout << "<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>---<!>" << std::endl;
@@ -471,6 +500,10 @@ namespace Cryo
         case NODE_CUSTOM_TYPE:
         case NODE_SCOPED_FUNCTION_CALL:
         case NODE_STRUCT_CONSTRUCTOR:
+        case NODE_THIS:
+        case NODE_THIS_ASSIGNMENT:
+        case NODE_PROPERTY_ACCESS:
+        case NODE_PROPERTY_REASSIGN:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -696,6 +729,14 @@ namespace Cryo
             break;
 
         case NODE_STRUCT_CONSTRUCTOR:
+            assertNode(node);
+            break;
+
+        case NODE_PROPERTY_ACCESS:
+            assertNode(node);
+            break;
+
+        case NODE_THIS:
             assertNode(node);
             break;
 
@@ -1163,6 +1204,20 @@ namespace Cryo
         case NODE_STRUCT_CONSTRUCTOR:
         {
             logMessage("INFO", __LINE__, "Debugger", "Struct constructor passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_PROPERTY_ACCESS:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Property access passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_THIS:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "This passed assertion.");
             logNode(node);
             break;
         }

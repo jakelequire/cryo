@@ -655,7 +655,7 @@ ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue
     return node;
 }
 
-ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, Arena *arena, CompilerState *state)
+ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state)
 {
     ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena, state);
     if (!node)
@@ -668,6 +668,7 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
     node->data.structNode->properties = properties;
     node->data.structNode->propertyCount = propertyCount;
     node->data.structNode->propertyCapacity = 64;
+    node->data.structNode->constructor = constructor;
 
     return node;
 }
@@ -699,6 +700,67 @@ ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char
     }
 
     node->data.scopedFunctionCall->functionName = strdup(functionName);
+
+    return node;
+}
+
+ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state)
+{
+    ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create property access node");
+        return NULL;
+    }
+
+    node->data.propertyAccess->object = object;
+    node->data.propertyAccess->property = strdup(property);
+
+    return node;
+}
+
+ASTNode *createThisNode(Arena *arena, CompilerState *state)
+{
+    ASTNode *node = createASTNode(NODE_THIS, arena, state);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create 'this' node");
+        return NULL;
+    }
+
+    return node;
+}
+
+ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state)
+{
+    ASTNode *node = createASTNode(NODE_PROPERTY_REASSIGN, arena, state);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create property reassignment node");
+        return NULL;
+    }
+
+    node->data.propertyReassignment->object = object;
+    node->data.propertyReassignment->name = strdup(property);
+    node->data.propertyReassignment->value = newValue;
+
+    return node;
+}
+
+ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state)
+{
+    ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create constructor node");
+        return NULL;
+    }
+
+    node->data.structConstructor->name = strdup(structName);
+    node->data.structConstructor->args = fields;
+    node->data.structConstructor->argCount = argCount;
+    node->data.structConstructor->argCapacity = 64;
+    node->data.structConstructor->constructorBody = body;
 
     return node;
 }

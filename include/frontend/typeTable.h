@@ -30,16 +30,15 @@
 
 typedef enum PrimitiveDataType
 {
-    PRIM_INT,
-    PRIM_FLOAT,
-    PRIM_STRING,
-    PRIM_BOOLEAN,
-    PRIM_VOID,
-    PRIM_NULL,
-    PRIM_UNKNOWN
+    PRIM_INT,     // `int`
+    PRIM_FLOAT,   // `float`
+    PRIM_STRING,  // `string`
+    PRIM_BOOLEAN, // `boolean`
+    PRIM_VOID,    // `void`
+    PRIM_NULL,    // `null`
+    PRIM_UNKNOWN  // `<UNKNOWN>`
 } PrimitiveDataType;
 
-// Unimplemented
 typedef enum TypeofDataType
 {
     PRIMITIVE_TYPE, // `int`, `float`, `string`, `boolean`, `void`
@@ -49,31 +48,63 @@ typedef enum TypeofDataType
     UNKNOWN_TYPE    // `<UNKNOWN>`
 } TypeofDataType;
 
-// Unimplemented
+typedef struct StructType
+{
+    const char *name;
+    ASTNode **properties;
+    int propertyCount;
+    int propertyCapacity;
+    ASTNode **methods;
+    int methodCount;
+    int methodCapacity;
+    bool hasDefaultValue;
+    bool hasConstructor;
+    int size;
+} StructType;
+
 typedef struct DataType
 {
     TypeofDataType typeOf;
     union
     {
-        CryoDataType primitiveType;
+        PrimitiveDataType primitiveType;
         // Points to a struct node (StructNode)
-        struct ASTNode *structType;
+        StructType *structType;
         // Unimplemented
         struct ASTNode *enumType;
         // Unimplemented
         struct ASTNode *functionType;
-        // Built-in type
+        // Built-in type (Needs to be removed for )
         CryoDataType builtInType;
     };
 } DataType;
 
+// This is the global symbol table specifically for types.
+// This is how we will handle type checking and type inference.
 typedef struct TypeTable
 {
-
+    DataType **types;
+    int count;
+    int capacity;
+    char *namespaceName;
 } TypeTable;
 
 // # =========================================================================== #
 
+// Type Table Management
+TypeTable *initTypeTable(void);
+
+// Data Type Creation from AST Nodes / Primitives
+DataType *createDataTypeFromPrimitive(PrimitiveDataType type);
+DataType *createDataTypeFromStruct(Arena *arena, CompilerState *state, ASTNode *structNode);
+DataType *createDataTypeFromEnum(Arena *arena, CompilerState *state, ASTNode *enumNode);
+DataType *createDataTypeFromFunction(Arena *arena, CompilerState *state, ASTNode *functionNode);
+DataType *createDataTypeFromUnknown(void);
+
+// Node to type conversion
+StructType *createStructDataType(const char *name);
+
+// Utility Functions
 char *TypeofDataTypeToString(TypeofDataType type);
 
 #endif // TYPE_TABLE_H

@@ -11,9 +11,9 @@ struct Int {
     default value: int;
 
     // Constructor for the Int struct
-    // constructor(value: int) {
-    //     this.value = value;
-    // }
+    constructor(value: int) {
+        this.value = value;
+    }
     
     // // Methods for the Int struct
     // toString() -> string {

@@ -76,7 +76,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
 // <consume>
 void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state)
 {
-    logMessage("CRITICAL", __LINE__, "Parser", "Consuming Token: %s", CryoTokenToString(type));
+    logMessage("INFO", __LINE__, "Parser", "Consuming Token: %s", CryoTokenToString(type));
 
     // pushCallStack(&callStack, functionName, lexer->currentToken.line);
 
@@ -1935,18 +1935,26 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
     int propertyCount = 0;
     bool hasDefaultProperty = false;
+    bool hasConstructor = false;
     int defaultPropertyCount = 0;
+    ASTNode *constructorNode;
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
         if (lexer->currentToken.type == TOKEN_KW_CONSTRUCTOR)
         {
+            hasConstructor = true;
             ConstructorMetaData *metaData = (ConstructorMetaData *)ARENA_ALLOC(arena, sizeof(ConstructorMetaData));
             metaData->parentName = strdup(structName);
             metaData->parentNodeType = NODE_STRUCT_DECLARATION;
             metaData->hasDefaultFlag = hasDefaultProperty;
 
-            ASTNode *constructor = parseConstructor(lexer, table, context, arena, state, metaData);
+            constructorNode = parseConstructor(lexer, table, context, arena, state, metaData);
+        }
+
+        if (lexer->currentToken.type == TOKEN_RBRACE)
+        {
+            break;
         }
 
         ASTNode *field = parseStructField(lexer, table, context, arena, state);
@@ -1975,7 +1983,9 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         }
     }
 
-    ASTNode *structNode = createStructNode(structName, properties, propertyCount, arena, state);
+    ASTNode *structNode = createStructNode(structName, properties, propertyCount, constructorNode, arena, state);
+    structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
+    structNode->data.structNode->hasConstructor = hasConstructor;
     addASTNodeSymbol(table, structNode, arena);
 
     clearThisContext(context);
@@ -2077,10 +2087,17 @@ ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     strcat(consturctorName, "::constructor");
 
     ASTNode **params = parseParameterList(lexer, table, context, arena, consturctorName, state);
+    int paramCount = 0;
+    while (params[paramCount] != NULL)
+    {
+        paramCount++;
+    }
 
     ASTNode *constructorBody = parseBlock(lexer, table, context, arena, state);
 
-    DEBUG_BREAKPOINT;
+    ASTNode *constructorNode = createConstructorNode(consturctorName, constructorBody, params, paramCount, arena, state);
+
+    return constructorNode;
 }
 
 ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state)
@@ -2090,19 +2107,25 @@ ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     logThisContext(context);
 
-    // This function is going to have to be very dynamic,
-    // As it will need to parse the context of the `this` keyword
-    // as well as the context of dot notation
-
     CryoTokenType currentToken = lexer->currentToken.type;
 
+    ASTNode *thisNode;
     if (currentToken == TOKEN_DOT)
     {
-        getNextToken(lexer, arena, state);
-        // return parseDotNotation(lexer, table, context, arena, state, createThisNode(arena, state));
+        thisNode = parseDotNotation(lexer, table, context, arena, state, createThisNode(arena, state));
+        logASTNodeDebugView(thisNode);
     }
 
-    DEBUG_BREAKPOINT;
+    // Check if we are setting a property of the `this` context with `=`
+    if (lexer->currentToken.type == TOKEN_EQUAL)
+    {
+        char *propName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        getNextToken(lexer, arena, state);
+        ASTNode *newValue = parseExpression(lexer, table, context, arena, state);
+        consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseThisContext", table, arena, state);
+        ASTNode *propReasignment = createPropertyReassignmentNode(thisNode, propName, newValue, arena, state);
+        return propReasignment;
+    }
 }
 
 ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ASTNode *left)
@@ -2119,15 +2142,21 @@ ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     char *propertyName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Property name: %s", propertyName);
 
-    getNextToken(lexer, arena, state);
+    consume(lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseDotNotation", table, arena, state);
 
-    /// ASTNode *propertyNode = createPropertyAccessNode(left, propertyName, arena, state);
+    ASTNode *propertyNode = createPropertyAccessNode(left, propertyName, arena, state);
+
+    if (lexer->currentToken.type != TOKEN_DOT)
+    {
+        logMessage("INFO", __LINE__, "Parser", "No more dot notation.");
+        return propertyNode;
+    }
 
     // Check if there is another dot for nested dot notation
     while (lexer->currentToken.type == TOKEN_DOT)
     {
-        // propertyNode = parseDotNotation(lexer, table, context, arena, state, propertyNode);
+        propertyNode = parseDotNotation(lexer, table, context, arena, state, propertyNode);
     }
 
-    // return propertyNode;
+    return propertyNode;
 }

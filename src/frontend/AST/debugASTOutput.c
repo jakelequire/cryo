@@ -454,6 +454,50 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatFunctionBlock(node, output);
         }
     }
+    else if (strcmp(nodeType, "StructConstructor") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatStructConstructor(node, output);
+        }
+        else
+        {
+            formattedNode = formatStructConstructor(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "This") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatThisNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatThisNode(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "ThisAssign") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatThisAssignmentNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatThisAssignmentNode(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "PropertyReassign") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatPropertyAssignmentNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatPropertyAssignmentNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -823,10 +867,104 @@ char *CONSOLE_formatFunctionBlock(ASTDebugNode *node, DebugASTOutput *output)
 }
 // </FunctionBlock>
 // ============================================================
+// ============================================================
+// <StructConstructor>
+char *formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <StructConstructor> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<StructConstructor> <%i:%i>", node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <StructConstructor> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<StructConstructor>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </StructConstructor>
+// ============================================================
+// ============================================================
+// <This>
+char *formatThisNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <This> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<This> <%i:%i>", node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatThisNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <This> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<This>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </This>
+// ============================================================
+// ============================================================
+// <ThisAssignment>
+char *formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <ThisAssignment> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<ThisAssignment> <%i:%i>", node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <ThisAssignment> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<ThisAssignment>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </ThisAssignment>
+// ============================================================
+// ============================================================
+// <PropertyAssignment>
+char *formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <PropertyAssignment> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<PropertyAssignment> <%i:%i>", node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <PropertyAssignment> <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<PropertyAssignment>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </PropertyAssignment>
+// ============================================================
+
+// # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+// # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+// # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
 // # ============================================================ #
+
+///
 void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 {
     if (output->nodeCount >= AST_DEBUG_VIEW_NODE_COUNT)
@@ -940,6 +1078,9 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             createASTDebugView(node->data.structNode->properties[i], output, indentLevel);
             indentLevel--;
         }
+
+        createASTDebugView(node->data.structNode->constructor, output, indentLevel + 1);
+
         break;
     }
 
@@ -955,6 +1096,24 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             createASTDebugView(node, output, indentLevel);
             indentLevel--;
         }
+        break;
+    }
+
+    case NODE_STRUCT_CONSTRUCTOR:
+    {
+        __LINE_AND_COLUMN__
+        ASTDebugNode *structConstructorNode = createASTDebugNode("StructConstructor", "StructConstructor", DATA_TYPE_VOID, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *structConstructorNode;
+        output->nodeCount++;
+        for (int i = 0; i < node->data.structConstructor->argCount; i++)
+        {
+            indentLevel++;
+            createASTDebugView(node->data.structConstructor->args[i], output, indentLevel);
+            indentLevel--;
+        }
+
+        createASTDebugView(node->data.structConstructor->constructorBody, output, indentLevel + 1);
+
         break;
     }
 
@@ -1057,6 +1216,33 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         __LINE_AND_COLUMN__
         ASTDebugNode *argListNode = createASTDebugNode("ArgList", "ArgList", DATA_TYPE_VOID, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *argListNode;
+        output->nodeCount++;
+        break;
+    }
+
+    case NODE_THIS:
+    {
+        __LINE_AND_COLUMN__
+        ASTDebugNode *thisNode = createASTDebugNode("This", "This", DATA_TYPE_VOID, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *thisNode;
+        output->nodeCount++;
+        break;
+    }
+
+    case NODE_THIS_ASSIGNMENT:
+    {
+        __LINE_AND_COLUMN__
+        ASTDebugNode *thisReassignNode = createASTDebugNode("ThisAssign", "ThisAssign", DATA_TYPE_VOID, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *thisReassignNode;
+        output->nodeCount++;
+        break;
+    }
+
+    case NODE_PROPERTY_REASSIGN:
+    {
+        __LINE_AND_COLUMN__
+        ASTDebugNode *propertyReassignNode = createASTDebugNode("PropertyReassign", "PropertyReassign", DATA_TYPE_VOID, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *propertyReassignNode;
         output->nodeCount++;
         break;
     }

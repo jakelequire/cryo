@@ -882,6 +882,11 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     node->properties = NULL;
     node->propertyCount = 0;
     node->propertyCapacity = 128;
+    node->methods = NULL;
+    node->methodCount = 0;
+    node->methodCapacity = 128;
+    node->hasConstructor = false;
+    node->hasDefaultValue = false;
 
     return node;
 }
@@ -944,6 +949,19 @@ ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState
     return node;
 }
 
+/// ---
+/// ### Structure
+///```
+/// typedef struct StructConstructorNode
+/// {
+///     char *name;
+///     struct ASTNode **args;
+///     int argCount;
+///     int argCapacity;
+///     struct ConstructorMetaData *metaData;
+/// } StructConstructorNode;
+///```
+///
 StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, CompilerState *state)
 {
     StructConstructorNode *node = (StructConstructorNode *)ARENA_ALLOC(arena, sizeof(StructConstructorNode));
@@ -958,10 +976,22 @@ StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, Compil
     node->argCount = 0;
     node->argCapacity = 128;
     node->metaData = createConstructorMetaDataContainer(arena, state);
+    node->constructorBody = NULL;
 
     return node;
 }
 
+/// ---
+/// ### Structure
+///```
+/// typedef struct ConstructorMetaData
+/// {
+///     enum CryoNodeType parentNodeType;
+///     const char *parentName;
+///     bool hasDefaultFlag;
+/// } ConstructorMetaData;
+///```
+///
 ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerState *state)
 {
     ConstructorMetaData *node = (ConstructorMetaData *)ARENA_ALLOC(arena, sizeof(ConstructorMetaData));
@@ -974,6 +1004,81 @@ ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerSt
     node->parentNodeType = NODE_UNKNOWN;
     node->parentName = (char *)calloc(1, sizeof(char));
     node->hasDefaultFlag = false;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct PropertyAccessNode
+/// {
+///     struct ASTNode *object;
+///     const char *property;
+/// } PropertyAccessNode;
+///```
+///
+PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerState *state)
+{
+    PropertyAccessNode *node = (PropertyAccessNode *)ARENA_ALLOC(arena, sizeof(PropertyAccessNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate PropertyAccessNode node.");
+        return NULL;
+    }
+
+    node->object = NULL;
+    node->property = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct ThisNode
+/// {
+///     const char *name;
+/// } ThisNode;
+///```
+///
+ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state)
+{
+    ThisNode *node = (ThisNode *)ARENA_ALLOC(arena, sizeof(ThisNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ThisNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct PropertyReassignmentNode
+/// {
+///     char *name;
+///     struct ASTNode *object;
+///     struct ASTNode *value;
+/// } PropertyReassignmentNode;
+///```
+///
+PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, CompilerState *state)
+{
+    PropertyReassignmentNode *node = (PropertyReassignmentNode *)ARENA_ALLOC(arena, sizeof(PropertyReassignmentNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate PropertyReassignmentNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->object = NULL;
+    node->value = NULL;
 
     return node;
 }
