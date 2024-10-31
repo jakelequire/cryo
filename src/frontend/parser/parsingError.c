@@ -23,7 +23,8 @@ void parsingError(
     Arena *arena,
     CompilerState *state,
     Lexer *lexer,
-    const char *source)
+    const char *source, 
+    TypeTable *typeTable)
 {
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
@@ -91,7 +92,7 @@ void printPosition(Position position)
     printf("Line: %d, Column: %d\n", position.line, position.column);
 }
 
-void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state)
+void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     // printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",
     //        CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start);

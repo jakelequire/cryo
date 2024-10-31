@@ -27,6 +27,12 @@
 
 #include "frontend/tokens.h"
 #include "frontend/AST.h"
+#include "settings/compilerSettings.h"
+#include "common/common.h"
+
+typedef struct CompilerState CompilerState;
+typedef struct ASTNode ASTNode;
+typedef struct Arena Arena;
 
 typedef enum PrimitiveDataType
 {

@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "frontend/AST.h"
 
-ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state)
+ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     if (!node)

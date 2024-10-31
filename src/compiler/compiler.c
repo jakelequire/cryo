@@ -43,7 +43,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     state->settings = settings;
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, table, arena, state);
+    ASTNode *programNode = parseProgram(&lex, table, arena, state, typeTable);
 
     if (programNode == NULL)
     {
@@ -91,6 +91,8 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
 
+    TypeTable *typeTable = initTypeTable();
+
     // Initialize the lexer
     Lexer lexer;
     CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
@@ -98,7 +100,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state);
+    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable);
 
     if (programNode == NULL)
     {
@@ -138,6 +140,8 @@ ASTNode *compileForProgramNode(const char *filePath)
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
 
+    TypeTable *typeTable = initTypeTable();
+
     // Initialize the lexer
     Lexer lexer;
     CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
@@ -145,7 +149,7 @@ ASTNode *compileForProgramNode(const char *filePath)
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state);
+    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable);
 
     if (programNode == NULL)
     {

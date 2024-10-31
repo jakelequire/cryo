@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "frontend/parser.h"
 
-void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType)
+void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType, TypeTable *typeTable)
 {
     ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
     thisContext->nodeName = nodeName;
@@ -28,7 +28,7 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
     context->thisContext = thisContext;
 }
 
-void clearThisContext(ParsingContext *context)
+void clearThisContext(ParsingContext *context, TypeTable *typeTable)
 {
     if (context->thisContext)
     {
@@ -37,7 +37,7 @@ void clearThisContext(ParsingContext *context)
     }
 }
 
-void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode)
+void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode, TypeTable *typeTable)
 {
     if (context->thisContext)
     {
@@ -47,7 +47,7 @@ void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode)
     }
 }
 
-void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode)
+void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTable *typeTable)
 {
     if (context->thisContext)
     {
@@ -57,7 +57,7 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode)
     }
 }
 
-ASTNode *getPropertyByName(ParsingContext *context, const char *name)
+ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable)
 {
     if (context->thisContext)
     {
@@ -73,7 +73,7 @@ ASTNode *getPropertyByName(ParsingContext *context, const char *name)
     return NULL;
 }
 
-ASTNode *getMethodByName(ParsingContext *context, const char *name)
+ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *typeTable)
 {
     if (context->thisContext)
     {

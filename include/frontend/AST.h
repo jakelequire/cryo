@@ -863,85 +863,85 @@ extern "C"
     void printAST(ASTNode *node, int indent, Arena *arena);
 
     /* @Node_Management */
-    ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state);
-    void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *state);
+    ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *state, TypeTable *typeTable);
     void addStatementToBlock(ASTNode *block, ASTNode *statement, Arena *arena, CompilerState *state);
     void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena, CompilerState *state);
     void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, CompilerState *state);
 
     /* @Node_Creation - Expressions & Statements */
-    ASTNode *createProgramNode(Arena *arena, CompilerState *state);
-    ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state);
-    ASTNode *createLiteralIntExpr(int value, Arena *arena, CompilerState *state);
-    ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerState *state);
-    ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Arena *arena, CompilerState *state);
-    ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, CompilerState *state);
+    ASTNode *createProgramNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createLiteralIntExpr(int value, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Literals */
-    ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state);
-    ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state);
-    ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state);
+    ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state, TypeTable *typeTable);
     char *handleStringFormatting(char *value);
-    ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state);
-    ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena, CompilerState *state);
+    ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Blocks - Blocks */
-    ASTNode *createBlockNode(Arena *arena, CompilerState *state);
-    ASTNode *createFunctionBlock(Arena *arena, CompilerState *state);
-    ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state);
-    ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state);
-    ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state);
+    ASTNode *createBlockNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createFunctionBlock(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Blocks - Literals */
-    ASTNode *createBooleanLiteralExpr(int value, Arena *arena, CompilerState *state);
-    ASTNode *createStringLiteralExpr(char *str, Arena *arena, CompilerState *state);
-    ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state);
+    ASTNode *createBooleanLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStringLiteralExpr(char *str, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Variables */
-    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state);
-    ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, CompilerState *state);
+    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Functions */
-    ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType, Arena *arena, CompilerState *state);
-    ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType, Arena *arena, CompilerState *state);
-    ASTNode *createFunctionCallNode(Arena *arena, CompilerState *state);
-    ASTNode *createReturnNode(ASTNode *returnValue, CryoDataType returnType, Arena *arena, CompilerState *state);
-    ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType, Arena *arena, CompilerState *state);
+    ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createFunctionCallNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createReturnNode(ASTNode *returnValue, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Parameters */
-    ASTNode *createParamListNode(Arena *arena, CompilerState *state);
-    ASTNode *createArgumentListNode(Arena *arena, CompilerState *state);
-    ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena, CompilerState *state);
-    ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state);
+    ASTNode *createParamListNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createArgumentListNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Modules & Externals */
-    ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state);
-    ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *state);
+    ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Conditionals */
-    ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state);
-    ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state);
-    ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state);
+    ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Arrays */
-    ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state);
-    ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena, CompilerState *state);
+    ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Variable Reassignments */
-    ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena, CompilerState *state);
+    ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Structs */
-    ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena, CompilerState *state);
-    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state);
-    ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state);
+    ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Scoped Calls */
-    ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName);
+    ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName, TypeTable *typeTable);
 
     /* @Node_Creation - This Keyword */
-    ASTNode *createThisNode(Arena *arena, CompilerState *state);
-    ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state);
-    ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state);
+    ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 #ifdef __cplusplus
 }
