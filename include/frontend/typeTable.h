@@ -102,7 +102,7 @@ TypeTable *initTypeTable(void);
 
 // Data Type Creation from AST Nodes / Primitives
 DataType *createDataTypeFromPrimitive(PrimitiveDataType type);
-DataType *createDataTypeFromStruct(Arena *arena, CompilerState *state, ASTNode *structNode);
+DataType *createDataTypeFromStruct(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
 DataType *createDataTypeFromEnum(Arena *arena, CompilerState *state, ASTNode *enumNode);
 DataType *createDataTypeFromFunction(Arena *arena, CompilerState *state, ASTNode *functionNode);
 DataType *createDataTypeFromUnknown(void);
@@ -110,7 +110,16 @@ DataType *createDataTypeFromUnknown(void);
 // Node to type conversion
 StructType *createStructDataType(const char *name);
 
+// Add Type to Type Table
+void addTypeToTypeTable(TypeTable *table, DataType *type);
+
 // Utility Functions
 char *TypeofDataTypeToString(TypeofDataType type);
+char *PrimitiveDataTypeToString(PrimitiveDataType type);
+
+void printFormattedStructType(StructType *type);
+void printFormattedType(DataType *type);
+
+void printTypeTable(TypeTable *table);
 
 #endif // TYPE_TABLE_H

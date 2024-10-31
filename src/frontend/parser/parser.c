@@ -1937,7 +1937,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     bool hasDefaultProperty = false;
     bool hasConstructor = false;
     int defaultPropertyCount = 0;
-    ASTNode *constructorNode;
+    ASTNode *constructorNode = NULL;
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
@@ -1988,6 +1988,10 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     structNode->data.structNode->hasConstructor = hasConstructor;
     addASTNodeSymbol(table, structNode, arena);
 
+    DataType *structType = createDataTypeFromStruct(structNode, state, typeTable);
+    addTypeToTypeTable(typeTable, structType);
+
+    // Clear the `this` context after parsing the struct
     clearThisContext(context, typeTable);
 
     consume(lexer, TOKEN_RBRACE, "Expected `}` to end struct declaration.", "parseStructDeclaration", table, arena, state, typeTable);

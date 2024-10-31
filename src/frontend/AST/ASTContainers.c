@@ -887,6 +887,7 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     node->methodCapacity = 128;
     node->hasConstructor = false;
     node->hasDefaultValue = false;
+    node->constructor = NULL;
 
     return node;
 }

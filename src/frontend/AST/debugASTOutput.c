@@ -1079,8 +1079,10 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             indentLevel--;
         }
 
-        createASTDebugView(node->data.structNode->constructor, output, indentLevel + 1);
-
+        if (node->data.structNode->constructor != NULL)
+        {
+            createASTDebugView(node->data.structNode->constructor, output, indentLevel + 1);
+        }
         break;
     }
 

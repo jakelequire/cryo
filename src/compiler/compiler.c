@@ -71,6 +71,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     initASTConsoleOutput(programNode, filePath);
 
+    printTypeTable(typeTable);
+
     return 0;
 }
 
