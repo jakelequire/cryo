@@ -38,160 +38,184 @@ TypeTable *initTypeTable(void)
     return table;
 }
 
+// Create new TypeContainer
+TypeContainer *createTypeContainer(void)
+{
+    TypeContainer *container = malloc(sizeof(TypeContainer));
+    if (!container)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate TypeContainer\n");
+        return NULL;
+    }
+
+    container->baseType = UNKNOWN_TYPE;
+    container->primitive = PRIM_UNKNOWN;
+    container->isArray = false;
+    container->arrayDimensions = 0;
+    container->custom.name = NULL;
+    container->custom.structDef = NULL;
+    container->custom.funcDef = NULL;
+    container->custom.extraData = NULL;
+
+    return container;
+}
+
 // # =========================================================================== #
 // # Specialized Type Creation Functions
 
-StructType *createStructDataType(const char *name)
+// Create primitive type
+TypeContainer *createPrimitiveType(PrimitiveDataType primType)
 {
-    StructType *type = (StructType *)malloc(sizeof(StructType));
-    if (!type)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for struct type.\n");
+    TypeContainer *container = createTypeContainer();
+    if (!container)
         return NULL;
-    }
 
-    type->name = name;
-    type->properties = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
-    if (!type->properties)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for struct type properties.\n");
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = primType;
+
+    return container;
+}
+
+// Create struct type
+TypeContainer *createStructType(const char *name, StructType *structDef)
+{
+    TypeContainer *container = createTypeContainer();
+    if (!container)
         return NULL;
-    }
 
-    type->propertyCount = 0;
-    type->propertyCapacity = 64;
+    container->baseType = STRUCT_TYPE;
+    container->custom.name = strdup(name);
+    container->custom.structDef = structDef;
 
-    type->methods = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
-    if (!type->methods)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for struct type methods.\n");
+    return container;
+}
+
+TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
+{
+    TypeContainer *container = createTypeContainer();
+    if (!container)
         return NULL;
-    }
 
-    type->methodCount = 0;
-    type->methodCapacity = 64;
+    // Copy base type info
+    container->baseType = baseType->baseType;
+    container->primitive = baseType->primitive;
+    container->custom = baseType->custom;
 
-    type->hasDefaultValue = false;
+    // Add array info
+    container->isArray = true;
+    container->arrayDimensions = dimensions;
 
-    return type;
+    return container;
 }
 
 // # =========================================================================== #
 // # DataType Creation Functions
 
-DataType *createDataTypeFromPrimitive(PrimitiveDataType type)
+// Create DataType wrapper
+DataType *wrapTypeContainer(TypeContainer *container)
 {
-    DataType *dataType = (DataType *)malloc(sizeof(DataType));
-    if (!dataType)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for data type.\n");
-        return NULL;
-    }
-
-    dataType->typeOf = PRIMITIVE_TYPE;
-    dataType->primitiveType = type;
-
-    return dataType;
-}
-
-DataType *createDataTypeFromStruct(ASTNode *structNode, CompilerState *state, TypeTable *typeTable)
-{
-    DataType *type = (DataType *)malloc(sizeof(DataType));
+    DataType *type = malloc(sizeof(DataType));
     if (!type)
     {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for data type.\n");
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate DataType\n");
         return NULL;
     }
 
-    type->typeOf = STRUCT_TYPE;
-
-    const char *structName = structNode->data.structNode->name;
-    StructType *structType = createStructDataType(structName);
-    if (!structType)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to create struct type.\n");
-        return NULL;
-    }
-
-    structType->properties = structNode->data.structNode->properties;
-    structType->propertyCount = structNode->data.structNode->propertyCount;
-    structType->propertyCapacity = structNode->data.structNode->propertyCapacity;
-
-    structType->methods = structNode->data.structNode->methods;
-    structType->methodCount = structNode->data.structNode->methodCount;
-    structType->methodCapacity = structNode->data.structNode->methodCapacity;
-
-    structType->hasDefaultValue = structNode->data.structNode->hasDefaultValue;
-    structType->hasConstructor = structNode->data.structNode->hasConstructor;
-
-    type->structType = structType;
+    type->container = *container;
+    type->isConst = false;
+    type->isReference = false;
+    type->next = NULL;
 
     return type;
 }
 
-DataType *createDataTypeFromEnum(Arena *arena, CompilerState *state, ASTNode *enumNode)
+TypeContainer *lookupType(TypeTable *table, const char *name)
 {
-    DataType *type = (DataType *)ARENA_ALLOC(arena, sizeof(DataType));
-    if (!type)
+    for (int i = 0; i < table->count; i++)
     {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for data type.\n");
-        return NULL;
+        DataType *type = table->types[i];
+        if (type->container.custom.name &&
+            strcmp(type->container.custom.name, name) == 0)
+        {
+            return &type->container;
+        }
     }
-
-    type->typeOf = ENUM_TYPE;
-    type->enumType = enumNode;
-
-    return type;
-}
-
-DataType *createDataTypeFromFunction(Arena *arena, CompilerState *state, ASTNode *functionNode)
-{
-    DataType *type = (DataType *)ARENA_ALLOC(arena, sizeof(DataType));
-    if (!type)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for data type.\n");
-        return NULL;
-    }
-
-    type->typeOf = FUNCTION_TYPE;
-    type->functionType = functionNode;
-
-    return type;
-}
-
-DataType *createDataTypeFromUnknown(void)
-{
-    DataType *type = (DataType *)malloc(sizeof(DataType));
-    if (!type)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for data type.\n");
-        return NULL;
-    }
-
-    type->typeOf = UNKNOWN_TYPE;
-
-    return type;
+    return NULL;
 }
 
 // # =========================================================================== #
 // # Add Type to Type Table
-void addTypeToTypeTable(TypeTable *table, DataType *type)
+void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type)
 {
     if (table->count >= table->capacity)
     {
+        // Grow table
         int newCapacity = table->capacity * 2;
-        DataType **newTypes = (DataType **)realloc(table->types, newCapacity * sizeof(DataType *));
+        DataType **newTypes = realloc(table->types, newCapacity * sizeof(DataType *));
         if (!newTypes)
-        {
-            fprintf(stderr, "[TypeTable] Error: Failed to reallocate memory for type table.\n");
             return;
-        }
 
         table->types = newTypes;
         table->capacity = newCapacity;
     }
 
-    table->types[table->count++] = type;
+    DataType *newType = malloc(sizeof(DataType));
+    newType->container = *type;
+    newType->isConst = false;
+    newType->isReference = false;
+    newType->next = NULL;
+
+    table->types[table->count++] = newType;
+}
+
+bool isValidType(TypeContainer *type, TypeTable *typeTable)
+{
+    if (!type)
+        return false;
+
+    switch (type->baseType)
+    {
+    case PRIMITIVE_TYPE:
+        return type->primitive != PRIM_UNKNOWN;
+
+    case STRUCT_TYPE:
+        return type->custom.structDef != NULL;
+
+    case FUNCTION_TYPE:
+        return type->custom.funcDef != NULL;
+
+    default:
+        return false;
+    }
+}
+
+bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
+{
+    if (!left || !right)
+        return false;
+
+    // Check base type match
+    if (left->baseType != right->baseType)
+        return false;
+
+    // Check array dimensions
+    if (left->isArray != right->isArray)
+        return false;
+    if (left->isArray && left->arrayDimensions != right->arrayDimensions)
+        return false;
+
+    // Check specific type details
+    switch (left->baseType)
+    {
+    case PRIMITIVE_TYPE:
+        return left->primitive == right->primitive;
+
+    case STRUCT_TYPE:
+        return strcmp(left->custom.name, right->custom.name) == 0;
+
+    default:
+        return false;
+    }
 }
 
 // # =========================================================================== #
@@ -209,6 +233,8 @@ char *TypeofDataTypeToString(TypeofDataType type)
         return "ENUM_TYPE";
     case FUNCTION_TYPE:
         return "FUNCTION_TYPE";
+    case UNSET_TYPE:
+        return "UNSET_TYPE";
     case UNKNOWN_TYPE:
         return "UNKNOWN_TYPE";
     default:
@@ -241,34 +267,37 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
 
 void printFormattedStructType(StructType *type)
 {
-    printf("   ─────────────────────────────────────────────────────────────\n");
+    printf("   ────────────────────────────────────────────────────────────\n");
     printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
     printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
 }
 
-void printFormattedType(DataType *type)
+void printTypeContainer(TypeContainer *type)
 {
-    switch (type->typeOf)
+    if (!type)
+        return;
+
+    printf("Type: %s", TypeofDataTypeToString(type->baseType));
+
+    if (type->isArray)
+    {
+        printf("[%d]", type->arrayDimensions);
+    }
+
+    switch (type->baseType)
     {
     case PRIMITIVE_TYPE:
-        printf("PRIMITIVE_TYPE %s\n", PrimitiveDataTypeToString(type->primitiveType));
+        printf(" (%s)", PrimitiveDataTypeToString(type->primitive));
         break;
+
     case STRUCT_TYPE:
-        printFormattedStructType(type->structType);
+        printf(" (%s)", type->custom.name);
         break;
-    case ENUM_TYPE:
-        printf("ENUM_TYPE\n");
-        break;
-    case FUNCTION_TYPE:
-        printf("FUNCTION_TYPE\n");
-        break;
-    case UNKNOWN_TYPE:
-        printf("UNKNOWN_TYPE\n");
-        break;
+
     default:
-        printf("<TYPE UNKNOWN>\n");
         break;
     }
+    printf("\n");
 }
 
 void printTypeTable(TypeTable *table)
@@ -286,7 +315,7 @@ void printTypeTable(TypeTable *table)
         DataType *type = table->types[i];
         printFormattedType(type);
     }
-    printf("   ─────────────────────────────────────────────────────────────\n");
+    printf("   ────────────────────────────────────────────────────────────\n");
     printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
     printf("\n");
     if (table->count == 0)

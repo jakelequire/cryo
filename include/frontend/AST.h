@@ -31,6 +31,7 @@
 #include "tools/arena/arena.h"
 #include "tools/utils/c_logger.h"
 #include "tools/macros/consoleColors.h"
+#include "frontend/typeTable.h"
 #include "common/common.h"
 
 #define INITIAL_CAPACITY 8
@@ -233,6 +234,7 @@ typedef struct ExternFunctionNode
     int paramCount;
     int paramCapacity;
     CryoDataType returnType;
+    DataType *type;
 } ExternFunctionNode;
 
 /// #### The FunctionDeclNode struct represents a function declaration in the AST.
@@ -257,6 +259,8 @@ typedef struct FunctionDeclNode
     CryoNodeType type;
     CryoVisibilityType visibility;
     CryoDataType returnType;
+    DataType *returnType;
+
     char *name;
     struct ASTNode **params;
     int paramCount;
@@ -305,6 +309,7 @@ typedef struct FunctionCallNode
 typedef struct LiteralNode
 {
     CryoDataType dataType; // Data type of the literal
+    DataType *type;
     int length;
     union
     {
@@ -395,7 +400,8 @@ typedef struct WhileStatementNode
 typedef struct VariableNameNode
 {
     CryoDataType refType;
-    bool isRef;
+    DataType *type;
+    bool isRef; // Remove Later
     char *varName;
 } VariableNameNode;
 
@@ -420,6 +426,7 @@ typedef struct VariableNameNode
 typedef struct CryoExpressionNode
 {
     CryoNodeType nodeType;
+    DataType *type;
     union
     {
         // For Variable References
@@ -452,6 +459,7 @@ typedef struct CryoExpressionNode
 typedef struct CryoVariableNode
 {
     CryoDataType type;
+    DataType *dataType;
     struct VariableNameNode *varNameNode;
     char *name;
     bool isGlobal;
@@ -483,6 +491,7 @@ typedef struct CryoVariableNode
 typedef struct CryoParameterNode
 {
     CryoDataType type;
+    DataType *dataType;
     char *name;
     char *functionName;
     bool hasDefaultValue;
@@ -553,6 +562,7 @@ typedef struct CryoReturnNode
     struct ASTNode *returnValue;
     struct ASTNode *expression;
     CryoDataType returnType;
+    DataType *type;
 } CryoReturnNode;
 
 /// #### The CryoBinaryOpNode struct represents a binary operation in the AST.
@@ -651,6 +661,8 @@ typedef struct VariableReassignmentNode
     char *existingVarName;
     ASTNode *existingVarNode;
     CryoDataType existingVarType;
+    DataType *existingVarDataType;
+    DataType *type;
     ASTNode *newVarNode;
 } VariableReassignmentNode;
 
@@ -670,6 +682,7 @@ typedef struct PropertyNode
     char *name;
     ASTNode *value;
     CryoDataType type;
+    DataType *dataType;
     bool defaultProperty;
 } PropertyNode;
 

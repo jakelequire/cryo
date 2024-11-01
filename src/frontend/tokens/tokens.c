@@ -273,6 +273,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_EOF";
     case TOKEN_IDENTIFIER:
         return "TOKEN_IDENTIFIER";
+    case TOKEN_TYPE_IDENTIFIER:
+        return "TOKEN_TYPE_IDENTIFIER";
     case TOKEN_ERROR:
         return "TOKEN_ERROR";
     case TOKEN_SINGLE_COMMENT:

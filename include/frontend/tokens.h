@@ -30,18 +30,19 @@ extern "C"
     typedef enum
     {
         // Special tokens
-        TOKEN_UNKNOWN = -1,   // Unknown token        -1
-        TOKEN_EOF,            // End of file token    0
-        TOKEN_IDENTIFIER,     // `identifier` token   1
-        TOKEN_ERROR,          // Error token          2
-        TOKEN_SINGLE_COMMENT, // `//` token           3
-        TOKEN_MULTI_COMMENT,  // `/* */` token        4
-        TOKEN_WHITESPACE,     // ` ` token            5
-        TOKEN_ASSIGN,         // `=` token            6
-        TOKEN_NEWLINE,        // `\n` token           7
-        TOKEN_TAB,            // `\t` token           8
-        TOKEN_INDENT,         // Indent token         9
-        TOKEN_DEDENT,         // Dedent token         10
+        TOKEN_UNKNOWN = -1,    // Unknown token
+        TOKEN_EOF,             // End of file token
+        TOKEN_IDENTIFIER,      // `identifier` token
+        TOKEN_TYPE_IDENTIFIER, // `: {identifier}` token
+        TOKEN_ERROR,           // Error token
+        TOKEN_SINGLE_COMMENT,  // `//` token
+        TOKEN_MULTI_COMMENT,   // `/* */` token
+        TOKEN_WHITESPACE,      // ` ` token
+        TOKEN_ASSIGN,          // `=` token
+        TOKEN_NEWLINE,         // `\n` token
+        TOKEN_TAB,             // `\t` token
+        TOKEN_INDENT,          // Indent token
+        TOKEN_DEDENT,          // Dedent token
 
         // Data types
         TOKEN_TYPE_INT,            // `1`, `2`, `3`, etc. integers

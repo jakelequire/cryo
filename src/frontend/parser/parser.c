@@ -192,6 +192,44 @@ CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *t
 }
 // </parseType>
 
+// *NEW*
+TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    TypeContainer *type = ARENA_ALLOC(arena, sizeof(TypeContainer));
+    type->isArray = false;
+    type->arrayDimensions = 0;
+
+    // Get the base type name
+    char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+
+    // Check if it's a primitive type
+    if (isPrimitiveType(typeName))
+    {
+        type->baseType = PRIMITIVE_TYPE;
+        type->primitive = getPrimitiveFromString(typeName);
+    }
+    else
+    {
+        // Look up custom type
+        type->baseType = STRUCT_TYPE; // or other custom type
+        type->custom.name = typeName;
+        type->custom.structDef = lookupStructType(table, typeName);
+    }
+
+    // Handle array dimensions
+    while (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LBRACKET)
+    {
+        type->isArray = true;
+        type->arrayDimensions++;
+
+        // Skip '[' and ']'
+        getNextToken(lexer, arena, state, typeTable);
+        getNextToken(lexer, arena, state, typeTable);
+    }
+
+    return type;
+}
+
 // <getOperatorPrecedence>
 int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {

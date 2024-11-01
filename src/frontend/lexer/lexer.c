@@ -212,13 +212,10 @@ void skipWhitespace(Lexer *lexer, CompilerState *state)
             break;
         case '/':
         {
-            printf("[Lexer] Found comment character: %c\n", c);
             advance(lexer, state);
             char next = peekNextUnconsumedLexerToken(lexer, state);
-            printf("[Lexer] Next Unconsumed character: %c\n", next);
             if (next == '/')
             {
-                printf("[Lexer] ! Found single line comment character: %c\n", c);
                 while (peek(lexer, state) != '\n' && !isAtEnd(lexer, state))
                     advance(lexer, state);
             }
@@ -730,6 +727,47 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
     return type;
 }
 // </checkDataType>
+
+Token handleTypeIdentifier(Lexer *lexer, CompilerState *state)
+{
+    // Skip the initial ':'
+    advance(lexer, state);
+    skipWhitespace(lexer, state);
+
+    // Parse the type identifier
+    if (!isAlpha(peek(lexer, state)))
+    {
+        return errorToken(lexer, "Expected type identifier", state);
+    }
+
+    while (isAlpha(peek(lexer, state)) || isDigit(peek(lexer, state)))
+    {
+        advance(lexer, state);
+    }
+
+    // Check for array syntax
+    if (peek(lexer, state) == '[')
+    {
+        while (peek(lexer, state) == '[')
+        {
+            advance(lexer, state); // Consume '['
+
+            // Allow optional size
+            while (isDigit(peek(lexer, state)))
+            {
+                advance(lexer, state);
+            }
+
+            if (peek(lexer, state) != ']')
+            {
+                return errorToken(lexer, "Expected ']'", state);
+            }
+            advance(lexer, state); // Consume ']'
+        }
+    }
+
+    return makeToken(lexer, TOKEN_TYPE_IDENTIFIER, state);
+}
 
 /* =========================================================== */
 /* @DataType_Evaluation */

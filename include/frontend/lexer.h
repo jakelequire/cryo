@@ -129,6 +129,7 @@ Token identifier(Lexer *lexer, CompilerState *state);
 /* @Data_Types */
 Token checkKeyword(Lexer *lexer, CompilerState *state);
 CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type, CompilerState *state);
+Token handleTypeIdentifier(Lexer *lexer, CompilerState *state);
 
 /* @DataType_Evaluation */
 bool isAlpha(char c);
