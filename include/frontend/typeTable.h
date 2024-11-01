@@ -121,13 +121,28 @@ TypeTable *initTypeTable(void);
 // Type Container Creation
 TypeContainer *createTypeContainer(void);
 
+// Migration Functions
+DataType *parseDataType(const char *typeStr);
+PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
+bool isPrimitiveType(const char *typeStr);
+
+DataType *createPrimitiveIntType(void);
+DataType *createPrimitiveFloatType(void);
+DataType *createPrimitiveStringType(void);
+DataType *createPrimitiveBooleanType(void);
+DataType *createPrimitiveVoidType(void);
+DataType *createPrimitiveNullType(void);
+
+
 // Data Type Creation from AST Nodes / Primitives
 TypeContainer *createPrimitiveType(PrimitiveDataType primType);
 TypeContainer *createStructType(const char *name, StructType *structDef);
 TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
 
+// Data Type Wrapping
 DataType *wrapTypeContainer(TypeContainer *container);
 
+// Type Validation
 TypeContainer *lookupType(TypeTable *table, const char *name);
 bool isValidType(TypeContainer *type, TypeTable *typeTable);
 bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
@@ -138,10 +153,9 @@ void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type)
 // Utility Functions
 char *TypeofDataTypeToString(TypeofDataType type);
 char *PrimitiveDataTypeToString(PrimitiveDataType type);
-
 void printFormattedStructType(StructType *type);
-
 void printTypeTable(TypeTable *table);
 void printTypeContainer(TypeContainer *type);
+char *DataTypeToString(DataType *dataType);
 
 #endif // TYPE_TABLE_H

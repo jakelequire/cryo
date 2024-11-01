@@ -90,7 +90,7 @@ DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath,
     return output;
 }
 
-ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent, ASTNode *sourceNode)
+ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, DataType *dataType, int line, int column, int indent, ASTNode *sourceNode)
 {
     ASTDebugNode *node = (ASTDebugNode *)malloc(sizeof(ASTDebugNode));
     node->nodeType = nodeType;
@@ -997,7 +997,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         const char *funcName = strdup(node->data.functionDecl->name);
-        CryoDataType returnType = node->data.functionDecl->returnType;
+        DataType *returnType = node->data.functionDecl->type;
         ASTDebugNode *functionNode = createASTDebugNode("FunctionDecl", funcName, returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *functionNode;
         output->nodeCount++;
@@ -1019,7 +1019,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         char *funcName = strdup(node->data.externFunction->name);
-        CryoDataType returnType = node->data.externFunction->returnType;
+        DataType *returnType = node->data.externFunction->type;
 
         ASTDebugNode *externFuncNode = createASTDebugNode("ExternFunction", funcName, returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *externFuncNode;

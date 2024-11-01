@@ -60,7 +60,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTa
 
     logMessage("DEBUG", __LINE__, "AST", "Created literal expression node with value: %d", value);
     int intCpy = value;
-    node->data.literal->dataType = DATA_TYPE_INT;
+    node->data.literal->type = DATA_TYPE_INT;
     node->data.literal->value.intValue = value;
     // convert from int to string
     char *buffer = (char *)ARENA_ALLOC(arena, sizeof(char));
@@ -156,7 +156,7 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Typ
     logMessage("INFO", __LINE__, "AST", "Created integer literal node with value: %d", value);
 
     node->data.literal->value.intValue = value;
-    node->data.literal->dataType = DATA_TYPE_INT;
+    node->data.literal->type = DATA_TYPE_INT;
 
     return node;
 }
@@ -169,7 +169,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
 
     logMessage("INFO", __LINE__, "AST", "Created float literal node with value: %f", value);
 
-    node->data.literal->dataType = DATA_TYPE_FLOAT;
+    node->data.literal->type = DATA_TYPE_FLOAT;
     node->data.literal->value.floatValue = value;
     return node;
 }
@@ -191,7 +191,7 @@ ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state
 
     printf("Manipulated string: %s\n", strdup(trimmedString));
 
-    node->data.literal->dataType = DATA_TYPE_STRING;
+    node->data.literal->type = DATA_TYPE_STRING;
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
 
@@ -240,7 +240,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
 
     logMessage("INFO", __LINE__, "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
 
-    node->data.literal->dataType = DATA_TYPE_BOOLEAN;
+    node->data.literal->type = DATA_TYPE_BOOLEAN;
     node->data.literal->value.booleanValue = value;
     return node;
 }
@@ -260,14 +260,14 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
         logMessage("INFO", __LINE__, "AST", "Found symbol in symbol table: %s", sym->name);
         node->data.varName->varName = strdup(sym->name);
         node->data.varName->isRef = true;
-        node->data.varName->refType = sym->valueType;
+        node->data.varName->type = sym->valueType;
     }
     else
     {
         logMessage("INFO", __LINE__, "AST", "Symbol not found in symbol table: %s", varName);
         node->data.varName->varName = strdup(varName);
         node->data.varName->isRef = true;
-        node->data.varName->refType = DATA_TYPE_UNKNOWN;
+        node->data.varName->type = DATA_TYPE_UNKNOWN;
     }
     return node;
 }
@@ -340,13 +340,13 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTab
     ASTNode *node = createASTNode(NODE_STRING_EXPRESSION, arena, state, typeTable);
     if (!node)
         return NULL;
-    node->data.literal->dataType = DATA_TYPE_STRING;
+    node->data.literal->type = DATA_TYPE_STRING;
     node->data.literal->value.stringValue = strdup(str);
     return node;
 }
 
 /* @Node_Creation - Variables */
-ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state, typeTable);
     if (!node)
@@ -361,7 +361,7 @@ ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode
         return NULL;
     }
 
-    printf("\n\nData Type in Var Decl: %s\n\n", CryoDataTypeToString(dataType));
+    printf("\n\nData Type in Var Decl: %s\n\n", DataTypeToString(dataType));
 
     node->data.varDecl->type = dataType;
     node->data.varDecl->name = strdup(var_name);
@@ -389,7 +389,7 @@ ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, Compiler
 }
 
 /* @Node_Creation - Functions */
-ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION, arena, state, typeTable);
     if (!node)
@@ -408,11 +408,11 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     node->data.functionDecl->paramCount = paramCount;
     node->data.functionDecl->paramCapacity = paramCapacity;
     node->data.functionDecl->body = function_body;
-    node->data.functionDecl->returnType = returnType;
+    node->data.functionDecl->type = returnType;
     return node;
 }
 
-ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION, arena, state, typeTable);
     if (!node)
@@ -449,7 +449,7 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataTyp
         memcpy(node->data.externFunction->params, params, paramCount * sizeof(ASTNode *));
     }
 
-    node->data.externFunction->returnType = returnType;
+    node->data.externFunction->type = returnType;
 
     return node;
 }
@@ -459,14 +459,14 @@ ASTNode *createFunctionCallNode(Arena *arena, CompilerState *state, TypeTable *t
     return createASTNode(NODE_FUNCTION_CALL, arena, state, typeTable);
 }
 
-ASTNode *createReturnNode(ASTNode *returnValue, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, typeTable);
     if (!node)
         return NULL;
     node->data.returnStatement->returnValue = returnValue;
     node->data.returnStatement->expression = returnValue;
-    node->data.returnStatement->returnType = returnType;
+    node->data.returnStatement->type = returnType;
 
     if (returnType == DATA_TYPE_VOID)
     {
@@ -476,13 +476,13 @@ ASTNode *createReturnNode(ASTNode *returnValue, CryoDataType returnType, Arena *
     return node;
 }
 
-ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createReturnExpression(ASTNode *returnExpression, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, typeTable);
     if (!node)
         return NULL;
     node->data.returnStatement->expression = returnExpression;
-    node->data.returnStatement->returnType = returnType;
+    node->data.returnStatement->type = returnType;
     return node;
 }
 
@@ -497,7 +497,7 @@ ASTNode *createArgumentListNode(Arena *arena, CompilerState *state, TypeTable *t
     return createASTNode(NODE_ARG_LIST, arena, state, typeTable);
 }
 
-ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_PARAM, arena, state, typeTable);
     if (!node)
@@ -511,7 +511,7 @@ ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Aren
     return node;
 }
 
-ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(nodeType, arena, state, typeTable);
     if (!node)
@@ -524,25 +524,26 @@ ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bo
     {
     case NODE_LITERAL_EXPR:
     {
-        node->data.literal->dataType = type;
-        switch (type)
+        node->data.literal->type = type;
+        switch (type->container.primitive)
         {
-        case DATA_TYPE_INT:
+        case PRIM_INT:
             node->data.literal->value.intValue = atoi(name);
             break;
-        case DATA_TYPE_FLOAT:
+        case PRIM_FLOAT:
             node->data.literal->value.floatValue = atof(name);
             break;
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
             node->data.literal->value.stringValue = strdup(name);
             break;
-        case DATA_TYPE_BOOLEAN:
+        case PRIM_BOOLEAN:
             node->data.literal->value.booleanValue = strcmp(name, "true") == 0 ? true : false;
             break;
-        case DATA_TYPE_VOID:
+        case PRIM_NULL:
+        case PRIM_VOID:
             break;
         default:
-            logMessage("ERROR", __LINE__, "AST", "Unknown data type: %s", CryoDataTypeToString(type));
+            logMessage("ERROR", __LINE__, "AST", "Unknown data type: %s", DataTypeToString(type));
             CONDITION_FAILED;
         }
         break;
@@ -639,7 +640,7 @@ ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode 
     return node;
 }
 
-ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_PROPERTY, arena, state, typeTable);
     if (!node)

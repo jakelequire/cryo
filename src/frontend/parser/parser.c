@@ -148,25 +148,25 @@ char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTab
 /* @DataType_Management                                                   */
 
 // <getCryoDataType>
-CryoDataType getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable)
+DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Getting data typestring: %s", typeStr);
-    CryoDataType type = parseDataType(typeStr);
-    if (type == DATA_TYPE_UNKNOWN)
+    DataType *type = parseDataType(typeStr);
+    if (!type)
     {
         parsingError("Unknown data type", "getCryoDataType", NULL, arena, state, lexer, source, typeTable);
     }
 
-    logMessage("INFO", __LINE__, "Parser", "Data type: %s", CryoDataTypeToString(type));
+    logMessage("INFO", __LINE__, "Parser", "Data type: %s", DataTypeToString(type));
     return type;
 }
 // </getCryoDataType>
 
 // <parseType>
-CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable)
+DataType *parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing type...");
-    CryoDataType type = DATA_TYPE_UNKNOWN;
+    DataType *type = NULL;
 
     switch (lexer->currentToken.type)
     {
@@ -187,7 +187,7 @@ CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *t
         break;
     }
 
-    logMessage("INFO", __LINE__, "Parser", "Parsed type: %s", CryoDataTypeToString(type));
+    logMessage("INFO", __LINE__, "Parser", "Parsed type: %s", DataTypeToString(type));
     return type;
 }
 // </parseType>
@@ -195,7 +195,7 @@ CryoDataType parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *t
 // *NEW*
 TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    TypeContainer *type = ARENA_ALLOC(arena, sizeof(TypeContainer));
+    TypeContainer *type = (TypeContainer *)ARENA_ALLOC(arena, sizeof(TypeContainer));
     type->isArray = false;
     type->arrayDimensions = 0;
 
@@ -206,7 +206,7 @@ TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, CryoSy
     if (isPrimitiveType(typeName))
     {
         type->baseType = PRIMITIVE_TYPE;
-        type->primitive = getPrimitiveFromString(typeName);
+        type->primitive = getPrimativeTypeFromString(typeName);
     }
     else
     {
@@ -868,14 +868,14 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     getNextToken(lexer, arena, state, typeTable);
 
     // Parse the variable type
-    CryoDataType dataType = DATA_TYPE_UNKNOWN;
+    DataType *dataType = NULL;
     if (lexer->currentToken.type == TOKEN_COLON)
     {
         getNextToken(lexer, arena, state, typeTable);
         char *varType = strndup(lexer->currentToken.start, lexer->currentToken.length);
 
         dataType = getCryoDataType(varType, arena, state, lexer, typeTable);
-        if (dataType == DATA_TYPE_UNKNOWN)
+        if (!dataType)
         {
             parsingError("[Parser] Unknown data type.", "parseVarDeclaration", table, arena, state, lexer, source, typeTable);
         }
@@ -960,7 +960,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
         logMessage("INFO", __LINE__, "Parser", "Adding parameter: %s", params[i]->data.varDecl->name);
     }
 
-    CryoDataType returnType = DATA_TYPE_VOID; // Default return type
+    DataType *returnType = NULL; // Default return type
     if (lexer->currentToken.type == TOKEN_RESULT_ARROW)
     {
         logMessage("INFO", __LINE__, "Parser", "Found return type arrow");
@@ -973,7 +973,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
         parsingError("Expected `->` for return type.", "parseFunctionDeclaration", table, arena, state, lexer, source, typeTable);
     }
 
-    logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", CryoDataTypeToString(returnType));
+    logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", DataTypeToString(returnType));
 
     // Ensure the next token is `{` for the function block
     if (lexer->currentToken.type != TOKEN_LBRACE)
@@ -1032,7 +1032,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
         paramCount++;
     }
 
-    CryoDataType returnType = DATA_TYPE_VOID; // Default return type
+    DataType *returnType = NULL; // Default return type
     if (lexer->currentToken.type == TOKEN_RESULT_ARROW)
     {
         logMessage("INFO", __LINE__, "Parser", "Found return type arrow");
@@ -1045,7 +1045,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
         parsingError("Expected `->` for return type.", "parseFunctionDeclaration", table, arena, state, lexer, source, typeTable);
     }
 
-    logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", CryoDataTypeToString(returnType));
+    logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", DataTypeToString(returnType));
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", table, arena, state, typeTable);
 
     ASTNode *externFunc = createExternFuncNode(functionName, params, returnType, arena, state, typeTable);
@@ -1087,7 +1087,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         for (int i = 0; lexer->currentToken.type != TOKEN_RPAREN; ++i)
         {
             // Look up the expected type from the symbol table
-            CryoDataType type;
+            DataType *type;
             if (funcSymbol->node->metaData->type == NODE_FUNCTION_DECLARATION)
             {
                 logMessage("INFO", __LINE__, "Parser", "Function declaration");
@@ -1141,7 +1141,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
     logMessage("INFO", __LINE__, "Parser", "Parsing return statement...");
     consume(lexer, TOKEN_KW_RETURN, "Expected `return` keyword.", "parseReturnStatement", table, arena, state, typeTable);
 
-    CryoDataType returnType = DATA_TYPE_VOID;
+    DataType *returnType;
     ASTNode *expression = NULL;
     if (lexer->currentToken.type != TOKEN_SEMICOLON)
     {
@@ -1154,13 +1154,13 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
         logMessage("INFO", __LINE__, "Parser", "Return expression: %s", CryoNodeTypeToString(expression->metaData->type));
         if (expression->metaData->type == NODE_LITERAL_EXPR)
         {
-            returnType = expression->data.literal->dataType;
-            printf("[Parser] Return expression data type: %s\n", CryoDataTypeToString(returnType));
+            returnType = expression->data.literal->type;
+            printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
         }
         if (expression->metaData->type == NODE_BINARY_EXPR)
         {
             returnType = DATA_TYPE_INT;
-            printf("[Parser] Return expression data type: %s\n", CryoDataTypeToString(returnType));
+            printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
         }
     }
     else
@@ -1195,7 +1195,7 @@ ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 
     consume(lexer, TOKEN_COLON, "Expected `:` after parameter name.", "parseParameter", table, arena, state, typeTable);
 
-    CryoDataType paramType = parseType(lexer, context, table, arena, state, typeTable);
+    DataType *paramType = parseType(lexer, context, table, arena, state, typeTable);
     // consume data type:
     getNextToken(lexer, arena, state, typeTable);
     ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena, state, typeTable);
@@ -1298,7 +1298,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 
     // Resolve the type using the symbol table
     CryoSymbol *symbol = findSymbol(table, argName, arena);
-    CryoDataType argType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
+    DataType *argType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
 
     // Consume the argument name
     getNextToken(lexer, arena, state, typeTable);
@@ -1343,7 +1343,7 @@ ASTNode *parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 // </parseArgumentList>
 
 // <parseArgumentsWithExpectedType>
-ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, CryoDataType expectedType, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, DataType *expectedType, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing arguments with expected type...");
 
@@ -1407,14 +1407,14 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
         // Resolve the type using the symbol table
         CryoSymbol *symbol = findSymbol(table, argName, arena);
         expectedType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
-        logMessage("INFO", __LINE__, "Parser", "Argument type: %s", CryoDataTypeToString(expectedType));
+        logMessage("INFO", __LINE__, "Parser", "Argument type: %s", DataTypeToString(expectedType));
         isLiteral = false;
     }
 
     // Consume the argument name
     getNextToken(lexer, arena, state, typeTable);
 
-    logMessage("INFO", __LINE__, "Parser", "Creating argument node with expected type: %s", CryoDataTypeToString(expectedType));
+    logMessage("INFO", __LINE__, "Parser", "Creating argument node with expected type: %s", DataTypeToString(expectedType));
     logMessage("INFO", __LINE__, "Parser", "Argument name: %s", strdup(argName));
 
     return createArgsNode(argName, expectedType, nodeType, isLiteral, arena, state, typeTable);
@@ -1719,16 +1719,16 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
     // Check the type of for loop were in.
     // For now, the structure is:
     // for($iterable: <type> = <expression>; <condition>; <update>)
-    CryoDataType iterDataType = DATA_TYPE_UNKNOWN;
+    DataType *iterDataType = DATA_TYPE_UNKNOWN;
     getNextToken(lexer, arena, state, typeTable);
     char *iterableType = strndup(lexer->currentToken.start, lexer->currentToken.length);
     printf("\n\nType: %s\n\n", iterableType);
-    CryoDataType dataType = CryoDataTypeStringToType(iterableType);
+    DataType *dataType = CryoDataTypeStringToType(iterableType);
     if (dataType == DATA_TYPE_UNKNOWN)
     {
         parsingError("Unknown data type.", "parseForLoop", table, arena, state, lexer, source, typeTable);
     }
-    printf("DataType: %s\n", CryoDataTypeToString(dataType));
+    printf("DataType: %s\n", DataTypeToString(dataType));
 
     getNextToken(lexer, arena, state, typeTable);
     consume(lexer, TOKEN_EQUAL, "Expected `=` after iterable type.", "parseForLoop", table, arena, state, typeTable);
@@ -1737,7 +1737,7 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena, state, typeTable);
 
-    printf("\n\nDataType in ForLoop init: %s\n\n", CryoDataTypeToString(dataType));
+    printf("\n\nDataType in ForLoop init: %s\n\n", DataTypeToString(dataType));
     ASTNode *init = createVarDeclarationNode(iterableName, dataType, iterable, false, false, false, true, arena, state, typeTable);
 
     addASTNodeSymbol(table, init, arena);
@@ -2024,10 +2024,12 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     ASTNode *structNode = createStructNode(structName, properties, propertyCount, constructorNode, arena, state, typeTable);
     structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
     structNode->data.structNode->hasConstructor = hasConstructor;
-    addASTNodeSymbol(table, structNode, arena);
 
     DataType *structType = createDataTypeFromStruct(structNode, state, typeTable);
-    addTypeToTypeTable(typeTable, structType);
+    // addTypeToTypeTable(typeTable, structType);
+
+    // Add the struct to the symbol table
+    addASTNodeSymbol(table, structNode, arena);
 
     // Clear the `this` context after parsing the struct
     clearThisContext(context, typeTable);
@@ -2075,7 +2077,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     consume(lexer, TOKEN_COLON, "Expected `:` after field name.", "parseStructField", table, arena, state, typeTable);
 
-    CryoDataType fieldType = parseType(lexer, context, table, arena, state, typeTable);
+    DataType *fieldType = parseType(lexer, context, table, arena, state, typeTable);
     getNextToken(lexer, arena, state, typeTable);
 
     // This is where we could add support for values in the struct fields

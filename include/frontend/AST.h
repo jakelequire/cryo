@@ -223,7 +223,7 @@ typedef struct ExternNode
 ///     struct ASTNode **params;
 ///     int paramCount;
 ///     int paramCapacity;
-///     CryoDataType returnType;
+///     DataType *type;
 /// } ExternFunctionNode;
 ///
 /// ```
@@ -233,7 +233,6 @@ typedef struct ExternFunctionNode
     struct ASTNode **params;
     int paramCount;
     int paramCapacity;
-    CryoDataType returnType;
     DataType *type;
 } ExternFunctionNode;
 
@@ -245,7 +244,7 @@ typedef struct ExternFunctionNode
 /// {
 ///     CryoNodeType type;
 ///     CryoVisibilityType visibility;
-///     CryoDataType returnType;
+///     DataType *type;
 ///     char *name;
 ///     struct ASTNode **params;
 ///     int paramCount;
@@ -256,10 +255,9 @@ typedef struct ExternFunctionNode
 /// ```
 typedef struct FunctionDeclNode
 {
-    CryoNodeType type;
+    CryoNodeType nodeType;
     CryoVisibilityType visibility;
-    CryoDataType returnType;
-    DataType *returnType;
+    DataType *type;
 
     char *name;
     struct ASTNode **params;
@@ -295,7 +293,8 @@ typedef struct FunctionCallNode
 ///
 /// typedef struct LiteralNode
 /// {
-///     CryoDataType dataType; // Data type of the literal
+///     DataType *type;
+///     int length;
 ///     union
 ///     {
 ///         int intValue;
@@ -308,7 +307,6 @@ typedef struct FunctionCallNode
 /// ```
 typedef struct LiteralNode
 {
-    CryoDataType dataType; // Data type of the literal
     DataType *type;
     int length;
     union
@@ -391,7 +389,7 @@ typedef struct WhileStatementNode
 ///
 /// typedef struct VariableNameNode
 /// {
-///     CryoDataType refType;
+///     DataType *type;
 ///     bool isRef;
 ///     char *varName;
 /// } VariableNameNode;
@@ -399,7 +397,6 @@ typedef struct WhileStatementNode
 /// ```
 typedef struct VariableNameNode
 {
-    CryoDataType refType;
     DataType *type;
     bool isRef; // Remove Later
     char *varName;
@@ -442,7 +439,7 @@ typedef struct CryoExpressionNode
 ///
 /// typedef struct CryoVariableNode
 /// {
-///     CryoDataType type;
+///     DataType *type;
 ///     struct VariableNameNode *varNameNode;
 ///     char *name;
 ///     bool isGlobal;
@@ -458,8 +455,7 @@ typedef struct CryoExpressionNode
 /// ```
 typedef struct CryoVariableNode
 {
-    CryoDataType type;
-    DataType *dataType;
+    DataType *type;
     struct VariableNameNode *varNameNode;
     char *name;
     bool isGlobal;
@@ -480,7 +476,6 @@ typedef struct CryoVariableNode
 ///
 /// typedef struct CryoParameterNode
 /// {
-///     CryoDataType type;
 ///     char *name;
 ///     bool hasDefaultValue;
 ///     bool isMutable;
@@ -490,8 +485,7 @@ typedef struct CryoVariableNode
 /// ```
 typedef struct CryoParameterNode
 {
-    CryoDataType type;
-    DataType *dataType;
+    DataType *type;
     char *name;
     char *functionName;
     bool hasDefaultValue;
@@ -553,7 +547,7 @@ typedef struct ArgNode
 /// {
 ///     struct ASTNode *returnValue;
 ///     struct ASTNode *expression;
-///     CryoDataType returnType;
+///     DataType *type;
 /// } CryoReturnNode;
 ///
 /// ```
@@ -561,7 +555,6 @@ typedef struct CryoReturnNode
 {
     struct ASTNode *returnValue;
     struct ASTNode *expression;
-    CryoDataType returnType;
     DataType *type;
 } CryoReturnNode;
 
@@ -651,7 +644,6 @@ typedef struct IndexExprNode
 /// {
 ///     char *existingVarName;
 ///     ASTNode *existingVarNode;
-///     CryoDataType existingVarType;
 ///     ASTNode *newVarNode;
 /// } VariableReassignmentNode;
 ///
@@ -660,8 +652,7 @@ typedef struct VariableReassignmentNode
 {
     char *existingVarName;
     ASTNode *existingVarNode;
-    CryoDataType existingVarType;
-    DataType *existingVarDataType;
+    DataType *existingVarType;
     DataType *type;
     ASTNode *newVarNode;
 } VariableReassignmentNode;
@@ -674,15 +665,15 @@ typedef struct VariableReassignmentNode
 /// {
 ///     char *name;
 ///     ASTNode *value;
-///     CryoDataType type;
+///     DataType *type;
+///     bool defaultProperty;
 /// } PropertyNode;
 ///
 typedef struct PropertyNode
 {
     char *name;
     ASTNode *value;
-    CryoDataType type;
-    DataType *dataType;
+    DataType *type;
     bool defaultProperty;
 } PropertyNode;
 
@@ -716,7 +707,7 @@ typedef struct StructNode
 
 // typedef struct CustomTypeNode
 // {
-//     DataType type;
+//     DataType *type;
 //     char *typeString;
 //
 // } CustomTypeNode;
@@ -911,21 +902,21 @@ extern "C"
     ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Variables */
-    ASTNode *createVarDeclarationNode(char *var_name, CryoDataType dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Functions */
-    ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createExternFuncNode(char *function_name, ASTNode **params, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createFunctionCallNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createReturnNode(ASTNode *returnValue, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createReturnExpression(ASTNode *returnExpression, CryoDataType returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createReturnExpression(ASTNode *returnExpression, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Parameters */
     ASTNode *createParamListNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createArgumentListNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createParamNode(char *name, char *functionName, CryoDataType type, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createArgsNode(char *name, CryoDataType type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Modules & Externals */
     ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -944,7 +935,7 @@ extern "C"
     ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Structs */
-    ASTNode *createFieldNode(char *fieldName, CryoDataType type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
@@ -1007,7 +998,7 @@ typedef struct ASTDebugNode
 {
     const char *nodeType;
     const char *nodeName;
-    CryoDataType dataType;
+    DataType *dataType;
     int line;
     int column;
     struct ASTDebugNode *children;
@@ -1033,7 +1024,7 @@ void initASTConsoleOutput(ASTNode *root, const char *filePath);
 void logASTNodeDebugView(ASTNode *node);
 
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd);
-ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, CryoDataType dataType, int line, int column, int indent, ASTNode *sourceNode);
+ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, DataType *dataType, int line, int column, int indent, ASTNode *sourceNode);
 void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel);
 DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output);
 void createASTDebugOutputFile(DebugASTOutput *output);
