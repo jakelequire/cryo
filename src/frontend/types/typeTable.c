@@ -378,7 +378,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type)
     {
         // Grow table
         int newCapacity = table->capacity * 2;
-        DataType **newTypes = realloc(table->types, newCapacity * sizeof(DataType *));
+        DataType **newTypes = (DataType **)realloc(table->types, newCapacity * sizeof(DataType *));
         if (!newTypes)
             return;
 
@@ -460,8 +460,6 @@ char *TypeofDataTypeToString(TypeofDataType type)
         return "ENUM_TYPE";
     case FUNCTION_TYPE:
         return "FUNCTION_TYPE";
-    case UNSET_TYPE:
-        return "UNSET_TYPE";
     case UNKNOWN_TYPE:
         return "UNKNOWN_TYPE";
     default:
@@ -474,22 +472,52 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
     switch (type)
     {
     case PRIM_INT:
-        return "int";
+        return LIGHT_CYAN BOLD "int" COLOR_RESET;
     case PRIM_FLOAT:
-        return "float";
+        return LIGHT_CYAN BOLD "float" COLOR_RESET;
     case PRIM_STRING:
-        return "string";
+        return LIGHT_CYAN BOLD "string" COLOR_RESET;
     case PRIM_BOOLEAN:
-        return "boolean";
+        return LIGHT_CYAN BOLD "boolean" COLOR_RESET;
     case PRIM_VOID:
-        return "void";
+        return LIGHT_CYAN BOLD "void" COLOR_RESET;
     case PRIM_NULL:
-        return "null";
+        return LIGHT_CYAN BOLD "null" COLOR_RESET;
     case PRIM_UNKNOWN:
-        return "<UNKNOWN>";
+        return LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET;
     default:
-        return "<PRIMITIVE UNKNOWN>";
+        return LIGHT_RED BOLD "<PRIMITIVE UNKNOWN>" COLOR_RESET;
     }
+}
+
+char *DataTypeToString(DataType *dataType)
+{
+    if (!dataType)
+        return "<NULL DATATYPE>";
+
+    char *typeString = (char *)malloc(128);
+    if (!typeString)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
+        return NULL;
+    }
+
+    switch (dataType->container.baseType)
+    {
+    case PRIMITIVE_TYPE:
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, PrimitiveDataTypeToString(dataType->container.primitive));
+        break;
+
+    case STRUCT_TYPE:
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container.custom.name);
+        break;
+
+    default:
+        sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
+        break;
+    }
+
+    return typeString;
 }
 
 void printFormattedStructType(StructType *type)
@@ -497,6 +525,34 @@ void printFormattedStructType(StructType *type)
     printf("   ────────────────────────────────────────────────────────────\n");
     printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
     printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
+}
+
+void printFormattedPrimitiveType(PrimitiveDataType type)
+{
+    printf("   ────────────────────────────────────────────────────────────\n");
+    printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s\n", PrimitiveDataTypeToString(type));
+}
+
+void printFormattedType(DataType *type)
+{
+    if (!type)
+        return;
+
+    switch (type->container.baseType)
+    {
+    case PRIMITIVE_TYPE:
+        printFormattedPrimitiveType(type->container.primitive);
+        break;
+
+    case STRUCT_TYPE:
+        printFormattedStructType(type->container.custom.structDef);
+        break;
+
+    default:
+        printf("  ────────────────────────────────────────────────────────────\n");
+        printf(BOLD GREEN "  UNKNOWN_TYPE" COLOR_RESET "\n");
+        break;
+    }
 }
 
 void printTypeContainer(TypeContainer *type)
@@ -551,36 +607,6 @@ void printTypeTable(TypeTable *table)
         printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
         printf("\n");
     }
-}
-
-char *DataTypeToString(DataType *dataType)
-{
-    if (!dataType)
-        return "<NULL DATATYPE>";
-
-    char *typeString = malloc(256);
-    if (!typeString)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
-        return NULL;
-    }
-
-    switch (dataType->container.baseType)
-    {
-    case PRIMITIVE_TYPE:
-        sprintf(typeString, "%s", PrimitiveDataTypeToString(dataType->container.primitive));
-        break;
-
-    case STRUCT_TYPE:
-        sprintf(typeString, "%s", dataType->container.custom.name);
-        break;
-
-    default:
-        sprintf(typeString, "<UNKNOWN>");
-        break;
-    }
-
-    return typeString;
 }
 
 DataType *CryoDataTypeStringToType(const char *typeStr)

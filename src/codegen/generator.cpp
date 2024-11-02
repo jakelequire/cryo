@@ -171,14 +171,15 @@ namespace Cryo
         assert(literalNode != nullptr);
         DevDebugger::logMessage("INFO", __LINE__, "Generator", "Literal Node Found");
 
-        switch (literalNode->dataType)
+        DataType *dataType = literalNode->type;
+        switch (dataType->container.baseType)
         {
         case DATA_TYPE_INT:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
             int intValue = literalNode->value.intValue;
             std::cout << "\n\nLiteral Int Value:" << node->data.literal->value.intValue << std::endl;
-            llvm::Type *ty = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+            llvm::Type *ty = compiler.getTypes().getType(dataType, 0);
             llvmConstant = llvm::ConstantInt::get(ty, intValue);
             std::cout << "\n";
 
@@ -220,7 +221,7 @@ namespace Cryo
         }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "Generator", "Unknown type");
-            std::cout << "Received: " << CryoDataTypeToString(literalNode->dataType) << std::endl;
+            std::cout << "Received: " << DataTypeToString(literalNode->type) << std::endl;
             exit(1);
             break;
         }

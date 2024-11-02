@@ -1141,9 +1141,13 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing return statement...");
-    consume(lexer, TOKEN_KW_RETURN, "Expected `return` keyword.", "parseReturnStatement", table, arena, state, typeTable);
 
-    DataType *returnType;
+    if (lexer->currentToken.type == TOKEN_KW_RETURN)
+    {
+        consume(lexer, TOKEN_KW_RETURN, "Expected `return` keyword.", "parseReturnStatement", table, arena, state, typeTable);
+    }
+
+    DataType *returnType = createPrimitiveVoidType();
     ASTNode *expression = NULL;
     if (lexer->currentToken.type != TOKEN_SEMICOLON)
     {
@@ -1168,6 +1172,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
     else
     {
         logMessage("INFO", __LINE__, "Parser", "No return expression.");
+        returnType = createPrimitiveVoidType();
     }
 
     consume(lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseReturnStatement", table, arena, state, typeTable);

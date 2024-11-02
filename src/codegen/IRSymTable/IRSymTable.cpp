@@ -151,7 +151,7 @@ namespace Cryo
         funcContainer.LLVMFunction = nullptr;
         funcContainer.LLVMReturnType = nullptr;
         funcContainer.LLVMParamTypes.clear();
-        funcContainer.returnType = funcNode->returnType;
+        funcContainer.returnType = funcNode->type;
         return funcContainer;
     }
 
@@ -162,7 +162,7 @@ namespace Cryo
         externFuncContainer.LLVMFunction = nullptr;
         externFuncContainer.LLVMReturnType = nullptr;
         externFuncContainer.LLVMParamTypes.clear();
-        externFuncContainer.returnType = externNode->returnType;
+        externFuncContainer.returnType = externNode->type;
         return externFuncContainer;
     }
 
@@ -177,7 +177,7 @@ namespace Cryo
         paramContainer.paramName = "NULL";
         paramContainer.functionName = "NULL";
         paramContainer.nodeType = NODE_UNKNOWN;
-        paramContainer.dataType = DATA_TYPE_UNKNOWN;
+        paramContainer.dataType = createUnknownType();
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Parameter Container Created");
         return paramContainer;
     }
@@ -446,7 +446,7 @@ namespace Cryo
         for (auto const &func : symNode.functions)
         {
             std::cout << "Name: " << func.first << std::endl;
-            std::cout << "Return Type: " << func.second.returnType << std::endl;
+            std::cout << "Return Type: " << func.second.type << std::endl;
             std::cout << "Param Count: " << func.second.paramCount << std::endl;
             for (int i = 0; i < func.second.paramCount; i++)
             {
@@ -466,7 +466,7 @@ namespace Cryo
         for (auto const &externFunc : symNode.externFunctions)
         {
             std::cout << "Name: " << externFunc.first << std::endl;
-            std::cout << "Return Type: " << externFunc.second.returnType << std::endl;
+            std::cout << "Return Type: " << externFunc.second.type << std::endl;
             std::cout << "Param Count: " << externFunc.second.paramCount << std::endl;
             for (int i = 0; i < externFunc.second.paramCount; i++)
             {
@@ -523,7 +523,7 @@ namespace Cryo
             {
                 ExternFunctionNode externFuncNode;
                 externFuncNode.name = node->data.externFunction->name;
-                externFuncNode.returnType = node->data.externFunction->returnType;
+                externFuncNode.type = node->data.externFunction->type;
                 externFuncNode.paramCount = node->data.externFunction->paramCount;
                 externFuncNode.params = node->data.externFunction->params;
                 std::string externFuncNameStr = std::string(node->data.externFunction->name);
@@ -539,7 +539,7 @@ namespace Cryo
             {
                 FunctionDeclNode funcNode;
                 funcNode.name = node->data.functionDecl->name;
-                funcNode.returnType = node->data.functionDecl->returnType;
+                funcNode.type = node->data.functionDecl->type;
                 funcNode.paramCount = node->data.functionDecl->paramCount;
                 funcNode.params = node->data.functionDecl->params;
                 funcNode.body = node->data.functionDecl->body;

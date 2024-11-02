@@ -82,8 +82,8 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        CryoDataType dataType = property->type;
-        std::string dataTypeStr = CryoDataTypeToString(dataType);
+        DataType *dataType = property->type;
+        std::string dataTypeStr = DataTypeToString(dataType);
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Data Type: " + dataTypeStr);
 
         std::string propertyName = property->name;

@@ -52,7 +52,6 @@ typedef enum TypeofDataType
     ENUM_TYPE,      // `enum ... { ... }`
     FUNCTION_TYPE,  // `function (...) -> ...`
 
-    UNSET_TYPE,  // `<UNSET>`
     UNKNOWN_TYPE // `<UNKNOWN>`
 } TypeofDataType;
 
@@ -114,55 +113,67 @@ typedef struct TypeTable
 } TypeTable;
 
 // # =========================================================================== #
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+    // Type Table Management
+    TypeTable *initTypeTable(void);
 
-// Type Table Management
-TypeTable *initTypeTable(void);
+    // Type Container Creation
+    TypeContainer *createTypeContainer(void);
 
-// Type Container Creation
-TypeContainer *createTypeContainer(void);
+    // Migration Functions
+    DataType *parseDataType(const char *typeStr);
+    PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
+    bool isPrimitiveType(const char *typeStr);
 
-// Migration Functions
-DataType *parseDataType(const char *typeStr);
-PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
-bool isPrimitiveType(const char *typeStr);
+    DataType *createPrimitiveIntType(void);
+    DataType *createPrimitiveFloatType(void);
+    DataType *createPrimitiveStringType(void);
+    DataType *createPrimitiveBooleanType(void);
+    DataType *createPrimitiveVoidType(void);
+    DataType *createPrimitiveNullType(void);
+    DataType *createUnknownType(void);
 
-DataType *createPrimitiveIntType(void);
-DataType *createPrimitiveFloatType(void);
-DataType *createPrimitiveStringType(void);
-DataType *createPrimitiveBooleanType(void);
-DataType *createPrimitiveVoidType(void);
-DataType *createPrimitiveNullType(void);
-DataType *createUnknownType(void);
+    // Data Type Creation from AST Nodes / Primitives
 
-// Data Type Creation from AST Nodes / Primitives
+    TypeContainer *createPrimitiveType(PrimitiveDataType primType);
+    TypeContainer *createStructType(const char *name, StructType *structDef);
+    TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
 
-TypeContainer *createPrimitiveType(PrimitiveDataType primType);
-TypeContainer *createStructType(const char *name, StructType *structDef);
-TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
+    // Specialized Type Creation Functions
 
-// Specialized Type Creation Functions
+    StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
+    DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable);
 
-StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
-DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable);
+    // Data Type Wrapping
+    DataType *wrapTypeContainer(TypeContainer *container);
 
-// Data Type Wrapping
-DataType *wrapTypeContainer(TypeContainer *container);
+    // Type Validation
+    TypeContainer *lookupType(TypeTable *table, const char *name);
+    bool isValidType(TypeContainer *type, TypeTable *typeTable);
+    bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
 
-// Type Validation
-TypeContainer *lookupType(TypeTable *table, const char *name);
-bool isValidType(TypeContainer *type, TypeTable *typeTable);
-bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
+    // Add Type to Type Table
+    void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type);
 
-// Add Type to Type Table
-void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type);
+    // Utility Functions
+    char *TypeofDataTypeToString(TypeofDataType type);
+    char *PrimitiveDataTypeToString(PrimitiveDataType type);
 
-// Utility Functions
-char *TypeofDataTypeToString(TypeofDataType type);
-char *PrimitiveDataTypeToString(PrimitiveDataType type);
-void printFormattedStructType(StructType *type);
-void printTypeTable(TypeTable *table);
-void printTypeContainer(TypeContainer *type);
-char *DataTypeToString(DataType *dataType);
-DataType *CryoDataTypeStringToType(const char *typeStr);
+    void printFormattedStructType(StructType *type);
+    void printFormattedPrimitiveType(PrimitiveDataType type);
+    void printFormattedType(DataType *type);
+
+    void printTypeTable(TypeTable *table);
+    void printTypeContainer(TypeContainer *type);
+
+    char *DataTypeToString(DataType *dataType);
+    DataType *CryoDataTypeStringToType(const char *typeStr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // TYPE_TABLE_H

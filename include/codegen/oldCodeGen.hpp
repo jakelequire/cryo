@@ -337,9 +337,9 @@ namespace Cryo
         OldTypes(CryoCompiler &compiler) : compiler(compiler) {}
 
         /**
-         * @brief Returns the LLVM type for the given CryoDataType.
+         * @brief Returns the LLVM type for the given DataType *.
          */
-        llvm::Type *getType(CryoDataType type, int length);
+        llvm::Type *getType(DataType *type, int length);
 
         /**
          * @brief Returns the LLVM type for the given LiteralNode.
@@ -348,10 +348,10 @@ namespace Cryo
         llvm::Type *getLiteralType(LiteralNode *literal);
 
         /**
-         * @brief Returns the LLVM return type for the given CryoDataType.
+         * @brief Returns the LLVM return type for the given DataType *.
          * Used for non-initalized variables.
          */
-        llvm::Type *getReturnType(CryoDataType type);
+        llvm::Type *getReturnType(DataType *type);
 
         /**
          * @brief Returns the length of a string literal or Array type.
@@ -413,12 +413,12 @@ namespace Cryo
          * @brief This only converts simple types (int, float, boolean, void) to LLVM types.
          * Does not cover strings, arrays, or other complex types.
          */
-        llvm::Type *convertSimpleType(CryoDataType type);
+        llvm::Type *convertSimpleType(DataType *type);
 
         /**
          * @brief Converts complex types (strings, arrays) to LLVM types.
          */
-        llvm::Type *convertComplexType(CryoDataType types, int length);
+        llvm::Type *convertComplexType(DataType *types, int length);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -443,7 +443,7 @@ namespace Cryo
         // Specialized variable creation functions
         llvm::Value *createLiteralExprVariable(LiteralNode *literalNode, std::string varName);
         llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName);
-        llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, CryoDataType dataType, std::string varName);
+        llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, DataType *dataType, std::string varName);
         llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
         llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
         llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);

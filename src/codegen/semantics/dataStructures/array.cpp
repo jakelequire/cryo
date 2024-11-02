@@ -37,21 +37,21 @@ namespace Cryo
             if (element->metaData->type == NODE_LITERAL_EXPR)
             {
                 // Note to self, might need to get the length of each element
-                CryoDataType dataType = element->data.literal->dataType;
-                switch (dataType)
+                DataType *dataType = element->data.literal->type;
+                switch (dataType->container.baseType)
                 {
-                case DATA_TYPE_INT:
+                case PRIM_INT:
                 {
-                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, 0);
+                    llvmType = compiler.getTypes().getType(element->data.literal->type, 0);
                     int index = element->data.literal->value.intValue;
                     llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
                     elements.push_back(llvmElement);
                     break;
                 }
-                case DATA_TYPE_STRING:
+                case PRIM_STRING:
                 {
                     int _len = compiler.getTypes().getLiteralValLength(element);
-                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, _len + 1);
+                    llvmType = compiler.getTypes().getType(element->data.literal->type, _len + 1);
                     llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
                     elements.push_back(llvmElement);
                     break;
@@ -106,21 +106,21 @@ namespace Cryo
             if (element->metaData->type == NODE_LITERAL_EXPR)
             {
                 // Note to self, might need to get the length of each element
-                CryoDataType dataType = element->data.literal->dataType;
-                switch (dataType)
+                DataType *dataType = element->data.literal->type;
+                switch (dataType->container.baseType)
                 {
-                case DATA_TYPE_INT:
+                case PRIM_INT:
                 {
-                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, 0);
+                    llvmType = compiler.getTypes().getType(element->data.literal->type, 0);
                     int index = element->data.literal->value.intValue;
                     llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
                     elements.push_back(llvmElement);
                     break;
                 }
-                case DATA_TYPE_STRING:
+                case PRIM_STRING:
                 {
                     int _len = compiler.getTypes().getLiteralValLength(element);
-                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, _len + 1);
+                    llvmType = compiler.getTypes().getType(element->data.literal->type, _len + 1);
                     llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
                     elements.push_back(llvmElement);
                     break;
@@ -183,20 +183,20 @@ namespace Cryo
             if (element->metaData->type == NODE_LITERAL_EXPR)
             {
                 // Note to self, might need to get the length of each element
-                CryoDataType dataType = element->data.literal->dataType;
-                switch (dataType)
+                DataType *dataType = element->data.literal->type;
+                switch (dataType->container.baseType)
                 {
-                case DATA_TYPE_INT:
+                case PRIM_INT:
                 {
-                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, 0);
+                    llvmType = compiler.getTypes().getType(element->data.literal->type, 0);
                     llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, element->data.literal->value.intValue);
                     elements.push_back(llvmElement);
                     break;
                 }
-                case DATA_TYPE_STRING:
+                case PRIM_STRING:
                 {
                     int _len = compiler.getTypes().getLiteralValLength(element);
-                    llvmType = compiler.getTypes().getType(element->data.literal->dataType, _len + 1);
+                    llvmType = compiler.getTypes().getType(element->data.literal->type, _len + 1);
                     llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
                     elements.push_back(llvmElement);
                     break;
@@ -237,14 +237,13 @@ namespace Cryo
 
         llvm::Type *llvmType = nullptr;
         llvm::ArrayType *llvmArrayType = nullptr;
-
         switch (node->metaData->type)
         {
         case NODE_ARRAY_LITERAL:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Converting array literal to LLVM type");
 
-            llvmType = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+            llvmType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
             llvmArrayType = llvm::ArrayType::get(llvmType, getArrayLength(node));
             break;
         }
@@ -428,7 +427,7 @@ namespace Cryo
         }
         if (literalNode->metaData->type == NODE_LITERAL_EXPR)
         {
-            if (literalNode->data.literal->dataType == DATA_TYPE_INT)
+            if (literalNode->data.literal->type->container.baseType == PRIM_INT)
             {
                 int _indexValue = literalNode->data.literal->value.intValue;
                 ASTNode *element = array->data.array->elements[_indexValue];

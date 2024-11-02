@@ -56,7 +56,7 @@ namespace Cryo
         case NODE_FUNCTION_DECLARATION:
             std::cout << ">>==----------------{ Function Declaration Node }----------------==<<" << std::endl;
             std::cout << "Function Name: " << node->data.functionDecl->name << std::endl;
-            std::cout << "Return Type: " << CryoDataTypeToString(node->data.functionDecl->returnType) << std::endl;
+            std::cout << "Return Type: " << DataTypeToString(node->data.functionDecl->type) << std::endl;
             std::cout << "Parameter Count: " << node->data.functionDecl->paramCount << std::endl;
             for (int i = 0; i < node->data.functionDecl->paramCount; ++i)
             {
@@ -85,7 +85,7 @@ namespace Cryo
             }
             std::cout << ">>==----------------{ Variable Declaration Node }----------------==<<" << std::endl;
             std::cout << "Variable Name: " << node->data.varDecl->name << std::endl;
-            std::cout << "Data Type: " << CryoDataTypeToString(node->data.varDecl->type) << std::endl;
+            std::cout << "Data Type: " << DataTypeToString(node->data.varDecl->type) << std::endl;
             std::cout << "Is Global: " << (node->data.varDecl->isGlobal ? 0 : 1) << std::endl;
             std::cout << "Is Reference: " << (node->data.varDecl->isReference ? "Yes" : "No") << std::endl;
             std::cout << "Is Mutable: " << (node->data.varDecl->isMutable ? "Yes" : "No") << std::endl;
@@ -102,19 +102,19 @@ namespace Cryo
         case NODE_LITERAL_EXPR:
             std::cout << "\n";
             std::cout << ">>>>---{ Literal Expression Node }---<<<<" << std::endl;
-            std::cout << "Data Type: " << CryoDataTypeToString(node->data.literal->dataType) << std::endl;
-            switch (node->data.literal->dataType)
+            std::cout << "Data Type: " << DataTypeToString(node->data.literal->type) << std::endl;
+            switch (node->data.literal->type->container.baseType)
             {
-            case DATA_TYPE_INT:
+            case PRIM_INT:
                 std::cout << "Value: " << node->data.literal->value.intValue << std::endl;
                 break;
-            case DATA_TYPE_FLOAT:
+            case PRIM_FLOAT:
                 std::cout << "Value: " << node->data.literal->value.floatValue << std::endl;
                 break;
-            case DATA_TYPE_STRING:
+            case PRIM_STRING:
                 std::cout << "Value: " << node->data.literal->value.stringValue << std::endl;
                 break;
-            case DATA_TYPE_BOOLEAN:
+            case PRIM_BOOLEAN:
                 std::cout << "Value: " << (node->data.literal->value.booleanValue ? "True" : "False") << std::endl;
                 break;
             }
@@ -177,7 +177,7 @@ namespace Cryo
 
         case NODE_RETURN_STATEMENT:
             std::cout << ">>==-----------------{ Return Statement Node }-------------------==<<" << std::endl;
-            std::cout << "Return Type : " << CryoDataTypeToString(node->data.returnStatement->returnType) << std::endl;
+            std::cout << "Return Type : " << DataTypeToString(node->data.returnStatement->type) << std::endl;
             std::cout << "Return Value: " << std::endl;
             if (node->data.returnStatement->returnValue)
             {
@@ -199,7 +199,7 @@ namespace Cryo
         case NODE_EXTERN_FUNCTION:
             std::cout << ">>==------------------{ Extern Function Node }-------------------==<<" << std::endl;
             std::cout << "Function Name: " << strdup(node->data.externFunction->name) << std::endl;
-            std::cout << "Return Type: " << CryoDataTypeToString(node->data.externFunction->returnType) << std::endl;
+            std::cout << "Return Type: " << DataTypeToString(node->data.externFunction->type) << std::endl;
             std::cout << "Parameter Count: " << node->data.externFunction->paramCount << std::endl;
             for (int i = 0; i < node->data.externFunction->paramCount; ++i)
             {
@@ -263,7 +263,7 @@ namespace Cryo
             std::cout << "\n";
             std::cout << ">>>>-----{ Variable Name Node }-----<<<<" << std::endl;
             std::cout << "Variable Name: " << node->data.varName->varName << std::endl;
-            std::cout << "Data Type: " << CryoDataTypeToString(node->data.varName->refType) << std::endl;
+            std::cout << "Data Type: " << DataTypeToString(node->data.varName->type) << std::endl;
             std::cout << "Is Reference: " << (node->data.varName->isRef ? "True" : "False") << std::endl;
             std::cout << ">>>>--------------------------------<<<<" << std::endl;
             std::cout << "\n";
@@ -316,7 +316,7 @@ namespace Cryo
         case NODE_VAR_REASSIGN:
             std::cout << ">>==----------------{ Variable Reassignment Node }---------------==<<" << std::endl;
             std::cout << "Variable Name: " << node->data.varReassignment->existingVarName << std::endl;
-            std::cout << "Type: " << CryoDataTypeToString(node->data.varReassignment->existingVarType) << std::endl;
+            std::cout << "Type: " << DataTypeToString(node->data.varReassignment->existingVarType) << std::endl;
             std::cout << "Old Value: " << std::endl;
             logNode(node->data.varReassignment->existingVarNode);
             std::cout << "New Value: " << std::endl;
@@ -328,7 +328,7 @@ namespace Cryo
             std::cout << ">>==----------------------{ Parameter Node }---------------------==<<" << std::endl;
             std::cout << "Parameter Name: " << strdup(node->data.param->name) << std::endl;
             std::cout << "Function Name: " << strdup(node->data.param->functionName) << std::endl;
-            std::cout << "Data Type: " << CryoDataTypeToString(node->data.param->type) << std::endl;
+            std::cout << "Data Type: " << DataTypeToString(node->data.param->type) << std::endl;
             std::cout << "Has Default Value: " << (node->data.param->hasDefaultValue ? "Yes" : "No") << std::endl;
             if (node->data.param->hasDefaultValue)
             {
@@ -343,7 +343,7 @@ namespace Cryo
             std::cout << "\n";
             std::cout << ">>>>----{ Property Node }----<<<<" << std::endl;
             std::cout << "Property Name: " << node->data.property->name << std::endl;
-            std::cout << "Data Type: " << CryoDataTypeToString(node->data.property->type) << std::endl;
+            std::cout << "Data Type: " << DataTypeToString(node->data.property->type) << std::endl;
             std::cout << ">>>>-------------------------<<<<" << std::endl;
             std::cout << "\n";
             break;
@@ -802,14 +802,14 @@ namespace Cryo
                 logMessage("INFO", __LINE__, "Debugger", "Function name: " + std::string(node->data.functionDecl->name));
             }
 
-            if (node->data.functionDecl->returnType == DATA_TYPE_UNKNOWN)
+            if (node->data.functionDecl->type->container.baseType == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Function has unknown return type");
                 return false;
             }
             else
             {
-                logMessage("INFO", __LINE__, "Debugger", "Function return type: " + std::string(CryoDataTypeToString(node->data.functionDecl->returnType)));
+                logMessage("INFO", __LINE__, "Debugger", "Function return type: " + std::string(DataTypeToString(node->data.functionDecl->type)));
             }
 
             if (node->data.functionDecl->body == nullptr)
@@ -867,7 +867,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Variable has no name");
                 return false;
             }
-            if (node->data.varDecl->type == DATA_TYPE_UNKNOWN)
+            if (node->data.varDecl->type->container.baseType == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Variable has no type");
                 return false;
@@ -879,7 +879,7 @@ namespace Cryo
 
         case NODE_LITERAL_EXPR:
         {
-            if (node->data.literal->dataType == DATA_TYPE_UNKNOWN)
+            if (node->data.literal->type->container.baseType == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Literal has no type");
                 return false;
@@ -1005,7 +1005,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Extern function has no name");
                 return false;
             }
-            if (node->data.externFunction->returnType == DATA_TYPE_UNKNOWN)
+            if (node->data.externFunction->type->container.baseType == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Extern function has no return type");
                 return false;
@@ -1152,7 +1152,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no value");
                 return false;
             }
-            if (node->data.varReassignment->existingVarType == DATA_TYPE_UNKNOWN)
+            if (node->data.varReassignment->existingVarType->container.baseType == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no type");
                 return false;
@@ -1179,7 +1179,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Parameter has no function name");
                 return false;
             }
-            if (node->data.param->type == DATA_TYPE_UNKNOWN)
+            if (node->data.param->type->container.baseType == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Parameter has no type");
                 return false;

@@ -216,8 +216,8 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        CryoDataType leftDataType = node->data.bin_op->left->data.literal->dataType;
-        CryoDataType rightDataType = node->data.bin_op->right->data.literal->dataType;
+        DataType *leftDataType = node->data.bin_op->left->data.literal->type;
+        DataType *rightDataType = node->data.bin_op->right->data.literal->type;
         llvm::Type *leftType = types.getType(leftDataType, 0);
         llvm::Type *rightType = types.getType(rightDataType, 0);
         bool sameType = leftType == rightType;

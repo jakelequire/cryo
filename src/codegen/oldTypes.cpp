@@ -18,7 +18,7 @@
 
 namespace Cryo
 {
-    llvm::Type *OldTypes::getType(CryoDataType type, int length)
+    llvm::Type *OldTypes::getType(DataType *type, int length)
     {
         if (length == 0)
         {
@@ -36,33 +36,33 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting literal type");
 
-        if (literal->dataType == DATA_TYPE_UNKNOWN)
+        if (literal->type->container.baseType == UNKNOWN_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
             CONDITION_FAILED;
         }
 
-        CryoDataType type = literal->dataType;
+        DataType *type = literal->type;
         int len = literal->length;
-        switch (type)
+        switch (type->container.primitive)
         {
-        case DATA_TYPE_INT:
+        case PRIM_INT:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int type");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
         }
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
         {
             // [i8 x len]
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning string type");
             return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), len);
         }
-        case DATA_TYPE_FLOAT:
+        case PRIM_FLOAT:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning float type");
             return llvm::Type::getFloatTy(CryoContext::getInstance().context);
         }
-        case DATA_TYPE_BOOLEAN:
+        case PRIM_BOOLEAN:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning boolean type");
             return llvm::Type::getInt1Ty(CryoContext::getInstance().context);
@@ -75,101 +75,80 @@ namespace Cryo
         }
     }
 
-    llvm::Type *OldTypes::getReturnType(CryoDataType type)
+    llvm::Type *OldTypes::getReturnType(DataType *type)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting return type");
 
-        if (type == DATA_TYPE_UNKNOWN)
+        if (type->container.baseType == UNKNOWN_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;
         }
 
-        switch (type)
+        switch (type->container.primitive)
         {
-        case DATA_TYPE_INT:
+        case PRIM_INT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int type");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning string type");
             return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
-        case DATA_TYPE_FLOAT:
+        case PRIM_FLOAT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning float type");
             return llvm::Type::getFloatTy(CryoContext::getInstance().context);
-        case DATA_TYPE_BOOLEAN:
+        case PRIM_BOOLEAN:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning boolean type");
             return llvm::Type::getInt1Ty(CryoContext::getInstance().context);
-        case DATA_TYPE_VOID:
+        case PRIM_VOID:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning void type");
             return llvm::Type::getVoidTy(CryoContext::getInstance().context);
-        case DATA_TYPE_INT_ARRAY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int array type");
-            return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
-        case DATA_TYPE_STRING_ARRAY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning string array type");
-            return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), 0);
-        case DATA_TYPE_ARRAY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning array type");
-            return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
+            // case DATA_TYPE_INT_ARRAY:
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int array type");
+            //     return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
+            // case DATA_TYPE_STRING_ARRAY:
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning string array type");
+            //     return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), 0);
+            // case DATA_TYPE_ARRAY:
+            //    DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning array type");
+            //    return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
         }
     }
 
     // -----------------------------------------------------------------------------------------------
 
-    llvm::Type *OldTypes::convertSimpleType(CryoDataType type)
+    llvm::Type *OldTypes::convertSimpleType(DataType *type)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting simple type to LLVM type");
-        switch (type)
+
+        switch (type->container.primitive)
         {
-        case DATA_TYPE_INT:
+        case PRIM_INT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int to LLVM type");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
 
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting string to LLVM type");
             return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
 
-        case DATA_TYPE_FLOAT:
+        case PRIM_FLOAT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting float to LLVM type");
             return llvm::Type::getFloatTy(CryoContext::getInstance().context);
 
-        case DATA_TYPE_BOOLEAN:
+        case PRIM_BOOLEAN:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting boolean to LLVM type");
             return llvm::Type::getInt1Ty(CryoContext::getInstance().context);
 
-        case DATA_TYPE_VOID:
+        case PRIM_VOID:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting void to LLVM type");
             return llvm::Type::getVoidTy(CryoContext::getInstance().context);
 
-        case DATA_TYPE_INT_ARRAY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
-            return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
+            // case DATA_TYPE_INT_ARRAY:
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
+            //     return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
 
-        case DATA_TYPE_ANY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
-            return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
-
-        // ================================
-        // New Types
-
-        // Integer Types
-        case DATA_TYPE_SINT8:
-        case DATA_TYPE_SINT16:
-        case DATA_TYPE_SINT32:
-        case DATA_TYPE_SINT64:
-        case DATA_TYPE_UINT8:
-        case DATA_TYPE_UINT16:
-        case DATA_TYPE_UINT32:
-        case DATA_TYPE_UINT64:
-
-        // Arrays
-        case DATA_TYPE_INT8_ARRAY:
-        case DATA_TYPE_INT16_ARRAY:
-        case DATA_TYPE_INT32_ARRAY:
-        case DATA_TYPE_INT64_ARRAY:
-
-        // Vectors
-        case DATA_TYPE_DYN_VEC:
+            // case DATA_TYPE_ANY:
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
+            //     return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
 
         default:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
@@ -179,26 +158,26 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    llvm::Type *OldTypes::convertComplexType(CryoDataType types, int length)
+    llvm::Type *OldTypes::convertComplexType(DataType *types, int length)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting complex type to LLVM type");
-        switch (types)
+        switch (types->container.primitive)
         {
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting string to LLVM type");
             return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), length);
 
-        case DATA_TYPE_ARRAY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting array to LLVM type");
-            return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), length);
-
-        case DATA_TYPE_INT_ARRAY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
-            return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), length);
-
-        case DATA_TYPE_STRING_ARRAY:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting string array to LLVM type");
-            return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), length);
+            // case DATA_TYPE_ARRAY:
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting array to LLVM type");
+            //     return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), length);
+            //
+            // case DATA_TYPE_INT_ARRAY:
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
+            //     return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), length);
+            //
+            // case DATA_TYPE_STRING_ARRAY:
+            //    DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting string array to LLVM type");
+            //    return llvm::ArrayType::get(llvm::Type::getInt8Ty(CryoContext::getInstance().context), length);
 
         default:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
@@ -219,7 +198,7 @@ namespace Cryo
 
         if (node->metaData->type == NODE_LITERAL_EXPR)
         {
-            if (node->data.literal->dataType == DATA_TYPE_STRING)
+            if (node->data.literal->type->container.baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
                 int _len = strlen(node->data.literal->value.stringValue);
@@ -227,26 +206,26 @@ namespace Cryo
                 return _len;
             }
 
-            if (node->data.literal->dataType == DATA_TYPE_INT)
+            if (node->data.literal->type->container.baseType == PRIM_INT)
             {
                 return 0;
             }
 
-            if (node->data.literal->dataType == DATA_TYPE_FLOAT)
+            if (node->data.literal->type->container.baseType == PRIM_FLOAT)
             {
                 return 0;
             }
 
-            if (node->data.literal->dataType == DATA_TYPE_BOOLEAN)
+            if (node->data.literal->type->container.baseType == PRIM_BOOLEAN)
             {
                 return 0;
             }
 
-            if (node->data.literal->dataType == DATA_TYPE_INT_ARRAY)
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of int array literal");
-                return node->data.array->elementCount;
-            }
+            // if (node->data.literal->dataType == DATA_TYPE_INT_ARRAY)
+            // {
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of int array literal");
+            //     return node->data.array->elementCount;
+            // }
         }
         if (node->metaData->type == NODE_ARRAY_LITERAL)
         {
@@ -256,7 +235,7 @@ namespace Cryo
 
         if (node->metaData->type == NODE_VAR_DECLARATION)
         {
-            if (node->data.varDecl->type == DATA_TYPE_STRING)
+            if (node->data.varDecl->type->container.baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string variable");
                 return strlen(node->data.varDecl->initializer->data.literal->value.stringValue);
@@ -282,7 +261,7 @@ namespace Cryo
 
     int OldTypes::getLiteralValLength(LiteralNode *node)
     {
-        if (node->dataType == DATA_TYPE_STRING)
+        if (node->type->container.baseType == PRIM_STRING)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
             return strlen(node->value.stringValue);
@@ -294,7 +273,7 @@ namespace Cryo
 
     int OldTypes::getLiteralIntValue(LiteralNode *node)
     {
-        if (node->dataType != DATA_TYPE_INT)
+        if (node->type->container.baseType != PRIM_INT)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
             return 0;

@@ -33,6 +33,7 @@
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
+#include "frontend/typeTable.h"
 
 namespace Cryo
 {
@@ -66,7 +67,7 @@ namespace Cryo
         std::string functionName;
         ASTNode *ASTNode;
         CryoNodeType nodeType;
-        CryoDataType dataType;
+        DataType *dataType;
     };
 
     struct STFunction
@@ -75,7 +76,7 @@ namespace Cryo
         llvm::Type *LLVMReturnType;
         std::vector<llvm::Type *> LLVMParamTypes;
         FunctionDeclNode *ASTNode;
-        CryoDataType returnType;
+        DataType *returnType;
     };
 
     struct STExternFunction
@@ -84,7 +85,7 @@ namespace Cryo
         llvm::Type *LLVMReturnType;
         std::vector<llvm::Type *> LLVMParamTypes;
         ExternFunctionNode *ASTNode;
-        CryoDataType returnType;
+        DataType *returnType;
     };
 
     // -----------------------------------------------------------------------------------------------

@@ -87,9 +87,9 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
 
         // Get the return type
-        CryoDataType returnType = functionNode->returnType;
+        DataType *returnType = functionNode->type;
         llvm::Type *returnLLVMType = types.getReturnType(returnType);
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
         // Get the function arguments
         int argCount = functionNode->paramCount;
@@ -101,8 +101,8 @@ namespace Cryo
             CryoParameterNode *argNode = functionNode->params[i]->data.param;
             assert(argNode != nullptr);
 
-            CryoDataType _argType = argNode->type;
-            if (_argType == DATA_TYPE_STRING)
+            DataType *_argType = argNode->type;
+            if (_argType->container.baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
                 // int _len = types.getLiteralValLength(argNode->initializer);
@@ -112,7 +112,7 @@ namespace Cryo
                 continue;
             }
 
-            if (_argType == DATA_TYPE_INT)
+            if (_argType->container.baseType == PRIM_INT)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting int to LLVM type");
                 llvm::Type *argType = types.getType(_argType, 0);
@@ -201,15 +201,20 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
-                switch (returnType)
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
+
+                std::cout << "TypeOfDataType: " << std::string(TypeofDataTypeToString(returnType->container.baseType)) << std::endl;
+                std::cout << "PrimitiveType: " << std::string(PrimitiveDataTypeToString(returnType->container.primitive)) << std::endl;
+
+                switch (returnType->container.primitive)
                 {
-                case DATA_TYPE_VOID:
+                case PRIM_VOID:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning void");
                     compiler.getContext().builder.CreateRet(nullptr);
                     break;
                 }
-                case DATA_TYPE_INT:
+                case PRIM_INT:
                 {
                     CryoNodeType returnTypeNode = statement->data.returnStatement->expression->metaData->type;
                     std::cout << "Return Type Node: " << CryoNodeTypeToString(returnTypeNode) << std::endl;
@@ -260,11 +265,11 @@ namespace Cryo
                     }
                     break;
                 }
-                case DATA_TYPE_STRING:
+                case PRIM_STRING:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement);
-                    llvm::Type *returnType = types.getType(DATA_TYPE_STRING, _len);
+                    llvm::Type *returnType = types.getType(createPrimitiveStringType(), _len);
                     llvm::Value *returnValue = generator.getInitilizerValue(statement);
                     compiler.getContext().builder.CreateRet(returnValue);
 
@@ -273,7 +278,7 @@ namespace Cryo
                 default:
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
-                    std::cout << "Received: " << CryoDataTypeToString(returnType) << std::endl;
+                    std::cout << "Received: " << DataTypeToString(returnType) << std::endl;
                     CONDITION_FAILED;
                 }
                 }
@@ -357,8 +362,8 @@ namespace Cryo
         CryoReturnNode *returnNode = node->data.returnStatement;
         assert(returnNode != nullptr);
 
-        CryoDataType returnType = returnNode->returnType;
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
+        DataType *returnType = returnNode->type;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
         CryoNodeType nodeType = returnNode->expression->metaData->type;
         std::cout << "Return Node Type: " << CryoNodeTypeToString(nodeType) << std::endl;
@@ -428,8 +433,8 @@ namespace Cryo
         CryoReturnNode *returnNode = node->data.returnStatement;
         assert(returnNode != nullptr);
 
-        CryoDataType returnType = returnNode->returnType;
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
+        DataType *returnType = returnNode->type;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
         ASTNode *returnExpression = returnNode->expression;
         if (!returnExpression)
@@ -439,7 +444,7 @@ namespace Cryo
         }
 
         std::cout << "\n\nReturn Expression: " << std::endl;
-        std::cout << "Return Type: " << CryoDataTypeToString(returnType) << std::endl;
+        std::cout << "Return Type: " << DataTypeToString(returnType) << std::endl;
         std::cout << "Return Expression Type: " << CryoNodeTypeToString(returnExpression->metaData->type) << std::endl;
         DevDebugger::logNode(returnExpression);
     }
@@ -463,35 +468,35 @@ namespace Cryo
             ASTNode *statement = statements[i];
             if (statement->metaData->type == NODE_RETURN_STATEMENT)
             {
-                CryoDataType nodeDataType = statement->data.returnStatement->returnType;
+                DataType *nodeDataType = statement->data.returnStatement->type;
 
-                switch (nodeDataType)
+                switch (nodeDataType->container.baseType)
                 {
-                case DATA_TYPE_INT:
+                case PRIM_INT:
                 {
 
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning int");
-                    llvm::Type *retType = types.getType(DATA_TYPE_INT, 0);
+                    llvm::Type *retType = types.getType(createPrimitiveIntType(), 0);
                     return retType;
                 }
-                case DATA_TYPE_STRING:
+                case PRIM_STRING:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement->data.returnStatement->expression);
                     // +1 for the null terminator
-                    returnType = types.getType(DATA_TYPE_STRING, _len + 1);
+                    returnType = types.getType(createPrimitiveStringType(), _len + 1);
                     break;
                 }
-                case DATA_TYPE_VOID:
+                case PRIM_VOID:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning void");
-                    returnType = types.getReturnType(DATA_TYPE_VOID);
+                    returnType = types.getReturnType(createPrimitiveVoidType());
                     break;
                 }
                 default:
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
-                    std::cout << "Received: " << CryoDataTypeToString(nodeDataType) << std::endl;
+                    std::cout << "Received: " << DataTypeToString(nodeDataType) << std::endl;
                     CONDITION_FAILED;
                 }
                 }
@@ -499,7 +504,7 @@ namespace Cryo
             if (statement->metaData->type == NODE_BINARY_EXPR)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "");
-                returnType = types.getReturnType(DATA_TYPE_INT);
+                returnType = types.getReturnType(createPrimitiveIntType());
             }
         }
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Block Traversed");
@@ -525,8 +530,8 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
 
         // Get the return type
-        CryoDataType returnType = functionNode->returnType;
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(CryoDataTypeToString(returnType)));
+        DataType *returnType = functionNode->type;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
         // Get the function arguments
         int argCount = functionNode->paramCount;
@@ -537,9 +542,9 @@ namespace Cryo
         {
             CryoParameterNode *argNode = functionNode->params[i]->data.param;
             assert(argNode != nullptr);
-            CryoDataType _argType = argNode->type;
+            DataType *_argType = argNode->type;
 
-            if (_argType == DATA_TYPE_STRING)
+            if (_argType->container.baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
                 llvm::Type *argType = compiler.getTypes().getType(_argType, 0);
@@ -990,8 +995,8 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found, creating variable");
             CryoNodeType nodeType = varDeclNode->initializer->metaData->type;
             std::cout << "Node Type of VarDecl: " << CryoNodeTypeToString(nodeType) << std::endl;
-            CryoDataType dataType = varDeclNode->type;
-            std::cout << "Data Type of VarDecl: " << CryoDataTypeToString(dataType) << std::endl;
+            DataType *dataType = varDeclNode->type;
+            std::cout << "Data Type of VarDecl: " << DataTypeToString(dataType) << std::endl;
 
             if (nodeType == NODE_LITERAL_EXPR)
             {
@@ -1019,14 +1024,14 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        CryoDataType dataType = literalNode->dataType;
-        switch (dataType)
+        DataType *dataType = literalNode->type;
+        switch (dataType->container.baseType)
         {
-        case DATA_TYPE_INT:
+        case PRIM_INT:
         {
             // Create the integer literal
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-            llvm::Type *literalType = compiler.getTypes().getType(DATA_TYPE_INT, 0);
+            llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
             int literalValue = literalNode->value.intValue;
             llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
             llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
@@ -1052,7 +1057,7 @@ namespace Cryo
 
             return literalVar;
         }
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
             llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str.ptr");
@@ -1070,10 +1075,10 @@ namespace Cryo
 
             return literalVarPtr;
         }
-        case DATA_TYPE_BOOLEAN:
+        case PRIM_BOOLEAN:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
-            llvm::Type *literalType = compiler.getTypes().getType(DATA_TYPE_BOOLEAN, 0);
+            llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(), 0);
             bool literalValue = literalNode->value.booleanValue;
             llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
             llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
@@ -1172,40 +1177,6 @@ namespace Cryo
 
             llvm::Value *argValue = argValues[i];
             llvm::Type *expectedType = expectedTypes[i];
-
-            if (paramNode->dataType == DATA_TYPE_ANY)
-            {
-                // With a function parameter being `any` type, it only accepts pointers to any type
-                llvm::Value *argValue = argValues[i];
-                llvm::Type *argType = argValue->getType();
-                if (!argType->isPointerTy())
-                {
-                    // If the argument isn't a pointer, we need to get the pointer of the variable
-                    // Not the load instruction
-                    // Check if it alreadyd exists in the variable symbol table:
-                    std::string argName = argValue->getName().str();
-                    std::cout << "Argument Name: " << argName << std::endl;
-                    llvm::LoadInst *loadInst = llvm::dyn_cast<llvm::LoadInst>(argValue);
-                    std::string argOperandName = loadInst->getOperand(0)->getName().str();
-                    std::cout << "Argument Operand Name: " << argOperandName << std::endl;
-                    llvm::Value *argPtr = compiler.getContext().namedValues[argOperandName];
-                    if (!argPtr)
-                    {
-                        DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument pointer not found");
-                        CONDITION_FAILED;
-                    }
-
-                    verifiedArgs.push_back(argPtr);
-
-                    continue;
-                }
-                else
-                {
-                    verifiedArgs.push_back(argValue);
-                }
-
-                continue;
-            }
 
             if (argValue->getType()->getTypeID() != expectedType->getTypeID())
             {
