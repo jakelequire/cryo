@@ -148,7 +148,7 @@ char *symTableOutBuffer(CryoSymbolTable *table)
         offset += snprintf(buffer + offset, SIZE_OF_BUFFER - offset, "%-20s %-24s %-18s %-10d %-10s %-7d %-15s\n",
                            table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                            CryoNodeTypeToString(table->symbols[i]->nodeType),
-                           CryoDataTypeToString(table->symbols[i]->valueType),
+                           DataTypeToString(table->symbols[i]->type),
                            table->symbols[i]->scopeLevel,
                            locationStr,
                            table->symbols[i]->argCount,

@@ -34,6 +34,8 @@
 #include "frontend/typeTable.h"
 #include "common/common.h"
 
+typedef struct DataType DataType;
+
 #define INITIAL_CAPACITY 8
 
 /// ### The position struct represents the line and column number of a token in the source code.

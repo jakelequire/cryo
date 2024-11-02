@@ -213,7 +213,9 @@ TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, CryoSy
         // Look up custom type
         type->baseType = STRUCT_TYPE; // or other custom type
         type->custom.name = typeName;
-        type->custom.structDef = lookupStructType(table, typeName);
+
+        // TODO: Implement `lookupStructType` function
+        // type->custom.structDef = lookupStructType(table, typeName);
     }
 
     // Handle array dimensions
@@ -1159,7 +1161,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
         }
         if (expression->metaData->type == NODE_BINARY_EXPR)
         {
-            returnType = DATA_TYPE_INT;
+            returnType = createPrimitiveIntType();
             printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
         }
     }
@@ -1298,7 +1300,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 
     // Resolve the type using the symbol table
     CryoSymbol *symbol = findSymbol(table, argName, arena);
-    DataType *argType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
+    DataType *argType = symbol->type;
 
     // Consume the argument name
     getNextToken(lexer, arena, state, typeTable);
@@ -1362,14 +1364,14 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     if (lexer->currentToken.type == TOKEN_INT_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is an integer literal");
-        expectedType = DATA_TYPE_INT;
+        expectedType = createPrimitiveIntType();
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
     }
     else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a string literal");
-        expectedType = DATA_TYPE_STRING;
+        expectedType = createPrimitiveStringType();
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
 
@@ -1379,7 +1381,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a boolean literal");
-        expectedType = DATA_TYPE_BOOLEAN;
+        expectedType = createPrimitiveBooleanType();
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
     }
@@ -1389,24 +1391,28 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
         nodeType = NODE_VAR_NAME;
         // Try to find the symbol in the symbol table
         CryoSymbol *symbol = findSymbol(table, argName, arena);
-        if (symbol)
-        {
-            expectedType = symbol->valueType;
-        }
-        else
+        if (!symbol)
         {
             logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the symbol table.");
             parsingError("Symbol not found in the symbol table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, source, typeTable);
             CONDITION_FAILED;
             return NULL;
         }
+        expectedType = symbol->type;
+        isLiteral = false;
     }
     else
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is not a literal");
         // Resolve the type using the symbol table
         CryoSymbol *symbol = findSymbol(table, argName, arena);
-        expectedType = symbol ? symbol->valueType : DATA_TYPE_UNKNOWN;
+        if (!symbol)
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the symbol table.");
+            parsingError("Symbol not found in the symbol table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, source, typeTable);
+            return NULL;
+        }
+        expectedType = symbol->type;
         logMessage("INFO", __LINE__, "Parser", "Argument type: %s", DataTypeToString(expectedType));
         isLiteral = false;
     }
@@ -1719,12 +1725,12 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
     // Check the type of for loop were in.
     // For now, the structure is:
     // for($iterable: <type> = <expression>; <condition>; <update>)
-    DataType *iterDataType = DATA_TYPE_UNKNOWN;
+    DataType *iterDataType = createUnknownType();
     getNextToken(lexer, arena, state, typeTable);
     char *iterableType = strndup(lexer->currentToken.start, lexer->currentToken.length);
     printf("\n\nType: %s\n\n", iterableType);
     DataType *dataType = CryoDataTypeStringToType(iterableType);
-    if (dataType == DATA_TYPE_UNKNOWN)
+    if (dataType == NULL || dataType->container.baseType == UNKNOWN_TYPE)
     {
         parsingError("Unknown data type.", "parseForLoop", table, arena, state, lexer, source, typeTable);
     }
@@ -2025,8 +2031,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
     structNode->data.structNode->hasConstructor = hasConstructor;
 
-    DataType *structType = createDataTypeFromStruct(structNode, state, typeTable);
-    // addTypeToTypeTable(typeTable, structType);
+    StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
+    DataType *structDataType = createDataTypeFromStruct(structType, state, typeTable);
 
     // Add the struct to the symbol table
     addASTNodeSymbol(table, structNode, arena);

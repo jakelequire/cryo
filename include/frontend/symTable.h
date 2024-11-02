@@ -31,16 +31,18 @@
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"
+#include "frontend/typeTable.h"
 
 typedef struct ASTNode ASTNode;
 typedef struct CompilerState CompilerState;
+typedef struct DataType DataType;
 
 typedef struct CryoSymbol
 {
     ASTNode *node;
     char *name;
     CryoNodeType nodeType;
-    CryoDataType valueType;
+    DataType *type;
     int scopeLevel;
     bool isConstant;
     int argCount;

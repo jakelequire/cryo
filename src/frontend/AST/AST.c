@@ -60,7 +60,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTa
 
     logMessage("DEBUG", __LINE__, "AST", "Created literal expression node with value: %d", value);
     int intCpy = value;
-    node->data.literal->type = DATA_TYPE_INT;
+    node->data.literal->type = createPrimitiveIntType();
     node->data.literal->value.intValue = value;
     // convert from int to string
     char *buffer = (char *)ARENA_ALLOC(arena, sizeof(char));
@@ -156,7 +156,7 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Typ
     logMessage("INFO", __LINE__, "AST", "Created integer literal node with value: %d", value);
 
     node->data.literal->value.intValue = value;
-    node->data.literal->type = DATA_TYPE_INT;
+    node->data.literal->type = createPrimitiveIntType();
 
     return node;
 }
@@ -169,7 +169,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
 
     logMessage("INFO", __LINE__, "AST", "Created float literal node with value: %f", value);
 
-    node->data.literal->type = DATA_TYPE_FLOAT;
+    node->data.literal->type = createPrimitiveFloatType();
     node->data.literal->value.floatValue = value;
     return node;
 }
@@ -191,7 +191,7 @@ ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state
 
     printf("Manipulated string: %s\n", strdup(trimmedString));
 
-    node->data.literal->type = DATA_TYPE_STRING;
+    node->data.literal->type = createPrimitiveStringType();
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
 
@@ -240,7 +240,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
 
     logMessage("INFO", __LINE__, "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
 
-    node->data.literal->type = DATA_TYPE_BOOLEAN;
+    node->data.literal->type = createPrimitiveBooleanType();
     node->data.literal->value.booleanValue = value;
     return node;
 }
@@ -260,14 +260,14 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
         logMessage("INFO", __LINE__, "AST", "Found symbol in symbol table: %s", sym->name);
         node->data.varName->varName = strdup(sym->name);
         node->data.varName->isRef = true;
-        node->data.varName->type = sym->valueType;
+        node->data.varName->type = sym->type;
     }
     else
     {
         logMessage("INFO", __LINE__, "AST", "Symbol not found in symbol table: %s", varName);
         node->data.varName->varName = strdup(varName);
         node->data.varName->isRef = true;
-        node->data.varName->type = DATA_TYPE_UNKNOWN;
+        node->data.varName->type = createUnknownType();
     }
     return node;
 }
@@ -340,7 +340,7 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTab
     ASTNode *node = createASTNode(NODE_STRING_EXPRESSION, arena, state, typeTable);
     if (!node)
         return NULL;
-    node->data.literal->type = DATA_TYPE_STRING;
+    node->data.literal->type = createPrimitiveStringType();
     node->data.literal->value.stringValue = strdup(str);
     return node;
 }
@@ -467,11 +467,6 @@ ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *are
     node->data.returnStatement->returnValue = returnValue;
     node->data.returnStatement->expression = returnValue;
     node->data.returnStatement->type = returnType;
-
-    if (returnType == DATA_TYPE_VOID)
-    {
-        logMessage("WARN", __LINE__, "AST", "Return statement has void return type");
-    }
 
     return node;
 }

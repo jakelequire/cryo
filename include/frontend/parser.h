@@ -49,6 +49,7 @@ typedef struct CompilerState CompilerState;
 typedef struct Position Position;
 typedef struct ConstructorMetaData ConstructorMetaData;
 typedef struct TypeTable TypeTable;
+typedef struct DataType DataType;
 
 typedef struct ThisContext
 {

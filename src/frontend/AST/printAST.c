@@ -39,7 +39,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
 
     case NODE_EXTERN_FUNCTION:
         printf("\nExtern Function Node: %s\n", strdup(node->data.externFunction->name));
-        printf("Extern Function Return Type: %s\n", CryoDataTypeToString(node->data.externFunction->returnType));
+        printf("Extern Function Return Type: %s\n", DataTypeToString(node->data.externFunction->type));
         printf("Extern Function Parameters:\n");
         for (int i = 0; i < node->data.externFunction->paramCount; i++)
         {
@@ -50,7 +50,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
     case NODE_FUNCTION_DECLARATION:
         printf("\nFunction Declaration Node name: %s\n", strdup(node->data.functionDecl->name));
         printf("Function Declaration Node returnType: %s\n",
-               CryoDataTypeToString(node->data.functionDecl->returnType));
+               DataTypeToString(node->data.functionDecl->type));
         printf("Function Declaration Node visibility: %s\n",
                CryoVisibilityTypeToString(node->data.functionDecl->visibility));
         printf("Function Declaration Node params:\n");
@@ -64,7 +64,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
 
     case NODE_VAR_DECLARATION:
         printf("\nVariable Declaration Node: %s\n", strdup(node->data.varDecl->name));
-        printf("Variable Type: %s\n", CryoDataTypeToString(node->data.varDecl->type));
+        printf("Variable Type: %s\n", DataTypeToString(node->data.varDecl->type));
         printf("Is Global: %s\n", node->data.varDecl->isGlobal ? "true" : "false");
         printf("Is Reference: %s\n", node->data.varDecl->isReference ? "true" : "false");
         printf("Is Mutable: %s\n", node->data.varDecl->isMutable ? "true" : "false");
@@ -102,18 +102,18 @@ void printAST(ASTNode *node, int indent, Arena *arena)
 
     case NODE_LITERAL_EXPR:
         printf("\nLiteral Expression Node: ");
-        switch (node->data.literal->dataType)
+        switch (node->data.literal->type->container.primitive)
         {
-        case DATA_TYPE_INT:
+        case PRIM_INT:
             printf("Integer Literal Node: %d\n", node->data.literal->value.intValue);
             break;
-        case DATA_TYPE_FLOAT:
+        case PRIM_FLOAT:
             printf("Float Literal Node: %f\n", node->data.literal->value.floatValue);
             break;
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
             printf("String Literal Node: %s\n", node->data.literal->value.stringValue);
             break;
-        case DATA_TYPE_BOOLEAN:
+        case PRIM_BOOLEAN:
             printf("Boolean Literal Node: %s\n", node->data.literal->value.booleanValue ? "true" : "false");
             break;
         default:
@@ -257,7 +257,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
     case NODE_PARAM:
     {
         printf("\nParameter Node: %s\n", node->data.param->name);
-        printf("Parameter Type: %s\n", CryoDataTypeToString(node->data.param->type));
+        printf("Parameter Type: %s\n", DataTypeToString(node->data.param->type));
         printf("Function Name: %s\n", node->data.param->functionName);
         printf("Has Default Value: %s\n", node->data.param->hasDefaultValue ? "true" : "false");
         if (node->data.param->hasDefaultValue)
@@ -271,7 +271,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
     case NODE_PROPERTY:
     {
         printf("\nProperty Node: %s\n", node->data.property->name);
-        printf("Property Type: %s\n", CryoDataTypeToString(node->data.property->type));
+        printf("Property Type: %s\n", DataTypeToString(node->data.property->type));
         printf("Property Value:\n");
         printAST(node->data.property->value, indent + 2, arena);
         break;

@@ -351,6 +351,7 @@ extern "C"
     //
     // Function prototypes for the token module
     //
+
     char *operatorToString(CryoOperatorType op);
     char *CryoNodeTypeToString(CryoNodeType node);
     char *CryoDataTypeToString(CryoDataType type);
@@ -359,8 +360,6 @@ extern "C"
     char *CryoOperatorTypeToString(CryoOperatorType op);
     char *CryoOperatorToString(CryoOperatorType op);
     CryoOperatorType CryoTokenToOperator(CryoTokenType token);
-
-    CryoDataType CryoDataTypeStringToType(char *typeStr);
 
 #ifdef __cplusplus
 }

@@ -41,7 +41,7 @@ TypeTable *initTypeTable(void)
 // Create new TypeContainer
 TypeContainer *createTypeContainer(void)
 {
-    TypeContainer *container = malloc(sizeof(TypeContainer));
+    TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
     if (!container)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to allocate TypeContainer\n");
@@ -174,6 +174,11 @@ bool isPrimitiveType(const char *typeStr)
     return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
 }
 
+// # =========================================================================== #
+// # Primitive Type Creation Functions
+// # =========================================================================== #
+
+// Primitive int Type `(default/baseline)`
 DataType *createPrimitiveIntType(void)
 {
     TypeContainer *container = createTypeContainer();
@@ -182,6 +187,8 @@ DataType *createPrimitiveIntType(void)
 
     return wrapTypeContainer(container);
 }
+
+// Primitive float Type creation `(default/baseline)`
 DataType *createPrimitiveFloatType(void)
 {
     TypeContainer *container = createTypeContainer();
@@ -190,6 +197,8 @@ DataType *createPrimitiveFloatType(void)
 
     return wrapTypeContainer(container);
 }
+
+// Primitive string Type creation `(default/baseline)`
 DataType *createPrimitiveStringType(void)
 {
     TypeContainer *container = createTypeContainer();
@@ -198,6 +207,8 @@ DataType *createPrimitiveStringType(void)
 
     return wrapTypeContainer(container);
 }
+
+// Primitive boolean Type creation `(default/baseline)`
 DataType *createPrimitiveBooleanType(void)
 {
     TypeContainer *container = createTypeContainer();
@@ -206,6 +217,8 @@ DataType *createPrimitiveBooleanType(void)
 
     return wrapTypeContainer(container);
 }
+
+// Primitive void Type creation `(default/baseline)`
 DataType *createPrimitiveVoidType(void)
 {
     TypeContainer *container = createTypeContainer();
@@ -214,6 +227,8 @@ DataType *createPrimitiveVoidType(void)
 
     return wrapTypeContainer(container);
 }
+
+// Primitive null Type creation `(default/baseline)`
 DataType *createPrimitiveNullType(void)
 {
     TypeContainer *container = createTypeContainer();
@@ -223,8 +238,21 @@ DataType *createPrimitiveNullType(void)
     return wrapTypeContainer(container);
 }
 
+// Unknown Type `(will be resolved later in the compiler)`
+DataType *createUnknownType(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->baseType = UNKNOWN_TYPE;
+
+    return wrapTypeContainer(container);
+}
+
 // # =========================================================================== #
 // # Specialized Type Creation Functions
+// # =========================================================================== #
+
+// # ========================================================= #
+// # Primitive Types
 
 // Create primitive type
 TypeContainer *createPrimitiveType(PrimitiveDataType primType)
@@ -239,6 +267,9 @@ TypeContainer *createPrimitiveType(PrimitiveDataType primType)
     return container;
 }
 
+// # ========================================================= #
+// # Structs
+
 // Create struct type
 TypeContainer *createStructType(const char *name, StructType *structDef)
 {
@@ -252,6 +283,39 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
 
     return container;
 }
+
+// Creates a struct type from an ASTNode. `This will also add the struct to the type table.`
+StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable)
+{
+    StructType *structType = (StructType *)malloc(sizeof(StructType));
+    if (!structType)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate StructType\n");
+        return NULL;
+    }
+
+    structType->name = strdup(structNode->data.structNode->name);
+    structType->size = 0;
+    structType->propertyCount = 0;
+    structType->methodCount = 0;
+    structType->properties = NULL;
+    structType->methods = NULL;
+    structType->hasDefaultValue = false;
+    structType->hasConstructor = false;
+
+    // Add struct to type table
+    addTypeToTypeTable(typeTable, structType->name, createStructType(structType->name, structType));
+
+    return structType;
+}
+
+DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable)
+{
+    return wrapTypeContainer(createStructType(structType->name, structType));
+}
+
+// # ========================================================= #
+// # Arrays
 
 TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
 {
@@ -277,7 +341,7 @@ TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
 // Create DataType wrapper
 DataType *wrapTypeContainer(TypeContainer *container)
 {
-    DataType *type = malloc(sizeof(DataType));
+    DataType *type = (DataType *)malloc(sizeof(DataType));
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to allocate DataType\n");
@@ -322,7 +386,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type)
         table->capacity = newCapacity;
     }
 
-    DataType *newType = malloc(sizeof(DataType));
+    DataType *newType = (DataType *)malloc(sizeof(DataType));
     newType->container = *type;
     newType->isConst = false;
     newType->isReference = false;
@@ -517,4 +581,36 @@ char *DataTypeToString(DataType *dataType)
     }
 
     return typeString;
+}
+
+DataType *CryoDataTypeStringToType(const char *typeStr)
+{
+    if (strcmp(typeStr, "int") == 0)
+    {
+        return createPrimitiveIntType();
+    }
+    else if (strcmp(typeStr, "float") == 0)
+    {
+        return createPrimitiveFloatType();
+    }
+    else if (strcmp(typeStr, "string") == 0)
+    {
+        return createPrimitiveStringType();
+    }
+    else if (strcmp(typeStr, "boolean") == 0)
+    {
+        return createPrimitiveBooleanType();
+    }
+    else if (strcmp(typeStr, "void") == 0)
+    {
+        return createPrimitiveVoidType();
+    }
+    else if (strcmp(typeStr, "null") == 0)
+    {
+        return createPrimitiveNullType();
+    }
+    else
+    {
+        return createUnknownType();
+    }
 }

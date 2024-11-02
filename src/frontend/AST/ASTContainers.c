@@ -304,7 +304,6 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerStat
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = 128;
-    node->type = DATA_TYPE_UNKNOWN; // TOOD: Remove
     node->type = wrapTypeContainer(createTypeContainer());
     ;
 
@@ -339,7 +338,6 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->body = NULL;
-    node->type = DATA_TYPE_VOID; // TOOD: Remove
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
     ;
@@ -401,9 +399,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = DATA_TYPE_UNKNOWN; // TOOD: Remove
     node->type = wrapTypeContainer(createTypeContainer());
-    ;
     node->length = 0;
     node->value.intValue = 0;
     node->value.floatValue = 0;
@@ -592,9 +588,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
         return NULL;
     }
 
-    node->type = DATA_TYPE_UNKNOWN; // TOOD: Remove
     node->type = wrapTypeContainer(createTypeContainer());
-    ;
     node->isRef = false;
     node->varName = strdup(varName);
 
@@ -623,9 +617,7 @@ CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *sta
         return NULL;
     }
 
-    node->type = DATA_TYPE_UNKNOWN; // TOOD: Remove
     node->type = wrapTypeContainer(createTypeContainer());
-    ;
     node->name = (char *)calloc(1, sizeof(char));
     node->functionName = (char *)calloc(1, sizeof(char));
     node->hasDefaultValue = false;
@@ -719,9 +711,7 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state)
 
     node->returnValue = NULL;
     node->expression = NULL;
-    node->type = DATA_TYPE_UNKNOWN;
     node->type = wrapTypeContainer(createTypeContainer());
-    ;
 
     return node;
 }

@@ -132,12 +132,18 @@ DataType *createPrimitiveStringType(void);
 DataType *createPrimitiveBooleanType(void);
 DataType *createPrimitiveVoidType(void);
 DataType *createPrimitiveNullType(void);
-
+DataType *createUnknownType(void);
 
 // Data Type Creation from AST Nodes / Primitives
+
 TypeContainer *createPrimitiveType(PrimitiveDataType primType);
 TypeContainer *createStructType(const char *name, StructType *structDef);
 TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
+
+// Specialized Type Creation Functions
+
+StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
+DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable);
 
 // Data Type Wrapping
 DataType *wrapTypeContainer(TypeContainer *container);
@@ -157,5 +163,6 @@ void printFormattedStructType(StructType *type);
 void printTypeTable(TypeTable *table);
 void printTypeContainer(TypeContainer *type);
 char *DataTypeToString(DataType *dataType);
+DataType *CryoDataTypeStringToType(const char *typeStr);
 
 #endif // TYPE_TABLE_H
