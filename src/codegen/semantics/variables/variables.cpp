@@ -240,7 +240,9 @@ namespace Cryo
                 case PRIM_STRING:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Constant");
-                    llvmConstant = llvm::ConstantDataArray::getString(cryoContext.context, initializer->data.literal->value.stringValue);
+                    const char *str = strdup(initializer->data.literal->value.stringValue);
+                    DevDebugger::logMessage("INFO", __LINE__, "Variables", "String: " + std::string(str));
+                    llvmConstant = llvm::ConstantDataArray::getString(cryoContext.context, str);
                     break;
                 }
                 default:
@@ -368,7 +370,9 @@ namespace Cryo
                 case PRIM_STRING:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Constant");
-                    llvmConstant = llvm::ConstantDataArray::getString(cryoContext.context, initializer->data.literal->value.stringValue);
+                    const char *str = strdup(initializer->data.literal->value.stringValue);
+                    DevDebugger::logMessage("INFO", __LINE__, "Variables", "String: " + std::string(str));
+                    llvmConstant = llvm::ConstantDataArray::getString(cryoContext.context, str);
                     break;
                 }
                 default:

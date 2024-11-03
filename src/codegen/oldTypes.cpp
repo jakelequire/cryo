@@ -193,7 +193,7 @@ namespace Cryo
         if (node->metaData->type == NODE_STRING_LITERAL)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
-            return strlen(node->data.literal->value.stringValue);
+            return strlen(strdup(node->data.literal->value.stringValue));
         }
 
         if (node->metaData->type == NODE_LITERAL_EXPR)
@@ -201,7 +201,7 @@ namespace Cryo
             if (node->data.literal->type->container.baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
-                int _len = strlen(node->data.literal->value.stringValue);
+                int _len = strlen(strdup(node->data.literal->value.stringValue));
                 std::cout << "<TYPES> String Length: " << _len << std::endl;
                 return _len;
             }
@@ -238,7 +238,7 @@ namespace Cryo
             if (node->data.varDecl->type->container.baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string variable");
-                return strlen(node->data.varDecl->initializer->data.literal->value.stringValue);
+                return strlen(strdup(node->data.varDecl->initializer->data.literal->value.stringValue));
             }
             else
             {
@@ -264,7 +264,7 @@ namespace Cryo
         if (node->type->container.baseType == PRIM_STRING)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
-            return strlen(node->value.stringValue);
+            return strlen(strdup(node->value.stringValue));
         }
         return 0;
     }

@@ -484,6 +484,7 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingCo
 }
 
 /// @brief This function handles the `debugger` keyword. Which is used to pause the program execution.
+/// Note: This only stops the program on the parser side, not the runtime.
 void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing debugger statement...");

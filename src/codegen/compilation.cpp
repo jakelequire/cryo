@@ -42,6 +42,7 @@ namespace Cryo
             std::cout << "\n\n";
 
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
+
             exit(1);
         }
 

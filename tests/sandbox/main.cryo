@@ -24,10 +24,10 @@ struct Int {
 
 public function main() -> void {
     const fooInt: int = 56;
-    const fooStr: string = "Hello, World!";
     const barInt: int = 42;
-    const barStr: string = "Goodbye, World!";
+    printInt(fooInt);
 
+    const fooStr: string = "Hello, World!";
     printStr(fooStr);
 
     return;

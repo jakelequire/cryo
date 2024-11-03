@@ -262,7 +262,7 @@ namespace Cryo
         case NODE_VAR_NAME:
             std::cout << "\n";
             std::cout << ">>>>-----{ Variable Name Node }-----<<<<" << std::endl;
-            std::cout << "Variable Name: " << node->data.varName->varName << std::endl;
+            std::cout << "Variable Name: " << strdup(node->data.varName->varName) << std::endl;
             std::cout << "Data Type: " << DataTypeToString(node->data.varName->type) << std::endl;
             std::cout << "Is Reference: " << (node->data.varName->isRef ? "True" : "False") << std::endl;
             std::cout << ">>>>--------------------------------<<<<" << std::endl;
@@ -272,7 +272,7 @@ namespace Cryo
         case NODE_STRING_LITERAL:
             std::cout << "\n";
             std::cout << ">>>>-----{ String Literal Node }-----<<<<" << std::endl;
-            std::cout << "Value: " << node->data.literal->value.stringValue << std::endl;
+            std::cout << "Value: " << strdup(node->data.literal->value.stringValue) << std::endl;
             std::cout << ">>>>---------------------------------<<<<" << std::endl;
             std::cout << "\n";
             break;

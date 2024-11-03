@@ -386,7 +386,8 @@ namespace Cryo
         case PRIM_STRING:
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling String Literal");
-            std::string formattedString = formatString(literalNode->value.stringValue);
+            const char *cString = strdup(literalNode->value.stringValue);
+            std::string formattedString = formatString(std::string(cString));
             llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, formattedString);
             break;
         }
