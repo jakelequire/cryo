@@ -3,6 +3,10 @@
 # Binary Files
 /src/bin/
 /src/bin/*
+/bin/
+/bin/*
+./bin/
+./bin/*
 
 # Node Modules
 /node_modules/*

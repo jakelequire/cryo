@@ -16,17 +16,6 @@
  ********************************************************************************/
 #include "common/common.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-    int generateCodeWrapper(ASTNode *node, CompilerState *state);
-
-#ifdef __cplusplus
-}
-#endif
-
 // -------------------------------------------------------------------
 // @Compiler Errors
 
@@ -212,88 +201,3 @@ void dumpSymbolTableCXX(CompilerState state)
 {
     dumpSymbolTable(state);
 }
-
-// -------------------------------------------------------------------
-
-CompiledFile compileFile(const char *filePath, const char *compilerFlags)
-{
-    logMessage("INFO", __LINE__, "Common", "Compiling file...");
-    // Get the cryo ENV variable
-    const char *cryoEnv = getenv("CRYO_PATH");
-    if (cryoEnv == NULL)
-    {
-        fprintf(stderr, "Error: CRYO_PATH environment variable not set.\n");
-        exit(1);
-    }
-
-    // Get the executable path (CRYO_PATH/src/bin/main)
-    char *executablePath = (char *)malloc(strlen(cryoEnv) + 32);
-    strcpy(executablePath, cryoEnv);
-    strcat(executablePath, "/src/bin/main");
-
-    // Check if the file exists
-    FILE *file = fopen(filePath, "r");
-    if (file == NULL)
-    {
-        fprintf(stderr, "Error: File not found: %s\n", filePath);
-        exit(1);
-    }
-    // Close the file
-    fclose(file);
-
-    // Create the command string
-    char *command = (char *)malloc(strlen(executablePath) + strlen(filePath) + 32);
-    strcpy(command, executablePath);
-    strcat(command, " -f ");
-    strcat(command, filePath);
-
-    // Check if the compiler flags are set
-    if (compilerFlags != NULL)
-    {
-        logMessage("INFO", __LINE__, "Common", "Compiler flags detected: %s", strdup(compilerFlags));
-        strcat(command, " ");
-        strcat(command, strdup(compilerFlags));
-    }
-
-    printf("\n\n Executing command: %s\n\n", command);
-
-    // Execute the command
-    system(command);
-
-    logMessage("INFO", __LINE__, "Common", "File compiled successfully.");
-
-    // Free the memory
-    free(executablePath);
-    free(command);
-
-    char *fileName = (char *)malloc(strlen(filePath) + 1);
-    // Trim the file path
-    char *trimmedFileName = strrchr(filePath, '/');
-    if (trimmedFileName == NULL)
-    {
-        // If there's no '/' in the path, use the whole fileName
-        trimmedFileName = (char *)filePath;
-    }
-    else
-    {
-        // Skip the '/' character
-        trimmedFileName++;
-    }
-    strcpy(fileName, trimmedFileName);
-
-    // Return the compiled file
-    CompiledFile compiledFile;
-    compiledFile.fileName = fileName;
-    compiledFile.filePath = filePath;
-    compiledFile.outputPath = "unknown";
-
-    logMessage("INFO", __LINE__, "Common", "File compiled successfully.");
-    return compiledFile;
-}
-
-CompiledFile compileFileCXX(const char *filePath, const char *compilerFlags)
-{
-    return compileFile(filePath, compilerFlags);
-}
-
-// -------------------------------------------------------------------

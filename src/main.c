@@ -14,13 +14,25 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "main.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "settings/compilerSettings.h"
+#include "compiler/compiler.h"
+#include "tools/utils/compileTimer.h"
+#include "tools/utils/buildStats.h"
 
 int main(int argc, char *argv[])
 {
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
     logCompilerSettings(&settings);
+
+    BuildStats *buildStats = createBuildStats();
+    addCompilerSettings(buildStats, &settings);
+
+    CompileTimer *compileTimer = createCompileTimer();
+    startTimer(compileTimer);
 
     // Check if the input file exists
     const char *filePath = settings.inputFilePath;
@@ -38,5 +50,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    return 0;
+    double elapsed = stopTimer(compileTimer);
+    getSystemInfo(buildStats);
+    addElapsedTime(buildStats, elapsed);
+    printBuildStats(buildStats);
+
+    exit(EXIT_SUCCESS);
 }

@@ -16,61 +16,44 @@
 #*******************************************************************************/
 # clean.py
 import os
-import glob
 from datetime import datetime
 
-files_to_delete = [
-    # Compiled files within root directory
-    "./src/*.o",
-    "./src/tests/*.o",
-    "./src/compiler/*.o",
-    "./src/utils/*.o",
-    "./src/cli/*.o",
-    "./src/cli/commands/*.o",
-    # Compiled files within bin directory
-    "./src/bin/main",
-    "./src/bin/cryo",
-    "./src/bin/*.exe",
-    "./src/bin/*.ilk",
-    "./src/bin/*.pdb",
-    "./src/bin/*.o",
-    "./src/bin/.o/*.exe",
-    "./src/bin/.o/*.ilk",
-    "./src/bin/.o/*.pdb",
-    "./src/bin/.o/*.o",
-    "./src/bin/.o/*.d",
-    "./src/bin/debug/*.exe",
-    "./src/bin/debug/*.ilk",
-    "./src/bin/debug/*.pdb",
-    "./src/bin/debug/*.o",
-    "./src/bin/cleaned.txt",
-    # Compiled Cryo files
-    "./*.ll",
-    "./*.bc",
-    "./*.s",
-]
+object_files = []
 
-# Function to delete files
-def delete_files():
-    for pattern in files_to_delete:
-        for file in glob.glob(pattern, recursive=True):
-            try:
-                os.remove(file)
-                print(f"Deleted {file}")
-            except OSError as e:
-                print(f"Error deleting {file}: {e.strerror}")
+def recursive_file_names():
+    folder = "./bin/.o"
+    file_list = []
+    for root, dirs, files in os.walk(folder):
+        for file in files:
+            file_list.append(os.path.join(root, file))
+    
+    object_files.append(file_list)
+    return file_list
+
+def delete_folder():
+    folder = "./bin/.o"
+    try:
+        # Force delete folder and all contents
+        os.system(f"rm -rf {folder}")
+        print(f"Deleted {folder}")
+    except OSError as e:
+        print(f"Error deleting {folder}: {e.strerror}")
 
 # Function to create cleaned.txt log file
-def create_cleaned_log():
-    cleaned_file_path = "./src/bin/cleaned.txt"
+def create_cleaned_log(list):
+    cleaned_file_path = "./bin/cleaned.txt"
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     compiler_version = os.popen("clang --version").read().strip().split('\n')[0]
+    print("Cleaned Files List: ")
+    for file in list:
+        print(file)
 
     with open(cleaned_file_path, "w") as f:
         f.write(f"Last cleaned: {current_time}\n")
         f.write(f"Compiler version: {compiler_version}\n")
 
 if __name__ == "__main__":
-    delete_files()
-    create_cleaned_log()
+    object_files = recursive_file_names()
+    delete_folder()
+    create_cleaned_log(object_files)
     print("Cleaned successfully.")
