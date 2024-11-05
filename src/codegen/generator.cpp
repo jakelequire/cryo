@@ -172,9 +172,9 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Generator", "Literal Node Found");
 
         DataType *dataType = literalNode->type;
-        switch (dataType->container.baseType)
+        switch (dataType->container.primitive)
         {
-        case DATA_TYPE_INT:
+        case PRIM_INT:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
             int intValue = literalNode->value.intValue;
@@ -185,19 +185,19 @@ namespace Cryo
 
             break;
         }
-        case DATA_TYPE_STRING:
+        case PRIM_STRING:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating String Constant");
             llvmConstant = llvm::ConstantDataArray::getString(compiler.getContext().context, literalNode->value.stringValue);
             break;
         }
-        case DATA_TYPE_FLOAT:
+        case PRIM_FLOAT:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Float Constant");
             llvmConstant = llvm::ConstantFP::get(compiler.getContext().context, llvm::APFloat(literalNode->value.floatValue));
             break;
         }
-        case DATA_TYPE_BOOLEAN:
+        case PRIM_BOOLEAN:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Boolean Constant");
             int boolVal;
@@ -213,7 +213,13 @@ namespace Cryo
             llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(boolVal, boolVal, true));
             break;
         }
-        case DATA_TYPE_VOID:
+        case PRIM_NULL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Null Constant");
+            llvmConstant = llvm::ConstantPointerNull::get(llvm::PointerType::get(compiler.getTypes().getType(dataType, 0), 0));
+            break;
+        }
+        case PRIM_VOID:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Void Constant");
             llvmConstant = llvm::Constant::getNullValue(llvm::Type::getVoidTy(compiler.getContext().context));

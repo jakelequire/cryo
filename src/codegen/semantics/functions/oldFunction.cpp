@@ -1025,90 +1025,93 @@ namespace Cryo
         }
 
         DataType *dataType = literalNode->type;
-        switch (dataType->container.baseType)
+        if (dataType->container.baseType == PRIMITIVE_TYPE)
         {
-        case PRIM_INT:
-        {
-            // Create the integer literal
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-            llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
-            int literalValue = literalNode->value.intValue;
-            llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
-            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
-            if (!literalVarPtr)
+            switch (dataType->container.primitive)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+            case PRIM_INT:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_STRING:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+                llvm::Value *literalVar = compiler.getContext().builder.CreateStore(literalValue, literalVarPtr);
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not stored");
+                    CONDITION_FAILED;
+                }
+
+                return literalVarPtr;
+            }
+            case PRIM_BOOLEAN:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(), 0);
+                bool literalValue = literalNode->value.booleanValue;
+                llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalBool, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.bool.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            default:
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown literal type");
                 CONDITION_FAILED;
             }
-
-            llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
-
-            llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
-            if (!literalVar)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
-                CONDITION_FAILED;
             }
-            literalVar->setAlignment(llvm::Align(8));
-
-            // Add the literal to the named values
-            std::string literalName = literalVarPtr->getName().str();
-            compiler.getContext().namedValues[literalName] = literalVarPtr;
-
-            return literalVar;
-        }
-        case PRIM_STRING:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
-            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str.ptr");
-            if (!literalVarPtr)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
-                CONDITION_FAILED;
-            }
-            llvm::Value *literalVar = compiler.getContext().builder.CreateStore(literalValue, literalVarPtr);
-            if (!literalVar)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not stored");
-                CONDITION_FAILED;
-            }
-
-            return literalVarPtr;
-        }
-        case PRIM_BOOLEAN:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
-            llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(), 0);
-            bool literalValue = literalNode->value.booleanValue;
-            llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
-            llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
-            if (!literalVarPtr)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
-                CONDITION_FAILED;
-            }
-
-            llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalBool, literalVarPtr);
-
-            llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.bool.load.funcCall");
-            if (!literalVar)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
-                CONDITION_FAILED;
-            }
-            literalVar->setAlignment(llvm::Align(8));
-
-            // Add the literal to the named values
-            std::string literalName = literalVarPtr->getName().str();
-            compiler.getContext().namedValues[literalName] = literalVarPtr;
-
-            return literalVar;
-        }
-        default:
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown literal type");
-            CONDITION_FAILED;
-        }
         }
 
         return nullptr;

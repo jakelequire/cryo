@@ -22,6 +22,23 @@ ASTNode *programNode = NULL;
 
 // -------------------------------------------------------------------
 
+ASTNode *copyASTNode(ASTNode *node)
+{
+    if (!node)
+        return NULL;
+
+    ASTNode *copy = (ASTNode *)malloc(sizeof(ASTNode));
+    if (!copy)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST node copy");
+        return NULL;
+    }
+
+    memcpy(copy, node, sizeof(ASTNode));
+
+    return copy;
+}
+
 ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_NAMESPACE, arena, state, typeTable);
@@ -174,7 +191,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
     return node;
 }
 
-ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable);
     if (!node)
@@ -202,7 +219,7 @@ char *handleStringFormatting(char *value)
 {
     // Find the first instance of a format specifier
     // i.e `\n`, `\t`, etc.
-    char *formatSpecifier = strchr(value, '\\');
+    char *formatSpecifier = strchr((char *)value, '\\');
     if (!formatSpecifier)
     {
         return value;

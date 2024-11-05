@@ -305,7 +305,6 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerStat
     node->paramCount = 0;
     node->paramCapacity = 128;
     node->type = wrapTypeContainer(createTypeContainer());
-    ;
 
     return node;
 }
@@ -340,7 +339,6 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
-    ;
 
     return node;
 }
@@ -403,7 +401,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
     node->length = 0;
     node->value.intValue = 0;
     node->value.floatValue = 0;
-    node->value.stringValue = (char *)ARENA_ALLOC(arena, sizeof(char));
+    node->value.stringValue = (const char *)calloc(1, sizeof(char *));
     node->value.booleanValue = false;
 
     return node;
@@ -514,7 +512,6 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *s
         return NULL;
     }
 
-    node->nodeType = NODE_UNKNOWN; // TOOD: Remove
     node->type = wrapTypeContainer(createTypeContainer());
     ;
     node->data.varNameNode = NULL;

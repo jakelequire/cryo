@@ -363,46 +363,49 @@ namespace Cryo
         llvm::Constant *llvmConstant = nullptr;
 
         DataType *dataType = literalNode->type;
-        switch (dataType->container.baseType)
+        if (dataType->container.baseType == PRIMITIVE_TYPE)
         {
-        case PRIM_INT:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Integer Literal");
-            llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, literalNode->value.intValue, true));
-            break;
-        }
-        case PRIM_FLOAT:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Float Literal");
-            llvmValue = llvm::ConstantFP::get(compiler.getContext().context, llvm::APFloat(literalNode->value.floatValue));
-            break;
-        }
-        case PRIM_BOOLEAN:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Boolean Literal");
-            llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(1, literalNode->value.booleanValue, true));
-            break;
-        }
-        case PRIM_STRING:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling String Literal");
-            const char *cString = strdup(literalNode->value.stringValue);
-            std::string formattedString = formatString(std::string(cString));
-            llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, formattedString);
-            break;
-        }
-        case PRIM_VOID:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Void Literal");
-            llvmValue = llvm::UndefValue::get(llvm::Type::getVoidTy(compiler.getContext().context));
-            break;
-        }
-        default:
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown data type");
-            std::cout << "Received: " << DataTypeToString(dataType) << std::endl;
-            exit(1);
-        }
+            switch (dataType->container.primitive)
+            {
+            case PRIM_INT:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Integer Literal");
+                llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, literalNode->value.intValue, true));
+                break;
+            }
+            case PRIM_FLOAT:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Float Literal");
+                llvmValue = llvm::ConstantFP::get(compiler.getContext().context, llvm::APFloat(literalNode->value.floatValue));
+                break;
+            }
+            case PRIM_BOOLEAN:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Boolean Literal");
+                llvmValue = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(1, literalNode->value.booleanValue, true));
+                break;
+            }
+            case PRIM_STRING:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling String Literal");
+                const char *cString = strdup(literalNode->value.stringValue);
+                std::string formattedString = formatString(std::string(cString));
+                llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, formattedString);
+                break;
+            }
+            case PRIM_VOID:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Void Literal");
+                llvmValue = llvm::UndefValue::get(llvm::Type::getVoidTy(compiler.getContext().context));
+                break;
+            }
+            default:
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown data type");
+                std::cout << "Received: " << DataTypeToString(dataType) << std::endl;
+                exit(1);
+            }
+            }
         }
 
         return llvmValue;

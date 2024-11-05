@@ -51,13 +51,18 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return 1;
     }
 
+    ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
+    memcpy(programCopy, programNode, sizeof(ASTNode));
+
     PRINT_AST_START;
-    printAST(programNode, 0, arena);
+    printAST(programCopy, 0, arena);
     PRINT_AST_END;
 
     // Outputs the SymTable into a file in the build directory.
     outputSymTable(table, settings);
-    initASTDebugOutput(programNode, settings);
+
+    initASTDebugOutput(programCopy, settings);
+    logASTNodeDebugView(programCopy);
 
     printTypeTable(typeTable);
 

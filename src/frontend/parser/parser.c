@@ -544,7 +544,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     case TOKEN_STRING_LITERAL:
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing string literal");
-        char *str = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        const char *str = (const char *)strndup(lexer->currentToken.start, lexer->currentToken.length);
         printf("String: %s\n", str);
         node = createStringLiteralNode(str, arena, state, typeTable);
         getNextToken(lexer, arena, state, typeTable);

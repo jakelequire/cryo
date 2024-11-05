@@ -198,7 +198,7 @@ namespace Cryo
 
         if (node->metaData->type == NODE_LITERAL_EXPR)
         {
-            if (node->data.literal->type->container.baseType == PRIM_STRING)
+            if (node->data.literal->type->container.primitive == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
                 int _len = strlen(strdup(node->data.literal->value.stringValue));
@@ -206,17 +206,17 @@ namespace Cryo
                 return _len;
             }
 
-            if (node->data.literal->type->container.baseType == PRIM_INT)
+            if (node->data.literal->type->container.primitive == PRIM_INT)
             {
                 return 0;
             }
 
-            if (node->data.literal->type->container.baseType == PRIM_FLOAT)
+            if (node->data.literal->type->container.primitive == PRIM_FLOAT)
             {
                 return 0;
             }
 
-            if (node->data.literal->type->container.baseType == PRIM_BOOLEAN)
+            if (node->data.literal->type->container.primitive == PRIM_BOOLEAN)
             {
                 return 0;
             }
@@ -261,7 +261,7 @@ namespace Cryo
 
     int OldTypes::getLiteralValLength(LiteralNode *node)
     {
-        if (node->type->container.baseType == PRIM_STRING)
+        if (node->type->container.primitive == PRIM_STRING)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
             return strlen(strdup(node->value.stringValue));

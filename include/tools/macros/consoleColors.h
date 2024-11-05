@@ -105,6 +105,10 @@
     ------------
     ┼  Single cross
     ╬  Double cross
+
+↖ ↑ ↗
+← · →
+↙ ↓ ↘
 */
 
 #endif // CONSOLE_COLORS_H

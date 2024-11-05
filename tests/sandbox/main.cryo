@@ -29,6 +29,7 @@ public function main() -> void {
 
     const fooStr: string = "Hello, World!";
     printStr(fooStr);
+    printStr("Hey!");
 
     return;
 }

@@ -105,26 +105,26 @@ void printAST(ASTNode *node, int indent, Arena *arena)
         switch (node->data.literal->type->container.primitive)
         {
         case PRIM_INT:
-            printf("Integer Literal Node: %d\n", node->data.literal->value.intValue);
+            printf("\n\tInteger Literal Node: %d\n", node->data.literal->value.intValue);
             break;
         case PRIM_FLOAT:
-            printf("Float Literal Node: %f\n", node->data.literal->value.floatValue);
+            printf("\n\tFloat Literal Node: %f\n", node->data.literal->value.floatValue);
             break;
         case PRIM_STRING:
-            printf("String Literal Node: %s\n", node->data.literal->value.stringValue);
+            printf("\n\tString Literal Node: %s\n", strdup(node->data.literal->value.stringValue));
             break;
         case PRIM_BOOLEAN:
-            printf("Boolean Literal Node: %s\n", node->data.literal->value.booleanValue ? "true" : "false");
+            printf("\n\tBoolean Literal Node: %s\n", node->data.literal->value.booleanValue ? "true" : "false");
             break;
         default:
-            printf("Unknown Literal Type\n");
+            printf("\n\tUnknown Literal Type\n");
         }
         break;
     case NODE_STRING_EXPRESSION:
-        printf("\nString Expression Node: %s\n", node->data.literal->value.stringValue);
+        printf("\nString Expression Node: %s\n", strdup(node->data.literal->value.stringValue));
         break;
     case NODE_VAR_NAME:
-        printf("\nVariable Name Node: %s\n", node->data.varName->varName);
+        printf("\nVariable Name Node: %s\n", strdup(node->data.varName->varName));
         printf("Is Reference: %s\n", node->data.varName->isRef ? "true" : "false");
         break;
 

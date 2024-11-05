@@ -103,7 +103,7 @@ namespace Cryo
             std::cout << "\n";
             std::cout << ">>>>---{ Literal Expression Node }---<<<<" << std::endl;
             std::cout << "Data Type: " << DataTypeToString(node->data.literal->type) << std::endl;
-            switch (node->data.literal->type->container.baseType)
+            switch (node->data.literal->type->container.primitive)
             {
             case PRIM_INT:
                 std::cout << "Value: " << node->data.literal->value.intValue << std::endl;

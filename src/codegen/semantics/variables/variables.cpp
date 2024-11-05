@@ -210,14 +210,14 @@ namespace Cryo
             else
             {
                 int _len = types.getLiteralValLength(initializer);
-                if (type->container.baseType == DATA_TYPE_STRING)
+                if (type->container.primitive == DATA_TYPE_STRING)
                     _len += 1; // Add one for the null terminator
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
                 llvmType = types.getType(type, _len);
                 char *typeNode = DataTypeToString(type);
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(typeNode));
 
-                switch (type->container.baseType)
+                switch (type->container.primitive)
                 {
                 case PRIM_INT:
                 {
@@ -347,7 +347,7 @@ namespace Cryo
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Varname: " + std::string(varName));
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Data Type: " + std::string(typeNode));
 
-                switch (type->container.baseType)
+                switch (type->container.primitive)
                 {
                 case PRIM_INT:
                 {
@@ -534,7 +534,7 @@ namespace Cryo
         llvm::Constant *llvmConstant = nullptr;
 
         DataType *dataType = literalNode->type;
-        switch (dataType->container.baseType)
+        switch (dataType->container.primitive)
         {
         case PRIM_INT:
         {
@@ -647,95 +647,105 @@ namespace Cryo
 
         switch (nodeDataType->container.baseType)
         {
-        case PRIM_INT:
+        case PRIMITIVE_TYPE:
         {
-            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Int Variable");
-            std::cout << "Variable Name (Int): " << varName << std::endl;
-            llvmType = types.getType(nodeDataType, 0);
-
-            STVariable *var = symTable.getVariable(namespaceName, refVarName);
-            if (!var)
+            switch (nodeDataType->container.primitive)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            case PRIM_INT:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Int Variable");
+                std::cout << "Variable Name (Int): " << varName << std::endl;
+                llvmType = types.getType(nodeDataType, 0);
+
+                STVariable *var = symTable.getVariable(namespaceName, refVarName);
+                if (!var)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                    CONDITION_FAILED;
+                }
+                llvm::Value *stValue = var->LLVMValue;
+                if (!stValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                    compiler.dumpModule();
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
+                llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(llvmType, stValue, varName + ".load.var");
+                llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
+                llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
+                storeValue->setAlignment(llvm::Align(8));
+                // Add the variable to the named values map & symbol table
+                compiler.getContext().namedValues[varName] = ptrValue;
+                symTable.updateVariableNode(namespaceName, varName, ptrValue, llvmType);
+                symTable.addStoreInstToVar(namespaceName, varName, storeValue);
+                symTable.addLoadInstToVar(namespaceName, varName, loadInst);
+
+                break;
+            }
+            case PRIM_STRING:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
+                llvmValue = compiler.getContext().namedValues[refVarName];
+                if (!llvmValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                    CONDITION_FAILED;
+                }
+
+                STVariable *var = symTable.getVariable(namespaceName, refVarName);
+                if (!var)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *ST_Value = var->LLVMValue;
+                if (!ST_Value)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                    CONDITION_FAILED;
+                }
+
+                llvm::StoreInst *storeInst = var->LLVMStoreInst;
+                if (!storeInst)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
+                    CONDITION_FAILED;
+                }
+
+                // We get the store instruction and the type of the store instruction
+                // This is because `alloc` just returns a pointer, and we need the type of the pointer
+                llvm::Instruction *storeInstruction = llvm::dyn_cast<llvm::Instruction>(storeInst);
+                llvm::Type *storeType = types.parseInstForType(storeInstruction);
+
+                llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(storeType, nullptr, varName);
+                llvm::LoadInst *loadValue = compiler.getContext().builder.CreateLoad(storeType, llvmValue, varName + ".load.var");
+                llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
+                storeValue->setAlignment(llvm::Align(8));
+
+                // Add the variable to the named values map & symbol table
+                compiler.getContext().namedValues[varName] = ptrValue;
+                symTable.updateVariableNode(namespaceName, varName, ptrValue, storeType);
+                symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+                symTable.addLoadInstToVar(namespaceName, varName, loadValue);
+
+                break;
+            }
+            default:
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
                 CONDITION_FAILED;
             }
-            llvm::Value *stValue = var->LLVMValue;
-            if (!stValue)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                compiler.dumpModule();
-                CONDITION_FAILED;
             }
-
-            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
-            llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(llvmType, stValue, varName + ".load.var");
-            llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
-            llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
-            storeValue->setAlignment(llvm::Align(8));
-            // Add the variable to the named values map & symbol table
-            compiler.getContext().namedValues[varName] = ptrValue;
-            symTable.updateVariableNode(namespaceName, varName, ptrValue, llvmType);
-            symTable.addStoreInstToVar(namespaceName, varName, storeValue);
-            symTable.addLoadInstToVar(namespaceName, varName, loadInst);
-
-            break;
-        }
-        case PRIM_STRING:
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
-            llvmValue = compiler.getContext().namedValues[refVarName];
-            if (!llvmValue)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
-                CONDITION_FAILED;
-            }
-
-            STVariable *var = symTable.getVariable(namespaceName, refVarName);
-            if (!var)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
-                CONDITION_FAILED;
-            }
-
-            llvm::Value *ST_Value = var->LLVMValue;
-            if (!ST_Value)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
-                CONDITION_FAILED;
-            }
-
-            llvm::StoreInst *storeInst = var->LLVMStoreInst;
-            if (!storeInst)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
-                CONDITION_FAILED;
-            }
-
-            // We get the store instruction and the type of the store instruction
-            // This is because `alloc` just returns a pointer, and we need the type of the pointer
-            llvm::Instruction *storeInstruction = llvm::dyn_cast<llvm::Instruction>(storeInst);
-            llvm::Type *storeType = types.parseInstForType(storeInstruction);
-
-            llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(storeType, nullptr, varName);
-            llvm::LoadInst *loadValue = compiler.getContext().builder.CreateLoad(storeType, llvmValue, varName + ".load.var");
-            llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
-            storeValue->setAlignment(llvm::Align(8));
-
-            // Add the variable to the named values map & symbol table
-            compiler.getContext().namedValues[varName] = ptrValue;
-            symTable.updateVariableNode(namespaceName, varName, ptrValue, storeType);
-            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
-            symTable.addLoadInstToVar(namespaceName, varName, loadValue);
-
-            break;
-        }
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
             CONDITION_FAILED;
         }
         }
-
+        }
         return llvmValue;
     }
 

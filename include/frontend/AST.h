@@ -315,7 +315,7 @@ typedef struct LiteralNode
     {
         int intValue;
         float floatValue;
-        char *stringValue;
+        const char *stringValue;
         int booleanValue;
     } value;
 } LiteralNode;
@@ -864,9 +864,9 @@ typedef struct ASTNode
 extern "C"
 {
 #endif
-
     /* @Node_Accessors */
     void printAST(ASTNode *node, int indent, Arena *arena);
+    ASTNode *copyASTNode(ASTNode *node);
 
     /* @Node_Management */
     ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -886,7 +886,7 @@ extern "C"
     /* @Node_Creation - Literals */
     ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createStringLiteralNode(char *value, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, TypeTable *typeTable);
     char *handleStringFormatting(char *value);
     ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -1008,6 +1008,9 @@ typedef struct ASTDebugNode
     int indent;
     const char *namespaceName;
     ASTNode *sourceNode;
+    ASTNode *value;
+    ASTNode **args;
+    int argCount;
 } ASTDebugNode;
 
 typedef struct DebugASTOutput
@@ -1037,6 +1040,8 @@ bool propHasDefault(PropertyNode *prop);
 // Output File Buffer
 char *getASTBuffer(DebugASTOutput *output, bool console);
 char *logASTBuffer(DebugASTOutput *output, bool console);
+
+char *ASTNodeValueBuffer(ASTNode *node);
 
 // Formatting Functions
 char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console);
