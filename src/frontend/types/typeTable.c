@@ -445,6 +445,58 @@ bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
     }
 }
 
+DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable)
+{
+    if (!node)
+        return NULL;
+
+    switch (node->metaData->type)
+    {
+    case NODE_PROPERTY_ACCESS:
+    {
+        // Get the object type
+        DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object, state, typeTable);
+        if (!objectType)
+            return NULL;
+
+        // Get the property name
+        const char *propertyName = node->data.propertyAccess->property;
+
+        // Get the struct type
+        if (objectType->container.baseType == STRUCT_TYPE)
+        {
+            StructType *structType = objectType->container.custom.structDef;
+            if (!structType)
+            {
+                fprintf(stderr, "[TypeTable] Error: Failed to get struct type from property access.\n");
+                return NULL;
+            }
+
+            // Find the property in the struct
+            for (int i = 0; i < structType->propertyCount; i++)
+            {
+                ASTNode *property = structType->properties[i];
+                if (strcmp(property->data.property->name, propertyName) == 0)
+                {
+                    return property->data.property->type;
+                }
+            }
+
+            fprintf(stderr, "[TypeTable] Error: Property '%s' not found in struct '%s'.\n", propertyName, structType->name);
+            return NULL;
+        }
+        else
+        {
+            fprintf(stderr, "[TypeTable] Error: Property access on non-struct type.\n");
+            return NULL;
+        }
+    }
+
+    default:
+        return NULL;
+    }
+}
+
 // # =========================================================================== #
 // # Utility Functions
 

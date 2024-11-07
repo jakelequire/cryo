@@ -1379,6 +1379,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     }
 
     char *argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    bool usingDotNotation = false;
     bool isLiteral = false;
     CryoNodeType nodeType = NODE_UNKNOWN;
 
@@ -1411,6 +1412,28 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     else if (lexer->currentToken.type == TOKEN_IDENTIFIER)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is an identifier");
+        // Check for dot notation
+        Token nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable);
+        if (nextToken.type == TOKEN_DOT)
+        {
+            usingDotNotation = true;
+        }
+
+        if (usingDotNotation)
+        {
+            logMessage("INFO", __LINE__, "Parser", "Dot notation detected.");
+            // Parse through the dot notation
+            printFormattedType(expectedType);
+            ASTNode *lhs = parseLHSIdentifier(lexer, table, context, arena, state, typeTable, expectedType);
+            ASTNode *dotExpr = parseDotNotation(lexer, table, context, arena, state, lhs, typeTable);
+            if (!dotExpr)
+            {
+                logMessage("ERROR", __LINE__, "Parser", "Failed to parse dot expression.");
+                parsingError("Failed to parse dot expression.", "parseArgumentsWithExpectedType", table, arena, state, lexer, source, typeTable);
+                return NULL;
+            }
+        }
+
         nodeType = NODE_VAR_NAME;
         // Try to find the symbol in the symbol table
         CryoSymbol *symbol = findSymbol(table, argName, arena);
@@ -2184,6 +2207,14 @@ ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     logMessage("INFO", __LINE__, "Parser", "Parsing dot notation...");
     consume(__LINE__, lexer, TOKEN_DOT, "Expected `.` for dot notation.", "parseDotNotation", table, arena, state, typeTable);
 
+    // Look up the type of the left node in the type table
+    DataType *leftType = getDataTypeFromASTNode(left, state, typeTable);
+    if (leftType == NULL)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to get data type from left node.");
+        return NULL;
+    }
+
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
         parsingError("Expected an identifier after `.`.", "parseDotNotation", table, arena, state, lexer, source, typeTable);
@@ -2210,4 +2241,25 @@ ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     }
 
     return propertyNode;
+}
+
+ASTNode *parseLHSIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, DataType *typeOfNode)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing LHS identifier...");
+    if (lexer->currentToken.type != TOKEN_IDENTIFIER)
+    {
+        parsingError("Expected an identifier.", "parseLHSIdentifier", table, arena, state, lexer, source, typeTable);
+        return NULL;
+    }
+
+    printf("\n\n\n\nType of data type:");
+    printFormattedType(typeOfNode);
+    printf("\n\n\n\n");
+
+    char *varName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage("INFO", __LINE__, "Parser", "Variable name: %s", varName);
+
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseLHSIdentifier", table, arena, state, typeTable);
+
+    return createIdentifierNode(varName, table, arena, state, typeTable);
 }

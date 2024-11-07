@@ -22,6 +22,12 @@ struct Int {
     // }
 }
 
+public function testFunc() -> void {
+    const intTest: Int = 42;
+    printInt(intTest.value);
+    return;
+}
+
 public function main() -> void {
     const fooInt: int = 56;
     const barInt: int = 42;

@@ -172,6 +172,8 @@ extern "C"
     char *DataTypeToString(DataType *dataType);
     DataType *CryoDataTypeStringToType(const char *typeStr);
 
+    DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable);
+
 #ifdef __cplusplus
 }
 #endif
