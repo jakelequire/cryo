@@ -47,11 +47,21 @@ namespace Cryo
             structFields.push_back(fieldType);
         }
 
-        // Create the struct type
-        llvm::StructType *structType = llvm::StructType::create(
-            compiler.getContext().context,
-            structFields,
-            "struct." + structName);
+        llvm::StructType *structType = llvm::StructType::create(compiler.getContext().context, structFields, structName);
+        if (!structType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Failed to create struct type");
+            CONDITION_FAILED;
+        }
+
+        // Add to the module
+        llvm::GlobalVariable *structVar = new llvm::GlobalVariable(
+            *compiler.getContext().module,
+            structType,
+            false,
+            llvm::GlobalValue::ExternalLinkage,
+            nullptr,
+            llvm::Twine(structName));
 
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct type created");
         DevDebugger::logLLVMStruct(structType);
@@ -76,6 +86,9 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling Constructor");
 
+        CryoContext &context = compiler.getContext();
+        Variables &variables = compiler.getVariables();
+
         ASTNode *constructor = node->constructor;
         if (!constructor)
         {
@@ -84,8 +97,8 @@ namespace Cryo
         }
 
         StructConstructorNode *constructorNode = constructor->data.structConstructor;
-        std::string structName = constructorNode->name;
-        std::string constructorName = structName + "::Constructor";
+        std::string structName = std::string(constructorNode->name);
+        std::string constructorName = structName;
 
         // Create parameter types for constructor
         std::vector<llvm::Type *> paramTypes;
@@ -116,11 +129,13 @@ namespace Cryo
             llvm::Function::ExternalLinkage,
             constructorName);
 
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Constructor function created");
+        // Set function name
+        constructorFn->setName(constructorName);
 
-        // Add function attributes
-        constructorFn->addFnAttr(llvm::Attribute::NoUnwind);
-        constructorFn->addFnAttr(llvm::Attribute::UWTable);
+        // Add function to module
+        compiler.getContext().module->getFunctionList().push_back(constructorFn);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Constructor function created");
 
         // Create entry block
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(
@@ -140,7 +155,7 @@ namespace Cryo
         // Store constructor parameters in struct fields
         for (int i = 0; i < constructorNode->argCount; ++i)
         {
-            llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
+            llvm::Value *fieldPtr = context.getInstance().builder.CreateStructGEP(
                 structType,
                 thisPtr,
                 i,

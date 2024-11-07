@@ -439,6 +439,8 @@ namespace Cryo
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
 
+        llvm::Value *createTestGlobalVariable(void);
+
     private:
         // Specialized variable creation functions
         llvm::Value *createLiteralExprVariable(LiteralNode *literalNode, std::string varName);

@@ -1024,4 +1024,20 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
+    llvm::Value *Variables::createTestGlobalVariable(void)
+    {
+        // Create a global
+        llvm::Type *intType = llvm::Type::getInt32Ty(compiler.getContext().context);
+        llvm::Constant *intConstant = llvm::ConstantInt::get(intType, 80085);
+        llvm::GlobalVariable *intGlobal = new llvm::GlobalVariable(
+            *compiler.getContext().module,
+            intType,
+            false,
+            llvm::GlobalValue::ExternalLinkage,
+            intConstant,
+            "testInt");
+
+        return intGlobal;
+    }
+
 } // namespace Cryo
