@@ -170,6 +170,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "THIS_ASSIGNMENT";
     case NODE_PROPERTY_REASSIGN:
         return "PROPERTY_REASSIGN";
+    case NODE_METHOD:
+        return "METHOD";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

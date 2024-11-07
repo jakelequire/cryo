@@ -494,6 +494,9 @@ namespace Cryo
 
         llvm::Value *createReturnNode(ASTNode *node);
 
+        llvm::Value *createParamFromParamNode(ASTNode *paramNode);
+        llvm::Value *createArgumentVar(ASTNode *node);
+
         void handleFunction(ASTNode *node);
 
     private:
@@ -623,6 +626,10 @@ namespace Cryo
          * @brief Returns the LLVM type for the given property.
          */
         llvm::Type *getStructFieldType(PropertyNode *property);
+
+        void handleMethod(ASTNode *methodNode, llvm::StructType *structType,
+                          const std::string &structName);
+        void handleConstructor(StructNode *node, llvm::StructType *structType);
 
     private:
         CryoCompiler &compiler;

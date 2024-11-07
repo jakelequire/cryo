@@ -128,6 +128,15 @@ namespace Cryo
         return paramNode;
     }
 
+    STStruct *IRSymTable::getStruct(std::string namespaceName, std::string structName)
+    {
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the struct in the SymTable
+        STStruct *structNode = &symNode.structNode[structName];
+        return structNode;
+    }
+
     // -----------------------------------------------------------------------------------------------
     /// Struct Containers
 
@@ -194,13 +203,31 @@ namespace Cryo
         // Add the struct to the SymTable
         std::string structName = structTy->getName().str();
         std::cout << "Struct Name: " << structName << std::endl;
-        StructValue structValue;
-        structValue.ASTStruct = *structNode;
-        structValue.LLVMStruct = structTy;
+        STStruct structContainer;
+        structContainer.LLVMStruct = structTy;
+        structContainer.ASTNode = structNode;
+        structContainer.structType = structNode->type;
         SymTableNode symNode = getSymTableNode(namespaceName);
-        symNode.structs[structName] = structValue;
+        symNode.structNode[structName] = structContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Struct Added" << std::endl;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Struct Added to SymTable");
+
+        return;
+    }
+
+    void IRSymTable::addStructMethod(std::string namespaceName, std::string structName, llvm::Function *llvmFunction)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Struct Method to SymTable");
+        // Add the struct method to the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        STStruct structNode = symNode.structNode[structName];
+        structNode.LLVMMethods.push_back(llvmFunction);
+        symNode.structNode[structName] = structNode;
+        symTable.namespaces[namespaceName] = symNode;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Struct Method Added to SymTable");
+
         return;
     }
 
@@ -215,7 +242,9 @@ namespace Cryo
         // Add the variable to the SymTable
         symNode.variableNode[varName] = varContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Variable Added" << std::endl;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Variable Added to SymTable");
+
         return;
     }
 
@@ -235,7 +264,9 @@ namespace Cryo
         // Add the function to the SymTable
         symNode.functionNode[funcName] = funcContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Function Added" << std::endl;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Function Added to SymTable");
+
         return;
     }
 
@@ -250,7 +281,9 @@ namespace Cryo
         // Add the extern function to the SymTable
         symNode.externFunctionNode[funcName] = externFuncContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Extern Function Added" << std::endl;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Extern Function Added to SymTable");
+
         return;
     }
 
@@ -273,7 +306,9 @@ namespace Cryo
         // Add the parameter to the SymTable
         symNode.parameterNode[paramName] = paramContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Parameter Added" << std::endl;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Parameter Added to SymTable");
+
         return;
     }
 
@@ -409,6 +444,49 @@ namespace Cryo
         symNode.parameterNode[paramName] = paramNode;
         symTable.namespaces[namespaceName] = symNode;
         std::cout << "[IRSymTable] Parameter Updated" << std::endl;
+        return;
+    }
+
+    void IRSymTable::updateStructConstructor(std::string namespaceName, std::string structName, llvm::Function *llvmConstructor)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Updating Struct Constructor");
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the struct in the SymTable
+        STStruct structNode = symNode.structNode[structName];
+        // Update the struct constructor
+        structNode.LLVMConstructor = llvmConstructor;
+        // Update the struct in the SymTable
+        symNode.structNode[structName] = structNode;
+        symTable.namespaces[namespaceName] = symNode;
+        std::cout << "[IRSymTable] Struct Constructor Updated" << std::endl;
+        return;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+    /// ### ============================================================================= ###
+    /// ###
+    /// ### Creation Functions
+    /// ### These functions are used to create new nodes in the SymTable
+    /// ###
+    /// ### ============================================================================= ###
+
+    void IRSymTable::createNewStructDecl(std::string namespaceName, StructNode *structNode)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Creating New Struct Declaration");
+        // Add the struct to the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Create the struct container
+        STStruct structContainer;
+        structContainer.ASTNode = structNode;
+        structContainer.structType = structNode->type;
+        structContainer.LLVMStruct = nullptr;
+        structContainer.LLVMConstructor = nullptr;
+        structContainer.LLVMMethods.clear();
+        // Add the struct to the SymTable
+        symNode.structNode[structNode->name] = structContainer;
+        symTable.namespaces[namespaceName] = symNode;
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "New Struct Declaration Created");
         return;
     }
 

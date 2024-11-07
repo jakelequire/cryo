@@ -891,6 +891,7 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     node->hasConstructor = false;
     node->hasDefaultValue = false;
     node->constructor = NULL;
+    node->type = wrapTypeContainer(createTypeContainer());
 
     return node;
 }

@@ -98,7 +98,7 @@ void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @Helper_Functions | Debugging, Errors, Walkers */
-void consume(Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable);
+void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable);
 void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
 void parsingError(char *message, char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, Lexer *lexer, const char *source, TypeTable *typeTable);
 void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);

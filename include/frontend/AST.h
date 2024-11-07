@@ -679,6 +679,16 @@ typedef struct PropertyNode
     bool defaultProperty;
 } PropertyNode;
 
+typedef struct MethodNode
+{
+    DataType *type;
+    char *name;
+    ASTNode **params;
+    int paramCount;
+    int paramCapacity;
+    ASTNode *body;
+} MethodNode;
+
 /// #### The StructNode struct represents a struct in the AST.
 /// ---
 ///
@@ -705,6 +715,7 @@ typedef struct StructNode
     int methodCapacity;
     bool hasConstructor;
     bool hasDefaultValue;
+    DataType *type;
 } StructNode;
 
 // typedef struct CustomTypeNode
@@ -854,6 +865,8 @@ typedef struct ASTNode
         ThisNode *thisNode;
         // For Property Reassignment
         PropertyReassignmentNode *propertyReassignment;
+        // For Methods
+        MethodNode *method;
     } data;
 } ASTNode;
 

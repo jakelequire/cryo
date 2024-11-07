@@ -811,6 +811,54 @@ namespace Cryo
         return alloca;
     }
 
+    llvm::Value *Functions::createParamFromParamNode(ASTNode *paramNode)
+    {
+        OldTypes &types = compiler.getTypes();
+        Variables &variables = compiler.getVariables();
+        IRSymTable &symTable = compiler.getSymTable();
+        CryoContext &context = compiler.getContext();
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
+
+        DevDebugger::logNode(paramNode);
+
+        std::string paramName = paramNode->data.param->name;
+        std::cout << "Parameter Name: " << paramName << std::endl;
+
+        DataType *paramType = paramNode->data.param->type;
+        llvm::Type *paramLLVMType = types.getType(paramType, 0);
+        std::cout << "Parameter Type: " << std::endl;
+        DevDebugger::logLLVMType(paramLLVMType);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Alloca Instruction");
+
+        // Get the insert block
+        llvm::BasicBlock *insertBlock = context.builder.GetInsertBlock();
+        if (!insertBlock)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Insert block not found");
+            compiler.dumpModule();
+            CONDITION_FAILED;
+        }
+
+        llvm::AllocaInst *alloca = context.builder.CreateAlloca(paramLLVMType, nullptr, paramName);
+        alloca->setAlignment(llvm::Align(8));
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Store Instruction");
+
+        llvm::StoreInst *storeInst = context.builder.CreateStore(alloca, alloca);
+        storeInst->setAlignment(llvm::Align(8));
+
+        std::string _paramName = paramName;
+        compiler.getContext().namedValues[paramName] = alloca;
+
+        symTable.addParamAsVariable(namespaceName, _paramName, alloca, paramLLVMType, storeInst);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
+
+        return alloca;
+    }
+
     llvm::Value *Functions::anyTypeParam(std::string functionName, llvm::Value *argValue)
     {
     }
@@ -1263,6 +1311,20 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Cast Created");
         return castValue;
+    }
+
+    llvm::Value *Functions::createArgumentVar(ASTNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Argument Variable");
+
+        llvm::Value *argVar = compiler.getVariables().createLocalVariable(node);
+        if (!argVar)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument variable not created");
+            CONDITION_FAILED;
+        }
+
+        return argVar;
     }
 
 } // namespace Cryo

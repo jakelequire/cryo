@@ -334,8 +334,7 @@ namespace Cryo
         case NODE_PARAM:
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Parameter");
-            // llvmValue = functions.createParameter(node);
-            DEBUG_BREAKPOINT;
+            llvmValue = functions.createParamFromParamNode(node);
             break;
         }
         case NODE_ARRAY_LITERAL:
