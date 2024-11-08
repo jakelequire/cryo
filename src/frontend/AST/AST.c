@@ -537,7 +537,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
     case NODE_LITERAL_EXPR:
     {
         node->data.literal->type = type;
-        switch (type->container.primitive)
+        switch (type->container->primitive)
         {
         case PRIM_INT:
             node->data.literal->value.intValue = atoi(name);

@@ -215,7 +215,7 @@ namespace Cryo
                 char *typeNode = DataTypeToString(type);
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(typeNode));
 
-                switch (type->container.primitive)
+                switch (type->container->primitive)
                 {
                 case PRIM_INT:
                 {
@@ -337,7 +337,7 @@ namespace Cryo
             else
             {
                 int _len = types.getLiteralValLength(initializer);
-                if (type->container.baseType == PRIM_STRING)
+                if (type->container->baseType == PRIM_STRING)
                     _len += 1; // Add one for the null terminator
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
                 llvmType = types.getType(type, _len);
@@ -345,7 +345,7 @@ namespace Cryo
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Varname: " + std::string(varName));
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Data Type: " + std::string(typeNode));
 
-                switch (type->container.primitive)
+                switch (type->container->primitive)
                 {
                 case PRIM_INT:
                 {
@@ -532,7 +532,7 @@ namespace Cryo
         llvm::Constant *llvmConstant = nullptr;
 
         DataType *dataType = literalNode->type;
-        switch (dataType->container.primitive)
+        switch (dataType->container->primitive)
         {
         case PRIM_INT:
         {
@@ -643,11 +643,11 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
         llvm::Type *llvmType = nullptr;
 
-        switch (nodeDataType->container.baseType)
+        switch (nodeDataType->container->baseType)
         {
         case PRIMITIVE_TYPE:
         {
-            switch (nodeDataType->container.primitive)
+            switch (nodeDataType->container->primitive)
             {
             case PRIM_INT:
             {
@@ -770,22 +770,23 @@ namespace Cryo
         llvm::Type *llvmType = nullptr;
         llvm::Constant *llvmConstant = nullptr;
 
-        switch (dataType->container.baseType)
+        switch (dataType->container->baseType)
         {
-        // case DATA_TYPE_INT_ARRAY:
-        // {
-        //     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Int Array Literal");
-        //     llvmType = compiler.getTypes().getType(dataType, 0);
-        //     llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
-        //     break;
-        // }
-        // case DATA_TYPE_STRING_ARRAY:
-        // {
-        //     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Array Literal");
-        //     llvmType = compiler.getTypes().getType(dataType, 0);
-        //     llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
-        //     break;
-        // }
+            // case DATA_TYPE_INT_ARRAY:
+            // {
+            //     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Int Array Literal");
+            //     llvmType = compiler.getTypes().getType(dataType, 0);
+            //     llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
+            //     break;
+            // }
+            // case DATA_TYPE_STRING_ARRAY:
+            // {
+            //     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Array Literal");
+            //     llvmType = compiler.getTypes().getType(dataType, 0);
+            //     llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
+            //     break;
+            // }
+
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");

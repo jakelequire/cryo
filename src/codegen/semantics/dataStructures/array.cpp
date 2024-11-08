@@ -38,7 +38,7 @@ namespace Cryo
             {
                 // Note to self, might need to get the length of each element
                 DataType *dataType = element->data.literal->type;
-                switch (dataType->container.baseType)
+                switch (dataType->container->baseType)
                 {
                 case PRIM_INT:
                 {
@@ -107,7 +107,7 @@ namespace Cryo
             {
                 // Note to self, might need to get the length of each element
                 DataType *dataType = element->data.literal->type;
-                switch (dataType->container.baseType)
+                switch (dataType->container->baseType)
                 {
                 case PRIM_INT:
                 {
@@ -184,7 +184,7 @@ namespace Cryo
             {
                 // Note to self, might need to get the length of each element
                 DataType *dataType = element->data.literal->type;
-                switch (dataType->container.baseType)
+                switch (dataType->container->baseType)
                 {
                 case PRIM_INT:
                 {
@@ -427,7 +427,7 @@ namespace Cryo
         }
         if (literalNode->metaData->type == NODE_LITERAL_EXPR)
         {
-            if (literalNode->data.literal->type->container.baseType == PRIM_INT)
+            if (literalNode->data.literal->type->container->baseType == PRIM_INT)
             {
                 int _indexValue = literalNode->data.literal->value.intValue;
                 ASTNode *element = array->data.array->elements[_indexValue];

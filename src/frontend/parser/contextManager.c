@@ -91,7 +91,7 @@ ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *t
 
 // This functions adds a token to the lastTokens array in the parsing context
 // If the array is full, it will shift all the tokens to the left by one
-void addTokenToContext(ParsingContext *context, CryoTokenType token)
+void addTokenToContext(ParsingContext *context, Token token)
 {
     // Shift all tokens to the right by one
     for (int i = 15; i > 0; i--)
@@ -134,13 +134,13 @@ void logThisContext(ParsingContext *context)
 
 void logTokenArray(ParsingContext *context)
 {
-    printf(BOLD YELLOW "\n┌───────────────── Last Tokens ─────────────────┐\n" COLOR_RESET);
+    printf(BOLD YELLOW "\n┌────────────────────────── Last Tokens ──────────────────────────┐\n" COLOR_RESET);
     for (int i = 0; i < 16; i++)
     {
-        CryoTokenType token = context->lastTokens[i];
-        printf("   Token: %s\n", CryoTokenToString(token));
+        Token token = context->lastTokens[i];
+        printf(" %-3d %s\n", i, TokenToString(token));
     }
-    printf(BOLD YELLOW "└──────────────────────────────────────────────┘\n" COLOR_RESET);
+    printf(BOLD YELLOW "└─────────────────────────────────────────────────────────────────┘\n" COLOR_RESET);
 }
 
 void logParsingContext(ParsingContext *context)

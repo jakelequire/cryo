@@ -96,10 +96,10 @@ typedef struct TypeContainer
 
 typedef struct DataType
 {
-    TypeContainer container; // Type container
-    bool isConst;            // Const modifier
-    bool isReference;        // Reference type
-    struct DataType *next;   // For linked types (e.g. generics)
+    TypeContainer *container; // Type container
+    bool isConst;             // Const modifier
+    bool isReference;         // Reference type
+    struct DataType *next;    // For linked types (e.g. generics)
 } DataType;
 
 // This is the global symbol table specifically for types.
@@ -145,7 +145,7 @@ extern "C"
     // Specialized Type Creation Functions
 
     StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
-    DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable);
+    DataType *createDataTypeFromStructNode(ASTNode *structNode, ASTNode **properties, int propCount, CompilerState *state, TypeTable *typeTable);
 
     // Data Type Wrapping
     DataType *wrapTypeContainer(TypeContainer *container);
@@ -156,7 +156,7 @@ extern "C"
     bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
 
     // Add Type to Type Table
-    void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type);
+    void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
     bool typeAlreadyExists(TypeTable *table, const char *name);
 
     void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType);
@@ -165,6 +165,7 @@ extern "C"
     char *TypeofDataTypeToString(TypeofDataType type);
     char *PrimitiveDataTypeToString(PrimitiveDataType type);
     char *PrimitiveDataTypeToString_UF(PrimitiveDataType type);
+    char *VerboseStructTypeToString(StructType *type);
 
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);
@@ -172,9 +173,11 @@ extern "C"
     void printFormattedType(DataType *type);
     void logDataType(DataType *type);
     void logStructType(StructType *type);
+    void logVerboseDataType(DataType *type);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
+    void printVerboseTypeContainer(TypeContainer *type);
 
     char *DataTypeToString(DataType *dataType);
     char *DataTypeToStringUnformatted(DataType *type);

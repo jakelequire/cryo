@@ -1211,7 +1211,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         DataType *dataType = node->data.literal->type;
-        switch (dataType->container.baseType)
+        switch (dataType->container->baseType)
         {
         case PRIM_INT:
         {
@@ -1380,7 +1380,7 @@ char *ASTNodeValueBuffer(ASTNode *node)
     case NODE_LITERAL_EXPR:
     {
         DataType *type = node->data.literal->type;
-        switch (type->container.primitive)
+        switch (type->container->primitive)
         {
         case PRIM_INT:
         {

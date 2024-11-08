@@ -172,7 +172,7 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Generator", "Literal Node Found");
 
         DataType *dataType = literalNode->type;
-        switch (dataType->container.primitive)
+        switch (dataType->container->primitive)
         {
         case PRIM_INT:
         {

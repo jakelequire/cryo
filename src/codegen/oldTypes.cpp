@@ -36,7 +36,7 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting literal type");
 
-        if (literal->type->container.baseType == UNKNOWN_TYPE)
+        if (literal->type->container->baseType == UNKNOWN_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
             CONDITION_FAILED;
@@ -44,7 +44,7 @@ namespace Cryo
 
         DataType *type = literal->type;
         int len = literal->length;
-        switch (type->container.primitive)
+        switch (type->container->primitive)
         {
         case PRIM_INT:
         {
@@ -79,13 +79,13 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting return type");
 
-        if (type->container.baseType == UNKNOWN_TYPE)
+        if (type->container->baseType == UNKNOWN_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;
         }
 
-        switch (type->container.primitive)
+        switch (type->container->primitive)
         {
         case PRIM_INT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int type");
@@ -120,7 +120,7 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting simple type to LLVM type");
 
-        switch (type->container.primitive)
+        switch (type->container->primitive)
         {
         case PRIM_INT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int to LLVM type");
@@ -161,7 +161,7 @@ namespace Cryo
     llvm::Type *OldTypes::convertComplexType(DataType *types, int length)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting complex type to LLVM type");
-        switch (types->container.primitive)
+        switch (types->container->primitive)
         {
         case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting string to LLVM type");
@@ -198,7 +198,7 @@ namespace Cryo
 
         if (node->metaData->type == NODE_LITERAL_EXPR)
         {
-            if (node->data.literal->type->container.primitive == PRIM_STRING)
+            if (node->data.literal->type->container->primitive == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
                 int _len = strlen(strdup(node->data.literal->value.stringValue));
@@ -206,17 +206,17 @@ namespace Cryo
                 return _len;
             }
 
-            if (node->data.literal->type->container.primitive == PRIM_INT)
+            if (node->data.literal->type->container->primitive == PRIM_INT)
             {
                 return 0;
             }
 
-            if (node->data.literal->type->container.primitive == PRIM_FLOAT)
+            if (node->data.literal->type->container->primitive == PRIM_FLOAT)
             {
                 return 0;
             }
 
-            if (node->data.literal->type->container.primitive == PRIM_BOOLEAN)
+            if (node->data.literal->type->container->primitive == PRIM_BOOLEAN)
             {
                 return 0;
             }
@@ -226,7 +226,7 @@ namespace Cryo
             //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of int array literal");
             //     return node->data.array->elementCount;
             // }
-        }
+                }
         if (node->metaData->type == NODE_ARRAY_LITERAL)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of array literal");
@@ -235,7 +235,7 @@ namespace Cryo
 
         if (node->metaData->type == NODE_VAR_DECLARATION)
         {
-            if (node->data.varDecl->type->container.baseType == PRIM_STRING)
+            if (node->data.varDecl->type->container->baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string variable");
                 return strlen(strdup(node->data.varDecl->initializer->data.literal->value.stringValue));
@@ -261,7 +261,7 @@ namespace Cryo
 
     int OldTypes::getLiteralValLength(LiteralNode *node)
     {
-        if (node->type->container.primitive == PRIM_STRING)
+        if (node->type->container->primitive == PRIM_STRING)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string literal");
             return strlen(strdup(node->value.stringValue));
@@ -273,7 +273,7 @@ namespace Cryo
 
     int OldTypes::getLiteralIntValue(LiteralNode *node)
     {
-        if (node->type->container.baseType != PRIM_INT)
+        if (node->type->container->baseType != PRIM_INT)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
             return 0;

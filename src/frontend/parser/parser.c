@@ -83,7 +83,7 @@ void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, co
 
     // pushCallStack(&callStack, functionName, lexer->currentToken.line);
 
-    addTokenToContext(context, lexer->currentToken.type);
+    addTokenToContext(context, lexer->currentToken);
 
     if (lexer->currentToken.type == type)
     {
@@ -1782,7 +1782,7 @@ ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *cont
     char *iterableType = strndup(lexer->currentToken.start, lexer->currentToken.length);
     printf("\n\nType: %s\n\n", iterableType);
     DataType *dataType = CryoDataTypeStringToType(iterableType);
-    if (dataType == NULL || dataType->container.baseType == UNKNOWN_TYPE)
+    if (dataType == NULL || dataType->container->baseType == UNKNOWN_TYPE)
     {
         parsingError("Unknown data type.", "parseForLoop", table, arena, state, lexer, source, typeTable);
     }
@@ -2035,8 +2035,10 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     int defaultPropertyCount = 0;
     ASTNode *constructorNode = NULL;
 
+    ASTNode **propertiesArr = (ASTNode **)malloc(PROPERTY_CAPACITY * sizeof(ASTNode *));
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
+        int count = 0;
         ASTNode *field = parseStructField(lexer, table, context, arena, state, typeTable);
         if (field)
         {
@@ -2044,6 +2046,9 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             propertyCount++;
             addASTNodeSymbol(table, field, arena);
             addPropertyToThisContext(context, field, typeTable);
+
+            // Add to the properties array
+            propertiesArr[count] = field;
 
             if (parsePropertyForDefaultFlag(field) && !hasDefaultProperty)
             {
@@ -2055,6 +2060,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                 logMessage("ERROR", __LINE__, "Parser", "Struct can only have one default property.");
                 return NULL;
             }
+
+            count++;
         }
 
         if (lexer->currentToken.type == TOKEN_KW_CONSTRUCTOR)
@@ -2084,10 +2091,9 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
     structNode->data.structNode->hasConstructor = hasConstructor;
 
-    StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
-    DataType *structDataType = createDataTypeFromStruct(structType, state, typeTable);
+    DataType *structDataType = createDataTypeFromStructNode(structNode, propertiesArr, propertyCount, state, typeTable);
 
-    addTypeToTypeTable(typeTable, structName, &structDataType->container);
+    addTypeToTypeTable(typeTable, structName, structDataType);
 
     // Add the struct to the symbol table
     addASTNodeSymbol(table, structNode, arena);
@@ -2262,10 +2268,10 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
     logParsingContext(context);
 
     // Check the last token in the context
-    CryoTokenType lastToken = context->lastTokens[1]; // We +1 because the last token should be a dot.
-    CryoTokenType currentToken = lexer->currentToken.type;
+    Token lastToken = context->lastTokens[1]; // We +1 because the last token should be a dot.
+    Token currentToken = lexer->currentToken;
 
-    if (lastToken == TOKEN_KW_THIS)
+    if (lastToken.type == TOKEN_KW_THIS)
     {
         ThisContext *thisContext = context->thisContext;
         char *propName = strndup(lexer->currentToken.start, lexer->currentToken.length);
@@ -2300,7 +2306,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
             return NULL;
         }
     }
-    if (currentToken == TOKEN_IDENTIFIER)
+    if (currentToken.type == TOKEN_IDENTIFIER)
     {
         // Get the identifier name
         char *identifierName = strndup(lexer->currentToken.start, lexer->currentToken.length);
@@ -2317,11 +2323,15 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
 
         ASTNode *identifierNode = symbol->node;
         DataType *typeOfNode = DataTypeFromNode(identifierNode);
+        DataType *typeFromSymbol = symbol->type;
+
+        printf("\n\n\nType of data type:\n");
+        logVerboseDataType(typeOfNode);
 
         if (lexer->currentToken.type == TOKEN_DOT)
         {
             logMessage("INFO", __LINE__, "Parser", "Parsing dot notation with identifier...");
-            return parseDotNotationWithType(lexer, table, context, arena, state, typeTable, typeOfNode);
+            return parseDotNotationWithType(lexer, table, context, arena, state, typeTable, typeFromSymbol);
         }
 
         DEBUG_BREAKPOINT;
@@ -2355,11 +2365,13 @@ ASTNode *parseDotNotationWithType(Lexer *lexer, CryoSymbolTable *table, ParsingC
     // match it with the type of the node we are accessing
     logDataType(typeOfNode);
 
-    if (typeOfNode->container.baseType == STRUCT_TYPE)
+    if (typeOfNode->container->baseType == STRUCT_TYPE)
     {
         logMessage("INFO", __LINE__, "Parser", "Type of node is a struct.");
-        StructType *structType = typeOfNode->container.custom.structDef;
-        const char *structName = typeOfNode->container.custom.name;
+        StructType *structType = typeOfNode->container->custom.structDef;
+        printf("\n\n\nStruct type: \n");
+        logStructType(structType);
+        const char *structName = typeOfNode->container->custom.name;
         printf("\n\n\nStruct name: %s\n", structName);
         ASTNode *property = findStructProperty(structType, (const char *)propName);
         if (property)
@@ -2370,6 +2382,7 @@ ASTNode *parseDotNotationWithType(Lexer *lexer, CryoSymbolTable *table, ParsingC
         else
         {
             printTypeTable(typeTable);
+            printf("Property Attempted: %s\n", propName);
             parsingError("Property not found in struct.", "parseDotNotationWithType", table, arena, state, lexer, source, typeTable);
             return NULL;
         }

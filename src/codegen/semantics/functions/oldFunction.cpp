@@ -102,7 +102,7 @@ namespace Cryo
             assert(argNode != nullptr);
 
             DataType *_argType = argNode->type;
-            if (_argType->container.baseType == PRIM_STRING)
+            if (_argType->container->baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
                 // int _len = types.getLiteralValLength(argNode->initializer);
@@ -112,7 +112,7 @@ namespace Cryo
                 continue;
             }
 
-            if (_argType->container.baseType == PRIM_INT)
+            if (_argType->container->baseType == PRIM_INT)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting int to LLVM type");
                 llvm::Type *argType = types.getType(_argType, 0);
@@ -203,10 +203,10 @@ namespace Cryo
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
-                std::cout << "TypeOfDataType: " << std::string(TypeofDataTypeToString(returnType->container.baseType)) << std::endl;
-                std::cout << "PrimitiveType: " << std::string(PrimitiveDataTypeToString(returnType->container.primitive)) << std::endl;
+                std::cout << "TypeOfDataType: " << std::string(TypeofDataTypeToString(returnType->container->baseType)) << std::endl;
+                std::cout << "PrimitiveType: " << std::string(PrimitiveDataTypeToString(returnType->container->primitive)) << std::endl;
 
-                switch (returnType->container.primitive)
+                switch (returnType->container->primitive)
                 {
                 case PRIM_VOID:
                 {
@@ -470,7 +470,7 @@ namespace Cryo
             {
                 DataType *nodeDataType = statement->data.returnStatement->type;
 
-                switch (nodeDataType->container.baseType)
+                switch (nodeDataType->container->baseType)
                 {
                 case PRIM_INT:
                 {
@@ -544,7 +544,7 @@ namespace Cryo
             assert(argNode != nullptr);
             DataType *_argType = argNode->type;
 
-            if (_argType->container.baseType == PRIM_STRING)
+            if (_argType->container->baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
                 llvm::Type *argType = compiler.getTypes().getType(_argType, 0);
@@ -1073,9 +1073,9 @@ namespace Cryo
         }
 
         DataType *dataType = literalNode->type;
-        if (dataType->container.baseType == PRIMITIVE_TYPE)
+        if (dataType->container->baseType == PRIMITIVE_TYPE)
         {
-            switch (dataType->container.primitive)
+            switch (dataType->container->primitive)
             {
             case PRIM_INT:
             {
@@ -1308,7 +1308,6 @@ namespace Cryo
             DevDebugger::logMessage("WARNING", __LINE__, "Functions", "Using bitcast as fallback");
             castValue = argValue;
         }
-
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Cast Created");
         return castValue;
     }

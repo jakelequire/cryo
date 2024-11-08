@@ -174,196 +174,6 @@ bool isPrimitiveType(const char *typeStr)
     return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
 }
 
-// # =========================================================================== #
-// # Primitive Type Creation Functions
-// # =========================================================================== #
-
-// Primitive int Type `(default/baseline)`
-DataType *createPrimitiveIntType(void)
-{
-    TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
-    container->primitive = PRIM_INT;
-
-    return wrapTypeContainer(container);
-}
-
-// Primitive float Type creation `(default/baseline)`
-DataType *createPrimitiveFloatType(void)
-{
-    TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
-    container->primitive = PRIM_FLOAT;
-
-    return wrapTypeContainer(container);
-}
-
-// Primitive string Type creation `(default/baseline)`
-DataType *createPrimitiveStringType(void)
-{
-    TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
-    container->primitive = PRIM_STRING;
-
-    return wrapTypeContainer(container);
-}
-
-// Primitive boolean Type creation `(default/baseline)`
-DataType *createPrimitiveBooleanType(void)
-{
-    TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
-    container->primitive = PRIM_BOOLEAN;
-
-    return wrapTypeContainer(container);
-}
-
-// Primitive void Type creation `(default/baseline)`
-DataType *createPrimitiveVoidType(void)
-{
-    TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
-    container->primitive = PRIM_VOID;
-
-    return wrapTypeContainer(container);
-}
-
-// Primitive null Type creation `(default/baseline)`
-DataType *createPrimitiveNullType(void)
-{
-    TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
-    container->primitive = PRIM_NULL;
-
-    return wrapTypeContainer(container);
-}
-
-// Unknown Type `(will be resolved later in the compiler)`
-DataType *createUnknownType(void)
-{
-    TypeContainer *container = createTypeContainer();
-    container->baseType = UNKNOWN_TYPE;
-
-    return wrapTypeContainer(container);
-}
-
-// # =========================================================================== #
-// # Specialized Type Creation Functions
-// # =========================================================================== #
-
-// # ========================================================= #
-// # Primitive Types
-
-// Create primitive type
-TypeContainer *createPrimitiveType(PrimitiveDataType primType)
-{
-    TypeContainer *container = createTypeContainer();
-    if (!container)
-        return NULL;
-
-    container->baseType = PRIMITIVE_TYPE;
-    container->primitive = primType;
-
-    return container;
-}
-
-// # ========================================================= #
-// # Structs
-
-// Create struct type
-TypeContainer *createStructType(const char *name, StructType *structDef)
-{
-    TypeContainer *container = createTypeContainer();
-    if (!container)
-        return NULL;
-
-    container->baseType = STRUCT_TYPE;
-    container->custom.name = name;
-    container->custom.structDef = structDef;
-
-    return container;
-}
-
-// Creates a struct type from an ASTNode. `This will also add the struct to the type table.`
-StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable)
-{
-    StructType *structType = (StructType *)malloc(sizeof(StructType));
-    if (!structType)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate StructType\n");
-        return NULL;
-    }
-
-    printf("Creating struct type from node: %s\n", structNode->data.structNode->name);
-
-    structType->name = strdup(structNode->data.structNode->name);
-    structType->size = 0;
-    structType->propertyCount = 0;
-    structType->methodCount = 0;
-    structType->properties = NULL;
-    structType->methods = NULL;
-    structType->hasDefaultValue = false;
-    structType->hasConstructor = false;
-
-    // Add struct to type table
-    addTypeToTypeTable(typeTable, structType->name, createStructType(structType->name, structType));
-
-    return structType;
-}
-
-DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable)
-{
-    return wrapTypeContainer(createStructType(structType->name, structType));
-}
-
-void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)
-{
-    if (!properties || propCount <= 0)
-        return;
-
-    if (structType->propertyCount + propCount >= structType->propertyCapacity)
-    {
-        // Grow properties array
-        int newCapacity = structType->propertyCapacity * 2;
-        ASTNode **newProperties = (ASTNode **)realloc(structType->properties, newCapacity * sizeof(ASTNode *));
-        if (!newProperties)
-            return;
-
-        structType->properties = newProperties;
-        structType->propertyCapacity = newCapacity;
-    }
-
-    // Add properties to struct
-    for (int i = 0; i < propCount; i++)
-    {
-        structType->properties[structType->propertyCount++] = properties[i];
-    }
-}
-
-// # ========================================================= #
-// # Arrays
-
-TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
-{
-    TypeContainer *container = createTypeContainer();
-    if (!container)
-        return NULL;
-
-    // Copy base type info
-    container->baseType = baseType->baseType;
-    container->primitive = baseType->primitive;
-    container->custom = baseType->custom;
-
-    // Add array info
-    container->isArray = true;
-    container->arrayDimensions = dimensions;
-
-    return container;
-}
-
-// # =========================================================================== #
-// # DataType Creation Functions
-
 // Create DataType wrapper
 DataType *wrapTypeContainer(TypeContainer *container)
 {
@@ -374,7 +184,7 @@ DataType *wrapTypeContainer(TypeContainer *container)
         return NULL;
     }
 
-    type->container = *container;
+    type->container = container;
     type->isConst = false;
     type->isReference = false;
     type->next = NULL;
@@ -387,10 +197,10 @@ TypeContainer *lookupType(TypeTable *table, const char *name)
     for (int i = 0; i < table->count; i++)
     {
         DataType *type = table->types[i];
-        if (type->container.custom.name &&
-            strcmp(type->container.custom.name, name) == 0)
+        if (type->container->custom.name &&
+            strcmp(type->container->custom.name, name) == 0)
         {
-            return &type->container;
+            return type->container;
         }
     }
     return NULL;
@@ -398,98 +208,35 @@ TypeContainer *lookupType(TypeTable *table, const char *name)
 
 // # =========================================================================== #
 // # Add Type to Type Table
-void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type)
+void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
 {
-    if (table->count >= table->capacity)
+    if (!name || !type)
     {
-        // Grow table
-        int newCapacity = table->capacity * 2;
-        DataType **newTypes = (DataType **)realloc(table->types, newCapacity * sizeof(DataType *));
-        if (!newTypes)
-            return;
-
-        table->types = newTypes;
-        table->capacity = newCapacity;
-    }
-
-    // Check if type already exists
-    if (typeAlreadyExists(table, name))
-    {
-        fprintf(stderr, "[TypeTable] Error: Type '%s' already exists in the type table.\n", name);
+        fprintf(stderr, "[TypeTable] Error: Invalid name or type in addTypeToTypeTable\n");
         return;
     }
 
-    DataType *newType = (DataType *)malloc(sizeof(DataType));
-    newType->container = *type;
-    newType->isConst = false;
-    newType->isReference = false;
-    newType->next = NULL;
-
-    table->types[table->count++] = newType;
-}
-
-bool typeAlreadyExists(TypeTable *table, const char *name)
-{
-    for (int i = 0; i < table->count; i++)
+    // Check if the type already exists
+    TypeContainer *existingType = lookupType(table, name);
+    if (existingType)
     {
-        DataType *type = table->types[i];
-        if (type->container.custom.name &&
-            strcmp(type->container.custom.name, name) == 0)
+        fprintf(stderr, "[TypeTable] Error: Type '%s' already exists in the type table\n", name);
+        return;
+    }
+
+    // Add the type to the table
+    if (table->count >= table->capacity)
+    {
+        table->capacity *= 2;
+        table->types = (DataType **)realloc(table->types, table->capacity * sizeof(DataType *));
+        if (!table->types)
         {
-            return true;
+            fprintf(stderr, "[TypeTable] Error: Failed to reallocate memory for type table\n");
+            return;
         }
     }
-    return false;
-}
 
-bool isValidType(TypeContainer *type, TypeTable *typeTable)
-{
-    if (!type)
-        return false;
-
-    switch (type->baseType)
-    {
-    case PRIMITIVE_TYPE:
-        return type->primitive != PRIM_UNKNOWN;
-
-    case STRUCT_TYPE:
-        return type->custom.structDef != NULL;
-
-    case FUNCTION_TYPE:
-        return type->custom.funcDef != NULL;
-
-    default:
-        return false;
-    }
-}
-
-bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
-{
-    if (!left || !right)
-        return false;
-
-    // Check base type match
-    if (left->baseType != right->baseType)
-        return false;
-
-    // Check array dimensions
-    if (left->isArray != right->isArray)
-        return false;
-    if (left->isArray && left->arrayDimensions != right->arrayDimensions)
-        return false;
-
-    // Check specific type details
-    switch (left->baseType)
-    {
-    case PRIMITIVE_TYPE:
-        return left->primitive == right->primitive;
-
-    case STRUCT_TYPE:
-        return strcmp(left->custom.name, right->custom.name) == 0;
-
-    default:
-        return false;
-    }
+    table->types[table->count++] = type;
 }
 
 DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable)
@@ -510,9 +257,9 @@ DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable 
         const char *propertyName = node->data.propertyAccess->property;
 
         // Get the struct type
-        if (objectType->container.baseType == STRUCT_TYPE)
+        if (objectType->container->baseType == STRUCT_TYPE)
         {
-            StructType *structType = objectType->container.custom.structDef;
+            StructType *structType = objectType->container->custom.structDef;
             if (!structType)
             {
                 fprintf(stderr, "[TypeTable] Error: Failed to get struct type from property access.\n");
@@ -549,6 +296,7 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName)
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
+        fprintf(stderr, "[TypeTable] Error: Failed to find property '%s' in struct.\n", propertyName);
         return NULL;
     }
 
@@ -569,241 +317,6 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName)
 
 // # =========================================================================== #
 // # Utility Functions
-
-char *TypeofDataTypeToString(TypeofDataType type)
-{
-    switch (type)
-    {
-    case PRIMITIVE_TYPE:
-        return "PRIMITIVE_TYPE";
-    case STRUCT_TYPE:
-        return "STRUCT_TYPE";
-    case ENUM_TYPE:
-        return "ENUM_TYPE";
-    case FUNCTION_TYPE:
-        return "FUNCTION_TYPE";
-    case UNKNOWN_TYPE:
-        return "UNKNOWN_TYPE";
-    default:
-        return "<TYPE UNKNOWN>";
-    }
-}
-
-char *PrimitiveDataTypeToString(PrimitiveDataType type)
-{
-    switch (type)
-    {
-    case PRIM_INT:
-        return LIGHT_CYAN BOLD "int" COLOR_RESET;
-    case PRIM_FLOAT:
-        return LIGHT_CYAN BOLD "float" COLOR_RESET;
-    case PRIM_STRING:
-        return LIGHT_CYAN BOLD "string" COLOR_RESET;
-    case PRIM_BOOLEAN:
-        return LIGHT_CYAN BOLD "boolean" COLOR_RESET;
-    case PRIM_VOID:
-        return LIGHT_CYAN BOLD "void" COLOR_RESET;
-    case PRIM_NULL:
-        return LIGHT_CYAN BOLD "null" COLOR_RESET;
-    case PRIM_UNKNOWN:
-        return LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET;
-    default:
-        return LIGHT_RED BOLD "<PRIMITIVE UNKNOWN>" COLOR_RESET;
-    }
-}
-
-char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
-{
-    switch (type)
-    {
-    case PRIM_INT:
-        return "int";
-    case PRIM_FLOAT:
-        return "float";
-    case PRIM_STRING:
-        return "string";
-    case PRIM_BOOLEAN:
-        return "boolean";
-    case PRIM_VOID:
-        return "void";
-    case PRIM_NULL:
-        return "null";
-    case PRIM_UNKNOWN:
-        return "<UNKNOWN>";
-    default:
-        return "<PRIMITIVE UNKNOWN>";
-    }
-}
-
-char *DataTypeToStringUnformatted(DataType *type)
-{
-    if (!type)
-        return "<NULL DATATYPE>";
-
-    char *typeString = (char *)malloc(128);
-    if (!typeString)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
-        return NULL;
-    }
-
-    switch (type->container.baseType)
-    {
-    case PRIMITIVE_TYPE:
-        sprintf(typeString, "%s", PrimitiveDataTypeToString_UF(type->container.primitive));
-        break;
-
-    case STRUCT_TYPE:
-        sprintf(typeString, "%s", type->container.custom.name);
-        break;
-
-    default:
-        sprintf(typeString, "<UNKNOWN>");
-        break;
-    }
-
-    return typeString;
-}
-
-char *DataTypeToString(DataType *dataType)
-{
-    if (!dataType)
-        return "<NULL DATATYPE>";
-
-    char *typeString = (char *)malloc(128);
-    if (!typeString)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
-        return NULL;
-    }
-
-    switch (dataType->container.baseType)
-    {
-    case PRIMITIVE_TYPE:
-        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, PrimitiveDataTypeToString(dataType->container.primitive));
-        break;
-
-    case STRUCT_TYPE:
-        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container.custom.name);
-        break;
-
-    default:
-        sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
-        break;
-    }
-
-    return typeString;
-}
-
-void logDataType(DataType *type)
-{
-    if (!type)
-        return;
-
-    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-    printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
-    printTypeContainer(&type->container);
-    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-}
-
-void logStructType(StructType *type)
-{
-    if (!type)
-        return;
-
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
-    printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
-}
-
-void printFormattedStructType(StructType *type)
-{
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
-    printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
-}
-
-void printFormattedPrimitiveType(PrimitiveDataType type)
-{
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s\n", PrimitiveDataTypeToString(type));
-}
-
-void printFormattedType(DataType *type)
-{
-    if (!type)
-        return;
-
-    switch (type->container.baseType)
-    {
-    case PRIMITIVE_TYPE:
-        printFormattedPrimitiveType(type->container.primitive);
-        break;
-
-    case STRUCT_TYPE:
-        printFormattedStructType(type->container.custom.structDef);
-        break;
-
-    default:
-        printf("  ────────────────────────────────────────────────────────────\n");
-        printf(BOLD GREEN "  UNKNOWN_TYPE" COLOR_RESET "\n");
-        break;
-    }
-}
-
-void printTypeContainer(TypeContainer *type)
-{
-    if (!type)
-        return;
-
-    printf("Type: %s", TypeofDataTypeToString(type->baseType));
-
-    if (type->isArray)
-    {
-        printf("[%d]", type->arrayDimensions);
-    }
-
-    switch (type->baseType)
-    {
-    case PRIMITIVE_TYPE:
-        printf(" (%s)", PrimitiveDataTypeToString(type->primitive));
-        break;
-
-    case STRUCT_TYPE:
-        printf(" (%s)", type->custom.name);
-        break;
-
-    default:
-        break;
-    }
-    printf("\n");
-}
-
-void printTypeTable(TypeTable *table)
-{
-    printf("\n");
-    printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
-    printf("  Type Table: %p\n", (void *)table);
-    printf("  Type Count: %d\n", table->count);
-    printf("  Type Capacity: %d\n", table->capacity);
-    printf(" Namespace: %s\n", table->namespaceName);
-    printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
-
-    for (int i = 0; i < table->count; i++)
-    {
-        DataType *type = table->types[i];
-        printFormattedType(type);
-    }
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-    printf("\n");
-    if (table->count == 0)
-    {
-        printf("  No types in the type table.\n");
-        printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-        printf("\n");
-    }
-}
 
 DataType *CryoDataTypeStringToType(const char *typeStr)
 {
@@ -844,24 +357,31 @@ DataType *DataTypeFromNode(ASTNode *node)
     switch (nodeType)
     {
     case NODE_LITERAL_EXPR:
+        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from literal expression");
         return node->data.literal->type;
     case NODE_VAR_NAME:
+        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from var name");
         return node->data.varName->type;
     case NODE_STRUCT_DECLARATION:
+        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from struct declaration");
         return node->data.structNode->type;
     case NODE_FUNCTION_DECLARATION:
+        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from function declaration");
         return node->data.functionDecl->type;
     case NODE_PROPERTY:
+        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from property");
         return node->data.property->type;
     case NODE_PARAM:
+        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from param");
         return node->data.param->type;
     case NODE_VAR_DECLARATION:
+        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from var declaration");
         return node->data.varDecl->type;
     default:
     {
         fprintf(stderr, "[TypeTable] Error: Failed to get data type from node.\n");
         printf("Received node type: %s\n", CryoNodeTypeToString(nodeType));
-        return NULL;
+        CONDITION_FAILED;
     }
     }
 

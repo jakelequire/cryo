@@ -95,8 +95,10 @@ typedef struct ParsingContext
     ThisContext *thisContext;
 
     // An array of the last 16 tokens
-    CryoTokenType lastTokens[16];
+    Token lastTokens[16];
     int lastTokenCount;
+
+    //
 
     // Add other context flags as needed
 } ParsingContext;
@@ -206,7 +208,7 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTa
 ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable);
 ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *typeTable);
 
-void addTokenToContext(ParsingContext *context, CryoTokenType token);
+void addTokenToContext(ParsingContext *context, Token token);
 
 void logThisContext(ParsingContext *context);
 void logTokenArray(ParsingContext *context);

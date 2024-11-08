@@ -373,6 +373,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
     // printf("Current Token: %s\n", currentToken);
 
     Token token;
+    token.lexeme = currentToken;
     token.type = type;
     token.start = lexer->start;
     token.length = (int)(lexer->current - lexer->start);

@@ -762,3 +762,11 @@ char *CryoOperatorToString(CryoOperatorType op)
     }
 }
 // </CryoOperatorToString>
+
+char *TokenToString(Token token)
+{
+    char *tokenString = (char *)malloc(1024);
+    sprintf(tokenString, "Type: %-20s Lexeme: %-15s Length: %-5d",
+            CryoTokenToString(token.type), token.lexeme, token.length);
+    return tokenString;
+}
