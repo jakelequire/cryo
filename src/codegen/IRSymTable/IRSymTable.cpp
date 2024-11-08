@@ -145,7 +145,6 @@ namespace Cryo
         STVariable varContainer;
         varContainer.ASTNode = varNode;
         varContainer.nodeType = varNode->metaData->type;
-        varContainer.dataType = DATA_TYPE_UNKNOWN;
         varContainer.LLVMValue = nullptr;
         varContainer.LLVMType = nullptr;
         varContainer.LLVMStoreInst = nullptr;

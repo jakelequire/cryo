@@ -2087,6 +2087,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
     DataType *structDataType = createDataTypeFromStruct(structType, state, typeTable);
 
+    addTypeToTypeTable(typeTable, structName, &structDataType->container);
+
     // Add the struct to the symbol table
     addASTNodeSymbol(table, structNode, arena);
 
@@ -2355,16 +2357,19 @@ ASTNode *parseDotNotationWithType(Lexer *lexer, CryoSymbolTable *table, ParsingC
 
     if (typeOfNode->container.baseType == STRUCT_TYPE)
     {
+        logMessage("INFO", __LINE__, "Parser", "Type of node is a struct.");
         StructType *structType = typeOfNode->container.custom.structDef;
-        // TODO: implement `findStructProperty` function
-        PropertyNode *property = findStructProperty(structType, propName);
+        const char *structName = typeOfNode->container.custom.name;
+        printf("\n\n\nStruct name: %s\n", structName);
+        ASTNode *property = findStructProperty(structType, (const char *)propName);
         if (property)
         {
-            // TODO: implement `createStructPropertyAccessNode` function
-            return createStructPropertyAccessNode(structType, property, arena, state, typeTable);
+            // return createStructPropertyAccessNode(structType, property, arena, state, typeTable);
+            DEBUG_BREAKPOINT;
         }
         else
         {
+            printTypeTable(typeTable);
             parsingError("Property not found in struct.", "parseDotNotationWithType", table, arena, state, lexer, source, typeTable);
             return NULL;
         }

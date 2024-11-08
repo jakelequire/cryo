@@ -54,7 +54,6 @@ namespace Cryo
         llvm::LoadInst *LLVMLoadInst;
         ASTNode *ASTNode;
         CryoNodeType nodeType;
-        CryoDataType dataType;
     };
 
     struct STParameter

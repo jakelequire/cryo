@@ -87,7 +87,7 @@ typedef struct TypeContainer
     int arrayDimensions;         // Number of array dimensions
     struct
     {
-        char *name;            // Type identifier name
+        const char *name;      // Type identifier name
         StructType *structDef; // For struct types
         FunctionType *funcDef; // For function types
         void *extraData;       // For future extensibility
@@ -157,24 +157,34 @@ extern "C"
 
     // Add Type to Type Table
     void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type);
+    bool typeAlreadyExists(TypeTable *table, const char *name);
+
+    void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType);
 
     // Utility Functions
     char *TypeofDataTypeToString(TypeofDataType type);
     char *PrimitiveDataTypeToString(PrimitiveDataType type);
+    char *PrimitiveDataTypeToString_UF(PrimitiveDataType type);
 
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);
+
     void printFormattedType(DataType *type);
     void logDataType(DataType *type);
+    void logStructType(StructType *type);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
 
     char *DataTypeToString(DataType *dataType);
+    char *DataTypeToStringUnformatted(DataType *type);
+
     DataType *CryoDataTypeStringToType(const char *typeStr);
 
     DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable);
     DataType *DataTypeFromNode(ASTNode *node);
+    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
+
 #ifdef __cplusplus
 }
 #endif

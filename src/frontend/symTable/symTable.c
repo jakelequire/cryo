@@ -50,7 +50,7 @@ void printSymbolTable(CryoSymbolTable *table)
     printf("\n\n");
     printf("Namespace: %s\n", table->namespaceName ? table->namespaceName : "Unnamed");
     printf("\n");
-    printf("Name                 Node Type                Data Type        Scope        L:C      Args     Module\n");
+    printf("Name               Node Type             Data Type        Scope        L:C      Args     Module\n");
     printf("-----------------------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++)
     {
@@ -72,10 +72,10 @@ void printSymbolTable(CryoSymbolTable *table)
                  table->symbols[i]->line,
                  table->symbols[i]->column);
 
-        printf("%-20s %-24s %-18s %-10d %-10s %-7d %-15s\n",
+        printf("%-15s %-24s %-18s %-10d %-10s %-7d %-15s\n",
                table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                CryoNodeTypeToString(table->symbols[i]->nodeType),
-               DataTypeToString(table->symbols[i]->type),
+               DataTypeToStringUnformatted(table->symbols[i]->type),
                table->symbols[i]->scopeLevel,
                locationStr,
                table->symbols[i]->argCount,

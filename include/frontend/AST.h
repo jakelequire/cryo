@@ -962,6 +962,7 @@ extern "C"
     ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStructPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 #ifdef __cplusplus
 }

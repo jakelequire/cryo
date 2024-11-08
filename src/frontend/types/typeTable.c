@@ -278,7 +278,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
         return NULL;
 
     container->baseType = STRUCT_TYPE;
-    container->custom.name = strdup(name);
+    container->custom.name = name;
     container->custom.structDef = structDef;
 
     return container;
@@ -293,6 +293,8 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
         fprintf(stderr, "[TypeTable] Error: Failed to allocate StructType\n");
         return NULL;
     }
+
+    printf("Creating struct type from node: %s\n", structNode->data.structNode->name);
 
     structType->name = strdup(structNode->data.structNode->name);
     structType->size = 0;
@@ -312,6 +314,30 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
 DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable)
 {
     return wrapTypeContainer(createStructType(structType->name, structType));
+}
+
+void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)
+{
+    if (!properties || propCount <= 0)
+        return;
+
+    if (structType->propertyCount + propCount >= structType->propertyCapacity)
+    {
+        // Grow properties array
+        int newCapacity = structType->propertyCapacity * 2;
+        ASTNode **newProperties = (ASTNode **)realloc(structType->properties, newCapacity * sizeof(ASTNode *));
+        if (!newProperties)
+            return;
+
+        structType->properties = newProperties;
+        structType->propertyCapacity = newCapacity;
+    }
+
+    // Add properties to struct
+    for (int i = 0; i < propCount; i++)
+    {
+        structType->properties[structType->propertyCount++] = properties[i];
+    }
 }
 
 // # ========================================================= #
@@ -386,6 +412,13 @@ void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type)
         table->capacity = newCapacity;
     }
 
+    // Check if type already exists
+    if (typeAlreadyExists(table, name))
+    {
+        fprintf(stderr, "[TypeTable] Error: Type '%s' already exists in the type table.\n", name);
+        return;
+    }
+
     DataType *newType = (DataType *)malloc(sizeof(DataType));
     newType->container = *type;
     newType->isConst = false;
@@ -393,6 +426,20 @@ void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type)
     newType->next = NULL;
 
     table->types[table->count++] = newType;
+}
+
+bool typeAlreadyExists(TypeTable *table, const char *name)
+{
+    for (int i = 0; i < table->count; i++)
+    {
+        DataType *type = table->types[i];
+        if (type->container.custom.name &&
+            strcmp(type->container.custom.name, name) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool isValidType(TypeContainer *type, TypeTable *typeTable)
@@ -497,6 +544,29 @@ DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable 
     }
 }
 
+ASTNode *findStructProperty(StructType *structType, const char *propertyName)
+{
+    if (!structType)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
+        return NULL;
+    }
+
+    logMessage("INFO", __LINE__, "TypeTable", "Finding property '%s' in struct '%s'", propertyName, structType->name);
+    logStructType(structType);
+
+    for (int i = 0; i < structType->propertyCount; i++)
+    {
+        ASTNode *property = structType->properties[i];
+        if (strcmp(property->data.property->name, propertyName) == 0)
+        {
+            return property;
+        }
+    }
+
+    return NULL;
+}
+
 // # =========================================================================== #
 // # Utility Functions
 
@@ -542,6 +612,59 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
     }
 }
 
+char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
+{
+    switch (type)
+    {
+    case PRIM_INT:
+        return "int";
+    case PRIM_FLOAT:
+        return "float";
+    case PRIM_STRING:
+        return "string";
+    case PRIM_BOOLEAN:
+        return "boolean";
+    case PRIM_VOID:
+        return "void";
+    case PRIM_NULL:
+        return "null";
+    case PRIM_UNKNOWN:
+        return "<UNKNOWN>";
+    default:
+        return "<PRIMITIVE UNKNOWN>";
+    }
+}
+
+char *DataTypeToStringUnformatted(DataType *type)
+{
+    if (!type)
+        return "<NULL DATATYPE>";
+
+    char *typeString = (char *)malloc(128);
+    if (!typeString)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
+        return NULL;
+    }
+
+    switch (type->container.baseType)
+    {
+    case PRIMITIVE_TYPE:
+        sprintf(typeString, "%s", PrimitiveDataTypeToString_UF(type->container.primitive));
+        break;
+
+    case STRUCT_TYPE:
+        sprintf(typeString, "%s", type->container.custom.name);
+        break;
+
+    default:
+        sprintf(typeString, "<UNKNOWN>");
+        break;
+    }
+
+    return typeString;
+}
+
 char *DataTypeToString(DataType *dataType)
 {
     if (!dataType)
@@ -577,19 +700,20 @@ void logDataType(DataType *type)
     if (!type)
         return;
 
-    printf("Type: %s", DataTypeToString(type));
+    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+    printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
+    printTypeContainer(&type->container);
+    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+}
 
-    if (type->isConst)
-    {
-        printf(" (const)");
-    }
+void logStructType(StructType *type)
+{
+    if (!type)
+        return;
 
-    if (type->isReference)
-    {
-        printf(" (ref)");
-    }
-
-    printf("\n");
+    printf("   ────────────────────────────────────────────────────────────\n");
+    printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
+    printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
 }
 
 void printFormattedStructType(StructType *type)

@@ -777,3 +777,18 @@ ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields
 
     return node;
 }
+
+ASTNode *createStructPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create struct property access node");
+        return NULL;
+    }
+
+    node->data.propertyAccess->object = object;
+    node->data.propertyAccess->property = strdup(property);
+
+    return node;
+}
