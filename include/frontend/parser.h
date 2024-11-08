@@ -82,7 +82,22 @@ typedef struct ParsingContext
     bool isParsingIfCondition;
     int scopeLevel;
     const char *currentNamespace;
+
+    /// ---
+    ///``` c
+    /// CryoNodeType nodeType;
+    /// const char *nodeName;
+    /// ASTNode **properties;
+    /// int propertyCount;
+    /// ASTNode **methods;
+    /// int methodCount;
+    ///```
     ThisContext *thisContext;
+
+    // An array of the last 16 tokens
+    CryoTokenType lastTokens[16];
+    int lastTokenCount;
+
     // Add other context flags as needed
 } ParsingContext;
 
@@ -98,7 +113,7 @@ void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @Helper_Functions | Debugging, Errors, Walkers */
-void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable);
+void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
 void parsingError(char *message, char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, Lexer *lexer, const char *source, TypeTable *typeTable);
 void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -173,8 +188,10 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData, TypeTable *typeTable);
 
 ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
-ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ASTNode *left, TypeTable *typeTable);
+ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseDotNotationWithType(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, DataType *typeOfNode);
 ASTNode *parseLHSIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, DataType *typeOfNode);
+ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 
@@ -188,5 +205,10 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTa
 ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable);
 ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *typeTable);
 
+void addTokenToContext(ParsingContext *context, CryoTokenType token);
+
 void logThisContext(ParsingContext *context);
+void logTokenArray(ParsingContext *context);
+void logParsingContext(ParsingContext *context);
+
 #endif // PARSER_H

@@ -572,6 +572,26 @@ char *DataTypeToString(DataType *dataType)
     return typeString;
 }
 
+void logDataType(DataType *type)
+{
+    if (!type)
+        return;
+
+    printf("Type: %s", DataTypeToString(type));
+
+    if (type->isConst)
+    {
+        printf(" (const)");
+    }
+
+    if (type->isReference)
+    {
+        printf(" (ref)");
+    }
+
+    printf("\n");
+}
+
 void printFormattedStructType(StructType *type)
 {
     printf("   ────────────────────────────────────────────────────────────\n");
@@ -691,4 +711,35 @@ DataType *CryoDataTypeStringToType(const char *typeStr)
     {
         return createUnknownType();
     }
+}
+
+DataType *DataTypeFromNode(ASTNode *node)
+{
+    CryoNodeType nodeType = node->metaData->type;
+
+    switch (nodeType)
+    {
+    case NODE_LITERAL_EXPR:
+        return node->data.literal->type;
+    case NODE_VAR_NAME:
+        return node->data.varName->type;
+    case NODE_STRUCT_DECLARATION:
+        return node->data.structNode->type;
+    case NODE_FUNCTION_DECLARATION:
+        return node->data.functionDecl->type;
+    case NODE_PROPERTY:
+        return node->data.property->type;
+    case NODE_PARAM:
+        return node->data.param->type;
+    case NODE_VAR_DECLARATION:
+        return node->data.varDecl->type;
+    default:
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to get data type from node.\n");
+        printf("Received node type: %s\n", CryoNodeTypeToString(nodeType));
+        return NULL;
+    }
+    }
+
+    return NULL;
 }

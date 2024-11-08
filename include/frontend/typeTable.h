@@ -165,6 +165,7 @@ extern "C"
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);
     void printFormattedType(DataType *type);
+    void logDataType(DataType *type);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
@@ -173,7 +174,7 @@ extern "C"
     DataType *CryoDataTypeStringToType(const char *typeStr);
 
     DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable);
-
+    DataType *DataTypeFromNode(ASTNode *node);
 #ifdef __cplusplus
 }
 #endif

@@ -775,17 +775,18 @@ typedef struct StructConstructorNode
     ASTNode *constructorBody;
 } StructConstructorNode;
 
-typedef struct
-{
-    ASTNode *object;
-    const char *property;
-} PropertyAccessNode;
-
 typedef struct ThisNode
 {
     const char *name;
     ASTNode *object;
 } ThisNode;
+
+typedef struct PropertyAccessNode
+{
+    DataType *objType;
+    ASTNode *object;
+    const char *property;
+} PropertyAccessNode;
 
 typedef struct PropertyReassignmentNode
 {

@@ -1032,6 +1032,7 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
         return NULL;
     }
 
+    node->objType = wrapTypeContainer(createTypeContainer());
     node->object = NULL;
     node->property = (char *)calloc(1, sizeof(char));
 
