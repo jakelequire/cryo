@@ -50,7 +50,7 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
     case PRIM_VOID:
         return LIGHT_CYAN BOLD "void" COLOR_RESET;
     case PRIM_NULL:
-        return LIGHT_CYAN BOLD "null" COLOR_RESET;
+        return LIGHT_CYAN BOLD "<NULL>" COLOR_RESET;
     case PRIM_UNKNOWN:
         return LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET;
     default:
@@ -100,7 +100,7 @@ char *DataTypeToStringUnformatted(DataType *type)
         break;
 
     case STRUCT_TYPE:
-        sprintf(typeString, "%s", type->container->custom.name);
+        sprintf(typeString, "%s", type->container->custom.structDef->name);
         break;
 
     default:
@@ -130,7 +130,7 @@ char *DataTypeToString(DataType *dataType)
         break;
 
     case STRUCT_TYPE:
-        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.name);
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.structDef->name);
         break;
 
     default:
@@ -153,7 +153,7 @@ char *VerboseStructTypeToString(StructType *type)
         return NULL;
     }
 
-    sprintf(typeString, LIGHT_CYAN BOLD "struct %s" COLOR_RESET, type->name);
+    sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, type->name);
 
     if (type->propertyCount > 0)
     {
@@ -278,7 +278,7 @@ void printTypeContainer(TypeContainer *type)
         break;
 
     case STRUCT_TYPE:
-        printf(" (%s)", type->custom.name);
+        printf(" (%s)", type->custom.structDef->name);
         break;
 
     default:

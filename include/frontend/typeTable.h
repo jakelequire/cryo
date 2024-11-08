@@ -124,7 +124,7 @@ extern "C"
     TypeContainer *createTypeContainer(void);
 
     // Migration Functions
-    DataType *parseDataType(const char *typeStr);
+    DataType *parseDataType(const char *typeStr, TypeTable *typeTable);
     PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
     bool isPrimitiveType(const char *typeStr);
 

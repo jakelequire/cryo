@@ -156,7 +156,7 @@ char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTab
 DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Getting data typestring: %s", typeStr);
-    DataType *type = parseDataType(typeStr);
+    DataType *type = parseDataType(typeStr, typeTable);
     if (!type)
     {
         parsingError("Unknown data type", "getCryoDataType", NULL, arena, state, lexer, source, typeTable);
@@ -2371,7 +2371,7 @@ ASTNode *parseDotNotationWithType(Lexer *lexer, CryoSymbolTable *table, ParsingC
         StructType *structType = typeOfNode->container->custom.structDef;
         printf("\n\n\nStruct type: \n");
         logStructType(structType);
-        const char *structName = typeOfNode->container->custom.name;
+        const char *structName = typeOfNode->container->custom.structDef->name;
         printf("\n\n\nStruct name: %s\n", structName);
         ASTNode *property = findStructProperty(structType, (const char *)propName);
         if (property)

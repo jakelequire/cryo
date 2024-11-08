@@ -60,7 +60,7 @@ TypeContainer *createTypeContainer(void)
     return container;
 }
 
-DataType *parseDataType(const char *typeStr)
+DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
 {
     printf("Parsing data type: %s\n", typeStr);
 
@@ -116,9 +116,38 @@ DataType *parseDataType(const char *typeStr)
     }
     else
     {
-        // Handle struct/custom types here
-        container->baseType = STRUCT_TYPE;
-        container->custom.name = strdup(baseTypeStr);
+        // This is where we handle custom types.
+        // Get the name of the type:
+        char *typeName = strdup(baseTypeStr);
+        // Look up the type in the type table
+        TypeContainer *customType = lookupType(typeTable, typeName);
+        if (!customType)
+        {
+            fprintf(stderr, "[TypeTable] Error: Custom type '%s' not found in type table.\n", typeName);
+            free(container);
+            free(baseTypeStr);
+            free(typeName);
+            return NULL;
+        }
+
+        // Set the custom type
+        container->baseType = customType->baseType;
+        if (container->baseType == STRUCT_TYPE)
+        {
+            container->custom.structDef = customType->custom.structDef;
+        }
+        else if (container->baseType == FUNCTION_TYPE)
+        {
+            container->custom.funcDef = customType->custom.funcDef;
+        }
+        else
+        {
+            fprintf(stderr, "[TypeTable] Error: Invalid custom type '%s' in type table.\n", typeName);
+            free(container);
+            free(baseTypeStr);
+            free(typeName);
+            return NULL;
+        }
     }
 
     // Handle array types
@@ -131,8 +160,6 @@ DataType *parseDataType(const char *typeStr)
 
     // Wrap in DataType
     DataType *dataType = wrapTypeContainer(container);
-    free(container); // wrapTypeContainer makes a copy
-    free(baseTypeStr);
 
     return dataType;
 }
