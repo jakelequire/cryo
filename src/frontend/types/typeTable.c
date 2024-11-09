@@ -281,7 +281,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable 
             return NULL;
 
         // Get the property name
-        const char *propertyName = node->data.propertyAccess->property;
+        const char *propertyName = node->data.propertyAccess->propertyName;
 
         // Get the struct type
         if (objectType->container->baseType == STRUCT_TYPE)
@@ -328,7 +328,6 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName)
     }
 
     logMessage("INFO", __LINE__, "TypeTable", "Finding property '%s' in struct '%s'", propertyName, structType->name);
-    logStructType(structType);
 
     for (int i = 0; i < structType->propertyCount; i++)
     {

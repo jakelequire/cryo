@@ -2331,7 +2331,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
         if (lexer->currentToken.type == TOKEN_DOT)
         {
             logMessage("INFO", __LINE__, "Parser", "Parsing dot notation with identifier...");
-            return parseDotNotationWithType(lexer, table, context, arena, state, typeTable, typeFromSymbol);
+            return parseDotNotationWithType(identifierNode, lexer, table, context, arena, state, typeTable, typeFromSymbol);
         }
 
         DEBUG_BREAKPOINT;
@@ -2344,7 +2344,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
     return NULL;
 }
 
-ASTNode *parseDotNotationWithType(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, DataType *typeOfNode)
+ASTNode *parseDotNotationWithType(ASTNode *object, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, DataType *typeOfNode)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing dot notation with type...");
     consume(__LINE__, lexer, TOKEN_DOT, "Expected `.` for property access.", "parseDotNotationWithType", table, arena, state, typeTable, context);
@@ -2360,24 +2360,17 @@ ASTNode *parseDotNotationWithType(Lexer *lexer, CryoSymbolTable *table, ParsingC
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseDotNotationWithType", table, arena, state, typeTable, context);
 
-    // The object name is a representation of the type of the object.
-    // It needs to be looked up in the type table to get the actual type and
-    // match it with the type of the node we are accessing
-    logDataType(typeOfNode);
-
     if (typeOfNode->container->baseType == STRUCT_TYPE)
     {
         logMessage("INFO", __LINE__, "Parser", "Type of node is a struct.");
         StructType *structType = typeOfNode->container->custom.structDef;
-        printf("\n\n\nStruct type: \n");
         logStructType(structType);
         const char *structName = typeOfNode->container->custom.structDef->name;
-        printf("\n\n\nStruct name: %s\n", structName);
         ASTNode *property = findStructProperty(structType, (const char *)propName);
         if (property)
         {
-            // return createStructPropertyAccessNode(structType, property, arena, state, typeTable);
-            DEBUG_BREAKPOINT;
+            logMessage("INFO", __LINE__, "Parser", "Property found in struct, name: %s", propName);
+            return createStructPropertyAccessNode(object, property, (char *)propName, typeOfNode, arena, state, typeTable);
         }
         else
         {

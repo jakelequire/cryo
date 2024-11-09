@@ -20,6 +20,12 @@ namespace Cryo
 {
     llvm::Type *OldTypes::getType(DataType *type, int length)
     {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting type");
+        if (type->container->baseType == STRUCT_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct type");
+            return this->getStructType(type);
+        }
         if (length == 0)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting simple type to LLVM type");
@@ -226,7 +232,7 @@ namespace Cryo
             //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of int array literal");
             //     return node->data.array->elementCount;
             // }
-                }
+        }
         if (node->metaData->type == NODE_ARRAY_LITERAL)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of array literal");
@@ -423,4 +429,82 @@ namespace Cryo
         return str;
     }
 
+    // -----------------------------------------------------------------------------------------------
+
+    llvm::Type *OldTypes::getStructType(DataType *type)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting struct type");
+
+        if (type->container->baseType != STRUCT_TYPE)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
+            return nullptr;
+        }
+
+        // Check if the struct already exists
+        llvm::Type *structType = doesStructExist(type->container->custom.structDef->name);
+        if (structType)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct already exists");
+            return structType;
+        }
+
+        std::vector<llvm::Type *> structTypes;
+        for (int i = 0; i < type->container->custom.structDef->propertyCount; i++)
+        {
+            ASTNode *property = type->container->custom.structDef->properties[i];
+            DataType *propertyType = property->data.property->type;
+            llvm::Type *llvmType = this->getType(propertyType, 0);
+            structTypes.push_back(llvmType);
+        }
+
+        return llvm::StructType::create(CryoContext::getInstance().context, structTypes);
+    }
+
+    llvm::Type *OldTypes::doesStructExist(std::string structName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Checking if struct exists");
+
+        if (CryoContext::getInstance().structTypes.find(structName) != CryoContext::getInstance().structTypes.end())
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct exists");
+            return CryoContext::getInstance().structTypes[structName];
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct does not exist");
+        return nullptr;
+    }
+
+    llvm::Value *OldTypes::createAllocaFromStructProps(llvm::StructType *structType, llvm::Value *thisPtr)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Creating alloca from struct properties");
+
+        std::string structName = structType->getName().str();
+        std::string propName = structName + ".prop";
+
+        llvm::IRBuilder<> builder(CryoContext::getInstance().context);
+        llvm::Value *alloca = builder.CreateAlloca(structType, nullptr, propName);
+
+        for (int i = 0; i < structType->getNumElements(); i++)
+        {
+            llvm::Value *fieldPtr = builder.CreateStructGEP(structType, thisPtr, i, "field" + std::to_string(i));
+            builder.CreateStore(fieldPtr, alloca);
+        }
+
+        return alloca;
+    }
+
+    bool OldTypes::isCustomType(DataType *type)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Checking if type is custom");
+
+        if (type->container->baseType == STRUCT_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Type is custom");
+            return true;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Type is not custom");
+        return false;
+    }
 } // namespace Cryo

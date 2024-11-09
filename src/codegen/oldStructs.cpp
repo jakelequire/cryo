@@ -80,6 +80,9 @@ namespace Cryo
         {
             handleMethod(structNode->methods[i], structType, structName);
         }
+
+        // Add the struct to the instance
+        compiler.getContext().addStructToInstance(structName, structType);
     }
 
     void Structs::handleConstructor(StructNode *node, llvm::StructType *structType)

@@ -735,6 +735,7 @@ namespace Cryo
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
                 std::cout << "Received: " << CryoNodeTypeToString(argNodeType) << std::endl;
+                compiler.dumpModule();
                 CONDITION_FAILED;
             }
             }

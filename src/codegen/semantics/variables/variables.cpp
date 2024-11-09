@@ -472,7 +472,7 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable initializer is a LiteralNode.");
             LiteralNode *literal = initializer->data.literal;
-            return createLiteralExprVariable(literal, varName);
+            return createLiteralExprVariable(literal, varName, varType);
         }
         case NODE_ARRAY_LITERAL:
         {
@@ -520,7 +520,7 @@ namespace Cryo
     /// const bar: string = "Hello, World!";
     ///
     /// ```
-    llvm::Value *Variables::createLiteralExprVariable(LiteralNode *literalNode, std::string varName)
+    llvm::Value *Variables::createLiteralExprVariable(LiteralNode *literalNode, std::string varName, DataType *type)
     {
         IRSymTable &symTable = compiler.getSymTable();
         OldTypes &types = compiler.getTypes();
@@ -538,8 +538,7 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is an int literal");
             int intValue = literalNode->value.intValue;
-            // llvm::Type *ty = compiler.getTypes().getType(dataType, 0);
-            llvm::Type *ty = compiler.getTypes().getLiteralType(literalNode);
+            llvm::Type *ty = compiler.getTypes().getType(type, 0);
             llvm::Value *varValue = compiler.getGenerator().getLiteralValue(literalNode);
             if (!varValue)
             {
@@ -1019,6 +1018,11 @@ namespace Cryo
         }
 
         return llvmValue;
+    }
+
+    void Variables::initCustomTypeVar(DataType *type, std::string varName)
+    {
+        
     }
 
     // -----------------------------------------------------------------------------------------------

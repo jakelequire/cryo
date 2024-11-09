@@ -785,7 +785,8 @@ typedef struct PropertyAccessNode
 {
     DataType *objType;
     ASTNode *object;
-    const char *property;
+    const char *propertyName;
+    ASTNode *property;
 } PropertyAccessNode;
 
 typedef struct PropertyReassignmentNode
@@ -962,7 +963,7 @@ extern "C"
     ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createStructPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 #ifdef __cplusplus
 }

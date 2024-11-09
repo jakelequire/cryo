@@ -154,6 +154,11 @@ namespace Cryo
             compiledFiles.push_back(file);
         }
 
+        void addStructToInstance(std::string name, llvm::StructType *structType)
+        {
+            structTypes[name] = structType;
+        }
+
     private:
         CryoContext() : builder(context) {}
     };
@@ -405,6 +410,17 @@ namespace Cryo
          */
         std::string trimStrQuotes(std::string str);
 
+        /**
+         * @brief Converts a DataType * that is a struct to an LLVM struct type.
+         */
+        llvm::Type *getStructType(DataType *type);
+
+        llvm::Type *doesStructExist(std::string structName);
+
+        llvm::Value *createAllocaFromStructProps(llvm::StructType *structType, llvm::Value *thisPtr);
+
+        bool isCustomType(DataType *type);
+
     private:
         CryoCompiler &compiler;
 
@@ -439,11 +455,14 @@ namespace Cryo
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
 
+        void initCustomTypeVar(DataType *type, std::string varName);
+
+        // DEBUGGING PURPOSES
         llvm::Value *createTestGlobalVariable(void);
 
     private:
         // Specialized variable creation functions
-        llvm::Value *createLiteralExprVariable(LiteralNode *literalNode, std::string varName);
+        llvm::Value *createLiteralExprVariable(LiteralNode *literalNode, std::string varName, DataType *type);
         llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName);
         llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, DataType *dataType, std::string varName);
         llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
@@ -718,7 +737,6 @@ namespace Cryo
           imports(std::make_unique<Imports>(*this)),
           whileStatements(std::make_unique<WhileStatements>(*this)),
           symTable(std::make_unique<IRSymTable>())
-
     {
         context.initializeContext();
     }
@@ -730,7 +748,13 @@ namespace Cryo
 
     inline void CryoCompiler::dumpModule(void)
     {
+        std::cout << "\n";
+        std::cout << BOLD;
+        std::cout << "═══════════════════════════ Module IR Dump ═══════════════════════════" << std::endl;
         context.module->print(llvm::outs(), nullptr);
+        std::cout << "══════════════════════════════════════════════════════════════════════" << std::endl;
+        std::cout << COLOR_RESET;
+        std::cout << "\n";
     }
 
 } // namespace Cryo

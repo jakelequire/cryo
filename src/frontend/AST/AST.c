@@ -727,7 +727,7 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
     }
 
     node->data.propertyAccess->object = object;
-    node->data.propertyAccess->property = strdup(property);
+    node->data.propertyAccess->propertyName = strdup(property);
 
     return node;
 }
@@ -778,7 +778,7 @@ ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields
     return node;
 }
 
-ASTNode *createStructPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable);
     if (!node)
@@ -787,8 +787,10 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, const char *property, A
         return NULL;
     }
 
+    node->data.propertyAccess->objType = type;
     node->data.propertyAccess->object = object;
-    node->data.propertyAccess->property = strdup(property);
+    node->data.propertyAccess->property = property;
+    node->data.propertyAccess->propertyName = strdup(propertyName);
 
     return node;
 }
