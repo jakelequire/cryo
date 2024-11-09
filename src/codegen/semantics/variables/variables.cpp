@@ -541,6 +541,7 @@ namespace Cryo
                 llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(
                     varDecl->initializer);
 
+                // IMPORTANT: The constructor is required to initialize the struct with the given value.
                 // Get the constructor function
                 llvm::Function *ctor = compiler.getContext().module->getFunction(
                     structName + "::constructor");

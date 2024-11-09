@@ -44,8 +44,10 @@ namespace Cryo
         compiler.getSymTable().addStruct(structName, structType, structNode);
         compiler.getContext().addStructToInstance(structName, structType);
 
-        // Handle constructor
-        handleStructConstructor(structNode, structType);
+        if (structNode->constructor)
+        {
+            handleStructConstructor(structNode, structType);
+        }
     }
 
     void Structs::handleStructConstructor(StructNode *node, llvm::StructType *structType)

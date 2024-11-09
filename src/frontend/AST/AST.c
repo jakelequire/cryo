@@ -794,3 +794,8 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
 
     return node;
 }
+
+ASTNode *createMethodNode(ASTNode *object, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    DEBUG_BREAKPOINT;
+}

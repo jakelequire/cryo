@@ -41,6 +41,7 @@ typedef struct Lexer
     int line;
     int column;
     Token currentToken;
+    Token nextToken;
     Token lookahead;
     bool hasPeeked;
     const char *fileName;

@@ -82,6 +82,8 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
     lexer->hasPeeked = false;
     lexer->fileName = fileName;
 
+    lexer->nextToken = peekNextToken(lexer, state);
+
     printf("{lexer} -------------- <Input Source Code> --------------\n\n");
     printf("\n{lexer} File Name: %s\n", fileName);
     printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
@@ -320,6 +322,9 @@ Token get_next_token(Lexer *lexer, CompilerState *state)
 {
     // printf("[Lexer] Getting next token...\n");
     nextToken(lexer, &lexer->currentToken, state);
+
+    lexer->nextToken = peekNextToken(lexer, state);
+
     return lexer->currentToken;
 }
 // </get_next_token>
