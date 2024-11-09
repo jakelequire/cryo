@@ -159,6 +159,11 @@ namespace Cryo
             structTypes[name] = structType;
         }
 
+        llvm::StructType *getStruct(std::string name)
+        {
+            return structTypes[name];
+        }
+
     private:
         CryoContext() : builder(context) {}
     };
@@ -451,11 +456,15 @@ namespace Cryo
         llvm::Value *createLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
+        llvm::Value *createStructVariable(CryoVariableNode *varDecl);
+        llvm::Value *getStructFieldValue(const std::string &structVarName,
+                                         const std::string &fieldName);
 
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
 
         void initCustomTypeVar(DataType *type, std::string varName);
+        void createStructPropVar(DataType *structType, std::string propName);
 
         // DEBUGGING PURPOSES
         llvm::Value *createTestGlobalVariable(void);
@@ -530,6 +539,7 @@ namespace Cryo
         void createScopedFunctionCall(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
 
+        llvm::Value *createPropertyAccessCall(PropertyAccessNode *propAccess);
         llvm::Value *createVarNameCall(VariableNameNode *varNameNode);
         llvm::Value *createLiteralCall(LiteralNode *literalNode);
         llvm::Value *createVarDeclCall(CryoVariableNode *varDeclNode);
@@ -650,7 +660,8 @@ namespace Cryo
 
         void handleMethod(ASTNode *methodNode, llvm::StructType *structType,
                           const std::string &structName);
-        void handleConstructor(StructNode *node, llvm::StructType *structType);
+        void handleStructConstructor(StructNode *node, llvm::StructType *structType);
+        llvm::Value *createStructInstance(ASTNode *node);
 
     private:
         CryoCompiler &compiler;

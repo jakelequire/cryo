@@ -400,7 +400,6 @@ namespace Cryo
             }
         }
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Created");
-
         return;
     }
 
@@ -425,6 +424,13 @@ namespace Cryo
         DataType *varType = varDecl->type;
         ASTNode *initializer = varDecl->initializer;
         assert(initializer != nullptr);
+
+        // Handle custom types
+        if (varType->container->baseType == STRUCT_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is a struct");
+            return createStructVariable(varDecl);
+        }
 
         CryoNodeType initializerNodeType = initializer->metaData->type;
         std::string varName = std::string(varDecl->name);
@@ -502,6 +508,131 @@ namespace Cryo
     /// ### These functions are used to create variables with specific initializers
     /// ###
     /// ### ============================================================================= ###
+
+    llvm::Value *Variables::createStructVariable(CryoVariableNode *varDecl)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Struct Variable");
+
+        std::string varName = std::string(varDecl->name);
+        std::string structName = varDecl->type->container->custom.structDef->name;
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
+        // Get struct type
+        llvm::StructType *structType = compiler.getContext().structTypes[structName];
+        if (!structType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Struct type not found: " + structName);
+            CONDITION_FAILED;
+        }
+
+        // Create struct allocation
+        llvm::Value *structPtr = compiler.getContext().builder.CreateAlloca(
+            structType,
+            nullptr,
+            varName + ".ptr");
+
+        // Handle initializer (in this case, literal value 42)
+        if (varDecl->initializer)
+        {
+            if (varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
+            {
+                // Get the literal value
+                llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(
+                    varDecl->initializer);
+
+                // Get the constructor function
+                llvm::Function *ctor = compiler.getContext().module->getFunction(
+                    structName + "::constructor");
+                if (!ctor)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                            "Constructor not found for struct: " + structName);
+                    CONDITION_FAILED;
+                }
+
+                // Call constructor with this pointer and initial value
+                std::vector<llvm::Value *> args = {structPtr, initValue};
+                compiler.getContext().builder.CreateCall(ctor, args);
+            }
+        }
+
+        // Register in symbol table
+        compiler.getContext().namedValues[varName] = structPtr;
+        compiler.getSymTable().updateVariableNode(
+            namespaceName,
+            varName,
+            structPtr,
+            structType);
+
+        return structPtr;
+    }
+
+    llvm::Value *Variables::getStructFieldValue(const std::string &structVarName,
+                                                const std::string &fieldName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Variables",
+                                "Getting struct field: " + structVarName + "." + fieldName);
+
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
+        // Get the struct variable
+        STVariable *var = compiler.getSymTable().getVariable(namespaceName, structVarName);
+        if (!var)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Struct variable not found: " + structVarName);
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *structPtr = var->LLVMValue;
+        llvm::StructType *structType = llvm::dyn_cast<llvm::StructType>(structPtr->getType());
+
+        if (!structType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Not a struct type");
+            CONDITION_FAILED;
+        }
+
+        // Get the struct definition
+        STStruct *structDef = compiler.getSymTable().getStruct(
+            namespaceName,
+            structType->getName().str());
+
+        // Find field index
+        StructType *structDataType = structDef->structType->container->custom.structDef;
+        int fieldIndex = -1;
+        for (int i = 0; i < structDataType->propertyCount; ++i)
+        {
+            PropertyNode *prop = structDataType->properties[i]->data.property;
+            if (std::string(prop->name) == fieldName)
+            {
+                fieldIndex = i;
+                break;
+            }
+        }
+
+        if (fieldIndex == -1)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Field not found: " + fieldName);
+            CONDITION_FAILED;
+        }
+
+        // Create GEP for field access
+        llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
+            structType,
+            structPtr,
+            fieldIndex,
+            structVarName + "." + fieldName);
+
+        // Load and return field value
+        return compiler.getContext().builder.CreateLoad(
+            structType->getElementType(fieldIndex),
+            fieldPtr,
+            structVarName + "." + fieldName + ".load");
+    }
 
     ///
     /// @brief Create a variable with a literal expression initializer
@@ -1022,7 +1153,52 @@ namespace Cryo
 
     void Variables::initCustomTypeVar(DataType *type, std::string varName)
     {
-        
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Initializing Custom Type Variable");
+
+        TypeofDataType typeOf = type->container->baseType;
+
+        switch (typeOf)
+        {
+        case STRUCT_TYPE:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Initializing Struct Variable");
+            createStructPropVar(type, varName);
+            break;
+        }
+        default:
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+            CONDITION_FAILED;
+        }
+        }
+
+        return;
+    }
+
+    void Variables::createStructPropVar(DataType *structType, std::string propName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Struct Property Variable");
+
+        std::vector<llvm::Value *> IRValues;
+
+        std::string structName = std::string(structType->container->custom.structDef->name);
+
+        int propCount = structType->container->custom.structDef->propertyCount;
+        for (int i = 0; i < propCount; i++)
+        {
+            ASTNode *propNode = structType->container->custom.structDef->properties[i];
+            PropertyNode *prop = propNode->data.property;
+            DataType *propType = prop->type;
+
+            llvm::Type *llvmType = compiler.getTypes().getType(propType, 0);
+            std::string propVarName = propName + "." + std::string(prop->name);
+
+            llvm::Value *propValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, propVarName);
+
+            IRValues.push_back(propValue);
+        }
+
+        return;
     }
 
     // -----------------------------------------------------------------------------------------------

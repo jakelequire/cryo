@@ -149,6 +149,7 @@ namespace Cryo
         varContainer.LLVMType = nullptr;
         varContainer.LLVMStoreInst = nullptr;
         varContainer.LLVMLoadInst = nullptr;
+        varContainer.dataType = varNode->data.varDecl->type;
         return varContainer;
     }
 

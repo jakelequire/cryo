@@ -731,6 +731,22 @@ namespace Cryo
                 argValues.push_back(argNode);
                 break;
             }
+            case NODE_PROPERTY_ACCESS:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a property access");
+                PropertyAccessNode *propNode = argNode->data.propertyAccess;
+                assert(propNode != nullptr);
+
+                llvm::Value *argNode = createPropertyAccessCall(propNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
@@ -956,6 +972,85 @@ namespace Cryo
     /// ### These functions are used to handle specific types of function calls
     /// ###
     /// ### ============================================================================= ###
+
+    llvm::Value *Functions::createPropertyAccessCall(PropertyAccessNode *propAccess)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Handling property access");
+
+        ASTNode *objNode = propAccess->object;
+        std::string structVarName;
+        if (objNode->metaData->type == NODE_VAR_DECLARATION)
+        {
+            structVarName = std::string(objNode->data.varDecl->name);
+        }
+        std::string fieldName = std::string(propAccess->propertyName);
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                "Accessing " + structVarName + "." + fieldName);
+
+        // Get the struct variable from symbol table
+        STVariable *var = compiler.getSymTable().getVariable(namespaceName, structVarName);
+        if (!var)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Struct variable not found: " + structVarName);
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                "Struct variable found: " + structVarName);
+
+        // Get the struct pointer and type
+        llvm::Value *structPtr = var->LLVMValue;
+
+        DataType *structDataType = var->dataType;
+        StructType *structDef = structDataType->container->custom.structDef;
+        std::string structTypeName = std::string(structDataType->container->custom.structDef->name);
+        llvm::StructType *structType = compiler.getContext().getStruct(structTypeName);
+        if (!structType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Struct type not found");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                "Struct type found: " + structType->getName().str());
+
+        // Find field index
+        int fieldIndex = -1;
+        int propertyCount = structDef->propertyCount;
+        for (int i = 0; i < propertyCount; i++)
+        {
+            PropertyNode *prop = structDef->properties[i]->data.property;
+            if (std::string(prop->name) == fieldName)
+            {
+                fieldIndex = i;
+                break;
+            }
+        }
+
+        if (fieldIndex == -1)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Field not found: " + fieldName);
+            CONDITION_FAILED;
+        }
+
+        // Get field pointer using GEP
+        llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
+            structType,
+            structPtr,
+            fieldIndex,
+            structVarName + "." + fieldName);
+
+        // Load and return field value
+        return compiler.getContext().builder.CreateLoad(
+            structType->getElementType(fieldIndex),
+            fieldPtr,
+            structVarName + "." + fieldName + ".load");
+    }
 
     llvm::Value *Functions::createVarNameCall(VariableNameNode *varNameNode)
     {

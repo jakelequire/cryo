@@ -14,12 +14,6 @@ struct Int {
     constructor(val: int) {
         this.value = val;
     }
-    
-    // // Methods for the Int struct
-    // toString() -> string {
-    //     const i: int = this.value;
-    //     return intToString(i);
-    // }
 }
 
 public function testFunc() -> void {
@@ -36,6 +30,8 @@ public function main() -> void {
     const fooStr: string = "Hello, World!";
     printStr(fooStr);
     printStr("Hey!");
+
+    testFunc();
 
     return;
 }

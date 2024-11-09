@@ -21,22 +21,9 @@ namespace Cryo
     void Structs::handleStructDeclaration(ASTNode *node)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling Struct Declaration");
-        DevDebugger::logNode(node);
 
         StructNode *structNode = node->data.structNode;
-        if (!structNode)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Structs", "StructNode is null");
-            CONDITION_FAILED;
-        }
-
         std::string structName = structNode->name;
-        if (structName.empty())
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Struct name is empty");
-            CONDITION_FAILED;
-        }
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct name: " + structName);
 
         // Create struct type with fields
         std::vector<llvm::Type *> structFields;
@@ -47,135 +34,72 @@ namespace Cryo
             structFields.push_back(fieldType);
         }
 
-        llvm::StructType *structType = llvm::StructType::create(compiler.getContext().context, structFields, structName);
-        if (!structType)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Failed to create struct type");
-            CONDITION_FAILED;
-        }
+        // Create the struct type and register it
+        llvm::StructType *structType = llvm::StructType::create(
+            compiler.getContext().context,
+            structFields,
+            structName);
 
-        // Add to the module
-        llvm::GlobalVariable *structVar = new llvm::GlobalVariable(
-            *compiler.getContext().module,
-            structType,
-            false,
-            llvm::GlobalValue::ExternalLinkage,
-            nullptr,
-            llvm::Twine(structName));
-
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct type created");
-        DevDebugger::logLLVMStruct(structType);
-
-        // Add struct type to the symbol table first
+        // Add struct type to the symbol table and context
         compiler.getSymTable().addStruct(structName, structType, structNode);
-
-        // Handle constructor if present
-        if (structNode->constructor)
-        {
-            handleConstructor(structNode, structType);
-        }
-
-        // Handle methods
-        for (int i = 0; i < structNode->methodCount; ++i)
-        {
-            handleMethod(structNode->methods[i], structType, structName);
-        }
-
-        // Add the struct to the instance
         compiler.getContext().addStructToInstance(structName, structType);
+
+        // Handle constructor
+        handleStructConstructor(structNode, structType);
     }
 
-    void Structs::handleConstructor(StructNode *node, llvm::StructType *structType)
+    void Structs::handleStructConstructor(StructNode *node, llvm::StructType *structType)
     {
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling Constructor");
-
-        CryoContext &context = compiler.getContext();
-        Variables &variables = compiler.getVariables();
-
         ASTNode *constructor = node->constructor;
-        if (!constructor)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Constructor node is null");
-            CONDITION_FAILED;
-        }
-
-        StructConstructorNode *constructorNode = constructor->data.structConstructor;
-        std::string structName = std::string(constructorNode->name);
-        std::string constructorName = structName;
-
-        // Create parameter types for constructor
-        std::vector<llvm::Type *> paramTypes;
-        // First parameter is always the struct pointer (this)
-        paramTypes.push_back(structType->getPointerTo());
-
-        // Add parameter types from constructor arguments
-        for (int i = 0; i < constructorNode->argCount; ++i)
-        {
-            CryoParameterNode *param = constructorNode->args[i]->data.param;
-            llvm::Type *paramType = compiler.getTypes().getType(param->type, 0);
-            paramTypes.push_back(paramType);
-        }
-
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Creating constructor function");
+        std::string structName = std::string(node->name);
 
         // Create constructor function type
-        llvm::FunctionType *constructorFnType = llvm::FunctionType::get(
+        std::vector<llvm::Type *> paramTypes;
+        paramTypes.push_back(structType->getPointerTo()); // 'this' pointer
+
+        // Add constructor parameters
+        for (int i = 0; i < constructor->data.structConstructor->argCount; ++i)
+        {
+            CryoParameterNode *param = constructor->data.structConstructor->args[i]->data.param;
+            paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
+        }
+
+        // Create constructor function
+        llvm::FunctionType *ctorType = llvm::FunctionType::get(
             llvm::Type::getVoidTy(compiler.getContext().context),
             paramTypes,
             false);
 
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Constructor function type created");
-
-        // Create the constructor function
-        llvm::Function *constructorFn = llvm::Function::Create(
-            constructorFnType,
+        llvm::Function *ctorFunc = llvm::Function::Create(
+            ctorType,
             llvm::Function::ExternalLinkage,
-            constructorName);
-
-        // Set function name
-        constructorFn->setName(constructorName);
-
-        // Add function to module
-        compiler.getContext().module->getFunctionList().push_back(constructorFn);
-
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Constructor function created");
+            structName + "::constructor",
+            *compiler.getContext().module);
 
         // Create entry block
-        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(
             compiler.getContext().context,
             "entry",
-            constructorFn);
-        compiler.getContext().builder.SetInsertPoint(entryBlock);
+            ctorFunc);
+        compiler.getContext().builder.SetInsertPoint(entry);
 
-        // Get constructor parameters
-        auto argIt = constructorFn->arg_begin();
+        // Initialize fields
+        auto argIt = ctorFunc->arg_begin();
         llvm::Value *thisPtr = argIt++; // First argument is 'this' pointer
 
-        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Creating constructor body");
-
-        DevDebugger::logLLVMStruct(structType);
-
-        // Store constructor parameters in struct fields
-        for (int i = 0; i < constructorNode->argCount; ++i)
+        for (int i = 0; i < node->propertyCount; ++i)
         {
-            llvm::Value *fieldPtr = context.getInstance().builder.CreateStructGEP(
+            PropertyNode *prop = node->properties[i]->data.property;
+            llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
                 structType,
                 thisPtr,
                 i,
                 "field" + std::to_string(i));
-
             llvm::Value *argValue = argIt++;
             compiler.getContext().builder.CreateStore(argValue, fieldPtr);
         }
 
-        // Create return void
         compiler.getContext().builder.CreateRetVoid();
-
-        // Add to symbol table
-        compiler.getSymTable().updateStructConstructor(
-            compiler.getContext().currentNamespace,
-            structName,
-            constructorFn);
     }
 
     void Structs::handleMethod(ASTNode *methodNode, llvm::StructType *structType,
@@ -261,5 +185,40 @@ namespace Cryo
         }
 
         return compiler.getTypes().getType(dataType, 0);
+    }
+
+    llvm::Value *Structs::createStructInstance(ASTNode *node)
+    {
+        CryoVariableNode *varDecl = node->data.varDecl;
+        std::string structName = varDecl->type->container->custom.structDef->name;
+
+        // Get struct type
+        llvm::StructType *structType = compiler.getContext().structTypes[structName];
+
+        // Allocate memory for struct
+        llvm::Value *structPtr = compiler.getContext().builder.CreateAlloca(
+            structType,
+            nullptr,
+            varDecl->name);
+
+        // If there's an initializer, handle it
+        if (varDecl->initializer)
+        {
+            // For implicit constructor call with single value
+            if (varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
+            {
+                llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(varDecl->initializer);
+
+                // Call constructor
+                std::vector<llvm::Value *> args;
+                args.push_back(structPtr);
+                args.push_back(initValue);
+
+                llvm::Function *ctor = compiler.getContext().module->getFunction(structName + "::constructor");
+                compiler.getContext().builder.CreateCall(ctor, args);
+            }
+        }
+
+        return structPtr;
     }
 };
