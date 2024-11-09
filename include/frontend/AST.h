@@ -966,6 +966,7 @@ extern "C"
     ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
+
 #ifdef __cplusplus
 }
 #endif
@@ -1059,6 +1060,7 @@ char *getASTBuffer(DebugASTOutput *output, bool console);
 char *logASTBuffer(DebugASTOutput *output, bool console);
 
 char *ASTNodeValueBuffer(ASTNode *node);
+void logASTNode(ASTNode *node);
 
 // Formatting Functions
 char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console);

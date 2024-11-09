@@ -275,40 +275,40 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
     }
 
     char c = advance(lexer, state);
-    logMessage("INFO", __LINE__, "Lexer", "Current character: %c", c);
+    // logMessage("INFO", __LINE__, "Lexer", "Current character: %c", c);
 
     if (isAlpha(c))
     {
         *token = checkKeyword(lexer, state);
-        logMessage("INFO", __LINE__, "Lexer", "Keyword token created");
+        // logMessage("INFO", __LINE__, "Lexer", "Keyword token created");
         return *token;
     }
 
     if (isDigit(c))
     {
         *token = number(lexer, state);
-        logMessage("INFO", __LINE__, "Lexer", "Number token created");
+        // logMessage("INFO", __LINE__, "Lexer", "Number token created");
         return *token;
     }
 
     if (c == '"')
     {
         *token = string(lexer, state);
-        logMessage("INFO", __LINE__, "Lexer", "String token created");
+        // logMessage("INFO", __LINE__, "Lexer", "String token created");
         return *token;
     }
 
     if (c == '&')
     {
         *token = makeToken(lexer, TOKEN_AMPERSAND, state);
-        logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
+        // logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
         return *token;
     }
     Token symToken = symbolChar(lexer, c, state);
     if (symToken.type != TOKEN_UNKNOWN)
     {
         *token = symToken;
-        logMessage("INFO", __LINE__, "Lexer", "Symbol token created");
+        // logMessage("INFO", __LINE__, "Lexer", "Symbol token created");
         return *token;
     }
 
@@ -385,9 +385,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
     token.line = lexer->line;
     token.column = lexer->column;
 
-    // printf("[Lexer] Created token: %.*s (Type: %d, Line: %d, Column: %d)\n",
-    //        token.length, token.start, token.type, token.line, token.column);
-    logMessage("INFO", __LINE__, "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
+    // logMessage("INFO", __LINE__, "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
     return token;
 }
 // </makeToken>

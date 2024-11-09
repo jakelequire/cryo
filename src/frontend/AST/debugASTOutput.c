@@ -261,6 +261,25 @@ char *logASTBuffer(DebugASTOutput *output, bool console)
     return buffer;
 }
 
+void logASTNode(ASTNode *node)
+{
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Node is null in logASTNode");
+        return;
+    }
+
+    DebugASTOutput *output = createDebugASTOutput("console", "console", "txt", "console");
+    createASTDebugView(node, output, 0);
+    char *buffer = logASTBuffer(output, true);
+    if (!buffer)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to get AST buffer for debug output");
+        return;
+    }
+    printf("%s\n", buffer);
+}
+
 // # ============================================================ #
 // # Formatting Functions                                         #
 // # ============================================================ #

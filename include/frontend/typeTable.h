@@ -152,8 +152,8 @@ extern "C"
 
     // Type Validation
     TypeContainer *lookupType(TypeTable *table, const char *name);
-    bool isValidType(TypeContainer *type, TypeTable *typeTable);
     bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
+    bool isValidType(DataType *type);
 
     // Add Type to Type Table
     void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
@@ -187,6 +187,13 @@ extern "C"
     DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable);
     DataType *DataTypeFromNode(ASTNode *node);
     ASTNode *findStructProperty(StructType *structType, const char *propertyName);
+
+#define VALIDATE_TYPE(type)                                         \
+    if (!isValidType(type))                                         \
+    {                                                               \
+        logMessage("ERROR", __LINE__, "TypeTable", "Invalid type"); \
+        CONDITION_FAILED;                                           \
+    }
 
 #ifdef __cplusplus
 }

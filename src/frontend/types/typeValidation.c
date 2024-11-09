@@ -30,25 +30,71 @@ bool typeAlreadyExists(TypeTable *table, const char *name)
     return false;
 }
 
-bool isValidType(TypeContainer *type, TypeTable *typeTable)
+bool isValidType(DataType *type)
 {
     if (!type)
-        return false;
-
-    switch (type->baseType)
     {
-    case PRIMITIVE_TYPE:
-        return type->primitive != PRIM_UNKNOWN;
-
-    case STRUCT_TYPE:
-        return type->custom.structDef != NULL;
-
-    case FUNCTION_TYPE:
-        return type->custom.funcDef != NULL;
-
-    default:
+        logMessage("ERROR", __LINE__, "TypeTable", "Type is null");
         return false;
     }
+
+    if (!type->container)
+    {
+        logMessage("ERROR", __LINE__, "TypeTable", "Type container is null");
+        return false;
+    }
+
+    if (type->container->baseType == UNKNOWN_TYPE)
+    {
+        logMessage("ERROR", __LINE__, "TypeTable", "Base Type is unknown");
+        return false;
+    }
+
+    if (type->container->baseType == PRIMITIVE_TYPE)
+    {
+        if (type->container->primitive == PRIM_UNKNOWN)
+        {
+            logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is unknown");
+            return false;
+        }
+        if (type->container->primitive == PRIM_VOID)
+        {
+            logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is void");
+            return false;
+        }
+        if (type->container->primitive == PRIM_NULL)
+        {
+            logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is null");
+            return false;
+        }
+
+        logMessage("INFO", __LINE__, "TypeTable", "Primitive Type is valid: %s", DataTypeToString(type));
+        return true;
+    }
+
+    if (type->container->baseType == STRUCT_TYPE)
+    {
+        if (!type->container->custom.structDef)
+        {
+            logMessage("ERROR", __LINE__, "TypeTable", "Struct Type is inaccesible");
+            return false;
+        }
+        if (strcmp(type->container->custom.structDef->name, "<UNKNOWN>") == 0)
+        {
+            logMessage("ERROR", __LINE__, "TypeTable", "Struct Type is unknown");
+            return false;
+        }
+
+        logMessage("INFO", __LINE__, "TypeTable", "Struct Type is valid: %s", DataTypeToString(type));
+        return true;
+    }
+
+    if (type->container->baseType == FUNCTION_TYPE)
+        return type->container->custom.funcDef != NULL;
+
+    logMessage("INFO", __LINE__, "TypeTable", "Type is valid: %s", DataTypeToString(type));
+
+    return true;
 }
 
 bool areTypesCompatible(TypeContainer *left, TypeContainer *right)

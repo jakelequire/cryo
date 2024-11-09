@@ -2,7 +2,7 @@ namespace Main;
 
 extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
-extern function intToString(i: int) -> string;
+extern function intToString(num: int) -> string;
 
 struct Int {
     // The default keyword is used to specify the default primary property

@@ -293,6 +293,8 @@ char *getNameOfNode(ASTNode *node)
         return strdup(node->data.import->moduleName);
     case NODE_PROPERTY:
         return strdup(node->data.property->name);
+    case NODE_PROPERTY_ACCESS:
+        return strdup(node->data.propertyAccess->propertyName);
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %s", CryoNodeTypeToString(node->metaData->type));
         return NULL;
@@ -446,6 +448,15 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
         break;
+
+    case NODE_PROPERTY_ACCESS:
+    {
+        symbolNode->name = strdup(node->data.propertyAccess->propertyName);
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
+        break;
+    }
 
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
