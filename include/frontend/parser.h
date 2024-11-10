@@ -122,6 +122,7 @@ void parsingError(char *message, char *functionName, CryoSymbolTable *table, Are
 void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
 char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
 Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
+void printHorizontalLine(int width);
 
 /* @DataType_Management */
 DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable);
