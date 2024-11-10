@@ -207,6 +207,7 @@ bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 
 // # ============================================================ #
 
+void setDefaultThisContext(const char *currentNamespace, ParsingContext *context, TypeTable *typeTable);
 void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType, TypeTable *typeTable);
 void clearThisContext(ParsingContext *context, TypeTable *typeTable);
 void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode, TypeTable *typeTable);

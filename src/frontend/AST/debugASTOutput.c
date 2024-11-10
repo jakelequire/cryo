@@ -519,6 +519,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatPropertyAssignmentNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "Method") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatMethodNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatMethodNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -674,7 +685,10 @@ char *CONSOLE_formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output)
         char *valueBuffer = ASTNodeValueBuffer(node->value);
         if (valueBuffer)
         {
-            sprintf(buffer, "%s %s%sValue:%s %s%s%s", buffer, DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC);
+            sprintf(buffer, "%s %s%sValue:%s %s%s%s %s",
+                    buffer,
+                    DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC,
+                    COLOR_RESET);
             free(valueBuffer);
         }
     }
@@ -728,7 +742,10 @@ char *CONSOLE_formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output)
         char *valueBuffer = ASTNodeValueBuffer(node->value);
         if (valueBuffer)
         {
-            sprintf(buffer, "%s %s%sValue:%s %s%s%s", buffer, DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC);
+            sprintf(buffer, "%s %s%sValue:%s %s%s%s %s",
+                    buffer,
+                    DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC,
+                    COLOR_RESET);
             free(valueBuffer);
         }
     }
@@ -789,7 +806,9 @@ char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output)
             char *argBuffer = ASTNodeValueBuffer(node->args[i]);
             if (argBuffer)
             {
-                sprintf(buffer, "%s %s%s%i:%s %s%s%s", buffer, DARK_GRAY, ITALIC, i, COLOR_RESET, argBuffer, DARK_GRAY, ITALIC);
+                sprintf(buffer, "%s %s%s%i:%s %s%s%s %s",
+                        buffer, DARK_GRAY, ITALIC, i, COLOR_RESET, argBuffer, DARK_GRAY, ITALIC,
+                        COLOR_RESET);
                 free(argBuffer);
             }
         }
@@ -1030,6 +1049,30 @@ char *CONSOLE_formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *o
 }
 // </PropertyAssignment>
 // ============================================================
+// ============================================================
+// <Method>
+char *formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Method> [NAME] [RETURN_TYPE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<Method> [%s] →  %s <0:0>",
+            node->nodeName,
+            DataTypeToString(node->dataType));
+    return buffer;
+}
+char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Method> [NAME] → [RETURN_TYPE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Method>%s %s[%s] → %s%s%s %s %s%s<0:0>%s%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, COLOR_RESET, COLOR_RESET);
+    return buffer;
+}
 
 // # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 // # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -1194,6 +1237,27 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         break;
     }
 
+    case NODE_METHOD:
+    {
+        __LINE_AND_COLUMN__
+        char *methodName = strdup(node->data.method->name);
+        DataType *returnType = node->data.method->type;
+
+        ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, returnType, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *methodNode;
+        output->nodeCount++;
+        for (int i = 0; i < node->data.method->paramCount; i++)
+        {
+            indentLevel++;
+            createASTDebugView(node->data.method->params[i], output, indentLevel);
+            indentLevel--;
+        }
+
+        createASTDebugView(node->data.method->body, output, indentLevel + 1);
+
+        break;
+    }
+
     case NODE_NAMESPACE:
     {
         __LINE_AND_COLUMN__
@@ -1289,6 +1353,12 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         ASTDebugNode *returnNode = createASTDebugNode("ReturnStatement", "ReturnStatement", createPrimitiveVoidType(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *returnNode;
         output->nodeCount++;
+
+        if (node->data.returnStatement->expression != NULL)
+        {
+            createASTDebugView(node->data.returnStatement->expression, output, indentLevel + 1);
+        }
+
         break;
     }
 

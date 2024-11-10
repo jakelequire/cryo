@@ -290,7 +290,11 @@ void printTypeContainer(TypeContainer *type)
 void printVerboseTypeContainer(TypeContainer *type)
 {
     if (!type)
+    {
+        printf("   ────────────────────────────────────────────────────────────\n");
+        printf(BOLD GREEN "   TYPE_CONTAINER" COLOR_RESET " | <NULL>\n");
         return;
+    }
 
     printf("Type: %s", TypeofDataTypeToString(type->baseType));
 
@@ -310,6 +314,7 @@ void printVerboseTypeContainer(TypeContainer *type)
         break;
 
     default:
+        printf(" <UNKNOWN>");
         break;
     }
     printf("\n");

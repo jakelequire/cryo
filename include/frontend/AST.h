@@ -687,6 +687,7 @@ typedef struct MethodNode
     int paramCount;
     int paramCapacity;
     ASTNode *body;
+    CryoVisibilityType visibility;
 } MethodNode;
 
 /// #### The StructNode struct represents a struct in the AST.
@@ -953,9 +954,11 @@ extern "C"
 
     /* @Node_Creation - Structs */
     ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
+                              ASTNode **methods, int methodCount,
+                              Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createMethodNode(ASTNode *object, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Scoped Calls */
     ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName, TypeTable *typeTable);
@@ -965,7 +968,6 @@ extern "C"
     ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable);
-
 
 #ifdef __cplusplus
 }
@@ -1009,6 +1011,7 @@ ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerSt
 PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerState *state);
 ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state);
 PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, CompilerState *state);
+MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
@@ -1083,6 +1086,7 @@ char *formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output);
 char *formatThisNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatMethodNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1104,5 +1108,6 @@ char *CONSOLE_formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output
 char *CONSOLE_formatThisNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

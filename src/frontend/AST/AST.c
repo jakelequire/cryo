@@ -668,7 +668,9 @@ ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, A
     return node;
 }
 
-ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
+                          ASTNode **methods, int methodCount,
+                          Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena, state, typeTable);
     if (!node)
@@ -795,7 +797,20 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
     return node;
 }
 
-ASTNode *createMethodNode(ASTNode *object, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    DEBUG_BREAKPOINT;
+    ASTNode *node = createASTNode(NODE_METHOD, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create method node");
+        return NULL;
+    }
+
+    node->data.method->name = strdup(methodName);
+    node->data.method->body = body;
+    node->data.method->params = args;
+    node->data.method->paramCount = argCount;
+    node->data.method->type = type;
+
+    return node;
 }

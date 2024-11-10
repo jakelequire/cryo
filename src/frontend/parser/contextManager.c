@@ -16,8 +16,22 @@
  ********************************************************************************/
 #include "frontend/parser.h"
 
+void setDefaultThisContext(const char *currentNamespace, ParsingContext *context, TypeTable *typeTable)
+{
+    ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
+    thisContext->nodeName = currentNamespace;
+    thisContext->nodeType = NODE_NAMESPACE;
+    thisContext->properties = NULL;
+    thisContext->propertyCount = 0;
+    thisContext->methods = NULL;
+    thisContext->methodCount = 0;
+    context->thisContext = thisContext;
+}
+
 void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType, TypeTable *typeTable)
 {
+    clearThisContext(context, typeTable);
+
     ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
     thisContext->nodeName = nodeName;
     thisContext->nodeType = nodeType;
