@@ -679,6 +679,17 @@ typedef struct PropertyNode
     bool defaultProperty;
 } PropertyNode;
 
+typedef struct MethodNode
+{
+    DataType *type;
+    char *name;
+    ASTNode **params;
+    int paramCount;
+    int paramCapacity;
+    ASTNode *body;
+    CryoVisibilityType visibility;
+} MethodNode;
+
 /// #### The StructNode struct represents a struct in the AST.
 /// ---
 ///
@@ -705,6 +716,7 @@ typedef struct StructNode
     int methodCapacity;
     bool hasConstructor;
     bool hasDefaultValue;
+    DataType *type;
 } StructNode;
 
 // typedef struct CustomTypeNode
@@ -764,17 +776,19 @@ typedef struct StructConstructorNode
     ASTNode *constructorBody;
 } StructConstructorNode;
 
-typedef struct
-{
-    ASTNode *object;
-    const char *property;
-} PropertyAccessNode;
-
 typedef struct ThisNode
 {
     const char *name;
     ASTNode *object;
 } ThisNode;
+
+typedef struct PropertyAccessNode
+{
+    DataType *objType;
+    ASTNode *object;
+    const char *propertyName;
+    ASTNode *property;
+} PropertyAccessNode;
 
 typedef struct PropertyReassignmentNode
 {
@@ -854,6 +868,8 @@ typedef struct ASTNode
         ThisNode *thisNode;
         // For Property Reassignment
         PropertyReassignmentNode *propertyReassignment;
+        // For Methods
+        MethodNode *method;
     } data;
 } ASTNode;
 
@@ -938,8 +954,11 @@ extern "C"
 
     /* @Node_Creation - Structs */
     ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
+                              ASTNode **methods, int methodCount,
+                              Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Scoped Calls */
     ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName, TypeTable *typeTable);
@@ -948,6 +967,7 @@ extern "C"
     ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 #ifdef __cplusplus
 }
@@ -991,6 +1011,7 @@ ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerSt
 PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerState *state);
 ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state);
 PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, CompilerState *state);
+MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
@@ -1042,6 +1063,7 @@ char *getASTBuffer(DebugASTOutput *output, bool console);
 char *logASTBuffer(DebugASTOutput *output, bool console);
 
 char *ASTNodeValueBuffer(ASTNode *node);
+void logASTNode(ASTNode *node);
 
 // Formatting Functions
 char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console);
@@ -1064,6 +1086,10 @@ char *formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output);
 char *formatThisNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatMethodNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatStringLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatBooleanLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1085,5 +1111,9 @@ char *CONSOLE_formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output
 char *CONSOLE_formatThisNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatThisAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatStringLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatBooleanLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

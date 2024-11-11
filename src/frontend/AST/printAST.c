@@ -102,7 +102,7 @@ void printAST(ASTNode *node, int indent, Arena *arena)
 
     case NODE_LITERAL_EXPR:
         printf("\nLiteral Expression Node: ");
-        switch (node->data.literal->type->container.primitive)
+        switch (node->data.literal->type->container->primitive)
         {
         case PRIM_INT:
             printf("\n\tInteger Literal Node: %d\n", node->data.literal->value.intValue);

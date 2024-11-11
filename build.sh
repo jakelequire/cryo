@@ -289,7 +289,7 @@ clang++ -S -emit-llvm ./cryo/cxx_support.cpp -o $OUT_DIR/$C_SUPPORT_IR || error 
 
 
 # Combine the `cryolib.ll` and `output.ll` files into one object file
-llvm-link  $OUT_DIR/$C_SUPPORT_IR $OUT_DIR/$FILE_NAME.ll -S -o $OUT_DIR/bin.ll
+llvm-link $OUT_DIR/$C_SUPPORT_IR $OUT_DIR/$FILE_NAME.ll -S -o $OUT_DIR/bin.ll
 
 # Compile the object file
 llc -filetype=obj -relocation-model=static $OUT_DIR/bin.ll -o $OUT_DIR/bin.o

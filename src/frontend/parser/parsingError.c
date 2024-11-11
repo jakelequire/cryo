@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/parser.h"
+#include "tools/misc/syntaxHighlighter.h"
 
 void parsingError(
     char *message,
@@ -23,7 +24,7 @@ void parsingError(
     Arena *arena,
     CompilerState *state,
     Lexer *lexer,
-    const char *source, 
+    const char *source,
     TypeTable *typeTable)
 {
     int line = lexer->currentToken.line;
@@ -35,47 +36,123 @@ void parsingError(
         curModule = "Unnamed";
     }
 
-    printSymbolTable(table);
-    dumpCompilerState(*state);
+    // Top border with module info
+    printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);
+    printf("\n");
 
-    printf("\n\n------------------------------------------------------------------------\n");
-    printf("<!> [Parser] Module: %s\n", curModule);
-    printf("<!> [Parser] Error: %s at line %d, column %d\n", message, line, column);
-    printf("@Function: <%s>\n", functionName);
-    printf("------------------------------------------------------------------------\n\n");
-    // Print the line containing the error
-    printf("%d ", line - 1);
-    printLine(source, line - 1, arena, state);
-    printf("%d ", line);
+    printf("%s%s  %sModule:%s %s%-50s%s %s%s\n",
+           LIGHT_RED, COLOR_RESET,
+           BOLD, COLOR_RESET,
+           CYAN, curModule, COLOR_RESET,
+           LIGHT_RED, COLOR_RESET);
+
+    // Error message
+    printf("%s%s  %sError:%s %s%-60s%s %s%s\n",
+           LIGHT_RED, COLOR_RESET,
+           BOLD, COLOR_RESET,
+           BRIGHT_RED, message, COLOR_RESET,
+           LIGHT_RED, COLOR_RESET);
+
+    // Location info
+    printf("%s%s  Location: %sLine %d, Column %d%s %s%s\n",
+           LIGHT_RED, COLOR_RESET,
+           YELLOW, line, column, COLOR_RESET,
+           LIGHT_RED, COLOR_RESET);
+
+    // Function name
+    printf("%s%s  Function: %s%s%s %s%s\n",
+           LIGHT_RED, COLOR_RESET,
+           MAGENTA, functionName, COLOR_RESET,
+           LIGHT_RED, COLOR_RESET);
+
+    // Middle border
+    printf("\n");
+    printf("%s╠══════════════════════════════════════════════════════════════════════════════╣%s\n", LIGHT_RED, COLOR_RESET);
+
+    printf("\n");
+    // Show 3 lines before the error line
+    for (int i = 3; i > 0; i--)
+    {
+        int contextLine = line - i;
+        if (contextLine > 0)
+        {
+            printf("%s%s %s%3d │%s ",
+                   LIGHT_RED, COLOR_RESET,
+                   DARK_GRAY, contextLine, COLOR_RESET);
+            printLine(source, contextLine, arena, state);
+        }
+    }
+
+    // Error line (highlighted in bright red)
+    printf("%s%s %s%3d │%s ",
+           LIGHT_RED, COLOR_RESET,
+           BRIGHT_RED, line, COLOR_RESET);
     printLine(source, line, arena, state);
 
-    for (int i = line; i < column + line; i++)
+    // Error pointer with message
+    printf("%s%s     │ ", LIGHT_RED, COLOR_RESET);
+    for (int i = 0; i < column; i++)
     {
         printf(" ");
     }
+    printf("%s^%s %s%s%s\n", BRIGHT_RED, COLOR_RESET, BRIGHT_RED, message, COLOR_RESET);
 
-    printf(" ^ %s\n", message);
-    printf("\n------------------------------------------------------------------------\n\n");
+    // Show 3 lines after the error line
+    for (int i = 1; i <= 3; i++)
+    {
+        int contextLine = line + i;
+        printf("%s%s %s%3d │%s ",
+               LIGHT_RED, COLOR_RESET,
+               DARK_GRAY, contextLine, COLOR_RESET);
+        printLine(source, contextLine, arena, state);
+    }
+
+    printf("\n");
+
+    // Bottom border
+    printf("%s╚══════════════════════════════════════════════════════════════════════════════╝%s\n\n", LIGHT_RED, COLOR_RESET);
+
+    printSymbolTable(table);
+
     exit(1);
 }
 
 void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 {
-    const char *lineStart = source;
-    while (*lineStart && line > 1)
+    const char *start = source;
+    for (int i = 1; i < line; i++)
     {
-        if (*lineStart == '\n')
-            line--;
-        lineStart++;
+        start = strchr(start, '\n');
+        if (!start)
+            return;
+        start++;
     }
 
-    const char *lineEnd = lineStart;
-    while (*lineEnd && *lineEnd != '\n')
-    {
-        lineEnd++;
-    }
+    // Find the end of the line
+    const char *end = strchr(start, '\n');
+    if (!end)
+        end = start + strlen(start);
 
-    printf("%.*s\n", (int)(lineEnd - lineStart), lineStart);
+    // Create a temporary buffer for the line
+    int lineLength = end - start;
+    char *lineBuf = (char *)malloc(lineLength + 1);
+    strncpy(lineBuf, start, lineLength);
+    lineBuf[lineLength] = '\0';
+
+    // Apply syntax highlighting
+    highlightSyntax(lineBuf);
+    printf("\n");
+
+    free(lineBuf);
+}
+
+void printHorizontalLine(int width)
+{
+    for (int i = 0; i < width; i++)
+    {
+        printf(GRAY "%s" COLOR_RESET, HORIZONTAL);
+    }
+    printf("\n");
 }
 
 Position getPosition(Lexer *lexer)

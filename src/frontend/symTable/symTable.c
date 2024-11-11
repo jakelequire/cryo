@@ -43,15 +43,15 @@ void freeSymbolTable(CryoSymbolTable *table, Arena *arena)
 // <printSymbolTable>
 void printSymbolTable(CryoSymbolTable *table)
 {
-    printf("\n\n-------------------------------------------------------------------------------------------------\n");
+    printf("\n\n-----------------------------------------------------------------------------------------\n");
     printf("[SymTable] Symbol count: %d\n", table->count);
     printf("[SymTable] Scope depth: %d\n", table->scopeDepth);
     printf("[SymTable] Table capacity: %d\n", table->capacity);
     printf("\n\n");
     printf("Namespace: %s\n", table->namespaceName ? table->namespaceName : "Unnamed");
     printf("\n");
-    printf("Name                 Node Type                Data Type        Scope        L:C      Args     Module\n");
-    printf("-----------------------------------------------------------------------------------------------------\n");
+    printf("Name               Node Type             Data Type          L:C    Args     Module\n");
+    printf("----------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++)
     {
         if (table->symbols[i] == NULL)
@@ -72,16 +72,15 @@ void printSymbolTable(CryoSymbolTable *table)
                  table->symbols[i]->line,
                  table->symbols[i]->column);
 
-        printf("%-20s %-24s %-18s %-10d %-10s %-7d %-15s\n",
+        printf("%-15s %-24s %-18s %-7s %-7d %-15s\n",
                table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                CryoNodeTypeToString(table->symbols[i]->nodeType),
-               DataTypeToString(table->symbols[i]->type),
-               table->symbols[i]->scopeLevel,
+               DataTypeToStringUnformatted(table->symbols[i]->type),
                locationStr,
                table->symbols[i]->argCount,
                table->symbols[i]->module ? table->symbols[i]->module : "Unnamed");
     }
-    printf("-----------------------------------------------------------------------------------------------------\n");
+    printf("----------------------------------------------------------------------------------------\n");
 }
 // </printSymbolTable>
 
@@ -294,6 +293,10 @@ char *getNameOfNode(ASTNode *node)
         return strdup(node->data.import->moduleName);
     case NODE_PROPERTY:
         return strdup(node->data.property->name);
+    case NODE_PROPERTY_ACCESS:
+        return strdup(node->data.propertyAccess->propertyName);
+    case NODE_METHOD:
+        return strdup(node->data.method->name);
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %s", CryoNodeTypeToString(node->metaData->type));
         return NULL;
@@ -447,6 +450,24 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
         break;
+
+    case NODE_PROPERTY_ACCESS:
+    {
+        symbolNode->name = strdup(node->data.propertyAccess->propertyName);
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
+        break;
+    }
+
+    case NODE_METHOD:
+    {
+        symbolNode->name = strdup(node->data.method->name);
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
+        break;
+    }
 
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);

@@ -87,7 +87,7 @@ typedef struct TypeContainer
     int arrayDimensions;         // Number of array dimensions
     struct
     {
-        char *name;            // Type identifier name
+        const char *name;      // Type identifier name
         StructType *structDef; // For struct types
         FunctionType *funcDef; // For function types
         void *extraData;       // For future extensibility
@@ -96,10 +96,10 @@ typedef struct TypeContainer
 
 typedef struct DataType
 {
-    TypeContainer container; // Type container
-    bool isConst;            // Const modifier
-    bool isReference;        // Reference type
-    struct DataType *next;   // For linked types (e.g. generics)
+    TypeContainer *container; // Type container
+    bool isConst;             // Const modifier
+    bool isReference;         // Reference type
+    struct DataType *next;    // For linked types (e.g. generics)
 } DataType;
 
 // This is the global symbol table specifically for types.
@@ -124,7 +124,7 @@ extern "C"
     TypeContainer *createTypeContainer(void);
 
     // Migration Functions
-    DataType *parseDataType(const char *typeStr);
+    DataType *parseDataType(const char *typeStr, TypeTable *typeTable);
     PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
     bool isPrimitiveType(const char *typeStr);
 
@@ -145,32 +145,59 @@ extern "C"
     // Specialized Type Creation Functions
 
     StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
-    DataType *createDataTypeFromStruct(StructType *structType, CompilerState *state, TypeTable *typeTable);
+    DataType *createDataTypeFromStructNode(
+        ASTNode *structNode, ASTNode **properties, int propCount,
+        ASTNode **methods, int methodCount,
+        CompilerState *state, TypeTable *typeTable);
 
     // Data Type Wrapping
     DataType *wrapTypeContainer(TypeContainer *container);
 
     // Type Validation
     TypeContainer *lookupType(TypeTable *table, const char *name);
-    bool isValidType(TypeContainer *type, TypeTable *typeTable);
     bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
+    bool isValidType(DataType *type);
 
     // Add Type to Type Table
-    void addTypeToTypeTable(TypeTable *table, const char *name, TypeContainer *type);
+    void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
+    bool typeAlreadyExists(TypeTable *table, const char *name);
+
+    void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType);
+    void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType);
 
     // Utility Functions
     char *TypeofDataTypeToString(TypeofDataType type);
     char *PrimitiveDataTypeToString(PrimitiveDataType type);
+    char *PrimitiveDataTypeToString_UF(PrimitiveDataType type);
+    char *VerboseStructTypeToString(StructType *type);
 
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);
+
     void printFormattedType(DataType *type);
+    void logDataType(DataType *type);
+    void logStructType(StructType *type);
+    void logVerboseDataType(DataType *type);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
+    void printVerboseTypeContainer(TypeContainer *type);
 
     char *DataTypeToString(DataType *dataType);
+    char *DataTypeToStringUnformatted(DataType *type);
+
     DataType *CryoDataTypeStringToType(const char *typeStr);
+
+    DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable);
+    DataType *DataTypeFromNode(ASTNode *node);
+    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
+
+#define VALIDATE_TYPE(type)                                         \
+    if (!isValidType(type))                                         \
+    {                                                               \
+        logMessage("ERROR", __LINE__, "TypeTable", "Invalid type"); \
+        CONDITION_FAILED;                                           \
+    }
 
 #ifdef __cplusplus
 }

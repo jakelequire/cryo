@@ -23,11 +23,11 @@
     int line = line;        \
     int column = column;
 
-#define BUFFER_FAILED_ALLOCA_CATCH                                                        \
-    if (!buffer)                                                                          \
-    {                                                                                     \
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST buffer"); \
-        return NULL;                                                                      \
+#define BUFFER_FAILED_ALLOCA_CATCH                                                             \
+    if (!buffer)                                                                               \
+    {                                                                                          \
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer"); \
+        return NULL;                                                                           \
     }
 
 #define BUFFER_CHAR_SIZE sizeof(char) * 1024
@@ -57,7 +57,7 @@ void initASTConsoleOutput(ASTNode *root, const char *filePath)
     char *buffer = getASTBuffer(output, true);
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to get AST buffer for debug output");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
         return;
     }
     printf("%s\n", buffer);
@@ -71,7 +71,7 @@ void logASTNodeDebugView(ASTNode *node)
     char *buffer = logASTBuffer(output, true);
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to get AST buffer for debug output");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
         return;
     }
     printf("%s\n", buffer);
@@ -129,7 +129,7 @@ void createASTDebugOutputFile(DebugASTOutput *output)
     char *buffer = getASTBuffer(output, false);
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to get AST buffer for debug output");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
         return;
     }
 
@@ -139,12 +139,12 @@ void createASTDebugOutputFile(DebugASTOutput *output)
 
     if (!filePath)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to get file path for AST debug output");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get file path for AST debug output");
         return;
     }
     if (!dirExists(filePath))
     {
-        logMessage("WARN", __LINE__, "AST", "Creating directory for AST debug output: %s", filePath);
+        logMessage("WARN", __LINE__, "AST::DBG", "Creating directory for AST debug output: %s", filePath);
         createDir(filePath);
     }
 
@@ -159,7 +159,7 @@ void createASTDebugOutputFile(DebugASTOutput *output)
     FILE *file = fopen(outputFilePath, "w");
     if (!file)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to open file for AST debug output");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to open file for AST debug output");
         return;
     }
 
@@ -212,7 +212,7 @@ char *getASTBuffer(DebugASTOutput *output, bool console)
     char *buffer = MALLOC_AST_BUFFER;
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST buffer");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer");
         return NULL;
     }
 
@@ -242,7 +242,7 @@ char *logASTBuffer(DebugASTOutput *output, bool console)
     char *buffer = MALLOC_AST_BUFFER;
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST buffer");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer");
         return NULL;
     }
 
@@ -259,6 +259,25 @@ char *logASTBuffer(DebugASTOutput *output, bool console)
     sprintf(buffer, "%s\n", buffer);
 
     return buffer;
+}
+
+void logASTNode(ASTNode *node)
+{
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST::DBG", "Node is null in logASTNode");
+        return;
+    }
+
+    DebugASTOutput *output = createDebugASTOutput("console", "console", "txt", "console");
+    createASTDebugView(node, output, 0);
+    char *buffer = logASTBuffer(output, true);
+    if (!buffer)
+    {
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
+        return;
+    }
+    printf("%s\n", buffer);
 }
 
 // # ============================================================ #
@@ -500,6 +519,50 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatPropertyAssignmentNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "Method") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatMethodNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatMethodNode(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "IntLiteral") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatIntLiteralNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatIntLiteralNode(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "StringLiteral") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatStringLiteralNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatStringLiteralNode(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "BooleanLiteral") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatBooleanLiteralNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatBooleanLiteralNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -507,7 +570,7 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
     }
     else
     {
-        logMessage("ERROR", __LINE__, "AST", "Unhandled node type: %s", nodeType);
+        logMessage("ERROR", __LINE__, "AST::DBG", "Unhandled node type: %s", nodeType);
         return NULL;
     }
 
@@ -515,7 +578,7 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
     char *indentedNode = MALLOC_BUFFER;
     if (!indentedNode)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for indented node");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for indented node");
         return NULL;
     }
     sprintf(indentedNode, "%s%s", indent, formattedNode);
@@ -655,7 +718,10 @@ char *CONSOLE_formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output)
         char *valueBuffer = ASTNodeValueBuffer(node->value);
         if (valueBuffer)
         {
-            sprintf(buffer, "%s %s%sValue:%s %s%s%s", buffer, DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC);
+            sprintf(buffer, "%s %s%sValue:%s %s%s%s %s",
+                    buffer,
+                    DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC,
+                    COLOR_RESET);
             free(valueBuffer);
         }
     }
@@ -709,7 +775,10 @@ char *CONSOLE_formatLiteralExprNode(ASTDebugNode *node, DebugASTOutput *output)
         char *valueBuffer = ASTNodeValueBuffer(node->value);
         if (valueBuffer)
         {
-            sprintf(buffer, "%s %s%sValue:%s %s%s%s", buffer, DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC);
+            sprintf(buffer, "%s %s%sValue:%s %s%s%s %s",
+                    buffer,
+                    DARK_GRAY, ITALIC, COLOR_RESET, valueBuffer, DARK_GRAY, ITALIC,
+                    COLOR_RESET);
             free(valueBuffer);
         }
     }
@@ -770,7 +839,9 @@ char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output)
             char *argBuffer = ASTNodeValueBuffer(node->args[i]);
             if (argBuffer)
             {
-                sprintf(buffer, "%s %s%s%i:%s %s%s%s", buffer, DARK_GRAY, ITALIC, i, COLOR_RESET, argBuffer, DARK_GRAY, ITALIC);
+                sprintf(buffer, "%s %s%s%i:%s %s%s%s %s",
+                        buffer, DARK_GRAY, ITALIC, i, COLOR_RESET, argBuffer, DARK_GRAY, ITALIC,
+                        COLOR_RESET);
                 free(argBuffer);
             }
         }
@@ -1011,6 +1082,101 @@ char *CONSOLE_formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *o
 }
 // </PropertyAssignment>
 // ============================================================
+// ============================================================
+// <Method>
+char *formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Method> [NAME] [RETURN_TYPE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<Method> [%s] →  %s <0:0>",
+            node->nodeName,
+            DataTypeToString(node->dataType));
+    return buffer;
+}
+char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <Method> [NAME] → [RETURN_TYPE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Method>%s %s[%s] → %s%s%s %s %s%s<0:0>%s%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, COLOR_RESET, COLOR_RESET);
+    return buffer;
+}
+// </Method>
+// ============================================================
+// ============================================================
+// <IntLiteral>
+char *formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <IntLiteral> [VALUE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<IntLiteral> [%i] <%i:%i>", node->nodeName, node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <IntLiteral> [VALUE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<IntLiteral>%s %s[%i]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </IntLiteral>
+// ============================================================
+// ============================================================
+// <StringLiteral>
+char *formatStringLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <StringLiteral> [VALUE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<StringLiteral> [%s] <%i:%i>", node->nodeName, node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatStringLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <StringLiteral> [VALUE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<StringLiteral>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </StringLiteral>
+// ============================================================
+// ============================================================
+// <BooleanLiteral>
+char *formatBooleanLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <BooleanLiteral> [VALUE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<BooleanLiteral> [%s] <%i:%i>", node->nodeName, node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatBooleanLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <BooleanLiteral> [VALUE] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<BooleanLiteral>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </BooleanLiteral>
+// ============================================================
 
 // # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 // # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -1025,8 +1191,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 {
     if (output->nodeCount >= AST_DEBUG_VIEW_NODE_COUNT)
     {
-        logMessage("ERROR", __LINE__, "AST", "Exceeded maximum node count for debug output");
-        logMessage("ERROR", __LINE__, "AST", "Node Count: %d", output->nodeCount);
+        logMessage("ERROR", __LINE__, "AST::DBG", "Exceeded maximum node count for debug output");
+        logMessage("ERROR", __LINE__, "AST::DBG", "Node Count: %d", output->nodeCount);
         return;
     }
 
@@ -1139,6 +1305,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         {
             createASTDebugView(node->data.structNode->constructor, output, indentLevel + 1);
         }
+
+        for (int i = 0; i < node->data.structNode->methodCount; i++)
+        {
+            indentLevel++;
+            createASTDebugView(node->data.structNode->methods[i], output, indentLevel);
+            indentLevel--;
+        }
         break;
     }
 
@@ -1171,6 +1344,27 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         }
 
         createASTDebugView(node->data.structConstructor->constructorBody, output, indentLevel + 1);
+
+        break;
+    }
+
+    case NODE_METHOD:
+    {
+        __LINE_AND_COLUMN__
+        char *methodName = strdup(node->data.method->name);
+        DataType *returnType = node->data.method->type;
+
+        ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, returnType, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *methodNode;
+        output->nodeCount++;
+        for (int i = 0; i < node->data.method->paramCount; i++)
+        {
+            indentLevel++;
+            createASTDebugView(node->data.method->params[i], output, indentLevel);
+            indentLevel--;
+        }
+
+        createASTDebugView(node->data.method->body, output, indentLevel + 1);
 
         break;
     }
@@ -1211,12 +1405,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         DataType *dataType = node->data.literal->type;
-        switch (dataType->container.baseType)
+        switch (dataType->container->baseType)
         {
         case PRIM_INT:
         {
             char *literalValue = (char *)malloc(sizeof(char) * 32);
-            sprintf(literalValue, "%d", node->data.literal->value.intValue);
+            int intValue = node->data.literal->value.intValue;
+            sprintf(literalValue, "%i", intValue);
             ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
@@ -1270,6 +1465,12 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         ASTDebugNode *returnNode = createASTDebugNode("ReturnStatement", "ReturnStatement", createPrimitiveVoidType(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *returnNode;
         output->nodeCount++;
+
+        if (node->data.returnStatement->expression != NULL)
+        {
+            createASTDebugView(node->data.returnStatement->expression, output, indentLevel + 1);
+        }
+
         break;
     }
 
@@ -1380,7 +1581,7 @@ char *ASTNodeValueBuffer(ASTNode *node)
     case NODE_LITERAL_EXPR:
     {
         DataType *type = node->data.literal->type;
-        switch (type->container.primitive)
+        switch (type->container->primitive)
         {
         case PRIM_INT:
         {

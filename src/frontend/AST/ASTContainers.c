@@ -882,15 +882,16 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->name = (char *)calloc(1, sizeof(char));
-    node->properties = NULL;
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->propertyCount = 0;
     node->propertyCapacity = 128;
-    node->methods = NULL;
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->methodCount = 0;
     node->methodCapacity = 128;
     node->hasConstructor = false;
     node->hasDefaultValue = false;
     node->constructor = NULL;
+    node->type = wrapTypeContainer(createTypeContainer());
 
     return node;
 }
@@ -1031,8 +1032,10 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
         return NULL;
     }
 
+    node->objType = wrapTypeContainer(createTypeContainer());
     node->object = NULL;
-    node->property = (char *)calloc(1, sizeof(char));
+    node->propertyName = (char *)calloc(1, sizeof(char));
+    node->property = NULL;
 
     return node;
 }
@@ -1083,6 +1086,41 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
     node->name = (char *)calloc(1, sizeof(char));
     node->object = NULL;
     node->value = NULL;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct MethodNode
+/// {
+///     enum CryoVisibilityType visibility;
+///     enum CryoDataType returnType;
+///     char *name;
+///     struct ASTNode **params;
+///     int paramCount;
+///     int paramCapacity;
+///     struct ASTNode *body;
+/// } MethodNode;
+///```
+///
+MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
+{
+    MethodNode *node = (MethodNode *)ARENA_ALLOC(arena, sizeof(MethodNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate MethodNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->params = NULL;
+    node->paramCount = 0;
+    node->paramCapacity = 128;
+    node->body = NULL;
+    node->visibility = VISIBILITY_PUBLIC;
+    node->type = wrapTypeContainer(createTypeContainer());
 
     return node;
 }

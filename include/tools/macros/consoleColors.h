@@ -23,9 +23,11 @@
 
 #define GREEN "\033[32m"
 #define CYAN "\033[36m"
+#define BRIGHT_CYAN "\033[96m"
 #define YELLOW "\033[33m"
 #define BLUE "\033[34m"
 #define RED "\033[31m"
+#define BRIGHT_RED "\033[91m"
 #define MAGENTA "\033[35m"
 #define WHITE "\033[37m"
 #define BLACK "\033[30m"
@@ -66,6 +68,28 @@
 #define FONT_LARGE "\x1b#3"
 // Makes text 1x (normal size)
 #define FONT_NORMAL "\x1b#5"
+
+#define TOP_LEFT "┌"
+#define TOP_RIGHT "┐"
+#define BOTTOM_LEFT "└"
+#define BOTTOM_RIGHT "┘"
+#define HORIZONTAL "─"
+#define VERTICAL "│"
+#define T_DOWN "┬"
+#define T_UP "┴"
+#define T_RIGHT "├"
+#define T_LEFT "┤"
+
+// Box drawing characters
+#define BOX_TOP_LEFT "╔"
+#define BOX_TOP_RIGHT "╗"
+#define BOX_BOTTOM_LEFT "╚"
+#define BOX_BOTTOM_RIGHT "╝"
+#define BOX_HORIZONTAL "═"
+#define BOX_VERTICAL "║"
+#define BOX_LEFT_T "╠"
+#define BOX_RIGHT_T "╣"
+#define BOX_VERTICAL_SEP "│"
 
 /*
     Box Drawing Characters Reference Table

@@ -170,6 +170,10 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "THIS_ASSIGNMENT";
     case NODE_PROPERTY_REASSIGN:
         return "PROPERTY_REASSIGN";
+    case NODE_METHOD:
+        return "METHOD";
+    case NODE_IDENTIFIER:
+        return "IDENTIFIER";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -177,73 +181,6 @@ char *CryoNodeTypeToString(CryoNodeType node)
     }
 }
 // </CryoNodeTypeToString>
-
-// <CryoDataTypeToString>
-char *CryoDataTypeToString(CryoDataType type)
-{
-    switch (type)
-    {
-    case DATA_TYPE_INT:
-        return "TYPE_INT";
-    case DATA_TYPE_FLOAT:
-        return "TYPE_FLOAT";
-    case DATA_TYPE_STRING:
-        return "TYPE_STRING";
-    case DATA_TYPE_BOOLEAN:
-        return "TYPE_BOOLEAN";
-    case DATA_TYPE_FUNCTION:
-        return "TYPE_FUNCTION";
-    case DATA_TYPE_VOID:
-        return "TYPE_VOID";
-    case DATA_TYPE_NULL:
-        return "TYPE_NULL";
-    case DATA_TYPE_ARRAY:
-        return "TYPE_ARRAY";
-    case DATA_TYPE_INT_ARRAY:
-        return "TYPE_INT_ARRAY";
-    case DATA_TYPE_FLOAT_ARRAY:
-        return "TYPE_FLOAT_ARRAY";
-    case DATA_TYPE_STRING_ARRAY:
-        return "TYPE_STRING_ARRAY";
-    case DATA_TYPE_BOOLEAN_ARRAY:
-        return "TYPE_BOOLEAN_ARRAY";
-    case DATA_TYPE_VOID_ARRAY:
-        return "TYPE_VOID_ARRAY";
-    case DATA_TYPE_SINT8:
-        return "TYPE_SINT8";
-    case DATA_TYPE_SINT16:
-        return "TYPE_SINT16";
-    case DATA_TYPE_SINT32:
-        return "TYPE_SINT32";
-    case DATA_TYPE_SINT64:
-        return "TYPE_SINT64";
-    case DATA_TYPE_UINT8:
-        return "TYPE_UINT8";
-    case DATA_TYPE_UINT16:
-        return "TYPE_UINT16";
-    case DATA_TYPE_UINT32:
-        return "TYPE_UINT32";
-    case DATA_TYPE_UINT64:
-        return "TYPE_UINT64";
-    case DATA_TYPE_INT8_ARRAY:
-        return "TYPE_INT8_ARRAY";
-    case DATA_TYPE_INT16_ARRAY:
-        return "TYPE_INT16_ARRAY";
-    case DATA_TYPE_INT32_ARRAY:
-        return "TYPE_INT32_ARRAY";
-    case DATA_TYPE_INT64_ARRAY:
-        return "TYPE_INT64_ARRAY";
-    case DATA_TYPE_DYN_VEC:
-        return "TYPE_DYN_VEC";
-    case DATA_TYPE_ANY:
-        return "TYPE_ANY";
-    case DATA_TYPE_UNKNOWN:
-        return "TYPE_UNKNOWN";
-    default:
-        return "<TYPE UNKNOWN>";
-    }
-}
-// </CryoDataTypeToString>
 
 // <CryoVisibilityTypeToString>
 char *CryoVisibilityTypeToString(CryoVisibilityType visibility)
@@ -825,3 +762,11 @@ char *CryoOperatorToString(CryoOperatorType op)
     }
 }
 // </CryoOperatorToString>
+
+char *TokenToString(Token token)
+{
+    char *tokenString = (char *)malloc(1024);
+    sprintf(tokenString, "Type: %-20s Lexeme: %-15s Length: %-5d",
+            CryoTokenToString(token.type), token.lexeme, token.length);
+    return tokenString;
+}

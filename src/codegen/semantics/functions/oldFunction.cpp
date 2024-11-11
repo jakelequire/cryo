@@ -102,7 +102,7 @@ namespace Cryo
             assert(argNode != nullptr);
 
             DataType *_argType = argNode->type;
-            if (_argType->container.baseType == PRIM_STRING)
+            if (_argType->container->baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
                 // int _len = types.getLiteralValLength(argNode->initializer);
@@ -112,7 +112,7 @@ namespace Cryo
                 continue;
             }
 
-            if (_argType->container.baseType == PRIM_INT)
+            if (_argType->container->baseType == PRIM_INT)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting int to LLVM type");
                 llvm::Type *argType = types.getType(_argType, 0);
@@ -203,10 +203,10 @@ namespace Cryo
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
-                std::cout << "TypeOfDataType: " << std::string(TypeofDataTypeToString(returnType->container.baseType)) << std::endl;
-                std::cout << "PrimitiveType: " << std::string(PrimitiveDataTypeToString(returnType->container.primitive)) << std::endl;
+                std::cout << "TypeOfDataType: " << std::string(TypeofDataTypeToString(returnType->container->baseType)) << std::endl;
+                std::cout << "PrimitiveType: " << std::string(PrimitiveDataTypeToString(returnType->container->primitive)) << std::endl;
 
-                switch (returnType->container.primitive)
+                switch (returnType->container->primitive)
                 {
                 case PRIM_VOID:
                 {
@@ -470,7 +470,7 @@ namespace Cryo
             {
                 DataType *nodeDataType = statement->data.returnStatement->type;
 
-                switch (nodeDataType->container.baseType)
+                switch (nodeDataType->container->baseType)
                 {
                 case PRIM_INT:
                 {
@@ -544,7 +544,7 @@ namespace Cryo
             assert(argNode != nullptr);
             DataType *_argType = argNode->type;
 
-            if (_argType->container.baseType == PRIM_STRING)
+            if (_argType->container->baseType == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
                 llvm::Type *argType = compiler.getTypes().getType(_argType, 0);
@@ -731,10 +731,27 @@ namespace Cryo
                 argValues.push_back(argNode);
                 break;
             }
+            case NODE_PROPERTY_ACCESS:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a property access");
+                PropertyAccessNode *propNode = argNode->data.propertyAccess;
+                assert(propNode != nullptr);
+
+                llvm::Value *argNode = createPropertyAccessCall(propNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
                 std::cout << "Received: " << CryoNodeTypeToString(argNodeType) << std::endl;
+                compiler.dumpModule();
                 CONDITION_FAILED;
             }
             }
@@ -805,6 +822,54 @@ namespace Cryo
         compiler.getContext().namedValues[param->getName().str()] = alloca;
 
         symTable.addParamAsVariable(namespaceName, _paramName, alloca, argTypes, storeInst);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
+
+        return alloca;
+    }
+
+    llvm::Value *Functions::createParamFromParamNode(ASTNode *paramNode)
+    {
+        OldTypes &types = compiler.getTypes();
+        Variables &variables = compiler.getVariables();
+        IRSymTable &symTable = compiler.getSymTable();
+        CryoContext &context = compiler.getContext();
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
+
+        DevDebugger::logNode(paramNode);
+
+        std::string paramName = paramNode->data.param->name;
+        std::cout << "Parameter Name: " << paramName << std::endl;
+
+        DataType *paramType = paramNode->data.param->type;
+        llvm::Type *paramLLVMType = types.getType(paramType, 0);
+        std::cout << "Parameter Type: " << std::endl;
+        DevDebugger::logLLVMType(paramLLVMType);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Alloca Instruction");
+
+        // Get the insert block
+        llvm::BasicBlock *insertBlock = context.builder.GetInsertBlock();
+        if (!insertBlock)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Insert block not found");
+            compiler.dumpModule();
+            CONDITION_FAILED;
+        }
+
+        llvm::AllocaInst *alloca = context.builder.CreateAlloca(paramLLVMType, nullptr, paramName);
+        alloca->setAlignment(llvm::Align(8));
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Store Instruction");
+
+        llvm::StoreInst *storeInst = context.builder.CreateStore(alloca, alloca);
+        storeInst->setAlignment(llvm::Align(8));
+
+        std::string _paramName = paramName;
+        compiler.getContext().namedValues[paramName] = alloca;
+
+        symTable.addParamAsVariable(namespaceName, _paramName, alloca, paramLLVMType, storeInst);
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
@@ -907,6 +972,85 @@ namespace Cryo
     /// ### These functions are used to handle specific types of function calls
     /// ###
     /// ### ============================================================================= ###
+
+    llvm::Value *Functions::createPropertyAccessCall(PropertyAccessNode *propAccess)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Handling property access");
+
+        ASTNode *objNode = propAccess->object;
+        std::string structVarName;
+        if (objNode->metaData->type == NODE_VAR_DECLARATION)
+        {
+            structVarName = std::string(objNode->data.varDecl->name);
+        }
+        std::string fieldName = std::string(propAccess->propertyName);
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                "Accessing " + structVarName + "." + fieldName);
+
+        // Get the struct variable from symbol table
+        STVariable *var = compiler.getSymTable().getVariable(namespaceName, structVarName);
+        if (!var)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Struct variable not found: " + structVarName);
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                "Struct variable found: " + structVarName);
+
+        // Get the struct pointer and type
+        llvm::Value *structPtr = var->LLVMValue;
+
+        DataType *structDataType = var->dataType;
+        StructType *structDef = structDataType->container->custom.structDef;
+        std::string structTypeName = std::string(structDataType->container->custom.structDef->name);
+        llvm::StructType *structType = compiler.getContext().getStruct(structTypeName);
+        if (!structType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Struct type not found");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                "Struct type found: " + structType->getName().str());
+
+        // Find field index
+        int fieldIndex = -1;
+        int propertyCount = structDef->propertyCount;
+        for (int i = 0; i < propertyCount; i++)
+        {
+            PropertyNode *prop = structDef->properties[i]->data.property;
+            if (std::string(prop->name) == fieldName)
+            {
+                fieldIndex = i;
+                break;
+            }
+        }
+
+        if (fieldIndex == -1)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Field not found: " + fieldName);
+            CONDITION_FAILED;
+        }
+
+        // Get field pointer using GEP
+        llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
+            structType,
+            structPtr,
+            fieldIndex,
+            structVarName + "." + fieldName);
+
+        // Load and return field value
+        return compiler.getContext().builder.CreateLoad(
+            structType->getElementType(fieldIndex),
+            fieldPtr,
+            structVarName + "." + fieldName + ".load");
+    }
 
     llvm::Value *Functions::createVarNameCall(VariableNameNode *varNameNode)
     {
@@ -1025,9 +1169,9 @@ namespace Cryo
         }
 
         DataType *dataType = literalNode->type;
-        if (dataType->container.baseType == PRIMITIVE_TYPE)
+        if (dataType->container->baseType == PRIMITIVE_TYPE)
         {
-            switch (dataType->container.primitive)
+            switch (dataType->container->primitive)
             {
             case PRIM_INT:
             {
@@ -1260,9 +1404,22 @@ namespace Cryo
             DevDebugger::logMessage("WARNING", __LINE__, "Functions", "Using bitcast as fallback");
             castValue = argValue;
         }
-
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Cast Created");
         return castValue;
+    }
+
+    llvm::Value *Functions::createArgumentVar(ASTNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Argument Variable");
+
+        llvm::Value *argVar = compiler.getVariables().createLocalVariable(node);
+        if (!argVar)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument variable not created");
+            CONDITION_FAILED;
+        }
+
+        return argVar;
     }
 
 } // namespace Cryo

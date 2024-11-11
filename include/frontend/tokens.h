@@ -295,49 +295,10 @@ extern "C"
         NODE_THIS,                 // 39
         NODE_THIS_ASSIGNMENT,      // 40
         NODE_PROPERTY_REASSIGN,    // 41
-        NODE_UNKNOWN,              // 42
+        NODE_METHOD,               // 42
+        NODE_IDENTIFIER,           // 43
+        NODE_UNKNOWN,              // 44
     } CryoNodeType;
-
-    typedef enum CryoDataType
-    {
-        DATA_TYPE_UNKNOWN = -1,    // `<UNKNOWN>`         -1
-        DATA_TYPE_INT,             // `int`               0
-        DATA_TYPE_FLOAT,           // `float`             2
-        DATA_TYPE_STRING,          // `string`            3
-        DATA_TYPE_BOOLEAN,         // `boolean`           4
-        DATA_TYPE_FUNCTION,        // `function`          5
-        DATA_TYPE_EXTERN_FUNCTION, // `extern function`   6
-        DATA_TYPE_VOID,            // `void`              7
-        DATA_TYPE_NULL,            // `null`              8
-        DATA_TYPE_ARRAY,           // `[]`                9
-        DATA_TYPE_INT_ARRAY,       // `int[]`             10
-        DATA_TYPE_FLOAT_ARRAY,     // `float[]`           11
-        DATA_TYPE_STRING_ARRAY,    // `string[]`          12
-        DATA_TYPE_BOOLEAN_ARRAY,   // `boolean[]`         13
-        DATA_TYPE_VOID_ARRAY,      // `void[]`            14
-
-        // Integers
-        DATA_TYPE_SINT8,  // `int8`  15
-        DATA_TYPE_SINT16, // `int16` 16
-        DATA_TYPE_SINT32, // `int32` 17
-        DATA_TYPE_SINT64, // `int64` 18
-        DATA_TYPE_UINT8,  // `u_int8`  19
-        DATA_TYPE_UINT16, // `u_int16` 20
-        DATA_TYPE_UINT32, // `u_int32` 21
-        DATA_TYPE_UINT64, // `u_int64` 22
-
-        // Arrays
-        DATA_TYPE_INT8_ARRAY,  // `int8[]`  23
-        DATA_TYPE_INT16_ARRAY, // `int16[]` 24
-        DATA_TYPE_INT32_ARRAY, // `int32[]` 25
-        DATA_TYPE_INT64_ARRAY, // `int64[]` 26
-
-        // Vectors
-        DATA_TYPE_DYN_VEC, // `dyn_vec` 27
-
-        // Custom types
-        DATA_TYPE_ANY, // `Any`    28
-    } CryoDataType;
 
     typedef enum CryoVisibilityType
     {
@@ -348,17 +309,62 @@ extern "C"
         VISIBILITY_UNKNOWN,   // `<UNKNOWN>`      4
     } CryoVisibilityType;
 
+    typedef struct
+    {
+        char *keyword;
+        CryoTokenType type;
+    } KeywordToken;
+
+    typedef enum TagType
+    {
+        TAG_TYPE_UNKNOWN = -1,
+        TAG_TYPE_INTERNAL,
+        TAG_TYPE_EXTERNAL,
+    } TagType;
+
+    typedef struct TagToken
+    {
+        char *tag;
+        TagType type;
+    } TagToken;
+
+    typedef struct
+    {
+        char *baseType;
+        CryoTokenType dataType;
+    } DataTypeToken;
+
+    typedef union
+    {
+        int intValue;
+        float floatValue;
+        char *stringValue;
+    } TokenValue;
+
+    typedef struct Token
+    {
+        CryoTokenType type; // Type of the token
+        const char *lexeme; // Lexeme of the token
+        const char *start;  // Pointer to the beginning of the token in the source code
+        int length;         // Length of the token
+        int line;           // Line number where the token is found
+        int column;         // Column number where the token is found
+        const char *style;  // Style of the token
+        TokenValue value;   // Token value
+    } Token;
+
     //
     // Function prototypes for the token module
     //
 
     char *operatorToString(CryoOperatorType op);
     char *CryoNodeTypeToString(CryoNodeType node);
-    char *CryoDataTypeToString(CryoDataType type);
     char *CryoVisibilityTypeToString(CryoVisibilityType visibility);
     char *CryoTokenToString(CryoTokenType node);
     char *CryoOperatorTypeToString(CryoOperatorType op);
     char *CryoOperatorToString(CryoOperatorType op);
+    char *TokenToString(Token token);
+
     CryoOperatorType CryoTokenToOperator(CryoTokenType token);
 
 #ifdef __cplusplus

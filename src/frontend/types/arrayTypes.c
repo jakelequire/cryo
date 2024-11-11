@@ -14,8 +14,22 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include <iostream>
-#include <string>
-#include <vector>
+#include "frontend/typeTable.h"
 
-#define __EXTERN_C__ extern "C"
+TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
+{
+    TypeContainer *container = createTypeContainer();
+    if (!container)
+        return NULL;
+
+    // Copy base type info
+    container->baseType = baseType->baseType;
+    container->primitive = baseType->primitive;
+    container->custom = baseType->custom;
+
+    // Add array info
+    container->isArray = true;
+    container->arrayDimensions = dimensions;
+
+    return container;
+}

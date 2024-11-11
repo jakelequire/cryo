@@ -32,49 +32,6 @@
 
 typedef struct CompilerState CompilerState;
 
-typedef struct
-{
-    char *keyword;
-    CryoTokenType type;
-} KeywordToken;
-
-typedef enum TagType
-{
-    TAG_TYPE_UNKNOWN = -1,
-    TAG_TYPE_INTERNAL,
-    TAG_TYPE_EXTERNAL,
-} TagType;
-
-typedef struct TagToken
-{
-    char *tag;
-    TagType type;
-} TagToken;
-
-typedef struct
-{
-    char *baseType;
-    CryoTokenType dataType;
-} DataTypeToken;
-
-typedef union
-{
-    int intValue;
-    float floatValue;
-    char *stringValue;
-} TokenValue;
-
-typedef struct Token
-{
-    CryoTokenType type; // Type of the token
-    const char *start;  // Pointer to the beginning of the token in the source code
-    int length;         // Length of the token
-    int line;           // Line number where the token is found
-    int column;         // Column number where the token is found
-    const char *style;  // Style of the token
-    TokenValue value;   // Token value
-} Token;
-
 typedef struct Lexer
 {
     const char *source;
@@ -84,6 +41,7 @@ typedef struct Lexer
     int line;
     int column;
     Token currentToken;
+    Token nextToken;
     Token lookahead;
     bool hasPeeked;
     const char *fileName;

@@ -537,7 +537,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
     case NODE_LITERAL_EXPR:
     {
         node->data.literal->type = type;
-        switch (type->container.primitive)
+        switch (type->container->primitive)
         {
         case PRIM_INT:
             node->data.literal->value.intValue = atoi(name);
@@ -668,7 +668,9 @@ ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, A
     return node;
 }
 
-ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
+                          ASTNode **methods, int methodCount,
+                          Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena, state, typeTable);
     if (!node)
@@ -681,6 +683,9 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
     node->data.structNode->properties = properties;
     node->data.structNode->propertyCount = propertyCount;
     node->data.structNode->propertyCapacity = 64;
+    node->data.structNode->methods = methods;
+    node->data.structNode->methodCount = methodCount;
+    node->data.structNode->methodCapacity = 64;
     node->data.structNode->constructor = constructor;
 
     return node;
@@ -727,7 +732,7 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
     }
 
     node->data.propertyAccess->object = object;
-    node->data.propertyAccess->property = strdup(property);
+    node->data.propertyAccess->propertyName = strdup(property);
 
     return node;
 }
@@ -774,6 +779,41 @@ ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields
     node->data.structConstructor->argCount = argCount;
     node->data.structConstructor->argCapacity = 64;
     node->data.structConstructor->constructorBody = body;
+
+    return node;
+}
+
+ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create struct property access node");
+        return NULL;
+    }
+
+    node->data.propertyAccess->objType = type;
+    node->data.propertyAccess->object = object;
+    node->data.propertyAccess->property = property;
+    node->data.propertyAccess->propertyName = strdup(propertyName);
+
+    return node;
+}
+
+ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    ASTNode *node = createASTNode(NODE_METHOD, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create method node");
+        return NULL;
+    }
+
+    node->data.method->name = strdup(methodName);
+    node->data.method->body = body;
+    node->data.method->params = args;
+    node->data.method->paramCount = argCount;
+    node->data.method->type = type;
 
     return node;
 }
