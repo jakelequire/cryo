@@ -882,10 +882,10 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->name = (char *)calloc(1, sizeof(char));
-    node->properties = NULL;
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->propertyCount = 0;
     node->propertyCapacity = 128;
-    node->methods = NULL;
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->methodCount = 0;
     node->methodCapacity = 128;
     node->hasConstructor = false;

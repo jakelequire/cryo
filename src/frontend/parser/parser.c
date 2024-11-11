@@ -2431,6 +2431,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         }
     }
 
+    logMessage("INFO", __LINE__, "Parser", "Property Count: %d | Method Count: %d", propertyCount, methodCount);
     ASTNode *structNode = createStructNode(structName, properties, propertyCount, constructorNode,
                                            methods, methodCount,
                                            arena, state, typeTable);
@@ -2439,7 +2440,9 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     hasConstructor = constructorNode != NULL;
     structNode->data.structNode->hasConstructor = hasConstructor;
 
-    DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount, state, typeTable);
+    DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount,
+                                                            methods, methodCount,
+                                                            state, typeTable);
 
     addTypeToTypeTable(typeTable, structName, structDataType);
 

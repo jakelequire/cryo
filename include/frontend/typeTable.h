@@ -145,7 +145,10 @@ extern "C"
     // Specialized Type Creation Functions
 
     StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
-    DataType *createDataTypeFromStructNode(ASTNode *structNode, ASTNode **properties, int propCount, CompilerState *state, TypeTable *typeTable);
+    DataType *createDataTypeFromStructNode(
+        ASTNode *structNode, ASTNode **properties, int propCount,
+        ASTNode **methods, int methodCount,
+        CompilerState *state, TypeTable *typeTable);
 
     // Data Type Wrapping
     DataType *wrapTypeContainer(TypeContainer *container);
@@ -160,6 +163,7 @@ extern "C"
     bool typeAlreadyExists(TypeTable *table, const char *name);
 
     void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType);
+    void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType);
 
     // Utility Functions
     char *TypeofDataTypeToString(TypeofDataType type);

@@ -30,8 +30,6 @@ void setDefaultThisContext(const char *currentNamespace, ParsingContext *context
 
 void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType, TypeTable *typeTable)
 {
-    clearThisContext(context, typeTable);
-
     ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
     thisContext->nodeName = nodeName;
     thisContext->nodeType = nodeType;

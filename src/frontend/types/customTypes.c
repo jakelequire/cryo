@@ -51,13 +51,16 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
     structType->methodCount = 0;
     structType->properties = NULL;
     structType->methods = NULL;
-    structType->hasDefaultValue = false;
-    structType->hasConstructor = false;
+    structType->hasDefaultValue = structNode->data.structNode->hasDefaultValue;
+    structType->hasConstructor = structNode->data.structNode->hasConstructor;
 
     return structType;
 }
 
-DataType *createDataTypeFromStructNode(ASTNode *structNode, ASTNode **properties, int propCount, CompilerState *state, TypeTable *typeTable)
+DataType *createDataTypeFromStructNode(
+    ASTNode *structNode, ASTNode **properties, int propCount,
+    ASTNode **methods, int methodCount,
+    CompilerState *state, TypeTable *typeTable)
 {
     StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
     if (!structType)
@@ -67,6 +70,7 @@ DataType *createDataTypeFromStructNode(ASTNode *structNode, ASTNode **properties
     }
 
     addPropertiesToStruct(properties, propCount, structType);
+    addMethodsToStruct(methods, methodCount, structType);
 
     return wrapTypeContainer(createStructType(structType->name, structType));
 }
@@ -92,5 +96,29 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
     for (int i = 0; i < propCount; i++)
     {
         structType->properties[structType->propertyCount++] = properties[i];
+    }
+}
+
+void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType)
+{
+    if (!methods || methodCount <= 0)
+        return;
+
+    if (structType->methodCount + methodCount >= structType->methodCapacity)
+    {
+        // Grow methods array
+        int newCapacity = structType->methodCapacity * 2;
+        ASTNode **newMethods = (ASTNode **)realloc(structType->methods, newCapacity * sizeof(ASTNode *));
+        if (!newMethods)
+            return;
+
+        structType->methods = newMethods;
+        structType->methodCapacity = newCapacity;
+    }
+
+    // Add methods to struct
+    for (int i = 0; i < methodCount; i++)
+    {
+        structType->methods[structType->methodCount++] = methods[i];
     }
 }

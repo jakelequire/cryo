@@ -165,6 +165,25 @@ char *VerboseStructTypeToString(StructType *type)
         }
     }
 
+    if (type->methodCount > 0)
+    {
+        for (int i = 0; i < type->methodCount; i++)
+        {
+            ASTNode *method = type->methods[i];
+            char *methodType = DataTypeToString(method->data.method->type);
+            sprintf(typeString, "%s %s →  %s", typeString, method->data.method->name, methodType);
+            if (method->data.method->paramCount > 0)
+            {
+                for (int j = 0; j < method->data.method->paramCount; j++)
+                {
+                    ASTNode *param = method->data.method->params[j];
+                    char *paramType = DataTypeToString(param->data.param->type);
+                    sprintf(typeString, "%s %s: %s", typeString, param->data.param->name, paramType);
+                }
+            }
+        }
+    }
+
     return typeString;
 }
 
@@ -200,8 +219,12 @@ void logStructType(StructType *type)
     }
 
     printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
-    printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
+    printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n",
+           type->size, type->propertyCount, type->methodCount);
+
+    printf("   Name: %s | HDV: %s | Has Constructor: %s\n",
+           type->name, type->hasDefaultValue ? "true" : "false",
+           type->hasConstructor ? "true" : "false");
 }
 
 void printFormattedStructType(StructType *type)
@@ -226,7 +249,15 @@ void printFormattedStructType(StructType *type)
         for (int i = 0; i < type->methodCount; i++)
         {
             ASTNode *method = type->methods[i];
-            printf("     %s: %s\n", method->data.functionDecl->name, DataTypeToString(method->data.functionDecl->type));
+            printf("     %s →  %s\n", method->data.method->name, DataTypeToString(method->data.method->type));
+            if (method->data.method->paramCount > 0)
+            {
+                for (int j = 0; j < method->data.method->paramCount; j++)
+                {
+                    ASTNode *param = method->data.method->params[j];
+                    printf("       %s: %s\n", param->data.param->name, DataTypeToString(param->data.param->type));
+                }
+            }
         }
     }
 }

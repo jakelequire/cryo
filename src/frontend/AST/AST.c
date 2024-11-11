@@ -683,6 +683,9 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
     node->data.structNode->properties = properties;
     node->data.structNode->propertyCount = propertyCount;
     node->data.structNode->propertyCapacity = 64;
+    node->data.structNode->methods = methods;
+    node->data.structNode->methodCount = methodCount;
+    node->data.structNode->methodCapacity = 64;
     node->data.structNode->constructor = constructor;
 
     return node;

@@ -5,18 +5,12 @@ extern function printStr(s: string) -> void;
 extern function intToString(num: int) -> string;
 
 struct Int {
-    // The default keyword is used to specify the default primary property
-    // value of the struct field. If `default` is not provided,
-    // The constructor will need to be explicitly called with
-    // the field value.
     value: int;
 
-    // Constructor for the Int struct
     constructor(val: int) {
         this.value = val;
     }
 
-    // Method for the Int struct
     toString() -> string {
         return intToString(this.value);
     }
