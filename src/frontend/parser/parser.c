@@ -2336,8 +2336,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     int defaultPropertyCount = 0;
     ASTNode *constructorNode = NULL;
 
-    ASTNode **methodsArr = (ASTNode **)malloc(PROPERTY_CAPACITY * sizeof(ASTNode *));
-    ASTNode **propertiesArr = (ASTNode **)malloc(PROPERTY_CAPACITY * sizeof(ASTNode *));
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
         int count = 0;
@@ -2351,9 +2349,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                 propertyCount++;
                 addASTNodeSymbol(table, field, arena);
                 addPropertyToThisContext(context, field, typeTable);
-
-                // Add to the properties array
-                propertiesArr[propertyCount] = field;
 
                 if (parsePropertyForDefaultFlag(field) && !hasDefaultProperty)
                 {
@@ -2370,7 +2365,20 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             }
             else
             {
+                logMessage("ERROR", __LINE__, "Parser", "Failed to parse struct field, received Node Type %s", CryoNodeTypeToString(fieldType));
                 parsingError("Failed to parse struct field.", "parseStructDeclaration", table, arena, state, lexer, source, typeTable);
+            }
+
+            if (fieldType == NODE_METHOD)
+            {
+                logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
+                DEBUG_BREAKPOINT;
+            }
+
+            // End the loop
+            if (lexer->currentToken.type == TOKEN_RBRACE)
+            {
+                break;
             }
         }
 
@@ -2393,10 +2401,10 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             ASTNode *method = parseMethodDeclaration(lexer, table, context, arena, state, typeTable);
             if (method)
             {
-                properties[methodCount] = method;
+                methods[methodCount] = method;
                 methodCount++;
                 addASTNodeSymbol(table, method, arena);
-                addPropertyToThisContext(context, method, typeTable);
+                addMethodToThisContext(context, method, typeTable);
             }
         }
 
@@ -2431,7 +2439,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     hasConstructor = constructorNode != NULL;
     structNode->data.structNode->hasConstructor = hasConstructor;
 
-    DataType *structDataType = createDataTypeFromStructNode(structNode, propertiesArr, propertyCount, state, typeTable);
+    DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount, state, typeTable);
 
     addTypeToTypeTable(typeTable, structName, structDataType);
 
@@ -2476,7 +2484,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
         return NULL;
     }
 
-    if (nextToken == TOKEN_LPAREN)
+    if (nextToken == TOKEN_LPAREN && currentToken != TOKEN_KW_CONSTRUCTOR)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
         return parseMethodDeclaration(lexer, table, context, arena, state, typeTable);
