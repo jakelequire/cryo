@@ -2368,18 +2368,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
                 count++;
             }
-            else if (fieldType == NODE_METHOD)
-            {
-                methods[methodCount] = field;
-                methodCount++;
-                addASTNodeSymbol(table, field, arena);
-                addMethodToThisContext(context, field, typeTable);
-
-                // Add to the methods array
-                methodsArr[methodCount] = field;
-
-                count++;
-            }
             else
             {
                 parsingError("Failed to parse struct field.", "parseStructDeclaration", table, arena, state, lexer, source, typeTable);
@@ -2405,8 +2393,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             ASTNode *method = parseMethodDeclaration(lexer, table, context, arena, state, typeTable);
             if (method)
             {
-                properties[propertyCount] = method;
-                propertyCount++;
+                properties[methodCount] = method;
+                methodCount++;
                 addASTNodeSymbol(table, method, arena);
                 addPropertyToThisContext(context, method, typeTable);
             }
@@ -2474,6 +2462,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     int defaultCount = 0; // This should never be more than 1
     CryoTokenType currentToken = lexer->currentToken.type;
+    CryoTokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
     if (currentToken == TOKEN_KW_DEFAULT)
     {
         defaultCount++;
@@ -2485,6 +2474,12 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     {
         parsingError("Expected an identifier.", "parseStructField", table, arena, state, lexer, source, typeTable);
         return NULL;
+    }
+
+    if (nextToken == TOKEN_LPAREN)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
+        return parseMethodDeclaration(lexer, table, context, arena, state, typeTable);
     }
 
     printf("Default Count: %d\n", defaultCount);
@@ -2726,6 +2721,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
     if (typeOfNode->container->baseType == STRUCT_TYPE)
     {
         logMessage("INFO", __LINE__, "Parser", "Type of node is a struct.");
+        VALIDATE_TYPE(typeOfNode);
         StructType *structType = typeOfNode->container->custom.structDef;
         logStructType(structType);
         const char *structName = typeOfNode->container->custom.structDef->name;
@@ -2733,7 +2729,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (property)
         {
             logMessage("INFO", __LINE__, "Parser", "Property found in struct, name: %s", propName);
-            return createStructPropertyAccessNode(object, property, (char *)propName, typeOfNode, arena, state, typeTable);
+            return createStructPropertyAccessNode(object, property, (const char *)propName, typeOfNode, arena, state, typeTable);
         }
         else
         {
