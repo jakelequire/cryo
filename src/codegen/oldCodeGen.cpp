@@ -105,6 +105,12 @@ namespace Cryo
         return;
     }
 
+    // Just a name wrapper around `parseTree` to look cleaner
+    void Generator::generateBlock(ASTNode *node)
+    {
+        parseTree(node);
+    }
+
     /**
      * Parses the given AST tree starting from the root node.
      *

@@ -137,6 +137,30 @@ namespace Cryo
         return structNode;
     }
 
+    PropertyNode *IRSymTable::getPropertyNode(std::string namespaceName, std::string propName, std::string structName)
+    {
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the struct in the SymTable
+        STStruct structNode = symNode.structNode[structName];
+        if (structNode.ASTNode)
+        {
+            // Find the property in the struct
+            for (int i = 0; i < structNode.ASTNode->propertyCount; ++i)
+            {
+                PropertyNode *propNode = structNode.ASTNode->properties[i]->data.property;
+                if (propNode->name == propName)
+                {
+                    return propNode;
+                }
+            }
+        }
+        else
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Struct Node not found");
+        }
+    }
+
     // -----------------------------------------------------------------------------------------------
     /// Struct Containers
 
@@ -196,17 +220,19 @@ namespace Cryo
     /// Setters
     ///
 
-    void IRSymTable::addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode)
+    void IRSymTable::addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode, DataType *structType)
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Struct to SymTable");
         // Add the struct to the SymTable
         std::string structName = structTy->getName().str();
         std::cout << "Struct Name: " << structName << std::endl;
+
         STStruct structContainer;
         structContainer.LLVMStruct = structTy;
         structContainer.ASTNode = structNode;
-        structContainer.structType = structNode->type;
+        structContainer.structType = structType;
+
         SymTableNode symNode = getSymTableNode(namespaceName);
         symNode.structNode[structName] = structContainer;
         symTable.namespaces[namespaceName] = symNode;

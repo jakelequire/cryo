@@ -121,6 +121,7 @@ namespace Cryo
         case NODE_THIS_ASSIGNMENT:
         case NODE_PROPERTY_ACCESS:
         case NODE_PROPERTY_REASSIGN:
+        case NODE_METHOD:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -365,6 +366,18 @@ namespace Cryo
             break;
 
         case NODE_THIS:
+            assertNode(node);
+            break;
+
+        case NODE_PROPERTY_REASSIGN:
+            assertNode(node);
+            break;
+
+        case NODE_METHOD:
+            assertNode(node);
+            break;
+
+        case NODE_PROPERTY:
             assertNode(node);
             break;
 
@@ -846,6 +859,27 @@ namespace Cryo
         case NODE_THIS:
         {
             logMessage("INFO", __LINE__, "Debugger", "This passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_PROPERTY_REASSIGN:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Property reassign passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_METHOD:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Method passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_PROPERTY:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Property passed assertion.");
             logNode(node);
             break;
         }

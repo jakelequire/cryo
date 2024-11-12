@@ -921,6 +921,8 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
     node->value = NULL;
     node->type = wrapTypeContainer(createTypeContainer());
     node->defaultProperty = false;
+    node->parentName = (char *)calloc(1, sizeof(char));
+    node->parentNodeType = NODE_UNKNOWN;
 
     return node;
 }

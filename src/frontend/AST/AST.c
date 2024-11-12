@@ -652,7 +652,7 @@ ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode 
     return node;
 }
 
-ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createFieldNode(char *fieldName, DataType *type, const char *parentName, CryoNodeType parentNodeType, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     ASTNode *node = createASTNode(NODE_PROPERTY, arena, state, typeTable);
     if (!node)
@@ -664,6 +664,8 @@ ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, A
     node->data.property->name = strdup(fieldName);
     node->data.property->value = fieldValue;
     node->data.property->type = type;
+    node->data.property->parentName = parentName;
+    node->data.property->parentNodeType = parentNodeType;
 
     return node;
 }

@@ -677,6 +677,8 @@ typedef struct PropertyNode
     ASTNode *value;
     DataType *type;
     bool defaultProperty;
+    const char *parentName;
+    CryoNodeType parentNodeType;
 } PropertyNode;
 
 typedef struct MethodNode
@@ -953,7 +955,8 @@ extern "C"
     ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /* @Node_Creation - Structs */
-    ASTNode *createFieldNode(char *fieldName, DataType *type, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
+    ASTNode *createFieldNode(char *fieldName, DataType *type, const char *parentName, CryoNodeType parentNodeType, ASTNode *fieldValue,
+                             Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
                               ASTNode **methods, int methodCount,
                               Arena *arena, CompilerState *state, TypeTable *typeTable);

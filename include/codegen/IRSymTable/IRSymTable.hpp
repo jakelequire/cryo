@@ -153,9 +153,10 @@ namespace Cryo
         STVariable *getVariable(std::string namespaceName, std::string varName);
         STParameter *getParameter(std::string namespaceName, std::string paramName);
         STStruct *getStruct(std::string namespaceName, std::string structName);
+        PropertyNode *getPropertyNode(std::string namespaceName, std::string propName, std::string structName);
 
         // Setters
-        void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode);
+        void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode, DataType *structType);
         void addVariable(std::string namespaceName, std::string varName, ASTNode *varNode);
         void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode, llvm::Function *llvmFunction, llvm::Type *llvmReturnType);
         void addExternFunciton(std::string namespaceName, std::string funcName, ExternFunctionNode externNode);

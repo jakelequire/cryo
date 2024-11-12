@@ -24,6 +24,7 @@ namespace Cryo
         CompilerSettings *settings = compiler.getCompilerSettings();
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
+        compiler.dumpModule();
         std::cout << "\n\n";
         if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {

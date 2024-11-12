@@ -125,6 +125,7 @@ namespace Cryo
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
+        std::unordered_map<std::string, DataType *> structDataTypes;
 
         std::string currentNamespace;
         llvm::Function *currentFunction;
@@ -157,6 +158,11 @@ namespace Cryo
         void addStructToInstance(std::string name, llvm::StructType *structType)
         {
             structTypes[name] = structType;
+        }
+
+        void addStructDataType(std::string name, DataType *dataType)
+        {
+            structDataTypes[name] = dataType;
         }
 
         llvm::StructType *getStruct(std::string name)
@@ -263,6 +269,7 @@ namespace Cryo
 
         void generateCode(ASTNode *root);
         void parseTree(ASTNode *root);
+        void generateBlock(ASTNode *node);
         llvm::Value *getInitilizerValue(ASTNode *node);
         llvm::Value *getNamedValue(std::string name);
         std::string getNamespace(ASTNode *node);
@@ -539,6 +546,7 @@ namespace Cryo
         void createScopedFunctionCall(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
 
+        llvm::Value *createPropertyCall(PropertyNode *property);
         llvm::Value *createPropertyAccessCall(PropertyAccessNode *propAccess);
         llvm::Value *createVarNameCall(VariableNameNode *varNameNode);
         llvm::Value *createLiteralCall(LiteralNode *literalNode);
@@ -658,8 +666,7 @@ namespace Cryo
          */
         llvm::Type *getStructFieldType(PropertyNode *property);
 
-        void handleMethod(ASTNode *methodNode, llvm::StructType *structType,
-                          const std::string &structName);
+        void handleMethod(ASTNode *methodNode, const std::string &structName, llvm::StructType *structType);
         void handleStructConstructor(StructNode *node, llvm::StructType *structType);
         llvm::Value *createStructInstance(ASTNode *node);
 

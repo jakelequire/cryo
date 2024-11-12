@@ -11,9 +11,9 @@ struct Int {
         this.value = val;
     }
 
-    toString() -> string {
-        return intToString(this.value);
-    }
+    // toString() -> string {
+    //     return intToString(this.value);
+    // }
 }
 
 public function testFunc() -> void {

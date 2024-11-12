@@ -24,6 +24,10 @@ namespace Cryo
 
         StructNode *structNode = node->data.structNode;
         std::string structName = structNode->name;
+        DataType *structDataType = structNode->type;
+        logVerboseDataType(structDataType);
+
+        compiler.getContext().addStructDataType(structName, structDataType);
 
         // Create struct type with fields
         std::vector<llvm::Type *> structFields;
@@ -41,12 +45,21 @@ namespace Cryo
             structName);
 
         // Add struct type to the symbol table and context
-        compiler.getSymTable().addStruct(structName, structType, structNode);
+        compiler.getSymTable().addStruct(structName, structType, structNode, structDataType);
         compiler.getContext().addStructToInstance(structName, structType);
+
+        // Add to the `NamedGlobal` map
+        // compiler.getContext().module->getOrInsertGlobal(structName, structType);
 
         if (structNode->constructor)
         {
             handleStructConstructor(structNode, structType);
+        }
+
+        for (int i = 0; i < structNode->methodCount; ++i)
+        {
+            ASTNode *methodNode = structNode->methods[i];
+            handleMethod(methodNode, structName, structType);
         }
     }
 
@@ -104,8 +117,7 @@ namespace Cryo
         compiler.getContext().builder.CreateRetVoid();
     }
 
-    void Structs::handleMethod(ASTNode *methodNode, llvm::StructType *structType,
-                               const std::string &structName)
+    void Structs::handleMethod(ASTNode *methodNode, const std::string &structName, llvm::StructType *structType)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling Method");
 
@@ -114,7 +126,9 @@ namespace Cryo
 
         // Create parameter types for method
         std::vector<llvm::Type *> paramTypes;
-        paramTypes.push_back(structType->getPointerTo()); // 'this' pointer
+
+        // Add the struct pointer as the first parameter (this pointer)
+        paramTypes.push_back(structType->getPointerTo());
 
         for (int i = 0; i < method->paramCount; ++i)
         {
@@ -137,9 +151,14 @@ namespace Cryo
             llvm::Function::ExternalLinkage,
             methodName);
 
-        // Add function attributes
-        methodFn->addFnAttr(llvm::Attribute::NoUnwind);
-        methodFn->addFnAttr(llvm::Attribute::UWTable);
+        // Add struct instance as a parameter in the method function
+        // Set the name of the struct parameter
+        auto argIt = methodFn->arg_begin();
+        argIt->setName("this"); // Name the struct pointer parameter
+
+        // Add it to the module and set it as the current function
+        compiler.getContext().module->getFunctionList().push_back(methodFn);
+        compiler.getContext().currentFunction = methodFn;
 
         // Create entry block
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(
@@ -151,18 +170,15 @@ namespace Cryo
         // Implementation of method body would go here
         // You'll need to implement this based on your AST node structure
 
-        // Add return statement
-        if (returnType->isVoidTy())
+        if (method->body)
         {
-            compiler.getContext().builder.CreateRetVoid();
+            // Handle method body
+            compiler.getGenerator().generateBlock(method->body);
         }
-        else
-        {
-            // For non-void methods, you'll need to implement the proper return
-            // based on your method body implementation
-            llvm::Value *returnValue = llvm::UndefValue::get(returnType);
-            compiler.getContext().builder.CreateRet(returnValue);
-        }
+
+        // Clear the insertion point
+        compiler.getContext().builder.ClearInsertionPoint();
+        compiler.getContext().currentFunction = nullptr;
     }
 
     llvm::Type *Structs::getStructFieldType(PropertyNode *property)
@@ -223,4 +239,5 @@ namespace Cryo
 
         return structPtr;
     }
+
 };

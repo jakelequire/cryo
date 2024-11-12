@@ -2436,13 +2436,13 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                                            methods, methodCount,
                                            arena, state, typeTable);
 
-    structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
-    hasConstructor = constructorNode != NULL;
-    structNode->data.structNode->hasConstructor = hasConstructor;
-
     DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount,
                                                             methods, methodCount,
                                                             state, typeTable);
+    structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
+    hasConstructor = constructorNode != NULL;
+    structNode->data.structNode->hasConstructor = hasConstructor;
+    structNode->data.structNode->type = structDataType;
 
     addTypeToTypeTable(typeTable, structName, structDataType);
 
@@ -2510,7 +2510,11 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseStructField", table, arena, state, typeTable, context);
 
-    ASTNode *propertyNode = createFieldNode(fieldName, fieldType, NULL, arena, state, typeTable);
+    const char *parentName = context->thisContext->nodeName;
+    // Find the parent node in the symbol table
+    CryoNodeType parentNodeType = context->thisContext->nodeType;
+
+    ASTNode *propertyNode = createFieldNode(fieldName, fieldType, parentName, parentNodeType, NULL, arena, state, typeTable);
     if (defaultCount > 0)
     {
         propertyNode->data.property->defaultProperty = true;

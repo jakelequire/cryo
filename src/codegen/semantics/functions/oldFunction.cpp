@@ -410,6 +410,13 @@ namespace Cryo
             cryoContext.builder.CreateRet(returnValue);
             break;
         }
+        case NODE_FUNCTION_CALL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
+            ASTNode *functionCall = returnNode->expression;
+            createFunctionCall(functionCall);
+            break;
+        }
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown node type");
@@ -591,6 +598,8 @@ namespace Cryo
         Variables &variables = compiler.getVariables();
         OldTypes &types = compiler.getTypes();
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
+        std::string nodeTypeStr = CryoNodeTypeToString(node->metaData->type);
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Call Node Type: " + nodeTypeStr);
 
         FunctionCallNode *functionCallNode = node->data.functionCall;
         assert(functionCallNode != nullptr);
@@ -738,6 +747,22 @@ namespace Cryo
                 assert(propNode != nullptr);
 
                 llvm::Value *argNode = createPropertyAccessCall(propNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
+            case NODE_PROPERTY:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a property");
+                PropertyNode *propNode = argNode->data.property;
+                assert(propNode != nullptr);
+
+                llvm::Value *argNode = createPropertyCall(propNode);
                 if (!argNode)
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
@@ -972,6 +997,100 @@ namespace Cryo
     /// ### These functions are used to handle specific types of function calls
     /// ###
     /// ### ============================================================================= ###
+
+    llvm::Value *Functions::createPropertyCall(PropertyNode *property)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Property Call");
+
+        std::string propertyName = std::string(property->name);
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        std::string parentName = std::string(property->parentName);
+        CryoNodeType parentNodeType = property->parentNodeType;
+        std::string parentNodeTypeStr = CryoNodeTypeToString(parentNodeType);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                "Property: " + propertyName + " Parent Struct: " + parentName);
+
+        // Get the struct type
+        llvm::StructType *structType = compiler.getContext().structTypes[parentName];
+        if (!structType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "LLVM struct type not found for: " + parentName);
+            compiler.dumpModule();
+
+            CONDITION_FAILED;
+        }
+
+        DataType *structDataType = compiler.getContext().structDataTypes[parentName];
+        logVerboseDataType(structDataType);
+
+        int propertyCount = structDataType->container->custom.structDef->propertyCount;
+        std::cout << "Property Count: " << propertyCount << std::endl;
+
+        // Find the property index
+        int propertyIndex = -1;
+        DataType *propertyType = nullptr;
+        for (int i = 0; i < propertyCount; i++)
+        {
+            PropertyNode *prop = structDataType->container->custom.structDef->properties[i]->data.property;
+            if (std::string(prop->name) == propertyName)
+            {
+                propertyIndex = i;
+                propertyType = prop->type;
+                break;
+            }
+        }
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Property Index: " + std::to_string(propertyIndex));
+
+        if (propertyIndex == -1)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Property not found: " + propertyName);
+            CONDITION_FAILED;
+        }
+
+        // Get the property's type
+        DataType *propType = propertyType;
+        llvm::Type *llvmPropType = compiler.getTypes().getType(propType, 0);
+
+        // Get the current function
+        llvm::Function *currentFunction = compiler.getContext().currentFunction;
+        if (!currentFunction)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "No current function context");
+            compiler.dumpModule();
+            CONDITION_FAILED;
+        }
+
+        llvm::Argument *structInstance = &*currentFunction->arg_begin();
+        if (!structInstance)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Failed to get struct instance from current function");
+            compiler.dumpModule();
+
+            CONDITION_FAILED;
+        }
+
+        // Create GEP instruction to get property address
+        std::vector<llvm::Value *> indices = {
+            llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, 0)),
+            llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, propertyIndex))};
+
+        llvm::Value *propPtr = compiler.getContext().builder.CreateInBoundsGEP(
+            structType,
+            structInstance,
+            indices,
+            "prop." + propertyName + ".ptr");
+
+        // Load and return the property value
+        return compiler.getContext().builder.CreateLoad(
+            llvmPropType,
+            propPtr,
+            "prop." + propertyName + ".load");
+    }
 
     llvm::Value *Functions::createPropertyAccessCall(PropertyAccessNode *propAccess)
     {
