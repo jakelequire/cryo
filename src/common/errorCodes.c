@@ -14,48 +14,4 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_DEBUGGER
-#define CRYO_DEBUGGER
-#include <iomanip>
-#include <iostream>
-#include <string>
-
-#include "llvm/IR/Value.h"
-#include "llvm/IR/IRBuilder.h"
-
-#include "frontend/AST.h"
-
-namespace Cryo
-{
-#define VALIDATE_ASTNODE(node) checkNode(node)
-
-    class DevDebugger
-    {
-    public:
-        static void logNode(ASTNode *node);
-        static void logMessage(const char *type, int line, const std::string &category, const std::string &message);
-
-        static bool lintTree(ASTNode *node);
-        static bool assertNode(ASTNode *node);
-        static bool isValidNodeType(CryoNodeType type);
-        static void logLLVMValue(llvm::Value *valueNode);
-        static void logLLVMStruct(llvm::StructType *structTy);
-        static void logLLVMType(llvm::Type *type);
-        static void logLLVMInst(llvm::Instruction *inst);
-        static void logLLVMFunction(llvm::Function *func);
-
-        static std::string LLVMTypeIDToString(llvm::Type *type);
-
-        static void UNIMPLEMENTED_FUNCTION(std::string functionName, std::string fileName, int lineNumber);
-
-        // Macro Implementations
-        static void checkNode(ASTNode *node);
-
-    private:
-        static bool isNodeTypeValid(ASTNode *node);
-
-    protected:
-    };
-
-}
-#endif // CRYO_DEBUGGER
+#include "common/errorCodes.h"

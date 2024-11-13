@@ -1135,8 +1135,10 @@ MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state
         fprintf(stderr, "[AST] Error: Failed to allocate MethodCallNode node.");
         return NULL;
     }
-    
+
     node->instanceType = wrapTypeContainer(createTypeContainer());
+    node->instanceName = (char *)calloc(1, sizeof(char));
+    node->accessorObj = NULL;
     node->returnType = wrapTypeContainer(createTypeContainer());
     node->name = (char *)calloc(1, sizeof(char));
     node->args = NULL;

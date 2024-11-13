@@ -2766,7 +2766,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (currentToken.type == TOKEN_LPAREN)
         {
             logMessage("INFO", __LINE__, "Parser", "Parsing method call...");
-            return parseMethodCall(propName, typeOfNode, lexer, table, context, arena, state, typeTable);
+            return parseMethodCall(object, propName, typeOfNode, lexer, table, context, arena, state, typeTable);
         }
 
         logMessage("INFO", __LINE__, "Parser", "Struct name: %s", structName);
@@ -2820,6 +2820,7 @@ ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     ASTNode *methodBody = parseBlock(lexer, table, context, arena, state, typeTable);
     // Create the method node
     ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, arena, state, typeTable);
+
     // Add the method to the symbol table
     addASTNodeSymbol(table, methodNode, arena);
 
@@ -2885,7 +2886,7 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
     return propAccessNode;
 }
 
-ASTNode *parseMethodCall(char *methodName, DataType *instanceType,
+ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *instanceType,
                          Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing method call...");
@@ -2912,7 +2913,7 @@ ASTNode *parseMethodCall(char *methodName, DataType *instanceType,
     DataType *returnType = symbol->type;
     VALIDATE_TYPE(returnType);
 
-    ASTNode *methodCall = createMethodCallNode(returnType, instanceType, methodName,
+    ASTNode *methodCall = createMethodCallNode(accessorObj, returnType, instanceType, methodName,
                                                params, paramCount, arena, state, typeTable);
     if (!methodCall)
     {

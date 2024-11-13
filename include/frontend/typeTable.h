@@ -185,6 +185,7 @@ extern "C"
 
     char *DataTypeToString(DataType *dataType);
     char *DataTypeToStringUnformatted(DataType *type);
+    const char *getDataTypeName(DataType *type);
 
     DataType *CryoDataTypeStringToType(const char *typeStr);
 

@@ -17,21 +17,20 @@ struct Int {
 }
 
 public function testFunc() -> void {
-    const intTest: Int = 420;
-    printInt(intTest.value);
-    const strTest: string = intTest.toString();
-    printStr(strTest);
+    const intTest: Int = 4205;
+    // printInt(intTest.value);
+    printStr(intTest.toString());
     return;
 }
 
 public function main() -> void {
-    const fooInt: int = 34;
-    const barInt: int = 4205;
-    printInt(fooInt);
-
-    const fooStr: string = "This is pain";
-    printStr(fooStr);
-    printStr("Oof!");
+    // const fooInt: int = 34;
+    // const barInt: int = 4205;
+    // printInt(fooInt);
+    // 
+    // const fooStr: string = "This is pain";
+    // printStr(fooStr);
+    // printStr("Oof!");
 
     testFunc();
 

@@ -820,7 +820,7 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
     return node;
 }
 
-ASTNode *createMethodCallNode(DataType *returnType, DataType *instanceType, const char *methodName,
+ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataType *instanceType, const char *methodName,
                               ASTNode **args, int argCount,
                               Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
@@ -833,9 +833,11 @@ ASTNode *createMethodCallNode(DataType *returnType, DataType *instanceType, cons
 
     node->data.methodCall->returnType = returnType;
     node->data.methodCall->instanceType = instanceType;
+    node->data.methodCall->accessorObj = accessorObj;
     node->data.methodCall->name = strdup(methodName);
     node->data.methodCall->args = args;
     node->data.methodCall->argCount = argCount;
+    node->data.methodCall->instanceName = getDataTypeName(instanceType);
 
     return node;
 }

@@ -413,3 +413,25 @@ DataType *DataTypeFromNode(ASTNode *node)
 
     return NULL;
 }
+
+const char *getDataTypeName(DataType *type)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
+        return NULL;
+    }
+
+    if (type->container->baseType == PRIMITIVE_TYPE)
+    {
+        return PrimitiveDataTypeToString_UF(type->container->primitive);
+    }
+    else if (type->container->baseType == STRUCT_TYPE)
+    {
+        return type->container->custom.structDef->name;
+    }
+    else
+    {
+        return "unknown";
+    }
+}

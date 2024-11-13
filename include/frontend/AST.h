@@ -696,6 +696,8 @@ typedef struct MethodCallNode
 {
     DataType *returnType;
     DataType *instanceType;
+    ASTNode *accessorObj;
+    const char *instanceName;
     char *name;
     ASTNode **args;
     int argCount;
@@ -983,7 +985,7 @@ extern "C"
     ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable);
     ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable);
-    ASTNode *createMethodCallNode(DataType *returnType, DataType *instanceType, const char *methodName,
+    ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataType *instanceType, const char *methodName,
                                   ASTNode **args, int argCount,
                                   Arena *arena, CompilerState *state, TypeTable *typeTable);
 

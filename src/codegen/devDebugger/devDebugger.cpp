@@ -1030,6 +1030,34 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
+    void DevDebugger::logLLVMFunction(llvm::Function *func)
+    {
+        if (func == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Function is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Function Node>-----------===<<" << std::endl;
+
+        // Print out the name of the function
+        std::string funcName = func->getName().str();
+        std::cout << "Name: " << funcName << std::endl;
+
+        // Print out the instruction of the function
+        std::string funcInst;
+        llvm::raw_string_ostream rso(funcInst);
+        func->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the function
+        std::cout << "Address: " << func << std::endl;
+        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+
     std::string DevDebugger::LLVMTypeIDToString(llvm::Type *type)
     {
         if (!type || type == nullptr)

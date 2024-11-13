@@ -460,6 +460,7 @@ namespace Cryo
         void handleRefVariable(ASTNode *node);
         void handleMutableVariable(ASTNode *node);
         void handleVariableReassignment(ASTNode *node);
+
         llvm::Value *createLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
@@ -469,9 +470,6 @@ namespace Cryo
 
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
-
-        void initCustomTypeVar(DataType *type, std::string varName);
-        void createStructPropVar(DataType *structType, std::string propName);
 
         // DEBUGGING PURPOSES
         llvm::Value *createTestGlobalVariable(void);
@@ -484,6 +482,7 @@ namespace Cryo
         llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
         llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
         llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);
+        llvm::Value *createMethodCallVariable(MethodCallNode *node, std::string varName, DataType *varType);
 
         CryoCompiler &compiler;
     };
@@ -546,6 +545,7 @@ namespace Cryo
         void createScopedFunctionCall(ASTNode *node);
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
 
+        llvm::Value *createMethodCall(MethodCallNode *node);
         llvm::Value *createPropertyCall(PropertyNode *property);
         llvm::Value *createPropertyAccessCall(PropertyAccessNode *propAccess);
         llvm::Value *createVarNameCall(VariableNameNode *varNameNode);

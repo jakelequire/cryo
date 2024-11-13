@@ -783,6 +783,22 @@ namespace Cryo
                 argValues.push_back(argNode);
                 break;
             }
+            case NODE_METHOD_CALL:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a method call");
+                MethodCallNode *methodNode = argNode->data.methodCall;
+                assert(methodNode != nullptr);
+
+                llvm::Value *argNode = createMethodCall(methodNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
@@ -914,6 +930,88 @@ namespace Cryo
 
     llvm::Value *Functions::anyTypeParam(std::string functionName, llvm::Value *argValue)
     {
+    }
+
+    llvm::Value *Functions::createMethodCall(MethodCallNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Method Call");
+
+        MethodCallNode *methodCallNode = node;
+        assert(methodCallNode != nullptr);
+
+        // Get the method name
+        char *methodDefName = methodCallNode->name;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Name: " + std::string(methodDefName));
+
+        // Get the method arguments
+        int argCount = methodCallNode->argCount;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
+
+        // Get the first argument which is the accessor object
+        ASTNode *accessorNode = methodCallNode->accessorObj;
+        std::string accessorName;
+        if (accessorNode->metaData->type == NODE_VAR_DECLARATION)
+        {
+            CryoVariableNode *varNode = accessorNode->data.varDecl;
+            accessorName = std::string(varNode->name);
+        }
+        else
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Accessor node is not a variable declaration");
+            std::string nodeTypeStr = CryoNodeTypeToString(accessorNode->metaData->type);
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Node Type: " + nodeTypeStr);
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *accessorValue = compiler.getContext().namedValues[accessorName];
+        if (!accessorValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Accessor value not found: " + accessorName);
+            CONDITION_FAILED;
+        }
+
+        // Get the argument values
+        std::vector<llvm::Value *> argValues = {accessorValue};
+        for (int i = 0; i < argCount; ++i)
+        {
+            ASTNode *argNode = methodCallNode->args[i];
+            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+            if (!argValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                CONDITION_FAILED;
+            }
+
+            argValues.push_back(argValue);
+        }
+
+        // Combine instance name and method name to get the function name
+        std::string instanceName = methodCallNode->instanceName;
+        std::string methodName = instanceName + "::" + methodDefName;
+
+        // Get the function
+        llvm::Function *function = compiler.getContext().module->getFunction(methodName);
+        if (!function)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Function not found: " + methodName);
+            CONDITION_FAILED;
+        }
+
+        // If there are no arguments, just create the function call
+        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+        if (!functionCall)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function call not created");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Call Created");
+
+        return functionCall;
     }
 
     void Functions::createScopedFunctionCall(ASTNode *node)
