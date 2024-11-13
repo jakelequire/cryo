@@ -173,6 +173,7 @@ namespace Cryo
         varContainer.LLVMType = nullptr;
         varContainer.LLVMStoreInst = nullptr;
         varContainer.LLVMLoadInst = nullptr;
+        varContainer.LLVMFunctionPtr = nullptr;
         varContainer.dataType = varNode->data.varDecl->type;
         return varContainer;
     }
@@ -378,6 +379,23 @@ namespace Cryo
         symNode.variableNode[varName] = varNode;
         symTable.namespaces[namespaceName] = symNode;
         std::cout << "[IRSymTable] Store Instruction Added to Variable" << std::endl;
+        return;
+    }
+
+    void IRSymTable::addFunctionToVar(std::string namespaceName, std::string varName, llvm::Value *functionPtr)
+    {
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Function to Variable");
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+        // Add the function to the variable node
+        varNode.LLVMFunctionPtr = functionPtr;
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+        std::cout << "[IRSymTable] Function Added to Variable" << std::endl;
         return;
     }
 

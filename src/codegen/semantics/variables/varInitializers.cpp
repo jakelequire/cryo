@@ -122,7 +122,18 @@ namespace Cryo
         }
 
         // Store the return value in the variable
-        compiler.getContext().builder.CreateStore(functionCall, variablePtr);
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(functionCall, variablePtr);
+        if (!storeInst)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Failed to store function call value in variable");
+            CONDITION_FAILED;
+        }
+
+        std::cout << "\n\n === Variable Created === \n\n";
+        DevDebugger::logLLVMValue(variablePtr);
+        DevDebugger::logLLVMValue(functionCall);
+        std::cout << "\n\n === Variable Created === \n\n";
 
         // Register in symbol table
         compiler.getContext().namedValues[varName] = variablePtr;
@@ -131,6 +142,7 @@ namespace Cryo
             varName,
             variablePtr,
             variablePtr->getType());
+        compiler.getSymTable().addFunctionToVar(namespaceName, varName, functionCall);
 
         // Return the variable
         return variablePtr;

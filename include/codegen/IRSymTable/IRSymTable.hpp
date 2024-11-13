@@ -52,6 +52,7 @@ namespace Cryo
         llvm::Type *LLVMType;
         llvm::StoreInst *LLVMStoreInst;
         llvm::LoadInst *LLVMLoadInst;
+        llvm::Value *LLVMFunctionPtr;
         ASTNode *ASTNode;
         CryoNodeType nodeType;
         DataType *dataType;
@@ -167,6 +168,8 @@ namespace Cryo
         void updateVariableNode(std::string namespaceName, std::string varName, llvm::Value *llvmValue, llvm::Type *llvmType);
         void addStoreInstToVar(std::string namespaceName, std::string varName, llvm::StoreInst *storeInst);
         void addLoadInstToVar(std::string namespaceName, std::string varName, llvm::LoadInst *loadInst);
+        void addFunctionToVar(std::string namespaceName, std::string varName, llvm::Value *functionPtr);
+
         void addParamAsVariable(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst);
         void updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
         void updateExternFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
