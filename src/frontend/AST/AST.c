@@ -819,3 +819,23 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
 
     return node;
 }
+
+ASTNode *createMethodCallNode(DataType *returnType, DataType *instanceType, const char *methodName,
+                              ASTNode **args, int argCount,
+                              Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    ASTNode *node = createASTNode(NODE_METHOD_CALL, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create method call node");
+        return NULL;
+    }
+
+    node->data.methodCall->returnType = returnType;
+    node->data.methodCall->instanceType = instanceType;
+    node->data.methodCall->name = strdup(methodName);
+    node->data.methodCall->args = args;
+    node->data.methodCall->argCount = argCount;
+
+    return node;
+}

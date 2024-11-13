@@ -423,6 +423,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->type = node->data.structNode->type;
         break;
 
     case NODE_PROPERTY:
@@ -430,6 +431,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->type = node->data.property->type;
         break;
 
     case NODE_RETURN_STATEMENT:
@@ -466,6 +468,9 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->type = node->data.method->type;
+        symbolNode->argCount = node->data.method->paramCount;
+
         break;
     }
 

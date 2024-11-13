@@ -98,7 +98,7 @@ namespace Cryo
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
         case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning string type");
-            return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
         case PRIM_FLOAT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning float type");
             return llvm::Type::getFloatTy(CryoContext::getInstance().context);

@@ -122,6 +122,7 @@ namespace Cryo
         case NODE_PROPERTY_ACCESS:
         case NODE_PROPERTY_REASSIGN:
         case NODE_METHOD:
+        case NODE_METHOD_CALL:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -378,6 +379,10 @@ namespace Cryo
             break;
 
         case NODE_PROPERTY:
+            assertNode(node);
+            break;
+
+        case NODE_METHOD_CALL:
             assertNode(node);
             break;
 
@@ -880,6 +885,13 @@ namespace Cryo
         case NODE_PROPERTY:
         {
             logMessage("INFO", __LINE__, "Debugger", "Property passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_METHOD_CALL:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Method call passed assertion.");
             logNode(node);
             break;
         }

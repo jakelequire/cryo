@@ -174,6 +174,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "METHOD";
     case NODE_IDENTIFIER:
         return "IDENTIFIER";
+    case NODE_METHOD_CALL:
+        return "METHOD_CALL";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

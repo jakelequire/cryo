@@ -133,7 +133,7 @@ int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *st
 void addStatementToProgram(ASTNode *program, CryoSymbolTable *table, ASTNode *statement, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @ASTNode_Parsing - Expressions & Statements*/
-void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, const char *functionName, const char *scopeName, TypeTable *typeTable);
 ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -144,6 +144,8 @@ ASTNode *parseExpressionStatement(Lexer *lexer, CryoSymbolTable *table, ParsingC
 ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, int minPrecedence, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseUnaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @ASTNode_Parsing - Blocks*/
 ASTNode *parseBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -215,6 +217,8 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTa
 
 ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable);
 ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *typeTable);
+ASTNode *parseMethodCall(char *methodName, DataType *instanceType,
+                         Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 void addTokenToContext(ParsingContext *context, Token token);
 

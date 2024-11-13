@@ -138,6 +138,11 @@ namespace Cryo
 
         // Get return type
         llvm::Type *returnType = compiler.getTypes().getType(method->type, 0);
+        if (method->type->container->baseType == PRIMITIVE_TYPE 
+            && method->type->container->primitive == PRIM_STRING)
+        {
+            returnType = returnType->getPointerTo();
+        }
 
         // Create method function type
         llvm::FunctionType *methodType = llvm::FunctionType::get(

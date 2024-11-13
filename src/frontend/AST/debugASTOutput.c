@@ -563,6 +563,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatBooleanLiteralNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "MethodCall") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatMethodCallNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatMethodCallNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1177,6 +1188,32 @@ char *CONSOLE_formatBooleanLiteralNode(ASTDebugNode *node, DebugASTOutput *outpu
 }
 // </BooleanLiteral>
 // ============================================================
+// ============================================================
+// <MethodCall>
+char *formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <MethodCall> [NAME] { RETURN_TYPE } <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<MethodCall> [%s] →  %s <0:0>",
+            node->nodeName,
+            DataTypeToString(node->dataType));
+    return buffer;
+}
+char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <MethodCall> [NAME] { RETURN_TYPE } <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<MethodCall>%s %s[%s] → %s%s%s %s %s%s<0:0>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, COLOR_RESET);
+    return buffer;
+}
+// </MethodCall>
+// ============================================================
 
 // # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 // # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -1553,6 +1590,19 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         __LINE_AND_COLUMN__
         ASTDebugNode *propertyReassignNode = createASTDebugNode("PropertyReassign", "PropertyReassign", createPrimitiveVoidType(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *propertyReassignNode;
+        output->nodeCount++;
+        break;
+    }
+
+    case NODE_METHOD_CALL:
+    {
+        __LINE_AND_COLUMN__
+        char *methodName = strdup(node->data.methodCall->name);
+        DataType *returnType = node->data.methodCall->returnType;
+        ASTDebugNode *methodCallNode = createASTDebugNode("MethodCall", methodName, returnType, line, column, indentLevel, node);
+        methodCallNode->args = node->data.methodCall->args;
+        methodCallNode->argCount = node->data.methodCall->argCount;
+        output->nodes[output->nodeCount] = *methodCallNode;
         output->nodeCount++;
         break;
     }

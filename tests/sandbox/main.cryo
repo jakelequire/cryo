@@ -11,25 +11,27 @@ struct Int {
         this.value = val;
     }
 
-    // toString() -> string {
-    //     return intToString(this.value);
-    // }
+    toString() -> string {
+        return intToString(this.value);
+    }
 }
 
 public function testFunc() -> void {
     const intTest: Int = 420;
     printInt(intTest.value);
+    const strTest: string = intTest.toString();
+    printStr(strTest);
     return;
 }
 
 public function main() -> void {
-    const fooInt: int = 69;
-    const barInt: int = 420;
+    const fooInt: int = 34;
+    const barInt: int = 4205;
     printInt(fooInt);
 
-    const fooStr: string = "I'm in pain";
+    const fooStr: string = "This is pain";
     printStr(fooStr);
-    printStr("Onichan!");
+    printStr("Oof!");
 
     testFunc();
 

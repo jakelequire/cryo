@@ -414,7 +414,18 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
             ASTNode *functionCall = returnNode->expression;
-            createFunctionCall(functionCall);
+            llvm::Value *funcCallVal = createFunctionCall(functionCall);
+            // Return the value of the function call
+            llvm::Function *currentFunction = cryoContext.currentFunction;
+            llvm::Type *returnType = currentFunction->getReturnType();
+            if (returnType->isVoidTy())
+            {
+                cryoContext.builder.CreateRetVoid();
+            }
+            else
+            {
+                cryoContext.builder.CreateRet(funcCallVal);
+            }
             break;
         }
         default:

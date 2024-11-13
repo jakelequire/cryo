@@ -542,6 +542,8 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     logMessage("INFO", __LINE__, "Parser", "Current Token: %s", CryoTokenToString(lexer->currentToken.type));
 
     ASTNode *node = NULL;
+    CryoTokenType prevToken = context->lastTokens[0].type;
+    printf("\n@parsePrimaryExpression Previous Token: %s\n\n", CryoTokenToString(prevToken));
 
     switch (lexer->currentToken.type)
     {
@@ -581,50 +583,8 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     }
     case TOKEN_IDENTIFIER:
     {
-        // Peek to see if the next token is `;` for a statement
-        if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_SEMICOLON)
-        {
-            logMessage("INFO", __LINE__, "Parser", "Parsing identifier as a statement");
-            node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
-            getNextToken(lexer, arena, state, typeTable);
-            return node;
-        }
-        // Peek to see if the next token is `)` for a statement
-        if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_RPAREN)
-        {
-            logMessage("INFO", __LINE__, "Parser", "Parsing identifier as a statement");
-            node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
-            getNextToken(lexer, arena, state, typeTable);
-            return node;
-        }
-        // Peek to see if the next token is `[` for array indexing
-        if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LBRACKET)
-        {
-            logMessage("INFO", __LINE__, "Parser", "Parsing array indexing");
-            return parseArrayIndexing(lexer, table, context, NULL, arena, state, typeTable);
-        }
-        // Peek to see if the next token is `=` for assignment
-        else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_EQUAL)
-        {
-            logMessage("INFO", __LINE__, "Parser", "Parsing assignment");
-            return parseAssignment(lexer, table, context, NULL, arena, state, typeTable);
-        }
-        // Peek to see if the next token is `(` to start a function call.
-        else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN, typeTable)
-        {
-            logMessage("INFO", __LINE__, "Parser", "Parsing function call");
-            char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-            return parseFunctionCall(lexer, table, context, functionName, arena, state, typeTable);
-        }
-        else
-        {
-            logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena, state, typeTable).type));
-        }
-        logMessage("INFO", __LINE__, "Parser", "Parsing identifier");
-        // Check to see if it exists in the symbol table as a variable or parameter
-        node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
-        getNextToken(lexer, arena, state, typeTable);
-        return node;
+        logMessage("INFO", __LINE__, "Parser", "Parsing identifier expression");
+        return parseIdentifierExpression(lexer, table, context, arena, state, typeTable);
     }
     case TOKEN_INCREMENT:
     case TOKEN_DECREMENT:
@@ -657,6 +617,67 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     return node;
 }
 // </parsePrimaryExpression>
+
+ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    CryoTokenType prevToken = context->lastTokens[0].type;
+    char *curToken = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    CryoTokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
+    printf("\n@parseIdentifierExpression Previous Token: %s\n ", CryoTokenToString(prevToken));
+    printf("\n@parseIdentifierExpression Current Token: %s\n\n", curToken);
+    printf("\n@parseIdentifierExpression Next Token: %s\n\n", CryoTokenToString(nextToken));
+
+    // Check for dot notation after the primary expression
+    if (nextToken == TOKEN_DOT)
+    {
+        // This can either be a struct field or a function call.
+        return parseDotNotation(lexer, table, context, arena, state, typeTable);
+    }
+    // Peek to see if the next token is `;` for a statement
+    if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_SEMICOLON)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing identifier as a statement");
+        ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
+        getNextToken(lexer, arena, state, typeTable);
+        return node;
+    }
+    // Peek to see if the next token is `)` for a statement
+    if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_RPAREN)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing identifier as a statement");
+        ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
+        getNextToken(lexer, arena, state, typeTable);
+        return node;
+    }
+    // Peek to see if the next token is `[` for array indexing
+    if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LBRACKET)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing array indexing");
+        return parseArrayIndexing(lexer, table, context, NULL, arena, state, typeTable);
+    }
+    // Peek to see if the next token is `=` for assignment
+    else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_EQUAL)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing assignment");
+        return parseAssignment(lexer, table, context, NULL, arena, state, typeTable);
+    }
+    // Peek to see if the next token is `(` to start a function call.
+    else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN, typeTable)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing function call");
+        char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        return parseFunctionCall(lexer, table, context, functionName, arena, state, typeTable);
+    }
+    else
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena, state, typeTable).type));
+    }
+    logMessage("INFO", __LINE__, "Parser", "Parsing identifier");
+    // Check to see if it exists in the symbol table as a variable or parameter
+    ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
+    getNextToken(lexer, arena, state, typeTable);
+    return node;
+}
 
 // <parseExpression>
 ASTNode *parseExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
@@ -2558,8 +2579,6 @@ ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
         return NULL;
     }
 
-    logThisContext(context);
-
     CryoTokenType currentToken = lexer->currentToken.type;
 
     ASTNode *thisNode;
@@ -2737,9 +2756,22 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
     {
         logMessage("INFO", __LINE__, "Parser", "Type of node is a struct.");
         VALIDATE_TYPE(typeOfNode);
+
         StructType *structType = typeOfNode->container->custom.structDef;
         logStructType(structType);
         const char *structName = typeOfNode->container->custom.structDef->name;
+        Token nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable);
+        Token currentToken = lexer->currentToken;
+
+        if (currentToken.type == TOKEN_LPAREN)
+        {
+            logMessage("INFO", __LINE__, "Parser", "Parsing method call...");
+            return parseMethodCall(propName, typeOfNode, lexer, table, context, arena, state, typeTable);
+        }
+
+        logMessage("INFO", __LINE__, "Parser", "Struct name: %s", structName);
+        logMessage("INFO", __LINE__, "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
+
         ASTNode *property = findStructProperty(structType, (const char *)propName);
         if (property)
         {
@@ -2784,9 +2816,12 @@ ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     DataType *returnType = parseType(lexer, context, table, arena, state, typeTable);
     getNextToken(lexer, arena, state, typeTable);
 
+    // Create the method body
     ASTNode *methodBody = parseBlock(lexer, table, context, arena, state, typeTable);
-
+    // Create the method node
     ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, arena, state, typeTable);
+    // Add the method to the symbol table
+    addASTNodeSymbol(table, methodNode, arena);
 
     return methodNode;
 }
@@ -2848,4 +2883,45 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
     VALIDATE_TYPE(expectedType);
 
     return propAccessNode;
+}
+
+ASTNode *parseMethodCall(char *methodName, DataType *instanceType,
+                         Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing method call...");
+
+    ASTNode **params = parseParameterList(lexer, table, context, arena, methodName, state, typeTable);
+    int paramCount = 0;
+    while (params[paramCount] != NULL)
+    {
+        paramCount++;
+    }
+
+    logMessage("INFO", __LINE__, "Parser", "Method name: %s", methodName);
+    logMessage("INFO", __LINE__, "Parser", "Param count: %d", paramCount);
+
+    // Find the method in the symbol table
+    CryoSymbol *symbol = findSymbol(table, methodName, arena);
+    if (!symbol)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Method not found.");
+        parsingError("Method not found.", "parseMethodCall", table, arena, state, lexer, source, typeTable);
+        CONDITION_FAILED;
+    }
+    printSymbolTable(table);
+    DataType *returnType = symbol->type;
+    VALIDATE_TYPE(returnType);
+
+    ASTNode *methodCall = createMethodCallNode(returnType, instanceType, methodName,
+                                               params, paramCount, arena, state, typeTable);
+    if (!methodCall)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to create method call node.");
+        parsingError("Failed to create method call node.", "parseMethodCall", table, arena, state, lexer, source, typeTable);
+        CONDITION_FAILED;
+    }
+
+    logASTNode(methodCall);
+
+    return methodCall;
 }

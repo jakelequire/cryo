@@ -1126,3 +1126,22 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
 
     return node;
 }
+
+MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state)
+{
+    MethodCallNode *node = (MethodCallNode *)ARENA_ALLOC(arena, sizeof(MethodCallNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate MethodCallNode node.");
+        return NULL;
+    }
+    
+    node->instanceType = wrapTypeContainer(createTypeContainer());
+    node->returnType = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->args = NULL;
+    node->argCount = 0;
+    node->argCapacity = 128;
+
+    return node;
+}
