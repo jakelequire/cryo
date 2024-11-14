@@ -802,6 +802,7 @@ typedef struct PropertyAccessNode
     ASTNode *object;
     const char *propertyName;
     ASTNode *property;
+    int propertyIndex;
 } PropertyAccessNode;
 
 typedef struct PropertyReassignmentNode

@@ -1308,12 +1308,17 @@ namespace Cryo
         if (!storeInst)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Store instruction not found");
-            compiler.dumpModule();
             // Check if the varName is a function call reference
             if (var->LLVMFunctionPtr)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable is a function reference");
                 return var->LLVMFunctionPtr;
+            }
+
+            if (var->LLVMValue)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable is a value reference");
+                return var->LLVMValue;
             }
 
             CONDITION_FAILED;

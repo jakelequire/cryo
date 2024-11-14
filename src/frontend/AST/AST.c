@@ -798,6 +798,7 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
     node->data.propertyAccess->object = object;
     node->data.propertyAccess->property = property;
     node->data.propertyAccess->propertyName = strdup(propertyName);
+    node->data.propertyAccess->propertyIndex = getPropertyAccessIndex(type, propertyName);
 
     return node;
 }

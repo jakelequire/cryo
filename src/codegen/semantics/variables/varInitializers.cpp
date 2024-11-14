@@ -25,6 +25,77 @@ namespace Cryo
     /// ###
     /// ### ============================================================================= ###
 
+    llvm::Value *Variables::createPropertyAccessVariable(PropertyAccessNode *propAccessNode, std::string varName, DataType *varType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Property Access Variable");
+
+        std::string propertyName = std::string(propAccessNode->propertyName);
+        ASTNode *objNode = propAccessNode->object;
+        DataType *objType = nullptr;
+        logASTNode(objNode);
+
+        std::string accessorName;
+        if (objNode->metaData->type == NODE_VAR_DECLARATION)
+        {
+            CryoVariableNode *varNode = objNode->data.varDecl;
+            accessorName = std::string(varNode->name);
+            objType = varNode->type;
+        }
+        else
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Accessor node is not a variable declaration");
+            std::string nodeTypeStr = CryoNodeTypeToString(objNode->metaData->type);
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Node Type: " + nodeTypeStr);
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *accessorValue = compiler.getContext().namedValues[accessorName];
+        if (!accessorValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Accessor value not found: " + accessorName);
+            CONDITION_FAILED;
+        }
+
+        int propIndex = propAccessNode->propertyIndex;
+        std::cout << "Property Index: " << propIndex << std::endl;
+
+        llvm::Type *objIRType = compiler.getTypes().getType(objType, 0);
+        std::string structTypeName = objType->container->custom.structDef->name;
+        llvm::StructType *structType = compiler.getContext().getStruct(structTypeName);
+        if (!structType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Struct type not found");
+            CONDITION_FAILED;
+        }
+
+        // Get the property
+        llvm::Value *propertyValue = compiler.getContext().builder.CreateStructGEP(
+            objIRType,
+            accessorValue,
+            propIndex,
+            varName + ".prop");
+
+        llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(
+            structType->getElementType(propIndex),
+            propertyValue,
+            varName + ".load");
+
+        // Register in symbol table
+        compiler.getContext().namedValues[varName] = propertyValue;
+        compiler.getSymTable().updateVariableNode(
+            compiler.getContext().currentNamespace,
+            varName,
+            loadedValue,
+            propertyValue->getType());
+
+        // Return the variable
+        return propertyValue;
+    }
+
     llvm::Value *Variables::createMethodCallVariable(MethodCallNode *methodCall, std::string varName, DataType *varType)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Method Call Variable");

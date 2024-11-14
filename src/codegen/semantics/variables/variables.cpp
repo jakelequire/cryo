@@ -503,6 +503,14 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Method Name: " + methodName);
             return createMethodCallVariable(methodCall, varName, varType);
         }
+        case NODE_PROPERTY_ACCESS:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable initializer is a PropertyAccessNode.");
+            PropertyAccessNode *propertyAccess = initializer->data.propertyAccess;
+            std::string varName = std::string(varDecl->name);
+            DataType *varType = varDecl->type;
+            return createPropertyAccessVariable(propertyAccess, varName, varType);
+        }
         default:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is of unknown type");

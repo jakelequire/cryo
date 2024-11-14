@@ -18,7 +18,10 @@ struct Int {
 
 public function testFunc() -> void {
     const intTest: Int = 4205;
-    // printInt(intTest.value);
+    const intTestTwo: int = intTest.value;
+    printInt(intTestTwo);
+    printInt(intTest.value);
+
     const strVal: string = intTest.toString();
     printStr(strVal);
     printStr(intTest.toString());
@@ -34,7 +37,7 @@ public function main() -> void {
     printStr(fooStr);
     printStr("Oof!");
 
-    testFunc();
+    testFunc();w
 
     return;
 }

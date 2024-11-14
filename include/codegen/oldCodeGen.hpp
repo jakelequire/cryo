@@ -483,6 +483,7 @@ namespace Cryo
         llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
         llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);
         llvm::Value *createMethodCallVariable(MethodCallNode *node, std::string varName, DataType *varType);
+        llvm::Value *createPropertyAccessVariable(PropertyAccessNode *propAccessNode, std::string varName, DataType *varType);
 
         CryoCompiler &compiler;
     };

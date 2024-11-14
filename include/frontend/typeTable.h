@@ -186,6 +186,7 @@ extern "C"
     char *DataTypeToString(DataType *dataType);
     char *DataTypeToStringUnformatted(DataType *type);
     const char *getDataTypeName(DataType *type);
+    int getPropertyAccessIndex(DataType *type, const char *propertyName);
 
     DataType *CryoDataTypeStringToType(const char *typeStr);
 

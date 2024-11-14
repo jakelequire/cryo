@@ -1021,7 +1021,10 @@ ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerSt
 /// typedef struct PropertyAccessNode
 /// {
 ///     struct ASTNode *object;
+///     struct ASTNode *object;
 ///     const char *property;
+///     struct ASTNode *property;
+///     int propertyIndex;
 /// } PropertyAccessNode;
 ///```
 ///
@@ -1038,6 +1041,7 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
     node->object = NULL;
     node->propertyName = (char *)calloc(1, sizeof(char));
     node->property = NULL;
+    node->propertyIndex = 0;
 
     return node;
 }
