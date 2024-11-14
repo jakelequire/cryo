@@ -18,7 +18,7 @@
 
 #define AST_OUTPUT_EXT ".txt"
 #define AST_OUTPUT_FILENAME "ast_debug"
-#define AST_DEBUG_VIEW_NODE_COUNT 128
+#define AST_DEBUG_VIEW_NODE_COUNT 1024
 #define __LINE_AND_COLUMN__ \
     int line = line;        \
     int column = column;
@@ -30,7 +30,7 @@
         return NULL;                                                                           \
     }
 
-#define BUFFER_CHAR_SIZE sizeof(char) * 1024
+#define BUFFER_CHAR_SIZE sizeof(char) * 10512
 #define MALLOC_BUFFER (char *)malloc(BUFFER_CHAR_SIZE)
 #define AST_BUFFER_SIZE 5012
 #define MALLOC_AST_BUFFER (char *)malloc(sizeof(char) * AST_BUFFER_SIZE)
@@ -40,8 +40,8 @@ int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)
     const char *fileExt = AST_OUTPUT_EXT;
     const char *cwd = settings->rootDir;
 
-    const char *outDir = (char *)malloc(sizeof(char) * 1024);
-    sprintf((char *)outDir, "%s/%s", cwd, "build/debug");
+    char *outDir = (char *)malloc(sizeof(char) * 1024);
+    sprintf(outDir, "%s/%s", cwd, "build/debug");
 
     DebugASTOutput *output = createDebugASTOutput(settings->inputFile, outDir, fileExt, cwd);
     createASTDebugView(root, output, 0);
@@ -52,6 +52,7 @@ int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)
 
 void initASTConsoleOutput(ASTNode *root, const char *filePath)
 {
+    printf("Creating AST debug output for console\n");
     DebugASTOutput *output = createDebugASTOutput(filePath, filePath, "txt", "console");
     createASTDebugView(root, output, 0);
     char *buffer = getASTBuffer(output, true);
@@ -60,7 +61,8 @@ void initASTConsoleOutput(ASTNode *root, const char *filePath)
         logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
         return;
     }
-    printf("%s\n", buffer);
+    logMessage("INFO", __LINE__, "AST::DBG", "AST debug output created for console");
+    sprintf(buffer, "%s\n", buffer);
 }
 
 void logASTNodeDebugView(ASTNode *node)
@@ -148,11 +150,11 @@ void createASTDebugOutputFile(DebugASTOutput *output)
         createDir(filePath);
     }
 
-    const char *outputPath = (char *)malloc(sizeof(char) * 1024);
-    sprintf((char *)outputPath, "%s", output->cwd);
+    char *outputPath = (char *)malloc(sizeof(char) * 1024);
+    sprintf(outputPath, "%s", output->cwd);
 
-    const char *outputFilePath = (char *)malloc(sizeof(char) * 1024);
-    sprintf((char *)outputFilePath, "%s/%s%s", outputPath, fileName, ext);
+    char *outputFilePath = (char *)malloc(sizeof(char) * 1024);
+    sprintf(outputFilePath, "%s/%s%s", outputPath, fileName, ext);
 
     removePrevASTOutput(outputFilePath);
 
@@ -209,7 +211,8 @@ bool propHasDefault(PropertyNode *prop)
 
 char *getASTBuffer(DebugASTOutput *output, bool console)
 {
-    char *buffer = MALLOC_AST_BUFFER;
+    printf("Creating AST buffer\n");
+    char *buffer = (char *)malloc(sizeof(char) * AST_BUFFER_SIZE);
     if (!buffer)
     {
         logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer");
@@ -239,7 +242,7 @@ char *getASTBuffer(DebugASTOutput *output, bool console)
 
 char *logASTBuffer(DebugASTOutput *output, bool console)
 {
-    char *buffer = MALLOC_AST_BUFFER;
+    char *buffer = (char *)malloc(sizeof(char) * AST_BUFFER_SIZE);
     if (!buffer)
     {
         logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer");
@@ -277,7 +280,7 @@ void logASTNode(ASTNode *node)
         logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
         return;
     }
-    printf("%s\n", buffer);
+    sprintf(buffer, "%s\n", buffer);
 }
 
 // # ============================================================ #
@@ -891,7 +894,7 @@ char *formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
     // <Property> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<Property> [%s] { Type: %s } <%i:%i>", node->nodeName, DataTypeToString(node->dataType), node->line, node->column);
+    sprintf(buffer, "<Property> [%s] { Type: %s } <0:0>", node->nodeName, DataTypeToString(node->dataType));
     return buffer;
 }
 char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -899,15 +902,11 @@ char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
     // <Property> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    const char *defaultString = BOLD LIGHT_BLUE ":"
-                                                "Default" COLOR_RESET;
-    const char *propFlag = propHasDefault(node->sourceNode->data.property) ? defaultString : "";
 
-    sprintf(buffer, "%s%s<Property>%s%s%s [%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
-            BOLD, LIGHT_MAGENTA, COLOR_RESET, (char *)propFlag,
-            YELLOW, node->nodeName, COLOR_RESET,
+    sprintf(buffer, "%s%s<Property>%s %s[%s]%s %s%s{ %s }%s %s%s<0:0>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET, YELLOW, node->nodeName, COLOR_RESET,
             BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
-            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+            DARK_GRAY, ITALIC, COLOR_RESET);
     return buffer;
 }
 // </Property>

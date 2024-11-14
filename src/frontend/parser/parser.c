@@ -2397,9 +2397,15 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             }
 
             // End the loop
-            if (lexer->currentToken.type == TOKEN_RBRACE)
+            // if (lexer->currentToken.type == TOKEN_RBRACE)
+            // {
+            //     break;
+            // }
+
+            if (lexer->currentToken.type == TOKEN_IDENTIFIER)
             {
-                break;
+                // parse the next field
+                continue;
             }
         }
 
@@ -2428,16 +2434,14 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                 addMethodToThisContext(context, method, typeTable);
             }
         }
-
         else if (lexer->currentToken.type == TOKEN_RBRACE)
         {
             break;
         }
-
         else
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to parse struct field.");
-            return NULL;
+            CONDITION_FAILED;
         }
 
         if (lexer->currentToken.type == TOKEN_RBRACE)
@@ -2448,7 +2452,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         else
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to parse struct field.");
-            return NULL;
+            CONDITION_FAILED;
         }
     }
 
@@ -2517,7 +2521,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     printf("Default Count: %d\n", defaultCount);
 
     char *fieldName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    logMessage("INFO", __LINE__, "Parser", "Field name: %s", fieldName);
+    logMessage("INFO", __LINE__, "Parser", "Field name: %s", strdup(fieldName));
 
     getNextToken(lexer, arena, state, typeTable);
 
@@ -2535,7 +2539,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     // Find the parent node in the symbol table
     CryoNodeType parentNodeType = context->thisContext->nodeType;
 
-    ASTNode *propertyNode = createFieldNode(fieldName, fieldType, parentName, parentNodeType, NULL, arena, state, typeTable);
+    ASTNode *propertyNode = createFieldNode(strdup(fieldName), fieldType, parentName, parentNodeType, NULL, arena, state, typeTable);
     if (defaultCount > 0)
     {
         propertyNode->data.property->defaultProperty = true;

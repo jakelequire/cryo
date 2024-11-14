@@ -16,8 +16,19 @@ struct Int {
     }
 }
 
+struct Foo {
+    bar: int;
+    baz: string;
+    buz: Int;
+}
+
+public function anotherTest() -> void {
+    const fooTest: int = 8008;
+    return;
+}
+
 public function testFunc() -> void {
-    const intTest: Int = 4205;
+    const intTest: Int = 420;
     const intTestTwo: int = intTest.value;
     printInt(intTestTwo);
     printInt(intTest.value);
@@ -30,14 +41,13 @@ public function testFunc() -> void {
 
 public function main() -> void {
     const fooInt: int = 34;
-    const barInt: int = 4205;
     printInt(fooInt);
 
     const fooStr: string = "This is pain";
     printStr(fooStr);
     printStr("Oof!");
 
-    testFunc();w
+    testFunc();
 
     return;
 }

@@ -73,6 +73,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     END_COMPILATION_MESSAGE;
 
     initASTConsoleOutput(programNode, filePath);
+    logASTNodeDebugView(programCopy);
 
     printTypeTable(typeTable);
 

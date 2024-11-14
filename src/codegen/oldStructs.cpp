@@ -49,7 +49,7 @@ namespace Cryo
         compiler.getContext().addStructToInstance(structName, structType);
 
         // Add to the `NamedGlobal` map
-        // compiler.getContext().module->getOrInsertGlobal(structName, structType);
+        compiler.getContext().module->getOrInsertGlobal(structName, structType);
 
         if (structNode->constructor)
         {
@@ -138,8 +138,7 @@ namespace Cryo
 
         // Get return type
         llvm::Type *returnType = compiler.getTypes().getType(method->type, 0);
-        if (method->type->container->baseType == PRIMITIVE_TYPE 
-            && method->type->container->primitive == PRIM_STRING)
+        if (method->type->container->baseType == PRIMITIVE_TYPE && method->type->container->primitive == PRIM_STRING)
         {
             returnType = returnType->getPointerTo();
         }

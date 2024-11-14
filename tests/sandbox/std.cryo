@@ -1,0 +1,21 @@
+namespace Std;
+
+struct Int {
+    value: int;
+
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> string {
+        return intToString(this.value);
+    }
+}
+
+struct String {
+    value: string;
+
+    constructor(val: string) {
+        this.value = val;
+    }
+}
