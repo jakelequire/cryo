@@ -24,7 +24,6 @@ namespace Cryo
         CompilerSettings *settings = compiler.getCompilerSettings();
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
-        compiler.dumpModule();
         std::cout << "\n\n";
         if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
         {
@@ -99,14 +98,12 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
             return;
         }
-
         LLVM_MODULE_COMPLETE_START;
         LoadStoreWhitespaceAnnotator LSWA;
 
         // Use the custom annotator when printing
         cryoContext.module->print(dest, &LSWA);
         cryoContext.module->print(llvm::outs(), &LSWA);
-
         LLVM_MODULE_COMPLETE_END;
 
         dest.close();

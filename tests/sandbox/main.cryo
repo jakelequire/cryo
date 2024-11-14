@@ -22,13 +22,32 @@ struct Foo {
     buz: Int;
 }
 
-public function anotherTest() -> void {
-    const fooTest: int = 8008;
+function binOpTest() -> void {
+    const addTest: int = 34 + 36;
+    printStr("Addition test: ");
+    printInt(addTest);
+    
+    const subTest: int = 34 - 36;
+    printStr("Subtraction test: ");
+    printInt(subTest);
+
+    const mulTest: int = 16 * 16;
+    printStr("Multiplication test: ");
+    printInt(mulTest);
+
+    const divTest: int = 10 / 2;
+    printStr("Division test: ");
+    printInt(divTest);
+
+    const modTest: int = 10 % 3;
+    printStr("Modulus test: ");
+    printInt(modTest);
+
     return;
 }
 
-public function testFunc() -> void {
-    const intTest: Int = 420;
+function structTesting() -> void {
+    const intTest: Int = 1234;
     const intTestTwo: int = intTest.value;
     printInt(intTestTwo);
     printInt(intTest.value);
@@ -39,7 +58,7 @@ public function testFunc() -> void {
     return;
 }
 
-public function main() -> void {
+function main() -> void {
     const fooInt: int = 34;
     printInt(fooInt);
 
@@ -47,7 +66,8 @@ public function main() -> void {
     printStr(fooStr);
     printStr("Oof!");
 
-    testFunc();
+    structTesting();
+    binOpTest();
 
     return;
 }

@@ -76,7 +76,6 @@ void logASTNodeDebugView(ASTNode *node)
         logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
         return;
     }
-    printf("%s\n", buffer);
 }
 
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd)
@@ -259,7 +258,7 @@ char *logASTBuffer(DebugASTOutput *output, bool console)
             free(formattedNode);
         }
     }
-    sprintf(buffer, "%s\n", buffer);
+    printf("%s\n", buffer);
 
     return buffer;
 }
@@ -575,6 +574,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
         else
         {
             formattedNode = formatMethodCallNode(node, output);
+        }
+    }
+    else if (strcmp(nodeType, "BinOp") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatBinOpNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatBinOpNode(node, output);
         }
     }
     else if (strcmp(nodeType, "Namespace") == 0)
@@ -1213,10 +1223,29 @@ char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
 }
 // </MethodCall>
 // ============================================================
-
-// # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-// # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-// # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+// ============================================================
+// <BinOp>
+char *formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <BinOp> [OPERATOR] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<BinOp> [%s] <%i:%i>", node->nodeName, node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <BinOp> [OPERATOR] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<BinOp>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </BinOp>
+// ============================================================
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -1441,7 +1470,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         DataType *dataType = node->data.literal->type;
-        switch (dataType->container->baseType)
+        switch (dataType->container->primitive)
         {
         case PRIM_INT:
         {
@@ -1603,6 +1632,17 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         methodCallNode->argCount = node->data.methodCall->argCount;
         output->nodes[output->nodeCount] = *methodCallNode;
         output->nodeCount++;
+        break;
+    }
+
+    case NODE_BINARY_EXPR:
+    {
+        __LINE_AND_COLUMN__
+        ASTDebugNode *binaryExprNode = createASTDebugNode("BinOp", "BinOp", createPrimitiveVoidType(), line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *binaryExprNode;
+        output->nodeCount++;
+        createASTDebugView(node->data.bin_op->left, output, indentLevel + 1);
+        createASTDebugView(node->data.bin_op->right, output, indentLevel + 1);
         break;
     }
 

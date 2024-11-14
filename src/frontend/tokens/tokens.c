@@ -640,7 +640,7 @@ CryoOperatorType CryoTokenToOperator(CryoTokenType token)
         return OPERATOR_MUL;
     case TOKEN_SLASH:
         return OPERATOR_DIV;
-    case TOKEN_OP_MOD:
+    case TOKEN_PERCENT:
         return OPERATOR_MOD;
     case TOKEN_OP_AND:
         return OPERATOR_AND;

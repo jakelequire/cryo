@@ -56,10 +56,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     // Outputs the SymTable into a file in the build directory.
     outputSymTable(table, settings);
-
     initASTDebugOutput(programCopy, settings);
-    logASTNodeDebugView(programCopy);
-
     printTypeTable(typeTable);
 
     // Generate code
@@ -72,9 +69,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     END_COMPILATION_MESSAGE;
 
-    initASTConsoleOutput(programNode, filePath);
     logASTNodeDebugView(programCopy);
-
     printTypeTable(typeTable);
 
     return 0;

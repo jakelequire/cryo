@@ -342,6 +342,12 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     case TOKEN_KW_PUBLIC:
         return parsePublicDeclaration(lexer, table, context, arena, state, typeTable);
 
+    case TOKEN_KW_PRIVATE:
+        return parsePrivateDeclaration(lexer, table, context, arena, state, typeTable);
+
+    case TOKEN_KW_FN:
+        return parseFunctionDeclaration(lexer, table, context, VISIBILITY_PUBLIC, arena, state, typeTable);
+
     case TOKEN_KW_RETURN:
         return parseReturnStatement(lexer, table, context, arena, state, typeTable);
 
@@ -731,15 +737,9 @@ ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCont
         int precedence = getOperatorPrecedence(_op, arena, state, typeTable);
         printf("Precedence: %d\n", precedence);
 
-        // if (operator== )
-        // {
-        //     // This means that the literal expression is an array indexing operation
-        //     // <TOKEN_RBRACKET> <TOKEN_INT_LITERAL> <TOKEN_LBRACKET> = NODE_INDEX_EXPR
-        //     consume()
-        // }
-
         if (precedence < minPrecedence)
         {
+            logMessage("INFO", __LINE__, "Parser", "End of expression");
             break;
         }
 
@@ -827,6 +827,27 @@ ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     }
 }
 // </parsePublicDeclaration>
+
+// <parsePrivateDeclaration>
+ASTNode *parsePrivateDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing private declaration...");
+    consume(__LINE__, lexer, TOKEN_KW_PRIVATE, "Expected 'private' keyword.", "parsePrivateDeclaration", table, arena, state, typeTable, context);
+
+    switch (lexer->currentToken.type)
+    {
+    case TOKEN_KW_CONST:
+    case TOKEN_KW_MUT:
+        return parseVarDeclaration(lexer, table, context, arena, state, typeTable);
+    case TOKEN_KW_FN:
+        return parseFunctionDeclaration(lexer, table, context, VISIBILITY_PRIVATE, arena, state, typeTable);
+
+    default:
+        parsingError("Expected a declaration.", "parsePrivateDeclaration", table, arena, state, lexer, source, typeTable);
+        return NULL;
+    }
+}
+// </parsePrivateDeclaration>
 
 /* ====================================================================== */
 /* @ASTNode_Parsing - Blocks                                              */
@@ -2460,13 +2481,12 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     ASTNode *structNode = createStructNode(structName, properties, propertyCount, constructorNode,
                                            methods, methodCount,
                                            arena, state, typeTable);
+    structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
+    structNode->data.structNode->hasConstructor = hasConstructor;
 
     DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount,
                                                             methods, methodCount,
                                                             state, typeTable);
-    structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
-    hasConstructor = constructorNode != NULL;
-    structNode->data.structNode->hasConstructor = hasConstructor;
     structNode->data.structNode->type = structDataType;
 
     addTypeToTypeTable(typeTable, structName, structDataType);

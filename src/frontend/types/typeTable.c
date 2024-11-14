@@ -50,6 +50,8 @@ TypeContainer *createTypeContainer(void)
 
     container->baseType = UNKNOWN_TYPE;
     container->primitive = PRIM_UNKNOWN;
+    container->size = 0;
+    container->length = 0;
     container->isArray = false;
     container->arrayDimensions = 0;
     container->custom.name = NULL;

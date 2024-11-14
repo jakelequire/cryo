@@ -83,9 +83,11 @@ typedef struct TypeContainer
 {
     TypeofDataType baseType;     // Base type (primitive, struct, etc)
     PrimitiveDataType primitive; // If primitive type
+    int size;                    // Size of the type
+    int length;                  // Length of the type
     bool isArray;                // Array flag
     int arrayDimensions;         // Number of array dimensions
-    struct
+    struct custom
     {
         const char *name;      // Type identifier name
         StructType *structDef; // For struct types

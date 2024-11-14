@@ -1113,6 +1113,7 @@ char *formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatStringLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatBooleanLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1139,5 +1140,6 @@ char *CONSOLE_formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatStringLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatBooleanLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H
