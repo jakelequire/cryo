@@ -68,7 +68,7 @@ This will be a basic overview of the language and its features. This will be upd
 |                      |                   | `<=` - LTE           | `%=`                 |
 
 ### <u>Hello, world!</u>
-Since there is no standard library yet, the language is very limited in what it can do. When the project builds, it will use a C file to borrow functions from. This is located in [`./src/cryo/std.c`](./src/cryo/std.c).
+Since there is no standard library yet, the language is very limited in what it can do. When the project builds, it will use a C++ file to borrow functions from. This is located in [`./cryo/cxx_support.cpp`](./cryo/cxx_support.cpp).
 
 Here is a simple hello world program in Cryo:
 
