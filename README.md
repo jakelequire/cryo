@@ -31,6 +31,7 @@ I started this project to learn more about compilers and programming languages.
   - [Operators](#operators)
   - [Hello, world!](#hello-world)
   - [Fibonacci Sequence](#fibonacci-sequence)
+  - [Structures](#structures)
 - [Compile & Run](#compile--run)
   - [Dependencies](#dependencies)
   - [Building](#building)
