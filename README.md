@@ -3,8 +3,6 @@
 General Purpose, Strongly Typed, OOP, Programming Language witten in C & C++.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)]
-[![GitHub issues](https://img.shields.io/github/issues/jakelequire/cryo)]
-[![GitHub forks](https://img.shields.io/github/forks/jakelequire/cryo)]
 [![GitHub stars](https://img.shields.io/github/stars/jakelequire/cryo)]
 [![Version](https://img.shields.io/badge/Version-0.0.1-blue)]
 
