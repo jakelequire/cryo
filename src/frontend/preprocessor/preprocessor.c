@@ -14,22 +14,4 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/dataTypes.h"
-
-TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
-{
-    TypeContainer *container = createTypeContainer();
-    if (!container)
-        return NULL;
-
-    // Copy base type info
-    container->baseType = baseType->baseType;
-    container->primitive = baseType->primitive;
-    container->custom = baseType->custom;
-
-    // Add array info
-    container->isArray = true;
-    container->arrayDimensions = dimensions;
-
-    return container;
-}
+#include "frontend/preprocessor.h"

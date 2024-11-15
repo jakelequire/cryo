@@ -16,6 +16,24 @@ struct Int {
     }
 }
 
+struct Array <T> {
+    data: T[];
+    length: int;
+
+    constructor(data: T[]) {
+        this.data = data;
+        this.length = data.length;
+    }
+
+    get(index: Int) -> T {
+        return this.data[index];
+    }
+
+    set(index: Int, val: T) -> void {
+        this.data[index] = val;
+    }
+}
+
 function binOpTest() -> void {
     const addTest: int = 34 + 36;
     printStr("Addition test: ");
@@ -78,23 +96,7 @@ function main() -> void {
 //         }
 //     }
 // }
-// struct Array <T> {
-//     data: T[];
-//     length: int;
-// 
-//     constructor(data: T[]) {
-//         this.data = data;
-//         this.length = data.length;
-//     }
-// 
-//     get(index: Int) -> T {
-//         return this.data[index];
-//     }
-// 
-//     set(index: Int, val: T) -> void {
-//         this.data[index] = val;
-//     }
-// }
+
 // 
 // function arrayTesting() -> void {
 //     const intArray: Array<Int> = [1, 2, 3, 4, 5];

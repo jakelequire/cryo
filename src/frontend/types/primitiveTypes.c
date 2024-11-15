@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 // Primitive int Type `(default/baseline)`
 DataType *createPrimitiveIntType(void)

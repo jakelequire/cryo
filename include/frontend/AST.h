@@ -31,7 +31,7 @@
 #include "tools/arena/arena.h"
 #include "tools/utils/c_logger.h"
 #include "tools/macros/consoleColors.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 #include "common/common.h"
 
 typedef struct DataType DataType;

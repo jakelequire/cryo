@@ -251,7 +251,8 @@
     "compilerargs.h": "c",
     "typetable.h": "c",
     "syntaxhighlighter.h": "c",
-    "cerrno": "cpp"
+    "cerrno": "cpp",
+    "preprocessor.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 char *TypeofDataTypeToString(TypeofDataType type)
 {
@@ -362,7 +362,6 @@ void printTypeTable(TypeTable *table)
     printf("  Type Table: %p\n", (void *)table);
     printf("  Type Count: %d\n", table->count);
     printf("  Type Capacity: %d\n", table->capacity);
-    printf(" Namespace: %s\n", table->namespaceName);
     printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
 
     for (int i = 0; i < table->count; i++)

@@ -35,7 +35,7 @@
 #include "compiler/compiler.h"
 #include "settings/compilerSettings.h"
 #include "tools/macros/consoleColors.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 #define INITIAL_STATEMENT_CAPACITY 512
 #define INITIAL_PARAM_CAPACITY 8

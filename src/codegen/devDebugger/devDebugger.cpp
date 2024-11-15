@@ -29,7 +29,7 @@ namespace Cryo
 
     /**
      * @public
-     * @brief Used to log a specific node.
+     * @brief Used to log a specific AST node.
      */
     void DevDebugger::logNode(ASTNode *node)
     {

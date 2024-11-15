@@ -26,7 +26,7 @@
 #include "frontend/parser.h"
 #include "frontend/tokens.h"
 #include "frontend/symTable.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"

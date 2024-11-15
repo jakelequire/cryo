@@ -31,7 +31,7 @@
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 typedef struct ASTNode ASTNode;
 typedef struct CompilerState CompilerState;
