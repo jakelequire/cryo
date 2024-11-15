@@ -78,7 +78,7 @@ namespace Main;
 
 extern function printStr(str: string) -> void;
 
-public function main() -> void {
+function main() -> void {
     printStr("Hello, world!");
 
     const example: string = "Hello, world!";
@@ -99,7 +99,7 @@ namespace Fibonacci;
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
 
-public function fibonacci(n: int) -> void {
+function fibonacci(n: int) -> void {
     mut a: int = 0;
     mut b: int = 1;
     mut c: int = 0;
@@ -117,8 +117,36 @@ public function fibonacci(n: int) -> void {
 }
 
 
-public function main() -> void {
+function main() -> void {
     fibonacci(16);
+    return;
+}
+```
+
+### <u>Structures</u>
+Still early in development, but this is the early implementation of structures in Cryo.
+
+```cpp
+namespace Structures;
+
+extern function intToStr(num: int) -> string;
+extern function printStr(str: string) -> void;
+
+struct Int {
+    value: int;
+
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> string {
+        return intToStr(this.value);
+    }
+}
+
+function main() -> void {
+    const num: Int = 10;
+    printStr(num.toString());
     return;
 }
 ```
@@ -154,7 +182,7 @@ To compile the project, you will first need to build it. You can do this by runn
 ```bash
 make all
 ```
-This will build the source code of the project and create an executable file called `main` in [`./src/bin/`](./src/bin/).
+This will build the source code of the project and create an executable file called `compiler` in [`./bin/`](./bin/).
 
 #### Environment Variables
 There is only one environmental variable you need to set in order to run the program. This is something that I will fix in the future, but for now, you will need to set the `CRYO_PATH` variable for the program to work. You can set this by running:
@@ -169,7 +197,7 @@ There is a build script in the project directory that will compile and execute a
 ```
 
 ### LSP
-There is a small LSP within the project under the [`./src/assets/`](./src/assets/) directory. This is a VS Code Extension that will provide syntax highlighting for the Cryo language. You can just double click the `.vsix` file to install it in VS Code.
+There is a small LSP within the project under the [`./assets/`](./assets/) directory. This is a VS Code Extension that will provide syntax highlighting for the Cryo language. You can just double click the `.vsix` file to install it in VS Code.
 
 ## Conclusion
 
