@@ -16,12 +16,6 @@ struct Int {
     }
 }
 
-struct Foo {
-    bar: int;
-    baz: string;
-    buz: Int;
-}
-
 function binOpTest() -> void {
     const addTest: int = 34 + 36;
     printStr("Addition test: ");
@@ -71,3 +65,94 @@ function main() -> void {
 
     return;
 }
+
+// function matchTesting() -> void {
+//     const intStructTest: Int = 999;
+// 
+//     match (intStructTest) {
+//         case Int -> {
+//             printStr("Matched Int");
+//         }
+//         case _  -> {
+//             printStr("Matched default");
+//         }
+//     }
+// }
+// struct Array <T> {
+//     data: T[];
+//     length: int;
+// 
+//     constructor(data: T[]) {
+//         this.data = data;
+//         this.length = data.length;
+//     }
+// 
+//     get(index: Int) -> T {
+//         return this.data[index];
+//     }
+// 
+//     set(index: Int, val: T) -> void {
+//         this.data[index] = val;
+//     }
+// }
+// 
+// function arrayTesting() -> void {
+//     const intArray: Array<Int> = [1, 2, 3, 4, 5];
+// }
+
+// I need to figure out how to make two types of enums.
+// 1. Simple enums that are just a list of values (like in C)
+// 2. Enums that are a list of values with associated data (like in Rust)
+
+// enum TestEnum {
+//     Foo,
+//     Bar,
+//     Baz,
+//     Buz
+// }
+
+// enum TestEnumTwo {
+//     Foo(int),
+//     Bar(string),
+//     Baz(Int),
+//     Buz(Int)
+// }
+
+// function testEnums() -> void {
+//     const testEnum: TestEnum = TestEnum::Foo;
+//     const testEnumTwo: TestEnumTwo = TestEnumTwo::Foo(1234);
+
+//     match (testEnum) {
+//         case TestEnum::Foo -> {
+//             printStr("Matched Foo");
+//         }
+//         case TestEnum::Bar -> {
+//             printStr("Matched Bar");
+//         }
+//         case TestEnum::Baz -> {
+//             printStr("Matched Baz");
+//         }
+//         case TestEnum::Buz -> {
+//             printStr("Matched Buz");
+//         }
+//     }
+
+//     match (testEnumTwo) {
+//         case TestEnumTwo::Foo(val) -> {
+//             printStr("Matched Foo");
+//             printInt(val);
+//         }
+//         case TestEnumTwo::Bar(val) -> {
+//             printStr("Matched Bar");
+//             printStr(val);
+//         }
+//         case TestEnumTwo::Baz(val) -> {
+//             printStr("Matched Baz");
+//             printInt(val.value);
+//         }
+//         case TestEnumTwo::Buz(val) -> {
+//             printStr("Matched Buz");
+//             printInt(val.value);
+//         }
+//     }
+// }

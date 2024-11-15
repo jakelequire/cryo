@@ -51,6 +51,8 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
         return LIGHT_CYAN BOLD "void" COLOR_RESET;
     case PRIM_NULL:
         return LIGHT_CYAN BOLD "<NULL>" COLOR_RESET;
+    case PRIM_CUSTOM:
+        return LIGHT_CYAN BOLD "Custom Type" COLOR_RESET;
     case PRIM_UNKNOWN:
         return LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET;
     default:
@@ -74,6 +76,8 @@ char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
         return "void";
     case PRIM_NULL:
         return "null";
+    case PRIM_CUSTOM:
+        return "Custom Type";
     case PRIM_UNKNOWN:
         return "<UNKNOWN>";
     default:

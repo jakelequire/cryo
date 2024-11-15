@@ -57,7 +57,6 @@ TypeContainer *createTypeContainer(void)
     container->custom.name = NULL;
     container->custom.structDef = NULL;
     container->custom.funcDef = NULL;
-    container->custom.extraData = NULL;
 
     return container;
 }
@@ -217,6 +216,7 @@ DataType *wrapTypeContainer(TypeContainer *container)
     type->isConst = false;
     type->isReference = false;
     type->next = NULL;
+    type->genericParam = NULL;
 
     return type;
 }

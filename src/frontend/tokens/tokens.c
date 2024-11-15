@@ -176,6 +176,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "IDENTIFIER";
     case NODE_METHOD_CALL:
         return "METHOD_CALL";
+    case NODE_ENUM:
+        return "ENUM";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

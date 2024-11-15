@@ -33,6 +33,7 @@
 typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
 typedef struct Arena Arena;
+typedef struct DataType DataType;
 
 typedef enum PrimitiveDataType
 {
@@ -42,6 +43,7 @@ typedef enum PrimitiveDataType
     PRIM_BOOLEAN, // `boolean`
     PRIM_VOID,    // `void`
     PRIM_NULL,    // `null`
+    PRIM_CUSTOM,  // Custom type
     PRIM_UNKNOWN  // `<UNKNOWN>`
 } PrimitiveDataType;
 
@@ -79,6 +81,14 @@ typedef struct FunctionType
     PrimitiveDataType returnType;
 } FunctionType;
 
+typedef struct EnumType
+{
+    const char *name;
+    ASTNode **values;
+    int valueCount;
+    int valueCapacity;
+} EnumType;
+
 typedef struct TypeContainer
 {
     TypeofDataType baseType;     // Base type (primitive, struct, etc)
@@ -89,19 +99,22 @@ typedef struct TypeContainer
     int arrayDimensions;         // Number of array dimensions
     struct custom
     {
-        const char *name;      // Type identifier name
-        StructType *structDef; // For struct types
-        FunctionType *funcDef; // For function types
-        void *extraData;       // For future extensibility
+        const char *name;         // Type identifier name
+        StructType *structDef;    // For struct types
+        FunctionType *funcDef;    // For function types
+        EnumType *enumDef;        // For enum types
+        DataType **genericParams; // Generic type parameters
+        int genericParamCount;    // Number of generic type parameters
     } custom;
 } TypeContainer;
 
 typedef struct DataType
 {
-    TypeContainer *container; // Type container
-    bool isConst;             // Const modifier
-    bool isReference;         // Reference type
-    struct DataType *next;    // For linked types (e.g. generics)
+    TypeContainer *container;      // Type container
+    bool isConst;                  // Const modifier
+    bool isReference;              // Reference type
+    struct DataType *next;         // For linked types (e.g. generics)
+    struct DataType *genericParam; // For generic type parameters
 } DataType;
 
 // This is the global symbol table specifically for types.

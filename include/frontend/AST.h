@@ -812,6 +812,15 @@ typedef struct PropertyReassignmentNode
     ASTNode *value;
 } PropertyReassignmentNode;
 
+typedef struct EnumNode
+{
+    DataType *type;
+    const char *name;
+    ASTNode **properties;
+    int propertyCount;
+    int propertyCapacity;
+} EnumNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -887,6 +896,8 @@ typedef struct ASTNode
         MethodNode *method;
         // For Method Calls
         MethodCallNode *methodCall;
+        // For Enums
+        EnumNode *enumNode;
     } data;
 } ASTNode;
 

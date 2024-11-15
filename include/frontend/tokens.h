@@ -298,7 +298,8 @@ extern "C"
         NODE_METHOD,               // 42
         NODE_IDENTIFIER,           // 43
         NODE_METHOD_CALL,          // 44
-        NODE_UNKNOWN,              // 45
+        NODE_ENUM,                 // 45
+        NODE_UNKNOWN,              // 46
     } CryoNodeType;
 
     typedef enum CryoVisibilityType
