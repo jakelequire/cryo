@@ -205,6 +205,7 @@ extern "C"
 
     void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType);
     void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType);
+    int calculateStructSize(StructType *structType);
 
     // # =========================================================================== #
     // # Array Type Functions
@@ -239,7 +240,16 @@ extern "C"
     bool validateGenericType(GenericType *type, DataType *concrete_type);
 
     bool isGenericInstance(TypeContainer *type);
-    bool isGenericType(TypeContainer *type);
+    bool isGenericType(DataType *type);
+
+    const char *getGenericTypeName(DataType *type);
+    int getGenericParameterCount(TypeContainer *type);
+
+    StructType *substituteGenericType(StructType *structDef, DataType *genericParam, DataType *concreteType);
+    ASTNode *cloneAndSubstituteGenericMethod(ASTNode *method, DataType *concreteType);
+    ASTNode *cloneAndSubstituteGenericParam(ASTNode *param, DataType *concreteType);
+    ASTNode *cloneAndSubstituteGenericBody(ASTNode *body, DataType *concreteType);
+    ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concreteType);
 
     // # =========================================================================== #
     // # Print Functions

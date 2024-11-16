@@ -39,6 +39,13 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
     getNextToken(lexer, arena, state, typeTable);
 
+    if (lexer->currentToken.type == TOKEN_LESS)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing generic declaration...");
+        ASTNode *genericNode = parseGenericDecl(lexer, table, context, arena, state, typeTable);
+        DEBUG_BREAKPOINT;
+    }
+
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start struct declaration.", "parseStructDeclaration", table, arena, state, typeTable, context);
 
     int PROPERTY_CAPACITY = 64;
@@ -342,4 +349,37 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
     logASTNode(methodCall);
 
     return methodCall;
+}
+
+ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing generic declaration...");
+    Token currentToken = lexer->currentToken;
+    char *tokenVal = strndup(currentToken.start, currentToken.length);
+
+    consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` to start generic declaration.", "parseGenericDecl", table, arena, state, typeTable, context);
+
+    // We will need to loop through the generic types within the `<>`
+    // Each generic type will be separated by a `,`
+    // The generic type will be an identifier
+    // We will need to add the generic types to the symbol table
+    // We will need to add the generic types to the type table
+
+    while (lexer->currentToken.type != TOKEN_GREATER)
+    {
+        if (lexer->currentToken.type != TOKEN_IDENTIFIER)
+        {
+            parsingError("Expected an identifier.", "parseGenericDecl", table, arena, state, lexer, lexer->source, typeTable);
+            return NULL;
+        }
+
+        char *genericName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage("INFO", __LINE__, "Parser", "Generic name: %s", genericName);
+
+        getNextToken(lexer, arena, state, typeTable);
+
+        consume(__LINE__, lexer, TOKEN_COMMA, "Expected `,` to separate generic types.", "parseGenericDecl", table, arena, state, typeTable, context);
+    }
+
+    DEBUG_BREAKPOINT;
 }

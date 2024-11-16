@@ -111,9 +111,9 @@ TypeContainer *createGenericStructInstance(TypeContainer *genericDef, DataType *
     container->baseType = STRUCT_TYPE;
 
     // Create name like "Array<int>"
-    char *instanceName = malloc(strlen(genericDef->custom.name) +
-                                strlen(concreteType->container->custom.name) + 3);
-    sprintf(instanceName, "%s<%s>", genericDef->custom.name,
+    char *instanceName = (char *)malloc(strlen(genericDef->custom.name) +
+                                        strlen(concreteType->container->custom.name) + 3);
+    sprintf((char *)instanceName, "%s<%s>", genericDef->custom.name,
             concreteType->container->custom.name);
     container->custom.name = instanceName;
 
@@ -136,15 +136,15 @@ TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteT
     container->baseType = STRUCT_TYPE;
 
     // Create a new struct type
-    StructType *instance = malloc(sizeof(StructType));
+    StructType *instance = (StructType *)malloc(sizeof(StructType));
     instance->name = (char *)malloc(strlen(baseStruct->name) + strlen(concreteType->container->custom.name) + 3);
-    sprintf(instance->name, "%s<%s>", baseStruct->name, concreteType->container->custom.name);
+    sprintf((char *)instance->name, "%s<%s>", baseStruct->name, concreteType->container->custom.name);
 
     // Initialize arrays
     instance->propertyCapacity = baseStruct->propertyCapacity;
     instance->methodCapacity = baseStruct->methodCapacity;
-    instance->properties = malloc(sizeof(ASTNode *) * instance->propertyCapacity);
-    instance->methods = malloc(sizeof(ASTNode *) * instance->methodCapacity);
+    instance->properties = (ASTNode **)malloc(sizeof(ASTNode *) * instance->propertyCapacity);
+    instance->methods = (ASTNode **)malloc(sizeof(ASTNode *) * instance->methodCapacity);
 
     // Deep copy and substitute generic types in properties
     instance->propertyCount = baseStruct->propertyCount;
@@ -195,9 +195,16 @@ TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteT
     return container;
 }
 
-bool isGenericType(TypeContainer *type)
+bool isGenericType(DataType *type)
 {
-    return type->custom.genericParamCount > 0;
+    if (type->container->baseType == STRUCT_TYPE)
+    {
+        StructType *structDef = type->container->custom.structDef;
+        return structDef->propertyCount == 1 &&
+               structDef->methodCount == 0 &&
+               structDef->properties[0]->metaData->type == NODE_PARAM &&
+               structDef->properties[0]->data.param->type->container->baseType == GENERIC_TYPE;
+    }
 }
 
 bool isGenericInstance(TypeContainer *type)
@@ -213,4 +220,182 @@ DataType *getGenericParameter(TypeContainer *type, int index)
         return type->custom.genericParams[index];
     }
     return NULL;
+}
+
+int getGenericParameterCount(TypeContainer *type)
+{
+    return type->custom.genericParamCount;
+}
+
+const char *getGenericTypeName(DataType *type)
+{
+    return type->container->custom.name;
+}
+
+// Function to substitute generic types in a struct definition
+StructType *substituteGenericType(StructType *structDef, DataType *genericParam, DataType *concreteType)
+{
+    StructType *instance = (StructType *)malloc(sizeof(StructType));
+    instance->name = (char *)malloc(strlen(structDef->name) + strlen(concreteType->container->custom.name) + 3);
+    sprintf((char *)instance->name, "%s<%s>", structDef->name, concreteType->container->custom.name);
+
+    // Initialize arrays
+    instance->propertyCapacity = structDef->propertyCapacity;
+    instance->methodCapacity = structDef->methodCapacity;
+    instance->properties = (ASTNode **)malloc(sizeof(ASTNode *) * instance->propertyCapacity);
+    instance->methods = (ASTNode **)malloc(sizeof(ASTNode *) * instance->methodCapacity);
+
+    // Deep copy and substitute generic types in properties
+    instance->propertyCount = structDef->propertyCount;
+    for (int i = 0; i < structDef->propertyCount; i++)
+    {
+        // Create new AST node for the property
+        ASTNode *originalProp = structDef->properties[i];
+        ASTNode *newProp = (ASTNode *)malloc(sizeof(ASTNode));
+
+        // Copy basic property info
+        *newProp = *originalProp; // Shallow copy first
+
+        // If the property type is our generic type, substitute it
+        if (isGenericType(getDataTypeFromASTNode(originalProp)) &&
+            strcmp(getGenericTypeName(getDataTypeFromASTNode(originalProp)), "T") == 0)
+        {
+            setNewDataTypeForNode(newProp, concreteType);
+        }
+        else
+        {
+            // Deep copy the data type if it's not being substituted
+            setNewDataTypeForNode(newProp, cloneDataType(getDataTypeFromASTNode(originalProp)));
+        }
+
+        instance->properties[i] = newProp;
+    }
+
+    // Deep copy and substitute generic types in methods
+    instance->methodCount = structDef->methodCount;
+    for (int i = 0; i < structDef->methodCount; i++)
+    {
+        // Similar process for methods, but we also need to:
+        // 1. Update parameter types that use T
+        // 2. Update return types that use T
+        // 3. Update any local variables in the method body that use T
+        instance->methods[i] = cloneAndSubstituteGenericMethod(
+            structDef->methods[i],
+            concreteType);
+    }
+
+    instance->hasDefaultValue = structDef->hasDefaultValue;
+    instance->hasConstructor = structDef->hasConstructor;
+    instance->size = calculateStructSize(instance); // Recalculate size with concrete types
+
+    return instance;
+}
+
+// Function to clone and substitute generic types in a method definition
+ASTNode *cloneAndSubstituteGenericMethod(ASTNode *method, DataType *concreteType)
+{
+    ASTNode *newMethod = (ASTNode *)malloc(sizeof(ASTNode));
+    *newMethod = *method; // Shallow copy first
+
+    // Deep copy the method name
+    newMethod->data.method->name = strdup(method->data.method->name);
+
+    // Deep copy the method parameters
+    newMethod->data.method->paramCapacity = method->data.method->paramCapacity;
+    newMethod->data.method->params = (ASTNode **)malloc(sizeof(ASTNode *) * newMethod->data.method->paramCapacity);
+    newMethod->data.method->paramCount = method->data.method->paramCount;
+    for (int i = 0; i < method->data.method->paramCount; i++)
+    {
+        newMethod->data.method->params[i] = cloneAndSubstituteGenericParam(
+            method->data.method->params[i],
+            concreteType);
+    }
+
+    // Deep copy the method body
+    newMethod->data.method->body = cloneAndSubstituteGenericBody(
+        method->data.method->body,
+        concreteType);
+
+    return newMethod;
+}
+
+// Function to clone and substitute generic types in a method parameter
+ASTNode *cloneAndSubstituteGenericParam(ASTNode *param, DataType *concreteType)
+{
+    ASTNode *newParam = (ASTNode *)malloc(sizeof(ASTNode));
+    *newParam = *param; // Shallow copy first
+
+    // Deep copy the parameter name
+    newParam->data.param->name = strdup(param->data.param->name);
+
+    // Deep copy the parameter type
+    newParam->data.param->type = cloneDataType(getDataTypeFromASTNode(param));
+
+    // Substitute the generic type if it's being used
+    if (isGenericType(newParam->data.param->type))
+    {
+        setNewDataTypeForNode(newParam, concreteType);
+    }
+
+    return newParam;
+}
+
+// Function to clone and substitute generic types in a method body
+ASTNode *cloneAndSubstituteGenericBody(ASTNode *body, DataType *concreteType)
+{
+    ASTNode *newBody = (ASTNode *)malloc(sizeof(ASTNode));
+    *newBody = *body; // Shallow copy first
+
+    // Deep copy the body statements
+    newBody->data.block->statementCapacity = body->data.block->statementCapacity;
+    newBody->data.block->statements = (ASTNode **)malloc(sizeof(ASTNode *) * newBody->data.block->statementCapacity);
+    newBody->data.block->statementCount = body->data.block->statementCount;
+    for (int i = 0; i < body->data.block->statementCount; i++)
+    {
+        newBody->data.block->statements[i] = cloneAndSubstituteGenericStatement(
+            body->data.block->statements[i],
+            concreteType);
+    }
+
+    return newBody;
+}
+
+// Function to clone and substitute generic types in a method statement
+ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concreteType)
+{
+    ASTNode *newStatement = (ASTNode *)malloc(sizeof(ASTNode));
+    *newStatement = *statement; // Shallow copy first
+
+    // Deep copy the statement
+    switch (statement->metaData->type)
+    {
+    case NODE_VAR_DECLARATION:
+        newStatement->data.varDecl->name = strdup(statement->data.varDecl->name);
+        newStatement->data.varDecl->type = cloneDataType(getDataTypeFromASTNode(statement));
+        if (isGenericType(newStatement->data.varDecl->type))
+        {
+            setNewDataTypeForNode(newStatement, concreteType);
+        }
+        break;
+    case NODE_VAR_REASSIGN:
+        newStatement->data.varReassignment->existingVarName = strdup(statement->data.varReassignment->existingVarName);
+        newStatement->data.varReassignment->type = cloneDataType(getDataTypeFromASTNode(statement));
+        if (isGenericType(newStatement->data.varReassignment->type))
+        {
+            setNewDataTypeForNode(newStatement, concreteType);
+        }
+        break;
+    case NODE_PROPERTY_ACCESS:
+        newStatement->data.propertyAccess->propertyName = strdup(statement->data.propertyAccess->propertyName);
+        break;
+    case NODE_METHOD_CALL:
+        newStatement->data.methodCall->name = strdup(statement->data.methodCall->name);
+        break;
+    default:
+        logMessage("ERROR", __LINE__, "TypeTable", "Failed to clone and substitute generic statement, received node type: %s",
+                   CryoNodeTypeToString(statement->metaData->type));
+        break;
+    }
+
+    return newStatement;
 }

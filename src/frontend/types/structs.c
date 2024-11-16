@@ -158,3 +158,28 @@ int getPropertyAccessIndex(DataType *type, const char *propertyName)
         return -1;
     }
 }
+
+int calculateStructSize(StructType *structType)
+{
+    if (!structType)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
+        return -1;
+    }
+
+    int size = 0;
+    for (int i = 0; i < structType->propertyCount; i++)
+    {
+        ASTNode *property = structType->properties[i];
+        DataType *propertyType = getDataTypeFromASTNode(property);
+        if (!propertyType)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type for property.\n");
+            return -1;
+        }
+
+        size += propertyType->container->size;
+    }
+
+    return size;
+}
