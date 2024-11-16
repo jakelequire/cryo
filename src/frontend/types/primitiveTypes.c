@@ -97,3 +97,40 @@ TypeContainer *createPrimitiveType(PrimitiveDataType primType)
 
     return container;
 }
+
+PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
+{
+    if (strcmp(typeStr, "int") == 0)
+    {
+        return PRIM_INT;
+    }
+    else if (strcmp(typeStr, "float") == 0)
+    {
+        return PRIM_FLOAT;
+    }
+    else if (strcmp(typeStr, "string") == 0)
+    {
+        return PRIM_STRING;
+    }
+    else if (strcmp(typeStr, "boolean") == 0)
+    {
+        return PRIM_BOOLEAN;
+    }
+    else if (strcmp(typeStr, "void") == 0)
+    {
+        return PRIM_VOID;
+    }
+    else if (strcmp(typeStr, "null") == 0)
+    {
+        return PRIM_NULL;
+    }
+    else
+    {
+        return PRIM_UNKNOWN;
+    }
+}
+
+bool isPrimitiveType(const char *typeStr)
+{
+    return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
+}

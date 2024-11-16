@@ -123,6 +123,7 @@ namespace Cryo
         case NODE_PROPERTY_REASSIGN:
         case NODE_METHOD:
         case NODE_METHOD_CALL:
+        case NODE_GENERIC_TYPE:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -383,6 +384,10 @@ namespace Cryo
             break;
 
         case NODE_METHOD_CALL:
+            assertNode(node);
+            break;
+
+        case NODE_GENERIC_TYPE:
             assertNode(node);
             break;
 
@@ -892,6 +897,13 @@ namespace Cryo
         case NODE_METHOD_CALL:
         {
             logMessage("INFO", __LINE__, "Debugger", "Method call passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_GENERIC_TYPE:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Generic type passed assertion.");
             logNode(node);
             break;
         }

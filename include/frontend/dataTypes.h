@@ -53,9 +53,25 @@ typedef enum TypeofDataType
     STRUCT_TYPE,    // `struct ... { ... }`
     ENUM_TYPE,      // `enum ... { ... }`
     FUNCTION_TYPE,  // `function (...) -> ...`
+    GENERIC_TYPE,   // `T`, `U`, `V`, etc.
 
     UNKNOWN_TYPE // `<UNKNOWN>`
 } TypeofDataType;
+
+typedef struct GenericType
+{
+    const char *name;        // Name of the generic type (e.g., "T")
+    DataType *constraint;    // Optional constraint on the generic type
+    ASTNode **genericParams; // Array of generic parameter nodes
+    int genericParamCount;
+    int genericParamCapacity;
+    struct
+    {
+        bool isArray;        // Whether this generic type is an array
+        int arrayDimensions; // Number of array dimensions if isArray is true
+    } arrayInfo;
+    struct GenericType *next; // For linking multiple generic params (e.g., <T, U>)
+} GenericType;
 
 typedef struct StructType
 {
@@ -127,21 +143,38 @@ typedef struct TypeTable
     char *namespaceName;
 } TypeTable;
 
-// # =========================================================================== #
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-    // Type Table Management
-    TypeTable *initTypeTable(void);
+    // # =============================================================================================== #
 
-    // Type Container Creation
+    // # =========================================================================== #
+    // # DataType Functions
+    // # (datatypes.c)
+    // # =========================================================================== #
+
+    TypeTable *initTypeTable(void);
     TypeContainer *createTypeContainer(void);
 
-    // Migration Functions
     DataType *parseDataType(const char *typeStr, TypeTable *typeTable);
-    PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
-    bool isPrimitiveType(const char *typeStr);
+    DataType *wrapTypeContainer(TypeContainer *container);
+
+    TypeContainer *lookupType(TypeTable *table, const char *name);
+    void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
+
+    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
+    DataType *CryoDataTypeStringToType(const char *typeStr);
+    DataType *DataTypeFromNode(ASTNode *node);
+    const char *getDataTypeName(DataType *type);
+    DataType *getDataTypeFromASTNode(ASTNode *node);
+    void setNewDataTypeForNode(ASTNode *node, DataType *type);
+    DataType *cloneDataType(DataType *type);
+
+    // # =========================================================================== #
+    // # Primitive Type Functions
+    // # (primitives.c)
+    // # =========================================================================== #
 
     DataType *createPrimitiveIntType(void);
     DataType *createPrimitiveFloatType(void);
@@ -150,14 +183,17 @@ extern "C"
     DataType *createPrimitiveVoidType(void);
     DataType *createPrimitiveNullType(void);
     DataType *createUnknownType(void);
-
-    // Data Type Creation from AST Nodes / Primitives
-
     TypeContainer *createPrimitiveType(PrimitiveDataType primType);
     TypeContainer *createStructType(const char *name, StructType *structDef);
     TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
 
-    // Specialized Type Creation Functions
+    PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
+    bool isPrimitiveType(const char *typeStr);
+
+    // # =========================================================================== #
+    // # Struct Type Functions
+    // # (structs.c)
+    // # =========================================================================== #
 
     StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
     DataType *createDataTypeFromStructNode(
@@ -165,22 +201,51 @@ extern "C"
         ASTNode **methods, int methodCount,
         CompilerState *state, TypeTable *typeTable);
 
-    // Data Type Wrapping
-    DataType *wrapTypeContainer(TypeContainer *container);
-
-    // Type Validation
-    TypeContainer *lookupType(TypeTable *table, const char *name);
-    bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
-    bool isValidType(DataType *type);
-
-    // Add Type to Type Table
-    void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
-    bool typeAlreadyExists(TypeTable *table, const char *name);
+    int getPropertyAccessIndex(DataType *type, const char *propertyName);
 
     void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType);
     void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType);
 
-    // Utility Functions
+    // # =========================================================================== #
+    // # Array Type Functions
+    // # (arrayTypes.c)
+    // # =========================================================================== #
+
+    TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
+
+    // # =========================================================================== #
+    // # Type Validation Functions
+    // # (typeValidation.c)
+    // # =========================================================================== #
+
+    bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
+    bool isValidType(DataType *type);
+
+    // # =========================================================================== #
+    // # Generic Type Functions
+    // # (generics.c)
+    // # =========================================================================== #
+
+    void initGenericType(GenericType *type, const char *name);
+    GenericType *createGenericParameter(const char *name);
+    TypeContainer *createGenericArrayType(DataType *genericParam);
+
+    TypeContainer *createGenericStructInstance(TypeContainer *genericDef, DataType *concreteType);
+    TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteType);
+
+    void addGenericConstraint(GenericType *type, DataType *constraint);
+    void setGenericArrayInfo(GenericType *type, int dimensions);
+    void linkGenericParameter(GenericType *base, GenericType *next);
+    bool validateGenericType(GenericType *type, DataType *concrete_type);
+
+    bool isGenericInstance(TypeContainer *type);
+    bool isGenericType(TypeContainer *type);
+
+    // # =========================================================================== #
+    // # Print Functions
+    // # (printFunctions.c)
+    // # =========================================================================== #
+
     char *TypeofDataTypeToString(TypeofDataType type);
     char *PrimitiveDataTypeToString(PrimitiveDataType type);
     char *PrimitiveDataTypeToString_UF(PrimitiveDataType type);
@@ -200,14 +265,10 @@ extern "C"
 
     char *DataTypeToString(DataType *dataType);
     char *DataTypeToStringUnformatted(DataType *type);
-    const char *getDataTypeName(DataType *type);
-    int getPropertyAccessIndex(DataType *type, const char *propertyName);
 
-    DataType *CryoDataTypeStringToType(const char *typeStr);
+    bool typeAlreadyExists(TypeTable *table, const char *name);
 
-    DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable);
-    DataType *DataTypeFromNode(ASTNode *node);
-    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
+    // # =============================================================================================== #
 
 #define VALIDATE_TYPE(type)                                         \
     if (!isValidType(type))                                         \

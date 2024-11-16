@@ -82,8 +82,8 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
     lexer->column = 0;
     lexer->hasPeeked = false;
     lexer->fileName = fileName;
-
     lexer->nextToken = peekNextToken(lexer, state);
+    lexer->source = source;
 
     printf("{lexer} -------------- <Input Source Code> --------------\n\n");
     printf("\n{lexer} File Name: %s\n", fileName);

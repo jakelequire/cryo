@@ -3,8 +3,6 @@
 General Purpose, Strongly Typed, OOP, Programming Language witten in C & C++.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)]
-[![GitHub issues](https://img.shields.io/github/issues/jakelequire/cryo)]
-[![GitHub forks](https://img.shields.io/github/forks/jakelequire/cryo)]
 [![GitHub stars](https://img.shields.io/github/stars/jakelequire/cryo)]
 [![Version](https://img.shields.io/badge/Version-0.0.1-blue)]
 
@@ -31,6 +29,7 @@ I started this project to learn more about compilers and programming languages.
   - [Operators](#operators)
   - [Hello, world!](#hello-world)
   - [Fibonacci Sequence](#fibonacci-sequence)
+  - [Structures](#structures)
 - [Compile & Run](#compile--run)
   - [Dependencies](#dependencies)
   - [Building](#building)
@@ -69,16 +68,16 @@ This will be a basic overview of the language and its features. This will be upd
 |                      |                   | `<=` - LTE           | `%=`                 |
 
 ### <u>Hello, world!</u>
-Since there is no standard library yet, the language is very limited in what it can do. When the project builds, it will use a C file to borrow functions from. This is located in [`./src/cryo/std.c`](./src/cryo/std.c).
+Since there is no standard library yet, the language is very limited in what it can do. When the project builds, it will use a C++ file to borrow functions from. This is located in [`./cryo/cxx_support.cpp`](./cryo/cxx_support.cpp).
 
 Here is a simple hello world program in Cryo:
 
-```
+```cpp
 namespace Main;
 
 extern function printStr(str: string) -> void;
 
-public function main() -> void {
+function main() -> void {
     printStr("Hello, world!");
 
     const example: string = "Hello, world!";
@@ -93,13 +92,13 @@ This will print `Hello, world!` to the console.
 ### <u>Fibonacci Sequence</u>
 Here is a simple program that will print the first 16 numbers of the Fibonacci sequence.
 
-```
+```cpp
 namespace Fibonacci;
 
 extern function printStr(str: string) -> void;
 extern function printInt(num: int) -> void;
 
-public function fibonacci(n: int) -> void {
+function fibonacci(n: int) -> void {
     mut a: int = 0;
     mut b: int = 1;
     mut c: int = 0;
@@ -117,8 +116,36 @@ public function fibonacci(n: int) -> void {
 }
 
 
-public function main() -> void {
+function main() -> void {
     fibonacci(16);
+    return;
+}
+```
+
+### <u>Structures</u>
+Still early in development, but this is the early implementation of structures in Cryo.
+
+```cpp
+namespace Structures;
+
+extern function intToStr(num: int) -> string;
+extern function printStr(str: string) -> void;
+
+struct Int {
+    value: int;
+
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> string {
+        return intToStr(this.value);
+    }
+}
+
+function main() -> void {
+    const num: Int = 10;
+    printStr(num.toString());
     return;
 }
 ```
@@ -154,7 +181,7 @@ To compile the project, you will first need to build it. You can do this by runn
 ```bash
 make all
 ```
-This will build the source code of the project and create an executable file called `main` in [`./src/bin/`](./src/bin/).
+This will build the source code of the project and create an executable file called `compiler` in [`./bin/`](./bin/).
 
 #### Environment Variables
 There is only one environmental variable you need to set in order to run the program. This is something that I will fix in the future, but for now, you will need to set the `CRYO_PATH` variable for the program to work. You can set this by running:
@@ -169,7 +196,7 @@ There is a build script in the project directory that will compile and execute a
 ```
 
 ### LSP
-There is a small LSP within the project under the [`./src/assets/`](./src/assets/) directory. This is a VS Code Extension that will provide syntax highlighting for the Cryo language. You can just double click the `.vsix` file to install it in VS Code.
+There is a small LSP within the project under the [`./assets/`](./assets/) directory. This is a VS Code Extension that will provide syntax highlighting for the Cryo language. You can just double click the `.vsix` file to install it in VS Code.
 
 ## Conclusion
 

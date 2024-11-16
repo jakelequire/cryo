@@ -178,6 +178,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "METHOD_CALL";
     case NODE_ENUM:
         return "ENUM";
+    case NODE_GENERIC_TYPE:
+        return "GENERIC_TYPE";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

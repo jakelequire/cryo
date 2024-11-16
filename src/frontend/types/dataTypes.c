@@ -165,43 +165,6 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
     return dataType;
 }
 
-PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
-{
-    if (strcmp(typeStr, "int") == 0)
-    {
-        return PRIM_INT;
-    }
-    else if (strcmp(typeStr, "float") == 0)
-    {
-        return PRIM_FLOAT;
-    }
-    else if (strcmp(typeStr, "string") == 0)
-    {
-        return PRIM_STRING;
-    }
-    else if (strcmp(typeStr, "boolean") == 0)
-    {
-        return PRIM_BOOLEAN;
-    }
-    else if (strcmp(typeStr, "void") == 0)
-    {
-        return PRIM_VOID;
-    }
-    else if (strcmp(typeStr, "null") == 0)
-    {
-        return PRIM_NULL;
-    }
-    else
-    {
-        return PRIM_UNKNOWN;
-    }
-}
-
-bool isPrimitiveType(const char *typeStr)
-{
-    return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
-}
-
 // Create DataType wrapper
 DataType *wrapTypeContainer(TypeContainer *container)
 {
@@ -266,58 +229,6 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
     }
 
     table->types[table->count++] = type;
-}
-
-DataType *getDataTypeFromASTNode(ASTNode *node, CompilerState *state, TypeTable *typeTable)
-{
-    if (!node)
-        return NULL;
-
-    switch (node->metaData->type)
-    {
-    case NODE_PROPERTY_ACCESS:
-    {
-        // Get the object type
-        DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object, state, typeTable);
-        if (!objectType)
-            return NULL;
-
-        // Get the property name
-        const char *propertyName = node->data.propertyAccess->propertyName;
-
-        // Get the struct type
-        if (objectType->container->baseType == STRUCT_TYPE)
-        {
-            StructType *structType = objectType->container->custom.structDef;
-            if (!structType)
-            {
-                fprintf(stderr, "[TypeTable] Error: Failed to get struct type from property access.\n");
-                return NULL;
-            }
-
-            // Find the property in the struct
-            for (int i = 0; i < structType->propertyCount; i++)
-            {
-                ASTNode *property = structType->properties[i];
-                if (strcmp(property->data.property->name, propertyName) == 0)
-                {
-                    return property->data.property->type;
-                }
-            }
-
-            fprintf(stderr, "[TypeTable] Error: Property '%s' not found in struct '%s'.\n", propertyName, structType->name);
-            return NULL;
-        }
-        else
-        {
-            fprintf(stderr, "[TypeTable] Error: Property access on non-struct type.\n");
-            return NULL;
-        }
-    }
-
-    default:
-        return NULL;
-    }
 }
 
 ASTNode *findStructProperty(StructType *structType, const char *propertyName)
@@ -438,38 +349,157 @@ const char *getDataTypeName(DataType *type)
     }
 }
 
-int getPropertyAccessIndex(DataType *type, const char *propertyName)
+DataType *getDataTypeFromASTNode(ASTNode *node)
+{
+    if (!node)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
+        return NULL;
+    }
+
+    switch (node->metaData->type)
+    {
+    case NODE_LITERAL_EXPR:
+        return node->data.literal->type;
+    case NODE_VAR_NAME:
+        return node->data.varName->type;
+    case NODE_STRUCT_DECLARATION:
+        return node->data.structNode->type;
+    case NODE_FUNCTION_DECLARATION:
+        return node->data.functionDecl->type;
+    case NODE_PROPERTY:
+        return node->data.property->type;
+    case NODE_PARAM:
+        return node->data.param->type;
+    case NODE_VAR_DECLARATION:
+        return node->data.varDecl->type;
+    case NODE_PROPERTY_ACCESS:
+    {
+        // Get the object type
+        DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object);
+        if (!objectType)
+            return NULL;
+
+        // Get the property name
+        const char *propertyName = node->data.propertyAccess->propertyName;
+
+        // Get the struct type
+        if (objectType->container->baseType == STRUCT_TYPE)
+        {
+            StructType *structType = objectType->container->custom.structDef;
+            if (!structType)
+            {
+                fprintf(stderr, "[TypeTable] Error: Failed to get struct type from property access.\n");
+                return NULL;
+            }
+
+            // Find the property in the struct
+            for (int i = 0; i < structType->propertyCount; i++)
+            {
+                ASTNode *property = structType->properties[i];
+                if (strcmp(property->data.property->name, propertyName) == 0)
+                {
+                    return property->data.property->type;
+                }
+            }
+
+            fprintf(stderr, "[TypeTable] Error: Property '%s' not found in struct '%s'.\n", propertyName, structType->name);
+            return NULL;
+        }
+        else
+        {
+            fprintf(stderr, "[TypeTable] Error: Property access on non-struct type.\n");
+            return NULL;
+        }
+    }
+    default:
+        logMessage("ERROR", __LINE__, "TypeTable", "Failed to get data type from AST node, received node type: %s",
+                   CryoNodeTypeToString(node->metaData->type));
+        return NULL;
+    }
+}
+
+void setNewDataTypeForNode(ASTNode *node, DataType *type)
+{
+    if (!node || !type)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid node or type.\n");
+        return;
+    }
+
+    switch (node->metaData->type)
+    {
+    case NODE_LITERAL_EXPR:
+        node->data.literal->type = type;
+        break;
+    case NODE_VAR_NAME:
+        node->data.varName->type = type;
+        break;
+    case NODE_STRUCT_DECLARATION:
+        node->data.structNode->type = type;
+        break;
+    case NODE_FUNCTION_DECLARATION:
+        node->data.functionDecl->type = type;
+        break;
+    case NODE_PROPERTY:
+        node->data.property->type = type;
+        break;
+    case NODE_PARAM:
+        node->data.param->type = type;
+        break;
+    case NODE_VAR_DECLARATION:
+        node->data.varDecl->type = type;
+        break;
+    default:
+        fprintf(stderr, "[TypeTable] Error: Failed to set data type for node, received node type: %s\n",
+                CryoNodeTypeToString(node->metaData->type));
+        break;
+    }
+}
+
+DataType *cloneDataType(DataType *type)
 {
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
-        return -1;
+        return NULL;
     }
 
-    if (type->container->baseType == STRUCT_TYPE)
+    TypeContainer *container = type->container;
+    if (!container)
     {
-        StructType *structType = type->container->custom.structDef;
-        if (!structType)
-        {
-            fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
-            return -1;
-        }
-
-        for (int i = 0; i < structType->propertyCount; i++)
-        {
-            ASTNode *property = structType->properties[i];
-            if (strcmp(property->data.property->name, propertyName) == 0)
-            {
-                return i;
-            }
-        }
-
-        fprintf(stderr, "[TypeTable] Error: Property '%s' not found in struct '%s'.\n", propertyName, structType->name);
-        return -1;
+        fprintf(stderr, "[TypeTable] Error: Invalid type container.\n");
+        return NULL;
     }
-    else
+
+    TypeContainer *newContainer = createTypeContainer();
+    if (!newContainer)
     {
-        fprintf(stderr, "[TypeTable] Error: Property access on non-struct type.\n");
-        return -1;
+        fprintf(stderr, "[TypeTable] Error: Failed to create new type container.\n");
+        return NULL;
     }
+
+    newContainer->baseType = container->baseType;
+    newContainer->primitive = container->primitive;
+    newContainer->size = container->size;
+    newContainer->length = container->length;
+    newContainer->isArray = container->isArray;
+    newContainer->arrayDimensions = container->arrayDimensions;
+    newContainer->custom.name = container->custom.name;
+    newContainer->custom.structDef = container->custom.structDef;
+    newContainer->custom.funcDef = container->custom.funcDef;
+
+    DataType *newType = wrapTypeContainer(newContainer);
+    if (!newType)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to wrap new type container.\n");
+        return NULL;
+    }
+
+    newType->isConst = type->isConst;
+    newType->isReference = type->isReference;
+    newType->next = type->next;
+    newType->genericParam = type->genericParam;
+
+    return newType;
 }

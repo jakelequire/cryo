@@ -122,3 +122,39 @@ void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structTy
         structType->methods[structType->methodCount++] = methods[i];
     }
 }
+
+int getPropertyAccessIndex(DataType *type, const char *propertyName)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
+        return -1;
+    }
+
+    if (type->container->baseType == STRUCT_TYPE)
+    {
+        StructType *structType = type->container->custom.structDef;
+        if (!structType)
+        {
+            fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
+            return -1;
+        }
+
+        for (int i = 0; i < structType->propertyCount; i++)
+        {
+            ASTNode *property = structType->properties[i];
+            if (strcmp(property->data.property->name, propertyName) == 0)
+            {
+                return i;
+            }
+        }
+
+        fprintf(stderr, "[TypeTable] Error: Property '%s' not found in struct '%s'.\n", propertyName, structType->name);
+        return -1;
+    }
+    else
+    {
+        fprintf(stderr, "[TypeTable] Error: Property access on non-struct type.\n");
+        return -1;
+    }
+}
