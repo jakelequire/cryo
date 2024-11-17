@@ -42,7 +42,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     if (lexer->currentToken.type == TOKEN_LESS)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing generic declaration...");
-        ASTNode *genericNode = parseGenericDecl(lexer, table, context, arena, state, typeTable);
+        ASTNode *genericNode = parseGenericDecl(structName, lexer, table, context, arena, state, typeTable);
         DEBUG_BREAKPOINT;
     }
 
@@ -351,35 +351,185 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
     return methodCall;
 }
 
-ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+// Enhanced parseGenericDecl implementation
+ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, CryoSymbolTable *table,
+                          ParsingContext *context, Arena *arena, CompilerState *state,
+                          TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing generic declaration...");
-    Token currentToken = lexer->currentToken;
-    char *tokenVal = strndup(currentToken.start, currentToken.length);
 
-    consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` to start generic declaration.", "parseGenericDecl", table, arena, state, typeTable, context);
+    // Create a list to store generic parameters
+    int genericParamCapacity = 8;
+    GenericType **genericParams = (GenericType **)ARENA_ALLOC(arena,
+                                                              genericParamCapacity * sizeof(GenericType *));
+    int genericParamCount = 0;
 
-    // We will need to loop through the generic types within the `<>`
-    // Each generic type will be separated by a `,`
-    // The generic type will be an identifier
-    // We will need to add the generic types to the symbol table
-    // We will need to add the generic types to the type table
+    consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` to start generic declaration.",
+            "parseGenericDecl", table, arena, state, typeTable, context);
 
+    // Parse generic parameters
     while (lexer->currentToken.type != TOKEN_GREATER)
     {
         if (lexer->currentToken.type != TOKEN_IDENTIFIER)
         {
-            parsingError("Expected an identifier.", "parseGenericDecl", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Expected generic type identifier.",
+                         "parseGenericDecl", table, arena, state, lexer,
+                         lexer->source, typeTable);
             return NULL;
         }
 
-        char *genericName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        logMessage("INFO", __LINE__, "Parser", "Generic name: %s", genericName);
-
+        // Get generic parameter name
+        char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
         getNextToken(lexer, arena, state, typeTable);
 
-        consume(__LINE__, lexer, TOKEN_COMMA, "Expected `,` to separate generic types.", "parseGenericDecl", table, arena, state, typeTable, context);
+        // Create generic parameter
+        GenericType *genericParam = createGenericParameter(paramName);
+
+        // Check for constraints (e.g., T extends Number)
+        if (lexer->currentToken.type == TOKEN_KW_EXTENDS)
+        {
+            getNextToken(lexer, arena, state, typeTable);
+
+            // Parse constraint type
+            DataType *constraint = parseType(lexer, context, table, arena, state, typeTable);
+            addGenericConstraint(genericParam, constraint);
+            getNextToken(lexer, arena, state, typeTable);
+        }
+
+        // Add to generic parameters list
+        genericParams[genericParamCount++] = genericParam;
+
+        // Handle comma-separated list
+        if (lexer->currentToken.type == TOKEN_COMMA)
+        {
+            getNextToken(lexer, arena, state, typeTable);
+            continue;
+        }
+
+        if (lexer->currentToken.type != TOKEN_GREATER)
+        {
+            parsingError("Expected ',' or '>' in generic parameter list.",
+                         "parseGenericDecl", table, arena, state, lexer,
+                         lexer->source, typeTable);
+            return NULL;
+        }
     }
 
-    DEBUG_BREAKPOINT;
+    consume(__LINE__, lexer, TOKEN_GREATER, "Expected `>` to end generic declaration.",
+            "parseGenericDecl", table, arena, state, typeTable, context);
+
+    // Create generic type container
+    TypeContainer *container = createTypeContainer();
+    container->baseType = GENERIC_TYPE;
+    container->custom.name = strdup(typeName);
+    container->custom.generic.declaration->genericDef = NULL;
+    container->custom.generic.declaration->paramCount = genericParamCount;
+
+    // Convert GenericType to DataType for each parameter
+    for (int i = 0; i < genericParamCount; i++)
+    {
+        DataType *paramType = (DataType *)ARENA_ALLOC(arena, sizeof(DataType));
+        paramType->container = createTypeContainer();
+        paramType->container->baseType = GENERIC_TYPE;
+        paramType->container->custom.name = strdup(genericParams[i]->name);
+        // Transfer constraints if any
+        if (genericParams[i]->constraint)
+        {
+            paramType->genericParam = genericParams[i]->constraint;
+        }
+        container->custom.generic.declaration->params[i] = paramType->container->custom.generic.declaration->params[0];
+    }
+
+    DataType *genericType = wrapTypeContainer(container);
+    ASTNode *genericDeclNode = createGenericDeclNode(genericType, typeName, genericParams, genericParamCount, NULL, false,
+                                                     arena, state, typeTable);
+
+    // Add to type table
+    addTypeToTypeTable(typeTable, typeName, genericType);
+
+    return genericDeclNode;
+}
+
+// Helper function to parse generic type instantiation
+ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
+                                   CryoSymbolTable *table, ParsingContext *context,
+                                   Arena *arena, CompilerState *state,
+                                   TypeTable *typeTable)
+{
+    consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` in generic instantiation.",
+            "parseGenericInstantiation", table, arena, state, typeTable, context);
+
+    // Find base generic type
+    DataType *baseType = lookupType(typeTable, baseName);
+    if (!baseType || !isGenericType(baseType))
+    {
+        parsingError("Type is not generic.", "parseGenericInstantiation",
+                     table, arena, state, lexer, lexer->source, typeTable);
+        return NULL;
+    }
+
+    int expectedParamCount = baseType->container->custom.generic.instantiation->argCount;
+    DataType **concreteTypes = (DataType **)malloc(expectedParamCount * sizeof(DataType *));
+    int paramCount = 0;
+
+    // Parse concrete type arguments
+    while (lexer->currentToken.type != TOKEN_GREATER)
+    {
+        if (paramCount >= expectedParamCount)
+        {
+            parsingError("Too many type arguments.", "parseGenericInstantiation",
+                         table, arena, state, lexer, lexer->source, typeTable);
+            return NULL;
+        }
+
+        DataType *concreteType = parseType(lexer, context, table, arena, state, typeTable);
+
+        // Validate against constraints
+        if (baseType->container->custom.generic.declaration->params[paramCount]->constraint)
+        {
+            if (!validateGenericType(baseType->container->custom.generic.declaration->params[paramCount]->constraint,
+                                     concreteType))
+            {
+                parsingError("Type argument does not satisfy constraints.",
+                             "parseGenericInstantiation", table, arena, state,
+                             lexer, lexer->source, typeTable);
+                return NULL;
+            }
+        }
+
+        concreteTypes[paramCount++] = concreteType;
+
+        if (lexer->currentToken.type == TOKEN_COMMA)
+        {
+            getNextToken(lexer, arena, state, typeTable);
+            continue;
+        }
+
+        if (lexer->currentToken.type != TOKEN_GREATER)
+        {
+            parsingError("Expected ',' or '>' in type argument list.",
+                         "parseGenericInstantiation", table, arena, state,
+                         lexer, lexer->source, typeTable);
+            return NULL;
+        }
+    }
+
+    if (paramCount != expectedParamCount)
+    {
+        parsingError("Wrong number of type arguments.", "parseGenericInstantiation",
+                     table, arena, state, lexer, lexer->source, typeTable);
+        return NULL;
+    }
+
+    consume(__LINE__, lexer, TOKEN_GREATER, "Expected `>` after type arguments.",
+            "parseGenericInstantiation", table, arena, state, typeTable, context);
+
+    // Create instantiated type
+    TypeContainer *instantiatedContainer = createGenericStructInstance(baseType->container,
+                                                                       concreteTypes[0]);
+
+    ASTNode *genericInstNode = createGenericInstNode(baseName, concreteTypes, paramCount,
+                                                     wrapTypeContainer(instantiatedContainer), arena, state, typeTable);
+
+    return genericInstNode;
 }

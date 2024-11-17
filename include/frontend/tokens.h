@@ -299,7 +299,8 @@ extern "C"
         NODE_IDENTIFIER,           // 43
         NODE_METHOD_CALL,          // 44
         NODE_ENUM,                 // 45
-        NODE_GENERIC_TYPE,         // 46
+        NODE_GENERIC_DECL,         // 46
+        NODE_GENERIC_INST,         // 47
         NODE_UNKNOWN,              // 47
     } CryoNodeType;
 

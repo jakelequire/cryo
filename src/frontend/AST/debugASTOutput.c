@@ -1246,6 +1246,52 @@ char *CONSOLE_formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output)
 }
 // </BinOp>
 // ============================================================
+// ============================================================
+// <GenericDecl>
+char *formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <GenericDecl> [NAME] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<GenericDecl> [%s] <%i:%i>", node->nodeName, node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <GenericDecl> [NAME] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<GenericDecl>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </GenericDecl>
+// ============================================================
+// ============================================================
+// <GenericInst>
+char *formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <GenericInst> [NAME] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<GenericInst> [%s] <%i:%i>", node->nodeName, node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    // <GenericInst> [NAME] <L:C>
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<GenericInst>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </GenericInst>
+// ============================================================
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #

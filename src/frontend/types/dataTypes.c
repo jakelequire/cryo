@@ -121,7 +121,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
         // Get the name of the type:
         char *typeName = strdup(baseTypeStr);
         // Look up the type in the type table
-        TypeContainer *customType = lookupType(typeTable, typeName);
+        TypeContainer *customType = lookupType(typeTable, typeName)->container;
         if (!customType)
         {
             fprintf(stderr, "[TypeTable] Error: Custom type '%s' not found in type table.\n", typeName);
@@ -184,7 +184,7 @@ DataType *wrapTypeContainer(TypeContainer *container)
     return type;
 }
 
-TypeContainer *lookupType(TypeTable *table, const char *name)
+DataType *lookupType(TypeTable *table, const char *name)
 {
     for (int i = 0; i < table->count; i++)
     {
@@ -192,7 +192,7 @@ TypeContainer *lookupType(TypeTable *table, const char *name)
         if (type->container->custom.name &&
             strcmp(type->container->custom.name, name) == 0)
         {
-            return type->container;
+            return type;
         }
     }
     return NULL;
@@ -209,7 +209,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
     }
 
     // Check if the type already exists
-    TypeContainer *existingType = lookupType(table, name);
+    TypeContainer *existingType = lookupType(table, name)->container;
     if (existingType)
     {
         fprintf(stderr, "[TypeTable] Error: Type '%s' already exists in the type table\n", name);

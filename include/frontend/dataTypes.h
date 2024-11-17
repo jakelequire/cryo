@@ -34,6 +34,7 @@ typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
 typedef struct Arena Arena;
 typedef struct DataType DataType;
+typedef struct TypeContainer TypeContainer;
 
 typedef enum PrimitiveDataType
 {
@@ -60,16 +61,28 @@ typedef enum TypeofDataType
 
 typedef struct GenericType
 {
-    const char *name;        // Name of the generic type (e.g., "T")
-    DataType *constraint;    // Optional constraint on the generic type
-    ASTNode **genericParams; // Array of generic parameter nodes
-    int genericParamCount;
-    int genericParamCapacity;
-    struct
+    const char *name;     // Name of the generic type (e.g., "T")
+    DataType *constraint; // Optional constraint on the generic type
+    bool isType;          // Whether this is a type parameter (T) or a concrete type (int)
+    union
     {
-        bool isArray;        // Whether this generic type is an array
-        int arrayDimensions; // Number of array dimensions if isArray is true
-    } arrayInfo;
+        struct
+        {                            // For type parameters (when isType is false)
+            ASTNode **genericParams; // Array of generic parameter nodes
+            int genericParamCount;
+            int genericParamCapacity;
+            struct
+            {
+                bool isArray;
+                int arrayDimensions;
+            } arrayInfo;
+        } parameter;
+
+        struct
+        {                           // For concrete types (when isType is true)
+            DataType *concreteType; // The actual type used in instantiation
+        } concrete;
+    };
     struct GenericType *next; // For linking multiple generic params (e.g., <T, U>)
 } GenericType;
 
@@ -85,6 +98,17 @@ typedef struct StructType
     bool hasDefaultValue;
     bool hasConstructor;
     int size;
+
+    // New fields for generic support
+    struct
+    {
+        bool isGeneric;         // Whether this is a generic struct
+        GenericType **params;   // Array of generic type parameters
+        int paramCount;         // Number of generic parameters
+        StructType *baseStruct; // Original generic struct (for instantiations)
+        DataType **typeArgs;    // Concrete type arguments (for instantiations)
+    } generic;
+
 } StructType;
 
 typedef struct FunctionType
@@ -105,6 +129,21 @@ typedef struct EnumType
     int valueCapacity;
 } EnumType;
 
+typedef struct GenericDeclType
+{
+    StructType *genericDef; // The generic type definition
+    DataType **params;      // Generic parameters
+    int paramCount;
+} GenericDeclType;
+
+typedef struct GenericInstType
+{
+    StructType *structDef; // The concrete struct definition
+    DataType **typeArgs;   // The concrete type arguments
+    int argCount;
+    TypeContainer *baseDef; // Reference to the generic declaration
+} GenericInstType;
+
 typedef struct TypeContainer
 {
     TypeofDataType baseType;     // Base type (primitive, struct, etc)
@@ -115,13 +154,19 @@ typedef struct TypeContainer
     int arrayDimensions;         // Number of array dimensions
     struct custom
     {
-        const char *name;         // Type identifier name
-        StructType *structDef;    // For struct types
-        FunctionType *funcDef;    // For function types
-        EnumType *enumDef;        // For enum types
-        DataType **genericParams; // Generic type parameters
-        int genericParamCount;    // Number of generic type parameters
+        const char *name; // Type identifier name
+
+        union generic // For generic types
+        {
+            GenericDeclType *declaration;   // For generic declarations
+            GenericInstType *instantiation; // For generic instantiations
+        } generic;
+
+        StructType *structDef; // For struct types
+        FunctionType *funcDef; // For function types
+        EnumType *enumDef;     // For enum types
     } custom;
+
 } TypeContainer;
 
 typedef struct DataType
@@ -143,6 +188,13 @@ typedef struct TypeTable
     char *namespaceName;
 } TypeTable;
 
+// Helper macros for type checking
+#define IS_GENERIC_DECLARATION(type) \
+    ((type)->baseType == GENERIC_TYPE && (type)->custom.generic.declaration.genericDef != NULL)
+
+#define IS_GENERIC_INSTANTIATION(type) \
+    ((type)->baseType == STRUCT_TYPE && (type)->custom.generic.instantiation.baseDef != NULL)
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -160,7 +212,7 @@ extern "C"
     DataType *parseDataType(const char *typeStr, TypeTable *typeTable);
     DataType *wrapTypeContainer(TypeContainer *container);
 
-    TypeContainer *lookupType(TypeTable *table, const char *name);
+    DataType *lookupType(TypeTable *table, const char *name);
     void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
 
     ASTNode *findStructProperty(StructType *structType, const char *propertyName);
@@ -230,6 +282,8 @@ extern "C"
     void initGenericType(GenericType *type, const char *name);
     GenericType *createGenericParameter(const char *name);
     TypeContainer *createGenericArrayType(DataType *genericParam);
+    GenericDeclType *createGenericDeclarationContainer(StructType *structDef, DataType **genericParam, int paramCount);
+    GenericInstType *createGenericInstanceContainer(StructType *structDef, DataType **typeArgs, int argCount, TypeContainer *baseDef);
 
     TypeContainer *createGenericStructInstance(TypeContainer *genericDef, DataType *concreteType);
     TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteType);
@@ -237,10 +291,11 @@ extern "C"
     void addGenericConstraint(GenericType *type, DataType *constraint);
     void setGenericArrayInfo(GenericType *type, int dimensions);
     void linkGenericParameter(GenericType *base, GenericType *next);
-    bool validateGenericType(GenericType *type, DataType *concrete_type);
 
     bool isGenericInstance(TypeContainer *type);
     bool isGenericType(DataType *type);
+    bool validateGenericType(DataType *type, DataType *concreteType);
+    bool isTypeCompatible(DataType *type, DataType *other);
 
     const char *getGenericTypeName(DataType *type);
     int getGenericParameterCount(TypeContainer *type);

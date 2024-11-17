@@ -51,6 +51,7 @@ KeywordToken keywords[] = {
     {"constructor", TOKEN_KW_CONSTRUCTOR},
     {"this", TOKEN_KW_THIS},
     {"new", TOKEN_KW_NEW},
+    {"extends", TOKEN_KW_EXTENDS},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

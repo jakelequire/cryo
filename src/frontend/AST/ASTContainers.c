@@ -1131,6 +1131,22 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     return node;
 }
 
+/// ---
+/// ### Structure
+///```
+/// typedef struct MethodCallNode
+/// {
+///     DataType *instanceType;
+///     DataType *returnType;
+///     const char *instanceName;
+///     ASTNode *accessorObj;
+///     const char *name;
+///     struct ASTNode **args;
+///     int argCount;
+///     int argCapacity;
+/// } MethodCallNode;
+///```
+///
 MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state)
 {
     MethodCallNode *node = (MethodCallNode *)ARENA_ALLOC(arena, sizeof(MethodCallNode));
@@ -1141,13 +1157,75 @@ MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state
     }
 
     node->instanceType = wrapTypeContainer(createTypeContainer());
-    node->instanceName = (char *)calloc(1, sizeof(char));
-    node->accessorObj = NULL;
     node->returnType = wrapTypeContainer(createTypeContainer());
     node->name = (char *)calloc(1, sizeof(char));
+    node->instanceName = (char *)calloc(1, sizeof(char));
+    node->accessorObj = NULL;
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = 128;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct GenericDeclNode
+/// {
+///     DataType *type;             // e.g., List<T>
+///     const char *name;           // e.g., "List"
+///     ASTNode **properties;       // e.g., <T>
+///     int propertyCount;          // e.g., 1
+///     DataType **constraintTypes; // e.g., T extends Number
+///     bool hasConstraint;
+/// } GenericDeclNode;
+///```
+///
+GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *state)
+{
+    GenericDeclNode *node = (GenericDeclNode *)ARENA_ALLOC(arena, sizeof(GenericDeclNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate GenericDeclNode node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->properties = NULL;
+    node->propertyCount = 0;
+    node->constraintTypes = NULL;
+    node->hasConstraint = false;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct GenericInstNode
+/// {
+///     const char *baseName;     // e.g., "List"
+///     DataType **typeArguments; // e.g., <int>
+///     int argumentCount;
+///     DataType *resultType; // The concrete type after substitution
+/// } GenericInstNode;
+///```
+///
+GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *state)
+{
+    GenericInstNode *node = (GenericInstNode *)ARENA_ALLOC(arena, sizeof(GenericInstNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate GenericInstNode node.");
+        return NULL;
+    }
+
+    node->baseName = (char *)calloc(1, sizeof(char));
+    node->typeArguments = NULL;
+    node->argumentCount = 0;
+    node->resultType = wrapTypeContainer(createTypeContainer());
 
     return node;
 }

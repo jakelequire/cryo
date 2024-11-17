@@ -842,3 +842,43 @@ ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataTy
 
     return node;
 }
+
+ASTNode *createGenericDeclNode(DataType *type, const char *name, GenericType **properties, int propertyCount,
+                               DataType **constraintTypes, bool hasConstraint,
+                               Arena *arena, CompilerState *state, TypeTable *typeTable)
+
+{
+    ASTNode *node = createASTNode(NODE_GENERIC_DECL, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create method call node");
+        return NULL;
+    }
+
+    node->data.genericDecl->name = strdup(name);
+    node->data.genericDecl->properties = properties;
+    node->data.genericDecl->propertyCount = propertyCount;
+    node->data.genericDecl->constraintTypes = constraintTypes;
+    node->data.genericDecl->hasConstraint = hasConstraint;
+    node->data.genericDecl->type = type;
+
+    return node;
+}
+
+ASTNode *createGenericInstNode(const char *baseName, DataType **typeArguments, int argumentCount, DataType *resultType,
+                               Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    ASTNode *node = createASTNode(NODE_GENERIC_INST, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create method call node");
+        return NULL;
+    }
+
+    node->data.genericInst->baseName = baseName;
+    node->data.genericInst->typeArguments = typeArguments;
+    node->data.genericInst->argumentCount = argumentCount;
+    node->data.genericInst->resultType = resultType;
+
+    return node;
+}

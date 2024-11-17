@@ -20,11 +20,6 @@ void initGenericType(GenericType *type, const char *name)
 {
     type->name = strdup(name);
     type->constraint = NULL;
-    type->genericParams = NULL;
-    type->genericParamCount = 0;
-    type->genericParamCapacity = 0;
-    type->arrayInfo.isArray = false;
-    type->arrayInfo.arrayDimensions = 0;
     type->next = NULL;
 }
 
@@ -45,9 +40,10 @@ TypeContainer *createGenericArrayType(DataType *genericParam)
     container->arrayDimensions = 1;
 
     // Store the generic parameter T
-    container->custom.genericParamCount = 1;
-    container->custom.genericParams = (DataType **)malloc(sizeof(DataType *));
-    container->custom.genericParams[0] = genericParam;
+    container->custom.generic.declaration = createGenericDeclarationContainer(
+        NULL,
+        &genericParam,
+        1);
 
     return container;
 }
@@ -61,24 +57,36 @@ TypeContainer *createGenericStructType(const char *name, StructType *structDef, 
     container->custom.structDef = structDef;
 
     // Set up the generic parameter
-    container->custom.genericParamCount = 1;
-    container->custom.genericParams = (DataType **)malloc(sizeof(DataType *));
-    container->custom.genericParams[0] = genericParam; // T
+    container->custom.generic.declaration = createGenericDeclarationContainer(
+        structDef,
+        &genericParam,
+        1);
 
     return container;
+}
+
+GenericDeclType *createGenericDeclarationContainer(StructType *structDef, DataType **genericParam, int paramCount)
+{
+    GenericDeclType *decl = (GenericDeclType *)malloc(sizeof(GenericDeclType));
+    decl->genericDef = structDef;
+    decl->params = genericParam;
+    decl->paramCount = paramCount;
+    return decl;
+}
+GenericInstType *createGenericInstanceContainer(StructType *structDef, DataType **typeArgs, int argCount, TypeContainer *baseDef)
+{
+    GenericInstType *inst = (GenericInstType *)malloc(sizeof(GenericInstType));
+    inst->structDef = structDef;
+    inst->typeArgs = typeArgs;
+    inst->argCount = argCount;
+    inst->baseDef = baseDef;
+    return inst;
 }
 
 // Function to add constraint to generic type
 void addGenericConstraint(GenericType *type, DataType *constraint)
 {
     type->constraint = constraint;
-}
-
-// Function to handle array types of generic parameters
-void setGenericArrayInfo(GenericType *type, int dimensions)
-{
-    type->arrayInfo.isArray = true;
-    type->arrayInfo.arrayDimensions = dimensions;
 }
 
 // Function to link multiple generic parameters
@@ -90,18 +98,6 @@ void linkGenericParameter(GenericType *base, GenericType *next)
         current = current->next;
     }
     current->next = next;
-}
-
-// Function to validate generic type usage
-bool validateGenericType(GenericType *type, DataType *concrete_type)
-{
-    if (type->constraint != NULL)
-    {
-        // Check if concrete_type satisfies the constraint
-        // This would need to be implemented based on your type system rules
-        return areTypesCompatible(type->constraint->container, concrete_type->container);
-    }
-    return true;
 }
 
 TypeContainer *createGenericStructInstance(TypeContainer *genericDef, DataType *concreteType)
@@ -120,13 +116,13 @@ TypeContainer *createGenericStructInstance(TypeContainer *genericDef, DataType *
     // Create concrete struct definition where T is replaced with int
     container->custom.structDef = substituteGenericType(
         genericDef->custom.structDef,
-        genericDef->custom.genericParams[0],
+        genericDef->custom.structDef->properties[0]->data.param->type,
         concreteType);
 
-    // No generic parameters in concrete instance
-    container->custom.genericParamCount = 0;
-    container->custom.genericParams = NULL;
-
+    container->custom.generic.declaration = createGenericDeclarationContainer(
+        genericDef->custom.structDef,
+        &concreteType,
+        1);
     return container;
 }
 
@@ -215,16 +211,15 @@ bool isGenericInstance(TypeContainer *type)
 
 DataType *getGenericParameter(TypeContainer *type, int index)
 {
-    if (index >= 0 && index < type->custom.genericParamCount)
+    if (index >= 0 && index < type->custom.generic.declaration->paramCount)
     {
-        return type->custom.genericParams[index];
+        return type->custom.generic.declaration->params[index]->container->custom.generic.declaration->params[0];
     }
-    return NULL;
 }
 
 int getGenericParameterCount(TypeContainer *type)
 {
-    return type->custom.genericParamCount;
+    return type->custom.generic.declaration->paramCount;
 }
 
 const char *getGenericTypeName(DataType *type)
@@ -398,4 +393,70 @@ ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concre
     }
 
     return newStatement;
+}
+
+bool validateGenericInstantiation(ASTNode *node, TypeTable *typeTable)
+{
+    if (node->metaData->type != NODE_GENERIC_INST)
+        return false;
+
+    GenericInstNode *inst = node->data.genericInst;
+
+    // Look up the generic declaration
+    DataType *baseType = lookupType(typeTable, inst->baseName);
+    if (!baseType || !isGenericType(baseType))
+    {
+        return false; // Base type must exist and be generic
+    }
+
+    // Validate argument count matches parameter count
+    GenericDeclType *decl = baseType->container->custom.generic.declaration;
+    int paramCount = baseType->container->custom.generic.declaration->paramCount;
+    for (int i = 0; i < paramCount; i++)
+    {
+        DataType *param = decl->params[i];
+        if (!isTypeCompatible(param, inst->typeArguments[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool validateGenericType(DataType *type, DataType *concreteType)
+{
+    if (type->container->baseType == GENERIC_TYPE)
+    {
+        DataType *paramDataType = type->container->custom.generic.declaration->params[0];
+        return isTypeCompatible(paramDataType, concreteType);
+    }
+
+    return true;
+}
+
+bool isTypeCompatible(DataType *type, DataType *other)
+{
+    if (type->container->baseType == STRUCT_TYPE && other->container->baseType == STRUCT_TYPE)
+    {
+        StructType *structType = type->container->custom.structDef;
+        StructType *otherType = other->container->custom.structDef;
+
+        if (structType->propertyCount != otherType->propertyCount)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < structType->propertyCount; i++)
+        {
+            if (!isTypeCompatible(structType->properties[i]->data.property->type, otherType->properties[i]->data.property->type))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    return type->container->baseType == other->container->baseType;
 }
