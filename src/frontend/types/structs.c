@@ -54,6 +54,8 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
     structType->hasDefaultValue = structNode->data.structNode->hasDefaultValue;
     structType->hasConstructor = structNode->data.structNode->hasConstructor;
 
+    printf("Struct Created, name: %s\n", structType->name);
+
     return structType;
 }
 
@@ -68,11 +70,17 @@ DataType *createDataTypeFromStructNode(
         fprintf(stderr, "[TypeTable] Error: Failed to create struct type from node.\n");
         CONDITION_FAILED;
     }
-
+    logMessage("INFO", __LINE__, "DataTypes", "Created struct type from node: %s", structType->name);
     addPropertiesToStruct(properties, propCount, structType);
     addMethodsToStruct(methods, methodCount, structType);
 
-    return wrapTypeContainer(createStructType(structType->name, structType));
+    logMessage("INFO", __LINE__, "DataTypes", "Creating data type from struct node: %s", structType->name);
+    const char *typeName = structType->name;
+    logMessage("INFO", __LINE__, "DataTypes", "Type name: %s", typeName);
+    TypeContainer *structContainer = createStructType(typeName, structType);
+    logMessage("INFO", __LINE__, "DataTypes", "Created struct type: %s", structType->name);
+
+    return wrapTypeContainer(structContainer);
 }
 
 void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)

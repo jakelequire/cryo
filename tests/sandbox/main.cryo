@@ -4,6 +4,25 @@ extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
 extern function intToString(num: int) -> string;
 
+// struct Array <T> {
+//     data: T[];
+//     length: int;
+// 
+//     constructor(data: T[]) {
+//         this.data = data;
+//         this.length = data.length;
+//     }
+// 
+//     get(index: Int) -> T {
+//         return this.data[index];
+//     }
+// 
+//     set(index: Int, val: T) -> void {
+//         this.data[index] = val;
+//     }
+// }
+
+
 struct Int {
     value: int;
 
@@ -16,23 +35,18 @@ struct Int {
     }
 }
 
-struct Array <T> {
-    data: T[];
-    length: int;
+function structTesting() -> void {
+    const intTest: Int = 1234;
+    const intTestTwo: int = intTest.value;
+    printInt(intTestTwo);
+    printInt(intTest.value);
 
-    constructor(data: T[]) {
-        this.data = data;
-        this.length = data.length;
-    }
-
-    get(index: Int) -> T {
-        return this.data[index];
-    }
-
-    set(index: Int, val: T) -> void {
-        this.data[index] = val;
-    }
+    const strVal: string = intTest.toString();
+    printStr(strVal);
+    printStr(intTest.toString());
+    return;
 }
+
 
 function binOpTest() -> void {
     const addTest: int = 34 + 36;
@@ -58,17 +72,6 @@ function binOpTest() -> void {
     return;
 }
 
-function structTesting() -> void {
-    const intTest: Int = 1234;
-    const intTestTwo: int = intTest.value;
-    printInt(intTestTwo);
-    printInt(intTest.value);
-
-    const strVal: string = intTest.toString();
-    printStr(strVal);
-    printStr(intTest.toString());
-    return;
-}
 
 function main() -> void {
     const fooInt: int = 34;

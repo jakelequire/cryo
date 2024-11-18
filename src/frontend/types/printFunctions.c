@@ -93,7 +93,7 @@ char *DataTypeToStringUnformatted(DataType *type)
     char *typeString = (char *)malloc(128);
     if (!typeString)
     {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
         return NULL;
     }
 
@@ -112,6 +112,8 @@ char *DataTypeToStringUnformatted(DataType *type)
         break;
     }
 
+    sprintf(typeString, COLOR_RESET);
+
     return typeString;
 }
 
@@ -123,7 +125,7 @@ char *DataTypeToString(DataType *dataType)
     char *typeString = (char *)malloc(128);
     if (!typeString)
     {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
         return NULL;
     }
 
@@ -142,6 +144,8 @@ char *DataTypeToString(DataType *dataType)
         break;
     }
 
+    sprintf(typeString, COLOR_RESET);
+
     return typeString;
 }
 
@@ -153,11 +157,11 @@ char *VerboseStructTypeToString(StructType *type)
     char *typeString = (char *)malloc(128);
     if (!typeString)
     {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type string.\n");
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
         return NULL;
     }
 
-    sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, type->name);
+    sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, (char *)type->name);
 
     if (type->propertyCount > 0)
     {
@@ -188,6 +192,8 @@ char *VerboseStructTypeToString(StructType *type)
         }
     }
 
+    sprintf(typeString, COLOR_RESET);
+
     return typeString;
 }
 
@@ -200,6 +206,7 @@ void logDataType(DataType *type)
     printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
     printTypeContainer(type->container);
     printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+    printf(COLOR_RESET);
 }
 
 void logVerboseDataType(DataType *type)
@@ -211,6 +218,7 @@ void logVerboseDataType(DataType *type)
     printf(BOLD GREEN "   (v)DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
     printVerboseTypeContainer(type->container);
     printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+    printf(COLOR_RESET);
 }
 
 void logStructType(StructType *type)
@@ -229,6 +237,8 @@ void logStructType(StructType *type)
     printf("   Name: %s | HDV: %s | Has Constructor: %s\n",
            type->name, type->hasDefaultValue ? "true" : "false",
            type->hasConstructor ? "true" : "false");
+
+    printf(COLOR_RESET);
 }
 
 void printFormattedStructType(StructType *type)
@@ -264,12 +274,15 @@ void printFormattedStructType(StructType *type)
             }
         }
     }
+
+    printf(COLOR_RESET);
 }
 
 void printFormattedPrimitiveType(PrimitiveDataType type)
 {
     printf("   ────────────────────────────────────────────────────────────\n");
     printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s\n", PrimitiveDataTypeToString(type));
+    printf(COLOR_RESET);
 }
 
 void printFormattedType(DataType *type)
@@ -292,6 +305,8 @@ void printFormattedType(DataType *type)
         printf(BOLD GREEN "  UNKNOWN_TYPE" COLOR_RESET "\n");
         break;
     }
+
+    printf(COLOR_RESET);
 }
 
 void printTypeContainer(TypeContainer *type)

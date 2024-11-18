@@ -170,6 +170,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                                                             state, typeTable);
     structNode->data.structNode->type = structDataType;
 
+    logVerboseDataType(structDataType);
+
     addTypeToTypeTable(typeTable, structName, structDataType);
 
     // Add the struct to the symbol table

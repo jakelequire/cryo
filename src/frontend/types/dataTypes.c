@@ -44,9 +44,11 @@ TypeContainer *createTypeContainer(void)
     TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
     if (!container)
     {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate TypeContainer\n");
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate TypeContainer\n");
         return NULL;
     }
+
+    logMessage("INFO", __LINE__, "DataTypes", "Creating type container");
 
     container->baseType = UNKNOWN_TYPE;
     container->primitive = PRIM_UNKNOWN;
@@ -54,9 +56,14 @@ TypeContainer *createTypeContainer(void)
     container->length = 0;
     container->isArray = false;
     container->arrayDimensions = 0;
-    container->custom.name = NULL;
+    container->custom.name = (char *)malloc(sizeof(char) * 64);
     container->custom.structDef = NULL;
     container->custom.funcDef = NULL;
+    container->custom.structDef = NULL;
+    container->custom.generic.declaration = NULL;
+    container->custom.generic.instantiation = NULL;
+
+    logMessage("INFO", __LINE__, "DataTypes", "Created type container");
 
     return container;
 }
@@ -175,11 +182,15 @@ DataType *wrapTypeContainer(TypeContainer *container)
         return NULL;
     }
 
+    logMessage("INFO", __LINE__, "DataTypes", "Wrapping type container");
+
     type->container = container;
     type->isConst = false;
     type->isReference = false;
     type->next = NULL;
     type->genericParam = NULL;
+
+    logMessage("INFO", __LINE__, "DataTypes", "Wrapped type container");
 
     return type;
 }
@@ -192,9 +203,12 @@ DataType *lookupType(TypeTable *table, const char *name)
         if (type->container->custom.name &&
             strcmp(type->container->custom.name, name) == 0)
         {
+            logMessage("INFO", __LINE__, "DataTypes", "Found type '%s' in type table", name);
             return type;
         }
     }
+
+    logMessage("INFO", __LINE__, "DataTypes", "Type '%s' not found in type table", name);
     return NULL;
 }
 
@@ -209,13 +223,15 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
     }
 
     // Check if the type already exists
-    TypeContainer *existingType = lookupType(table, name)->container;
+    logMessage("INFO", __LINE__, "DataTypes", "Looking up type '%s' in type table", name);
+    DataType *existingType = lookupType(table, name);
     if (existingType)
     {
         fprintf(stderr, "[TypeTable] Error: Type '%s' already exists in the type table\n", name);
         return;
     }
 
+    logMessage("INFO", __LINE__, "DataTypes", "Adding type '%s' to type table", name);
     // Add the type to the table
     if (table->count >= table->capacity)
     {
@@ -228,7 +244,9 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
         }
     }
 
+    logMessage("INFO", __LINE__, "DataTypes", "Adding type '%s' to type table, count: %d", name, table->count);
     table->types[table->count++] = type;
+    logMessage("INFO", __LINE__, "DataTypes", "Added type '%s' to type table", name);
 }
 
 ASTNode *findStructProperty(StructType *structType, const char *propertyName)
@@ -240,7 +258,7 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName)
         return NULL;
     }
 
-    logMessage("INFO", __LINE__, "TypeTable", "Finding property '%s' in struct '%s'", propertyName, structType->name);
+    logMessage("INFO", __LINE__, "DataTypes", "Finding property '%s' in struct '%s'", propertyName, structType->name);
 
     for (int i = 0; i < structType->propertyCount; i++)
     {
@@ -296,25 +314,25 @@ DataType *DataTypeFromNode(ASTNode *node)
     switch (nodeType)
     {
     case NODE_LITERAL_EXPR:
-        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from literal expression");
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from literal expression");
         return node->data.literal->type;
     case NODE_VAR_NAME:
-        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from var name");
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var name");
         return node->data.varName->type;
     case NODE_STRUCT_DECLARATION:
-        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from struct declaration");
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from struct declaration");
         return node->data.structNode->type;
     case NODE_FUNCTION_DECLARATION:
-        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from function declaration");
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from function declaration");
         return node->data.functionDecl->type;
     case NODE_PROPERTY:
-        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from property");
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from property");
         return node->data.property->type;
     case NODE_PARAM:
-        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from param");
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from param");
         return node->data.param->type;
     case NODE_VAR_DECLARATION:
-        logMessage("INFO", __LINE__, "TypeTable", "Getting data type from var declaration");
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var declaration");
         return node->data.varDecl->type;
     default:
     {
@@ -413,7 +431,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
         }
     }
     default:
-        logMessage("ERROR", __LINE__, "TypeTable", "Failed to get data type from AST node, received node type: %s",
+        logMessage("ERROR", __LINE__, "DataTypes", "Failed to get data type from AST node, received node type: %s",
                    CryoNodeTypeToString(node->metaData->type));
         return NULL;
     }
