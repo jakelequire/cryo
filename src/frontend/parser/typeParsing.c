@@ -484,19 +484,6 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
 
         DataType *concreteType = parseType(lexer, context, table, arena, state, typeTable);
 
-        // Validate against constraints
-        if (baseType->container->custom.generic.declaration->params[paramCount]->constraint)
-        {
-            if (!validateGenericType(baseType->container->custom.generic.declaration->params[paramCount]->constraint,
-                                     concreteType))
-            {
-                parsingError("Type argument does not satisfy constraints.",
-                             "parseGenericInstantiation", table, arena, state,
-                             lexer, lexer->source, typeTable);
-                return NULL;
-            }
-        }
-
         concreteTypes[paramCount++] = concreteType;
 
         if (lexer->currentToken.type == TOKEN_COMMA)

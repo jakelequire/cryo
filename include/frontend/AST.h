@@ -1344,6 +1344,30 @@ extern "C"
         CompilerState *state,
         TypeTable *typeTable);
 
+    ASTNode *createIfStatement(
+        ASTNode *condition,
+        ASTNode *then_branch,
+        ASTNode *else_branch,
+        Arena *arena,
+        CompilerState *state,
+        TypeTable *typeTable);
+
+    ASTNode *createForStatement(
+        ASTNode *initializer,
+        ASTNode *condition,
+        ASTNode *increment,
+        ASTNode *body,
+        Arena *arena,
+        CompilerState *state,
+        TypeTable *typeTable);
+
+    ASTNode *createWhileStatement(
+        ASTNode *condition,
+        ASTNode *body,
+        Arena *arena,
+        CompilerState *state,
+        TypeTable *typeTable);
+
     /**
      * String Utility Functions
      */
