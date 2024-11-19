@@ -236,6 +236,12 @@ namespace Cryo
             generator.handleScopedFunctionCall(root);
             break;
         }
+        case NODE_METHOD_CALL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Method Call");
+            compiler.getFunctions().handleMethodCall(root);
+            break;
+        }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             std::cout << "Received: " << CryoNodeTypeToString(root->metaData->type) << std::endl;

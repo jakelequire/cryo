@@ -365,6 +365,18 @@ namespace Cryo
         DataType *returnType = returnNode->type;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
+        if (!returnNode->expression && returnType->container->primitive != PRIM_VOID)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Return expression is null");
+            CONDITION_FAILED;
+        }
+        if (!returnNode->expression && returnType->container->primitive == PRIM_VOID)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return expression is null");
+            cryoContext.builder.CreateRetVoid();
+            return;
+        }
+
         CryoNodeType nodeType = returnNode->expression->metaData->type;
         std::cout << "Return Node Type: " << CryoNodeTypeToString(nodeType) << std::endl;
 
@@ -1661,6 +1673,90 @@ namespace Cryo
         }
 
         return argVar;
+    }
+
+    void Functions::handleMethodCall(ASTNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Handling Method Call");
+
+        MethodCallNode *methodCallNode = node->data.methodCall;
+        assert(methodCallNode != nullptr);
+
+        // Get the method name
+        char *methodDefName = methodCallNode->name;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Name: " + std::string(methodDefName));
+
+        // Get the method arguments
+        int argCount = methodCallNode->argCount;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
+
+        // Get the first argument which is the accessor object
+        ASTNode *accessorNode = methodCallNode->accessorObj;
+        std::string accessorName;
+
+        if (accessorNode->metaData->type == NODE_VAR_DECLARATION)
+        {
+            CryoVariableNode *varNode = accessorNode->data.varDecl;
+            accessorName = std::string(varNode->name);
+        }
+        else
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Accessor node is not a variable declaration");
+            std::string nodeTypeStr = CryoNodeTypeToString(accessorNode->metaData->type);
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Node Type: " + nodeTypeStr);
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *accessorValue = compiler.getContext().namedValues[accessorName];
+        if (!accessorValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Accessor value not found: " + accessorName);
+            CONDITION_FAILED;
+        }
+
+        // Get the argument values
+        std::vector<llvm::Value *> argValues = {accessorValue};
+
+        for (int i = 0; i < argCount; ++i)
+        {
+            ASTNode *argNode = methodCallNode->args[i];
+            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+            if (!argValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                CONDITION_FAILED;
+            }
+
+            argValues.push_back(argValue);
+        }
+
+        // Combine instance name and method name to get the function name
+        std::string instanceName = methodCallNode->instanceName;
+        std::string methodName = instanceName + "::" + methodDefName;
+
+        // Get the function
+        llvm::Function *function = compiler.getContext().module->getFunction(methodName);
+        if (!function)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Function not found: " + methodName);
+            CONDITION_FAILED;
+        }
+
+        // If there are no arguments, just create the function call
+        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+        if (!functionCall)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function call not created");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Call Handled");
+
+        return;
     }
 
 } // namespace Cryo

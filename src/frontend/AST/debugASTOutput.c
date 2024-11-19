@@ -866,7 +866,6 @@ char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output)
                 sprintf(buffer, "%s %s%s%i:%s %s%s%s %s",
                         buffer, DARK_GRAY, ITALIC, i, COLOR_RESET, argBuffer, DARK_GRAY, ITALIC,
                         COLOR_RESET);
-                free(argBuffer);
             }
         }
     }

@@ -56,7 +56,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
             // traverseAST(statement, table);
             addStatementToProgram(program, table, statement, arena, state, typeTable);
             logMessage("INFO", __LINE__, "Parser", "Statement added to program");
-
+            printTypeTable(typeTable);
             if (statement->metaData->type == NODE_NAMESPACE)
             {
                 // Initialize the `this`context to the namespace
@@ -902,6 +902,10 @@ ASTNode *parseFunctionBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext
             // DEBUG_ARENA_PRINT(arena);
             // addASTNodeSymbol(table, statement, arena);
             addStatementToFunctionBlock(functionBlock, statement, arena, state);
+            if (lexer->currentToken.type == TOKEN_SEMICOLON)
+            {
+                getNextToken(lexer, arena, state, typeTable);
+            }
         }
         else
         {
@@ -1140,6 +1144,15 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     logMessage("INFO", __LINE__, "Parser", "Parsing function call...");
 
     Token token = lexer->currentToken;
+
+    // Check if the function name is a struct declaration.
+    // In this case, we have to create a new struct instance and redirect the parser
+    // to the struct declaration.
+    // if (isStructDeclaration(typeTable, functionName))
+    // {
+    //     logMessage("INFO", __LINE__, "Parser", "Struct declaration detected.");
+    //     return parseStructInstance(functionName, lexer, table, context, arena, state, typeTable);
+    // }
 
     // Create function call node
     ASTNode *functionCallNode = createFunctionCallNode(arena, state, typeTable);
@@ -1512,7 +1525,13 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing arguments...");
 
-    if (lexer->currentToken.type != TOKEN_IDENTIFIER && lexer->currentToken.type != TOKEN_INT_LITERAL && lexer->currentToken.type != TOKEN_STRING_LITERAL && lexer->currentToken.type != TOKEN_BOOLEAN_LITERAL)
+    Token currentToken = lexer->currentToken;
+
+    if (currentToken.type != TOKEN_IDENTIFIER &&
+        currentToken.type != TOKEN_INT_LITERAL &&
+        currentToken.type != TOKEN_STRING_LITERAL &&
+        currentToken.type != TOKEN_BOOLEAN_LITERAL &&
+        currentToken.type != TOKEN_KW_THIS)
     {
         parsingError("Expected an identifier.", "parseArguments", table, arena, state, lexer, lexer->source, typeTable);
         return NULL;
@@ -1541,6 +1560,12 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         logMessage("INFO", __LINE__, "Parser", "Argument is a boolean literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
+    }
+    else if (lexer->currentToken.type == TOKEN_KW_THIS)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Argument is `this` keyword");
+        nodeType = NODE_THIS;
+        return parseThisContext(lexer, table, context, arena, state, typeTable);
     }
     else if (lexer->currentToken.type == TOKEN_IDENTIFIER)
     {
@@ -2536,7 +2561,8 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (currentToken.type == TOKEN_LPAREN)
         {
             logMessage("INFO", __LINE__, "Parser", "Parsing method call...");
-            return parseMethodCall(object, propName, typeOfNode, lexer, table, context, arena, state, typeTable);
+            ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, table, context, arena, state, typeTable);
+            return methodCallNode;
         }
 
         logMessage("INFO", __LINE__, "Parser", "Struct name: %s", structName);

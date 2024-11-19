@@ -57,11 +57,6 @@ bool isValidType(DataType *type)
             logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is unknown");
             return false;
         }
-        if (type->container->primitive == PRIM_VOID)
-        {
-            logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is void");
-            return false;
-        }
         if (type->container->primitive == PRIM_NULL)
         {
             logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is null");

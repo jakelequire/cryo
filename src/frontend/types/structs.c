@@ -19,6 +19,28 @@
 // # ========================================================= #
 // # Structs
 
+// Create an empty struct definition
+DataType *createStructDefinition(const char *structName)
+{
+    StructType *structDef = (StructType *)malloc(sizeof(StructType));
+    if (!structDef)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate StructType\n");
+        return NULL;
+    }
+
+    structDef->name = strdup(structName);
+    structDef->size = 0;
+    structDef->propertyCount = 0;
+    structDef->methodCount = 0;
+    structDef->properties = NULL;
+    structDef->methods = NULL;
+    structDef->hasDefaultValue = false;
+    structDef->hasConstructor = false;
+
+    return wrapStructType(structDef);
+}
+
 // Create struct type
 TypeContainer *createStructType(const char *name, StructType *structDef)
 {
@@ -190,4 +212,30 @@ int calculateStructSize(StructType *structType)
     }
 
     return size;
+}
+
+DataType *wrapStructType(StructType *structDef)
+{
+    TypeContainer *container = createStructType(structDef->name, structDef);
+    if (!container)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to wrap struct type.\n");
+        return NULL;
+    }
+
+    return wrapTypeContainer(container);
+}
+
+bool isStructDeclaration(TypeTable *table, const char *name)
+{
+    DataType *type = lookupType(table, name);
+    if (!type)
+        return false;
+
+    return type->container->baseType == STRUCT_TYPE;
+}
+
+bool isStructType(DataType *type)
+{
+    return type->container->baseType == STRUCT_TYPE;
 }

@@ -535,6 +535,7 @@ namespace Cryo
         llvm::Value *createArgumentVar(ASTNode *node);
 
         void handleFunction(ASTNode *node);
+        void handleMethodCall(ASTNode *node);
 
     private:
         CryoCompiler &compiler;

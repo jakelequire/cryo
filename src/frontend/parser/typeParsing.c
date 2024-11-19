@@ -39,13 +39,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
     getNextToken(lexer, arena, state, typeTable);
 
-    if (lexer->currentToken.type == TOKEN_LESS)
-    {
-        logMessage("INFO", __LINE__, "Parser", "Parsing generic declaration...");
-        ASTNode *genericNode = parseGenericDecl(structName, lexer, table, context, arena, state, typeTable);
-        DEBUG_BREAKPOINT;
-    }
-
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start struct declaration.", "parseStructDeclaration", table, arena, state, typeTable, context);
 
     int PROPERTY_CAPACITY = 64;
@@ -58,6 +51,10 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     bool hasConstructor = false;
     int defaultPropertyCount = 0;
     ASTNode *constructorNode = NULL;
+
+    // Add the struct name to the type table
+    DataType *structDefinition = createStructDefinition(structName);
+    addTypeToTypeTable(typeTable, structName, structDefinition);
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
@@ -86,24 +83,22 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
 
                 count++;
             }
+            else if (fieldType == NODE_METHOD)
+            {
+                methods[methodCount] = field;
+                methodCount++;
+                addASTNodeSymbol(table, field, arena);
+                addMethodToThisContext(context, field, typeTable);
+                count++;
+
+                // Go to the next field
+                continue;
+            }
             else
             {
                 logMessage("ERROR", __LINE__, "Parser", "Failed to parse struct field, received Node Type %s", CryoNodeTypeToString(fieldType));
                 parsingError("Failed to parse struct field.", "parseStructDeclaration", table, arena, state, lexer, lexer->source, typeTable);
             }
-
-            if (fieldType == NODE_METHOD)
-            {
-                logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
-                DEBUG_BREAKPOINT;
-            }
-
-            // End the loop
-            // if (lexer->currentToken.type == TOKEN_RBRACE)
-            // {
-            //     break;
-            // }
-
             if (lexer->currentToken.type == TOKEN_IDENTIFIER)
             {
                 // parse the next field
@@ -136,24 +131,18 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                 addMethodToThisContext(context, method, typeTable);
             }
         }
+
+        // If we reach the end of the struct declaration with `}`
         else if (lexer->currentToken.type == TOKEN_RBRACE)
         {
             break;
         }
+        // If we fail to parse a struct field
         else
         {
-            logMessage("ERROR", __LINE__, "Parser", "Failed to parse struct field.");
-            CONDITION_FAILED;
-        }
-
-        if (lexer->currentToken.type == TOKEN_RBRACE)
-        {
-            break;
-        }
-
-        else
-        {
-            logMessage("ERROR", __LINE__, "Parser", "Failed to parse struct field.");
+            char *currentTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+            printf("Current Token: %s, Token Str: %s\n", CryoTokenToString(lexer->currentToken.type), currentTokenStr);
+            logMessage("ERROR", __LINE__, "Parser::TypeParsing", "Failed to parse struct field.");
             CONDITION_FAILED;
         }
     }
@@ -169,9 +158,11 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                                                             methods, methodCount,
                                                             state, typeTable);
     structNode->data.structNode->type = structDataType;
+    logMessage("INFO", __LINE__, "Parser::TypeParsing", "Created struct data type:");
 
     logVerboseDataType(structDataType);
 
+    // Add the struct type to the type table
     addTypeToTypeTable(typeTable, structName, structDataType);
 
     // Add the struct to the symbol table
@@ -335,7 +326,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
         parsingError("Method not found.", "parseMethodCall", table, arena, state, lexer, lexer->source, typeTable);
         CONDITION_FAILED;
     }
-    printSymbolTable(table);
+
     DataType *returnType = symbol->type;
     VALIDATE_TYPE(returnType);
 
@@ -521,4 +512,39 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
                                                      wrapTypeContainer(instantiatedContainer), arena, state, typeTable);
 
     return genericInstNode;
+}
+
+ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing struct instance...");
+
+    Token currentToken = lexer->currentToken;
+
+    // Find struct type in type table
+    DataType *structType = lookupType(typeTable, structName);
+    if (!structType || !isStructType(structType))
+    {
+        parsingError("Type is not a struct.", "parseStructInstance",
+                     table, arena, state, lexer, lexer->source, typeTable);
+        return NULL;
+    }
+
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected struct name in struct instance.",
+            "parseStructInstance", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` in struct instance.",
+            "parseStructInstance", table, arena, state, typeTable, context);
+
+    // Parse struct arguments
+    ASTNode *args = parseArgumentList(lexer, table, context, arena, state, typeTable);
+    if (!args)
+    {
+        parsingError("Failed to parse struct arguments.", "parseStructInstance",
+                     table, arena, state, lexer, lexer->source, typeTable);
+        return NULL;
+    }
+
+    consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` after struct arguments.",
+            "parseStructInstance", table, arena, state, typeTable, context);
+
+    DEBUG_BREAKPOINT;
 }

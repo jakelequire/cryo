@@ -22,14 +22,14 @@ TypeTable *initTypeTable(void)
     if (!table)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type table.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     table->types = (DataType **)malloc(sizeof(DataType *) * 64);
     if (!table->types)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type table types.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     table->count = 0;
@@ -45,10 +45,8 @@ TypeContainer *createTypeContainer(void)
     if (!container)
     {
         fprintf(stderr, "[DataTypes] Error: Failed to allocate TypeContainer\n");
-        return NULL;
+        CONDITION_FAILED;
     }
-
-    logMessage("INFO", __LINE__, "DataTypes", "Creating type container");
 
     container->baseType = UNKNOWN_TYPE;
     container->primitive = PRIM_UNKNOWN;
@@ -62,8 +60,6 @@ TypeContainer *createTypeContainer(void)
     container->custom.structDef = NULL;
     container->custom.generic.declaration = NULL;
     container->custom.generic.instantiation = NULL;
-
-    logMessage("INFO", __LINE__, "DataTypes", "Created type container");
 
     return container;
 }
@@ -88,7 +84,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
     if (!container)
     {
         free(baseTypeStr);
-        return NULL;
+        CONDITION_FAILED;
     }
 
     // Handle primitive types
@@ -128,6 +124,8 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
         // Get the name of the type:
         char *typeName = strdup(baseTypeStr);
         // Look up the type in the type table
+        logMessage("INFO", __LINE__, "DataTypes", "Looking up custom type '%s' in type table", typeName);
+        printTypeTable(typeTable);
         TypeContainer *customType = lookupType(typeTable, typeName)->container;
         if (!customType)
         {
@@ -135,7 +133,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
             free(container);
             free(baseTypeStr);
             free(typeName);
-            return NULL;
+            CONDITION_FAILED;
         }
 
         // Set the custom type
@@ -154,7 +152,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
             free(container);
             free(baseTypeStr);
             free(typeName);
-            return NULL;
+            CONDITION_FAILED;
         }
     }
 
@@ -179,18 +177,14 @@ DataType *wrapTypeContainer(TypeContainer *container)
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to allocate DataType\n");
-        return NULL;
+        CONDITION_FAILED;
     }
-
-    logMessage("INFO", __LINE__, "DataTypes", "Wrapping type container");
 
     type->container = container;
     type->isConst = false;
     type->isReference = false;
     type->next = NULL;
     type->genericParam = NULL;
-
-    logMessage("INFO", __LINE__, "DataTypes", "Wrapped type container");
 
     return type;
 }
@@ -228,6 +222,8 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
     if (existingType)
     {
         fprintf(stderr, "[TypeTable] Error: Type '%s' already exists in the type table\n", name);
+        // Update the existing type
+        updateTypeInTypeTable(table, name, type);
         return;
     }
 
@@ -255,7 +251,7 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
         fprintf(stderr, "[TypeTable] Error: Failed to find property '%s' in struct.\n", propertyName);
-        return NULL;
+        CONDITION_FAILED;
     }
 
     logMessage("INFO", __LINE__, "DataTypes", "Finding property '%s' in struct '%s'", propertyName, structType->name);
@@ -269,7 +265,7 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName)
         }
     }
 
-    return NULL;
+    CONDITION_FAILED;
 }
 
 // # =========================================================================== #
@@ -342,7 +338,7 @@ DataType *DataTypeFromNode(ASTNode *node)
     }
     }
 
-    return NULL;
+    CONDITION_FAILED;
 }
 
 const char *getDataTypeName(DataType *type)
@@ -350,7 +346,7 @@ const char *getDataTypeName(DataType *type)
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     if (type->container->baseType == PRIMITIVE_TYPE)
@@ -372,7 +368,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     switch (node->metaData->type)
@@ -396,7 +392,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
         // Get the object type
         DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object);
         if (!objectType)
-            return NULL;
+            CONDITION_FAILED;
 
         // Get the property name
         const char *propertyName = node->data.propertyAccess->propertyName;
@@ -408,7 +404,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
             if (!structType)
             {
                 fprintf(stderr, "[TypeTable] Error: Failed to get struct type from property access.\n");
-                return NULL;
+                CONDITION_FAILED;
             }
 
             // Find the property in the struct
@@ -422,18 +418,18 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
             }
 
             fprintf(stderr, "[TypeTable] Error: Property '%s' not found in struct '%s'.\n", propertyName, structType->name);
-            return NULL;
+            CONDITION_FAILED;
         }
         else
         {
             fprintf(stderr, "[TypeTable] Error: Property access on non-struct type.\n");
-            return NULL;
+            CONDITION_FAILED;
         }
     }
     default:
         logMessage("ERROR", __LINE__, "DataTypes", "Failed to get data type from AST node, received node type: %s",
                    CryoNodeTypeToString(node->metaData->type));
-        return NULL;
+        CONDITION_FAILED;
     }
 }
 
@@ -480,21 +476,21 @@ DataType *cloneDataType(DataType *type)
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     TypeContainer *container = type->container;
     if (!container)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid type container.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     TypeContainer *newContainer = createTypeContainer();
     if (!newContainer)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to create new type container.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     newContainer->baseType = container->baseType;
@@ -511,7 +507,7 @@ DataType *cloneDataType(DataType *type)
     if (!newType)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to wrap new type container.\n");
-        return NULL;
+        CONDITION_FAILED;
     }
 
     newType->isConst = type->isConst;
@@ -520,4 +516,25 @@ DataType *cloneDataType(DataType *type)
     newType->genericParam = type->genericParam;
 
     return newType;
+}
+
+void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type)
+{
+    if (!table || !name || !type)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid table, name, or type.\n");
+        return;
+    }
+
+    for (int i = 0; i < table->count; i++)
+    {
+        DataType *existingType = table->types[i];
+        if (strcmp(existingType->container->custom.name, name) == 0)
+        {
+            table->types[i] = type;
+            return;
+        }
+    }
+
+    fprintf(stderr, "[TypeTable] Error: Type '%s' not found in type table.\n", name);
 }

@@ -58,6 +58,8 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
     default:
         return LIGHT_RED BOLD "<PRIMITIVE UNKNOWN>" COLOR_RESET;
     }
+
+    return "<UNKNOWN>";
 }
 
 char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
@@ -83,6 +85,8 @@ char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
     default:
         return "<PRIMITIVE UNKNOWN>";
     }
+
+    return "<UNKNOWN>";
 }
 
 char *DataTypeToStringUnformatted(DataType *type)
@@ -111,8 +115,6 @@ char *DataTypeToStringUnformatted(DataType *type)
         sprintf(typeString, "<UNKNOWN>");
         break;
     }
-
-    sprintf(typeString, COLOR_RESET);
 
     return typeString;
 }
@@ -143,8 +145,6 @@ char *DataTypeToString(DataType *dataType)
         sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
         break;
     }
-
-    sprintf(typeString, COLOR_RESET);
 
     return typeString;
 }
@@ -191,8 +191,6 @@ char *VerboseStructTypeToString(StructType *type)
             }
         }
     }
-
-    sprintf(typeString, COLOR_RESET);
 
     return typeString;
 }

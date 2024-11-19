@@ -33,6 +33,12 @@ struct Int {
     toString() -> string {
         return intToString(this.value);
     }
+
+    fooMethod() -> void {
+        printStr("Foo method called");
+        return;
+    }
+
 }
 
 function structTesting() -> void {
@@ -44,6 +50,12 @@ function structTesting() -> void {
     const strVal: string = intTest.toString();
     printStr(strVal);
     printStr(intTest.toString());
+
+    // const intTestThree: Int = intTest.add(Int(1234));
+    // printInt(intTestThree.value);
+
+    intTest.fooMethod();
+
     return;
 }
 
@@ -53,7 +65,7 @@ function binOpTest() -> void {
     printStr("Addition test: ");
     printInt(addTest);
     
-    const subTest: int = 34 - 36;
+    const subTest: int = 36 - 34;
     printStr("Subtraction test: ");
     printInt(subTest);
 
@@ -86,6 +98,7 @@ function main() -> void {
 
     return;
 }
+
 
 // function matchTesting() -> void {
 //     const intStructTest: Int = 999;

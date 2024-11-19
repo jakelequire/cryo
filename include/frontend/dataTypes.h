@@ -223,6 +223,8 @@ extern "C"
     void setNewDataTypeForNode(ASTNode *node, DataType *type);
     DataType *cloneDataType(DataType *type);
 
+    void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type);
+
     // # =========================================================================== #
     // # Primitive Type Functions
     // # (primitives.c)
@@ -247,6 +249,7 @@ extern "C"
     // # (structs.c)
     // # =========================================================================== #
 
+    DataType *createStructDefinition(const char *structName);
     StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
     DataType *createDataTypeFromStructNode(
         ASTNode *structNode, ASTNode **properties, int propCount,
@@ -258,6 +261,10 @@ extern "C"
     void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType);
     void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType);
     int calculateStructSize(StructType *structType);
+
+    DataType *wrapStructType(StructType *structDef);
+    bool isStructDeclaration(TypeTable *table, const char *name);
+    bool isStructType(DataType *type);
 
     // # =========================================================================== #
     // # Array Type Functions
