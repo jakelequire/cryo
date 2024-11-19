@@ -313,7 +313,7 @@ extern "C"
         VISIBILITY_UNKNOWN,   // `<UNKNOWN>`      4
     } CryoVisibilityType;
 
-    typedef struct
+    typedef struct KeywordToken
     {
         char *keyword;
         CryoTokenType type;
@@ -332,13 +332,13 @@ extern "C"
         TagType type;
     } TagToken;
 
-    typedef struct
+    typedef struct DataTypeToken
     {
         char *baseType;
         CryoTokenType dataType;
     } DataTypeToken;
 
-    typedef union
+    typedef union TokenValue
     {
         int intValue;
         float floatValue;

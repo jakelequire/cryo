@@ -38,7 +38,6 @@ struct Int {
         printStr("Foo method called");
         return;
     }
-
 }
 
 function structTesting() -> void {

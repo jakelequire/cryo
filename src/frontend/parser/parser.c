@@ -16,9 +16,6 @@
  ********************************************************************************/
 #include "frontend/parser.h"
 
-/* ====================================================================== */
-// Scope-Declared
-static Lexer currentLexer;
 
 /* ====================================================================== */
 /* @Entry_Point | Lexer passes tokens to the entry point to be processed. */
@@ -27,8 +24,6 @@ static Lexer currentLexer;
 ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing program...");
-
-    currentLexer = *lexer;
 
     ParsingContext context = {
         false,

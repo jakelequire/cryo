@@ -30,10 +30,12 @@
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"
+#include "runtime/bootstrap.h"
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
+typedef struct Bootstrapper Bootstrapper;
 
 // C++ headers
 #ifdef __cplusplus

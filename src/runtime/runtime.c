@@ -14,55 +14,21 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef FS_H
-#define FS_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdbool.h>
-#include <dirent.h>
-#include <unistd.h>
+#include "runtime/runtime.h"
 
-#include "tools/macros/debugMacros.h"
-#include "tools/utils/c_logger.h"
-
-typedef struct CryoSrcLocations
+void printInt(int value)
 {
-    const char *rootDir;
-} CryoSrcLocations;
-
-// This is being hard coded for now, but will be replaced with a config file later
-CryoSrcLocations srcLocations[] = {
-    {"/workspaces/cryo/"},
-    {"/home/Phock/Programming/apps/cryo/"},
-};
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-    char *readFile(const char *path);
-    bool fileExists(const char *path);
-
-#ifdef __cplusplus
+    printf("%d\n", value);
 }
-#endif
 
-char *readFile(const char *path);
-bool fileExists(const char *path);
-bool dirExists(const char *path);
-void createDir(const char *path);
-void removeFile(const char *filePath);
-const char *getSTDFilePath(const char *subModule);
-const char *trimFilePath(const char *filePath);
+void printStr(char *value)
+{
+    printf("%s\n", value);
+}
 
-const char *getCurRootDir(void);
-char *getCryoSrcLocation(void);
-char *getCRuntimePath(void);
-
-#define CUR_ROOT_DIR_ABS
-#define CUR_ROOT_DIR_REL
-#endif
+char *intToString(int value)
+{
+    char *buffer = (char *)malloc(sizeof(char) * 1024);
+    sprintf(buffer, "%d", value);
+    return buffer;
+}

@@ -192,3 +192,58 @@ const char *trimFilePath(const char *filePath)
     return fileName;
 }
 // </trimFilePath>
+
+// <getCurRootDir>
+const char *getCurRootDir(void)
+{
+    // Get the current working directory
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) == NULL)
+    {
+        logMessage("ERROR", __LINE__, "FS", "Failed to get current working directory");
+        CONDITION_FAILED;
+    }
+
+    return cwd;
+}
+// </getCurRootDir>
+
+// <getCryoSrcLocation>
+char *getCryoSrcLocation(void)
+{
+    int i = 0;
+    while (srcLocations->rootDir[i] != NULL)
+    {
+        if (dirExists(srcLocations->rootDir))
+        {
+            logMessage("INFO", __LINE__, "FS", "Found Cryo source location");
+            return srcLocations->rootDir;
+        }
+        i++;
+    }
+
+    return NULL;
+}
+// </getCryoSrcLocation>
+
+// <getCRuntimePath>
+char *getCRuntimePath(void)
+{
+    // Find the path to the Cryo Compiler
+    char *srcPath = getCryoSrcLocation();
+    if (!srcPath)
+    {
+        logMessage("ERROR", __LINE__, "FS", "Failed to find Cryo source location");
+        DEBUG_BREAKPOINT;
+        return NULL;
+    }
+
+    // The runtime path will be $CRYO_PATH/src/runtime/
+    char *runtimePath = (char *)malloc(strlen(srcPath) + 32);
+    sprintf(runtimePath, "%s/src/runtime/", srcPath);
+
+    printf("Runtime Path: %s\n", runtimePath);
+
+    return runtimePath;
+}
+// </getCRuntimePath>

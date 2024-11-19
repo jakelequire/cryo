@@ -25,11 +25,24 @@ struct Int
     }
 };
 
+class FooClass
+{
+public:
+    FooClass()
+    {
+        int a = 5;
+        int b = 10;
+        int c = a + b;
+    }
+};
+
 int main()
 {
     Int i(5);
     int x = i.value;
     i.toString();
+
+    FooClass foo;
 
     return 0;
 }

@@ -208,6 +208,7 @@ DataType *lookupType(TypeTable *table, const char *name)
 
 // # =========================================================================== #
 // # Add Type to Type Table
+
 void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
 {
     if (!name || !type)

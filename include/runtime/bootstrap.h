@@ -14,55 +14,44 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef FS_H
-#define FS_H
+#ifndef CRYO_BOOTSTRAP_H
+#define CRYO_BOOTSTRAP_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <stdbool.h>
-#include <dirent.h>
-#include <unistd.h>
+#include <stdint.h>
 
-#include "tools/macros/debugMacros.h"
-#include "tools/utils/c_logger.h"
+#include "frontend/AST.h"
+#include "frontend/lexer.h"
+#include "frontend/parser.h"
+#include "frontend/symTable.h"
+#include "frontend/dataTypes.h"
 
-typedef struct CryoSrcLocations
+#include "tools/utils/fs.h"
+
+enum BootstrapStatus
 {
-    const char *rootDir;
-} CryoSrcLocations;
-
-// This is being hard coded for now, but will be replaced with a config file later
-CryoSrcLocations srcLocations[] = {
-    {"/workspaces/cryo/"},
-    {"/home/Phock/Programming/apps/cryo/"},
+    BOOTSTRAP_IDLE = -1,
+    BOOTSTRAP_SUCCESS,
+    BOOTSTRAP_FAILED
 };
 
-#ifdef __cplusplus
-extern "C"
+typedef struct Bootstrapper
 {
-#endif
+    Arena *arena;
+    CryoSymbolTable *table;
+    TypeTable *typeTable;
+    Lexer lexer;
+    CompilerState *state;
+    ASTNode *programNode;
+    enum BootstrapStatus status;
+} Bootstrapper;
 
-    char *readFile(const char *path);
-    bool fileExists(const char *path);
+Bootstrapper *initBootstrapper(const char *filePath, CompilerSettings *settings);
+void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 
-#ifdef __cplusplus
-}
-#endif
+ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath);
 
-char *readFile(const char *path);
-bool fileExists(const char *path);
-bool dirExists(const char *path);
-void createDir(const char *path);
-void removeFile(const char *filePath);
-const char *getSTDFilePath(const char *subModule);
-const char *trimFilePath(const char *filePath);
 
-const char *getCurRootDir(void);
-char *getCryoSrcLocation(void);
-char *getCRuntimePath(void);
-
-#define CUR_ROOT_DIR_ABS
-#define CUR_ROOT_DIR_REL
-#endif
+#endif // CRYO_BOOTSTRAP_H

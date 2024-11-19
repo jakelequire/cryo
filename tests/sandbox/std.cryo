@@ -1,5 +1,9 @@
 namespace Std;
 
+extern function intToString(num: int) -> string;
+extern function printStr(s: string) -> void;
+extern function printInt(i: int) -> void;
+
 struct Int {
     value: int;
 
@@ -10,12 +14,9 @@ struct Int {
     toString() -> string {
         return intToString(this.value);
     }
-}
 
-struct String {
-    value: string;
-
-    constructor(val: string) {
-        this.value = val;
+    fooMethod() -> void {
+        printStr("Foo method called");
+        return;
     }
 }
