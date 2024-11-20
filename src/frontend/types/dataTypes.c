@@ -159,6 +159,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
     // Handle array types
     if (isArray)
     {
+        logMessage("INFO", __LINE__, "DataTypes", "Creating array type for '%s'", baseTypeStr);
         TypeContainer *arrayContainer = createArrayType(container, 1);
         free(container); // Free the base container since createArrayType makes a copy
         container = arrayContainer;

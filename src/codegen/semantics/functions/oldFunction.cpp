@@ -1518,7 +1518,59 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Index Expression Call");
 
-        DEBUG_BREAKPOINT;
+        // Retrieve the array node and name
+        ASTNode *arrayNode = indexNode->array;
+        std::string arrayName = std::string(indexNode->name);
+        std::cout << "Array Name: " << arrayName << std::endl;
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
+        // Get the array variable from the symbol table
+        STVariable *var = compiler.getSymTable().getVariable(namespaceName, arrayName);
+        if (!var)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Array variable not found");
+            CONDITION_FAILED;
+        }
+
+        // Get the array pointer and type
+        llvm::Value *arrayPtr = var->LLVMValue;
+        if (!arrayPtr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Array pointer not found");
+            CONDITION_FAILED;
+        }
+
+        // Get the index value
+        ASTNode *indexValueNode = indexNode->index;
+        llvm::Value *indexValue = compiler.getGenerator().getInitilizerValue(indexValueNode);
+        if (!indexValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Index value not found");
+            CONDITION_FAILED;
+        }
+
+        // Get the array type
+        DataType *arrayType = var->dataType;
+        if (!arrayType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Array type not found");
+            CONDITION_FAILED;
+        }
+
+        // Create GEP instruction to get array element address
+        std::vector<llvm::Value *> indices = {
+            llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, 0)),
+            indexValue};
+
+        llvm::Value *elementPtr = compiler.getContext().builder.CreateInBoundsGEP(
+            arrayPtr->getType(),
+            arrayPtr,
+            indices,
+            arrayName + ".index.ptr");
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Index Expression Call Created");
+
+        return elementPtr;
     }
 
     llvm::Value *Functions::createFunctionCallCall(FunctionCallNode *functionCallNode)

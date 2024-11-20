@@ -16,6 +16,12 @@
  ********************************************************************************/
 #include "tools/utils/fs.h"
 
+// This is being hard coded for now, but will be replaced with a config file later
+CryoSrcLocations srcLocations[] = {
+    {"/workspaces/cryo/"},
+    {"/home/Phock/Programming/apps/cryo/"},
+};
+
 // <readFile>
 /// @brief Takes in a file path and reads the contents of the file into a buffer
 char *readFile(const char *path)
@@ -209,7 +215,7 @@ const char *getCurRootDir(void)
 // </getCurRootDir>
 
 // <getCryoSrcLocation>
-char *getCryoSrcLocation(void)
+const char *getCryoSrcLocation(void)
 {
     int i = 0;
     while (srcLocations->rootDir[i] != NULL)
@@ -230,7 +236,7 @@ char *getCryoSrcLocation(void)
 char *getCRuntimePath(void)
 {
     // Find the path to the Cryo Compiler
-    char *srcPath = getCryoSrcLocation();
+    char *srcPath = (char *)getCryoSrcLocation();
     if (!srcPath)
     {
         logMessage("ERROR", __LINE__, "FS", "Failed to find Cryo source location");

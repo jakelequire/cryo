@@ -58,7 +58,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     outputSymTable(table, settings);
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
-
+    logASTNodeDebugView(programCopy);
     // Generate code
     int result = generateCodeWrapper(programNode, state);
     if (result != 0)

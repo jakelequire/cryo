@@ -32,9 +32,9 @@ Bootstrapper *initBootstrapper(const char *filePath, CompilerSettings *settings)
     bootstrapper->typeTable = initTypeTable();
 
     // Initialize the lexer
-    CompilerState *state = initCompilerState(bootstrapper->arena, &bootstrapper->lexer, bootstrapper->table, filePath);
+    CompilerState *state = initCompilerState(bootstrapper->arena, bootstrapper->lexer, bootstrapper->table, filePath);
     state->settings = settings;
-    initLexer(&bootstrapper->lexer, filePath, filePath, state);
+    initLexer(bootstrapper->lexer, filePath, filePath, state);
 
     // Set the program node to null, we will parse it later.
     bootstrapper->programNode = NULL;

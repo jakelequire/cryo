@@ -30,6 +30,14 @@
 
 #include "tools/utils/fs.h"
 
+typedef struct CryoSymbolTable CryoSymbolTable;
+typedef struct TypeTable TypeTable;
+typedef struct CompilerSettings CompilerSettings;
+typedef struct CompilerState CompilerState;
+typedef struct Lexer Lexer;
+typedef struct Arena Arena;
+typedef struct ASTNode ASTNode;
+
 enum BootstrapStatus
 {
     BOOTSTRAP_IDLE = -1,
@@ -42,7 +50,7 @@ typedef struct Bootstrapper
     Arena *arena;
     CryoSymbolTable *table;
     TypeTable *typeTable;
-    Lexer lexer;
+    Lexer *lexer;
     CompilerState *state;
     ASTNode *programNode;
     enum BootstrapStatus status;
@@ -52,6 +60,5 @@ Bootstrapper *initBootstrapper(const char *filePath, CompilerSettings *settings)
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 
 ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath);
-
 
 #endif // CRYO_BOOTSTRAP_H

@@ -33,11 +33,7 @@ typedef struct CryoSrcLocations
     const char *rootDir;
 } CryoSrcLocations;
 
-// This is being hard coded for now, but will be replaced with a config file later
-CryoSrcLocations srcLocations[] = {
-    {"/workspaces/cryo/"},
-    {"/home/Phock/Programming/apps/cryo/"},
-};
+
 
 #ifdef __cplusplus
 extern "C"
@@ -60,7 +56,7 @@ const char *getSTDFilePath(const char *subModule);
 const char *trimFilePath(const char *filePath);
 
 const char *getCurRootDir(void);
-char *getCryoSrcLocation(void);
+const char *getCryoSrcLocation(void);
 char *getCRuntimePath(void);
 
 #define CUR_ROOT_DIR_ABS

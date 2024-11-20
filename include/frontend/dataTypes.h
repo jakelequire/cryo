@@ -51,6 +51,7 @@ typedef enum PrimitiveDataType
 typedef enum TypeofDataType
 {
     PRIMITIVE_TYPE, // `int`, `float`, `string`, `boolean`, `void`
+    ARRAY_TYPE,     // `int[]`, `float[]`, `string[]`, `boolean[]`
     STRUCT_TYPE,    // `struct ... { ... }`
     ENUM_TYPE,      // `enum ... { ... }`
     FUNCTION_TYPE,  // `function (...) -> ...`

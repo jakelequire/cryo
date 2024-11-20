@@ -22,7 +22,6 @@ extern function intToString(num: int) -> string;
 //     }
 // }
 
-
 struct Int {
     value: int;
 
@@ -40,6 +39,25 @@ struct Int {
     }
 }
 
+struct ArrayTest {
+    value: int[];
+}
+
+struct ObjectTest {
+    valueOne: int;
+    valueTwo: string;
+}
+
+function arrayTesting() -> void {
+    // const fooArr: int[] = [1, 2, 3, 4, 5];
+    // printInt(fooArr[2]);
+
+    const barArr: string[] = ["foo", "bar", "baz", "buz"];
+    printStr(barArr[3]);
+
+    return;
+}
+
 function structTesting() -> void {
     const intTest: Int = 1234;
     const intTestTwo: int = intTest.value;
@@ -49,9 +67,6 @@ function structTesting() -> void {
     const strVal: string = intTest.toString();
     printStr(strVal);
     printStr(intTest.toString());
-
-    // const intTestThree: Int = intTest.add(Int(1234));
-    // printInt(intTestThree.value);
 
     intTest.fooMethod();
 
@@ -94,6 +109,7 @@ function main() -> void {
 
     structTesting();
     binOpTest();
+    arrayTesting();
 
     return;
 }

@@ -34,42 +34,6 @@ ASTNode *appendASTNodeDefs(ASTNode *root, CryoSymbolTable *table, TypeTable *typ
 
     int statementCount = root->data.program->statementCount;
 
-
-    return root;
-}
-
-ASTNode *traverseASTTree(ASTNode *root, CryoSymbolTable *table, TypeTable *typeTable, Arena *arena)
-{
-    if (!root)
-    {
-        logMessage("ERROR", __LINE__, "AST", "Root node is NULL");
-        return NULL;
-    }
-
-    if (root->metaData->type == NODE_PROGRAM)
-    {
-        logMessage("INFO", __LINE__, "AST", "Traversing program node");
-        return traverseASTTree(root, table, typeTable, arena);
-    }
-
-    if (root->metaData->type == NODE_NAMESPACE)
-    {
-        logMessage("INFO", __LINE__, "AST", "Traversing namespace node");
-        return traverseASTTree(root, table, typeTable, arena);
-    }
-
-    if (root->metaData->type == NODE_VAR_DECLARATION)
-    {
-        logMessage("INFO", __LINE__, "AST", "Traversing variable declaration node");
-        return root->data.varDecl;
-    }
-
-    if (root->metaData->type == NODE_VAR_NAME)
-    {
-        logMessage("INFO", __LINE__, "AST", "Traversing variable name node");
-        return root->data.varName;
-    }
-
     return root;
 }
 

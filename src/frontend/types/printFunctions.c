@@ -22,6 +22,8 @@ char *TypeofDataTypeToString(TypeofDataType type)
     {
     case PRIMITIVE_TYPE:
         return "PRIMITIVE_TYPE";
+    case ARRAY_TYPE:
+        return "ARRAY_TYPE";
     case STRUCT_TYPE:
         return "STRUCT_TYPE";
     case ENUM_TYPE:
@@ -104,6 +106,11 @@ char *DataTypeToStringUnformatted(DataType *type)
     switch (type->container->baseType)
     {
     case PRIMITIVE_TYPE:
+        if (type->container->isArray)
+        {
+            sprintf(typeString, "%s[]", PrimitiveDataTypeToString_UF(type->container->primitive));
+            return typeString;
+        }
         sprintf(typeString, "%s", PrimitiveDataTypeToString_UF(type->container->primitive));
         break;
 
@@ -134,6 +141,12 @@ char *DataTypeToString(DataType *dataType)
     switch (dataType->container->baseType)
     {
     case PRIMITIVE_TYPE:
+        if (dataType->container->isArray)
+        {
+            sprintf(typeString, LIGHT_CYAN BOLD "%s[]" COLOR_RESET,
+                    PrimitiveDataTypeToString(dataType->container->primitive));
+            return typeString;
+        }
         sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, PrimitiveDataTypeToString(dataType->container->primitive));
         break;
 
@@ -291,7 +304,15 @@ void printFormattedType(DataType *type)
     switch (type->container->baseType)
     {
     case PRIMITIVE_TYPE:
-        printFormattedPrimitiveType(type->container->primitive);
+        if (type->container->isArray)
+        {
+            printf("   ────────────────────────────────────────────────────────────\n");
+            printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s[%d]\n", PrimitiveDataTypeToString(type->container->primitive), type->container->arrayDimensions);
+        }
+        else
+        {
+            printFormattedPrimitiveType(type->container->primitive);
+        }
         break;
 
     case STRUCT_TYPE:

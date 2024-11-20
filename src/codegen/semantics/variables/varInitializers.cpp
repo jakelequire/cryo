@@ -585,6 +585,11 @@ namespace Cryo
         }
         }
         }
+
+        // Add the variable to the named values map & symbol table
+        compiler.getContext().namedValues[varName] = llvmValue;
+        symTable.updateVariableNode(namespaceName, varName, llvmValue, llvmType);
+
         return llvmValue;
     }
 
@@ -611,29 +616,45 @@ namespace Cryo
         llvm::Type *llvmType = nullptr;
         llvm::Constant *llvmConstant = nullptr;
 
-        switch (dataType->container->baseType)
+        if (dataType->container->isArray)
         {
-            // case DATA_TYPE_INT_ARRAY:
-            // {
-            //     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Int Array Literal");
-            //     llvmType = compiler.getTypes().getType(dataType, 0);
-            //     llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
-            //     break;
-            // }
-            // case DATA_TYPE_STRING_ARRAY:
-            // {
-            //     DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Array Literal");
-            //     llvmType = compiler.getTypes().getType(dataType, 0);
-            //     llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
-            //     break;
-            // }
+            switch (dataType->container->baseType)
+            {
+            case PRIMITIVE_TYPE:
+            {
+                switch (dataType->container->primitive)
+                {
+                case PRIM_INT:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Int Array Literal");
+                    llvmType = compiler.getTypes().getType(dataType, 0);
+                    llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
+                    break;
+                }
+                case PRIM_STRING:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Array Literal");
+                    llvmType = compiler.getTypes().getType(dataType, 0);
+                    llvmValue = compiler.getArrays().createArrayLiteral(arrayNode, varName);
+                    break;
+                }
+                default:
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+                    CONDITION_FAILED;
+                }
+                }
+            }
+            }
+        }
 
-        default:
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
-            CONDITION_FAILED;
-        }
-        }
+        // Add the variable to the named values map & symbol table
+        compiler.getContext().namedValues[varName] = llvmValue;
+        compiler.getSymTable().updateVariableNode(
+            compiler.getContext().currentNamespace,
+            varName,
+            llvmValue,
+            llvmType);
 
         return llvmValue;
     }
