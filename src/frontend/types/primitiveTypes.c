@@ -37,11 +37,12 @@ DataType *createPrimitiveFloatType(void)
 }
 
 // Primitive string Type creation `(default/baseline)`
-DataType *createPrimitiveStringType(void)
+DataType *createPrimitiveStringType(int length)
 {
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_STRING;
+    container->length = length;
 
     return wrapTypeContainer(container);
 }
@@ -133,4 +134,9 @@ PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
 bool isPrimitiveType(const char *typeStr)
 {
     return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
+}
+
+bool isStringType(DataType *type)
+{
+    return type->container->baseType == PRIMITIVE_TYPE && type->container->primitive == PRIM_STRING;
 }

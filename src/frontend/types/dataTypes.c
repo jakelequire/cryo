@@ -285,7 +285,7 @@ DataType *CryoDataTypeStringToType(const char *typeStr)
     }
     else if (strcmp(typeStr, "string") == 0)
     {
-        return createPrimitiveStringType();
+        return createPrimitiveStringType(0);
     }
     else if (strcmp(typeStr, "boolean") == 0)
     {

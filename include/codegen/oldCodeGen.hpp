@@ -399,11 +399,13 @@ namespace Cryo
 
         /**
          * @brief Mutates an explicit type to a pointer.
+         * Note: This is a dangerous operation and should be used with caution.
          */
         llvm::Value *explicitTypeToPtr(llvm::Value *value);
 
         /**
          * @brief Mutate a values type to the given type.
+         * Note: This is a dangerous operation and should be used with caution.
          */
         llvm::Value *castTyToVal(llvm::Value *val, llvm::Type *ty);
 

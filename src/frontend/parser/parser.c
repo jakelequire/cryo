@@ -16,7 +16,6 @@
  ********************************************************************************/
 #include "frontend/parser.h"
 
-
 /* ====================================================================== */
 /* @Entry_Point | Lexer passes tokens to the entry point to be processed. */
 
@@ -1254,7 +1253,9 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 
             case TOKEN_STRING_LITERAL:
             {
-                DataType *expectedType = createPrimitiveStringType();
+                char *stringLiteral = strndup(lexer->currentToken.start, lexer->currentToken.length);
+                int stringLength = strlen(stringLiteral);
+                DataType *expectedType = createPrimitiveStringType(stringLength);
                 ASTNode *arg = parsePrimaryExpression(lexer, table, context, arena, state, typeTable);
                 addArgumentToFunctionCall(table, functionCallNode, arg, arena, state, typeTable);
                 break;
@@ -1657,7 +1658,9 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a string literal");
-        expectedType = createPrimitiveStringType();
+        char *stringLiteral = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        int stringLength = strlen(stringLiteral);
+        expectedType = createPrimitiveStringType(stringLength);
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
 
@@ -2207,12 +2210,22 @@ ASTNode *parseArrayLiteral(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         return NULL;
     }
 
+    int elementCount = 0;
+    DataType **elementTypes = (DataType **)calloc(ARRAY_CAPACITY, sizeof(DataType *));
+
     while (lexer->currentToken.type != TOKEN_RBRACKET)
     {
         ASTNode *element = parseExpression(lexer, table, context, arena, state, typeTable);
         if (element)
         {
             addElementToArrayLiteral(table, elements, element, arena, state, typeTable);
+            logMessage("INFO", __LINE__, "Parser", "Element added to array literal.");
+
+            DataType *elType = DataTypeFromNode(element);
+            elementTypes[elementCount] = elType;
+            logMessage("INFO", __LINE__, "Parser", "Element type: %s", DataTypeToString(elType));
+
+            elementCount++;
         }
         else
         {
@@ -2225,6 +2238,11 @@ ASTNode *parseArrayLiteral(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
             getNextToken(lexer, arena, state, typeTable);
         }
     }
+
+    elements->data.array->elementTypes = elementTypes;
+    elements->data.array->elementCount = elementCount;
+    elements->data.array->elementCapacity = elementCount;
+    elements->data.array->type = wrapArrayType(createArrayTypeContainer(elementTypes[0], elementTypes, elementCount, 0));
 
     consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array literal.", "parseArrayLiteral", table, arena, state, typeTable, context);
     return elements;

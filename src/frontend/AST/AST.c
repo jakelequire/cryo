@@ -224,8 +224,8 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
     trimmedString = handleStringFormatting(strdup(trimmedString));
 
     printf("Manipulated string: %s\n", strdup(trimmedString));
-
-    node->data.literal->type = createPrimitiveStringType();
+    int length = getStringLength(trimmedString);
+    node->data.literal->type = createPrimitiveStringType(length);
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
 
@@ -264,6 +264,17 @@ char *handleStringFormatting(char *value)
 
     // Recursively call the function to handle the next format specifier
     return handleStringFormatting(formatSpecifier);
+}
+
+int getStringLength(char *str)
+{
+    int length = 0;
+    while (*str != '\0')
+    {
+        length++;
+        str++;
+    }
+    return length;
 }
 
 ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable)
@@ -374,7 +385,8 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTab
     ASTNode *node = createASTNode(NODE_STRING_EXPRESSION, arena, state, typeTable);
     if (!node)
         return NULL;
-    node->data.literal->type = createPrimitiveStringType();
+    int length = strlen(str);
+    node->data.literal->type = createPrimitiveStringType(length);
     node->data.literal->value.stringValue = strdup(str);
     return node;
 }
@@ -617,23 +629,47 @@ ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *stat
 /* @Node_Creation - Conditionals */
 ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    return createIfBlock(condition, then_branch, else_branch, arena, state, typeTable);
+    ASTNode *node = createIfBlock(condition, then_branch, else_branch, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create if statement node");
+        return NULL;
+    }
+    return node;
 }
 
 ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    return createForBlock(initializer, condition, increment, body, arena, state, typeTable);
+    ASTNode *node = createForBlock(initializer, condition, increment, body, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create for statement node");
+        return NULL;
+    }
+    return node;
 }
 
 ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    return createWhileBlock(condition, body, arena, state, typeTable);
+    ASTNode *node = createWhileBlock(condition, body, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create while statement node");
+        return NULL;
+    }
+    return node;
 }
 
 /* @Node_Creation - Arrays */
 ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    return createASTNode(NODE_ARRAY_LITERAL, arena, state, typeTable);
+    ASTNode *node = createASTNode(NODE_ARRAY_LITERAL, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create array literal node");
+        return NULL;
+    }
+    return node;
 }
 
 // Add a new function to create an index expression node

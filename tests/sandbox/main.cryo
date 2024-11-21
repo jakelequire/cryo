@@ -39,26 +39,25 @@ struct Int {
     }
 }
 
-struct ArrayTest {
-    value: int[];
-}
-
 struct ObjectTest {
     valueOne: int;
     valueTwo: string;
 }
 
 function arrayTesting() -> void {
-    // const fooArr: int[] = [1, 2, 3, 4, 5];
-    // printInt(fooArr[2]);
+    printStr("--------- Array Testing ---------");
+    const fooArr: int[] = [1, 2, 3, 4, 5];
+    printInt(fooArr[2]);
 
     const barArr: string[] = ["foo", "bar", "baz", "buz"];
-    printStr(barArr[3]);
+    const strIndex: string = barArr[1];
+    printStr(strIndex);
 
     return;
 }
 
 function structTesting() -> void {
+    printStr("-------- Struct Testing --------");
     const intTest: Int = 1234;
     const intTestTwo: int = intTest.value;
     printInt(intTestTwo);
@@ -75,6 +74,7 @@ function structTesting() -> void {
 
 
 function binOpTest() -> void {
+    printStr("------ Binary Ops Testing ------");
     const addTest: int = 34 + 36;
     printStr("Addition test: ");
     printInt(addTest);
@@ -113,7 +113,6 @@ function main() -> void {
 
     return;
 }
-
 
 // function matchTesting() -> void {
 //     const intStructTest: Int = 999;

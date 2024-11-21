@@ -122,6 +122,15 @@ typedef struct FunctionType
     PrimitiveDataType returnType;
 } FunctionType;
 
+typedef struct ArrayType
+{
+    DataType *baseType;
+    int dimensions;
+    int length;
+    DataType **elements;
+    int elementCount;
+} ArrayType;
+
 typedef struct EnumType
 {
     const char *name;
@@ -165,6 +174,7 @@ typedef struct TypeContainer
 
         StructType *structDef; // For struct types
         FunctionType *funcDef; // For function types
+        ArrayType *arrayDef;   // For array types
         EnumType *enumDef;     // For enum types
     } custom;
 
@@ -233,7 +243,7 @@ extern "C"
 
     DataType *createPrimitiveIntType(void);
     DataType *createPrimitiveFloatType(void);
-    DataType *createPrimitiveStringType(void);
+    DataType *createPrimitiveStringType(int length);
     DataType *createPrimitiveBooleanType(void);
     DataType *createPrimitiveVoidType(void);
     DataType *createPrimitiveNullType(void);
@@ -244,6 +254,7 @@ extern "C"
 
     PrimitiveDataType getPrimativeTypeFromString(const char *typeStr);
     bool isPrimitiveType(const char *typeStr);
+    bool isStringType(DataType *type);
 
     // # =========================================================================== #
     // # Struct Type Functions
@@ -273,6 +284,8 @@ extern "C"
     // # =========================================================================== #
 
     TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
+    ArrayType *createArrayTypeContainer(DataType *baseType, DataType **elementTypes, int length, int dimensions);
+    DataType *wrapArrayType(ArrayType *arrayType);
 
     // # =========================================================================== #
     // # Type Validation Functions

@@ -33,3 +33,54 @@ TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
 
     return container;
 }
+
+/*
+typedef struct ArrayType
+{
+    DataType *baseType;
+    int dimensions;
+    int length;
+    DataType **elements;
+    int elementCount;
+} ArrayType;
+*/
+
+ArrayType *createArrayTypeContainer(DataType *baseType, DataType **elementTypes, int length, int dimensions)
+{
+    ArrayType *arrayType = (ArrayType *)malloc(sizeof(ArrayType));
+    if (!arrayType)
+    {
+        logMessage("ERROR", __LINE__, "DataTypes", "Failed to allocate memory for ArrayType");
+        CONDITION_FAILED;
+    }
+    arrayType->baseType = baseType;
+    arrayType->dimensions = dimensions;
+    arrayType->length = 0;
+    arrayType->elements = (DataType **)malloc(sizeof(DataType *) * 64);
+    if (!arrayType->elements)
+    {
+        logMessage("ERROR", __LINE__, "DataTypes", "Failed to allocate memory for ArrayType elements");
+        CONDITION_FAILED;
+    }
+    arrayType->elementCount = 0;
+
+    return arrayType;
+}
+
+DataType *wrapArrayType(ArrayType *arrayType)
+{
+    TypeContainer *container = createTypeContainer();
+    if (!container)
+    {
+        logMessage("ERROR", __LINE__, "DataTypes", "Failed to create type container for array type");
+        CONDITION_FAILED;
+    }
+
+    container->baseType = ARRAY_TYPE;
+    container->custom.arrayDef = arrayType;
+    container->isArray = true;
+    container->arrayDimensions = arrayType->dimensions;
+    container->length = arrayType->length;
+
+    return wrapTypeContainer(container);
+}

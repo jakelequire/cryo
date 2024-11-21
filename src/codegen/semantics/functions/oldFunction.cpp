@@ -269,7 +269,7 @@ namespace Cryo
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement);
-                    llvm::Type *returnType = types.getType(createPrimitiveStringType(), _len);
+                    llvm::Type *returnType = types.getType(createPrimitiveStringType(_len), _len);
                     llvm::Value *returnValue = generator.getInitilizerValue(statement);
                     compiler.getContext().builder.CreateRet(returnValue);
 
@@ -514,7 +514,7 @@ namespace Cryo
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement->data.returnStatement->expression);
                     // +1 for the null terminator
-                    returnType = types.getType(createPrimitiveStringType(), _len + 1);
+                    returnType = types.getType(createPrimitiveStringType(_len), _len + 1);
                     break;
                 }
                 case PRIM_VOID:
@@ -759,6 +759,8 @@ namespace Cryo
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
                     CONDITION_FAILED;
                 }
+
+                argNode->getType()->getPointerTo();
 
                 argValues.push_back(argNode);
                 break;
@@ -1313,7 +1315,17 @@ namespace Cryo
         if (!varValue)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
-            CONDITION_FAILED;
+            // Attempt to check for the variable in the named values map
+            llvm::Value *namedValue = compiler.getContext().namedValues[varName];
+            if (!namedValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Named value not found: " + varName);
+                compiler.dumpModule();
+                CONDITION_FAILED;
+            }
+
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Named value found");
+            varValue = namedValue;
         }
 
         llvm::StoreInst *storeInst = var->LLVMStoreInst;
@@ -1540,6 +1552,25 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        // Get the array type
+        llvm::Type *arrayType = var->LLVMType;
+        if (!arrayType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Array type not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::StoreInst *arrStoreInst = var->LLVMStoreInst;
+        if (!arrStoreInst)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Store instruction not found");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Getting Data Type from Store Instruction");
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(arrStoreInst);
+        llvm::Type *arrInstType = compiler.getTypes().parseInstForType(inst);
+
         // Get the index value
         ASTNode *indexValueNode = indexNode->index;
         llvm::Value *indexValue = compiler.getGenerator().getInitilizerValue(indexValueNode);
@@ -1550,7 +1581,7 @@ namespace Cryo
         }
 
         // Get the array type
-        DataType *arrayType = var->dataType;
+        DataType *arrayDataType = var->dataType;
         if (!arrayType)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Array type not found");
@@ -1563,14 +1594,36 @@ namespace Cryo
             indexValue};
 
         llvm::Value *elementPtr = compiler.getContext().builder.CreateInBoundsGEP(
-            arrayPtr->getType(),
+            arrInstType,
             arrayPtr,
             indices,
             arrayName + ".index.ptr");
 
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Index Expression Call Created");
+        DevDebugger::logLLVMType(arrInstType);
 
-        return elementPtr;
+        if (arrInstType->isArrayTy())
+        {
+            // If the type is an array, we need to check what kind of array it is (int, string, etc)
+            llvm::Type *elementType = arrInstType->getArrayElementType();
+            DevDebugger::logLLVMType(elementType);
+            if (elementType->isArrayTy())
+            {
+                // This is a string array
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "String array type");
+                arrInstType = arrInstType->getPointerTo();
+            }
+            else if (elementType->isIntegerTy())
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Integer array type");
+                arrInstType = elementType;
+            }
+        }
+
+        // Load and return the array element value
+        return compiler.getContext().builder.CreateLoad(
+            arrInstType,
+            elementPtr,
+            arrayName + ".index.load");
     }
 
     llvm::Value *Functions::createFunctionCallCall(FunctionCallNode *functionCallNode)

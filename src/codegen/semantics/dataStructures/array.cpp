@@ -79,9 +79,11 @@ namespace Cryo
         }
 
         // Alloc the array without initializing it
-        llvm::Value *llvmAlloc = compiler.getContext().builder.CreateAlloca(llvmArrayType, nullptr, varName);
+        llvm::AllocaInst *llvmAlloc = compiler.getContext().builder.CreateAlloca(llvmArrayType, nullptr, varName);
+        llvmAlloc->setAlignment(llvm::Align(8));
+
         // Store the array in the variable
-        llvm::Value *llvmStore = compiler.getContext().builder.CreateStore(llvmValue, llvmAlloc);
+        llvm::StoreInst *llvmStore = compiler.getContext().builder.CreateStore(llvmValue, llvmAlloc);
         // Add the variable to the named values
         compiler.getContext().namedValues[varName] = llvmAlloc;
 
@@ -94,36 +96,69 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating Array Literal");
 
+        std::string namespaceName = compiler.getContext().currentNamespace;
         llvm::Type *llvmType = nullptr;
         llvm::Value *llvmValue = nullptr;
         llvm::ArrayType *llvmArrayType = nullptr;
 
         // Get the type of the array
         std::vector<llvm::Constant *> elements;
-        for (int i = 0; i < array->elementCount; ++i)
+        int elementCount = array->elementCount;
+        if (elementCount == 0)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "No elements found");
+            CONDITION_FAILED;
+        }
+
+        DataType *arrDataType = array->type;
+
+        for (int i = 0; i < elementCount; ++i)
         {
             ASTNode *element = array->elements[i];
             if (element->metaData->type == NODE_LITERAL_EXPR)
             {
                 // Note to self, might need to get the length of each element
                 DataType *dataType = element->data.literal->type;
+                std::cout << "Type of DataType: " << TypeofDataTypeToString(dataType->container->baseType) << std::endl;
                 switch (dataType->container->baseType)
                 {
-                case PRIM_INT:
+                case PRIMITIVE_TYPE:
                 {
-                    llvmType = compiler.getTypes().getType(element->data.literal->type, 0);
-                    int index = element->data.literal->value.intValue;
-                    llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
-                    elements.push_back(llvmElement);
+                    DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating Primitive Literal");
+                    switch (dataType->container->primitive)
+                    {
+                    case PRIM_INT:
+                    {
+                        DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating Int Literal");
+                        llvmType = compiler.getTypes().getType(element->data.literal->type, 0);
+                        int index = element->data.literal->value.intValue;
+                        llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
+                        elements.push_back(llvmElement);
+                        break;
+                    }
+                    case PRIM_STRING:
+                    {
+                        DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating String Literal");
+                        int _len = compiler.getTypes().getLiteralValLength(element);
+                        llvmType = compiler.getTypes().getType(element->data.literal->type, _len + 1);
+                        llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
+                        elements.push_back(llvmElement);
+                        break;
+                    }
+                    default:
+                    {
+                        DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Unknown primitive type");
+                        DEBUG_BREAKPOINT;
+                    }
+                    }
+
                     break;
                 }
-                case PRIM_STRING:
+                default:
                 {
-                    int _len = compiler.getTypes().getLiteralValLength(element);
-                    llvmType = compiler.getTypes().getType(element->data.literal->type, _len + 1);
-                    llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
-                    elements.push_back(llvmElement);
-                    break;
+                    DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Unknown element type");
+                    std::cout << "Received: " << DataTypeToString(dataType) << std::endl;
+                    DEBUG_BREAKPOINT;
                 }
                 }
             }
@@ -148,11 +183,18 @@ namespace Cryo
         }
 
         // Alloc the array without initializing it
-        llvm::Value *llvmAlloc = compiler.getContext().builder.CreateAlloca(llvmArrayType, nullptr, varName);
+        llvm::AllocaInst *llvmAlloc = compiler.getContext().builder.CreateAlloca(llvmArrayType, nullptr, varName);
+        llvmAlloc->setAlignment(llvm::Align(8));
+        
         // Store the array in the variable
-        llvm::Value *llvmStore = compiler.getContext().builder.CreateStore(llvmValue, llvmAlloc);
+        llvm::StoreInst *llvmStore = compiler.getContext().builder.CreateStore(llvmValue, llvmAlloc);
+        llvmStore->setAlignment(llvm::Align(8));
+
         // Add the variable to the named values
         compiler.getContext().namedValues[varName] = llvmAlloc;
+
+        // Add the store instruction to the variable
+        compiler.getSymTable().addStoreInstToVar(namespaceName, varName, llvmStore);
 
         DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Array Literal Created");
         return llvmAlloc;

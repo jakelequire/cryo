@@ -38,6 +38,15 @@ typedef struct DataType DataType;
 typedef struct GenericType GenericType;
 
 #define INITIAL_CAPACITY 8
+#define PROGRAM_CAPACITY 512
+#define BLOCK_CAPACITY 512
+#define FUNCTION_BLOCK_CAPACITY 512
+#define PARAM_CAPACITY 16
+#define ARG_CAPACITY 16
+#define IMPORT_CAPACITY 16
+#define ARRAY_CAPACITY 128
+#define PROPERTY_CAPACITY 32
+#define METHOD_CAPACITY 64
 
 /// ### The position struct represents the line and column number of a token in the source code.
 typedef struct Position
@@ -612,6 +621,8 @@ typedef struct CryoUnaryOpNode
 /// ```
 typedef struct CryoArrayNode
 {
+    DataType *type;
+    DataType **elementTypes;
     struct ASTNode **elements;
     int elementCount;
     int elementCapacity;
@@ -1371,7 +1382,9 @@ extern "C"
     /**
      * String Utility Functions
      */
+
     char *handleStringFormatting(char *value);
+    int getStringLength(char *str);
 
 #ifdef __cplusplus
 }

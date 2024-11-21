@@ -30,9 +30,9 @@
         return NULL;                                                                           \
     }
 
-#define BUFFER_CHAR_SIZE sizeof(char) * 10512
+#define BUFFER_CHAR_SIZE sizeof(char) * 10512 * 32
 #define MALLOC_BUFFER (char *)malloc(BUFFER_CHAR_SIZE)
-#define AST_BUFFER_SIZE 5012
+#define AST_BUFFER_SIZE 10512 * 32
 #define MALLOC_AST_BUFFER (char *)malloc(sizeof(char) * AST_BUFFER_SIZE)
 
 int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)

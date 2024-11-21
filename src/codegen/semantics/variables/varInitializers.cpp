@@ -417,8 +417,8 @@ namespace Cryo
         case PRIM_STRING:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is a string literal");
-            int _len = compiler.getTypes().getLiteralValLength(literalNode);
-            llvmType = compiler.getTypes().getType(dataType, _len + 1);
+            int _len = compiler.getTypes().getLiteralValLength(literalNode) + 1;
+            llvmType = compiler.getTypes().getType(dataType, _len);
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(DataTypeToString(dataType)));
 
             llvm::Value *varValue = compiler.getGenerator().getLiteralValue(literalNode);
@@ -433,7 +433,7 @@ namespace Cryo
 
             compiler.getContext().namedValues[varName] = llvmValue;
 
-            llvm::Type *strType = types.getType(createPrimitiveStringType(), _len + 1);
+            llvm::Type *strType = types.getType(createPrimitiveStringType(_len), _len);
             symTable.updateVariableNode(namespaceName, varName, llvmValue, strType);
             symTable.addStoreInstToVar(namespaceName, varName, storeInst);
 
@@ -688,29 +688,69 @@ namespace Cryo
 
         std::string arrayName = std::string(indexExprNode->name);
         std::cout << "Array Name: " << arrayName << std::endl;
-        ASTNode *arrayNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, arrayName);
-        if (!arrayNode)
+        ASTNode *indexNode = indexExprNode->index;
+        DevDebugger::logNode(indexNode);
+        STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, arrayName);
+        if (!var)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array not found");
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
             CONDITION_FAILED;
         }
 
-        std::string indexVarName = std::string(indexExprNode->index->data.varName->varName);
-        llvm::Value *indexValue = compiler.getVariables().getVariable(indexVarName);
+        llvm::Value *arrayPtr = var->LLVMValue;
+        if (!arrayPtr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array pointer not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Type *arrayType = var->LLVMType;
+        if (!arrayType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array type not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::StoreInst *arrStoreInst = var->LLVMStoreInst;
+        if (!arrStoreInst)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(arrStoreInst);
+        llvm::Type *arrInstType = compiler.getTypes().parseInstForType(inst);
+
+        // Get the index value
+        llvm::Value *indexValue = compiler.getGenerator().getInitilizerValue(indexExprNode->index);
         if (!indexValue)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Index value not found");
             CONDITION_FAILED;
         }
-        int indexNumValue = indexExprNode->index->data.literal->value.intValue;
-        llvmValue = compiler.getArrays().indexArrayForValue(arrayNode, indexNumValue);
-        if (!llvmValue)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Indexed value not found");
-            CONDITION_FAILED;
-        }
 
-        return llvmValue;
+        // Create GEP for array access
+        llvm::Value *arrayValue = compiler.getContext().builder.CreateGEP(
+            arrInstType,
+            arrayPtr,
+            indexValue,
+            varName + ".array");
+
+        // Load and return array value
+        llvm::Value *loadedArr = compiler.getContext().builder.CreateLoad(
+            arrInstType,
+            arrayValue,
+            varName + ".load");
+
+        // Update the symbol table
+        compiler.getContext().namedValues[varName] = loadedArr;
+        compiler.getSymTable().updateVariableNode(
+            compiler.getContext().currentNamespace,
+            varName,
+            loadedArr,
+            arrInstType);
+
+        return loadedArr;
     }
 
     ///

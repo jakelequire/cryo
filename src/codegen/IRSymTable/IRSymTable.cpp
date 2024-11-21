@@ -288,6 +288,7 @@ namespace Cryo
         funcContainer.LLVMFunction = llvmFunction;
         funcContainer.LLVMReturnType = llvmReturnType;
         funcContainer.ASTNode = &funcNode;
+
         // Add the function to the SymTable
         symNode.functionNode[funcName] = funcContainer;
         symTable.namespaces[namespaceName] = symNode;

@@ -38,7 +38,7 @@
 #include "frontend/dataTypes.h"
 
 #define INITIAL_STATEMENT_CAPACITY 512
-#define INITIAL_PARAM_CAPACITY 8
+#define INITIAL_PARAM_CAPACITY 16
 #define MAX_ARGUMENTS 255
 
 typedef struct Lexer Lexer;

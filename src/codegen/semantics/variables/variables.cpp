@@ -417,6 +417,7 @@ namespace Cryo
         OldTypes &types = compiler.getTypes();
         Arrays &arrays = compiler.getArrays();
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Local Variable");
+        std::string namespaceName = compiler.getContext().currentNamespace;
 
         CryoVariableNode *varDecl = node->data.varDecl;
         assert(varDecl != nullptr);
@@ -491,7 +492,8 @@ namespace Cryo
             IndexExprNode *indexNode = initializer->data.indexExpr;
             CryoNodeType indexNodeType = initializer->data.indexExpr->index->metaData->type;
             std::string varName = std::string(initializer->data.indexExpr->name);
-            return createIndexExprInitializer(indexNode, indexNodeType, varName);
+            llvm::Value *indexExprInitializer = createIndexExprInitializer(indexNode, indexNodeType, varName);
+            return indexExprInitializer;
         }
         case NODE_METHOD_CALL:
         {

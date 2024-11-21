@@ -57,7 +57,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    const int initialCapacity = 128;
+    const int initialCapacity = PROGRAM_CAPACITY;
     node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -92,7 +92,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    int initialCapacity = 128; // Or any other small, non-zero value
+    int initialCapacity = BLOCK_CAPACITY;
     node->statements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -121,14 +121,26 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state)
 ///
 CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState *state)
 {
+    int initialCapacity = FUNCTION_BLOCK_CAPACITY;
     CryoFunctionBlock *block = (CryoFunctionBlock *)ARENA_ALLOC(arena, sizeof(CryoFunctionBlock));
-    if (block)
+    if (!block)
     {
-        block->function = NULL;
-        block->statements = NULL;
-        block->statementCount = 0;
-        block->statementCapacity = 128;
+        fprintf(stderr, "[AST] Error: Failed to allocate CryoFunctionBlock node.");
+        return NULL;
     }
+
+    block->function = NULL;
+    block->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    if (!block->statements)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
+        free(block);
+        return NULL;
+    }
+
+    block->statementCount = 0;
+    block->statementCapacity = initialCapacity;
+
     return block;
 }
 
@@ -303,7 +315,7 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerStat
     node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 128;
+    node->paramCapacity = PARAM_CAPACITY;
     node->type = wrapTypeContainer(createTypeContainer());
 
     return node;
@@ -367,7 +379,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *s
     node->name = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
 
     return node;
 }
@@ -649,7 +661,7 @@ ParamNode *createParamNodeContainer(Arena *arena, CompilerState *state)
     node->nodeType = NODE_UNKNOWN;
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 128;
+    node->paramCapacity = PARAM_CAPACITY;
     node->funcRefName = NULL;
 
     return node;
@@ -680,7 +692,7 @@ ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state)
     node->nodeType = NODE_UNKNOWN;
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
     node->funcRefName = NULL;
 
     return node;
@@ -786,7 +798,7 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    const int initialCapacity = 64; // Or any other small, non-zero value
+    const int initialCapacity = ARRAY_CAPACITY;
     node->elements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->elements)
     {
@@ -797,6 +809,8 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
 
     node->elementCount = 0;
     node->elementCapacity = initialCapacity;
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->elementTypes = (DataType **)calloc(initialCapacity, sizeof(DataType *));
 
     return node;
 }
@@ -884,10 +898,10 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     node->name = (char *)calloc(1, sizeof(char));
     node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->propertyCount = 0;
-    node->propertyCapacity = 128;
+    node->propertyCapacity = PROPERTY_CAPACITY;
     node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->methodCount = 0;
-    node->methodCapacity = 128;
+    node->methodCapacity = METHOD_CAPACITY;
     node->hasConstructor = false;
     node->hasDefaultValue = false;
     node->constructor = NULL;
@@ -951,7 +965,7 @@ ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState
     node->functionName = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
 
     return node;
 }
@@ -981,7 +995,7 @@ StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, Compil
     node->name = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
     node->metaData = createConstructorMetaDataContainer(arena, state);
     node->constructorBody = NULL;
 
@@ -1123,7 +1137,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 128;
+    node->paramCapacity = PARAM_CAPACITY;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
@@ -1163,7 +1177,7 @@ MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state
     node->accessorObj = NULL;
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
 
     return node;
 }
