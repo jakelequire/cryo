@@ -185,7 +185,7 @@ namespace Cryo
         // Alloc the array without initializing it
         llvm::AllocaInst *llvmAlloc = compiler.getContext().builder.CreateAlloca(llvmArrayType, nullptr, varName);
         llvmAlloc->setAlignment(llvm::Align(8));
-        
+
         // Store the array in the variable
         llvm::StoreInst *llvmStore = compiler.getContext().builder.CreateStore(llvmValue, llvmAlloc);
         llvmStore->setAlignment(llvm::Align(8));
@@ -311,6 +311,46 @@ namespace Cryo
         assert(arrayNode != nullptr);
 
         return arrayNode->elementCount;
+    }
+
+    llvm::Value *Arrays::getArrayLength(std::string arrayName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Getting Array Length");
+
+        CryoContext &context = compiler.getContext();
+        Variables &variables = compiler.getVariables();
+        OldTypes &types = compiler.getTypes();
+        IRSymTable &symTable = compiler.getSymTable();
+
+        ASTNode *arrayNode = symTable.getASTNode(context.currentNamespace, NODE_VAR_DECLARATION, arrayName);
+        if (!arrayNode)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Array not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *arrayPtr = variables.getVariable(arrayName);
+        if (!arrayPtr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Array pointer not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Type *arrayType = arrayPtr->getType();
+        if (!arrayType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Array type not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *arrayLength = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.context), getArrayLength(arrayNode));
+        if (!arrayLength)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Array length not found");
+            CONDITION_FAILED;
+        }
+        
+        return arrayLength;
     }
 
     // This will be creating the global variable.

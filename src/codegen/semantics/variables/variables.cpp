@@ -491,7 +491,6 @@ namespace Cryo
         {
             IndexExprNode *indexNode = initializer->data.indexExpr;
             CryoNodeType indexNodeType = initializer->data.indexExpr->index->metaData->type;
-            std::string varName = std::string(initializer->data.indexExpr->name);
             llvm::Value *indexExprInitializer = createIndexExprInitializer(indexNode, indexNodeType, varName);
             return indexExprInitializer;
         }

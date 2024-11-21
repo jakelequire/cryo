@@ -66,8 +66,6 @@
 #include "common/common.h"
 #include "tools/macros/printMacros.h"
 
-extern "C" CompiledFile compileFile(const char *filePath, const char *compilerFlags);
-
 namespace Cryo
 {
     struct SymTable;
@@ -89,6 +87,7 @@ namespace Cryo
     class Structs;
     class Imports;
     class WhileStatements;
+    class ErrorHandler;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -201,6 +200,7 @@ namespace Cryo
         Structs &getStructs() { return *structs; }
         Imports &getImports() { return *imports; }
         WhileStatements &getWhileStatements() { return *whileStatements; }
+        ErrorHandler &getErrorHandler() { return *errorHandler; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
 
@@ -228,6 +228,7 @@ namespace Cryo
         std::unique_ptr<Structs> structs;
         std::unique_ptr<Imports> imports;
         std::unique_ptr<WhileStatements> whileStatements;
+        std::unique_ptr<ErrorHandler> errorHandler;
     };
 
     /**
@@ -513,7 +514,10 @@ namespace Cryo
         llvm::Value *createArrayLiteral(CryoArrayNode *array, std::string varName = "array");
         void handleArrayLiteral(ASTNode *node);
         llvm::ArrayType *getArrayType(ASTNode *node);
+
         int getArrayLength(ASTNode *node);
+        llvm::Value *getArrayLength(std::string arrayName);
+
         void handleIndexExpression(ASTNode *node, std::string varName);
         llvm::Value *indexArrayForValue(ASTNode *array, int index);
         llvm::Value *getIndexExpressionValue(ASTNode *node);
@@ -743,6 +747,19 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
+
+    class ErrorHandler
+    {
+    public:
+        ErrorHandler(CryoCompiler &compiler) : compiler(compiler) {}
+
+        void IsOutOfBoundsException(llvm::Value *index, std::string arrayName, llvm::Type *arrayType);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
+    // -----------------------------------------------------------------------------------------------
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
           codeGen(std::make_unique<CodeGen>(*this)),
@@ -758,6 +775,7 @@ namespace Cryo
           structs(std::make_unique<Structs>(*this)),
           imports(std::make_unique<Imports>(*this)),
           whileStatements(std::make_unique<WhileStatements>(*this)),
+          errorHandler(std::make_unique<ErrorHandler>(*this)),
           symTable(std::make_unique<IRSymTable>())
     {
         context.initializeContext();

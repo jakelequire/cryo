@@ -1328,6 +1328,8 @@ namespace Cryo
             varValue = namedValue;
         }
 
+        llvm::Type *varType = varValue->getType();
+
         llvm::StoreInst *storeInst = var->LLVMStoreInst;
         if (!storeInst)
         {
@@ -1529,7 +1531,7 @@ namespace Cryo
     llvm::Value *Functions::createIndexExprCall(IndexExprNode *indexNode)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Index Expression Call");
-
+        ErrorHandler &errorHandler = compiler.getErrorHandler();
         // Retrieve the array node and name
         ASTNode *arrayNode = indexNode->array;
         std::string arrayName = std::string(indexNode->name);
@@ -1580,6 +1582,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+
         // Get the array type
         DataType *arrayDataType = var->dataType;
         if (!arrayType)
@@ -1600,6 +1603,10 @@ namespace Cryo
             arrayName + ".index.ptr");
 
         DevDebugger::logLLVMType(arrInstType);
+
+        
+        // Check for an out of bounds error
+        errorHandler.IsOutOfBoundsException(indexValue, arrayName, arrInstType);
 
         if (arrInstType->isArrayTy())
         {

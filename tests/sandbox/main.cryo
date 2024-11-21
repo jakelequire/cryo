@@ -4,24 +4,6 @@ extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
 extern function intToString(num: int) -> string;
 
-// struct Array <T> {
-//     data: T[];
-//     length: int;
-// 
-//     constructor(data: T[]) {
-//         this.data = data;
-//         this.length = data.length;
-//     }
-// 
-//     get(index: Int) -> T {
-//         return this.data[index];
-//     }
-// 
-//     set(index: Int, val: T) -> void {
-//         this.data[index] = val;
-//     }
-// }
-
 struct Int {
     value: int;
 
@@ -47,14 +29,18 @@ struct ObjectTest {
 function arrayTesting() -> void {
     printStr("--------- Array Testing ---------");
     const fooArr: int[] = [1, 2, 3, 4, 5];
+    printInt(fooArr[0]);
+    printInt(fooArr[1]);
     printInt(fooArr[2]);
+    printInt(fooArr[3]);
+    printInt(fooArr[4]);
 
-    const barArr: string[] = ["foo", "bar", "baz", "buz"];
-    const strIndex: string = barArr[1];
-    printStr(strIndex);
+    // This should throw an error
+    printInt(fooArr[5]);
 
     return;
 }
+
 
 function structTesting() -> void {
     printStr("-------- Struct Testing --------");

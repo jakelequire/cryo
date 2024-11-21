@@ -688,6 +688,7 @@ namespace Cryo
 
         std::string arrayName = std::string(indexExprNode->name);
         std::cout << "Array Name: " << arrayName << std::endl;
+        std::cout << "Variable Name: " << varName << std::endl;
         ASTNode *indexNode = indexExprNode->index;
         DevDebugger::logNode(indexNode);
         STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, arrayName);
@@ -737,18 +738,30 @@ namespace Cryo
             varName + ".array");
 
         // Load and return array value
-        llvm::Value *loadedArr = compiler.getContext().builder.CreateLoad(
+        llvm::LoadInst *loadedArr = compiler.getContext().builder.CreateLoad(
             arrInstType,
             arrayValue,
             varName + ".load");
 
+        // Store the array value in the variable
+        llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(arrInstType, nullptr, varName);
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadedArr, varValue);
+        storeInst->setAlignment(llvm::Align(8));
+
         // Update the symbol table
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
         compiler.getContext().namedValues[varName] = loadedArr;
         compiler.getSymTable().updateVariableNode(
             compiler.getContext().currentNamespace,
             varName,
             loadedArr,
             arrInstType);
+
+        // Add load inst to var with `addLoadInstToVar`
+        compiler.getSymTable().addLoadInstToVar(
+            compiler.getContext().currentNamespace,
+            varName,
+            loadedArr);
 
         return loadedArr;
     }
