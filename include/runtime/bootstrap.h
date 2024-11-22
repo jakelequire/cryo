@@ -42,7 +42,8 @@ enum BootstrapStatus
 {
     BOOTSTRAP_IDLE = -1,
     BOOTSTRAP_SUCCESS,
-    BOOTSTRAP_FAILED
+    BOOTSTRAP_FAILED,
+    BOOTSTRAP_IN_PROGRESS
 };
 
 typedef struct Bootstrapper
@@ -56,7 +57,8 @@ typedef struct Bootstrapper
     enum BootstrapStatus status;
 } Bootstrapper;
 
-Bootstrapper *initBootstrapper(const char *filePath, CompilerSettings *settings);
+void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable);
+Bootstrapper *initBootstrapper(const char *filePath);
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 
 ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath);

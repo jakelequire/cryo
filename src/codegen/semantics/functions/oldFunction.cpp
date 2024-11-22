@@ -67,6 +67,11 @@ namespace Cryo
         }
     }
 
+    llvm::Function *Functions::getFunction(std::string functionName)
+    {
+        DEBUG_BREAKPOINT;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     void Functions::createFunctionDeclaration(ASTNode *node)
@@ -1582,7 +1587,6 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-
         // Get the array type
         DataType *arrayDataType = var->dataType;
         if (!arrayType)
@@ -1604,7 +1608,6 @@ namespace Cryo
 
         DevDebugger::logLLVMType(arrInstType);
 
-        
         // Check for an out of bounds error
         errorHandler.IsOutOfBoundsException(indexValue, arrayName, arrInstType);
 

@@ -34,7 +34,11 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
 
+    // Initialize the type table
     TypeTable *typeTable = initTypeTable();
+
+    // Bootstrap the runtime definitions
+    boostrapRuntimeDefinitions(table, typeTable);
 
     // Initialize the lexer
     Lexer lex;

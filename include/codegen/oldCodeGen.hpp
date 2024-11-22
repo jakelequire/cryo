@@ -543,6 +543,8 @@ namespace Cryo
         void handleFunction(ASTNode *node);
         void handleMethodCall(ASTNode *node);
 
+        llvm::Function *getFunction(std::string functionName);
+
     private:
         CryoCompiler &compiler;
 

@@ -235,6 +235,7 @@ extern "C"
     DataType *cloneDataType(DataType *type);
 
     void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type);
+    void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root);
 
     // # =========================================================================== #
     // # Primitive Type Functions

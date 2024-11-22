@@ -37,3 +37,8 @@ __EXTERN_C__ char *intToString(int value)
     sprintf(buffer, "%d", value);
     return buffer;
 }
+
+__EXTERN_C__ void sys_exit(int code)
+{
+    exit(code);
+}

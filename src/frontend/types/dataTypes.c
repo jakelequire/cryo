@@ -540,3 +540,29 @@ void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type)
 
     fprintf(stderr, "[TypeTable] Error: Type '%s' not found in type table.\n", name);
 }
+
+void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
+{
+    if (!root)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid root node.\n");
+        return;
+    }
+
+    if (root->metaData->type != NODE_PROGRAM)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid root node type.\n");
+        return;
+    }
+
+    for (int i = 0; i < root->data.program->statementCount; i++)
+    {
+        ASTNode *node = root->data.program->statements[i];
+        if (node->metaData->type == NODE_STRUCT_DECLARATION)
+        {
+            const char *name = node->data.structNode->name;
+            DataType *type = node->data.structNode->type;
+            addTypeToTypeTable(typeTable, name, type);
+        }
+    }
+}

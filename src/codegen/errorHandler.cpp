@@ -21,43 +21,40 @@ namespace Cryo
     void ErrorHandler::IsOutOfBoundsException(llvm::Value *index, std::string arrayName, llvm::Type *arrayType)
     {
         DevDebugger::logMessage("INFO", __LINE__, "ErrorHandler", "Checking for out of bounds exception");
+        llvm::Value *arraySize = nullptr;
 
-        llvm::Function *function = compiler.getContext().module->getFunction("CryoArrayOutOfBounds");
-        if (!function)
+        if (arrayType->isArrayTy())
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "ErrorHandler", "Function not found: CryoArrayOutOfBounds");
+            arraySize = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, arrayType->getArrayNumElements()));
+        }
+        else
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "ErrorHandler", "Array type not found");
             CONDITION_FAILED;
         }
 
-        // Get the array length
-        llvm::Value *arrayLength = compiler.getArrays().getArrayLength(arrayName);
-        if (!arrayLength)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "ErrorHandler", "Array length not found");
-            CONDITION_FAILED;
-        }
-
-        // Create the comparison
-        llvm::Value *cmp = compiler.getContext().builder.CreateICmpSGE(index, arrayLength, "cmp");
-
-        // Create the conditional branch
+        llvm::Value *isOutOfBounds = compiler.getContext().builder.CreateICmpUGE(index, arraySize, "isOutOfBounds");
         llvm::BasicBlock *currentBlock = compiler.getContext().builder.GetInsertBlock();
-        llvm::BasicBlock *outOfBoundsBlock = llvm::BasicBlock::Create(compiler.getContext().context, "outOfBounds", currentBlock->getParent());
-        llvm::BasicBlock *continueBlock = llvm::BasicBlock::Create(compiler.getContext().context, "continue", currentBlock->getParent());
+        llvm::Function *currentFunction = currentBlock->getParent();
+        llvm::BasicBlock *outOfBoundsBlock = llvm::BasicBlock::Create(compiler.getContext().context, "outOfBounds", currentFunction);
+        llvm::BasicBlock *inBoundsBlock = llvm::BasicBlock::Create(compiler.getContext().context, "inBounds", currentFunction);
+        llvm::BasicBlock *mergeBlock = llvm::BasicBlock::Create(compiler.getContext().context, "merge", currentFunction);
 
-        compiler.getContext().builder.CreateCondBr(cmp, outOfBoundsBlock, continueBlock);
+        compiler.getContext().builder.CreateCondBr(isOutOfBounds, outOfBoundsBlock, inBoundsBlock);
 
-        // Set the insert point to the out of bounds block
+        // Out of bounds block
         compiler.getContext().builder.SetInsertPoint(outOfBoundsBlock);
+        compiler.getContext().builder.CreateCall(compiler.getFunctions().getFunction("outOfBoundsError"), {});
+        compiler.getContext().builder.CreateBr(mergeBlock);
 
-        // Call the out of bounds function
-        compiler.getContext().builder.CreateCall(function, {}, "call");
+        // In bounds block
+        compiler.getContext().builder.SetInsertPoint(inBoundsBlock);
+        compiler.getContext().builder.CreateBr(mergeBlock);
 
-        // Create the unconditional branch
-        compiler.getContext().builder.CreateBr(continueBlock);
+        // Merge block
+        compiler.getContext().builder.SetInsertPoint(mergeBlock);
 
-        // Set the insert point to the continue block
-        compiler.getContext().builder.SetInsertPoint(continueBlock);
+        return;
     }
 
 } // namespace Cryo

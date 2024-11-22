@@ -1,0 +1,16 @@
+namespace Runtime;
+
+extern function printInt(i: int) -> void;
+extern function printStr(s: string) -> void;
+
+extern function sys_exit(code: int) -> void;
+
+struct Error {
+    message: string;
+}
+
+function outOfBoundsError() -> void {
+    printStr("Array index out of bounds error");
+    return;
+}
+
