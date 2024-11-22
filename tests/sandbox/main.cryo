@@ -1,5 +1,11 @@
 namespace Main;
 
+
+function foo() -> void {
+    outOfBoundsError();
+    return;
+}
+
 extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
 extern function intToString(num: int) -> string;

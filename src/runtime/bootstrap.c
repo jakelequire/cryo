@@ -47,12 +47,7 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
 
     logMessage("INFO", __LINE__, "Bootstrap", "Runtime node compiled successfully");
 
-    // Add the runtime definitions to the symbol table
-    for (int i = 0; i < runtimeNode->data.program->statementCount; i++)
-    {
-        ASTNode *node = runtimeNode->data.program->statements[i];
-        addDefinitionToSymbolTable(table, node, bootstrap->arena);
-    }
+    importRuntimeDefinitionsToSymTable(table, runtimeNode, bootstrap->arena);
 
     logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions added to symbol table");
 
@@ -135,6 +130,8 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
 
 void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
 {
+    logMessage("INFO", __LINE__, "Bootstrap", "Compiling runtime object file...");
+
     // Generate code
     int result = generateCodeWrapper(runtimeNode, state);
     if (result != 0)

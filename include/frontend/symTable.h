@@ -86,6 +86,8 @@ void setNamespace(CryoSymbolTable *table, const char *name);
 
 bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena);
 
+void importRuntimeDefinitionsToSymTable(CryoSymbolTable *table, ASTNode *runtimeNode, Arena *arena);
+
 // C++ Accessable Functions
 #ifdef __cplusplus
 extern "C"

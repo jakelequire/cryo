@@ -579,3 +579,14 @@ bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena)
     return true;
 }
 // </analyzeNode>
+
+void importRuntimeDefinitionsToSymTable(CryoSymbolTable *table, ASTNode *runtimeNode, Arena *arena)
+{
+    for (int i = 0; i < runtimeNode->data.program->statementCount; i++)
+    {
+        ASTNode *node = runtimeNode->data.program->statements[i];
+        addASTNodeSymbol(table, node, arena);
+        logMessage("INFO", __LINE__, "SymTable", "Adding runtime definition to symbol table %s%s%s%s",
+                   BOLD, GREEN, CryoNodeTypeToString(node->metaData->type), COLOR_RESET);
+    }
+}
