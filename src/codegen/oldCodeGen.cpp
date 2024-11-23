@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "codegen/oldCodeGen.hpp"
 
-int generateCodeWrapper(ASTNode *node, CompilerState *state)
+int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker cLinker)
 {
     std::cout << ">===------------- CPP Code Generation -------------===<\n"
               << std::endl;
@@ -24,12 +24,51 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state)
     Cryo::CryoCompiler compiler;
     compiler.setCompilerState(state);
     compiler.setCompilerSettings(state->settings);
+    compiler.isPreprocessing = false;
 
     std::string moduleName = state->fileName;
     std::cout << "Module Name: " << moduleName << std::endl;
     compiler.setModuleIdentifier(moduleName);
 
+    // Convert C opaque pointer back to C++ type
+    Cryo::Linker *cppLinker = reinterpret_cast<Cryo::Linker *>(cLinker);
+    compiler.setLinker(cppLinker);
+    compiler.linkDependencies();
+
     compiler.compile(node);
+
+    return 0;
+}
+
+int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath)
+{
+    std::cout << ">===------------- CPP Runtime Generation -------------===<\n"
+              << std::endl;
+
+    std::cout << "Starting Runtime IR Generation" << std::endl;
+    Cryo::CryoCompiler compiler;
+    std::cout << "Compiler Initialized" << std::endl;
+
+    compiler.setCompilerState(state);
+    std::cout << "Compiler State set" << std::endl;
+
+    compiler.setCompilerSettings(state->settings);
+    std::cout << "Compiler Settings set" << std::endl;
+
+    std::string moduleName = "runtime";
+    compiler.setModuleIdentifier(moduleName);
+
+    std::cout << "Module Identifier set | " << moduleName << std::endl;
+    // Set the output path for the runtime
+    compiler.setCustomOutputPath(outputPath);
+
+    std::cout << "Custom Output Path set | " << outputPath << std::endl;
+
+    compiler.compile(runtimeNode);
+
+    // TODO:
+    // The module is compiled and the IR file is generated.
+    // Take the module and add as a dependency to the linker.
 
     return 0;
 }

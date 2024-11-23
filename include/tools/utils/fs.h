@@ -33,8 +33,6 @@ typedef struct CryoSrcLocations
     const char *rootDir;
 } CryoSrcLocations;
 
-
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -58,6 +56,8 @@ const char *trimFilePath(const char *filePath);
 const char *getCurRootDir(void);
 const char *getCryoSrcLocation(void);
 char *getCRuntimePath(void);
+
+const char *appendStrings(const char *str1, const char *str2);
 
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL

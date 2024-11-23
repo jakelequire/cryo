@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "linker/linker.hpp"
 #include "compiler/compiler.h"
 
 int cryoCompiler(const char *filePath, CompilerSettings *settings)
@@ -28,6 +29,20 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
     const char *fileName = trimFilePath(filePath);
 
+    const char *rootDirectory = settings->rootDir;
+    if (!rootDirectory)
+    {
+        fprintf(stderr, "Error: Root directory not set\n");
+        return 1;
+    }
+    const char *buildDir = appendStrings(rootDirectory, "/build");
+
+    // Create and initialize linker
+    CryoLinker linker = CryoLinker_Create();
+    CryoLinker_SetBuildSrcDirectory(linker, buildDir);
+
+    CryoLinker_LogState(linker);
+
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
@@ -37,8 +52,11 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     // Initialize the type table
     TypeTable *typeTable = initTypeTable();
 
-    // Bootstrap the runtime definitions
+    // Import the runtime definitions and initialize the global dependencies
     boostrapRuntimeDefinitions(table, typeTable);
+    CryoLinker_InitDependencies(linker);
+
+    CryoLinker_LogState(linker);
 
     // Initialize the lexer
     Lexer lex;
@@ -63,13 +81,17 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
     logASTNodeDebugView(programCopy);
-    // Generate code
-    int result = generateCodeWrapper(programNode, state);
+
+    // Generate code (The C++ backend process)
+    int result = generateCodeWrapper(programNode, state, linker);
     if (result != 0)
     {
         CONDITION_FAILED;
         return 1;
     }
+
+    // Before returning, add cleanup
+    CryoLinker_Destroy(linker);
 
     END_COMPILATION_MESSAGE;
 
@@ -113,7 +135,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     }
 
     // Generate code
-    int result = generateCodeWrapper(programNode, state);
+    int result = generateCodeWrapper(programNode, state, nullptr);
     if (result != 0)
     {
         CONDITION_FAILED;

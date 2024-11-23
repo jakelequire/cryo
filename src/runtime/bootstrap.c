@@ -17,8 +17,8 @@
 #include "runtime/bootstrap.h"
 
 // This is being hard coded for now, but will be replaced with a more dynamic solution later.
-char *runtimeFilePaths[] = {
-    "/home/phock/Programming/apps/cryo/cryo/runtime.cryo"};
+#define RUNTIME_SRC_FILE "/home/phock/Programming/apps/cryo/cryo/runtime.cryo"
+#define RUINTIME_OBJ_FILE "/home/phock/Programming/apps/cryo/build/out/deps/runtime.ll"
 
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
@@ -27,7 +27,7 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapping runtime definitions...");
 
-    char *runtimePath = runtimeFilePaths[0];
+    char *runtimePath = RUNTIME_SRC_FILE;
     Bootstrapper *bootstrap = initBootstrapper(runtimePath);
 
     logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapper initialized");
@@ -60,6 +60,12 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
     updateBootstrapStatus(bootstrap, BOOTSTRAP_SUCCESS);
 
     logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions bootstrapped successfully");
+
+    // Create the runtime object file
+    const char *outputFile = RUINTIME_OBJ_FILE;
+    bootstrap->state->settings->inputFile = RUNTIME_SRC_FILE;
+
+    preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile);
 
     // Free the bootstrap state
     free(bootstrap);
@@ -102,11 +108,10 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
         return NULL;
     }
 
-    printf("Source: %s\n", source);
-
     // Initialize the lexer
     Lexer lexer;
     CompilerState *state = initCompilerState(bootstrap->arena, &lexer, bootstrap->table, filePath);
+    bootstrap->state = state;
 
     logMessage("INFO", __LINE__, "Bootstrap", "Compiler state initialized");
 
@@ -133,7 +138,7 @@ void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
     logMessage("INFO", __LINE__, "Bootstrap", "Compiling runtime object file...");
 
     // Generate code
-    int result = generateCodeWrapper(runtimeNode, state);
+    int result = generateCodeWrapper(runtimeNode, state, NULL);
     if (result != 0)
     {
         CONDITION_FAILED;

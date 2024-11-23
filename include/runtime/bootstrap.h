@@ -38,6 +38,18 @@ typedef struct Lexer Lexer;
 typedef struct Arena Arena;
 typedef struct ASTNode ASTNode;
 
+// C++ headers
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath);
+
+#ifdef __cplusplus
+}
+#endif
+
 enum BootstrapStatus
 {
     BOOTSTRAP_IDLE = -1,

@@ -14,3 +14,8 @@ function outOfBoundsError() -> void {
     return;
 }
 
+
+function runtimeTest() -> void {
+    printStr("Runtime test");
+    return;
+}

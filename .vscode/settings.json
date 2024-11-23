@@ -253,9 +253,10 @@
     "syntaxhighlighter.h": "c",
     "cerrno": "cpp",
     "preprocessor.h": "c",
-    "bootstrap.h": "c"
+    "bootstrap.h": "c",
+    "linker.hpp": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
-  "C_Cpp.errorSquiggles": "enabled",
+  "C_Cpp.errorSquiggles": "disabled",
   "editor.selectionClipboard": false
 }

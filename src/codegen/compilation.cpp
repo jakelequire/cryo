@@ -46,6 +46,15 @@ namespace Cryo
             exit(1);
         }
 
+        bool isPreprocessing = compiler.isPreprocessing;
+        if (isPreprocessing)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Preprocessing Compilation");
+            std::string outputPath = compiler.customOutputPath;
+            compileUniquePath(outputPath);
+            return;
+        }
+
         std::cout << "\n Getting the output path\n";
         const char *unsafe_filePath = strdup(settings->inputFile);
         std::string outputFilePath(unsafe_filePath);
@@ -61,11 +70,11 @@ namespace Cryo
         std::string outputFileIR = trimmedFileExt + ".ll";
         std::string outputFileDir = outputPath + outputFileIR;
 
-        std::cout << "\n\n\n Output Path: " << outputPath << "\n\n\n";
-        std::cout << "\n\n\n Trimmed File: " << trimmedOutputFile << "\n\n\n";
-        std::cout << "\n\n\n Trimmed File Ext: " << trimmedFileExt << "\n\n\n";
-        std::cout << "\n\n\n Output File IR: " << outputFileIR << "\n\n\n";
-        std::cout << "\n\n\n Output File Dir: " << outputFileDir << "\n\n\n";
+        std::cout << "\n\n\n Output Path: " << outputPath << "\n";
+        std::cout << "Trimmed File: " << trimmedOutputFile << "\n";
+        std::cout << "Trimmed File Ext: " << trimmedFileExt << "\n";
+        std::cout << "Output File IR: " << outputFileIR << "\n";
+        std::cout << "Output File Dir: " << outputFileDir << "\n\n\n";
         if (settings->customOutputPath)
         {
             // outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
@@ -109,6 +118,38 @@ namespace Cryo
         dest.close();
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
+        return;
+    }
+
+    void Compilation::compileUniquePath(std::string outputPath)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling Unique Path");
+        CryoContext &cryoContext = compiler.getContext();
+
+        // Ensure the output directory exists
+        std::string outputDir = outputPath.substr(0, outputPath.find_last_of("/\\"));
+        isValidDir(outputDir);
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing");
+            return;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Code CodeGen Complete");
+
+        LLVM_MODULE_COMPLETE_START;
+        LoadStoreWhitespaceAnnotator LSWA;
+
+        // Use the custom annotator when printing
+        cryoContext.module->print(dest, &LSWA);
+        cryoContext.module->print(llvm::outs(), &LSWA);
+        LLVM_MODULE_COMPLETE_END;
+
+        dest.close();
+
         return;
     }
 
@@ -165,6 +206,23 @@ namespace Cryo
 
             return;
         }
+    }
+
+    llvm::Module *Compilation::compileAndMergeModule(std::string inputFile)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling and Merging Module");
+
+        llvm::LLVMContext &context = compiler.getContext().context;
+        llvm::SMDiagnostic err;
+
+        std::unique_ptr<llvm::Module> module = llvm::parseIRFile(inputFile, err, context);
+        if (!module)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Failed to parse IR file");
+            CONDITION_FAILED;
+        }
+
+        return module.release();
     }
 
     /// @private

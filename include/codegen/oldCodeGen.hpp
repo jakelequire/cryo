@@ -65,6 +65,7 @@
 #include "frontend/AST.h"
 #include "common/common.h"
 #include "tools/macros/printMacros.h"
+#include "linker/linker.hpp"
 
 namespace Cryo
 {
@@ -203,6 +204,17 @@ namespace Cryo
         ErrorHandler &getErrorHandler() { return *errorHandler; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
+        Linker *getLinker() { return linker.get(); }
+        void setLinker(Linker *newLinker)
+        {
+            if (newLinker)
+            {
+                linker = std::unique_ptr<Linker>(newLinker);
+            }
+        }
+
+        std::string customOutputPath = "";
+        bool isPreprocessing = false;
 
         void compile(ASTNode *root);
         void dumpModule(void);
@@ -210,6 +222,24 @@ namespace Cryo
         void setModuleIdentifier(std::string name)
         {
             CryoContext::getInstance().setModuleIdentifier(name);
+        }
+
+        void setCustomOutputPath(std::string path)
+        {
+            customOutputPath = path;
+            isPreprocessing = true;
+        }
+
+        void linkDependencies(void)
+        {
+            if (linker)
+            {
+                linker->appendDependenciesToRoot(&getModule());
+            }
+            else
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "CryoCompiler", "Linker not set");
+            }
         }
 
     private:
@@ -229,6 +259,7 @@ namespace Cryo
         std::unique_ptr<Imports> imports;
         std::unique_ptr<WhileStatements> whileStatements;
         std::unique_ptr<ErrorHandler> errorHandler;
+        std::unique_ptr<Linker> linker;
     };
 
     /**
@@ -737,6 +768,7 @@ namespace Cryo
         Compilation(CryoCompiler &compiler) : compiler(compiler) {}
 
         void compileIRFile(void);
+        llvm::Module *compileAndMergeModule(std::string inputFile);
 
     private:
         CryoCompiler &compiler;
@@ -746,6 +778,7 @@ namespace Cryo
         void isValidFile(std::string filePath);
         void makeOutputDir(std::string dirPath);
         void compile(std::string inputFile, std::string outputPath);
+        void compileUniquePath(std::string outputPath);
     };
 
     // -----------------------------------------------------------------------------------------------

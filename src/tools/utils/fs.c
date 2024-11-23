@@ -253,3 +253,18 @@ char *getCRuntimePath(void)
     return runtimePath;
 }
 // </getCRuntimePath>
+
+const char *appendStrings(const char *str1, const char *str2)
+{
+    char *result = (char *)malloc(strlen(str1) + strlen(str2) + 1);
+    if (!result)
+    {
+        logMessage("ERROR", __LINE__, "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strcpy(result, str1);
+    strcat(result, str2);
+
+    return result;
+}

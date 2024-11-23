@@ -42,8 +42,8 @@ typedef struct Bootstrapper Bootstrapper;
 extern "C"
 {
 #endif
-
-    int generateCodeWrapper(ASTNode *node, CompilerState *state);
+    typedef struct CryoLinker_t *CryoLinker;
+    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker linker);
 
 #ifdef __cplusplus
 }
