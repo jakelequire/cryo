@@ -575,6 +575,7 @@ namespace Cryo
         void handleMethodCall(ASTNode *node);
 
         llvm::Function *getFunction(std::string functionName);
+        bool doesExternFunctionExist(std::string functionName);
 
     private:
         CryoCompiler &compiler;

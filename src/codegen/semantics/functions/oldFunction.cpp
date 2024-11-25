@@ -564,6 +564,14 @@ namespace Cryo
         char *functionName = functionNode->name;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
 
+        // Check if the function already exists
+        if (doesExternFunctionExist(functionName))
+        {
+            // If the function is already found, we will throw a warning but continue
+            DevDebugger::logMessage("WARN", __LINE__, "Functions", "Function already exists");
+            return;
+        }
+
         // Get the return type
         DataType *returnType = functionNode->type;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
@@ -615,6 +623,21 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Extern Function Created");
 
         return;
+    }
+
+    bool Functions::doesExternFunctionExist(std::string functionName)
+    {
+        llvm::Function *function = compiler.getContext().module->getFunction(functionName);
+        if (!function)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            return false;
+        }
+        else
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function found");
+            return true;
+        }
     }
 
     // -----------------------------------------------------------------------------------------------

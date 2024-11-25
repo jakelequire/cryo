@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "codegen/utility/highlighter.hpp"
 #include "codegen/oldCodeGen.hpp"
 
 namespace Cryo
@@ -23,12 +24,19 @@ namespace Cryo
         CryoContext &cryoContext = compiler.getContext();
         CompilerSettings *settings = compiler.getCompilerSettings();
 
-        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
-        std::cout << "\n\n";
-        if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
+        Linker *linker = compiler.getLinker();
+
+        // Hoist the declarations from the linker
+        linker->hoistDeclarations(compiler.getContext().module.get());
+
+        if (llvm::verifyModule(*cryoContext.module, nullptr))
         {
             LLVM_MODULE_FAILED_MESSAGE_START;
-            cryoContext.module->print(llvm::errs(), nullptr);
+
+            LLVMIRHighlighter highlighter;
+            llvm::formatted_raw_ostream formatted_errs(llvm::errs());
+            highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
+
             LLVM_MODULE_FAILED_MESSAGE_END;
             LLVM_MODULE_ERROR_START;
             // Get the error itself without the module showing up
@@ -108,11 +116,14 @@ namespace Cryo
             return;
         }
         LLVM_MODULE_COMPLETE_START;
-        LoadStoreWhitespaceAnnotator LSWA;
 
-        // Use the custom annotator when printing
-        cryoContext.module->print(dest, &LSWA);
-        cryoContext.module->print(llvm::outs(), &LSWA);
+        LLVMIRHighlighter highlighter;
+        // File output without colors (keep it clean)
+        cryoContext.module->print(dest, nullptr);
+        // Console output with colors
+        llvm::formatted_raw_ostream formatted_out(llvm::outs());
+        cryoContext.module->print(formatted_out, &highlighter);
+
         LLVM_MODULE_COMPLETE_END;
 
         dest.close();
@@ -159,22 +170,21 @@ namespace Cryo
         std::string ErrorMsg;
         llvm::raw_string_ostream ErrorStream(ErrorMsg);
 
-        bool Err = llvm::verifyModule(*cryoContext.module, &llvm::errs());
+        // Verify module and capture output in our string stream instead of errs()
+        bool Err = llvm::verifyModule(*cryoContext.module, &ErrorStream);
+        ErrorStream.flush();
 
-        return ErrorStream.str();
+        // Apply syntax highlighting to the error message
+        LLVMIRHighlighter highlighter;
+        std::string highlighted = highlighter.highlightText(ErrorMsg);
+
+        return highlighted;
     }
 
     /// @private
     void Compilation::compile(std::string inputFile, std::string outputPath)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "outputPath: " + outputPath);
-        // Check if the file exists
-        // std::ifstream file(outputPath);
-        // if (!file)
-        // {
-        //     DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Source file not found");
-        //     CONDITION_FAILED;
-        // }
 
         std::error_code EC;
         llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);

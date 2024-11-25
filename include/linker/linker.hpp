@@ -85,6 +85,8 @@ extern "C"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
+#include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Transforms/Utils/ValueMapper.h"
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
@@ -121,6 +123,7 @@ namespace Cryo
         void initDependencies(void);
         const std::vector<std::string> scanDependenciesDir(void);
         void appendDependenciesToRoot(llvm::Module *root);
+        void hoistDeclarations(llvm::Module *module);
 
     private:
         llvm::LLVMContext context;

@@ -254,7 +254,10 @@
     "cerrno": "cpp",
     "preprocessor.h": "c",
     "bootstrap.h": "c",
-    "linker.hpp": "c"
+    "linker.hpp": "c",
+    "devdebugger.hpp": "c",
+    "valuemapper.h": "c",
+    "regex": "cpp"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "disabled",

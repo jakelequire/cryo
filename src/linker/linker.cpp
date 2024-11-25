@@ -28,6 +28,7 @@ extern "C"
         }
         catch (...)
         {
+            logMessage("ERROR", __LINE__, "CryoLinker", "Failed to create linker");
             return nullptr;
         }
     }
@@ -36,6 +37,7 @@ extern "C"
     {
         if (linker)
         {
+            logMessage("INFO", __LINE__, "CryoLinker", "Destroying linker");
             delete reinterpret_cast<Cryo::Linker *>(linker);
         }
     }
@@ -212,13 +214,134 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        // Verify the module before returning it
+        std::string verifyStr;
+        llvm::raw_string_ostream verifyStream(verifyStr);
+        if (llvm::verifyModule(*module, &verifyStream))
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation",
+                                    "Module verification failed: " + verifyStream.str());
+            return nullptr;
+        }
+
         return module.release();
     }
 
     void Linker::appendDependenciesToRoot(llvm::Module *root)
     {
-        if (root)
+        if (!root)
         {
+            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Root module is null");
+            return;
+        }
+
+        if (dependencies.empty())
+        {
+            DevDebugger::logMessage("WARNING", __LINE__, "Linker", "No dependencies to link");
+            rootModule = root;
+            return;
+        }
+
+        // Get the context from the root module
+        llvm::LLVMContext &rootContext = root->getContext();
+
+        for (auto *depModule : dependencies)
+        {
+            if (!depModule)
+            {
+                DevDebugger::logMessage("WARNING", __LINE__, "Linker", "Skipping null dependency module");
+                continue;
+            }
+
+            // Check if contexts match
+            if (&depModule->getContext() != &rootContext)
+            {
+                DevDebugger::logMessage("WARNING", __LINE__, "Linker",
+                                        "Module context mismatch - attempting to clone module");
+
+                // Create a value mapping for cloning
+                llvm::ValueToValueMapTy VMap;
+                std::unique_ptr<llvm::Module> newModule = llvm::CloneModule(*depModule, VMap);
+
+                if (!newModule)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Linker",
+                                            "Failed to clone module");
+                    continue;
+                }
+
+                // Link the cloned module
+                std::string errorMsg;
+                if (llvm::Linker::linkModules(*root, std::move(newModule)))
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Linker",
+                                            "Failed to link cloned module: " + depModule->getName().str());
+                }
+            }
+            else
+            {
+                // Contexts match, link directly
+                std::unique_ptr<llvm::Module> depModulePtr(depModule);
+                if (llvm::Linker::linkModules(*root, std::move(depModulePtr)))
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Linker",
+                                            "Failed to link module: " + depModule->getName().str());
+                }
+            }
+        }
+
+        // After all linking is done, hoist declarations
+        hoistDeclarations(root);
+
+        // Store the linked result
+        rootModule = root;
+    }
+
+    void Linker::hoistDeclarations(llvm::Module *module)
+    {
+        if (!module)
+            return;
+
+        // Handle functions only
+        std::vector<llvm::Function *> declarations;
+        std::vector<llvm::Function *> definitions;
+
+        // Separate function declarations and definitions
+        for (auto &F : *module)
+        {
+            if (F.isDeclaration())
+            {
+                declarations.push_back(&F);
+            }
+            else
+            {
+                definitions.push_back(&F);
+            }
+        }
+
+        // Sort declarations by name for consistency
+        std::sort(declarations.begin(), declarations.end(),
+                  [](const llvm::Function *a, const llvm::Function *b)
+                  {
+                      return a->getName() < b->getName();
+                  });
+
+        // Remove all functions from module
+        for (auto *F : declarations)
+            F->removeFromParent();
+        for (auto *F : definitions)
+            F->removeFromParent();
+
+        // Add them back in proper order:
+        // 1. Function declarations
+        // 2. Function definitions
+        for (auto *F : declarations)
+        {
+            module->getFunctionList().push_back(F);
+        }
+        for (auto *F : definitions)
+        {
+            module->getFunctionList().push_back(F);
         }
     }
 
