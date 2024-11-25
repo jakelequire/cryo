@@ -257,7 +257,9 @@
     "linker.hpp": "c",
     "devdebugger.hpp": "c",
     "valuemapper.h": "c",
-    "regex": "cpp"
+    "regex": "cpp",
+    "cbindingwrapping.h": "c",
+    "diagnosticinfo.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "disabled",

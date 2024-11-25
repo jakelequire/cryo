@@ -54,8 +54,6 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     // Import the runtime definitions and initialize the global dependencies
     boostrapRuntimeDefinitions(table, typeTable);
-    CryoLinker_InitDependencies(linker);
-
     CryoLinker_LogState(linker);
 
     // Initialize the lexer
@@ -95,7 +93,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     END_COMPILATION_MESSAGE;
 
-    logASTNodeDebugView(programCopy);
+    // logASTNodeDebugView(programCopy);
 
     return 0;
 }

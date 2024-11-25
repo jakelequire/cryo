@@ -160,6 +160,43 @@ namespace Cryo
         createModulesFromDependencies(deps);
     }
 
+    void Linker::newInitDependencies(llvm::Module *srcModule)
+    {
+        if (!srcModule)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Source module is null");
+            CONDITION_FAILED;
+        }
+
+        // Set the linkers module and context from the source module
+        setModuleAndContextFromRoot(srcModule);
+
+        // Scan the dependency directory
+        const std::vector<std::string> deps = scanDependenciesDir();
+        int count = deps.size();
+
+        setDependencyCount(count);
+
+        // Create the modules from the dependencies
+        createModulesFromDependencies(deps);
+
+        // Append the dependencies to the source module
+        appendDependenciesToRoot(srcModule);
+
+        return;
+    }
+
+    void Linker::setModuleAndContextFromRoot(llvm::Module *root)
+    {
+        if (!root)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Root module is null");
+            CONDITION_FAILED;
+        }
+
+        setRootModule(root);
+    }
+
     const std::vector<std::string> Linker::scanDependenciesDir(void)
     {
         std::filesystem::path dir(dependencyDir);
@@ -207,7 +244,7 @@ namespace Cryo
     {
         llvm::SMDiagnostic err;
 
-        std::unique_ptr<llvm::Module> module = llvm::parseIRFile(inputFile, err, context);
+        std::unique_ptr<llvm::Module> module = llvm::parseIRFile(inputFile, err, rootModule->getContext());
         if (!module)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Failed to parse IR file");
@@ -245,6 +282,9 @@ namespace Cryo
         // Get the context from the root module
         llvm::LLVMContext &rootContext = root->getContext();
 
+        // Linker flags
+        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
+
         for (auto *depModule : dependencies)
         {
             if (!depModule)
@@ -254,35 +294,20 @@ namespace Cryo
             }
 
             // Check if contexts match
-            if (&depModule->getContext() != &rootContext)
+            if (!contextMatch(root, depModule))
             {
                 DevDebugger::logMessage("WARNING", __LINE__, "Linker",
                                         "Module context mismatch - attempting to clone module");
+                contextMismatchMerge(root, depModule);
 
-                // Create a value mapping for cloning
-                llvm::ValueToValueMapTy VMap;
-                std::unique_ptr<llvm::Module> newModule = llvm::CloneModule(*depModule, VMap);
-
-                if (!newModule)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Linker",
-                                            "Failed to clone module");
-                    continue;
-                }
-
-                // Link the cloned module
-                std::string errorMsg;
-                if (llvm::Linker::linkModules(*root, std::move(newModule)))
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Linker",
-                                            "Failed to link cloned module: " + depModule->getName().str());
-                }
+                // Continue to next module
+                continue;
             }
             else
             {
                 // Contexts match, link directly
                 std::unique_ptr<llvm::Module> depModulePtr(depModule);
-                if (llvm::Linker::linkModules(*root, std::move(depModulePtr)))
+                if (llvm::Linker::linkModules(*root, std::move(depModulePtr), linkerFlags))
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Linker",
                                             "Failed to link module: " + depModule->getName().str());
@@ -295,6 +320,45 @@ namespace Cryo
 
         // Store the linked result
         rootModule = root;
+    }
+
+    // This function is executed when the context of the two modules do not match.
+    // We will attempt to make the destination module the base context,
+    // and merge the source modules into it and make the context match.
+    void Linker::contextMismatchMerge(llvm::Module *dest, llvm::Module *src)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Merging modules with context mismatch");
+
+        // Create a value mapping for cloning
+        llvm::ValueToValueMapTy VMap;
+
+        // Clone the source module
+        std::unique_ptr<llvm::Module> newModule = llvm::CloneModule(*src, VMap);
+        if (!newModule)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Failed to clone module");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Module cloned, linking to destination");
+        // Link the cloned module
+        std::string errorMsg;
+        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
+        if (llvm::Linker::linkModules(*dest, std::move(newModule), linkerFlags))
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Failed to link cloned module");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Module linked, hoisting declarations");
+
+        // Hoist declarations
+        hoistDeclarations(dest);
+
+        // Store the linked result
+        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Module context mismatch merge complete");
+
+        return;
     }
 
     void Linker::hoistDeclarations(llvm::Module *module)
@@ -343,6 +407,11 @@ namespace Cryo
         {
             module->getFunctionList().push_back(F);
         }
+    }
+
+    bool Linker::contextMatch(llvm::Module *mod1, llvm::Module *mod2)
+    {
+        return &mod1->getContext() == &mod2->getContext();
     }
 
 } // namespace Cryo

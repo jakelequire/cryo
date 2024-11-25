@@ -118,12 +118,11 @@ namespace Cryo
         LLVM_MODULE_COMPLETE_START;
 
         LLVMIRHighlighter highlighter;
-        // File output without colors (keep it clean)
+        // We need to print the highlighted version to the console
+        // and the raw version to the file
         cryoContext.module->print(dest, nullptr);
-        // Console output with colors
         llvm::formatted_raw_ostream formatted_out(llvm::outs());
-        cryoContext.module->print(formatted_out, &highlighter);
-
+        highlighter.printWithHighlighting(cryoContext.module.get(), formatted_out);
         LLVM_MODULE_COMPLETE_END;
 
         dest.close();

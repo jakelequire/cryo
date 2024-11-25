@@ -230,6 +230,18 @@ namespace Cryo
             isPreprocessing = true;
         }
 
+        void initDependencies()
+        {
+            if (linker)
+            {
+                linker->newInitDependencies(&getModule());
+            }
+            else
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "CryoCompiler", "Linker not set");
+            }
+        }
+
         void linkDependencies(void)
         {
             if (linker)

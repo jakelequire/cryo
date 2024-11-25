@@ -1,6 +1,5 @@
 namespace Main;
 
-
 function foo() -> void {
     return;
 }

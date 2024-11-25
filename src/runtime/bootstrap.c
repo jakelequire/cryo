@@ -16,9 +16,15 @@
  ********************************************************************************/
 #include "runtime/bootstrap.h"
 
+char *runtimePaths[] = {
+    "/home/phock/Programming/apps/cryo/cryo/runtime.cryo",
+    "/home/phock/Programming/apps/cryo/build/out/deps/runtime.ll",
+    "/workspaces/cryo/cryo/runtime.cryo",
+    "/workspaces/cryo/build/out/deps/runtime.ll"};
+
 // This is being hard coded for now, but will be replaced with a more dynamic solution later.
-#define RUNTIME_SRC_FILE "/home/phock/Programming/apps/cryo/cryo/runtime.cryo"
-#define RUINTIME_OBJ_FILE "/home/phock/Programming/apps/cryo/build/out/deps/runtime.ll"
+#define RUNTIME_SRC_FILE runtimePaths[2]
+#define RUINTIME_OBJ_FILE runtimePaths[3]
 
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
@@ -105,7 +111,7 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
     if (!source)
     {
         fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
-        return NULL;
+        CONDITION_FAILED;
     }
 
     // Initialize the lexer

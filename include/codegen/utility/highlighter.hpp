@@ -87,7 +87,7 @@ private:
             {std::regex("\\b(alloca|load|store|getelementptr|inbounds)\\b"), Colors::MEMORY, 600},
 
             // Type patterns (handle array types properly)
-            {std::regex("\\b(void|i1|i8|i16|i32|i64|float|double|x86_fp80|fp128|ppc_fp128|label|metadata)\\b"), Colors::TYPE, 600},
+            {std::regex("\\b(ptr|void|i1|i8|i16|i32|i64|float|double|x86_fp80|fp128|ppc_fp128|label|metadata)\\b"), Colors::TYPE, 600},
             {std::regex("\\[\\s*\\d+\\s*x\\s*[\\w\\d*]+\\]"), Colors::TYPE, 600},
 
             // Attributes and alignment

@@ -102,6 +102,8 @@ namespace Cryo
         std::vector<llvm::Module *> dependencies;
         llvm::Module *rootModule;
 
+        void setRootModule(llvm::Module *mod) { rootModule = mod; }
+
         int dependencyCount = 0;
         void setDependencyCount(int count) { dependencyCount = count; }
 
@@ -121,15 +123,19 @@ namespace Cryo
 
         // The C++ Linker Implementation
         void initDependencies(void);
+        void newInitDependencies(llvm::Module *srcModule);
+
         const std::vector<std::string> scanDependenciesDir(void);
         void appendDependenciesToRoot(llvm::Module *root);
         void hoistDeclarations(llvm::Module *module);
+        void contextMismatchMerge(llvm::Module *dest, llvm::Module *src);
 
     private:
-        llvm::LLVMContext context;
-
         void createModulesFromDependencies(const std::vector<std::string> &deps);
         llvm::Module *compileAndMergeModule(std::string inputFile);
+        void setModuleAndContextFromRoot(llvm::Module *root);
+
+        bool contextMatch(llvm::Module *mod1, llvm::Module *mod2);
     };
 
     // C API Implementation
