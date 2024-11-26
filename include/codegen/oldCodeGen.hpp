@@ -799,12 +799,22 @@ namespace Cryo
     class ErrorHandler
     {
     public:
-        ErrorHandler(CryoCompiler &compiler) : compiler(compiler) {}
+        ErrorHandler(CryoCompiler &compiler) : compiler(compiler),
+                                               sharedOutOfBoundsBlock(nullptr),
+                                               sharedErrorFunc(nullptr),
+                                               isInitialized(false) {}
 
         void IsOutOfBoundsException(llvm::Value *index, std::string arrayName, llvm::Type *arrayType);
+        llvm::BasicBlock *getOrCreateErrorBlock(llvm::Function *function);
 
     private:
         CryoCompiler &compiler;
+        llvm::BasicBlock *sharedOutOfBoundsBlock;
+        llvm::Function *sharedErrorFunc;
+        bool isInitialized;
+        std::unordered_map<llvm::Function *, llvm::BasicBlock *> functionErrorBlocks;
+
+        void initializeErrorBlocks();
     };
 
     // -----------------------------------------------------------------------------------------------

@@ -28,13 +28,13 @@ __EXTERN_C__ void __c_printIntPtr(int *value)
 
 __EXTERN_C__ void __c_printStr(char *value)
 {
-    printf("%s\n", value);
+    printf("%s\n", (char *)value);
 }
 
-__EXTERN_C__ void printStr(char *value)
-{
-    printf("%s\n", value);
-}
+// __EXTERN_C__ void printStr(char *value)
+// {
+//     printf("%s\n", value);
+// }
 
 __EXTERN_C__ char *__c_intToString(int value)
 {

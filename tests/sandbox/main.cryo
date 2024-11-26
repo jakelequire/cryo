@@ -1,9 +1,5 @@
 namespace Main;
 
-function foo() -> void {
-    return;
-}
-extern function printStr(s: string) -> void;
 extern function intToString(num: int) -> string;
 
 struct Int {

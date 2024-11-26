@@ -917,16 +917,16 @@ namespace Cryo
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(param, alloca);
         storeInst->setAlignment(llvm::Align(8));
         // Load the value of the parameter
-        // llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
+        llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
 
         std::string _paramName = param->getName().str();
-        compiler.getContext().namedValues[param->getName().str()] = alloca;
+        compiler.getContext().namedValues[param->getName().str()] = loadInst;
 
-        symTable.addParamAsVariable(namespaceName, _paramName, alloca, argTypes, storeInst);
+        symTable.addParamAsVariable(namespaceName, _paramName, loadInst, argTypes, storeInst);
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
-        return alloca;
+        return loadInst;
     }
 
     llvm::Value *Functions::createParamFromParamNode(ASTNode *paramNode)

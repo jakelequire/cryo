@@ -66,7 +66,7 @@ private:
         patterns = {
 
             // Error messages - highest priority
-            {std::regex("Error:|error:|does not match|failed"), Colors::ERROR, 1100},
+            {std::regex("Error:|does not match|failed"), Colors::ERROR, 1100},
             {std::regex("Function context does not match Module context!"), Colors::ERROR, 1100},
             {std::regex("Call parameter type does not match function signature!"), Colors::ERROR, 1100},
 
