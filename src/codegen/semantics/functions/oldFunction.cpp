@@ -69,7 +69,14 @@ namespace Cryo
 
     llvm::Function *Functions::getFunction(std::string functionName)
     {
-        DEBUG_BREAKPOINT;
+        CryoContext &context = compiler.getContext();
+        llvm::Function *function = context.module->getFunction(functionName);
+        if (!function)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            CONDITION_FAILED;
+        }
+        return function;
     }
 
     // -----------------------------------------------------------------------------------------------

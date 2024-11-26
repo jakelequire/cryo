@@ -89,7 +89,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
 
     // Before returning, add cleanup
-    CryoLinker_Destroy(linker);
+    // CryoLinker_Destroy(linker); <- This was causing a problem at the end of compilation, unsure why
 
     END_COMPILATION_MESSAGE;
 

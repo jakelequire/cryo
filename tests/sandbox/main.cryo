@@ -3,8 +3,6 @@ namespace Main;
 function foo() -> void {
     return;
 }
-
-extern function printInt(i: int) -> void;
 extern function printStr(s: string) -> void;
 extern function intToString(num: int) -> string;
 
@@ -33,14 +31,15 @@ struct ObjectTest {
 function arrayTesting() -> void {
     printStr("--------- Array Testing ---------");
     const fooArr: int[] = [1, 2, 3, 4, 5];
-    // printInt(fooArr[0]);
-    // printInt(fooArr[1]);
-    // printInt(fooArr[2]);
-    // printInt(fooArr[3]);
-    // printInt(fooArr[4]);
-// 
-    // // This should throw an error
-    // printInt(fooArr[5]);
+    
+    printInt(fooArr[0]);
+    printInt(fooArr[1]);
+    printInt(fooArr[2]);
+    printInt(fooArr[3]);
+    printInt(fooArr[4]);
+
+    // This should throw an error
+    printInt(fooArr[5]);
 
     return;
 }
@@ -90,13 +89,14 @@ function binOpTest() -> void {
 
 
 function main() -> void {
-    runtimeTest();
     const fooInt: int = 34;
     printInt(fooInt);
 
     const fooStr: string = "This is pain";
     printStr(fooStr);
     printStr("Oof!");
+
+    // sys_exit(0);
 
     structTesting();
     binOpTest();
