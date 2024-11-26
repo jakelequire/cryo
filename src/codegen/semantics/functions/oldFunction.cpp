@@ -485,10 +485,14 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        std::cout << "\n\nReturn Expression: " << std::endl;
-        std::cout << "Return Type: " << DataTypeToString(returnType) << std::endl;
-        std::cout << "Return Expression Type: " << CryoNodeTypeToString(returnExpression->metaData->type) << std::endl;
-        DevDebugger::logNode(returnExpression);
+        llvm::Value *returnValue = compiler.getGenerator().getInitilizerValue(returnExpression);
+        if (!returnValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to get return value");
+            CONDITION_FAILED;
+        }
+
+        return returnValue;
     }
 
     // -----------------------------------------------------------------------------------------------

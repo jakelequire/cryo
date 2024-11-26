@@ -118,6 +118,11 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
         container->baseType = PRIMITIVE_TYPE;
         container->primitive = PRIM_NULL;
     }
+    else if (strcmp(baseTypeStr, "any") == 0)
+    {
+        container->baseType = PRIMITIVE_TYPE;
+        container->primitive = PRIM_ANY;
+    }
     else
     {
         // This is where we handle custom types.

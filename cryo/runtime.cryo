@@ -28,9 +28,9 @@ function printStr(s: string) -> void {
     return;
 }
 
-// function intToString(i: int) -> string {
-//     return __c_intToString(i);
-// }
+function intToString(i: int) -> string {
+    return __c_intToString(i);
+}
 
 function outOfBoundsError() -> void {
     printStr("Array index out of bounds error");

@@ -1,7 +1,5 @@
 namespace Main;
 
-extern function intToString(num: int) -> string;
-
 struct Int {
     value: int;
 

@@ -21,6 +21,7 @@
 // #################################//
 KeywordToken keywords[] = {
     {"public", TOKEN_KW_PUBLIC},
+    {"private", TOKEN_KW_PRIVATE},
     {"function", TOKEN_KW_FN},
     {"if", TOKEN_KW_IF},
     {"else", TOKEN_KW_ELSE},
@@ -52,22 +53,18 @@ KeywordToken keywords[] = {
     {"this", TOKEN_KW_THIS},
     {"new", TOKEN_KW_NEW},
     {"extends", TOKEN_KW_EXTENDS},
+    {"static", TOKEN_KW_STATIC},
+    {"protected", TOKEN_KW_PROTECTED},
+    {"class", TOKEN_KW_CLASS},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
-// #################################//
-//        DataType Dictionary.      //
-// #################################//
+#define X(str, type) DECLARE_TOKEN(str, type),
 DataTypeToken dataTypes[] = {
-    {"int", TOKEN_TYPE_INT},
-    {"string", TOKEN_TYPE_STRING},
-    {"boolean", TOKEN_TYPE_BOOLEAN},
-    {"void", TOKEN_TYPE_VOID},
-    {"int[]", TOKEN_TYPE_INT_ARRAY},
-    {"string[]", TOKEN_TYPE_STRING_ARRAY},
-    {"boolean[]", TOKEN_TYPE_BOOLEAN_ARRAY},
-    {NULL, TOKEN_UNKNOWN} // Sentinel value
+    DATA_TYPE_TABLE
+        DECLARE_TOKEN(NULL, TOKEN_UNKNOWN) // Sentinel value
 };
+#undef X
 
 /* =========================================================== */
 /* @Lexer */

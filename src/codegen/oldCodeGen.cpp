@@ -375,7 +375,7 @@ namespace Cryo
         case NODE_FUNCTION_CALL:
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Function Call");
-            generator.handleFunctionCall(node);
+            llvmValue = functions.createFunctionCall(node);
             break;
         }
         case NODE_PARAM:
@@ -437,6 +437,13 @@ namespace Cryo
                 const char *cString = strdup(literalNode->value.stringValue);
                 std::string formattedString = formatString(std::string(cString));
                 llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, formattedString);
+                break;
+            }
+            case PRIM_ANY:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Any Literal");
+                // Handle Any type
+                DEBUG_BREAKPOINT;
                 break;
             }
             case PRIM_VOID:

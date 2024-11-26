@@ -1,0 +1,14 @@
+namespace Classes;
+
+
+static class IO {
+
+    public print(msg: Any) -> void {
+        
+    }
+}
+
+
+function main() -> void {
+    return;
+}

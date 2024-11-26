@@ -30,6 +30,19 @@
 #include "settings/compilerSettings.h"
 #include "common/common.h"
 
+// Define each token mapping
+#define DECLARE_TOKEN(str, type) {str, type}
+
+// Define the data types table with X-Macros
+#define DATA_TYPE_TABLE                    \
+    X("int", TOKEN_TYPE_INT)               \
+    X("string", TOKEN_TYPE_STRING)         \
+    X("boolean", TOKEN_TYPE_BOOLEAN)       \
+    X("void", TOKEN_TYPE_VOID)             \
+    X("int[]", TOKEN_TYPE_INT_ARRAY)       \
+    X("string[]", TOKEN_TYPE_STRING_ARRAY) \
+    X("boolean[]", TOKEN_TYPE_BOOLEAN_ARRAY)
+
 typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
 typedef struct Arena Arena;
@@ -44,6 +57,7 @@ typedef enum PrimitiveDataType
     PRIM_BOOLEAN, // `boolean`
     PRIM_VOID,    // `void`
     PRIM_NULL,    // `null`
+    PRIM_ANY,     // `any`
     PRIM_CUSTOM,  // Custom type
     PRIM_UNKNOWN  // `<UNKNOWN>`
 } PrimitiveDataType;
@@ -248,6 +262,7 @@ extern "C"
     DataType *createPrimitiveBooleanType(void);
     DataType *createPrimitiveVoidType(void);
     DataType *createPrimitiveNullType(void);
+    DataType *createPrimitiveAnyType(void);
     DataType *createUnknownType(void);
     TypeContainer *createPrimitiveType(PrimitiveDataType primType);
     TypeContainer *createStructType(const char *name, StructType *structDef);

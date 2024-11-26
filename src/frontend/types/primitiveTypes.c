@@ -77,6 +77,16 @@ DataType *createPrimitiveNullType(void)
     return wrapTypeContainer(container);
 }
 
+// Primitive any Type creation `(default/baseline)`
+DataType *createPrimitiveAnyType(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_ANY;
+
+    return wrapTypeContainer(container);
+}
+
 // Unknown Type `(will be resolved later in the compiler)`
 DataType *createUnknownType(void)
 {

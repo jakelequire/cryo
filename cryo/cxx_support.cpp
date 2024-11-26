@@ -43,12 +43,12 @@ __EXTERN_C__ char *__c_intToString(int value)
     return buffer;
 }
 
-__EXTERN_C__ char *intToString(int value)
-{
-    char *buffer = (char *)malloc(sizeof(char) * 1024);
-    sprintf(buffer, "%d", value);
-    return buffer;
-}
+// __EXTERN_C__ char *intToString(int value)
+// {
+//     char *buffer = (char *)malloc(sizeof(char) * 1024);
+//     sprintf(buffer, "%d", value);
+//     return buffer;
+// }
 
 __EXTERN_C__ void __c_sys_exit(int code)
 {
