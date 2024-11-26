@@ -596,8 +596,17 @@ namespace Cryo
         void createFunctionBlock(ASTNode *node);
         void createReturnStatement(ASTNode *node);
         void createExternFunction(ASTNode *node);
-        void createScopedFunctionCall(ASTNode *node);
+
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
+
+        llvm::Value *anyTypeParam(std::string functionName, llvm::Value *argValue);
+        llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);
+        std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
+
+        // -----------------------------------
+        // Function Calls
+
+        void createScopedFunctionCall(ASTNode *node);
 
         llvm::Value *createMethodCall(MethodCallNode *node);
         llvm::Value *createPropertyCall(PropertyNode *property);
@@ -609,10 +618,10 @@ namespace Cryo
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
 
-        llvm::Value *anyTypeParam(std::string functionName, llvm::Value *argValue);
+        // -----------------------------------
+        // Cryo entry point functions
 
-        std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
-        llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);
+        void createCryoMainFunction(ASTNode *node);
     };
 
     // -----------------------------------------------------------------------------------------------

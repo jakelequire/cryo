@@ -32,7 +32,8 @@ function arrayTesting() -> void {
     printInt(fooArr[3]);
     printInt(fooArr[4]);
 
-    // This should throw an error
+    // This should throw an error and calls `sys_exit()` (for now).
+    // Eventually, I'll just return null and move on with execution.
     printInt(fooArr[5]);
 
     return;
@@ -82,15 +83,14 @@ function binOpTest() -> void {
 }
 
 
-function main() -> void {
-    const fooInt: int = 34;
-    printInt(fooInt);
+function main(argc: int, argv: string[]) -> void {
+    printStr("-------- Main Function --------");
+    printStr("Arg count: ");
+    printInt(argc);
 
-    const fooStr: string = "This is pain";
-    printStr(fooStr);
-    printStr("Oof!");
-
-    // sys_exit(0);
+    printStr("\nArgv[0]:");
+    const argOne: string = argv[0];
+    printStr(argOne);
 
     structTesting();
     binOpTest();

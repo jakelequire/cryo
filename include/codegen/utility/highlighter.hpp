@@ -48,6 +48,7 @@ private:
         static constexpr const char *ATTRIBUTE = "\033[38;5;146m";   // Light gray for attributes
         static constexpr const char *LABEL = "\033[38;5;159m";       // Light cyan for labels
         static constexpr const char *OPERATOR = "\033[38;5;231m";    // White for operators
+        static constexpr const char *BLOCK = "\033[35m";             // Purple for basic blocks
         static constexpr const char *ERROR = "\033[1;31m";           // Dark red for errors
     };
 
@@ -76,8 +77,11 @@ private:
             // Strings
             {std::regex("\"[^\"]*\""), Colors::STRING, 900},
 
+            // Basic blocks
+            {std::regex("^[a-zA-Z][a-zA-Z0-9._]*:", std::regex::multiline), Colors::BLOCK, 850},
+
             // Function declarations
-            {std::regex("(define|declare)\\s+([^@]*)(@\\w+)"), Colors::KEYWORD, 800},
+            {std::regex("(define|declare)\\s+([^@]*)(@[\\w._-]+)"), Colors::KEYWORD, 800},
 
             // Common LLVM instructions with type handling
             {std::regex("\\b(add|sub|mul|div|rem|and|or|xor|shl|lshr|ashr|fadd|fsub|fmul|fdiv|frem)\\b"), Colors::INSTRUCTION, 700},

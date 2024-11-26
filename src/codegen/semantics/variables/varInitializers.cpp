@@ -142,7 +142,7 @@ namespace Cryo
         }
 
         // Combine instance name and method name to get the function name
-        std::string methodName = instanceName + "::" + methodDefName;
+        std::string methodName = instanceName + "." + methodDefName;
 
         // Get the function
         llvm::Function *function = compiler.getContext().module->getFunction(methodName);
@@ -254,7 +254,7 @@ namespace Cryo
                 // IMPORTANT: The constructor is required to initialize the struct with the given value.
                 // Get the constructor function
                 llvm::Function *ctor = compiler.getContext().module->getFunction(
-                    structName + "::constructor");
+                    structName + ".constructor");
                 if (!ctor)
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Variables",

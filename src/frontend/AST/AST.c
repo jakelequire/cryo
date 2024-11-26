@@ -235,8 +235,7 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
 char *handleStringFormatting(char *value)
 {
     // Find the first instance of a format specifier
-    // i.e `\n`, `\t`, etc.
-    char *formatSpecifier = strchr((char *)value, '\\');
+    char *formatSpecifier = strchr(value, '\\');
     if (!formatSpecifier)
     {
         return value;
@@ -244,26 +243,32 @@ char *handleStringFormatting(char *value)
 
     // Find the character after the backslash
     char *formatChar = formatSpecifier + 1;
+    char replacement = '\0';
+
     switch (*formatChar)
     {
     case 'n':
-        *formatSpecifier = '\n';
+        replacement = '\n';
         break;
     case 't':
-        *formatSpecifier = '\t';
+        replacement = '\t';
         break;
     case 'r':
-        *formatSpecifier = '\r';
+        replacement = '\r';
         break;
     case '0':
-        *formatSpecifier = '\0';
+        replacement = '\0';
         break;
     default:
-        break;
+        return value;
     }
 
-    // Recursively call the function to handle the next format specifier
-    return handleStringFormatting(formatSpecifier);
+    // Replace the escape sequence and shift the rest of the string left
+    *formatSpecifier = replacement;
+    memmove(formatSpecifier + 1, formatSpecifier + 2, strlen(formatSpecifier + 2) + 1);
+
+    // Recursively handle any remaining escape sequences
+    return handleStringFormatting(value);
 }
 
 int getStringLength(char *str)

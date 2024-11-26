@@ -88,7 +88,7 @@ namespace Cryo
         llvm::Function *ctorFunc = llvm::Function::Create(
             ctorType,
             llvm::Function::ExternalLinkage,
-            structName + "::constructor",
+            structName + ".constructor",
             *compiler.getContext().module);
 
         // Create entry block
@@ -122,7 +122,7 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling Method");
 
         MethodNode *method = methodNode->data.method;
-        std::string methodName = structName + "::" + method->name;
+        std::string methodName = structName + "." + method->name;
 
         // Create parameter types for method
         std::vector<llvm::Type *> paramTypes;
@@ -236,7 +236,7 @@ namespace Cryo
                 args.push_back(structPtr);
                 args.push_back(initValue);
 
-                llvm::Function *ctor = compiler.getContext().module->getFunction(structName + "::constructor");
+                llvm::Function *ctor = compiler.getContext().module->getFunction(structName + ".constructor");
                 compiler.getContext().builder.CreateCall(ctor, args);
             }
         }
