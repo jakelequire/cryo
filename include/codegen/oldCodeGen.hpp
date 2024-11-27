@@ -479,6 +479,8 @@ namespace Cryo
 
         bool isCustomType(DataType *type);
 
+        bool isLLVMStringType(llvm::Value *val);
+
     private:
         CryoCompiler &compiler;
 
@@ -526,6 +528,8 @@ namespace Cryo
         llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName);
         llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, DataType *dataType, std::string varName);
         llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
+        llvm::Value *createStringIndexExpr(IndexExprNode *indexExprNode, std::string varName);
+
         llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
         llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);
         llvm::Value *createMethodCallVariable(MethodCallNode *node, std::string varName, DataType *varType);

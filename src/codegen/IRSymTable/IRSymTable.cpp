@@ -737,9 +737,6 @@ namespace Cryo
         case NODE_ARRAY_LITERAL:
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing ARRAY_LITERAL node");
             break;
-        case NODE_INDEX_EXPR:
-            DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing INDEX_EXPR node");
-            break;
         case NODE_VAR_REASSIGN:
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing VAR_REASSIGNMENT node");
             break;
@@ -749,6 +746,15 @@ namespace Cryo
         case NODE_SCOPED_FUNCTION_CALL:
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing SCOPED_FUNCTION_CALL node");
             break;
+        case NODE_INDEX_EXPR:
+        {
+            if (node->data.indexExpr)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing INDEX_EXPR node");
+                traverseASTNode(node->data.indexExpr->array, symTable);
+                traverseASTNode(node->data.indexExpr->index, symTable);
+            }
+        }
         case NODE_PARAM:
         {
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing PARAM node");

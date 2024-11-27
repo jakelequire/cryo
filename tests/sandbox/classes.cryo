@@ -3,7 +3,7 @@ namespace Classes;
 
 static class IO {
 
-    public print(msg: Any) -> void {
+    public static print(msg: Any) -> void {
         
     }
 }

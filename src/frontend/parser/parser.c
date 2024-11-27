@@ -629,8 +629,14 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, Parsing
         // This can either be a struct field or a function call.
         return parseDotNotation(lexer, table, context, arena, state, typeTable);
     }
+    // Peek to see if the next token is `[` for array indexing
+    if (nextToken == TOKEN_LBRACKET)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing array indexing for identifier: %s", curToken);
+        return parseArrayIndexing(lexer, table, context, NULL, arena, state, typeTable);
+    }
     // Peek to see if the next token is `;` for a statement
-    if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_SEMICOLON)
+    if (nextToken == TOKEN_SEMICOLON)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing identifier as a statement");
         ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
@@ -638,27 +644,22 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, Parsing
         return node;
     }
     // Peek to see if the next token is `)` for a statement
-    if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_RPAREN)
+    if (nextToken == TOKEN_RPAREN)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing identifier as a statement");
         ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), table, arena, state, typeTable);
         getNextToken(lexer, arena, state, typeTable);
         return node;
     }
-    // Peek to see if the next token is `[` for array indexing
-    if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LBRACKET)
-    {
-        logMessage("INFO", __LINE__, "Parser", "Parsing array indexing");
-        return parseArrayIndexing(lexer, table, context, NULL, arena, state, typeTable);
-    }
+
     // Peek to see if the next token is `=` for assignment
-    else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_EQUAL)
+    else if (nextToken == TOKEN_EQUAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing assignment");
         return parseAssignment(lexer, table, context, NULL, arena, state, typeTable);
     }
     // Peek to see if the next token is `(` to start a function call.
-    else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN, typeTable)
+    else if (nextToken == TOKEN_LPAREN)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing function call");
         char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);

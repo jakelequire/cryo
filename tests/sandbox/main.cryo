@@ -22,6 +22,14 @@ struct ObjectTest {
     valueTwo: string;
 }
 
+function stringTesting() -> void {
+    const testString: string = "Hello";
+    const indexString: string = testString[0];
+    printStr(indexString);
+
+    return;
+}
+
 function arrayTesting() -> void {
     printStr("--------- Array Testing ---------");
     const fooArr: int[] = [1, 2, 3, 4, 5];
@@ -34,7 +42,7 @@ function arrayTesting() -> void {
 
     // This should throw an error and calls `sys_exit()` (for now).
     // Eventually, I'll just return null and move on with execution.
-    printInt(fooArr[5]);
+    // printInt(fooArr[5]);
 
     return;
 }

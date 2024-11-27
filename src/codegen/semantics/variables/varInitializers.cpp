@@ -681,6 +681,7 @@ namespace Cryo
     llvm::Value *Variables::createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Index Expression Initializer");
+        OldTypes &types = compiler.getTypes();
 
         llvm::Value *llvmValue = nullptr;
         llvm::Type *llvmType = nullptr;
@@ -698,10 +699,116 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        llvm::Value *namedVal = compiler.getContext().namedValues[arrayName];
+        if (!namedVal)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Named value not found");
+            CONDITION_FAILED;
+        }
+
         llvm::Value *arrayPtr = var->LLVMValue;
         if (!arrayPtr)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array pointer not found");
+            CONDITION_FAILED;
+        }
+
+        bool isStringType = types.isLLVMStringType(namedVal);
+        if (isStringType)
+        {
+            // If the index expression is trying to index a string, we need to handle it differently.
+            return createStringIndexExpr(indexExprNode, varName);
+        }
+
+        llvm::Type *arrayType = var->LLVMType;
+        if (!arrayType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array type not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::StoreInst *arrStoreInst = var->LLVMStoreInst;
+        if (!arrStoreInst)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(arrStoreInst);
+        llvm::Type *arrInstType = compiler.getTypes().parseInstForType(inst);
+
+        // Get the index value
+        llvm::Value *indexValue = compiler.getGenerator().getInitilizerValue(indexExprNode->index);
+        if (!indexValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Index value not found");
+            CONDITION_FAILED;
+        }
+
+        // Create GEP for array access
+        llvm::Value *arrayValue = compiler.getContext().builder.CreateGEP(
+            arrInstType,
+            arrayPtr,
+            indexValue,
+            varName + ".array");
+
+        // Load and return array value
+        llvm::LoadInst *loadedArr = compiler.getContext().builder.CreateLoad(
+            arrInstType,
+            arrayValue,
+            varName + ".load");
+
+        // Store the array value in the variable
+        llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(arrInstType, nullptr, varName);
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadedArr, varValue);
+        storeInst->setAlignment(llvm::Align(8));
+
+        // Update the symbol table
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
+        compiler.getContext().namedValues[varName] = loadedArr;
+        compiler.getSymTable().updateVariableNode(
+            compiler.getContext().currentNamespace,
+            varName,
+            loadedArr,
+            arrInstType);
+
+        // Add load inst to var with `addLoadInstToVar`
+        compiler.getSymTable().addLoadInstToVar(
+            compiler.getContext().currentNamespace,
+            varName,
+            loadedArr);
+
+        return loadedArr;
+    }
+
+    llvm::Value *Variables::createStringIndexExpr(IndexExprNode *indexExprNode, std::string varName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Index Expression");
+        OldTypes &types = compiler.getTypes();
+
+        std::string arrayName = std::string(indexExprNode->name);
+        std::cout << "Array Name: " << arrayName << std::endl;
+        std::cout << "Variable Name: " << varName << std::endl;
+        ASTNode *indexNode = indexExprNode->index;
+
+        STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, arrayName);
+        if (!var)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *arrayPtr = var->LLVMValue;
+        if (!arrayPtr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array pointer not found");
+            CONDITION_FAILED;
+        }
+
+        bool isStringType = types.isLLVMStringType(arrayPtr);
+        if (!isStringType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array is not a string type");
             CONDITION_FAILED;
         }
 

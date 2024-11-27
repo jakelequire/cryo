@@ -507,4 +507,38 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Type is not custom");
         return false;
     }
+
+    bool OldTypes::isLLVMStringType(llvm::Value *val)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Checking if value is LLVM string type");
+
+        if (val->getType()->isPointerTy())
+        {
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(val);
+            if (!inst)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Types", "Instruction is null");
+                return false;
+            }
+            DevDebugger::logLLVMInst(inst);
+            llvm::Type *ty = parseInstForType(inst);
+            if (ty->isPointerTy())
+            {
+                llvm::Type *ptrTy = ty;
+                if (ptrTy->isIntegerTy(8))
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Types", "Value is an LLVM string type");
+                    return true;
+                }
+            }
+
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Value is not an LLVM string type");
+            DevDebugger::logLLVMType(ty);
+            return false;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Value is not a pointer");
+        DevDebugger::logLLVMValue(val);
+        return false;
+    }
 } // namespace Cryo
