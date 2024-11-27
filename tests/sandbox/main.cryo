@@ -23,8 +23,9 @@ struct ObjectTest {
 }
 
 function stringTesting() -> void {
+    printStr("------- String Testing --------");
     const testString: string = "Hello";
-    const indexString: string = testString[0];
+    const indexString: string = testString[1];
     printStr(indexString);
 
     return;
@@ -103,6 +104,7 @@ function main(argc: int, argv: string[]) -> void {
     structTesting();
     binOpTest();
     arrayTesting();
+    stringTesting();
 
     return;
 }

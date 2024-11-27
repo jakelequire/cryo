@@ -687,6 +687,13 @@ namespace Cryo
         compiler.getContext().namedValues[param->getName().str()] = loadInst;
 
         symTable.addParamAsVariable(namespaceName, _paramName, loadInst, argTypes, storeInst);
+        DataType *paramType = paramNode->data.param->type;
+        if (!paramType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Parameter type not found");
+            CONDITION_FAILED;
+        }
+        symTable.addDataTypeToVar(namespaceName, _paramName, paramType);
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
@@ -735,6 +742,7 @@ namespace Cryo
         compiler.getContext().namedValues[paramName] = alloca;
 
         symTable.addParamAsVariable(namespaceName, _paramName, alloca, paramLLVMType, storeInst);
+        DataType *paramDataType = paramNode->data.param->type;
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 

@@ -383,6 +383,24 @@ namespace Cryo
         return;
     }
 
+    void IRSymTable::addDataTypeToVar(std::string namespaceName, std::string varName, DataType *dataType)
+    {
+        // This should only update the data type if the data type in the `STVariable` is a nullptr or a `UnknownType`
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Data Type to Variable");
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+        // Add the data type to the variable node
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Updating Data Type");
+        varNode.dataType = dataType;
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+        std::cout << "[IRSymTable] Data Type Added to Variable" << std::endl;
+        return;
+    }
+
     void IRSymTable::addFunctionToVar(std::string namespaceName, std::string varName, llvm::Value *functionPtr)
     {
 

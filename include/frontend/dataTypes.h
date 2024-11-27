@@ -310,6 +310,7 @@ extern "C"
 
     bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
     bool isValidType(DataType *type);
+    bool isStringDataType(DataType *type);
 
     // # =========================================================================== #
     // # Generic Type Functions

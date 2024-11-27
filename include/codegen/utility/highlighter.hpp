@@ -63,9 +63,9 @@ private:
 
     void initializePatterns()
     {
+
         // Higher priority patterns are processed first
         patterns = {
-
             // Error messages - highest priority
             {std::regex("Error:|does not match|failed"), Colors::ERROR, 1100},
             {std::regex("Function context does not match Module context!"), Colors::ERROR, 1100},
@@ -78,7 +78,7 @@ private:
             {std::regex("\"[^\"]*\""), Colors::STRING, 900},
 
             // Basic blocks
-            {std::regex("^[a-zA-Z][a-zA-Z0-9._]*:", std::regex::multiline), Colors::BLOCK, 850},
+            // {std::regex("^[a-zA-Z][a-zA-Z0-9._]*:", std::regex::multiline), Colors::BLOCK, 850},
 
             // Function declarations
             {std::regex("(define|declare)\\s+([^@]*)(@[\\w._-]+)"), Colors::KEYWORD, 800},

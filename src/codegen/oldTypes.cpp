@@ -398,12 +398,18 @@ namespace Cryo
             return nullptr;
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Parsing instruction");
+        DevDebugger::logLLVMInst(inst);
+
         llvm::Value *op = inst->getOperand(0);
         if (!op)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Operand is null");
             return nullptr;
         }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Operand");
+        DevDebugger::logLLVMValue(op);
 
         llvm::Type *ty = op->getType();
         if (!ty)

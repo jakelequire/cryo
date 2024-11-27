@@ -713,7 +713,14 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        bool isStringType = types.isLLVMStringType(namedVal);
+        DataType *dataType = var->dataType;
+        if (!dataType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Data type not found: " + arrayName);
+            CONDITION_FAILED;
+        }
+
+        bool isStringType = isStringDataType(dataType);
         if (isStringType)
         {
             // If the index expression is trying to index a string, we need to handle it differently.
@@ -805,7 +812,14 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        bool isStringType = types.isLLVMStringType(arrayPtr);
+        DataType *dataType = var->dataType;
+        if (!dataType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Data type not found");
+            CONDITION_FAILED;
+        }
+
+        bool isStringType = isStringDataType(dataType);
         if (!isStringType)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array is not a string type");
@@ -838,39 +852,39 @@ namespace Cryo
         }
 
         // Create GEP for array access
-        llvm::Value *arrayValue = compiler.getContext().builder.CreateGEP(
+        llvm::Value *elementPtr = compiler.getContext().builder.CreateGEP(
             arrInstType,
             arrayPtr,
             indexValue,
             varName + ".array");
 
-        // Load and return array value
-        llvm::LoadInst *loadedArr = compiler.getContext().builder.CreateLoad(
-            arrInstType,
-            arrayValue,
-            varName + ".load");
+        // Load the character value
+        llvm::LoadInst *charValue = compiler.getContext().builder.CreateLoad(
+            llvm::Type::getInt8Ty(compiler.getContext().context),
+            elementPtr,
+            varName + ".char");
+        charValue->setAlignment(llvm::Align(8));
 
-        // Store the array value in the variable
-        llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(arrInstType, nullptr, varName);
-        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadedArr, varValue);
+        // Allocate space for the character and store it
+        llvm::AllocaInst *charPtr = compiler.getContext().builder.CreateAlloca(
+            llvm::Type::getInt8Ty(compiler.getContext().context),
+            nullptr,
+            varName + ".char.ptr");
+        charPtr->setAlignment(llvm::Align(8));
+
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(charValue, charPtr);
         storeInst->setAlignment(llvm::Align(8));
-
+        
         // Update the symbol table
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
-        compiler.getContext().namedValues[varName] = loadedArr;
+        compiler.getContext().namedValues[varName] = charPtr;
         compiler.getSymTable().updateVariableNode(
             compiler.getContext().currentNamespace,
             varName,
-            loadedArr,
-            arrInstType);
+            charPtr,
+            llvm::Type::getInt8Ty(compiler.getContext().context));
 
-        // Add load inst to var with `addLoadInstToVar`
-        compiler.getSymTable().addLoadInstToVar(
-            compiler.getContext().currentNamespace,
-            varName,
-            loadedArr);
-
-        return loadedArr;
+        return charPtr;
     }
 
     ///

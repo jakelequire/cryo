@@ -120,3 +120,25 @@ bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
         return false;
     }
 }
+
+// This function is used to determine if a DataType is a string type
+// and not a string array type.
+bool isStringDataType(DataType *type)
+{
+    if (!type)
+    {
+        logMessage("ERROR", __LINE__, "TypeTable", "Type is null");
+        return false;
+    }
+
+    if (type->container->baseType == PRIMITIVE_TYPE &&
+        type->container->primitive == PRIM_STRING &&
+        type->container->isArray == false)
+    {
+        logMessage("INFO", __LINE__, "TypeTable", "Type is a string type");
+        return true;
+    }
+
+    logMessage("INFO", __LINE__, "TypeTable", "Type is not a string type");
+    return false;
+}
