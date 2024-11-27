@@ -691,6 +691,20 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        DataType *varDataType = var->dataType;
+        if (!varDataType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Array data type not found");
+            CONDITION_FAILED;
+        }
+
+        bool isStringType = isStringDataType(varDataType);
+        if (isStringType)
+        {
+            // If the index expression is trying to index a string, we need to handle it differently.
+            return compiler.getVariables().createStringIndexExpr(indexNode, arrayName);
+        }
+
         // Get the array pointer and type
         llvm::Value *arrayPtr = var->LLVMValue;
         if (!arrayPtr)

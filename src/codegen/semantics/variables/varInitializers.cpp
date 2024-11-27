@@ -851,29 +851,36 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        std::vector<llvm::Value *> indices = {
+            llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(8, 0)),
+            indexValue};
+
         // Create GEP for array access
         llvm::Value *elementPtr = compiler.getContext().builder.CreateGEP(
             arrInstType,
             arrayPtr,
-            indexValue,
+            indices,
             varName + ".array");
+
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "String GEP Value");
+        DevDebugger::logLLVMValue(elementPtr);
 
         // Load the character value
         llvm::LoadInst *charValue = compiler.getContext().builder.CreateLoad(
             llvm::Type::getInt8Ty(compiler.getContext().context),
             elementPtr,
             varName + ".char");
-        charValue->setAlignment(llvm::Align(8));
+
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "String Load Value");
+        DevDebugger::logLLVMValue(charValue);
 
         // Allocate space for the character and store it
         llvm::AllocaInst *charPtr = compiler.getContext().builder.CreateAlloca(
             llvm::Type::getInt8Ty(compiler.getContext().context),
             nullptr,
             varName + ".char.ptr");
-        charPtr->setAlignment(llvm::Align(8));
 
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(charValue, charPtr);
-        storeInst->setAlignment(llvm::Align(8));
         
         // Update the symbol table
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
