@@ -108,12 +108,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         if (lexer->currentToken.type == TOKEN_KW_CONSTRUCTOR)
         {
             hasConstructor = true;
-            ConstructorMetaData *metaData = (ConstructorMetaData *)ARENA_ALLOC(arena, sizeof(ConstructorMetaData));
-            metaData->parentName = strdup(structName);
-            metaData->parentNodeType = NODE_STRUCT_DECLARATION;
-            metaData->hasDefaultFlag = hasDefaultProperty;
-
-            constructorNode = parseConstructor(lexer, table, context, arena, state, metaData, typeTable);
+            ConstructorMetaData *constructorMetaData = createConstructorMetaData(structName, NODE_STRUCT_DECLARATION, hasDefaultProperty);
+            constructorNode = parseConstructor(lexer, table, context, arena, state, constructorMetaData, typeTable);
         }
 
         // This is for the method declarations
@@ -546,4 +542,13 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTab
             "parseStructInstance", table, arena, state, typeTable, context);
 
     DEBUG_BREAKPOINT;
+}
+
+ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeType parentNodeType, bool hasDefaultFlag)
+{
+    ConstructorMetaData *metaData = (ConstructorMetaData *)malloc(sizeof(ConstructorMetaData));
+    metaData->parentName = strdup(parentName);
+    metaData->parentNodeType = parentNodeType;
+    metaData->hasDefaultFlag = hasDefaultFlag;
+    return metaData;
 }

@@ -235,10 +235,34 @@ bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
+ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeType parentNodeType, bool hasDefaultFlag);
+
 // # =========================================================================== #
 // # Class Parsing
 // # =========================================================================== #
 
 ASTNode *parseClassDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseClassBody(ASTNode *classNode, const char *className,
+                        Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
+                      Arena *arena, CompilerState *state, TypeTable *typeTable);
+void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
+                      Arena *arena, CompilerState *state, TypeTable *typeTable);
+void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
+                     Arena *arena, CompilerState *state, TypeTable *typeTable);
+void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable);
+void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
+                       Arena *arena, CompilerState *state, TypeTable *typeTable);
+void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable);
+void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
+                          Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+static void ensureCapacity(ASTNode **array, int *capacity, int count, int increment);
 
 #endif // PARSER_H

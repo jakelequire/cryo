@@ -483,6 +483,16 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         break;
     }
 
+    case NODE_CLASS:
+    {
+        symbolNode->name = strdup(node->data.classNode->name);
+        symbolNode->nodeType = node->metaData->type;
+        symbolNode->line = node->metaData->position.line;
+        symbolNode->column = node->metaData->position.column;
+        symbolNode->type = node->data.classNode->type;
+        break;
+    }
+
     default:
         logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
         return NULL;

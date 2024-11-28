@@ -2693,17 +2693,327 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
 ASTNode *parseClassDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing class declaration");
-    consume(__LINE__, lexer, TOKEN_KW_CLASS, "Expected `class` keyword.", "parseClassDeclaration", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_KW_CLASS, "Expected `class` keyword.", "parseclassNodearation", table, arena, state, typeTable, context);
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier for class name.", "parseClassDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier for class name.", "parseclassNodearation", table, arena, state, lexer, lexer->source, typeTable);
         CONDITION_FAILED;
     }
 
     char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
-
     logMessage("INFO", __LINE__, "Parser", "Class name: %s", className);
 
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for class name.", "parseclassNodearation", table, arena, state, typeTable, context);
+
+    ASTNode *classNode = createClassDeclarationNode(className, arena, state, typeTable);
+    if (!classNode)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to create class declaration node.");
+        parsingError("Failed to create class declaration node.", "parseclassNodearation", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
+
+    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start class body.", "parseclassNodearation", table, arena, state, typeTable, context);
+
+    ASTNode *classBody = parseClassBody(classNode, className, lexer, table, context, arena, state, typeTable);
+    if (!classBody)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to parse class body.");
+        parsingError("Failed to parse class body.", "parseclassNodearation", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
+
     DEBUG_BREAKPOINT;
+}
+
+ASTNode *parseClassBody(ASTNode *classNode, const char *className,
+                        Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing class body...");
+
+    int methodCount = 0;
+    int privateMethodCount = 0;
+    int publicMethodCount = 0;
+    int protectedMethodCount = 0;
+
+    int propertyCount = 0;
+    int privatePropertyCount = 0;
+    int publicPropertyCount = 0;
+    int protectedPropertyCount = 0;
+
+    bool hasConstructor = false;
+
+    while (lexer->currentToken.type != TOKEN_RBRACE)
+    {
+        switch (lexer->currentToken.type)
+        {
+        case TOKEN_KW_CONSTRUCTOR:
+        {
+            ConstructorMetaData *constructorMetaData = createConstructorMetaData(className, NODE_CLASS, false);
+            ASTNode *methodNode = parseConstructor(lexer, table, context, arena, state, constructorMetaData, typeTable);
+            if (!methodNode)
+            {
+                logMessage("ERROR", __LINE__, "Parser", "Failed to parse method declaration.");
+                parsingError("Failed to parse method declaration.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
+                CONDITION_FAILED;
+            }
+
+            logASTNode(methodNode);
+
+            DEBUG_BREAKPOINT;
+
+            break;
+        }
+        case TOKEN_KW_PUBLIC:
+        case TOKEN_KW_PRIVATE:
+        case TOKEN_KW_PROTECTED:
+        {
+        }
+        case TOKEN_IDENTIFIER:
+        {
+        }
+        default:
+        {
+            parsingError("Unexpected token in class body.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
+            CONDITION_FAILED;
+        }
+        }
+    }
+    DEBUG_BREAKPOINT;
+}
+
+// Helper function to ensure capacity for members
+static void ensureCapacity(ASTNode **array, int *capacity, int count, int increment)
+{
+    if (count >= *capacity)
+    {
+        *capacity = *capacity == 0 ? 4 : *capacity * 2;
+        ASTNode **newArray = (ASTNode **)realloc(array, *capacity * sizeof(ASTNode *));
+        if (!newArray)
+        {
+            logMessage("ERROR", __LINE__, "Memory", "Failed to reallocate memory for class members");
+            return;
+        }
+        array = newArray;
+    }
+}
+
+void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
+                      Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding method to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    switch (visibility)
+    {
+    case VISIBILITY_PRIVATE:
+        addPrivateMethod(classNode, methodNode, arena, state, typeTable);
+        break;
+    case VISIBILITY_PUBLIC:
+        addPublicMethod(classNode, methodNode, arena, state, typeTable);
+        break;
+    case VISIBILITY_PROTECTED:
+        addProtectedMethod(classNode, methodNode, arena, state, typeTable);
+        break;
+    default:
+        logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
+    }
+}
+
+void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding property to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    switch (visibility)
+    {
+    case VISIBILITY_PRIVATE:
+        addPrivateProperty(classNode, propNode, arena, state, typeTable);
+        break;
+    case VISIBILITY_PUBLIC:
+        addPublicProperty(classNode, propNode, arena, state, typeTable);
+        break;
+    case VISIBILITY_PROTECTED:
+        addProtectedProperty(classNode, propNode, arena, state, typeTable);
+        break;
+    default:
+        logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
+    }
+}
+
+void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
+                      Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding private method to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    ClassNode *classData = classNode->data.classNode;
+    if (!classData->privateMembers)
+    {
+        classData->privateMembers = (PrivateMembers *)calloc(1, sizeof(PrivateMembers));
+        if (!classData->privateMembers)
+        {
+            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate private members");
+            return;
+        }
+    }
+
+    ensureCapacity(classData->privateMembers->methods,
+                   &classData->privateMembers->methodCapacity,
+                   classData->privateMembers->methodCount, 1);
+
+    classData->privateMembers->methods[classData->privateMembers->methodCount++] = methodNode;
+}
+
+void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
+                     Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding public method to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    ClassNode *classData = classNode->data.classNode;
+    if (!classData->publicMembers)
+    {
+        classData->publicMembers = (PublicMembers *)calloc(1, sizeof(PublicMembers));
+        if (!classData->publicMembers)
+        {
+            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate public members");
+            return;
+        }
+    }
+
+    ensureCapacity(classData->publicMembers->methods,
+                   &classData->publicMembers->methodCapacity,
+                   classData->publicMembers->methodCount, 1);
+
+    classData->publicMembers->methods[classData->publicMembers->methodCount++] = methodNode;
+}
+
+void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding protected method to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    ClassNode *classData = classNode->data.classNode;
+    if (!classData->protectedMembers)
+    {
+        classData->protectedMembers = (ProtectedMembers *)calloc(1, sizeof(ProtectedMembers));
+        if (!classData->protectedMembers)
+        {
+            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate protected members");
+            return;
+        }
+    }
+
+    ensureCapacity(classData->protectedMembers->methods,
+                   &classData->protectedMembers->methodCapacity,
+                   classData->protectedMembers->methodCount, 1);
+
+    classData->protectedMembers->methods[classData->protectedMembers->methodCount++] = methodNode;
+}
+
+void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
+                       Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding public property to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    ClassNode *classData = classNode->data.classNode;
+    if (!classData->publicMembers)
+    {
+        classData->publicMembers = (PublicMembers *)calloc(1, sizeof(PublicMembers));
+        if (!classData->publicMembers)
+        {
+            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate public members");
+            return;
+        }
+    }
+
+    ensureCapacity(classData->publicMembers->properties,
+                   &classData->publicMembers->propertyCapacity,
+                   classData->publicMembers->propertyCount, 1);
+
+    classData->publicMembers->properties[classData->publicMembers->propertyCount++] = propNode;
+}
+
+void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding private property to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    ClassNode *classData = classNode->data.classNode;
+    if (!classData->privateMembers)
+    {
+        classData->privateMembers = (PrivateMembers *)calloc(1, sizeof(PrivateMembers));
+        if (!classData->privateMembers)
+        {
+            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate private members");
+            return;
+        }
+    }
+
+    ensureCapacity(classData->privateMembers->properties,
+                   &classData->privateMembers->propertyCapacity,
+                   classData->privateMembers->propertyCount, 1);
+
+    classData->privateMembers->properties[classData->privateMembers->propertyCount++] = propNode;
+}
+
+void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
+                          Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding protected property to class...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+    ClassNode *classData = classNode->data.classNode;
+    if (!classData->protectedMembers)
+    {
+        classData->protectedMembers = (ProtectedMembers *)calloc(1, sizeof(ProtectedMembers));
+        if (!classData->protectedMembers)
+        {
+            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate protected members");
+            return;
+        }
+    }
+
+    ensureCapacity(classData->protectedMembers->properties,
+                   &classData->protectedMembers->propertyCapacity,
+                   classData->protectedMembers->propertyCount, 1);
+
+    classData->protectedMembers->properties[classData->protectedMembers->propertyCount++] = propNode;
 }

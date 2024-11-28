@@ -803,7 +803,7 @@ typedef struct StructConstructorNode
     int argCapacity;
     ConstructorMetaData *metaData;
     ASTNode *constructorBody;
-} StructConstructorNode;
+} StructConstructorNode, ClassConstructorNode;
 
 typedef struct ThisNode
 {
@@ -969,6 +969,8 @@ typedef struct ASTNode
         GenericInstNode *genericInst;
         // For Classes
         ClassNode *classNode;
+        // For Class Constructors
+        ClassConstructorNode *classConstructor;
     } data;
 } ASTNode;
 
@@ -1380,41 +1382,47 @@ extern "C"
      * Nodes for array operations
      */
     ASTNode *createArrayLiteralNode(
-        Arena *arena,
-        CompilerState *state,
-        TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     ASTNode *createIndexExprNode(
         char *arrayName,
         ASTNode *arrayRef,
         ASTNode *index,
-        Arena *arena,
-        CompilerState *state,
-        TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     ASTNode *createIfStatement(
         ASTNode *condition,
         ASTNode *then_branch,
         ASTNode *else_branch,
-        Arena *arena,
-        CompilerState *state,
-        TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     ASTNode *createForStatement(
         ASTNode *initializer,
         ASTNode *condition,
         ASTNode *increment,
         ASTNode *body,
-        Arena *arena,
-        CompilerState *state,
-        TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     ASTNode *createWhileStatement(
         ASTNode *condition,
         ASTNode *body,
-        Arena *arena,
-        CompilerState *state,
-        TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+    /**
+     * Class Nodes
+     * Nodes for class definitions and operations
+     */
+
+    ASTNode *createClassDeclarationNode(
+        const char *className,
+        Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+    ASTNode *createClassConstructor(
+        const char *className,
+        ASTNode *body,
+        ASTNode **fields,
+        int argCount,
+        Arena *arena, CompilerState *state, TypeTable *typeTable);
 
     /**
      * String Utility Functions
@@ -1471,6 +1479,7 @@ GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *sta
 GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *state);
 void *createMembersContainer(Arena *arena, CompilerState *state);
 ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state);
+ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

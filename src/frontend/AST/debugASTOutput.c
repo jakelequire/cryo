@@ -1031,7 +1031,7 @@ char *formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output)
     // <StructConstructor> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<StructConstructor> <%i:%i>", node->line, node->column);
+    sprintf(buffer, "<Constructor> <%i:%i>", node->line, node->column);
     return buffer;
 }
 char *CONSOLE_formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output)
@@ -1039,7 +1039,7 @@ char *CONSOLE_formatStructConstructor(ASTDebugNode *node, DebugASTOutput *output
     // <StructConstructor> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<StructConstructor>%s %s%s<%i:%i>%s",
+    sprintf(buffer, "%s%s<Constructor>%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;

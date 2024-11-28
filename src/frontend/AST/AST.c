@@ -940,3 +940,36 @@ ASTNode *createGenericInstNode(const char *baseName, DataType **typeArguments, i
 
     return node;
 }
+
+ASTNode *createClassDeclarationNode(const char *className,
+                                    Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    ASTNode *node = createASTNode(NODE_CLASS, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create class declaration node");
+        return NULL;
+    }
+
+    node->data.classNode->name = className;
+
+    return node;
+}
+
+ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    ASTNode *node = createASTNode(NODE_CLASS_CONSTRUCTOR, arena, state, typeTable);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create class constructor node");
+        return NULL;
+    }
+
+    node->data.classConstructor->name = strdup(className);
+    node->data.classConstructor->args = fields;
+    node->data.classConstructor->argCount = argCount;
+    node->data.classConstructor->argCapacity = ARG_CAPACITY;
+    node->data.classConstructor->constructorBody = body;
+
+    return node;
+}

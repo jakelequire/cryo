@@ -1328,3 +1328,22 @@ ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
 
     return node;
 }
+
+ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, CompilerState *state)
+{
+    StructConstructorNode *node = (StructConstructorNode *)ARENA_ALLOC(arena, sizeof(StructConstructorNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate StructConstructorNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->args = NULL;
+    node->argCount = 0;
+    node->argCapacity = ARG_CAPACITY;
+    node->metaData = createConstructorMetaDataContainer(arena, state);
+    node->constructorBody = NULL;
+
+    return node;
+}
