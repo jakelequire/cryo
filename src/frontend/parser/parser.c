@@ -365,6 +365,9 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     case TOKEN_KW_STATIC:
         return parseStaticKeyword(lexer, table, context, arena, state, typeTable);
 
+    case TOKEN_KW_CLASS:
+        return parseClassDeclaration(lexer, table, context, arena, state, typeTable);
+
     case TOKEN_IDENTIFIER:
         if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN)
         {
@@ -2685,4 +2688,22 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
     VALIDATE_TYPE(expectedType);
 
     return propAccessNode;
+}
+
+ASTNode *parseClassDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing class declaration");
+    consume(__LINE__, lexer, TOKEN_KW_CLASS, "Expected `class` keyword.", "parseClassDeclaration", table, arena, state, typeTable, context);
+
+    if (lexer->currentToken.type != TOKEN_IDENTIFIER)
+    {
+        parsingError("Expected an identifier for class name.", "parseClassDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
+
+    char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
+
+    logMessage("INFO", __LINE__, "Parser", "Class name: %s", className);
+
+    DEBUG_BREAKPOINT;
 }

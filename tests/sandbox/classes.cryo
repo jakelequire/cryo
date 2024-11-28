@@ -1,7 +1,9 @@
 namespace Classes;
 
 
-static class IO {
+class IO {
+
+    constructor() {}
 
     public static print(msg: string) -> void {
         printStr(msg);

@@ -239,4 +239,6 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTab
 // # Class Parsing
 // # =========================================================================== #
 
+ASTNode *parseClassDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
 #endif // PARSER_H
