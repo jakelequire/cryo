@@ -235,4 +235,8 @@ bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
+// # =========================================================================== #
+// # Class Parsing
+// # =========================================================================== #
+
 #endif // PARSER_H

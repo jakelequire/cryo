@@ -16,6 +16,31 @@
  ********************************************************************************/
 #include "frontend/dataTypes.h"
 
+void printTypeTable(TypeTable *table)
+{
+    printf("\n");
+    printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
+    printf("  Type Table: %p\n", (void *)table);
+    printf("  Type Count: %d\n", table->count);
+    printf("  Type Capacity: %d\n", table->capacity);
+    printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
+
+    for (int i = 0; i < table->count; i++)
+    {
+        DataType *type = table->types[i];
+        printFormattedType(type);
+    }
+    printf("   ────────────────────────────────────────────────────────────\n");
+    printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
+    printf("\n");
+    if (table->count == 0)
+    {
+        printf("  No types in the type table.\n");
+        printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
+        printf("\n");
+    }
+}
+
 char *TypeofDataTypeToString(TypeofDataType type)
 {
     switch (type)
@@ -30,6 +55,10 @@ char *TypeofDataTypeToString(TypeofDataType type)
         return "ENUM_TYPE";
     case FUNCTION_TYPE:
         return "FUNCTION_TYPE";
+    case GENERIC_TYPE:
+        return "GENERIC_TYPE";
+    case CLASS_TYPE:
+        return "CLASS_TYPE";
     case UNKNOWN_TYPE:
         return "UNKNOWN_TYPE";
     default:
@@ -393,27 +422,45 @@ void printVerboseTypeContainer(TypeContainer *type)
     printf("\n");
 }
 
-void printTypeTable(TypeTable *table)
-{
-    printf("\n");
-    printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
-    printf("  Type Table: %p\n", (void *)table);
-    printf("  Type Count: %d\n", table->count);
-    printf("  Type Capacity: %d\n", table->capacity);
-    printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
+#define PRINT_MEMBERS_FN(TYPE)                                                                     \
+    if (type->TYPE##Members)                                                                       \
+    {                                                                                              \
+        printf("   " #TYPE " Members:\n");                                                         \
+        for (int i = 0; i < type->TYPE##Members->propertyCount; i++)                               \
+        {                                                                                          \
+            DataType *property = type->TYPE##Members->properties[i];                               \
+            printf("     %s: %s\n", property->container->custom.name, DataTypeToString(property)); \
+        }                                                                                          \
+    }
 
-    for (int i = 0; i < table->count; i++)
+void printClassType(ClassType *type)
+{
+    if (!type)
     {
-        DataType *type = table->types[i];
-        printFormattedType(type);
+        printf("   ────────────────────────────────────────────────────────────\n");
+        printf(BOLD GREEN "   CLASS_TYPE" COLOR_RESET " | <NULL>\n");
+        return;
     }
+
     printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-    printf("\n");
-    if (table->count == 0)
+    printf(BOLD GREEN "   CLASS_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n",
+           sizeof(ClassType), type->propertyCount, type->methodCount);
+
+    printf("   Name: %s | Static: %s | Has Constructor: %s\n",
+           type->name, type->isStatic ? "true" : "false",
+           type->hasConstructor ? "true" : "false");
+
+    // Print constructor if exists
+    if (type->hasConstructor && type->constructor)
     {
-        printf("  No types in the type table.\n");
-        printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-        printf("\n");
+        printf("   Constructor: %s\n", type->constructor->data.method->name);
     }
+
+    // Use the macro to print members for each access level
+    PRINT_MEMBERS_FN(public);
+    PRINT_MEMBERS_FN(private);
+    PRINT_MEMBERS_FN(protected);
+
+    printf(COLOR_RESET);
 }
+#undef PRINT_MEMBERS_FN

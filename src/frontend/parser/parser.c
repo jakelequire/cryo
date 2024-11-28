@@ -407,7 +407,7 @@ ASTNode *parseStaticKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 {
     consume(__LINE__, lexer, TOKEN_KW_STATIC, "Expected 'static' keyword", "parseStaticKeyword", table, arena, state, typeTable, context);
 
-    TokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
+    CryoTokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
     switch (nextToken)
     {
     case TOKEN_KW_CLASS:

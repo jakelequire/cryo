@@ -48,6 +48,7 @@ typedef struct ASTNode ASTNode;
 typedef struct Arena Arena;
 typedef struct DataType DataType;
 typedef struct TypeContainer TypeContainer;
+typedef struct ClassNode ClassNode;
 
 typedef enum PrimitiveDataType
 {
@@ -70,6 +71,7 @@ typedef enum TypeofDataType
     ENUM_TYPE,      // `enum ... { ... }`
     FUNCTION_TYPE,  // `function (...) -> ...`
     GENERIC_TYPE,   // `T`, `U`, `V`, etc.
+    CLASS_TYPE,     // `class ... { ... }`
 
     UNKNOWN_TYPE // `<UNKNOWN>`
 } TypeofDataType;
@@ -168,10 +170,39 @@ typedef struct GenericInstType
     TypeContainer *baseDef; // Reference to the generic declaration
 } GenericInstType;
 
+typedef struct
+{
+    DataType *parentType;
+
+    DataType **properties;
+    int propertyCount;
+    int propertyCapacity;
+
+    DataType **methods;
+    int methodCount;
+    int methodCapacity;
+} PublicMembersTypes, PrivateMembersTypes, ProtectedMembersTypes;
+
+typedef struct ClassType
+{
+    const char *name;
+    ASTNode *constructor;
+    int propertyCount;
+    int propertyCapacity;
+    int methodCount;
+    int methodCapacity;
+    bool hasConstructor;
+    bool isStatic;
+
+    PublicMembersTypes *publicMembers;
+    PrivateMembersTypes *privateMembers;
+    ProtectedMembersTypes *protectedMembers;
+} ClassType;
+
 typedef struct TypeContainer
 {
     TypeofDataType baseType;     // Base type (primitive, struct, etc)
-    PrimitiveDataType primitive; // If primitive type
+    PrimitiveDataType primitive; // All types have a primitive type (PRIM_NT, PRIM_CUSTOM, etc)
     int size;                    // Size of the type
     int length;                  // Length of the type
     bool isArray;                // Array flag
@@ -190,6 +221,7 @@ typedef struct TypeContainer
         FunctionType *funcDef; // For function types
         ArrayType *arrayDef;   // For array types
         EnumType *enumDef;     // For enum types
+        ClassType *classDef;   // For class types
     } custom;
 
 } TypeContainer;
@@ -343,6 +375,24 @@ extern "C"
     ASTNode *cloneAndSubstituteGenericParam(ASTNode *param, DataType *concreteType);
     ASTNode *cloneAndSubstituteGenericBody(ASTNode *body, DataType *concreteType);
     ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concreteType);
+
+    // # =========================================================================== #
+    // # Class Type Functions
+    // # (classTypes.c)
+    // # =========================================================================== #
+
+    ClassType *createClassType(const char *name, ClassNode *classNode);
+    TypeContainer *wrapClassInTypeContainer(ClassType *classType);
+    DataType *createClassDataType(const char *name, ClassNode *classNode);
+
+    void addPublicPropertyToClassType(ClassType *classType, ASTNode *property);
+    void addPublicMethodToClassType(ClassType *classType, ASTNode *method);
+
+    void addPrivatePropertyToClassType(ClassType *classType, ASTNode *property);
+    void addPrivateMethodToClassType(ClassType *classType, ASTNode *method);
+
+    void addProtectedPropertyToClassType(ClassType *classType, ASTNode *property);
+    void addProtectedMethodToClassType(ClassType *classType, ASTNode *method);
 
     // # =========================================================================== #
     // # Print Functions

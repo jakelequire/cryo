@@ -182,6 +182,10 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "GENERIC_DECL";
     case NODE_GENERIC_INST:
         return "GENERIC_INST";
+    case NODE_CLASS:
+        return "CLASS";
+    case NODE_CLASS_CONSTRUCTOR:
+        return "CLASS_CONSTRUCTOR";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

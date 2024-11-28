@@ -587,6 +587,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatBinOpNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "Class") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatClassNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatClassNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1291,6 +1302,31 @@ char *CONSOLE_formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output)
 }
 // </GenericInst>
 // ============================================================
+// ============================================================
+// <Class>
+char *formatClassNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<Class> [%s] { Type: %s } <0:0>",
+            node->nodeName,
+            DataTypeToString(node->dataType));
+    return buffer;
+}
+
+char *CONSOLE_formatClassNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Class>%s %s[%s]%s %s%s{ %s }%s %s%s<0:0>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            DARK_GRAY, ITALIC, COLOR_RESET);
+    return buffer;
+}
+// </Class>
+// ============================================================
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -1688,6 +1724,103 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         output->nodeCount++;
         createASTDebugView(node->data.bin_op->left, output, indentLevel + 1);
         createASTDebugView(node->data.bin_op->right, output, indentLevel + 1);
+        break;
+    }
+
+    case NODE_CLASS:
+    {
+        __LINE_AND_COLUMN__
+        char *className = strdup(node->data.classNode->name);
+        DataType *classType = node->data.classNode->type;
+        ASTDebugNode *classNode = createASTDebugNode("Class", className, classType, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *classNode;
+        output->nodeCount++;
+
+        // Handle constructor if present
+        if (node->data.classNode->hasConstructor && node->data.classNode->constructor)
+        {
+            indentLevel++;
+            createASTDebugView(node->data.classNode->constructor, output, indentLevel);
+            indentLevel--;
+        }
+
+        // Handle public members
+        if (node->data.classNode->publicMembers)
+        {
+            char *buffer = MALLOC_BUFFER;
+            sprintf(buffer, "Public");
+            ASTDebugNode *publicNode = createASTDebugNode("AccessControl", buffer, createPrimitiveVoidType(), line, column, indentLevel + 1, node);
+            output->nodes[output->nodeCount] = *publicNode;
+            output->nodeCount++;
+
+            // Log public properties
+            for (int i = 0; i < node->data.classNode->publicMembers->propertyCount; i++)
+            {
+                indentLevel += 2;
+                createASTDebugView(node->data.classNode->publicMembers->properties[i], output, indentLevel);
+                indentLevel -= 2;
+            }
+
+            // Log public methods
+            for (int i = 0; i < node->data.classNode->publicMembers->methodCount; i++)
+            {
+                indentLevel += 2;
+                createASTDebugView(node->data.classNode->publicMembers->methods[i], output, indentLevel);
+                indentLevel -= 2;
+            }
+        }
+
+        // Handle private members
+        if (node->data.classNode->privateMembers)
+        {
+            char *buffer = MALLOC_BUFFER;
+            sprintf(buffer, "Private");
+            ASTDebugNode *privateNode = createASTDebugNode("AccessControl", buffer, createPrimitiveVoidType(), line, column, indentLevel + 1, node);
+            output->nodes[output->nodeCount] = *privateNode;
+            output->nodeCount++;
+
+            // Log private properties
+            for (int i = 0; i < node->data.classNode->privateMembers->propertyCount; i++)
+            {
+                indentLevel += 2;
+                createASTDebugView(node->data.classNode->privateMembers->properties[i], output, indentLevel);
+                indentLevel -= 2;
+            }
+
+            // Log private methods
+            for (int i = 0; i < node->data.classNode->privateMembers->methodCount; i++)
+            {
+                indentLevel += 2;
+                createASTDebugView(node->data.classNode->privateMembers->methods[i], output, indentLevel);
+                indentLevel -= 2;
+            }
+        }
+
+        // Handle protected members
+        if (node->data.classNode->protectedMembers)
+        {
+            char *buffer = MALLOC_BUFFER;
+            sprintf(buffer, "Protected");
+            ASTDebugNode *protectedNode = createASTDebugNode("AccessControl", buffer, createPrimitiveVoidType(), line, column, indentLevel + 1, node);
+            output->nodes[output->nodeCount] = *protectedNode;
+            output->nodeCount++;
+
+            // Log protected properties
+            for (int i = 0; i < node->data.classNode->protectedMembers->propertyCount; i++)
+            {
+                indentLevel += 2;
+                createASTDebugView(node->data.classNode->protectedMembers->properties[i], output, indentLevel);
+                indentLevel -= 2;
+            }
+
+            // Log protected methods
+            for (int i = 0; i < node->data.classNode->protectedMembers->methodCount; i++)
+            {
+                indentLevel += 2;
+                createASTDebugView(node->data.classNode->protectedMembers->methods[i], output, indentLevel);
+                indentLevel -= 2;
+            }
+        }
         break;
     }
 

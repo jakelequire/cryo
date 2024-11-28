@@ -880,9 +880,17 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
 /// typedef struct StructNode
 /// {
 ///     char *name;
-///     struct PropertyNode **properties;
+///     ASTNode **properties;
+///     ASTNode **methods;
+///     ASTNode *constructor;
 ///     int propertyCount;
 ///     int propertyCapacity;
+///     int methodCount;
+///     int methodCapacity;
+///     bool hasConstructor;
+///     bool hasDefaultValue;
+///     DataType *type;
+///     bool isStatic;
 /// } StructNode;
 ///```
 ///
@@ -904,6 +912,7 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     node->methodCapacity = METHOD_CAPACITY;
     node->hasConstructor = false;
     node->hasDefaultValue = false;
+    node->isStatic = false;
     node->constructor = NULL;
     node->type = wrapTypeContainer(createTypeContainer());
 
@@ -919,6 +928,8 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
 ///     struct ASTNode *value;
 ///     CryoDataType type;
 ///     bool defaultProperty;
+///     const char *parentName;
+///     CryoNodeType parentNodeType;
 /// } PropertyNode;
 ///```
 ///
@@ -1122,6 +1133,7 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
 ///     int paramCount;
 ///     int paramCapacity;
 ///     struct ASTNode *body;
+///     bool isStatic;
 /// } MethodNode;
 ///```
 ///
@@ -1141,6 +1153,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
+    node->isStatic = false;
 
     return node;
 }
@@ -1158,6 +1171,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
 ///     struct ASTNode **args;
 ///     int argCount;
 ///     int argCapacity;
+///     bool isStatic;
 /// } MethodCallNode;
 ///```
 ///
@@ -1178,6 +1192,7 @@ MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
+    node->isStatic = false;
 
     return node;
 }
@@ -1240,6 +1255,76 @@ GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *sta
     node->typeArguments = NULL;
     node->argumentCount = 0;
     node->resultType = wrapTypeContainer(createTypeContainer());
+
+    return node;
+}
+
+void *createMembersContainer(Arena *arena, CompilerState *state)
+{
+    ProtectedMembers *node = (ProtectedMembers *)ARENA_ALLOC(arena, sizeof(ProtectedMembers));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
+        return NULL;
+    }
+
+    node->methods = NULL;
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->properties = NULL;
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct ClassNode
+/// {
+///     DataType *type;
+///     const char *name;
+///     ASTNode *constructor;
+///     int propertyCount;
+///     int propertyCapacity;
+///     int methodCount;
+///     int methodCapacity;
+///     bool hasConstructor;
+///     bool hasDefaultValue;
+///     bool isStatic;
+///     // For Private Members
+///     PrivateMembers *privateMembers;
+///     // For Public Members
+///     PublicMembers *publicMembers;
+///     // For Protected Members
+///     ProtectedMembers *protectedMembers;
+/// } ClassNode;
+///```
+///
+ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
+{
+    ClassNode *node = (ClassNode *)ARENA_ALLOC(arena, sizeof(ClassNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ClassNode node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->constructor = NULL;
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+    node->hasConstructor = false;
+    node->hasDefaultValue = false;
+    node->isStatic = false;
+    node->privateMembers = (PrivateMembers *)createMembersContainer(arena, state);
+    node->publicMembers = (PublicMembers *)createMembersContainer(arena, state);
+    node->protectedMembers = (ProtectedMembers *)createMembersContainer(arena, state);
 
     return node;
 }

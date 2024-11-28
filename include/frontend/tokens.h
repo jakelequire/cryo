@@ -301,7 +301,9 @@ extern "C"
         NODE_ENUM,                 // 45
         NODE_GENERIC_DECL,         // 46
         NODE_GENERIC_INST,         // 47
-        NODE_UNKNOWN,              // 47
+        NODE_CLASS,                // 48
+        NODE_CLASS_CONSTRUCTOR,    // 49
+        NODE_UNKNOWN,              // 49
     } CryoNodeType;
 
     typedef enum CryoVisibilityType

@@ -854,6 +854,38 @@ typedef struct GenericInstNode
     DataType *resultType; // The concrete type after substitution
 } GenericInstNode;
 
+typedef struct
+{
+    DataType *parentType;
+
+    ASTNode **properties;
+    ASTNode **methods;
+    int propertyCount;
+    int propertyCapacity;
+    int methodCount;
+    int methodCapacity;
+} ProtectedMembers, PrivateMembers, PublicMembers;
+
+typedef struct ClassNode
+{
+    DataType *type;
+    const char *name;
+    ASTNode *constructor;
+    int propertyCount;
+    int propertyCapacity;
+    int methodCount;
+    int methodCapacity;
+    bool hasConstructor;
+    bool hasDefaultValue;
+    bool isStatic;
+    // For Private Members
+    PrivateMembers *privateMembers;
+    // For Public Members
+    PublicMembers *publicMembers;
+    // For Protected Members
+    ProtectedMembers *protectedMembers;
+} ClassNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -935,6 +967,8 @@ typedef struct ASTNode
         GenericDeclNode *genericDecl;
         // For Generic Instantiations
         GenericInstNode *genericInst;
+        // For Classes
+        ClassNode *classNode;
     } data;
 } ASTNode;
 
@@ -1435,6 +1469,8 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state);
 MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state);
 GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *state);
 GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *state);
+void *createMembersContainer(Arena *arena, CompilerState *state);
+ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
@@ -1517,6 +1553,7 @@ char *formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatClassNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1546,5 +1583,6 @@ char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatClassNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H
