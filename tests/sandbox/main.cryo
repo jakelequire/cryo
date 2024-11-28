@@ -17,23 +17,21 @@ struct Int {
     }
 }
 
-struct ObjectTest {
-    valueOne: int;
-    valueTwo: string;
-}
 
 function stringTesting() -> void {
     printStr("------- String Testing --------");
 
     const testString: string = "Hello";
 
-    const indexStringOne: string = testString[0];
-    const indexStringTwo: string = testString[1];
-    const indexStringThree: string = testString[2];
+    // const indexStringOne: string = testString[0];
+    // const indexStringTwo: string = testString[1];
+    // const indexStringThree: string = testString[2];
     
-    printStr(indexStringOne);
-    printStr(indexStringTwo);
-    printStr(indexStringThree);
+    // printStr(indexStringOne);
+    // printStr(indexStringTwo);
+    // printStr(indexStringThree);
+
+    // printStr(testString[0]);
 
     return;
 }
@@ -111,7 +109,8 @@ function main(argc: int, argv: string[]) -> void {
     structTesting();
     binOpTest();
     arrayTesting();
-    stringTesting();
+    // stringTesting();
+    objectTesting();
 
     return;
 }

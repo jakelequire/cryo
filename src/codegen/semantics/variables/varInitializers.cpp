@@ -852,7 +852,7 @@ namespace Cryo
         }
 
         std::vector<llvm::Value *> indices = {
-            llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(8, 0)),
+            llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, 0)),
             indexValue};
 
         // Create GEP for array access
@@ -881,7 +881,7 @@ namespace Cryo
             varName + ".char.ptr");
 
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(charValue, charPtr);
-        
+
         // Update the symbol table
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
         compiler.getContext().namedValues[varName] = charPtr;

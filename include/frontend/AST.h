@@ -702,6 +702,7 @@ typedef struct MethodNode
     int paramCapacity;
     ASTNode *body;
     CryoVisibilityType visibility;
+    bool isStatic;
 } MethodNode;
 
 typedef struct MethodCallNode
@@ -714,6 +715,7 @@ typedef struct MethodCallNode
     ASTNode **args;
     int argCount;
     int argCapacity;
+    bool isStatic;
 } MethodCallNode;
 
 /// #### The StructNode struct represents a struct in the AST.
@@ -743,6 +745,7 @@ typedef struct StructNode
     bool hasConstructor;
     bool hasDefaultValue;
     DataType *type;
+    bool isStatic;
 } StructNode;
 
 // typedef struct CustomTypeNode

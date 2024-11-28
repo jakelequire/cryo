@@ -359,10 +359,11 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         return NULL;
 
     case TOKEN_KW_THIS:
-    {
         logMessage("INFO", __LINE__, "Parser", "Parsing `this` context...");
         return parseThisContext(lexer, table, context, arena, state, typeTable);
-    }
+
+    case TOKEN_KW_STATIC:
+        return parseStaticKeyword(lexer, table, context, arena, state, typeTable);
 
     case TOKEN_IDENTIFIER:
         if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN)
@@ -401,6 +402,33 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
 }
 // </parseStatement>
+
+ASTNode *parseStaticKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    consume(__LINE__, lexer, TOKEN_KW_STATIC, "Expected 'static' keyword", "parseStaticKeyword", table, arena, state, typeTable, context);
+
+    TokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
+    switch (nextToken)
+    {
+    case TOKEN_KW_CLASS:
+    {
+        DEBUG_BREAKPOINT;
+    }
+    case TOKEN_KW_STRUCT:
+    {
+        DEBUG_BREAKPOINT;
+    }
+    case TOKEN_KW_FN:
+    {
+        DEBUG_BREAKPOINT;
+    }
+    default:
+    {
+        parsingError("Expected 'class', 'struct', or 'function' keyword", "parseStaticKeyword", table, arena, state, lexer, lexer->source, typeTable);
+    }
+    }
+    DEBUG_BREAKPOINT;
+}
 
 // <parseScopeCall>
 ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)

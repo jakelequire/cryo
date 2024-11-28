@@ -59,6 +59,7 @@ typedef struct ThisContext
     int propertyCount;
     ASTNode **methods;
     int methodCount;
+    bool isStatic;
 } ThisContext;
 
 /**
@@ -92,14 +93,13 @@ typedef struct ParsingContext
     /// int propertyCount;
     /// ASTNode **methods;
     /// int methodCount;
+    /// bool isStatic;
     ///```
     ThisContext *thisContext;
 
     // An array of the last 16 tokens
     Token lastTokens[16];
     int lastTokenCount;
-
-    //
 
     // Add other context flags as needed
 } ParsingContext;
@@ -133,6 +133,7 @@ int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *st
 void addStatementToProgram(ASTNode *program, CryoSymbolTable *table, ASTNode *statement, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @ASTNode_Parsing - Expressions & Statements*/
+ASTNode *parseStaticKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, const char *functionName, const char *scopeName, TypeTable *typeTable);
