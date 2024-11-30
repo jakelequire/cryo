@@ -33,6 +33,7 @@ ClassType *createClassType(const char *name, ClassNode *classNode)
     classType->methodCapacity = classNode->methodCapacity;
     classType->hasConstructor = classNode->hasConstructor;
     classType->isStatic = classNode->isStatic;
+    classType->hasConstructor = classNode->hasConstructor;
 
     classType->publicMembers = NULL;    // TODO: Implement conversion from PublicMembers to PublicMembersType
     classType->privateMembers = NULL;   // TODO: Implement conversion from PrivateMembers to PrivateMembersType
@@ -52,6 +53,7 @@ TypeContainer *wrapClassInTypeContainer(ClassType *classType)
 
     container->baseType = CLASS_TYPE;
     container->custom.classDef = classType;
+    container->custom.name = classType->name;
 
     return container;
 }

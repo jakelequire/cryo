@@ -117,7 +117,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             lexer->nextToken.type == TOKEN_LPAREN &&
             lexer->currentToken.type != TOKEN_KW_CONSTRUCTOR)
         {
-            ASTNode *method = parseMethodDeclaration(lexer, table, context, arena, state, typeTable);
+            ASTNode *method = parseMethodDeclaration(false, lexer, table, context, arena, state, typeTable);
             if (method)
             {
                 methods[methodCount] = method;
@@ -204,7 +204,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     if (nextToken == TOKEN_LPAREN && currentToken != TOKEN_KW_CONSTRUCTOR)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
-        return parseMethodDeclaration(lexer, table, context, arena, state, typeTable);
+        return parseMethodDeclaration(false, lexer, table, context, arena, state, typeTable);
     }
 
     printf("Default Count: %d\n", defaultCount);
@@ -261,7 +261,7 @@ ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     return constructorNode;
 }
 
-ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
@@ -269,6 +269,9 @@ ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         parsingError("Expected an identifier.", "parseMethodDeclaration", table, arena, state, lexer, lexer->source, typeTable);
         return NULL;
     }
+
+    // Add the static identifier to the context
+    addStaticIdentifierToContext(context, isStatic);
 
     char *methodName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Method name: %s", methodName);
@@ -290,10 +293,15 @@ ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     // Create the method body
     ASTNode *methodBody = parseBlock(lexer, table, context, arena, state, typeTable);
     // Create the method node
-    ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, arena, state, typeTable, lexer);
+    const char *parentName = context->thisContext->nodeName;
+    ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, parentName, isStatic,
+                                           arena, state, typeTable, lexer);
 
     // Add the method to the symbol table
     addASTNodeSymbol(table, methodNode, arena);
+
+    // Remove the static identifier from the context
+    addStaticIdentifierToContext(context, false);
 
     return methodNode;
 }
@@ -325,8 +333,11 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
     DataType *returnType = symbol->type;
     VALIDATE_TYPE(returnType);
 
+    bool isStatic = symbol->node->data.method->isStatic;
+
     ASTNode *methodCall = createMethodCallNode(accessorObj, returnType, instanceType, methodName,
-                                               params, paramCount, arena, state, typeTable, lexer);
+                                               params, paramCount, isStatic,
+                                               arena, state, typeTable, lexer);
     if (!methodCall)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to create method call node.");

@@ -191,6 +191,7 @@ char *DataTypeToString(DataType *dataType)
         break;
 
     case CLASS_TYPE:
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.classDef->name);
         break;
 
     default:
@@ -358,6 +359,10 @@ void printFormattedType(DataType *type)
         printFormattedStructType(type->container->custom.structDef);
         break;
 
+    case CLASS_TYPE:
+        printClassType(type->container->custom.classDef);
+        break;
+
     default:
         printf("  ────────────────────────────────────────────────────────────\n");
         printf(BOLD GREEN "  UNKNOWN_TYPE" COLOR_RESET "\n");
@@ -455,12 +460,6 @@ void printClassType(ClassType *type)
     printf("   Name: %s | Static: %s | Has Constructor: %s\n",
            type->name, type->isStatic ? "true" : "false",
            type->hasConstructor ? "true" : "false");
-
-    // Print constructor if exists
-    if (type->hasConstructor && type->constructor)
-    {
-        printf("   Constructor: %s\n", type->constructor->data.method->name);
-    }
 
     // Use the macro to print members for each access level
     PRINT_MEMBERS_FN(public);

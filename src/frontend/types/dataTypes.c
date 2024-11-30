@@ -337,6 +337,9 @@ DataType *DataTypeFromNode(ASTNode *node)
     case NODE_VAR_DECLARATION:
         logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var declaration");
         return node->data.varDecl->type;
+    case NODE_CLASS:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from class");
+        return node->data.classNode->type;
     default:
     {
         fprintf(stderr, "[TypeTable] Error: Failed to get data type from node.\n");
@@ -352,7 +355,7 @@ const char *getDataTypeName(DataType *type)
 {
     if (!type)
     {
-        fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
+        fprintf(stderr, "[TypeTable] Error: Invalid data type. @getDataTypeName\n");
         CONDITION_FAILED;
     }
 
@@ -482,7 +485,7 @@ DataType *cloneDataType(DataType *type)
 {
     if (!type)
     {
-        fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
+        fprintf(stderr, "[TypeTable] Error: Invalid data type. @cloneDataType\n");
         CONDITION_FAILED;
     }
 
@@ -570,4 +573,24 @@ void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
             addTypeToTypeTable(typeTable, name, type);
         }
     }
+}
+
+DataType *findClassType(ASTNode *node, TypeTable *typeTable)
+{
+    if (!node || !typeTable)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid node or type table.\n");
+        CONDITION_FAILED;
+    }
+
+    if (node->metaData->type != NODE_CLASS)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid node type.\n");
+        CONDITION_FAILED;
+    }
+
+    const char *name = node->data.classNode->name;
+    DataType *type = lookupType(typeTable, name);
+
+    return type;
 }

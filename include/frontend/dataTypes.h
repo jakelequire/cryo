@@ -283,6 +283,8 @@ extern "C"
     void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type);
     void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root);
 
+    DataType *findClassType(ASTNode *node, TypeTable *typeTable);
+
     // # =========================================================================== #
     // # Primitive Type Functions
     // # (primitives.c)
@@ -411,6 +413,7 @@ extern "C"
     void logDataType(DataType *type);
     void logStructType(StructType *type);
     void logVerboseDataType(DataType *type);
+    void printClassType(ClassType *type);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);

@@ -690,10 +690,10 @@ ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->nodeType = NODE_UNKNOWN;
-    node->args = NULL;
+    node->args = (ASTNode **)calloc(ARG_CAPACITY, sizeof(ASTNode *));
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
-    node->funcRefName = NULL;
+    node->funcRefName = (char *)calloc(1, sizeof(char));
 
     return node;
 }
@@ -1154,6 +1154,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
     node->isStatic = false;
+    node->parentName = (char *)calloc(1, sizeof(char));
 
     return node;
 }

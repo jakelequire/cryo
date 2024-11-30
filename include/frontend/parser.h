@@ -215,6 +215,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
                          Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 void addTokenToContext(ParsingContext *context, Token token);
+void addStaticIdentifierToContext(ParsingContext *context, bool value);
 
 void logThisContext(ParsingContext *context);
 void logTokenArray(ParsingContext *context);
@@ -228,7 +229,7 @@ void logParsingContext(ParsingContext *context);
 ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData, TypeTable *typeTable);
-ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 
@@ -247,22 +248,22 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 
 void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable);
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
-                        Arena *arena, CompilerState *state, TypeTable *typeTable);
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 
 void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable);
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
-                     Arena *arena, CompilerState *state, TypeTable *typeTable);
+                     Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
-                        Arena *arena, CompilerState *state, TypeTable *typeTable);
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
-                       Arena *arena, CompilerState *state, TypeTable *typeTable);
+                       Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
-                        Arena *arena, CompilerState *state, TypeTable *typeTable);
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
-                          Arena *arena, CompilerState *state, TypeTable *typeTable);
+                          Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 
 static void ensureCapacity(ASTNode **array, int *capacity, int count, int increment);
 

@@ -50,7 +50,7 @@ void printSymbolTable(CryoSymbolTable *table)
     printf("\n\n");
     printf("Namespace: %s\n", table->namespaceName ? table->namespaceName : "Unnamed");
     printf("\n");
-    printf("Name               Node Type             Data Type          L:C    Args     Module\n");
+    printf("Name                 Node Type               Data Type       L:C    Args     Module\n");
     printf("----------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++)
     {
@@ -64,6 +64,11 @@ void printSymbolTable(CryoSymbolTable *table)
             printf("Error: node in symbol at index %d is null\n", i);
             continue;
         }
+        if (table->symbols[i]->nodeType == NODE_PARAM)
+        {
+            // Skip printing parameters, comment out the `continue` to print them
+            continue;
+        }
 
         char locationStr[16];
 
@@ -72,7 +77,7 @@ void printSymbolTable(CryoSymbolTable *table)
                  table->symbols[i]->line,
                  table->symbols[i]->column);
 
-        printf("%-15s %-24s %-18s %-7s %-7d %-15s\n",
+        printf("%-20s %-24s %-14s %-7s %-7d %-15s\n",
                table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                CryoNodeTypeToString(table->symbols[i]->nodeType),
                DataTypeToStringUnformatted(table->symbols[i]->type),
@@ -350,6 +355,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->isConstant = !isMutable;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
     }
 
@@ -360,6 +366,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->argCount = node->data.functionDecl->paramCount;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_EXTERN_FUNCTION:
@@ -378,6 +385,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->type = node->data.varDecl->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_VAR_NAME:
@@ -386,6 +394,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->type = node->data.varName->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_FUNCTION_CALL:
@@ -394,6 +403,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->argCount = node->data.functionCall->argCount;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_ARRAY_LITERAL:
@@ -402,6 +412,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->type = node->data.varDecl->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_VAR_REASSIGN:
@@ -410,6 +421,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->type = node->data.varReassignment->existingVarType;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_PARAM:
@@ -418,6 +430,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->type = node->data.param->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_STRUCT_DECLARATION:
@@ -426,6 +439,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
         symbolNode->type = node->data.structNode->type;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_PROPERTY:
@@ -434,11 +448,13 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
         symbolNode->type = node->data.property->type;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_RETURN_STATEMENT:
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_IMPORT_STATEMENT:
@@ -453,6 +469,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
 
     case NODE_PROPERTY_ACCESS:
@@ -461,6 +478,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
     }
 
@@ -472,7 +490,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->column = node->metaData->position.column;
         symbolNode->type = node->data.method->type;
         symbolNode->argCount = node->data.method->paramCount;
-
+        symbolNode->module = strdup(node->data.method->parentName);
         break;
     }
 
@@ -482,6 +500,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->nodeType = node->metaData->type;
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
     }
 
@@ -492,6 +511,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->line = node->metaData->position.line;
         symbolNode->column = node->metaData->position.column;
         symbolNode->type = node->data.classNode->type;
+        symbolNode->module = strdup(node->metaData->moduleName);
         break;
     }
 
@@ -577,21 +597,6 @@ void setNamespace(CryoSymbolTable *table, const char *name)
         table->namespaceName = strdup(name);
 }
 
-// <analyzeNode>
-bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena)
-{
-    // Cleanup
-    for (int i = 0; i < table->count; i++)
-    {
-        free(table->symbols[i]->name);
-        free(table->symbols[i]);
-    }
-    free(table->symbols);
-    free(table);
-    return true;
-}
-// </analyzeNode>
-
 void importRuntimeDefinitionsToSymTable(CryoSymbolTable *table, ASTNode *runtimeNode, Arena *arena)
 {
     for (int i = 0; i < runtimeNode->data.program->statementCount; i++)
@@ -601,4 +606,20 @@ void importRuntimeDefinitionsToSymTable(CryoSymbolTable *table, ASTNode *runtime
         logMessage("INFO", __LINE__, "SymTable", "Adding runtime definition to symbol table %s%s%s%s",
                    BOLD, GREEN, CryoNodeTypeToString(node->metaData->type), COLOR_RESET);
     }
+}
+
+CryoSymbol *resolveModuleSymbol(const char *moduleName, const char *symbolName, CryoSymbolTable *table, Arena *arena)
+{
+    for (int i = 0; i < table->count; i++)
+    {
+        if (strcmp(table->symbols[i]->name, symbolName) == 0 && strcmp(table->symbols[i]->module, moduleName) == 0)
+        {
+            return table->symbols[i];
+        }
+    }
+
+    printSymbolTable(table);
+    logMessage("ERROR", __LINE__, "SymTable", "Failed to resolve module symbol %s%s%s%s in module %s%s%s%s",
+               BOLD, RED, symbolName, COLOR_RESET, BOLD, RED, moduleName, COLOR_RESET);
+    return NULL;
 }

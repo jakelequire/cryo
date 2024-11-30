@@ -19,9 +19,9 @@
 #define AST_OUTPUT_EXT ".txt"
 #define AST_OUTPUT_FILENAME "ast_debug"
 #define AST_DEBUG_VIEW_NODE_COUNT 1024
-#define __LINE_AND_COLUMN__ \
-    int line = line;        \
-    int column = column;
+#define __LINE_AND_COLUMN__          \
+    int line = node->metaData->line; \
+    int column = node->metaData->column;
 
 #define BUFFER_FAILED_ALLOCA_CATCH                                                             \
     if (!buffer)                                                                               \

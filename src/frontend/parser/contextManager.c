@@ -101,6 +101,14 @@ ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *t
     return NULL;
 }
 
+void addStaticIdentifierToContext(ParsingContext *context, bool value)
+{
+    if (context->thisContext)
+    {
+        context->thisContext->isStatic = value;
+    }
+}
+
 // This functions adds a token to the lastTokens array in the parsing context
 // If the array is full, it will shift all the tokens to the left by one
 void addTokenToContext(ParsingContext *context, Token token)

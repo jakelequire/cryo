@@ -93,7 +93,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     END_COMPILATION_MESSAGE;
 
-    // logASTNodeDebugView(programCopy);
+    logASTNodeDebugView(programCopy);
 
     return 0;
 }
@@ -133,7 +133,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     }
 
     // Generate code
-    int result = generateCodeWrapper(programNode, state, nullptr);
+    int result = generateCodeWrapper(programNode, state, NULL);
     if (result != 0)
     {
         CONDITION_FAILED;

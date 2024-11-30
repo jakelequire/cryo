@@ -545,7 +545,7 @@ typedef struct ParamNode
 typedef struct ArgNode
 {
     enum CryoNodeType nodeType;
-    CryoVariableNode **args;
+    ASTNode **args;
     int argCount;
     int argCapacity;
     char *funcRefName;
@@ -703,6 +703,7 @@ typedef struct MethodNode
     ASTNode *body;
     CryoVisibilityType visibility;
     bool isStatic;
+    const char *parentName;
 } MethodNode;
 
 typedef struct MethodCallNode
@@ -1309,6 +1310,8 @@ extern "C"
         const char *methodName,
         ASTNode **args,
         int argCount,
+        const char *parentName,
+        bool isStatic,
         Arena *arena,
         CompilerState *state,
         TypeTable *typeTable, Lexer *lexer);
@@ -1350,6 +1353,7 @@ extern "C"
         const char *methodName,
         ASTNode **args,
         int argCount,
+        bool isStatic,
         Arena *arena,
         CompilerState *state,
         TypeTable *typeTable, Lexer *lexer);
@@ -1439,6 +1443,7 @@ extern "C"
 // # ============================================================ #
 // # Node Containers (./src/frontend/AST/ASTContainers.c)         #
 // # ============================================================ #
+
 CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state);
 CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state);
 CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state);

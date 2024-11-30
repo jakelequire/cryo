@@ -861,7 +861,8 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
     return node;
 }
 
-ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, const char *parentName, bool isStatic,
+                          Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
     ASTNode *node = createASTNode(NODE_METHOD, arena, state, typeTable, lexer);
     if (!node)
@@ -875,12 +876,14 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
     node->data.method->params = args;
     node->data.method->paramCount = argCount;
     node->data.method->type = type;
+    node->data.method->parentName = parentName;
+    node->data.method->isStatic = isStatic;
 
     return node;
 }
 
 ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataType *instanceType, const char *methodName,
-                              ASTNode **args, int argCount,
+                              ASTNode **args, int argCount, bool isStatic,
                               Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
     ASTNode *node = createASTNode(NODE_METHOD_CALL, arena, state, typeTable, lexer);
@@ -897,6 +900,7 @@ ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataTy
     node->data.methodCall->args = args;
     node->data.methodCall->argCount = argCount;
     node->data.methodCall->instanceName = getDataTypeName(instanceType);
+    node->data.methodCall->isStatic = isStatic;
 
     return node;
 }
