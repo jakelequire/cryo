@@ -1563,6 +1563,7 @@ char *formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatClassNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1593,5 +1594,6 @@ char *CONSOLE_formatBinOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatClassNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

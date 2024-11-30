@@ -23,8 +23,8 @@ char *runtimePaths[] = {
     "/workspaces/cryo/build/out/deps/runtime.ll"};
 
 // This is being hard coded for now, but will be replaced with a more dynamic solution later.
-#define RUNTIME_SRC_FILE runtimePaths[0]
-#define RUINTIME_OBJ_FILE runtimePaths[1]
+#define RUNTIME_SRC_FILE runtimePaths[2]
+#define RUINTIME_OBJ_FILE runtimePaths[3]
 
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to

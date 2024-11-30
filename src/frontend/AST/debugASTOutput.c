@@ -598,6 +598,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatClassNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "AccessControl") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatAccessControlNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatAccessControlNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1308,7 +1319,7 @@ char *formatClassNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<Class> [%s] { Type: %s } <0:0>",
+    sprintf(buffer, "<Class> [%s] <0:0>",
             node->nodeName,
             DataTypeToString(node->dataType));
     return buffer;
@@ -1318,14 +1329,33 @@ char *CONSOLE_formatClassNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<Class>%s %s[%s]%s %s%s{ %s }%s %s%s<0:0>%s",
+    sprintf(buffer, "%s%s<Class>%s %s[%s]%s %s%s<0:0>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, COLOR_RESET);
     return buffer;
 }
 // </Class>
+// ============================================================
+// ============================================================
+// <AccessControl>
+char *formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s:",
+            node->nodeName);
+    return buffer;
+}
+char *CONSOLE_formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s%s:%s",
+            BOLD, LIGHT_BLUE, node->nodeName, COLOR_RESET);
+    return buffer;
+}
+// </AccessControl>
 // ============================================================
 
 // # ============================================================ #
@@ -1406,7 +1436,17 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_BLOCK:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *blockNode = createASTDebugNode("Block", "Block", createPrimitiveVoidType(), line, column, indentLevel, node);
+        int statementCount = node->data.block->statementCount;
+        char *blockName = (char *)malloc(sizeof(char) * 32);
+        if (statementCount == 0)
+        {
+            sprintf(blockName, "EmptyBlock");
+        }
+        else
+        {
+            sprintf(blockName, "Block");
+        }
+        ASTDebugNode *blockNode = createASTDebugNode("Block", blockName, createPrimitiveVoidType(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *blockNode;
         output->nodeCount++;
         for (int i = 0; i < node->data.block->statementCount; i++)
@@ -1511,7 +1551,6 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         }
 
         createASTDebugView(node->data.method->body, output, indentLevel + 1);
-
         break;
     }
 
@@ -1737,7 +1776,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         output->nodeCount++;
 
         // Handle constructor if present
-        if (node->data.classNode->hasConstructor && node->data.classNode->constructor)
+        if (node->data.classNode->constructor)
         {
             indentLevel++;
             createASTDebugView(node->data.classNode->constructor, output, indentLevel);
@@ -1747,78 +1786,93 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         // Handle public members
         if (node->data.classNode->publicMembers)
         {
-            char *buffer = MALLOC_BUFFER;
-            sprintf(buffer, "Public");
-            ASTDebugNode *publicNode = createASTDebugNode("AccessControl", buffer, createPrimitiveVoidType(), line, column, indentLevel + 1, node);
+            ASTDebugNode *publicNode = createASTDebugNode("AccessControl", "Public", createPrimitiveVoidType(), 0, 0, indentLevel + 1, NULL);
             output->nodes[output->nodeCount] = *publicNode;
             output->nodeCount++;
 
             // Log public properties
             for (int i = 0; i < node->data.classNode->publicMembers->propertyCount; i++)
             {
-                indentLevel += 2;
-                createASTDebugView(node->data.classNode->publicMembers->properties[i], output, indentLevel);
-                indentLevel -= 2;
+                const char *propertyName = node->data.classNode->publicMembers->properties[i]->data.property->name;
+                DataType *propertyType = node->data.classNode->publicMembers->properties[i]->data.property->type;
+                ASTDebugNode *propertyNode = createASTDebugNode("Property", propertyName, propertyType, 0, 0, indentLevel + 2, node->data.classNode->publicMembers->properties[i]);
+                output->nodes[output->nodeCount] = *propertyNode;
+                output->nodeCount++;
             }
 
             // Log public methods
             for (int i = 0; i < node->data.classNode->publicMembers->methodCount; i++)
             {
-                indentLevel += 2;
-                createASTDebugView(node->data.classNode->publicMembers->methods[i], output, indentLevel);
-                indentLevel -= 2;
+                const char *methodName = node->data.classNode->publicMembers->methods[i]->data.method->name;
+                DataType *methodType = node->data.classNode->publicMembers->methods[i]->data.method->type;
+                ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, methodType, 0, 0, indentLevel + 2, node->data.classNode->publicMembers->methods[i]);
+                output->nodes[output->nodeCount] = *methodNode;
+                output->nodeCount++;
+
+                // Log method body
+                createASTDebugView(node->data.classNode->publicMembers->methods[i]->data.method->body, output, indentLevel + 3);
             }
         }
 
         // Handle private members
         if (node->data.classNode->privateMembers)
         {
-            char *buffer = MALLOC_BUFFER;
-            sprintf(buffer, "Private");
-            ASTDebugNode *privateNode = createASTDebugNode("AccessControl", buffer, createPrimitiveVoidType(), line, column, indentLevel + 1, node);
+            ASTDebugNode *privateNode = createASTDebugNode("AccessControl", "Private", createPrimitiveVoidType(), 0, 0, indentLevel + 1, NULL);
             output->nodes[output->nodeCount] = *privateNode;
             output->nodeCount++;
 
             // Log private properties
             for (int i = 0; i < node->data.classNode->privateMembers->propertyCount; i++)
             {
-                indentLevel += 2;
-                createASTDebugView(node->data.classNode->privateMembers->properties[i], output, indentLevel);
-                indentLevel -= 2;
+                const char *propertyName = node->data.classNode->privateMembers->properties[i]->data.property->name;
+                DataType *propertyType = node->data.classNode->privateMembers->properties[i]->data.property->type;
+                ASTDebugNode *propertyNode = createASTDebugNode("Property", propertyName, propertyType, 0, 0, indentLevel + 2, node->data.classNode->privateMembers->properties[i]);
+                output->nodes[output->nodeCount] = *propertyNode;
+                output->nodeCount++;
             }
 
             // Log private methods
             for (int i = 0; i < node->data.classNode->privateMembers->methodCount; i++)
             {
-                indentLevel += 2;
-                createASTDebugView(node->data.classNode->privateMembers->methods[i], output, indentLevel);
-                indentLevel -= 2;
+                const char *methodName = node->data.classNode->privateMembers->methods[i]->data.method->name;
+                DataType *methodType = node->data.classNode->privateMembers->methods[i]->data.method->type;
+                ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, methodType, 0, 0, indentLevel + 2, node->data.classNode->privateMembers->methods[i]);
+                output->nodes[output->nodeCount] = *methodNode;
+                output->nodeCount++;
+
+                // Log method body
+                createASTDebugView(node->data.classNode->privateMembers->methods[i]->data.method->body, output, indentLevel + 3);
             }
         }
 
         // Handle protected members
         if (node->data.classNode->protectedMembers)
         {
-            char *buffer = MALLOC_BUFFER;
-            sprintf(buffer, "Protected");
-            ASTDebugNode *protectedNode = createASTDebugNode("AccessControl", buffer, createPrimitiveVoidType(), line, column, indentLevel + 1, node);
+            ASTDebugNode *protectedNode = createASTDebugNode("AccessControl", "Protected", createPrimitiveVoidType(), 0, 0, indentLevel + 1, NULL);
             output->nodes[output->nodeCount] = *protectedNode;
             output->nodeCount++;
 
             // Log protected properties
             for (int i = 0; i < node->data.classNode->protectedMembers->propertyCount; i++)
             {
-                indentLevel += 2;
-                createASTDebugView(node->data.classNode->protectedMembers->properties[i], output, indentLevel);
-                indentLevel -= 2;
+                const char *propertyName = node->data.classNode->protectedMembers->properties[i]->data.property->name;
+                DataType *propertyType = node->data.classNode->protectedMembers->properties[i]->data.property->type;
+                ASTDebugNode *propertyNode = createASTDebugNode("Property", propertyName, propertyType, 0, 0, indentLevel + 2, node->data.classNode->protectedMembers->properties[i]);
+                output->nodes[output->nodeCount] = *propertyNode;
+                output->nodeCount++;
             }
 
             // Log protected methods
             for (int i = 0; i < node->data.classNode->protectedMembers->methodCount; i++)
             {
-                indentLevel += 2;
-                createASTDebugView(node->data.classNode->protectedMembers->methods[i], output, indentLevel);
-                indentLevel -= 2;
+                const char *methodName = node->data.classNode->protectedMembers->methods[i]->data.method->name;
+                DataType *methodType = node->data.classNode->protectedMembers->methods[i]->data.method->type;
+                ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, methodType, 0, 0, indentLevel + 2, node->data.classNode->protectedMembers->methods[i]);
+                output->nodes[output->nodeCount] = *methodNode;
+                output->nodeCount++;
+
+                // Log method body
+                createASTDebugView(node->data.classNode->protectedMembers->methods[i]->data.method->body, output, indentLevel + 3);
             }
         }
         break;

@@ -241,10 +241,11 @@ ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeT
 // # Class Parsing
 // # =========================================================================== #
 
-ASTNode *parseClassDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
-ASTNode *parseClassBody(ASTNode *classNode, const char *className,
+ASTNode *parseClassDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic,
                         Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
+void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
                       Arena *arena, CompilerState *state, TypeTable *typeTable);
 void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,

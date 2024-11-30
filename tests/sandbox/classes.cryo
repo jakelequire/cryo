@@ -2,6 +2,8 @@ namespace Classes;
 
 
 class IO {
+    public exampleProp: string;
+    // private examplePrivateProp: string = "private";
 
     constructor() {}
 
@@ -10,7 +12,6 @@ class IO {
         return;
     }
 }
-
 
 function main() -> void {
     IO::print("Hello, World!");

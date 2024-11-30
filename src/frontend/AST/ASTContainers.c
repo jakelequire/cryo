@@ -1268,11 +1268,11 @@ void *createMembersContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->methods = NULL;
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->methodCount = 0;
     node->methodCapacity = METHOD_CAPACITY;
 
-    node->properties = NULL;
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->propertyCount = 0;
     node->propertyCapacity = PROPERTY_CAPACITY;
 

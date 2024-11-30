@@ -187,6 +187,9 @@ char *DataTypeToString(DataType *dataType)
         sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.structDef->name);
         break;
 
+    case CLASS_TYPE:
+        break;
+
     default:
         sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
         break;
