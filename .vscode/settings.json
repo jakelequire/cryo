@@ -263,6 +263,6 @@
     "errorcodes.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
-  "C_Cpp.errorSquiggles": "disabled",
+  "C_Cpp.errorSquiggles": "enabled",
   "editor.selectionClipboard": false
 }

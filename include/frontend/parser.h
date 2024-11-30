@@ -266,4 +266,7 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
 
 static void ensureCapacity(ASTNode **array, int *capacity, int count, int increment);
 
+ASTNode *parseMethodScopeResolution(const char *scopeName,
+                                    Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
 #endif // PARSER_H

@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "frontend/AST.h"
 
-ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
     ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     if (!node)
@@ -39,6 +39,8 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);
+    node->metaData->line = lexer->line;
+    node->metaData->column = lexer->column;
 
     switch (type)
     {
@@ -188,7 +190,7 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
 // </addChildNode>
 
 // <addStatementToBlock>
-void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, CompilerState *state)
+void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     if (blockNode->metaData->type != NODE_BLOCK && blockNode->metaData->type != NODE_FUNCTION_BLOCK)
     {
@@ -222,7 +224,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, C
 }
 // </addStatementToBlock>
 
-void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena, CompilerState *state)
+void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     if (!functionBlock || !statement || !functionBlock->metaData || functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
     {
@@ -274,7 +276,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
 }
 
 // <addFunctionToProgram>
-void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, CompilerState *state)
+void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     if (!program || !function)
     {

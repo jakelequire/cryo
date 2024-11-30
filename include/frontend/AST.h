@@ -985,7 +985,7 @@ extern "C"
      * AST Node Core Operations
      * Basic operations for node manipulation and management
      */
-    // Node access and manipulation
+    /// @deprecated
     void printAST(
         ASTNode *node,
         int indent,
@@ -999,7 +999,8 @@ extern "C"
         CryoNodeType type,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable,
+        Lexer *lexer);
 
     void addChildNode(
         ASTNode *parent,
@@ -1015,26 +1016,26 @@ extern "C"
     ASTNode *createProgramNode(
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createNamespaceNode(
         char *name,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createImportNode(
         char *module,
         char *subModule,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createExternNode(
         ASTNode *externNode,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Block Statement Nodes
@@ -1044,24 +1045,24 @@ extern "C"
     ASTNode *createBlockNode(
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createFunctionBlock(
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     void addStatementToBlock(
         ASTNode *block,
         ASTNode *statement,
         Arena *arena,
-        CompilerState *state);
+        CompilerState *state, Lexer *lexer);
 
     void addStatementToFunctionBlock(
         ASTNode *functionBlock,
         ASTNode *statement,
         Arena *arena,
-        CompilerState *state);
+        CompilerState *state, Lexer *lexer);
 
     // Control flow blocks
     ASTNode *createIfBlock(
@@ -1070,7 +1071,7 @@ extern "C"
         ASTNode *else_branch,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createForBlock(
         ASTNode *initializer,
@@ -1079,14 +1080,14 @@ extern "C"
         ASTNode *body,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createWhileBlock(
         ASTNode *condition,
         ASTNode *body,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Expression Nodes
@@ -1097,7 +1098,7 @@ extern "C"
         ASTNode *expression,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createBinaryExpr(
         ASTNode *left,
@@ -1105,52 +1106,52 @@ extern "C"
         CryoOperatorType op,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createUnaryExpr(
         CryoTokenType op,
         ASTNode *operand,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     // Literal expressions
     ASTNode *createLiteralIntExpr(
         int value,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createIntLiteralNode(
         int value,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createFloatLiteralNode(
         float value,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createStringLiteralNode(
         const char *value,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createBooleanLiteralNode(
         int value,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createIdentifierNode(
         char *name,
         CryoSymbolTable *symTable,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Function-Related Nodes
@@ -1165,7 +1166,7 @@ extern "C"
         DataType *returnType,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createExternFuncNode(
         char *function_name,
@@ -1173,50 +1174,50 @@ extern "C"
         DataType *returnType,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     void addFunctionToProgram(
         ASTNode *program,
         ASTNode *function,
         Arena *arena,
-        CompilerState *state);
+        CompilerState *state, Lexer *lexer);
 
     // Function calls and returns
     ASTNode *createFunctionCallNode(
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createScopedFunctionCall(
         Arena *arena,
         CompilerState *state,
         const char *functionName,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createReturnNode(
         ASTNode *returnValue,
         DataType *returnType,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createReturnExpression(
         ASTNode *returnExpression,
         DataType *returnType,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     // Parameters and arguments
     ASTNode *createParamListNode(
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createArgumentListNode(
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createParamNode(
         char *name,
@@ -1224,7 +1225,7 @@ extern "C"
         DataType *type,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createArgsNode(
         char *name,
@@ -1233,7 +1234,7 @@ extern "C"
         bool isLiteral,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Variable-Related Nodes
@@ -1249,14 +1250,14 @@ extern "C"
         bool isIterator,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createVariableExpr(
         char *name,
         bool isReference,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createVarReassignment(
         char *varName,
@@ -1264,7 +1265,7 @@ extern "C"
         ASTNode *newVarNode,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Struct and Object-Oriented Nodes
@@ -1280,7 +1281,7 @@ extern "C"
         int methodCount,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createFieldNode(
         char *fieldName,
@@ -1290,7 +1291,7 @@ extern "C"
         ASTNode *fieldValue,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     // Object operations
     ASTNode *createConstructorNode(
@@ -1300,7 +1301,7 @@ extern "C"
         int argCount,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createMethodNode(
         DataType *type,
@@ -1310,19 +1311,19 @@ extern "C"
         int argCount,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createThisNode(
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createPropertyAccessNode(
         ASTNode *object,
         const char *property,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createPropertyReassignmentNode(
         ASTNode *object,
@@ -1330,7 +1331,7 @@ extern "C"
         ASTNode *newValue,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     // Method calls and property access
     ASTNode *createStructPropertyAccessNode(
@@ -1340,7 +1341,7 @@ extern "C"
         DataType *type,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createMethodCallNode(
         ASTNode *accessorObj,
@@ -1351,7 +1352,7 @@ extern "C"
         int argCount,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Generic Type Nodes
@@ -1366,7 +1367,7 @@ extern "C"
         bool hasConstraint,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createGenericInstNode(
         const char *baseName,
@@ -1375,38 +1376,38 @@ extern "C"
         DataType *resultType,
         Arena *arena,
         CompilerState *state,
-        TypeTable *typeTable);
+        TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Array-Related Nodes
      * Nodes for array operations
      */
     ASTNode *createArrayLiteralNode(
-        Arena *arena, CompilerState *state, TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createIndexExprNode(
         char *arrayName,
         ASTNode *arrayRef,
         ASTNode *index,
-        Arena *arena, CompilerState *state, TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createIfStatement(
         ASTNode *condition,
         ASTNode *then_branch,
         ASTNode *else_branch,
-        Arena *arena, CompilerState *state, TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createForStatement(
         ASTNode *initializer,
         ASTNode *condition,
         ASTNode *increment,
         ASTNode *body,
-        Arena *arena, CompilerState *state, TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createWhileStatement(
         ASTNode *condition,
         ASTNode *body,
-        Arena *arena, CompilerState *state, TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     /**
      * Class Nodes
@@ -1415,14 +1416,14 @@ extern "C"
 
     ASTNode *createClassDeclarationNode(
         const char *className,
-        Arena *arena, CompilerState *state, TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createClassConstructor(
         const char *className,
         ASTNode *body,
         ASTNode **fields,
         int argCount,
-        Arena *arena, CompilerState *state, TypeTable *typeTable);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     /**
      * String Utility Functions

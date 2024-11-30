@@ -151,6 +151,9 @@ char *DataTypeToStringUnformatted(DataType *type)
         sprintf(typeString, "%s", type->container->custom.structDef->name);
         break;
 
+    case CLASS_TYPE:
+        sprintf(typeString, "%s", type->container->custom.classDef->name);
+
     default:
         sprintf(typeString, "<UNKNOWN>");
         break;

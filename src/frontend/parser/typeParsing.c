@@ -145,7 +145,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     logMessage("INFO", __LINE__, "Parser", "Property Count: %d | Method Count: %d", propertyCount, methodCount);
     ASTNode *structNode = createStructNode(structName, properties, propertyCount, constructorNode,
                                            methods, methodCount,
-                                           arena, state, typeTable);
+                                           arena, state, typeTable, lexer);
     structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
     structNode->data.structNode->hasConstructor = hasConstructor;
 
@@ -228,7 +228,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     // Find the parent node in the symbol table
     CryoNodeType parentNodeType = context->thisContext->nodeType;
 
-    ASTNode *propertyNode = createFieldNode(strdup(fieldName), fieldType, parentName, parentNodeType, NULL, arena, state, typeTable);
+    ASTNode *propertyNode = createFieldNode(strdup(fieldName), fieldType, parentName, parentNodeType, NULL, arena, state, typeTable, lexer);
     if (defaultCount > 0)
     {
         propertyNode->data.property->defaultProperty = true;
@@ -256,7 +256,7 @@ ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     ASTNode *constructorBody = parseBlock(lexer, table, context, arena, state, typeTable);
 
-    ASTNode *constructorNode = createConstructorNode(consturctorName, constructorBody, params, paramCount, arena, state, typeTable);
+    ASTNode *constructorNode = createConstructorNode(consturctorName, constructorBody, params, paramCount, arena, state, typeTable, lexer);
 
     return constructorNode;
 }
@@ -290,7 +290,7 @@ ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     // Create the method body
     ASTNode *methodBody = parseBlock(lexer, table, context, arena, state, typeTable);
     // Create the method node
-    ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, arena, state, typeTable);
+    ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, arena, state, typeTable, lexer);
 
     // Add the method to the symbol table
     addASTNodeSymbol(table, methodNode, arena);
@@ -326,7 +326,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
     VALIDATE_TYPE(returnType);
 
     ASTNode *methodCall = createMethodCallNode(accessorObj, returnType, instanceType, methodName,
-                                               params, paramCount, arena, state, typeTable);
+                                               params, paramCount, arena, state, typeTable, lexer);
     if (!methodCall)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to create method call node.");
@@ -430,7 +430,7 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, CryoSymbolTable *t
 
     DataType *genericType = wrapTypeContainer(container);
     ASTNode *genericDeclNode = createGenericDeclNode(genericType, typeName, genericParams, genericParamCount, NULL, false,
-                                                     arena, state, typeTable);
+                                                     arena, state, typeTable, lexer);
 
     // Add to type table
     addTypeToTypeTable(typeTable, typeName, genericType);
@@ -504,7 +504,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
                                                                        concreteTypes[0]);
 
     ASTNode *genericInstNode = createGenericInstNode(baseName, concreteTypes, paramCount,
-                                                     wrapTypeContainer(instantiatedContainer), arena, state, typeTable);
+                                                     wrapTypeContainer(instantiatedContainer), arena, state, typeTable, lexer);
 
     return genericInstNode;
 }
