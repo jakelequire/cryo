@@ -26,9 +26,9 @@
 #include <assert.h>
 
 #include "frontend/tokens.h"
-#include "frontend/AST.h"
 #include "settings/compilerSettings.h"
 #include "common/common.h"
+#include "frontend/AST.h"
 
 // Define each token mapping
 #define DECLARE_TOKEN(str, type) {str, type}
@@ -49,6 +49,10 @@ typedef struct Arena Arena;
 typedef struct DataType DataType;
 typedef struct TypeContainer TypeContainer;
 typedef struct ClassNode ClassNode;
+
+typedef struct PublicMembers PublicMembers;
+typedef struct PrivateMembers PrivateMembers;
+typedef struct ProtectedMembers ProtectedMembers;
 
 typedef enum PrimitiveDataType
 {
@@ -131,11 +135,11 @@ typedef struct StructType
 typedef struct FunctionType
 {
     const char *name;
-    ASTNode **params;
+    DataType **paramTypes;
     int paramCount;
     int paramCapacity;
     ASTNode *body;
-    PrimitiveDataType returnType;
+    DataType *returnType;
 } FunctionType;
 
 typedef struct ArrayType
@@ -397,6 +401,25 @@ extern "C"
     void addProtectedPropertyToClassType(ClassType *classType, ASTNode *property);
     void addProtectedMethodToClassType(ClassType *classType, ASTNode *method);
 
+    PublicMembersTypes *createPublicMembersType(void);
+    PrivateMembersTypes *createPrivateMembersType(void);
+    ProtectedMembersTypes *createProtectedMembersType(void);
+
+    void linkPublicMemebers(PublicMembersTypes *membersType, PublicMembers *membersNode);
+    void linkPrivateMemebers(PrivateMembersTypes *membersType, PrivateMembers *membersNode);
+    void linkProtectedMemebers(ProtectedMembersTypes *membersType, ProtectedMembers *membersNode);
+
+    // # =========================================================================== #
+    // # Function Types
+    // # (functionTypes.c)
+    // # =========================================================================== #
+
+    FunctionType *createFunctionTypeContainer(void);
+    DataType *createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount,
+                               Arena *arena, CompilerState *state, TypeTable *typeTable);
+    DataType *createFunctionType(const char *functionName, DataType *returnType, DataType **paramTypes, int paramCount,
+                                 Arena *arena, CompilerState *state, TypeTable *typeTable);
+
     // # =========================================================================== #
     // # Print Functions
     // # (printFunctions.c)
@@ -406,6 +429,7 @@ extern "C"
     char *PrimitiveDataTypeToString(PrimitiveDataType type);
     char *PrimitiveDataTypeToString_UF(PrimitiveDataType type);
     char *VerboseStructTypeToString(StructType *type);
+    char *VerboseClassTypeToString(ClassType *type);
 
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);
@@ -415,6 +439,7 @@ extern "C"
     void logStructType(StructType *type);
     void logVerboseDataType(DataType *type);
     void printClassType(ClassType *type);
+    void printFunctionType(FunctionType *funcType);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);

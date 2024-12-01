@@ -1070,6 +1070,14 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     {
         logMessage("INFO", __LINE__, "Parser", "Adding parameter: %s", params[i]->data.varDecl->name);
     }
+    int paramCount = 0;
+    DataType **paramTypes = (DataType **)malloc(sizeof(DataType *) * 64);
+    for (int i = 0; params[i] != NULL; i++)
+    {
+        printf("Parameter at index %d\n", i);
+        paramTypes[i] = params[i]->data.param->type;
+        paramCount++;
+    }
 
     DataType *returnType = NULL; // Default return type
     if (lexer->currentToken.type == TOKEN_RESULT_ARROW)
@@ -1095,7 +1103,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     }
 
     // Definition of the function
-    ASTNode *functionDefNode = createFunctionNode(visibility, functionName, params, NULL, returnType, arena, state, typeTable, lexer);
+    ASTNode *functionDefNode = createFunctionNode(visibility, strdup(functionName), params, NULL, returnType, arena, state, typeTable, lexer);
     if (!functionDefNode)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to create function node.");
@@ -1112,7 +1120,9 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
         return NULL;
     }
 
-    ASTNode *functionNode = createFunctionNode(visibility, functionName, params, functionBlock, returnType, arena, state, typeTable, lexer);
+    ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, returnType, arena, state, typeTable, lexer);
+    DataType *functionType = createFunctionType(strdup(functionName), returnType, paramTypes, paramCount, arena, state, typeTable);
+    functionNode->data.functionDecl->functionType = functionType;
     addASTNodeSymbol(table, functionNode, arena);
     return functionNode;
 }

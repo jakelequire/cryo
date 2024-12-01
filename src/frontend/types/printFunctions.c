@@ -194,6 +194,25 @@ char *DataTypeToString(DataType *dataType)
         sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.classDef->name);
         break;
 
+    case FUNCTION_TYPE:
+        // (param1Type, param2Type, ...) → returnType
+        sprintf(typeString, LIGHT_CYAN BOLD "(" COLOR_RESET);
+        for (int i = 0; i < dataType->container->custom.funcDef->paramCount; i++)
+        {
+            DataType *paramType = dataType->container->custom.funcDef->paramTypes[i];
+            char *paramTypeStr = DataTypeToString(paramType);
+            sprintf(typeString, "%s%s", typeString, paramTypeStr);
+            if (i < dataType->container->custom.funcDef->paramCount - 1)
+            {
+                sprintf(typeString, "%s, ", typeString);
+            }
+        }
+        sprintf(typeString, "%s" LIGHT_CYAN BOLD ") → " COLOR_RESET, typeString);
+        sprintf(typeString, "%s%s", typeString, DataTypeToString(dataType->container->custom.funcDef->returnType));
+        // End with a color reset
+        sprintf(typeString, "%s" COLOR_RESET, typeString);
+        break;
+
     default:
         sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
         break;
@@ -240,6 +259,53 @@ char *VerboseStructTypeToString(StructType *type)
                     ASTNode *param = method->data.method->params[j];
                     char *paramType = DataTypeToString(param->data.param->type);
                     sprintf(typeString, "%s %s: %s", typeString, param->data.param->name, paramType);
+                }
+            }
+        }
+    }
+
+    return typeString;
+}
+
+char *VerboseClassTypeToString(ClassType *type)
+{
+    if (!type)
+        return "<NULL CLASS>";
+
+    char *typeString = (char *)malloc(128);
+    if (!typeString)
+    {
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
+        return NULL;
+    }
+
+    sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, (char *)type->name);
+
+    if (type->publicMembers->propertyCount > 0)
+    {
+        for (int i = 0; i < type->publicMembers->propertyCount; i++)
+        {
+            DataType *property = type->publicMembers->properties[i];
+            char *propType = DataTypeToString(property);
+            sprintf(typeString, "%s %s: %s", typeString, type->publicMembers->properties[i]->container->custom.name, propType);
+        }
+    }
+
+    if (type->publicMembers->methodCount > 0)
+    {
+        for (int i = 0; i < type->publicMembers->methodCount; i++)
+        {
+            DataType *method = type->publicMembers->methods[i];
+            char *methodType = DataTypeToString(method);
+            sprintf(typeString, "%s %s →  %s", typeString, type->publicMembers->methods[i]->container->custom.name, methodType);
+            if (method->container->custom.funcDef->paramCount > 0)
+            {
+                for (int j = 0; j < method->container->custom.funcDef->paramCount; j++)
+                {
+                    DataType *paramType = method->container->custom.funcDef->paramTypes[j];
+                    char *paramTypeStr = DataTypeToString(paramType);
+                    const char *paramName = strdup(paramType->container->custom.name);
+                    sprintf(typeString, "%s %s: %s", typeString, paramName, paramTypeStr);
                 }
             }
         }
@@ -394,6 +460,10 @@ void printTypeContainer(TypeContainer *type)
         printf(" (%s)", type->custom.structDef->name);
         break;
 
+    case CLASS_TYPE:
+        printf(" (%s)", type->custom.classDef->name);
+        break;
+
     default:
         break;
     }
@@ -425,7 +495,9 @@ void printVerboseTypeContainer(TypeContainer *type)
     case STRUCT_TYPE:
         printf(" (%s)", VerboseStructTypeToString(type->custom.structDef));
         break;
-
+    case CLASS_TYPE:
+        printf(" (%s)", VerboseClassTypeToString(type->custom.classDef));
+        break;
     default:
         printf(" <UNKNOWN>");
         break;
@@ -434,16 +506,22 @@ void printVerboseTypeContainer(TypeContainer *type)
 }
 
 #define PRINT_MEMBERS_FN(TYPE)                                                                     \
+    printf("\n");                                                                                  \
     if (type->TYPE##Members)                                                                       \
     {                                                                                              \
-        printf("   " #TYPE " Members:\n");                                                         \
+        printf("   " #TYPE " properties:\n");                                                      \
         for (int i = 0; i < type->TYPE##Members->propertyCount; i++)                               \
         {                                                                                          \
             DataType *property = type->TYPE##Members->properties[i];                               \
             printf("     %s: %s\n", property->container->custom.name, DataTypeToString(property)); \
         }                                                                                          \
+        printf("   " #TYPE " methods:\n");                                                         \
+        for (int i = 0; i < type->TYPE##Members->methodCount; i++)                                 \
+        {                                                                                          \
+            DataType *method = type->TYPE##Members->methods[i];                                    \
+            printf("     %s →  %s\n", method->container->custom.name, DataTypeToString(method));   \
+        }                                                                                          \
     }
-
 void printClassType(ClassType *type)
 {
     if (!type)
@@ -469,3 +547,29 @@ void printClassType(ClassType *type)
     printf(COLOR_RESET);
 }
 #undef PRINT_MEMBERS_FN
+
+void printFunctionType(FunctionType *funcType)
+{
+    // Make it look like a function signature (e.g., `function (int, float) -> string`)
+
+    // (param1Type, param2Type, ...) → returnType
+    char typeString[128];
+
+    sprintf(typeString, LIGHT_CYAN BOLD "(" COLOR_RESET);
+    for (int i = 0; i < funcType->paramCount; i++)
+    {
+        DataType *paramType = funcType->paramTypes[i];
+        char *paramTypeStr = DataTypeToString(paramType);
+        sprintf(typeString, "%s%s", typeString, paramTypeStr);
+        if (i < funcType->paramCount - 1)
+        {
+            sprintf(typeString, "%s, ", typeString);
+        }
+    }
+    sprintf(typeString, "%s" LIGHT_CYAN BOLD ") → " COLOR_RESET, typeString);
+    sprintf(typeString, "%s%s", typeString, DataTypeToString(funcType->returnType));
+    // End with a color reset
+    sprintf(typeString, "%s" COLOR_RESET, typeString);
+
+    printf(COLOR_RESET);
+}

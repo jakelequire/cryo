@@ -54,14 +54,17 @@ ASTNode *parseClassDeclaration(bool isStatic,
         CONDITION_FAILED;
     }
 
+    DataType *classType = createClassDataType(className, classNode->data.classNode);
+
     // Add to the symbol table
     addASTNodeSymbol(table, classNode, arena);
     // Add to the TypeTable
-    addTypeToTypeTable(typeTable, className, createClassDataType(className, classNode->data.classNode));
+    addTypeToTypeTable(typeTable, className, classType);
     // Clear the context
     clearThisContext(context, typeTable);
 
-    printTypeTable(typeTable);
+    // Add the class type to the node
+    addDataTypeToClassNode(classNode, classType);
 
     return classNode;
 }
@@ -71,12 +74,10 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing class body...");
 
-    int methodCount = 0;
     int privateMethodCount = 0;
     int publicMethodCount = 0;
     int protectedMethodCount = 0;
 
-    int propertyCount = 0;
     int privatePropertyCount = 0;
     int publicPropertyCount = 0;
     int protectedPropertyCount = 0;
@@ -135,6 +136,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 
                     logMessage("INFO", __LINE__, "Parser", "Parsing property declaration...");
                     DataType *type = parseType(lexer, context, table, arena, state, typeTable);
+                    type->container->custom.name = strdup(identifier);
 
                     // Move past the data type token
                     getNextToken(lexer, arena, state, typeTable);
@@ -146,7 +148,6 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 
                     logMessage("INFO", __LINE__, "Parser", "Property added to class.");
 
-                    propertyCount++;
                     publicPropertyCount++;
 
                     break;
@@ -165,6 +166,10 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     }
                     logMessage("INFO", __LINE__, "Parser", "Method node created.");
                     addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, typeTable, context);
+
+                    publicMethodCount++;
+
+                    break;
                 }
 
                 // Unknown
@@ -214,8 +219,26 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
         }
     }
 
+    int propertyCount = privatePropertyCount + publicPropertyCount + protectedPropertyCount;
+    int methodCount = privateMethodCount + publicMethodCount + protectedMethodCount;
+
+    logMessage("INFO", __LINE__, "Parser", "Property count: %i", propertyCount);
+    logMessage("INFO", __LINE__, "Parser", "Method count: %i", methodCount);
+
     // Update the constructor flag with the local variable flag
     classNode->data.classNode->hasConstructor = hasConstructor;
+
+    classNode->data.classNode->privateMembers->propertyCount = privatePropertyCount;
+    classNode->data.classNode->privateMembers->methodCount = privateMethodCount;
+
+    classNode->data.classNode->protectedMembers->propertyCount = protectedPropertyCount;
+    classNode->data.classNode->protectedMembers->methodCount = protectedMethodCount;
+
+    classNode->data.classNode->publicMembers->propertyCount = publicPropertyCount;
+    classNode->data.classNode->publicMembers->methodCount = publicMethodCount;
+
+    classNode->data.classNode->propertyCount = propertyCount;
+    classNode->data.classNode->methodCount = methodCount;
 
     logASTNode(classNode);
 
@@ -407,20 +430,6 @@ void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
     }
 
     ClassNode *classData = classNode->data.classNode;
-    if (!classData->publicMembers)
-    {
-        classData->publicMembers = (PublicMembers *)calloc(1, sizeof(PublicMembers));
-        if (!classData->publicMembers)
-        {
-            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate public members");
-            return;
-        }
-    }
-
-    ensureCapacity(classData->publicMembers->properties,
-                   &classData->publicMembers->propertyCapacity,
-                   classData->publicMembers->propertyCount, 1);
-
     addPropertyToThisContext(context, propNode, typeTable);
     classData->publicMembers->properties[classData->publicMembers->propertyCount++] = propNode;
 }
@@ -445,10 +454,6 @@ void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
             return;
         }
     }
-
-    ensureCapacity(classData->privateMembers->properties,
-                   &classData->privateMembers->propertyCapacity,
-                   classData->privateMembers->propertyCount, 1);
 
     classData->privateMembers->properties[classData->privateMembers->propertyCount++] = propNode;
 }
@@ -478,6 +483,19 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
                    classData->protectedMembers->propertyCount, 1);
 
     classData->protectedMembers->properties[classData->protectedMembers->propertyCount++] = propNode;
+}
+
+void addDataTypeToClassNode(ASTNode *classNode, DataType *type)
+{
+    logMessage("INFO", __LINE__, "Parser", "Adding data type to class node...");
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        return;
+    }
+
+    classNode->data.classNode->type = type;
+    logMessage("INFO", __LINE__, "Parser", "Data type added to class node.");
 }
 
 ASTNode *parseMethodScopeResolution(const char *scopeName,

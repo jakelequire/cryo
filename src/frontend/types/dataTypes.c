@@ -397,6 +397,8 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
         return node->data.param->type;
     case NODE_VAR_DECLARATION:
         return node->data.varDecl->type;
+    case NODE_METHOD:
+        return node->data.method->type;
     case NODE_PROPERTY_ACCESS:
     {
         // Get the object type

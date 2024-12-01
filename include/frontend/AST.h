@@ -269,9 +269,10 @@ typedef struct FunctionDeclNode
 {
     CryoNodeType nodeType;
     CryoVisibilityType visibility;
+    DataType *functionType;
     DataType *type;
 
-    char *name;
+    const char *name;
     struct ASTNode **params;
     int paramCount;
     int paramCapacity;
@@ -498,7 +499,7 @@ typedef struct CryoVariableNode
 typedef struct CryoParameterNode
 {
     DataType *type;
-    char *name;
+    const char *name;
     char *functionName;
     bool hasDefaultValue;
     bool isMutable;
@@ -695,6 +696,7 @@ typedef struct PropertyNode
 
 typedef struct MethodNode
 {
+    DataType *functionType;
     DataType *type;
     char *name;
     ASTNode **params;
@@ -855,7 +857,7 @@ typedef struct GenericInstNode
     DataType *resultType; // The concrete type after substitution
 } GenericInstNode;
 
-typedef struct
+struct ProtectedMembers
 {
     DataType *parentType;
 
@@ -865,7 +867,31 @@ typedef struct
     int propertyCapacity;
     int methodCount;
     int methodCapacity;
-} ProtectedMembers, PrivateMembers, PublicMembers;
+};
+
+struct PrivateMembers
+{
+    DataType *parentType;
+
+    ASTNode **properties;
+    ASTNode **methods;
+    int propertyCount;
+    int propertyCapacity;
+    int methodCount;
+    int methodCapacity;
+};
+
+struct PublicMembers
+{
+    DataType *parentType;
+
+    ASTNode **properties;
+    ASTNode **methods;
+    int propertyCount;
+    int propertyCapacity;
+    int methodCount;
+    int methodCapacity;
+};
 
 typedef struct ClassNode
 {

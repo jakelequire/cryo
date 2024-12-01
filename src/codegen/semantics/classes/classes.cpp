@@ -25,8 +25,16 @@ namespace Cryo
 
         ClassNode *classNode = node->data.classNode;
         std::string className = classNode->name;
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Class Name: " + className);
+
         DataType *classDataType = classNode->type;
+        if (!classDataType || classDataType == nullptr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Class Data Type is NULL");
+            CONDITION_FAILED;
+        }
         logVerboseDataType(classDataType);
+        DEBUG_BREAKPOINT;
 
         compiler.getContext().addClassDataType(className, classDataType);
 

@@ -266,6 +266,7 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
                           Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 
 static void ensureCapacity(ASTNode **array, int *capacity, int count, int increment);
+void addDataTypeToClassNode(ASTNode *classNode, DataType *type);
 
 ASTNode *parseMethodScopeResolution(const char *scopeName,
                                     Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);

@@ -460,6 +460,7 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     node->data.functionDecl->paramCapacity = paramCapacity;
     node->data.functionDecl->body = function_body;
     node->data.functionDecl->type = returnType;
+    node->data.functionDecl->functionType = createFunctionType(strdup(function_name), returnType, NULL, 0, arena, state, typeTable);
     return node;
 }
 
@@ -956,6 +957,8 @@ ASTNode *createClassDeclarationNode(const char *className,
     }
 
     node->data.classNode->name = className;
+    node->data.classNode->propertyCount = 0;
+    node->data.classNode->methodCount = 0;
 
     return node;
 }

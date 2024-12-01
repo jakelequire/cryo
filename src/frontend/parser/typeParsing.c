@@ -288,6 +288,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *ta
     // Get the return type `-> <type>`
     consume(__LINE__, lexer, TOKEN_RESULT_ARROW, "Expected `->` for return type.", "parseMethodDeclaration", table, arena, state, typeTable, context);
     DataType *returnType = parseType(lexer, context, table, arena, state, typeTable);
+    returnType->container->custom.name = strdup(methodName);
     getNextToken(lexer, arena, state, typeTable);
 
     // Create the method body
@@ -296,6 +297,16 @@ ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *ta
     const char *parentName = context->thisContext->nodeName;
     ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, parentName, isStatic,
                                            arena, state, typeTable, lexer);
+
+    DataType **paramTypes = (DataType **)ARENA_ALLOC(arena, paramCount * sizeof(DataType *));
+    for (int i = 0; i < paramCount; i++)
+    {
+        paramTypes[i] = params[i]->data.param->type;
+    }
+
+    // Create the method type
+    DataType *methodType = createMethodType(strdup(methodName), returnType, paramTypes, paramCount, arena, state, typeTable);
+    methodNode->data.method->type = methodType;
 
     // Add the method to the symbol table
     addASTNodeSymbol(table, methodNode, arena);

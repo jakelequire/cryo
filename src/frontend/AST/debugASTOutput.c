@@ -662,7 +662,7 @@ char *formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output)
     // <FunctionDecl> [NAME] [RETURN_TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<FunctionDecl> [%s] →  %s <%i:%i>",
+    sprintf(buffer, "<FunctionDecl> [%s]: %s <%i:%i>",
             node->nodeName,
             DataTypeToString(node->dataType),
             node->line, node->column);
@@ -672,7 +672,7 @@ char *CONSOLE_formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<FunctionDecl>%s %s[%s] →%s  %s%s%s%s %s%s<%i:%i>%s",
+    sprintf(buffer, "%s%s<FunctionDecl>%s %s[%s]:%s %s%s%s%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET, YELLOW, node->nodeName, COLOR_RESET,
             BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
@@ -1130,17 +1130,17 @@ char *formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
     // <Method> [NAME] [RETURN_TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<Method> [%s] →  %s <0:0>",
+    sprintf(buffer, "<Method> [%s]:  %s <0:0>",
             node->nodeName,
             DataTypeToString(node->dataType));
     return buffer;
 }
 char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
 {
-    // <Method> [NAME] → [RETURN_TYPE] <L:C>
+    // <Method> [NAME] → { FUNCTION_SIGNATURE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<Method>%s %s[%s] → %s%s%s %s %s%s<0:0>%s%s",
+    sprintf(buffer, "%s%s<Method>%s %s[%s]:%s%s%s %s %s%s<0:0>%s%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
@@ -1170,7 +1170,7 @@ char *CONSOLE_formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
-// </IntLiteral>
+// </IntLiteral>c
 // ============================================================
 // ============================================================
 // <StringLiteral>
@@ -1225,7 +1225,7 @@ char *formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
     // <MethodCall> [NAME] { RETURN_TYPE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<MethodCall> [%s] →  %s <0:0>",
+    sprintf(buffer, "<MethodCall> [%s]: %s <0:0>",
             node->nodeName,
             DataTypeToString(node->dataType));
     return buffer;
@@ -1235,7 +1235,7 @@ char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
     // <MethodCall> [NAME] { RETURN_TYPE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<MethodCall>%s %s[%s] → %s%s%s %s %s%s<0:0>%s",
+    sprintf(buffer, "%s%s<MethodCall>%s %s[%s]:%s%s%s %s %s%s<0:0>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
@@ -1395,7 +1395,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         const char *funcName = strdup(node->data.functionDecl->name);
-        DataType *returnType = node->data.functionDecl->type;
+        DataType *returnType = node->data.functionDecl->functionType;
         ASTDebugNode *functionNode = createASTDebugNode("FunctionDecl", funcName, returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *functionNode;
         output->nodeCount++;
@@ -1538,7 +1538,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         char *methodName = strdup(node->data.method->name);
-        DataType *returnType = node->data.method->type;
+        DataType *returnType = node->data.method->functionType;
 
         ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *methodNode;

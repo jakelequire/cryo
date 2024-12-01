@@ -987,6 +987,13 @@ namespace Cryo
         int argCount = methodCallNode->argCount;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
 
+        DevDebugger::logNode(node);
+        DEBUG_BREAKPOINT;
+
+        // This was for added for structs using dot notation accessing methods / properties
+        // Now with `{name}::{method}` syntax, we need to implement a new path for this type of syntax.
+        // ------------------------------------------------
+
         // Get the first argument which is the accessor object
         ASTNode *accessorNode = methodCallNode->accessorObj;
         std::string accessorName;

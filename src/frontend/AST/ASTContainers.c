@@ -351,6 +351,7 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
+    node->functionType = wrapTypeContainer(createTypeContainer());
 
     return node;
 }
@@ -1153,6 +1154,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
+    node->functionType = wrapTypeContainer(createTypeContainer());
     node->isStatic = false;
     node->parentName = (char *)calloc(1, sizeof(char));
 
@@ -1260,7 +1262,47 @@ GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *sta
     return node;
 }
 
-void *createMembersContainer(Arena *arena, CompilerState *state)
+PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
+{
+    PublicMembers *node = (PublicMembers *)ARENA_ALLOC(arena, sizeof(PublicMembers));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
+        return NULL;
+    }
+
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    return node;
+}
+
+PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state)
+{
+    PrivateMembers *node = (PrivateMembers *)ARENA_ALLOC(arena, sizeof(PrivateMembers));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
+        return NULL;
+    }
+
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    return node;
+}
+
+ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *state)
 {
     ProtectedMembers *node = (ProtectedMembers *)ARENA_ALLOC(arena, sizeof(ProtectedMembers));
     if (!node)
@@ -1323,9 +1365,9 @@ ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
     node->hasConstructor = false;
     node->hasDefaultValue = false;
     node->isStatic = false;
-    node->privateMembers = (PrivateMembers *)createMembersContainer(arena, state);
-    node->publicMembers = (PublicMembers *)createMembersContainer(arena, state);
-    node->protectedMembers = (ProtectedMembers *)createMembersContainer(arena, state);
+    node->privateMembers = createPrivateMembersContainer(arena, state);
+    node->publicMembers = createPublicMembersContainer(arena, state);
+    node->protectedMembers = createProtectedMembersContainer(arena, state);
 
     return node;
 }
@@ -1340,7 +1382,7 @@ ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, Compiler
     }
 
     node->name = (char *)calloc(1, sizeof(char));
-    node->args = NULL;
+    node->args = (ASTNode **)calloc(ARG_CAPACITY, sizeof(ASTNode *));
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
     node->metaData = createConstructorMetaDataContainer(arena, state);

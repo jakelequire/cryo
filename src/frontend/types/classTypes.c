@@ -35,9 +35,31 @@ ClassType *createClassType(const char *name, ClassNode *classNode)
     classType->isStatic = classNode->isStatic;
     classType->hasConstructor = classNode->hasConstructor;
 
-    classType->publicMembers = NULL;    // TODO: Implement conversion from PublicMembers to PublicMembersType
-    classType->privateMembers = NULL;   // TODO: Implement conversion from PrivateMembers to PrivateMembersType
-    classType->protectedMembers = NULL; // TODO: Implement conversion from ProtectedMembers to ProtectedMembersType
+    classType->publicMembers = createPublicMembersType();
+    if (!classType->publicMembers)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to create public members type\n");
+        return NULL;
+    }
+    classType->privateMembers = createPrivateMembersType();
+    if (!classType->privateMembers)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to create private members type\n");
+        return NULL;
+    }
+    classType->protectedMembers = createProtectedMembersType();
+    if (!classType->protectedMembers)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to create protected members type\n");
+        return NULL;
+    }
+
+    // Link public members
+    linkPublicMemebers(classType->publicMembers, classNode->publicMembers);
+    // Link private members
+    linkPrivateMemebers(classType->privateMembers, classNode->privateMembers);
+    // Link protected members
+    linkProtectedMemebers(classType->protectedMembers, classNode->protectedMembers);
 
     return classType;
 }
@@ -246,4 +268,193 @@ void addProtectedMethodToClassType(ClassType *classType, ASTNode *method)
 
     // Add method to class type
     classType->protectedMembers->methods[classType->protectedMembers->methodCount++] = getDataTypeFromASTNode(method);
+}
+
+PublicMembersTypes *createPublicMembersType(void)
+{
+    PublicMembersTypes *members = (PublicMembersTypes *)malloc(sizeof(PublicMembersTypes));
+    if (!members)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate PublicMembersTypes\n");
+        return NULL;
+    }
+
+    members->propertyCount = 0;
+    members->propertyCapacity = PROPERTY_CAPACITY;
+    members->properties = (DataType **)malloc(members->propertyCapacity * sizeof(DataType *));
+    if (!members->properties)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate properties array\n");
+        return NULL;
+    }
+
+    members->methodCount = 0;
+    members->methodCapacity = METHOD_CAPACITY;
+    members->methods = (DataType **)malloc(members->methodCapacity * sizeof(DataType *));
+    if (!members->methods)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate methods array\n");
+        return NULL;
+    }
+
+    return members;
+}
+
+PrivateMembersTypes *createPrivateMembersType(void)
+{
+    PrivateMembersTypes *members = (PrivateMembersTypes *)malloc(sizeof(PrivateMembersTypes));
+    if (!members)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate PrivateMembersTypes\n");
+        return NULL;
+    }
+
+    members->propertyCount = 0;
+    members->propertyCapacity = PROPERTY_CAPACITY;
+    members->properties = (DataType **)malloc(members->propertyCapacity * sizeof(DataType *));
+    if (!members->properties)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate properties array\n");
+        return NULL;
+    }
+
+    members->methodCount = 0;
+    members->methodCapacity = METHOD_CAPACITY;
+    members->methods = (DataType **)malloc(members->methodCapacity * sizeof(DataType *));
+    if (!members->methods)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate methods array\n");
+        return NULL;
+    }
+
+    return members;
+}
+
+ProtectedMembersTypes *createProtectedMembersType(void)
+{
+    ProtectedMembersTypes *members = (ProtectedMembersTypes *)malloc(sizeof(ProtectedMembersTypes));
+    if (!members)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate ProtectedMembersTypes\n");
+        return NULL;
+    }
+
+    members->propertyCount = 0;
+    members->propertyCapacity = PROPERTY_CAPACITY;
+    members->properties = (DataType **)malloc(members->propertyCapacity * sizeof(DataType *));
+    if (!members->properties)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate properties array\n");
+        return NULL;
+    }
+
+    members->methodCount = 0;
+    members->methodCapacity = METHOD_CAPACITY;
+    members->methods = (DataType **)malloc(members->methodCapacity * sizeof(DataType *));
+    if (!members->methods)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate methods array\n");
+        return NULL;
+    }
+
+    return members;
+}
+
+void linkPublicMemebers(PublicMembersTypes *membersType, PublicMembers *membersNode)
+{
+    if (!membersType || !membersNode)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid members type or members node\n");
+        return;
+    }
+
+    for (int i = 0; i < membersNode->propertyCount; i++)
+    {
+        DataType *property = getDataTypeFromASTNode(membersNode->properties[i]);
+        if (!property)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type from AST node\n");
+            return;
+        }
+
+        membersType->properties[membersType->propertyCount++] = property;
+    }
+
+    for (int i = 0; i < membersNode->methodCount; i++)
+    {
+        DataType *method = getDataTypeFromASTNode(membersNode->methods[i]);
+        if (!method)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type from AST node\n");
+            return;
+        }
+
+        membersType->methods[membersType->methodCount++] = method;
+    }
+}
+
+void linkPrivateMemebers(PrivateMembersTypes *membersType, PrivateMembers *membersNode)
+{
+    if (!membersType || !membersNode)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid members type or members node\n");
+        return;
+    }
+
+    for (int i = 0; i < membersNode->propertyCount; i++)
+    {
+        DataType *property = getDataTypeFromASTNode(membersNode->properties[i]);
+        if (!property)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type from AST node\n");
+            return;
+        }
+
+        membersType->properties[membersType->propertyCount++] = property;
+    }
+
+    for (int i = 0; i < membersNode->methodCount; i++)
+    {
+        DataType *method = getDataTypeFromASTNode(membersNode->methods[i]);
+        if (!method)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type from AST node\n");
+            return;
+        }
+
+        membersType->methods[membersType->methodCount++] = method;
+    }
+}
+
+void linkProtectedMemebers(ProtectedMembersTypes *membersType, ProtectedMembers *membersNode)
+{
+    if (!membersType || !membersNode)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid members type or members node\n");
+        return;
+    }
+
+    for (int i = 0; i < membersNode->propertyCount; i++)
+    {
+        DataType *property = getDataTypeFromASTNode(membersNode->properties[i]);
+        if (!property)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type from AST node\n");
+            return;
+        }
+
+        membersType->properties[membersType->propertyCount++] = property;
+    }
+
+    for (int i = 0; i < membersNode->methodCount; i++)
+    {
+        DataType *method = getDataTypeFromASTNode(membersNode->methods[i]);
+        if (!method)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type from AST node\n");
+            return;
+        }
+
+        membersType->methods[membersType->methodCount++] = method;
+    }
 }
