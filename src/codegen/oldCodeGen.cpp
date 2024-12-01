@@ -277,6 +277,12 @@ namespace Cryo
             compiler.getFunctions().handleMethodCall(root);
             break;
         }
+        case NODE_CLASS:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Class");
+            compiler.getClasses().handleClassDeclaration(root);
+            break;
+        }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             std::cout << "Received: " << CryoNodeTypeToString(root->metaData->type) << std::endl;

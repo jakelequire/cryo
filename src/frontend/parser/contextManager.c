@@ -37,6 +37,7 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
     thisContext->propertyCount = 0;
     thisContext->methods = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
     thisContext->methodCount = 0;
+    thisContext->isStatic = false;
     context->thisContext = thisContext;
 }
 

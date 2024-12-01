@@ -284,6 +284,7 @@ extern "C"
     void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root);
 
     DataType *findClassType(ASTNode *node, TypeTable *typeTable);
+    DataType *findClassTypeFromName(const char *name, TypeTable *typeTable);
 
     // # =========================================================================== #
     // # Primitive Type Functions

@@ -594,3 +594,22 @@ DataType *findClassType(ASTNode *node, TypeTable *typeTable)
 
     return type;
 }
+
+DataType *findClassTypeFromName(const char *name, TypeTable *typeTable)
+{
+    if (!name || !typeTable)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid name or type table.\n");
+        CONDITION_FAILED;
+    }
+
+    DataType *type = lookupType(typeTable, name);
+
+    if (type->container->baseType != CLASS_TYPE)
+    {
+        fprintf(stderr, "[TypeTable] Error: Type '%s' is not a class type.\n", name);
+        CONDITION_FAILED;
+    }
+
+    return type;
+}

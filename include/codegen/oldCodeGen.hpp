@@ -89,6 +89,7 @@ namespace Cryo
     class Imports;
     class WhileStatements;
     class ErrorHandler;
+    class Classes;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -126,6 +127,7 @@ namespace Cryo
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
         std::unordered_map<std::string, DataType *> structDataTypes;
+        std::unordered_map<std::string, DataType *> classDataTypes;
 
         std::string currentNamespace;
         llvm::Function *currentFunction;
@@ -165,6 +167,11 @@ namespace Cryo
             structDataTypes[name] = dataType;
         }
 
+        void addClassDataType(std::string name, DataType *dataType)
+        {
+            classDataTypes[name] = dataType;
+        }
+
         llvm::StructType *getStruct(std::string name)
         {
             return structTypes[name];
@@ -202,6 +209,7 @@ namespace Cryo
         Imports &getImports() { return *imports; }
         WhileStatements &getWhileStatements() { return *whileStatements; }
         ErrorHandler &getErrorHandler() { return *errorHandler; }
+        Classes &getClasses() { return *classes; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
         Linker *getLinker() { return linker.get(); }
@@ -272,6 +280,7 @@ namespace Cryo
         std::unique_ptr<WhileStatements> whileStatements;
         std::unique_ptr<ErrorHandler> errorHandler;
         std::unique_ptr<Linker> linker;
+        std::unique_ptr<Classes> classes;
     };
 
     /**
@@ -831,6 +840,28 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
+
+    class Classes
+    {
+    public:
+        Classes(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Handles class declarations in the AST.
+         */
+        void handleClassDeclaration(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+
+        std::vector<llvm::Type *> handleFieldDeclarations(ASTNode *classNode, PrivateMembers *privateMembers, PublicMembers *publicMembers, ProtectedMembers *protectedMembers);
+        llvm::Type *getClassFieldType(ASTNode *property);
+        llvm::Value *handleClassConstructor(ASTNode *node, llvm::StructType *structType);
+    };
+
+    // -----------------------------------------------------------------------------------------------
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
           codeGen(std::make_unique<CodeGen>(*this)),
@@ -847,6 +878,7 @@ namespace Cryo
           imports(std::make_unique<Imports>(*this)),
           whileStatements(std::make_unique<WhileStatements>(*this)),
           errorHandler(std::make_unique<ErrorHandler>(*this)),
+          classes(std::make_unique<Classes>(*this)),
           symTable(std::make_unique<IRSymTable>())
     {
         context.initializeContext();

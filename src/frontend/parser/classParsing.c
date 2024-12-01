@@ -518,9 +518,16 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
         int argCount = argList->data.argList->argCount;
 
         // We need to get the AST Node of the class as well as its type
+        DataType *classType = findClassTypeFromName(scopeName, typeTable);
+        if (!classType)
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Failed to find class type.");
+            parsingError("Failed to find class type.", "parseMethodScopeResolution", table, arena, state, lexer, lexer->source, typeTable);
+            CONDITION_FAILED;
+        }
 
         // Create the method call node
-        ASTNode *methodCall = createMethodCallNode(NULL, sym->type, NULL, methodName, args, argCount, isStaticMethod,
+        ASTNode *methodCall = createMethodCallNode(NULL, sym->type, classType, methodName, args, argCount, isStaticMethod,
                                                    arena, state, typeTable, lexer);
         if (!methodCall)
         {
@@ -530,7 +537,8 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
         }
 
         logASTNode(methodCall);
-    }
 
+        return methodCall;
+    }
     DEBUG_BREAKPOINT;
 }

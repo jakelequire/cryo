@@ -216,10 +216,42 @@ namespace Cryo
         return paramContainer;
     }
 
+    STClass IRSymTable::createClassContainer(ClassNode *classNode)
+    {
+        STClass classContainer;
+        classContainer.ASTNode = classNode;
+        classContainer.LLVMStruct = nullptr;
+        classContainer.LLVMConstructor = nullptr;
+        classContainer.LLVMMethods.clear();
+        classContainer.classType = classNode->type;
+        return classContainer;
+    }
+
     // -----------------------------------------------------------------------------------------------
     ///
     /// Setters
     ///
+
+    void IRSymTable::addClass(std::string namespaceName, llvm::StructType *classTy, ClassNode *classNode, DataType *classType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Class to SymTable");
+        // Add the class to the SymTable
+        std::string className = classTy->getName().str();
+        std::cout << "Class Name: " << className << std::endl;
+
+        STClass classContainer;
+        classContainer.LLVMStruct = classTy;
+        classContainer.ASTNode = classNode;
+        classContainer.classType = classType;
+
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        symNode.classNode[className] = classContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Class Added to SymTable");
+
+        return;
+    }
 
     void IRSymTable::addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode, DataType *structType)
     {

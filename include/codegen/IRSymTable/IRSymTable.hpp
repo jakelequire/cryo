@@ -98,6 +98,15 @@ namespace Cryo
         DataType *structType;
     };
 
+    struct STClass
+    {
+        llvm::StructType *LLVMStruct;
+        llvm::Function *LLVMConstructor;
+        std::vector<llvm::Function *> LLVMMethods;
+        ClassNode *ASTNode;
+        DataType *classType;
+    };
+
     // -----------------------------------------------------------------------------------------------
 
     // For each file, we will have a SymTable that contains all the variables and functions
@@ -116,6 +125,7 @@ namespace Cryo
         std::unordered_map<std::string, STExternFunction> externFunctionNode;
         std::unordered_map<std::string, STParameter> parameterNode;
         std::unordered_map<std::string, STStruct> structNode;
+        std::unordered_map<std::string, STClass> classNode;
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program
@@ -145,6 +155,7 @@ namespace Cryo
         STFunction createFuncContainer(FunctionDeclNode *funcNode);
         STExternFunction createExternFuncContainer(ExternFunctionNode *externNode);
         STParameter createParamContainer(void);
+        STClass createClassContainer(ClassNode *classNode);
 
         // Getters
         SymTable getSymTable();
@@ -157,6 +168,7 @@ namespace Cryo
         PropertyNode *getPropertyNode(std::string namespaceName, std::string propName, std::string structName);
 
         // Setters
+        void addClass(std::string namespaceName, llvm::StructType *classTy, ClassNode *classNode, DataType *classType);
         void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode, DataType *structType);
         void addVariable(std::string namespaceName, std::string varName, ASTNode *varNode);
         void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode, llvm::Function *llvmFunction, llvm::Type *llvmReturnType);

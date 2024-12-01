@@ -302,7 +302,7 @@ namespace Cryo
             assertNode(node);
             for (int i = 0; i < node->data.argList->argCount; ++i)
             {
-                lintTree(node->data.argList->args[i]->initializer);
+                lintTree(node->data.argList->args[i]);
             }
             break;
 

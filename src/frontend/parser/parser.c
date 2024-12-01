@@ -1679,6 +1679,8 @@ ASTNode *parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         }
     }
 
+    consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end argument list.", "parseArgumentList", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after argument list.", "parseArgumentList", table, arena, state, typeTable, context);
     return argListNode;
 }
 // </parseArgumentList>
