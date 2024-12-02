@@ -711,7 +711,7 @@ ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode 
     return node;
 }
 
-ASTNode *createFieldNode(char *fieldName, DataType *type, const char *parentName, CryoNodeType parentNodeType, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createFieldNode(const char *fieldName, DataType *type, const char *parentName, CryoNodeType parentNodeType, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
     ASTNode *node = createASTNode(NODE_PROPERTY, arena, state, typeTable, lexer);
     if (!node)
@@ -720,7 +720,7 @@ ASTNode *createFieldNode(char *fieldName, DataType *type, const char *parentName
         return NULL;
     }
 
-    node->data.property->name = strdup(fieldName);
+    node->data.property->name = fieldName;
     node->data.property->value = fieldValue;
     node->data.property->type = type;
     node->data.property->parentName = parentName;

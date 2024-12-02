@@ -686,7 +686,7 @@ typedef struct VariableReassignmentNode
 ///
 typedef struct PropertyNode
 {
-    char *name;
+    const char *name;
     ASTNode *value;
     DataType *type;
     bool defaultProperty;
@@ -714,7 +714,7 @@ typedef struct MethodCallNode
     DataType *instanceType;
     ASTNode *accessorObj;
     const char *instanceName;
-    char *name;
+    const char *name;
     ASTNode **args;
     int argCount;
     int argCapacity;
@@ -1311,7 +1311,7 @@ extern "C"
         TypeTable *typeTable, Lexer *lexer);
 
     ASTNode *createFieldNode(
-        char *fieldName,
+        const char *fieldName,
         DataType *type,
         const char *parentName,
         CryoNodeType parentNodeType,

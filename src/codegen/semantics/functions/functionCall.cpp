@@ -812,7 +812,7 @@ namespace Cryo
         assert(methodCallNode != nullptr);
 
         // Get the method name
-        char *methodDefName = methodCallNode->name;
+        const char *methodDefName = methodCallNode->name;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Name: " + std::string(methodDefName));
 
         // Get the method arguments
@@ -980,15 +980,20 @@ namespace Cryo
         assert(methodCallNode != nullptr);
 
         // Get the method name
-        char *methodDefName = methodCallNode->name;
+        const char *methodDefName = methodCallNode->name;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Name: " + std::string(methodDefName));
 
         // Get the method arguments
         int argCount = methodCallNode->argCount;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
 
-        DevDebugger::logNode(node);
-        DEBUG_BREAKPOINT;
+        bool isStaticMethod = methodCallNode->isStatic;
+        if (isStaticMethod)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Handling Static Method Call");
+            handleStaticMethodCall(node);
+            return;
+        }
 
         // This was for added for structs using dot notation accessing methods / properties
         // Now with `{name}::{method}` syntax, we need to implement a new path for this type of syntax.
@@ -1060,6 +1065,62 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Call Handled");
 
+        return;
+    }
+
+    void Functions::handleStaticMethodCall(ASTNode *node)
+    {
+        // A static method call assumes that it is calling a method from a class statically
+        // Such as `IO::print("Hello, World!")`, no instance is needed to call the method
+        // The accessor object in the ASTNode is undefined since it is a static reference to a call
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Handling Static Method Call");
+
+        MethodCallNode *methodCallNode = node->data.methodCall;
+        assert(methodCallNode != nullptr);
+
+        // Get the method name
+        std::string methodDefName = std::string(methodCallNode->name);
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Method Name: " + std::string(methodDefName));
+
+        // Get the method arguments
+        int argCount = methodCallNode->argCount;
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Count: " + std::to_string(argCount));
+
+        // Get the argument values
+        std::vector<llvm::Value *> argValues;
+        for (int i = 0; i < argCount; ++i)
+        {
+            ASTNode *argNode = methodCallNode->args[i];
+            llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+            if (!argValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                CONDITION_FAILED;
+            }
+
+            argValues.push_back(argValue);
+        }
+
+        // Get the function
+        llvm::Function *function = compiler.getContext().module->getFunction(methodDefName);
+        if (!function)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                    "Function not found: " + methodDefName);
+            compiler.dumpModule();
+            CONDITION_FAILED;
+        }
+
+        // If there are no arguments, just create the function call
+        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
+        if (!functionCall)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function call not created");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Static Method Call Handled");
+        
         return;
     }
 

@@ -209,8 +209,8 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     printf("Default Count: %d\n", defaultCount);
 
-    char *fieldName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    logMessage("INFO", __LINE__, "Parser", "Field name: %s", strdup(fieldName));
+    const char *fieldName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage("INFO", __LINE__, "Parser", "Field name: %s", fieldName);
 
     getNextToken(lexer, arena, state, typeTable);
 
@@ -228,7 +228,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     // Find the parent node in the symbol table
     CryoNodeType parentNodeType = context->thisContext->nodeType;
 
-    ASTNode *propertyNode = createFieldNode(strdup(fieldName), fieldType, parentName, parentNodeType, NULL, arena, state, typeTable, lexer);
+    ASTNode *propertyNode = createFieldNode(fieldName, fieldType, parentName, parentNodeType, NULL, arena, state, typeTable, lexer);
     if (defaultCount > 0)
     {
         propertyNode->data.property->defaultProperty = true;

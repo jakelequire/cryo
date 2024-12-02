@@ -195,9 +195,11 @@ char *DataTypeToString(DataType *dataType)
         break;
 
     case FUNCTION_TYPE:
+    {
         // (param1Type, param2Type, ...) → returnType
         sprintf(typeString, LIGHT_CYAN BOLD "(" COLOR_RESET);
-        for (int i = 0; i < dataType->container->custom.funcDef->paramCount; i++)
+        int paramCount = dataType->container->custom.funcDef->paramCount;
+        for (int i = 0; i < paramCount; i++)
         {
             DataType *paramType = dataType->container->custom.funcDef->paramTypes[i];
             char *paramTypeStr = DataTypeToString(paramType);
@@ -207,12 +209,16 @@ char *DataTypeToString(DataType *dataType)
                 sprintf(typeString, "%s, ", typeString);
             }
         }
+        if (paramCount == 0)
+        {
+            sprintf(typeString, "%s%s", typeString, "void");
+        }
         sprintf(typeString, "%s" LIGHT_CYAN BOLD ") → " COLOR_RESET, typeString);
         sprintf(typeString, "%s%s", typeString, DataTypeToString(dataType->container->custom.funcDef->returnType));
         // End with a color reset
         sprintf(typeString, "%s" COLOR_RESET, typeString);
         break;
-
+    }
     default:
         sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
         break;
@@ -272,22 +278,22 @@ char *VerboseClassTypeToString(ClassType *type)
     if (!type)
         return "<NULL CLASS>";
 
-    char *typeString = (char *)malloc(128);
+    char *typeString = (char *)malloc(512);
     if (!typeString)
     {
         fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
         return NULL;
     }
 
-    sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, (char *)type->name);
+    sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET " |", (char *)type->name);
 
     if (type->publicMembers->propertyCount > 0)
     {
         for (int i = 0; i < type->publicMembers->propertyCount; i++)
         {
             DataType *property = type->publicMembers->properties[i];
-            char *propType = DataTypeToString(property);
-            sprintf(typeString, "%s %s: %s", typeString, type->publicMembers->properties[i]->container->custom.name, propType);
+            const char *propertyType = DataTypeToString(property);
+            sprintf(typeString, "%s %s: %s |", typeString, property->container->custom.name, propertyType);
         }
     }
 
@@ -296,18 +302,8 @@ char *VerboseClassTypeToString(ClassType *type)
         for (int i = 0; i < type->publicMembers->methodCount; i++)
         {
             DataType *method = type->publicMembers->methods[i];
-            char *methodType = DataTypeToString(method);
-            sprintf(typeString, "%s %s →  %s", typeString, type->publicMembers->methods[i]->container->custom.name, methodType);
-            if (method->container->custom.funcDef->paramCount > 0)
-            {
-                for (int j = 0; j < method->container->custom.funcDef->paramCount; j++)
-                {
-                    DataType *paramType = method->container->custom.funcDef->paramTypes[j];
-                    char *paramTypeStr = DataTypeToString(paramType);
-                    const char *paramName = strdup(paramType->container->custom.name);
-                    sprintf(typeString, "%s %s: %s", typeString, paramName, paramTypeStr);
-                }
-            }
+            const char *methodType = DataTypeToString(method);
+            sprintf(typeString, "%s %s: %s", typeString, method->container->custom.name, methodType);
         }
     }
 

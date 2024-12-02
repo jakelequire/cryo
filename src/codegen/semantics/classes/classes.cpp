@@ -34,7 +34,6 @@ namespace Cryo
             CONDITION_FAILED;
         }
         logVerboseDataType(classDataType);
-        DEBUG_BREAKPOINT;
 
         compiler.getContext().addClassDataType(className, classDataType);
 
@@ -73,7 +72,13 @@ namespace Cryo
         {
             for (int i = 0; i < publicMembers->propertyCount; ++i)
             {
+                DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Public Member");
                 ASTNode *property = publicMembers->properties[i];
+                if (!property)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Property is NULL");
+                    CONDITION_FAILED;
+                }
                 llvm::Type *fieldType = getClassFieldType(property);
                 classFields.push_back(fieldType);
             }
@@ -84,7 +89,13 @@ namespace Cryo
         {
             for (int i = 0; i < privateMembers->propertyCount; ++i)
             {
+                DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Private Member");
                 ASTNode *property = privateMembers->properties[i];
+                if (!property)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Property is NULL");
+                    CONDITION_FAILED;
+                }
                 llvm::Type *fieldType = getClassFieldType(property);
                 classFields.push_back(fieldType);
             }
@@ -95,7 +106,13 @@ namespace Cryo
         {
             for (int i = 0; i < protectedMembers->propertyCount; ++i)
             {
+                DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Protected Member");
                 ASTNode *property = protectedMembers->properties[i];
+                if (!property)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Property is NULL");
+                    CONDITION_FAILED;
+                }
                 llvm::Type *fieldType = getClassFieldType(property);
                 classFields.push_back(fieldType);
             }
@@ -108,8 +125,7 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Classes", "Getting Class Field Type");
 
-        logASTNode(property);
-
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Getting Property Node");
         PropertyNode *propertyNode = property->data.property;
         DataType *propertyType = propertyNode->type;
 
@@ -120,82 +136,74 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Constructor");
 
+        if (!structType || structType == nullptr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Struct Type is NULL");
+            CONDITION_FAILED;
+        }
+
         // Create constructor function type
         std::vector<llvm::Type *> paramTypes;
         paramTypes.push_back(structType->getPointerTo()); // 'this' pointer
 
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Getting Constructor Node");
+
         // Add constructor parameters
-        for (int i = 0; i < node->data.classConstructor->argCount; ++i)
+        int argCount = node->data.classNode->constructor->data.classConstructor->argCount;
+        for (int i = 0; i < argCount; ++i)
         {
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Adding Constructor Parameter");
             CryoParameterNode *param = node->data.classConstructor->args[i]->data.param;
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Getting Parameter Type");
             paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Constructor Parameter Added");
         }
 
-        // Get return type
-        llvm::Type *returnType = llvm::Type::getVoidTy(compiler.getContext().context);
-
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Constructor Function Type");
         // Create constructor function type
         llvm::FunctionType *constructorType = llvm::FunctionType::get(
-            returnType,
+            llvm::Type::getVoidTy(compiler.getContext().context),
             paramTypes,
             false);
 
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Constructor Function");
         // Create the constructor function
         llvm::Function *constructorFn = llvm::Function::Create(
             constructorType,
             llvm::Function::ExternalLinkage,
             "constructor");
 
-        // Add struct instance as a parameter in the constructor function
-        // Set the name of the struct parameter
-        auto argIt = constructorFn->arg_begin();
-        argIt->setName("this"); // Name the struct pointer parameter
-
-        // Set the name of the constructor arguments
-        for (int i = 0; i < node->data.classConstructor->argCount; ++i)
-        {
-            argIt->setName(node->data.classConstructor->args[i]->data.param->name);
-            ++argIt;
-        }
-
-        // Create the entry block for the constructor
-        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Adding Constructor Function to Module");
+        // Create entry block
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(
             compiler.getContext().context,
             "entry",
             constructorFn);
+        compiler.getContext().builder.SetInsertPoint(entry);
 
-        // Set the insertion point
-        compiler.getContext().builder.SetInsertPoint(entryBlock);
-
-        // Set the current function
-        compiler.getContext().currentFunction = constructorFn;
-
-        // Set the 'this' pointer
+        // Add struct instance as a parameter in the constructor function
+        // Set the name of the struct parameter
+        auto argIt = constructorFn->arg_begin();
         llvm::Value *thisPtr = argIt++; // First argument is 'this' pointer
+        argIt->setName("this");         // Name the struct pointer parameter
 
+        // node->data.classConstructor->argCount
+        // Set the name of the constructor arguments
         for (int i = 0; i < node->data.classConstructor->argCount; ++i)
         {
-            // Get the argument value
-            llvm::Value *argValue = argIt++;
-
-            // Get the field pointer
+            PropertyNode *prop = node->data.classConstructor->args[i]->data.property;
             llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
                 structType,
                 thisPtr,
                 i,
                 "field" + std::to_string(i));
-
-            // Store the argument value in the field pointer
+            llvm::Value *argValue = argIt++;
             compiler.getContext().builder.CreateStore(argValue, fieldPtr);
         }
 
-        // Create the return void instruction
         compiler.getContext().builder.CreateRetVoid();
 
-        // Clear the insertion point
-        compiler.getContext().builder.ClearInsertionPoint();
-
-        return constructorFn;
+        return nullptr;
     }
 
 } // namespace Cryo
