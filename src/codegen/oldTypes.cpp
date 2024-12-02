@@ -156,9 +156,20 @@ namespace Cryo
             //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
             //     return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
 
+        case PRIM_CUSTOM:
+        {
+            if (type->container->baseType == FUNCTION_TYPE)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting function to LLVM type");
+                DataType *returntype = type->container->custom.funcDef->returnType;
+                return convertSimpleType(returntype);
+            }
+        }
+
         default:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
-            return nullptr;
+            std::cout << "Received: " << DataTypeToString(type) << std::endl;
+            CONDITION_FAILED;
         }
     }
 

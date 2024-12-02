@@ -51,12 +51,15 @@ DataType *createMethodType(const char *methodName, DataType *returnType, DataTyp
     }
 
     methodType->container->baseType = FUNCTION_TYPE;
+    methodType->container->custom.name = strdup(methodName);
     methodType->container->custom.funcDef = createFunctionTypeContainer();
 
     methodType->container->custom.funcDef->returnType = returnType;
     methodType->container->custom.funcDef->paramCount = paramCount;
     methodType->container->custom.funcDef->name = strdup(methodName);
     methodType->container->custom.funcDef->body = NULL;
+
+    methodType->container->primitive = PRIM_CUSTOM;
 
     for (int i = 0; i < paramCount; i++)
     {
@@ -77,10 +80,13 @@ DataType *createFunctionType(const char *functionName, DataType *returnType, Dat
 
     functionType->container->baseType = FUNCTION_TYPE;
     functionType->container->custom.funcDef = createFunctionTypeContainer();
+    functionType->container->custom.name = strdup(functionName);
 
     functionType->container->custom.funcDef->returnType = returnType;
     functionType->container->custom.funcDef->paramCount = paramCount;
     functionType->container->custom.funcDef->name = strdup(functionName);
+
+    functionType->container->primitive = PRIM_CUSTOM;
 
     for (int i = 0; i < paramCount; i++)
     {
