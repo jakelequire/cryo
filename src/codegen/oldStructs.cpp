@@ -158,7 +158,6 @@ namespace Cryo
         // Add struct instance as a parameter in the method function
         // Set the name of the struct parameter
         auto argIt = methodFn->arg_begin();
-        argIt->setName("this"); // Name the struct pointer parameter
 
         // Add it to the module and set it as the current function
         compiler.getContext().module->getFunctionList().push_back(methodFn);
@@ -170,9 +169,6 @@ namespace Cryo
             "entry",
             methodFn);
         compiler.getContext().builder.SetInsertPoint(entry);
-
-        // Implementation of method body would go here
-        // You'll need to implement this based on your AST node structure
 
         if (method->body)
         {

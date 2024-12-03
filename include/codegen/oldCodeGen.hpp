@@ -865,6 +865,7 @@ namespace Cryo
         void handleClassMethods(ASTNode *node, std::string className, llvm::StructType *classType);
         void createClassMethod(ASTNode *methodNode, llvm::StructType *classType);
         void addParametersToSymTable(ASTNode *paramNode, std::string paramName);
+        void createParameterVar(CryoParameterNode *paramNode, llvm::Function *function);
 
     private:
         CryoCompiler &compiler;

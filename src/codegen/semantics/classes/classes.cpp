@@ -146,8 +146,12 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Class Constructor");
 
-        std::string ctorName = std::string(ctorNode->name);
+        std::string ctorName = "class." + std::string(ctorNode->name);
         DevDebugger::logMessage("INFO", __LINE__, "Classes", "Constructor Name: " + ctorName);
+
+        compiler.getContext().currentFunction = nullptr;
+        // Clear any previous insertion points
+        compiler.getContext().builder.ClearInsertionPoint();
 
         // Create constructor function type
         std::vector<llvm::Type *> paramTypes;
@@ -178,6 +182,7 @@ namespace Cryo
             "entry",
             ctorFunc);
 
+        // Set the insertion point
         compiler.getContext().builder.SetInsertPoint(entry);
 
         // Initialize fields
@@ -196,7 +201,16 @@ namespace Cryo
             compiler.getContext().builder.CreateStore(argValue, fieldPtr);
         }
 
+        if (ctorNode->constructorBody)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Constructor Body");
+            compiler.getGenerator().generateBlock(ctorNode->constructorBody);
+        }
+
         compiler.getContext().builder.CreateRetVoid();
+
+        // clear the insertion point
+        compiler.getContext().builder.ClearInsertionPoint();
 
         return;
     }
@@ -302,44 +316,78 @@ namespace Cryo
         llvm::Function *methodFn = llvm::Function::Create(
             methodType,
             llvm::Function::ExternalLinkage,
-            llvm::Twine(methodFullName),
-            *compiler.getContext().module);
+            llvm::Twine(methodFullName));
 
         // Add struct instance as a parameter in the method function
         // Set the name of the struct parameter
         if (!isStatic)
         {
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Adding Non-Static Struct Pointer Parameter");
             auto argIt = methodFn->arg_begin();
             argIt->setName("this"); // Name the struct pointer parameter
         }
 
-        methodFn->setName(methodFullName);
-        // Set the name of the parameters
-        int i = isStatic ? 0 : 1;
-        for (auto &arg : methodFn->args())
-        {
-            std::string paramName = method->params[i]->data.param->name;
-            arg.setName(paramName);
-            llvm::Value *paramPtr = compiler.getFunctions().createParameter(&arg, paramTypes[i], method->params[i]);
-            compiler.getContext().namedValues[paramName] = paramPtr;
-            ++i;
-        }
-
-        // Add it to the module and set it as the current function
-        compiler.getContext().module->getFunctionList().push_back(methodFn);
-        compiler.getContext().currentFunction = methodFn;
-
-        // Create entry block
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(
             compiler.getContext().context,
             "entry",
             methodFn);
         compiler.getContext().builder.SetInsertPoint(entry);
 
-        // Implementation of method body would go here
+        // Allocate the params
+        for (int i = 0; i < method->paramCount; ++i)
+        {
+            CryoParameterNode *param = method->params[i]->data.param;
+            createParameterVar(param, methodFn);
+        }
+
+        // Add it to the module and set it as the current function
+        compiler.getContext().module->getFunctionList().push_back(methodFn);
+        compiler.getContext().currentFunction = methodFn;
+
         if (method->body)
         {
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Generating Method Body");
             compiler.getGenerator().generateBlock(method->body);
+        }
+
+        // Remove insertion point
+        compiler.getContext().builder.ClearInsertionPoint();
+
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Method Created");
+        return;
+    }
+
+    void Classes::createParameterVar(CryoParameterNode *paramNode, llvm::Function *function)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Parameter Vars");
+
+        llvm::Type *paramType = compiler.getTypes().getType(paramNode->type, 0);
+        std::string paramName = paramNode->name;
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Parameter Type Created for: " + paramName);
+        DevDebugger::logLLVMType(paramType);
+        CryoContext &context = compiler.getContext();
+
+        // Check to make sure we're in a block
+        llvm::BasicBlock *currentBlock = context.builder.GetInsertBlock();
+        if (!currentBlock)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "No Insert Block Found");
+            CONDITION_FAILED;
+        }
+
+        llvm::AllocaInst *paramVar = context.builder.CreateAlloca(paramType, nullptr, llvm::Twine(paramName));
+        if (!paramVar)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Parameter Variable not created");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Parameter Variable Created");
+        llvm::Value *paramStore = compiler.getContext().builder.CreateStore(paramVar, paramVar);
+        if (!paramStore)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Parameter Variable not stored");
+            CONDITION_FAILED;
         }
 
         return;

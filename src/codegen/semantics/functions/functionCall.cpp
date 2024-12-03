@@ -483,6 +483,7 @@ namespace Cryo
             varValue = namedValue;
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable Value Found");
         llvm::Type *varType = varValue->getType();
 
         llvm::StoreInst *storeInst = var->LLVMStoreInst;
@@ -502,9 +503,11 @@ namespace Cryo
                 return var->LLVMValue;
             }
 
+            compiler.dumpModule();
             CONDITION_FAILED;
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Store Instruction Found");
         llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(storeInst);
         llvm::Type *varInstType = types.parseInstForType(inst);
 
@@ -1111,12 +1114,16 @@ namespace Cryo
             argValues.push_back(argValue);
         }
 
-        // Get the function
-        llvm::Function *function = compiler.getContext().module->getFunction(methodDefName);
+        // Get the function (class.className.methodName)
+        std::string instanceName = methodCallNode->instanceName;
+        std::string classFnName = "class"
+                                  "." +
+                                  instanceName + "." + methodDefName;
+        llvm::Function *function = compiler.getContext().module->getFunction(classFnName);
         if (!function)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables",
-                                    "Function not found: " + methodDefName);
+                                    "Function not found: " + classFnName);
             compiler.dumpModule();
             CONDITION_FAILED;
         }

@@ -410,7 +410,6 @@ namespace Cryo
         }
 
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Parsing instruction");
-        DevDebugger::logLLVMInst(inst);
 
         llvm::Value *op = inst->getOperand(0);
         if (!op)
@@ -420,7 +419,6 @@ namespace Cryo
         }
 
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Operand");
-        DevDebugger::logLLVMValue(op);
 
         llvm::Type *ty = op->getType();
         if (!ty)

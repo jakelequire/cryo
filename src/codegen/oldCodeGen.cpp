@@ -237,6 +237,11 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Block");
             ASTNode **statements = root->data.block->statements;
             int statementCount = root->data.block->statementCount;
+            if (statementCount == 0)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Empty Block");
+                break;
+            }
             for (int i = 0; i < statementCount; i++)
             {
                 generator.parseTree(statements[i]);

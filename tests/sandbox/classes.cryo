@@ -13,7 +13,6 @@ class IO {
     }
 }
 
-
 function main() -> void {
     IO::print("Hello, World!");
     return;

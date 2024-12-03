@@ -257,7 +257,7 @@ char *VerboseStructTypeToString(StructType *type)
         {
             ASTNode *method = type->methods[i];
             char *methodType = DataTypeToString(method->data.method->type);
-            sprintf(typeString, "%s %s →  %s", typeString, method->data.method->name, methodType);
+            sprintf(typeString, "%s %s  %s", typeString, method->data.method->name, methodType);
             if (method->data.method->paramCount > 0)
             {
                 for (int j = 0; j < method->data.method->paramCount; j++)
@@ -515,7 +515,7 @@ void printVerboseTypeContainer(TypeContainer *type)
         for (int i = 0; i < type->TYPE##Members->methodCount; i++)                                 \
         {                                                                                          \
             DataType *method = type->TYPE##Members->methods[i];                                    \
-            printf("     %s →  %s\n", method->container->custom.name, DataTypeToString(method));   \
+            printf("     %s: %s\n", method->container->custom.name, DataTypeToString(method));     \
         }                                                                                          \
     }
 void printClassType(ClassType *type)
