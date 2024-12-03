@@ -464,9 +464,19 @@ namespace Cryo
             llvm::Value *namedValue = compiler.getContext().namedValues[varName];
             if (!namedValue)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Named value not found: " + varName);
-                compiler.dumpModule();
-                CONDITION_FAILED;
+                // Check if it's a parameter in the symbol table
+                STParameter *param = compiler.getSymTable().getParameter(namespaceName, varName);
+                if (param)
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter found");
+                    varValue = param->LLVMValue;
+                }
+                else
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Named value not found: " + varName);
+                    compiler.dumpModule();
+                    CONDITION_FAILED;
+                }
             }
 
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Named value found");
@@ -1120,7 +1130,7 @@ namespace Cryo
         }
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Static Method Call Handled");
-        
+
         return;
     }
 

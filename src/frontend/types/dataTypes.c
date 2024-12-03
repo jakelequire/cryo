@@ -367,6 +367,14 @@ const char *getDataTypeName(DataType *type)
     {
         return type->container->custom.structDef->name;
     }
+    else if (type->container->baseType == CLASS_TYPE)
+    {
+        return type->container->custom.classDef->name;
+    }
+    else if (type->container->baseType == FUNCTION_TYPE)
+    {
+        return type->container->custom.funcDef->name;
+    }
     else
     {
         return "unknown";

@@ -51,6 +51,9 @@ namespace Cryo
 
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
 
+            // Output the broken IR to a file
+            outputFailedIR();
+
             exit(1);
         }
 
@@ -128,6 +131,78 @@ namespace Cryo
         dest.close();
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
+        return;
+    }
+
+    void Compilation::outputFailedIR(void)
+    {
+        // Put the broken IR in the build directory under /out/errors/{MODULE_NAME}.error.ll
+        std::string outputPath = compiler.getCompilerSettings()->inputFile;
+        std::filesystem::path cwd = std::filesystem::current_path();
+        std::string cwd_str = cwd.c_str();
+        std::string outputDir = cwd_str + "/build/out/errors/";
+        std::string outputFileName = outputPath.substr(outputPath.find_last_of("/\\") + 1);
+        std::string outputFilePath = outputDir + outputFileName + ".error.ll";
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(outputFilePath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing");
+            return;
+        }
+
+        LLVM_MODULE_COMPLETE_START;
+        LoadStoreWhitespaceAnnotator LSWA;
+
+        // Use the custom annotator when printing
+        compiler.getContext().module->print(dest, &LSWA);
+        compiler.getContext().module->print(llvm::outs(), &LSWA);
+
+        LLVM_MODULE_COMPLETE_END;
+
+        dest.close();
+
+        return;
+    }
+
+    void Compilation::DumpModuleToDebugFile(void)
+    {
+        // Put the broken IR in the build directory under /out/errors/{MODULE_NAME}.debug.ll
+        std::filesystem::path cwd = std::filesystem::current_path();
+        std::string cwd_str = cwd.c_str();
+        std::string outputDir = cwd_str + "/build/out/errors/";
+        std::string outputFileName = "debug.ll";
+        std::string outputFilePath = outputDir + outputFileName;
+
+        // Make the directory
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Creating output directory:\n " + outputDir);
+        makeOutputDir(outputDir);
+
+        // Clean the directory
+        cleanErrorDir();
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(outputFilePath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
+            std::cout << "File Path: " << outputFilePath << std::endl;
+            CONDITION_FAILED;
+            return;
+        }
+
+        LLVM_MODULE_COMPLETE_START;
+        LoadStoreWhitespaceAnnotator LSWA;
+
+        // Use the custom annotator when printing
+        compiler.getContext().module->print(dest, &LSWA);
+        compiler.getContext().module->print(llvm::outs(), &LSWA);
+
+        LLVM_MODULE_COMPLETE_END;
+
+        dest.close();
+
         return;
     }
 
@@ -272,7 +347,30 @@ namespace Cryo
         std::filesystem::path dir(dirPath);
         if (!std::filesystem::exists(dir))
         {
-            std::filesystem::create_directories(dir);
+            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Creating directory: " + dirPath);
+            if (!std::filesystem::create_directories(dir))
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Failed to create directory");
+                std::cout << "Error: " << std::strerror(errno) << std::endl;
+                CONDITION_FAILED;
+            }
         }
+
+        return;
+    }
+
+    void Compilation::cleanErrorDir(void)
+    {
+        std::filesystem::path cwd = std::filesystem::current_path();
+        std::string cwd_str = cwd.c_str();
+        std::string outputDir = cwd_str + "/build/out/errors/";
+
+        // Only clear the files, keep the directory
+        for (const auto &entry : std::filesystem::directory_iterator(outputDir))
+        {
+            std::filesystem::remove(entry.path());
+        }
+
+        return;
     }
 }

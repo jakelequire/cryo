@@ -38,25 +38,35 @@ namespace Cryo
         compiler.getContext().addClassDataType(className, classDataType);
 
         // Create class type with fields (Public/Private/Protected)
-        std::vector<llvm::Type *> classFields = handleFieldDeclarations(node, classNode->privateMembers, classNode->publicMembers, classNode->protectedMembers);
+        std::vector<llvm::Type *> classFields = handleFieldDeclarations(node,
+                                                                        classNode->privateMembers,
+                                                                        classNode->publicMembers,
+                                                                        classNode->protectedMembers);
+
+        // Format the name: "class.<className>"
+        std::string classTypeName = "class." + className;
 
         // Create the class type and register it
         llvm::StructType *classType = llvm::StructType::create(
             compiler.getContext().context,
             classFields,
-            className);
+            classTypeName);
 
         // Add class type to the symbol table and context
         compiler.getSymTable().addClass(className, classType, classNode, classDataType);
 
         // Add to the `NamedGlobal` map
-        compiler.getContext().module->getOrInsertGlobal(className, classType);
+        compiler.getContext().module->getOrInsertGlobal(classTypeName, classType);
 
         // Handle constructor
         if (classNode->constructor)
         {
-            this->handleClassConstructor(node, classType);
+            ClassConstructorNode *ctorNode = classNode->constructor->data.classConstructor;
+            handleClassConstructor(ctorNode, classType);
         }
+
+        // Handle methods
+        handleClassMethods(node, className, classType);
 
         return;
     }
@@ -132,66 +142,51 @@ namespace Cryo
         return compiler.getTypes().getType(propertyType, 0);
     }
 
-    llvm::Value *Classes::handleClassConstructor(ASTNode *node, llvm::StructType *structType)
+    void Classes::handleClassConstructor(ClassConstructorNode *ctorNode, llvm::StructType *structType)
     {
-        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Constructor");
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Class Constructor");
 
-        if (!structType || structType == nullptr)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Struct Type is NULL");
-            CONDITION_FAILED;
-        }
+        std::string ctorName = std::string(ctorNode->name);
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Constructor Name: " + ctorName);
 
         // Create constructor function type
         std::vector<llvm::Type *> paramTypes;
         paramTypes.push_back(structType->getPointerTo()); // 'this' pointer
 
-        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Getting Constructor Node");
-
         // Add constructor parameters
-        int argCount = node->data.classNode->constructor->data.classConstructor->argCount;
-        for (int i = 0; i < argCount; ++i)
+        for (int i = 0; i < ctorNode->argCount; ++i)
         {
-            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Adding Constructor Parameter");
-            CryoParameterNode *param = node->data.classConstructor->args[i]->data.param;
-            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Getting Parameter Type");
+            CryoParameterNode *param = ctorNode->args[i]->data.param;
             paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
-            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Constructor Parameter Added");
         }
 
-        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Constructor Function Type");
-        // Create constructor function type
-        llvm::FunctionType *constructorType = llvm::FunctionType::get(
+        // Create constructor function
+        llvm::FunctionType *ctorType = llvm::FunctionType::get(
             llvm::Type::getVoidTy(compiler.getContext().context),
             paramTypes,
             false);
 
-        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Constructor Function");
-        // Create the constructor function
-        llvm::Function *constructorFn = llvm::Function::Create(
-            constructorType,
+        llvm::Function *ctorFunc = llvm::Function::Create(
+            ctorType,
             llvm::Function::ExternalLinkage,
-            "constructor");
+            ctorName,
+            *compiler.getContext().module);
 
-        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Adding Constructor Function to Module");
         // Create entry block
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(
             compiler.getContext().context,
             "entry",
-            constructorFn);
+            ctorFunc);
+
         compiler.getContext().builder.SetInsertPoint(entry);
 
-        // Add struct instance as a parameter in the constructor function
-        // Set the name of the struct parameter
-        auto argIt = constructorFn->arg_begin();
-        llvm::Value *thisPtr = argIt++; // First argument is 'this' pointer
-        argIt->setName("this");         // Name the struct pointer parameter
+        // Initialize fields
+        auto argIt = ctorFunc->arg_begin();
 
-        // node->data.classConstructor->argCount
-        // Set the name of the constructor arguments
-        for (int i = 0; i < node->data.classConstructor->argCount; ++i)
+        llvm::Value *thisPtr = argIt++; // First argument is 'this' pointer
+
+        for (int i = 0; i < ctorNode->argCount; ++i)
         {
-            PropertyNode *prop = node->data.classConstructor->args[i]->data.property;
             llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
                 structType,
                 thisPtr,
@@ -203,7 +198,162 @@ namespace Cryo
 
         compiler.getContext().builder.CreateRetVoid();
 
-        return nullptr;
+        return;
+    }
+
+    void Classes::handleClassMethods(ASTNode *node, std::string className, llvm::StructType *classType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Class Methods");
+
+        ClassNode *classNode = node->data.classNode;
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Class Name: " + className);
+
+        // Public Methods
+        if (classNode->publicMembers)
+        {
+            for (int i = 0; i < classNode->publicMembers->methodCount; ++i)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Public Method");
+                ASTNode *method = classNode->publicMembers->methods[i];
+                if (!method)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Method is NULL");
+                    CONDITION_FAILED;
+                }
+                createClassMethod(method, classType);
+            }
+        }
+
+        // Private Methods
+        if (classNode->privateMembers)
+        {
+            for (int i = 0; i < classNode->privateMembers->methodCount; ++i)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Private Method");
+                ASTNode *method = classNode->privateMembers->methods[i];
+                if (!method)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Method is NULL");
+                    CONDITION_FAILED;
+                }
+                createClassMethod(method, classType);
+            }
+        }
+
+        // Protected Methods
+        if (classNode->protectedMembers)
+        {
+            for (int i = 0; i < classNode->protectedMembers->methodCount; ++i)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Classes", "Handling Protected Method");
+                ASTNode *method = classNode->protectedMembers->methods[i];
+                if (!method)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Method is NULL");
+                    CONDITION_FAILED;
+                }
+                createClassMethod(method, classType);
+            }
+        }
+
+        return;
+    }
+
+    void Classes::createClassMethod(ASTNode *methodNode, llvm::StructType *classType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Class Method");
+
+        MethodNode *method = methodNode->data.method;
+        std::string methodName = std::string(method->name);
+        bool isStatic = method->isStatic;
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Method Name: " + methodName);
+
+        // Create parameter types for method
+        std::vector<llvm::Type *> paramTypes;
+
+        // Add the struct pointer as the first parameter (this pointer)
+        if (!isStatic)
+            paramTypes.push_back(classType->getPointerTo());
+
+        for (int i = 0; i < method->paramCount; ++i)
+        {
+            CryoParameterNode *param = method->params[i]->data.param;
+            addParametersToSymTable(method->params[i], param->name);
+            paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
+        }
+
+        // Get return type
+        llvm::Type *returnType = compiler.getTypes().getType(method->type, 0);
+        if (method->type->container->baseType == PRIMITIVE_TYPE && method->type->container->primitive == PRIM_STRING)
+        {
+            returnType = returnType->getPointerTo();
+        }
+
+        // Create method function type
+        llvm::FunctionType *methodType = llvm::FunctionType::get(
+            returnType,
+            paramTypes,
+            false);
+
+        std::string methodFullName = classType->getName().str() + "." + methodName;
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Method Full Name: " + methodFullName);
+
+        // Create the method function
+        llvm::Function *methodFn = llvm::Function::Create(
+            methodType,
+            llvm::Function::ExternalLinkage,
+            llvm::Twine(methodFullName),
+            *compiler.getContext().module);
+
+        // Add struct instance as a parameter in the method function
+        // Set the name of the struct parameter
+        if (!isStatic)
+        {
+            auto argIt = methodFn->arg_begin();
+            argIt->setName("this"); // Name the struct pointer parameter
+        }
+
+        methodFn->setName(methodFullName);
+        // Set the name of the parameters
+        int i = isStatic ? 0 : 1;
+        for (auto &arg : methodFn->args())
+        {
+            std::string paramName = method->params[i]->data.param->name;
+            arg.setName(paramName);
+            llvm::Value *paramPtr = compiler.getFunctions().createParameter(&arg, paramTypes[i], method->params[i]);
+            compiler.getContext().namedValues[paramName] = paramPtr;
+            ++i;
+        }
+
+        // Add it to the module and set it as the current function
+        compiler.getContext().module->getFunctionList().push_back(methodFn);
+        compiler.getContext().currentFunction = methodFn;
+
+        // Create entry block
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(
+            compiler.getContext().context,
+            "entry",
+            methodFn);
+        compiler.getContext().builder.SetInsertPoint(entry);
+
+        // Implementation of method body would go here
+        if (method->body)
+        {
+            compiler.getGenerator().generateBlock(method->body);
+        }
+
+        return;
+    }
+
+    void Classes::addParametersToSymTable(ASTNode *paramNode, std::string paramName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Adding Parameters to Symbol Table");
+        std::string namespaceName = compiler.getContext().currentNamespace;
+
+        // Add the parameter to the symbol table
+        compiler.getSymTable().addParameter(namespaceName, paramName, paramNode);
+
+        return;
     }
 
 } // namespace Cryo

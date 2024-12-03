@@ -726,7 +726,6 @@ namespace Cryo
         if (!insertBlock)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Insert block not found");
-            compiler.dumpModule();
             CONDITION_FAILED;
         }
 
@@ -892,6 +891,24 @@ namespace Cryo
         }
 
         return argVar;
+    }
+
+    llvm::Function *Functions::findClassMethod(std::string className, std::string methodName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Finding Class Method");
+        std::cout << "Class Name: " << className << std::endl;
+        std::cout << "Method Name: " << methodName << std::endl;
+
+        // All methods have the syntax of `class.{className}.{methodName}`
+        std::string classMethodName = "class." + className + "." + methodName;
+        llvm::Function *method = compiler.getContext().module->getFunction(classMethodName);
+        if (!method)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Method not found");
+            CONDITION_FAILED;
+        }
+
+        return method;
     }
 
 } // namespace Cryo

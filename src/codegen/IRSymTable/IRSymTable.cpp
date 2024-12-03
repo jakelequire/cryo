@@ -372,6 +372,23 @@ namespace Cryo
         return;
     }
 
+    void IRSymTable::addValueToParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue)
+    {
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Value to Parameter");
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the parameter in the SymTable
+        STParameter paramNode = symNode.parameterNode[paramName];
+        // Add the value to the parameter node
+        paramNode.LLVMValue = llvmValue;
+        // Update the parameter in the SymTable
+        symNode.parameterNode[paramName] = paramNode;
+        symTable.namespaces[namespaceName] = symNode;
+        std::cout << "[IRSymTable] Value Added to Parameter" << std::endl;
+        return;
+    }
+
     // -----------------------------------------------------------------------------------------------
     /// ### ============================================================================= ###
     /// ###

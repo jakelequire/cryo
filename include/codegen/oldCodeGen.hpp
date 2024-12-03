@@ -601,8 +601,8 @@ namespace Cryo
         void handleStaticMethodCall(ASTNode *node);
 
         llvm::Function *getFunction(std::string functionName);
+        llvm::Function *findClassMethod(std::string className, std::string methodName);
         bool doesExternFunctionExist(std::string functionName);
-
 
     private:
         CryoCompiler &compiler;
@@ -807,8 +807,11 @@ namespace Cryo
         void compileIRFile(void);
         llvm::Module *compileAndMergeModule(std::string inputFile);
 
+        void DumpModuleToDebugFile(void);
+
     private:
         CryoCompiler &compiler;
+        void outputFailedIR(void);
 
         std::string getErrorMessage(void);
         void isValidDir(std::string dirPath);
@@ -816,6 +819,7 @@ namespace Cryo
         void makeOutputDir(std::string dirPath);
         void compile(std::string inputFile, std::string outputPath);
         void compileUniquePath(std::string outputPath);
+        void cleanErrorDir(void);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -855,12 +859,15 @@ namespace Cryo
          */
         void handleClassDeclaration(ASTNode *node);
 
-    private:
-        CryoCompiler &compiler;
-
         std::vector<llvm::Type *> handleFieldDeclarations(ASTNode *classNode, PrivateMembers *privateMembers, PublicMembers *publicMembers, ProtectedMembers *protectedMembers);
         llvm::Type *getClassFieldType(ASTNode *property);
-        llvm::Value *handleClassConstructor(ASTNode *node, llvm::StructType *structType);
+        void handleClassConstructor(ClassConstructorNode *ctorNode, llvm::StructType *structType);
+        void handleClassMethods(ASTNode *node, std::string className, llvm::StructType *classType);
+        void createClassMethod(ASTNode *methodNode, llvm::StructType *classType);
+        void addParametersToSymTable(ASTNode *paramNode, std::string paramName);
+
+    private:
+        CryoCompiler &compiler;
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -900,6 +907,10 @@ namespace Cryo
         std::cout << "══════════════════════════════════════════════════════════════════════" << std::endl;
         std::cout << COLOR_RESET;
         std::cout << "\n";
+
+        // Call the Compilation class to output the current module to a file
+        // Compilation compileCode = Compilation(*this);
+        // compileCode.DumpModuleToDebugFile();
     }
 
 } // namespace Cryo

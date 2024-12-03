@@ -245,7 +245,7 @@ ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     char *consturctorName = (char *)calloc(strlen(metaData->parentName) + strlen("::") + strlen("constructor") + 1, sizeof(char));
     strcat(consturctorName, (char *)metaData->parentName);
-    strcat(consturctorName, "::constructor");
+    strcat(consturctorName, ".constructor");
 
     ASTNode **params = parseParameterList(lexer, table, context, arena, consturctorName, state, typeTable);
     int paramCount = 0;
@@ -345,7 +345,6 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
     VALIDATE_TYPE(returnType);
 
     bool isStatic = symbol->node->data.method->isStatic;
-
     ASTNode *methodCall = createMethodCallNode(accessorObj, returnType, instanceType, methodName,
                                                params, paramCount, isStatic,
                                                arena, state, typeTable, lexer);

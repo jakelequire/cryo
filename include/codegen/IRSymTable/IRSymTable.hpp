@@ -174,6 +174,7 @@ namespace Cryo
         void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode, llvm::Function *llvmFunction, llvm::Type *llvmReturnType);
         void addExternFunciton(std::string namespaceName, std::string funcName, ExternFunctionNode externNode);
         void addParameter(std::string namespaceName, std::string paramName, ASTNode *paramNode);
+        void addValueToParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue);
         void addStructMethod(std::string namespaceName, std::string structName, llvm::Function *llvmFunction);
 
         // Updates
