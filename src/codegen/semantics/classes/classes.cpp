@@ -292,7 +292,6 @@ namespace Cryo
         for (int i = 0; i < method->paramCount; ++i)
         {
             CryoParameterNode *param = method->params[i]->data.param;
-            addParametersToSymTable(method->params[i], param->name);
             paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
         }
 
@@ -331,18 +330,16 @@ namespace Cryo
             compiler.getContext().context,
             "entry",
             methodFn);
-        compiler.getContext().builder.SetInsertPoint(entry);
 
-        // Allocate the params
-        for (int i = 0; i < method->paramCount; ++i)
-        {
-            CryoParameterNode *param = method->params[i]->data.param;
-            createParameterVar(param, methodFn);
-        }
+        compiler.getContext().builder.SetInsertPoint(entry);
 
         // Add it to the module and set it as the current function
         compiler.getContext().module->getFunctionList().push_back(methodFn);
         compiler.getContext().currentFunction = methodFn;
+
+        // Allocate the params
+        ASTNode **params = method->params;
+        createParameterVar(params, methodFn);
 
         if (method->body)
         {
@@ -357,49 +354,67 @@ namespace Cryo
         return;
     }
 
-    void Classes::createParameterVar(CryoParameterNode *paramNode, llvm::Function *function)
+    void Classes::createParameterVar(ASTNode **paramNode, llvm::Function *function)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Parameter Vars");
 
-        llvm::Type *paramType = compiler.getTypes().getType(paramNode->type, 0);
-        std::string paramName = paramNode->name;
-        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Parameter Type Created for: " + paramName);
-        DevDebugger::logLLVMType(paramType);
-        CryoContext &context = compiler.getContext();
-
-        // Check to make sure we're in a block
-        llvm::BasicBlock *currentBlock = context.builder.GetInsertBlock();
-        if (!currentBlock)
+        // Loop over the function arguments and create the variables
+        int index = 0;
+        for (auto &arg : function->args())
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "No Insert Block Found");
-            CONDITION_FAILED;
+            if (paramNode == nullptr)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Parameter Node is NULL");
+                return;
+            }
+
+            if (*paramNode == nullptr)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Parameter Node is NULL");
+                return;
+            }
+
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Parameter Var");
+            ASTNode *param = paramNode[index];
+            std::string paramName = param->data.param->name;
+            llvm::Type *paramType = arg.getType();
+
+            // Create the variable
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Creating Alloca Instruction for: " + paramName);
+            llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(paramType, nullptr, paramName + ".ptr");
+            allocaInst->setAlignment(llvm::Align(8));
+
+            // Store the value
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Storing Value");
+            llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(&arg, allocaInst);
+            storeInst->setAlignment(llvm::Align(8));
+
+            // Load the value
+            DevDebugger::logMessage("INFO", __LINE__, "Classes", "Loading Value");
+            llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(paramType, allocaInst, paramName + ".load");
+
+            // Add the parameter to the symbol table
+            addParametersToSymTable(param, paramName, loadInst, paramType, storeInst);
+
+            // Move to the next parameter
+            index++;
         }
 
-        llvm::AllocaInst *paramVar = context.builder.CreateAlloca(paramType, nullptr, llvm::Twine(paramName));
-        if (!paramVar)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Parameter Variable not created");
-            CONDITION_FAILED;
-        }
-
-        DevDebugger::logMessage("INFO", __LINE__, "Classes", "Parameter Variable Created");
-        llvm::Value *paramStore = compiler.getContext().builder.CreateStore(paramVar, paramVar);
-        if (!paramStore)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Parameter Variable not stored");
-            CONDITION_FAILED;
-        }
-
+        // DEBUG_BREAKPOINT;
         return;
     }
 
-    void Classes::addParametersToSymTable(ASTNode *paramNode, std::string paramName)
+    void Classes::addParametersToSymTable(ASTNode *paramNode, std::string paramName,
+                                          llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Classes", "Adding Parameters to Symbol Table");
         std::string namespaceName = compiler.getContext().currentNamespace;
 
+        IRSymTable &symTable = compiler.getSymTable();
+
         // Add the parameter to the symbol table
-        compiler.getSymTable().addParameter(namespaceName, paramName, paramNode);
+        symTable.addParameter(namespaceName, paramName, paramNode);
+        symTable.addParamAsVariable(namespaceName, paramName, llvmValue, llvmType, storeInst);
 
         return;
     }

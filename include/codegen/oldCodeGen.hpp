@@ -529,6 +529,8 @@ namespace Cryo
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
 
+        llvm::Value *createStringVariable(ASTNode *node);
+
         // DEBUGGING PURPOSES
         llvm::Value *createTestGlobalVariable(void);
 
@@ -864,8 +866,9 @@ namespace Cryo
         void handleClassConstructor(ClassConstructorNode *ctorNode, llvm::StructType *structType);
         void handleClassMethods(ASTNode *node, std::string className, llvm::StructType *classType);
         void createClassMethod(ASTNode *methodNode, llvm::StructType *classType);
-        void addParametersToSymTable(ASTNode *paramNode, std::string paramName);
-        void createParameterVar(CryoParameterNode *paramNode, llvm::Function *function);
+        void createParameterVar(ASTNode **paramNode, llvm::Function *function);
+        void addParametersToSymTable(ASTNode *paramNode, std::string paramName,
+                                     llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst);
 
     private:
         CryoCompiler &compiler;

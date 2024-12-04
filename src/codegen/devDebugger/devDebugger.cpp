@@ -970,8 +970,6 @@ namespace Cryo
         std::cout << "\n";
     }
 
-    // -----------------------------------------------------------------------------------------------
-
     void DevDebugger::logLLVMStruct(llvm::StructType *structTy)
     {
         logMessage("INFO", __LINE__, "Debugger", "Logging LLVM Struct Type");
@@ -1052,8 +1050,6 @@ namespace Cryo
         std::cout << ">>===-------------------------------------------===<<" << std::endl;
     }
 
-    // -----------------------------------------------------------------------------------------------
-
     void DevDebugger::logLLVMFunction(llvm::Function *func)
     {
         if (func == nullptr)
@@ -1078,6 +1074,44 @@ namespace Cryo
         // Print out the address of the function
         std::cout << "Address: " << func << std::endl;
         std::cout << ">>===-------------------------------------------===<<" << std::endl;
+    }
+
+    void DevDebugger::logLLVMBlock(llvm::BasicBlock *block)
+    {
+        if (block == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Basic Block is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Basic Block Node>-----------===<<" << std::endl;
+
+        // Print out the name of the block
+        std::string blockName = block->getName().str();
+        std::cout << "Name: " << blockName << std::endl;
+
+        // Check for a parent function (if any)
+        llvm::Function *parentFunc = block->getParent();
+        if (parentFunc != nullptr)
+        {
+            std::string parentFuncName = parentFunc->getName().str();
+            std::cout << "Parent Function: " << parentFuncName << std::endl;
+        }
+        else
+        {
+            std::cout << "Parent Function: " << "<None>" << std::endl;
+        }
+
+        // Print out the instruction of the block
+        std::string blockInst;
+        llvm::raw_string_ostream rso(blockInst);
+        block->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the block
+        std::cout << "Address: " << block << std::endl;
+        std::cout << ">>===---------------------------------------------===<<" << std::endl;
     }
 
     // -----------------------------------------------------------------------------------------------

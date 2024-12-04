@@ -601,6 +601,18 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
         node->data.varName->isRef = false;
         break;
     }
+    case NODE_VAR_DECLARATION:
+    {
+        node->data.varDecl->name = strdup(name);
+        node->data.varDecl->varNameNode = createVariableNameNodeContainer(name, arena, state);
+        node->data.varDecl->isGlobal = false;
+        node->data.varDecl->isLocal = true;
+        node->data.varDecl->isReference = true;
+        node->data.varDecl->isMutable = false;
+        node->data.varDecl->isIterator = false;
+        node->data.varDecl->initializer = NULL;
+        break;
+    }
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown node type: %s", CryoNodeTypeToString(nodeType));
         CONDITION_FAILED;

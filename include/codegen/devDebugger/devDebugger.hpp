@@ -38,11 +38,13 @@ namespace Cryo
         static bool lintTree(ASTNode *node);
         static bool assertNode(ASTNode *node);
         static bool isValidNodeType(CryoNodeType type);
+
         static void logLLVMValue(llvm::Value *valueNode);
         static void logLLVMStruct(llvm::StructType *structTy);
         static void logLLVMType(llvm::Type *type);
         static void logLLVMInst(llvm::Instruction *inst);
         static void logLLVMFunction(llvm::Function *func);
+        static void logLLVMBlock(llvm::BasicBlock *block);
 
         static std::string LLVMTypeIDToString(llvm::Type *type);
 

@@ -593,6 +593,73 @@ namespace Cryo
         return llvmValue;
     }
 
+    llvm::Value *Variables::createStringVariable(ASTNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Variable");
+
+        CryoNodeType nodeType = node->metaData->type;
+        std::string nodeTypeStr = CryoNodeTypeToString(nodeType);
+        std::cout << "Node Type: " << nodeTypeStr << std::endl;
+        std::string varName = "literal.";
+
+        switch (nodeType)
+        {
+        case NODE_LITERAL_EXPR:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Literal Variable");
+            DataType *literalType = node->data.literal->type;
+            switch (literalType->container->primitive)
+            {
+            case PRIM_STRING:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Literal Variable");
+                std::string literalValue = node->data.literal->value.stringValue;
+                std::cout << "Literal Value: " << literalValue << std::endl;
+
+                varName += "string";
+
+                llvm::Type *stringType = llvm::Type::getInt8Ty(compiler.getContext().context)->getPointerTo();
+                llvm::Constant *stringConstVal = llvm::ConstantDataArray::getString(compiler.getContext().context, literalValue);
+                llvm::Type *stringDataType = stringConstVal->getType();
+                llvm::Value *stringVal = stringConstVal;
+
+                llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(stringDataType, nullptr, varName);
+
+                // Store the string value
+                llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(stringVal, allocaInst);
+                if (!storeInst)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to store string value");
+                    CONDITION_FAILED;
+                }
+
+                // Load the string value
+                llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(stringDataType->getPointerTo(), allocaInst, varName + ".load.var");
+                if (!loadedValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to load string value");
+                    CONDITION_FAILED;
+                }
+
+                return allocaInst;
+            }
+            default:
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown primitive type");
+                CONDITION_FAILED;
+            }
+            }
+        }
+        default:
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown node type");
+            std::string nodeTypeStr = CryoNodeTypeToString(nodeType);
+            std::cout << "Node Type Received: " << nodeTypeStr << std::endl;
+            CONDITION_FAILED;
+        }
+        }
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     llvm::Value *Variables::createTestGlobalVariable(void)

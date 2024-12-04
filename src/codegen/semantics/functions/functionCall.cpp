@@ -1104,6 +1104,30 @@ namespace Cryo
         for (int i = 0; i < argCount; ++i)
         {
             ASTNode *argNode = methodCallNode->args[i];
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Argument Value");
+            DevDebugger::logNode(argNode);
+            DataType *nodeType = getDataTypeFromASTNode(argNode);
+            if (!nodeType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Node type not found");
+                CONDITION_FAILED;
+            }
+            logDataType(nodeType);
+
+            bool isStringType = isStringDataType(nodeType);
+            if (isStringType)
+            {
+                llvm::Value *argValue = compiler.getVariables().createStringVariable(argNode);
+                if (!argValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not created");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argValue);
+                continue;
+            }
+
             llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
             if (!argValue)
             {
