@@ -207,9 +207,11 @@ namespace Cryo
 
     llvm::Value *Structs::createStructInstance(ASTNode *node)
     {
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Creating Struct Instance");
         CryoVariableNode *varDecl = node->data.varDecl;
         std::string structName = varDecl->type->container->custom.structDef->name;
 
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct Name: " + structName);
         // Get struct type
         llvm::StructType *structType = compiler.getContext().structTypes[structName];
 
@@ -225,8 +227,14 @@ namespace Cryo
             // For implicit constructor call with single value
             if (varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
             {
+                DataType *initType = varDecl->initializer->data.literal->type;
                 llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(varDecl->initializer);
-
+                if (!initValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Initializer value not found");
+                    CONDITION_FAILED;
+                }
+                
                 // Call constructor
                 std::vector<llvm::Value *> args;
                 args.push_back(structPtr);

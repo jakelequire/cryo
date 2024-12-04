@@ -457,10 +457,11 @@ namespace Cryo
         }
 
         // Check if the struct already exists
+        std::string structName = type->container->custom.structDef->name;
         llvm::Type *structType = doesStructExist(type->container->custom.structDef->name);
         if (structType)
         {
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct already exists");
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct already exists: " + structName);
             return structType;
         }
 
@@ -472,6 +473,9 @@ namespace Cryo
             llvm::Type *llvmType = this->getType(propertyType, 0);
             structTypes.push_back(llvmType);
         }
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Creating struct type");
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct Name: " + structName);
 
         return llvm::StructType::create(CryoContext::getInstance().context, structTypes);
     }

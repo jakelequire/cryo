@@ -161,7 +161,9 @@ namespace Cryo
         for (int i = 0; i < ctorNode->argCount; ++i)
         {
             CryoParameterNode *param = ctorNode->args[i]->data.param;
-            paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
+            DataType *paramType = param->type;
+            llvm::Type *llvmType = compiler.getTypes().getType(paramType, 0);
+            paramTypes.push_back(llvmType);
         }
 
         // Create constructor function
