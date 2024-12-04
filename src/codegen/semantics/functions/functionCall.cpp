@@ -366,9 +366,28 @@ namespace Cryo
 
         ASTNode *objNode = propAccess->object;
         std::string structVarName;
-        if (objNode->metaData->type == NODE_VAR_DECLARATION)
+        CryoNodeType objNodeType = objNode->metaData->type;
+        switch (objNodeType)
+        {
+        case NODE_VAR_DECLARATION:
         {
             structVarName = std::string(objNode->data.varDecl->name);
+            break;
+        }
+        case NODE_PARAM:
+        {
+            structVarName = std::string(objNode->data.param->name);
+            break;
+        }
+        default:
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Unknown object node type");
+            std::string nodeTypeStr = CryoNodeTypeToString(objNodeType);
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Node Type: " + nodeTypeStr);
+            CONDITION_FAILED;
+        }
         }
         std::string fieldName = std::string(propAccess->propertyName);
         std::string namespaceName = compiler.getContext().currentNamespace;
