@@ -609,6 +609,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatAccessControlNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "ArgList") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatArgListNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatArgListNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1357,6 +1368,50 @@ char *CONSOLE_formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output
 }
 // </AccessControl>
 // ============================================================
+// ============================================================
+// <ArgList>
+char *formatArgListNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<ArgList> <0:0>");
+    return buffer;
+}
+char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    char *argumentBuffer = (char *)malloc(sizeof(char) * 512);
+    if (!argumentBuffer)
+    {
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for argument buffer");
+        return NULL;
+    }
+    sprintf(argumentBuffer, "[");
+    ASTNode **argsNode = node->args;
+    for (int i = 0; i < node->argCount; i++)
+    {
+        char *argBuffer = ASTNodeValueBuffer(argsNode[i]);
+        if (argBuffer)
+        {
+            sprintf(argumentBuffer, "%s%s%s%s%s", argumentBuffer, DARK_GRAY, ITALIC, argBuffer, COLOR_RESET);
+            if (i < node->argCount - 1)
+            {
+                sprintf(argumentBuffer, "%s, ", argumentBuffer);
+            }
+            free(argBuffer);
+        }
+    }
+
+    sprintf(argumentBuffer, "%s]", argumentBuffer);
+    sprintf(buffer, "%s%s<ArgList>%s %s%s<0:0>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            argumentBuffer, DARK_GRAY, ITALIC, COLOR_RESET);
+
+    return buffer;
+}
+// </ArgList>
+// ============================================================
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -1710,6 +1765,10 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         ASTDebugNode *argListNode = createASTDebugNode("ArgList", "ArgList", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTNode **args = node->data.argList->args;
+        argListNode->args = args;
+        argListNode->argCount = node->data.argList->argCount;
+
         output->nodes[output->nodeCount] = *argListNode;
         output->nodeCount++;
         break;

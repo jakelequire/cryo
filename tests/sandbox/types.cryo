@@ -17,8 +17,9 @@ struct Int {
     }
 
     toString() -> String {
-        const str: String = intToString(this.value);
-        return str;
+        const str: string = intToString(this.value);
+        const strObj: String = new String(str);
+        return strObj;
     }
 }
 

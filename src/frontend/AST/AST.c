@@ -760,6 +760,7 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
     node->data.structNode->methodCount = methodCount;
     node->data.structNode->methodCapacity = 64;
     node->data.structNode->constructor = constructor;
+    node->data.structNode->ctorArgs = (ASTNode **)calloc(64, sizeof(ASTNode *));
 
     return node;
 }
@@ -989,6 +990,23 @@ ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **
     node->data.classConstructor->argCount = argCount;
     node->data.classConstructor->argCapacity = ARG_CAPACITY;
     node->data.classConstructor->constructorBody = body;
+
+    return node;
+}
+
+ASTNode *createObject(const char *objectName, DataType *objectType, bool isNew,
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+{
+    ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create object node");
+        return NULL;
+    }
+
+    node->data.objectNode->name = strdup(objectName);
+    node->data.objectNode->objType = objectType;
+    node->data.objectNode->isNewInstance = isNew;
 
     return node;
 }

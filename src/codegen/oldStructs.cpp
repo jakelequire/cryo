@@ -133,19 +133,24 @@ namespace Cryo
         for (int i = 0; i < method->paramCount; ++i)
         {
             CryoParameterNode *param = method->params[i]->data.param;
-            paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
+            DataType *paramType = param->type;
+            logDataType(paramType);
+            llvm::Type *paramLLVMType = compiler.getTypes().getType(paramType, 0);
+            paramTypes.push_back(paramLLVMType);
         }
 
         // Get return type
-        llvm::Type *returnType = compiler.getTypes().getType(method->type, 0);
+        DataType *returnType = method->type;
+        logDataType(returnType);
+        llvm::Type *returnLLVMType = compiler.getTypes().getType(returnType, 0);
         if (method->type->container->baseType == PRIMITIVE_TYPE && method->type->container->primitive == PRIM_STRING)
         {
-            returnType = returnType->getPointerTo();
+            returnLLVMType = returnLLVMType->getPointerTo();
         }
 
         // Create method function type
         llvm::FunctionType *methodType = llvm::FunctionType::get(
-            returnType,
+            returnLLVMType,
             paramTypes,
             false);
 

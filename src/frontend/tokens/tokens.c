@@ -186,6 +186,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "CLASS";
     case NODE_CLASS_CONSTRUCTOR:
         return "CLASS_CONSTRUCTOR";
+    case NODE_OBJECT_INST:
+        return "OBJECT_INST";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -263,6 +265,18 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_TYPE_STRING_ARRAY";
     case TOKEN_TYPE_BOOLEAN_ARRAY:
         return "TOKEN_TYPE_BOOLEAN_ARRAY";
+
+    case TOKEN_TYPE_I8:
+        return "TOKEN_TYPE_I8";
+    case TOKEN_TYPE_I16:
+        return "TOKEN_TYPE_I16";
+    case TOKEN_TYPE_I32:
+        return "TOKEN_TYPE_I32";
+    case TOKEN_TYPE_I64:
+        return "TOKEN_TYPE_I64";
+    case TOKEN_TYPE_I128:
+        return "TOKEN_TYPE_I128";
+
     case TOKEN_RESULT_ARROW:
         return "TOKEN_RESULT_ARROW";
 

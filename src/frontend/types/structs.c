@@ -75,7 +75,11 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
     structType->properties = NULL;
     structType->methods = NULL;
     structType->hasDefaultValue = structNode->data.structNode->hasDefaultValue;
+
     structType->hasConstructor = structNode->data.structNode->hasConstructor;
+    structType->ctorParamCount = structNode->data.structNode->ctorArgCount;
+    structType->ctorParamCapacity = structNode->data.structNode->ctorArgCapacity;
+    structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs);
 
     printf("Struct Created, name: %s\n", structType->name);
 

@@ -271,4 +271,7 @@ void addDataTypeToClassNode(ASTNode *classNode, DataType *type);
 ASTNode *parseMethodScopeResolution(const char *scopeName,
                                     Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
+// New Keyword Parsing
+ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
 #endif // PARSER_H

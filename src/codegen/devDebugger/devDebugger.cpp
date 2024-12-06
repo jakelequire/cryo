@@ -125,6 +125,9 @@ namespace Cryo
         case NODE_METHOD_CALL:
         case NODE_GENERIC_DECL:
         case NODE_GENERIC_INST:
+        case NODE_CLASS:
+        case NODE_CLASS_CONSTRUCTOR:
+        case NODE_OBJECT_INST:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -393,6 +396,18 @@ namespace Cryo
             break;
 
         case NODE_GENERIC_INST:
+            assertNode(node);
+            break;
+
+        case NODE_CLASS:
+            assertNode(node);
+            break;
+
+        case NODE_CLASS_CONSTRUCTOR:
+            assertNode(node);
+            break;
+
+        case NODE_OBJECT_INST:
             assertNode(node);
             break;
 
@@ -916,6 +931,27 @@ namespace Cryo
         case NODE_GENERIC_INST:
         {
             logMessage("INFO", __LINE__, "Debugger", "Generic instance passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_CLASS:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Class passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_CLASS_CONSTRUCTOR:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Class constructor passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_OBJECT_INST:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Object instance passed assertion.");
             logNode(node);
             break;
         }

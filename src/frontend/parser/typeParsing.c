@@ -153,6 +153,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                                                             methods, methodCount,
                                                             state, typeTable);
     structNode->data.structNode->type = structDataType;
+    structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
     logMessage("INFO", __LINE__, "Parser::TypeParsing", "Created struct data type:");
 
     logVerboseDataType(structDataType);

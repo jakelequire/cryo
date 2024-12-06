@@ -423,6 +423,8 @@ namespace Cryo
          */
         llvm::Type *getReturnType(DataType *type);
 
+        llvm::Type *getFunctionReturnType(DataType *returnType);
+
         /**
          * @brief Returns the length of a string literal or Array type.
          * All other types return `0`.
@@ -482,12 +484,24 @@ namespace Cryo
          */
         llvm::Type *getStructType(DataType *type);
 
+        /**
+         * @brief Checks if a struct exists from the given name, returns the llvm::Type if it does.
+         */
         llvm::Type *doesStructExist(std::string structName);
 
+        /**
+         * @brief Creates an alloca from a struct type.
+         */
         llvm::Value *createAllocaFromStructProps(llvm::StructType *structType, llvm::Value *thisPtr);
 
+        /**
+         * @brief Checks if a type is a custom type.
+         */
         bool isCustomType(DataType *type);
 
+        /**
+         * @brief Checks if a value is an LLVM string type.
+         */
         bool isLLVMStringType(llvm::Value *val);
 
     private:

@@ -575,6 +575,10 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state
     node->hasIndexExpr = false;
     node->indexExpr = NULL;
 
+    node->isNewInstance = false;
+    node->hasUnaryOp = false;
+    node->unaryOp = NULL;
+
     return node;
 }
 
@@ -905,16 +909,23 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->name = (char *)calloc(1, sizeof(char));
+
     node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->propertyCount = 0;
     node->propertyCapacity = PROPERTY_CAPACITY;
+
     node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->methodCount = 0;
     node->methodCapacity = METHOD_CAPACITY;
+
+    node->constructor = NULL;
+    node->ctorArgCount = 0;
+    node->ctorArgCapacity = ARG_CAPACITY;
+    node->ctorArgs = (ASTNode **)calloc(1, sizeof(ASTNode *));
+
     node->hasConstructor = false;
     node->hasDefaultValue = false;
     node->isStatic = false;
-    node->constructor = NULL;
     node->type = wrapTypeContainer(createTypeContainer());
 
     return node;
@@ -1387,6 +1398,26 @@ ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, Compiler
     node->argCapacity = ARG_CAPACITY;
     node->metaData = createConstructorMetaDataContainer(arena, state);
     node->constructorBody = NULL;
+
+    return node;
+}
+
+ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
+{
+    ObjectNode *node = (ObjectNode *)ARENA_ALLOC(arena, sizeof(ObjectNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ObjectNode node.");
+        return NULL;
+    }
+
+    node->objType = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->isNewInstance = false;
+
+    node->args = (ASTNode **)calloc(ARG_CAPACITY, sizeof(ASTNode *));
+    node->argCount = 0;
+    node->argCapacity = ARG_CAPACITY;
 
     return node;
 }

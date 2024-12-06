@@ -55,7 +55,14 @@ extern "C"
         TOKEN_TYPE_FLOAT_ARRAY,    // `float[]`
         TOKEN_TYPE_STRING_ARRAY,   // `string[]`
         TOKEN_TYPE_BOOLEAN_ARRAY,  // `boolean[]`
-        TOKEN_RESULT_ARROW,        // `->` token
+
+        TOKEN_TYPE_I8,   // `i8`
+        TOKEN_TYPE_I16,  // `i16`
+        TOKEN_TYPE_I32,  // `i32`
+        TOKEN_TYPE_I64,  // `i64`
+        TOKEN_TYPE_I128, // `i128`
+
+        TOKEN_RESULT_ARROW, // `->` token
 
         TOKEN_INT_LITERAL,     // `123`
         TOKEN_FLOAT_LITERAL,   // `123.0`
@@ -303,7 +310,8 @@ extern "C"
         NODE_GENERIC_INST,         // 47
         NODE_CLASS,                // 48
         NODE_CLASS_CONSTRUCTOR,    // 49
-        NODE_UNKNOWN,              // 49
+        NODE_OBJECT_INST,          // 50
+        NODE_UNKNOWN,              // 51
     } CryoNodeType;
 
     typedef enum CryoVisibilityType

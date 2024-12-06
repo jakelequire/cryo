@@ -34,14 +34,19 @@
 #define DECLARE_TOKEN(str, type) {str, type}
 
 // Define the data types table with X-Macros
-#define DATA_TYPE_TABLE                    \
-    X("int", TOKEN_TYPE_INT)               \
-    X("string", TOKEN_TYPE_STRING)         \
-    X("boolean", TOKEN_TYPE_BOOLEAN)       \
-    X("void", TOKEN_TYPE_VOID)             \
-    X("int[]", TOKEN_TYPE_INT_ARRAY)       \
-    X("string[]", TOKEN_TYPE_STRING_ARRAY) \
-    X("boolean[]", TOKEN_TYPE_BOOLEAN_ARRAY)
+#define DATA_TYPE_TABLE                      \
+    X("int", TOKEN_TYPE_INT)                 \
+    X("string", TOKEN_TYPE_STRING)           \
+    X("boolean", TOKEN_TYPE_BOOLEAN)         \
+    X("void", TOKEN_TYPE_VOID)               \
+    X("int[]", TOKEN_TYPE_INT_ARRAY)         \
+    X("string[]", TOKEN_TYPE_STRING_ARRAY)   \
+    X("boolean[]", TOKEN_TYPE_BOOLEAN_ARRAY) \
+    X("i8", TOKEN_TYPE_I8)                   \
+    X("i16", TOKEN_TYPE_I16)                 \
+    X("i32", TOKEN_TYPE_I32)                 \
+    X("i64", TOKEN_TYPE_I64)                 \
+    X("i128", TOKEN_TYPE_I128)
 
 typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
@@ -110,14 +115,22 @@ typedef struct GenericType
 typedef struct StructType
 {
     const char *name;
+
+    DataType **ctorParams;
+    int ctorParamCount;
+    int ctorParamCapacity;
+
     ASTNode **properties;
     int propertyCount;
     int propertyCapacity;
+
     ASTNode **methods;
     int methodCount;
     int methodCapacity;
+
     bool hasDefaultValue;
     bool hasConstructor;
+
     int size;
 
     // New fields for generic support
@@ -280,6 +293,7 @@ extern "C"
     DataType *CryoDataTypeStringToType(const char *typeStr);
     DataType *DataTypeFromNode(ASTNode *node);
     const char *getDataTypeName(DataType *type);
+    DataType **getTypeArrayFromASTNode(ASTNode **node);
     DataType *getDataTypeFromASTNode(ASTNode *node);
     void setNewDataTypeForNode(ASTNode *node, DataType *type);
     DataType *cloneDataType(DataType *type);
@@ -303,6 +317,7 @@ extern "C"
     DataType *createPrimitiveNullType(void);
     DataType *createPrimitiveAnyType(void);
     DataType *createUnknownType(void);
+
     TypeContainer *createPrimitiveType(PrimitiveDataType primType);
     TypeContainer *createStructType(const char *name, StructType *structDef);
     TypeContainer *createArrayType(TypeContainer *baseType, int dimensions);
@@ -430,6 +445,7 @@ extern "C"
     char *PrimitiveDataTypeToString_UF(PrimitiveDataType type);
     char *VerboseStructTypeToString(StructType *type);
     char *VerboseClassTypeToString(ClassType *type);
+    char *VerboseFunctionTypeToString(FunctionType *type);
 
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);

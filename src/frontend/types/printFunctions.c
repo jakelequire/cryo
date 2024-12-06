@@ -211,8 +211,20 @@ char *DataTypeToString(DataType *dataType)
         }
         if (paramCount == 0)
         {
-            sprintf(typeString, "%s%s", typeString, "void");
+            char *voidStr = (char *)malloc(16);
+            if (!voidStr)
+            {
+                fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for void string.\n");
+                return NULL;
+            }
+            // Add void to the string and make it light cyan
+            sprintf(voidStr, LIGHT_CYAN BOLD "void" COLOR_RESET);
+            sprintf(typeString, "%s%s", typeString, voidStr);
+
+            // Free the void string
+            free(voidStr);
         }
+
         sprintf(typeString, "%s" LIGHT_CYAN BOLD ") → " COLOR_RESET, typeString);
         sprintf(typeString, "%s%s", typeString, DataTypeToString(dataType->container->custom.funcDef->returnType));
         // End with a color reset
@@ -306,6 +318,37 @@ char *VerboseClassTypeToString(ClassType *type)
             sprintf(typeString, "%s %s: %s", typeString, method->container->custom.name, methodType);
         }
     }
+
+    return typeString;
+}
+
+char *VerboseFunctionTypeToString(FunctionType *type)
+{
+    if (!type)
+        return "<NULL FUNCTION>";
+
+    char *typeString = (char *)malloc(512);
+    if (!typeString)
+    {
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
+        return NULL;
+    }
+
+    sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, (char *)type->name);
+
+    if (type->paramCount > 0)
+    {
+        for (int i = 0; i < type->paramCount; i++)
+        {
+            DataType *param = type->paramTypes[i];
+            const char *paramType = DataTypeToString(param);
+            sprintf(typeString, "%s %s: %s |", typeString, param->container->custom.name, paramType);
+        }
+    }
+
+    // Add the return type
+    const char *returnType = DataTypeToString(type->returnType);
+    sprintf(typeString, "%s → %s", typeString, returnType);
 
     return typeString;
 }
@@ -425,6 +468,9 @@ void printFormattedType(DataType *type)
         printClassType(type->container->custom.classDef);
         break;
 
+    case FUNCTION_TYPE:
+        printFunctionType(type->container->custom.funcDef);
+
     default:
         printf("  ────────────────────────────────────────────────────────────\n");
         printf(BOLD GREEN "  UNKNOWN_TYPE" COLOR_RESET "\n");
@@ -460,6 +506,10 @@ void printTypeContainer(TypeContainer *type)
         printf(" (%s)", type->custom.classDef->name);
         break;
 
+    case FUNCTION_TYPE:
+        printf(" %s", VerboseFunctionTypeToString(type->custom.funcDef));
+        break;
+
     default:
         break;
     }
@@ -493,6 +543,9 @@ void printVerboseTypeContainer(TypeContainer *type)
         break;
     case CLASS_TYPE:
         printf(" (%s)", VerboseClassTypeToString(type->custom.classDef));
+        break;
+    case FUNCTION_TYPE:
+        printf(" (%s)", VerboseFunctionTypeToString(type->custom.funcDef));
         break;
     default:
         printf(" <UNKNOWN>");

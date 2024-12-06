@@ -55,50 +55,17 @@ typedef struct Position
     int column;
 } Position;
 
-/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
-/// ---
-/// ```
-///
-/// typedef struct CryoModule
-/// {
-///     ASTNode **astTable;
-/// } CryoModule;
-///
-/// ```
-///
 typedef struct CryoModule
 {
     ASTNode **astTable;
 } CryoModule;
 
-/// #### The Namespace for the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoNamespace
-/// {
-///     char *name;
-/// } CryoNamespace;
-/// ```
-///
 typedef struct CryoNamespace
 {
     char *name;
     Position position;
 } CryoNamespace;
 
-/// #### The CryoProgram struct represents the overall structure of a Cryo program.
-/// ---
-/// ```
-///
-/// typedef struct CryoProgram
-/// {
-///     struct ASTNode **statements;
-///     size_t statementCount;
-///     size_t statementCapacity;
-/// } CryoProgram;
-///
-/// ```
 typedef struct CryoProgram
 {
     struct ASTNode **statements;
@@ -106,21 +73,6 @@ typedef struct CryoProgram
     size_t statementCapacity;
 } CryoProgram;
 
-/// #### The CryoMetaData struct holds metadata information for AST nodes.
-/// ---
-/// ```
-///
-/// typedef struct CryoMetaData
-/// {
-///     enum CryoNodeType type;      // Node Type
-///     int line;                    // Line number for error reporting
-///     int column;                  // Column number for error reporting
-///     struct ASTNode *firstChild;  // First child node (for linked list structure)
-///     struct ASTNode *nextSibling; // Next sibling node (for linked list structure)
-///     char *moduleName;            // Current Module
-/// } CryoMetaData;
-///
-/// ```
 typedef struct CryoMetaData
 {
     enum CryoNodeType type;      // Node Type
@@ -132,18 +84,6 @@ typedef struct CryoMetaData
     Position position;
 } CryoMetaData;
 
-/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
-/// ---
-/// ```
-///
-/// typedef struct CryoImportNode
-/// {
-///     char *moduleName;
-///     char *subModuleName;
-///     bool isStdModule;
-/// } CryoImportNode;
-///
-/// ```
 typedef struct CryoImportNode
 {
     char *moduleName;
@@ -151,18 +91,6 @@ typedef struct CryoImportNode
     bool isStdModule;
 } CryoImportNode;
 
-/// #### The CryoScope struct represents the scope of a block of code.
-/// ---
-/// ```
-///
-/// typedef struct CryoScope
-/// {
-///     int scopeLevel;
-///     char *scopeName;
-///     CryoNodeType scopeType;
-/// } CryoScope;
-///
-/// ```
 typedef struct CryoScope
 {
     int scopeLevel;
@@ -170,18 +98,6 @@ typedef struct CryoScope
     CryoNodeType scopeType;
 } CryoScope;
 
-/// #### The CryoBlockNode struct represents a block of statements in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoBlockNode
-/// {
-///     struct ASTNode **statements;
-///     int statementCount;
-///     int statementCapacity;
-/// } CryoBlockNode;
-///
-/// ```
 typedef struct CryoBlockNode
 {
     struct ASTNode **statements;
@@ -189,19 +105,6 @@ typedef struct CryoBlockNode
     int statementCapacity;
 } CryoBlockNode;
 
-/// #### The CryoFunctionBlock struct represents a function block within the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoFunctionBlock
-/// {
-///     struct ASTNode *function;
-///     struct ASTNode **statements;
-///     int statementCount;
-///     int statementCapacity;
-/// } CryoFunctionBlock;
-///
-/// ```
 typedef struct CryoFunctionBlock
 {
     struct ASTNode *function;
@@ -210,35 +113,11 @@ typedef struct CryoFunctionBlock
     int statementCapacity;
 } CryoFunctionBlock;
 
-/// #### The ExternNode struct represents an external node in the AST.
-/// ---
-/// ```
-///
-/// typedef struct ExternNode
-/// {
-///     struct ASTNode *externNode;
-/// } ExternNode;
-///
-/// ```
 typedef struct ExternNode
 {
     struct ASTNode *externNode;
 } ExternNode;
 
-/// #### The ExternFunctionNode struct represents an external function in the AST.
-/// ---
-/// ```
-///
-/// typedef struct ExternFunctionNode
-/// {
-///     char *name;
-///     struct ASTNode **params;
-///     int paramCount;
-///     int paramCapacity;
-///     DataType *type;
-/// } ExternFunctionNode;
-///
-/// ```
 typedef struct ExternFunctionNode
 {
     char *name;
@@ -248,23 +127,6 @@ typedef struct ExternFunctionNode
     DataType *type;
 } ExternFunctionNode;
 
-/// #### The FunctionDeclNode struct represents a function declaration in the AST.
-/// ---
-/// ```
-///
-/// typedef struct FunctionDeclNode
-/// {
-///     CryoNodeType type;
-///     CryoVisibilityType visibility;
-///     DataType *type;
-///     char *name;
-///     struct ASTNode **params;
-///     int paramCount;
-///     int paramCapacity;
-///     struct ASTNode *body;
-/// } FunctionDeclNode;
-///
-/// ```
 typedef struct FunctionDeclNode
 {
     CryoNodeType nodeType;
@@ -279,19 +141,6 @@ typedef struct FunctionDeclNode
     struct ASTNode *body;
 } FunctionDeclNode;
 
-/// #### The FunctionCallNode struct represents a function call in the AST.
-/// ---
-/// ```
-///
-/// typedef struct FunctionCallNode
-/// {
-///     char *name;
-///     struct ASTNode **args;
-///     int argCount;
-///     int argCapacity;
-/// } FunctionCallNode;
-///
-/// ```
 typedef struct FunctionCallNode
 {
     char *name;
@@ -300,24 +149,6 @@ typedef struct FunctionCallNode
     int argCapacity;
 } FunctionCallNode;
 
-/// #### The LiteralNode struct represents a literal value in the AST.
-/// ---
-/// ```
-///
-/// typedef struct LiteralNode
-/// {
-///     DataType *type;
-///     int length;
-///     union
-///     {
-///         int intValue;
-///         float floatValue;
-///         char *stringValue;
-///         int booleanValue;
-///     } value;
-/// } LiteralNode;
-///
-/// ```
 typedef struct LiteralNode
 {
     DataType *type;
@@ -331,18 +162,6 @@ typedef struct LiteralNode
     } value;
 } LiteralNode;
 
-/// #### The IfStatementNode struct represents an if statement in the AST.
-/// ---
-/// ```
-///
-/// typedef struct IfStatementNode
-/// {
-///     struct ASTNode *condition;
-///     struct ASTNode *thenBranch;
-///     struct ASTNode *elseBranch;
-/// } IfStatementNode;
-///
-/// ```
 typedef struct IfStatementNode
 {
     struct ASTNode *condition;
@@ -350,22 +169,6 @@ typedef struct IfStatementNode
     struct ASTNode *elseBranch;
 } IfStatementNode;
 
-/// #### The ForStatementNode struct represents a for-loop statement in the AST.
-/// ---
-/// ```
-///
-/// typedef struct ForStatementNode
-/// {
-///     struct ASTNode *initializer;
-///     struct ASTNode *condition;
-///     struct ASTNode *increment;
-///     struct ASTNode *body;
-/// } ForStatementNode;
-///
-/// ```
-/// ```
-/// for(initializer; condition; increment) { ... }
-/// ```
 typedef struct ForStatementNode
 {
     // `${initializer};`
@@ -379,35 +182,12 @@ typedef struct ForStatementNode
     struct ASTNode *body;
 } ForStatementNode;
 
-/// #### The WhileStatementNode struct represents a while-loop statement in the AST.
-/// ---
-/// ```
-///
-/// typedef struct WhileStatementNode
-/// {
-///     struct ASTNode *condition;
-///     struct ASTNode *body;
-/// } WhileStatementNode;
-///
-/// ```
 typedef struct WhileStatementNode
 {
     struct ASTNode *condition;
     struct ASTNode *body;
 } WhileStatementNode;
 
-/// #### The VariableNameNode struct represents a variable name in the AST.
-/// ---
-/// ```
-///
-/// typedef struct VariableNameNode
-/// {
-///     DataType *type;
-///     bool isRef;
-///     char *varName;
-/// } VariableNameNode;
-///
-/// ```
 typedef struct VariableNameNode
 {
     DataType *type;
@@ -415,24 +195,6 @@ typedef struct VariableNameNode
     char *varName;
 } VariableNameNode;
 
-/// #### The CryoExpressionNode struct represents an expression in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoExpressionNode
-/// {
-///     CryoNodeType nodeType;
-///     union
-///     {
-///         // For Variable References
-///         VariableNameNode *varNameNode;
-///         LiteralNode *literalNode;
-///         // Unsure what else to put here but I'll figure it out later
-///     } data;
-///
-/// } CryoExpressionNode;
-///
-/// ```
 typedef struct CryoExpressionNode
 {
     CryoNodeType nodeType;
@@ -446,26 +208,6 @@ typedef struct CryoExpressionNode
     } data;
 } CryoExpressionNode;
 
-/// #### The CryoVariableNode struct represents a variable declaration in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoVariableNode
-/// {
-///     DataType *type;
-///     struct VariableNameNode *varNameNode;
-///     char *name;
-///     bool isGlobal;
-///     bool isLocal;
-///     bool isReference;
-///     // This is the data attached to the variable
-///     struct ASTNode *initializer;
-///     // Optional index expression for array handling
-///     bool hasIndexExpr;
-///     struct IndexExprNode *indexExpr;
-/// } CryoVariableNode;
-///
-/// ```
 typedef struct CryoVariableNode
 {
     DataType *type;
@@ -476,6 +218,10 @@ typedef struct CryoVariableNode
     bool isReference;
     bool isMutable;
     bool isIterator;
+    bool isNewInstance;
+    // Unary operators
+    bool hasUnaryOp;
+    ASTNode *unaryOp;
     // This is the data attached to the variable
     struct ASTNode *initializer;
     // Optional index expression for array handling
@@ -483,19 +229,6 @@ typedef struct CryoVariableNode
     struct IndexExprNode *indexExpr;
 } CryoVariableNode;
 
-/// #### The CryoParameterNode struct represents a parameter in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoParameterNode
-/// {
-///     char *name;
-///     bool hasDefaultValue;
-///     bool isMutable;
-///     struct ASTNode *defaultValue;
-/// } CryoParameterNode;
-///
-/// ```
 typedef struct CryoParameterNode
 {
     DataType *type;
@@ -506,20 +239,6 @@ typedef struct CryoParameterNode
     struct ASTNode *defaultValue;
 } CryoParameterNode;
 
-/// #### The ParamNode struct represents a parameter list in the AST.
-/// ---
-/// ```
-///
-/// typedef struct ParamNode
-/// {
-///     enum CryoNodeType nodeType;
-///     CryoVariableNode **params;
-///     int paramCount;
-///     int paramCapacity;
-///     char *funcRefName;
-/// } ParamNode;
-///
-/// ```
 typedef struct ParamNode
 {
     enum CryoNodeType nodeType;
@@ -529,20 +248,6 @@ typedef struct ParamNode
     char *funcRefName;
 } ParamNode;
 
-/// #### The ArgNode struct represents an argument list in the AST.
-/// ---
-/// ```
-///
-/// typedef struct ArgNode
-/// {
-///     enum CryoNodeType nodeType;
-///     CryoVariableNode **args;
-///     int argCount;
-///     int argCapacity;
-///     char *funcRefName;
-/// } ArgNode;
-///
-/// ```
 typedef struct ArgNode
 {
     enum CryoNodeType nodeType;
@@ -552,18 +257,6 @@ typedef struct ArgNode
     char *funcRefName;
 } ArgNode;
 
-/// #### The CryoReturnNode struct represents a return statement in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoReturnNode
-/// {
-///     struct ASTNode *returnValue;
-///     struct ASTNode *expression;
-///     DataType *type;
-/// } CryoReturnNode;
-///
-/// ```
 typedef struct CryoReturnNode
 {
     struct ASTNode *returnValue;
@@ -571,18 +264,6 @@ typedef struct CryoReturnNode
     DataType *type;
 } CryoReturnNode;
 
-/// #### The CryoBinaryOpNode struct represents a binary operation in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoBinaryOpNode
-/// {
-///     struct ASTNode *left;
-///     struct ASTNode *right;
-///     CryoOperatorType op;
-/// } CryoBinaryOpNode;
-///
-/// ```
 typedef struct CryoBinaryOpNode
 {
     struct ASTNode *left;
@@ -590,17 +271,6 @@ typedef struct CryoBinaryOpNode
     CryoOperatorType op;
 } CryoBinaryOpNode;
 
-/// #### The CryoUnaryOpNode struct represents a unary operation in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoUnaryOpNode
-/// {
-///     CryoTokenType op;
-///     struct ASTNode *operand;
-/// } CryoUnaryOpNode;
-///
-/// ```
 typedef struct CryoUnaryOpNode
 {
     CryoTokenType op;
@@ -608,18 +278,6 @@ typedef struct CryoUnaryOpNode
     struct ASTNode *expression;
 } CryoUnaryOpNode;
 
-/// #### The CryoArrayNode struct represents an array in the AST.
-/// ---
-/// ```
-///
-/// typedef struct CryoArrayNode
-/// {
-///     struct ASTNode **elements;
-///     int elementCount;
-///     int elementCapacity;
-/// } CryoArrayNode;
-///
-/// ```
 typedef struct CryoArrayNode
 {
     DataType *type;
@@ -629,18 +287,6 @@ typedef struct CryoArrayNode
     int elementCapacity;
 } CryoArrayNode;
 
-/// #### The IndexExprNode struct represents an index expression in the AST.
-/// ---
-///
-/// ```
-/// typedef struct IndexExprNode
-/// {
-///     char *name;
-///     struct ASTNode *array;
-///     struct ASTNode *index;
-/// } IndexExprNode;
-///
-/// ```
 typedef struct IndexExprNode
 {
     // Name of the array reference
@@ -651,18 +297,6 @@ typedef struct IndexExprNode
     struct ASTNode *index;
 } IndexExprNode;
 
-/// #### The VariableReassignmentNode struct represents a variable reassignment in the AST.
-/// ---
-///
-/// ```
-/// typedef struct VariableReassignmentNode
-/// {
-///     char *existingVarName;
-///     ASTNode *existingVarNode;
-///     ASTNode *newVarNode;
-/// } VariableReassignmentNode;
-///
-/// ```
 typedef struct VariableReassignmentNode
 {
     char *existingVarName;
@@ -672,18 +306,6 @@ typedef struct VariableReassignmentNode
     ASTNode *newVarNode;
 } VariableReassignmentNode;
 
-/// #### The PropertyNode struct represents a property in the AST.
-/// ---
-///
-/// ```
-/// typedef struct PropertyNode
-/// {
-///     char *name;
-///     ASTNode *value;
-///     DataType *type;
-///     bool defaultProperty;
-/// } PropertyNode;
-///
 typedef struct PropertyNode
 {
     const char *name;
@@ -721,54 +343,30 @@ typedef struct MethodCallNode
     bool isStatic;
 } MethodCallNode;
 
-/// #### The StructNode struct represents a struct in the AST.
-/// ---
-///
-/// ```
-/// typedef struct StructNode
-/// {
-///     char *name;
-///     PropertyNode **properties;
-///     ASTNode **methods;
-///     ASTNode *constructor;
-///     int propertyCount;
-///     int propertyCapacity;
-/// } StructNode;
-///
 typedef struct StructNode
 {
     char *name;
     ASTNode **properties;
     ASTNode **methods;
     ASTNode *constructor;
+    ASTNode **ctorArgs;
+
+    int ctorArgCount;
+    int ctorArgCapacity;
+
     int propertyCount;
     int propertyCapacity;
+
     int methodCount;
     int methodCapacity;
+
     bool hasConstructor;
     bool hasDefaultValue;
+
     DataType *type;
     bool isStatic;
 } StructNode;
 
-// typedef struct CustomTypeNode
-// {
-//     DataType *type;
-//     char *typeString;
-//
-// } CustomTypeNode;
-
-/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
-/// ---
-/// ```
-/// typedef struct ScopedFunctionCallNode {
-///     char *scopeName;           // e.g., "Math"
-///     char *functionName;        // e.g., "add"
-///     struct ASTNode **args;     // Array of argument nodes
-///     int argCount;
-///     int argCapacity;
-/// } ScopedFunctionCallNode;
-/// ```
 typedef struct ScopedFunctionCallNode
 {
     char *scopeName;       // e.g., "Math"
@@ -785,19 +383,6 @@ typedef struct ConstructorMetaData
     bool hasDefaultFlag;
 } ConstructorMetaData;
 
-/// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
-/// ---
-/// ```
-/// typedef struct StructConstructorNode
-/// {
-///     char *name;
-///     struct ASTNode **args;
-///     int argCount;
-///     int argCapacity;
-///     ConstructorMetaData *metaData;
-///     ASTNode *constructorBody;
-/// } StructConstructorNode;
-/// ```
 typedef struct StructConstructorNode
 {
     char *name;
@@ -913,6 +498,17 @@ typedef struct ClassNode
     ProtectedMembers *protectedMembers;
 } ClassNode;
 
+typedef struct ObjectNode
+{
+    DataType *objType;
+    const char *name;
+    bool isNewInstance;
+
+    ASTNode **args;
+    int argCount;
+    int argCapacity;
+} ObjectNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -998,6 +594,8 @@ typedef struct ASTNode
         ClassNode *classNode;
         // For Class Constructors
         ClassConstructorNode *classConstructor;
+        // For Objects
+        ObjectNode *objectNode;
     } data;
 } ASTNode;
 
@@ -1455,6 +1053,12 @@ extern "C"
         int argCount,
         Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
+    ASTNode *createObject(
+        const char *objectName,
+        DataType *objectType,
+        bool isNew,
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
     /**
      * String Utility Functions
      */
@@ -1512,6 +1116,7 @@ GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *sta
 void *createMembersContainer(Arena *arena, CompilerState *state);
 ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state);
 ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, CompilerState *state);
+ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
@@ -1596,6 +1201,7 @@ char *formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatClassNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1627,5 +1233,6 @@ char *CONSOLE_formatGenericDeclNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatGenericInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatClassNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

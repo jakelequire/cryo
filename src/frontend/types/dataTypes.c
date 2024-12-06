@@ -381,6 +381,36 @@ const char *getDataTypeName(DataType *type)
     }
 }
 
+DataType **getTypeArrayFromASTNode(ASTNode **node)
+{
+    if (!node)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
+        CONDITION_FAILED;
+    }
+
+    DataType **types = (DataType **)malloc(sizeof(DataType *) * 64);
+    if (!types)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type array.\n");
+        CONDITION_FAILED;
+    }
+
+    for (int i = 0; i < 64; i++)
+    {
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from AST node");
+        if (!node[i])
+        {
+            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop");
+            break;
+        }
+        types[i] = DataTypeFromNode(node[i]);
+        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node");
+    }
+
+    return types;
+}
+
 DataType *getDataTypeFromASTNode(ASTNode *node)
 {
     if (!node)

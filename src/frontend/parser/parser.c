@@ -617,6 +617,11 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         logMessage("INFO", __LINE__, "Parser", "Parsing identifier expression");
         return parseIdentifierExpression(lexer, table, context, arena, state, typeTable);
     }
+    case TOKEN_KW_NEW:
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing new expression");
+        return parseNewExpression(lexer, table, context, arena, state, typeTable);
+    }
     case TOKEN_INCREMENT:
     case TOKEN_DECREMENT:
     case TOKEN_MINUS:
@@ -657,6 +662,12 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, Parsing
     printf("\n@parseIdentifierExpression Previous Token: %s\n ", CryoTokenToString(prevToken));
     printf("\n@parseIdentifierExpression Current Token: %s\n\n", curToken);
     printf("\n@parseIdentifierExpression Next Token: %s\n\n", CryoTokenToString(nextToken));
+
+    if (nextToken == TOKEN_KW_NEW)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing new expression");
+        return parseNewExpression(lexer, table, context, arena, state, typeTable);
+    }
 
     // Check for dot notation after the primary expression
     if (nextToken == TOKEN_DOT)
@@ -2738,4 +2749,40 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
     VALIDATE_TYPE(expectedType);
 
     return propAccessNode;
+}
+
+ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing new expression...");
+    consume(__LINE__, lexer, TOKEN_KW_NEW, "Expected `new` keyword.", "parseNewExpression", table, arena, state, typeTable, context);
+
+    const char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseNewExpression", table, arena, state, typeTable, context);
+
+    logMessage("INFO", __LINE__, "Parser", "Type name: %s", typeName);
+
+    DataType *type = lookupType(typeTable, typeName);
+    if (!type)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Type not found.");
+        parsingError("Type not found.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
+
+    logMessage("INFO", __LINE__, "Parser", "Type found.");
+    logDataType(type);
+
+    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start new expression.", "parseNewExpression", table, arena, state, typeTable, context);
+
+    ASTNode *args = parseArgumentList(lexer, table, context, arena, state, typeTable);
+    if (!args)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to parse argument list.");
+        parsingError("Failed to parse argument list.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
+
+    logASTNode(args);
+
+    DEBUG_BREAKPOINT;
 }

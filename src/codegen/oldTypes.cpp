@@ -162,7 +162,8 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting function to LLVM type");
                 DataType *returntype = type->container->custom.funcDef->returnType;
-                return convertSimpleType(returntype);
+
+                return getFunctionReturnType(returntype);
             }
             if (type->container->baseType == STRUCT_TYPE)
             {
@@ -205,6 +206,30 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;
         }
+    }
+
+    llvm::Type *OldTypes::getFunctionReturnType(DataType *returnType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting function return type");
+        logDataType(returnType);
+        std::cout << "Primitive: " << PrimitiveDataTypeToString(returnType->container->primitive) << std::endl;
+        std::cout << "Typeof DataType: " << TypeofDataTypeToString(returnType->container->baseType) << std::endl;
+
+        TypeofDataType baseType = returnType->container->baseType;
+        if (baseType == STRUCT_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning struct type");
+            return getStructType(returnType);
+        }
+
+        if (baseType == PRIMITIVE_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning primitive type");
+            return convertSimpleType(returnType);
+        }
+
+        DEBUG_BREAKPOINT; // Safeguard
+        return nullptr;
     }
 
     // -----------------------------------------------------------------------------------------------
