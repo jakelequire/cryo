@@ -521,7 +521,7 @@ namespace Cryo
         llvm::Value *createLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
-        llvm::Value *createStructVariable(CryoVariableNode *varDecl);
+        llvm::Value *createStructVariable(ASTNode *varDecl);
         llvm::Value *getStructFieldValue(const std::string &structVarName,
                                          const std::string &fieldName);
         llvm::Value *createStringIndexExpr(IndexExprNode *indexExprNode, std::string varName);
@@ -752,6 +752,8 @@ namespace Cryo
 
     private:
         CryoCompiler &compiler;
+
+        void callConstructor(const std::string &structName, llvm::Value *structPtr, llvm::Value *initValue);
     };
 
     // -----------------------------------------------------------------------------------------------

@@ -430,7 +430,7 @@ namespace Cryo
         if (varType->container->baseType == STRUCT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is a struct");
-            return createStructVariable(varDecl);
+            return createStructVariable(node);
         }
 
         CryoNodeType initializerNodeType = initializer->metaData->type;

@@ -164,6 +164,11 @@ namespace Cryo
                 DataType *returntype = type->container->custom.funcDef->returnType;
                 return convertSimpleType(returntype);
             }
+            if (type->container->baseType == STRUCT_TYPE)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting struct to LLVM type");
+                return getStructType(type);
+            }
         }
 
         default:

@@ -219,54 +219,16 @@ namespace Cryo
         return variablePtr;
     }
 
-    llvm::Value *Variables::createStructVariable(CryoVariableNode *varDecl)
+    llvm::Value *Variables::createStructVariable(ASTNode *varDecl)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Struct Variable");
-
-        std::string varName = std::string(varDecl->name);
-        std::string structName = varDecl->type->container->custom.structDef->name;
+        CryoVariableNode *varNode = varDecl->data.varDecl;
+        std::string varName = std::string(varNode->name);
         std::string namespaceName = compiler.getContext().currentNamespace;
 
-        // Get struct type
-        llvm::StructType *structType = compiler.getContext().structTypes[structName];
-        if (!structType)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
-                                    "Struct type not found: " + structName);
-            CONDITION_FAILED;
-        }
-
-        // Create struct allocation
-        llvm::Value *structPtr = compiler.getContext().builder.CreateAlloca(
-            structType,
-            nullptr,
-            varName + ".ptr");
-
-        // Handle initializer (in this case, literal value 42)
-        if (varDecl->initializer)
-        {
-            if (varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
-            {
-                // Get the literal value
-                llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(
-                    varDecl->initializer);
-
-                // IMPORTANT: The constructor is required to initialize the struct with the given value.
-                // Get the constructor function
-                llvm::Function *ctor = compiler.getContext().module->getFunction(
-                    structName + ".constructor");
-                if (!ctor)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Variables",
-                                            "Constructor not found for struct: " + structName);
-                    CONDITION_FAILED;
-                }
-
-                // Call constructor with this pointer and initial value
-                std::vector<llvm::Value *> args = {structPtr, initValue};
-                compiler.getContext().builder.CreateCall(ctor, args);
-            }
-        }
+        // Create struct instance using the dedicated method
+        Structs &structs = compiler.getStructs();
+        llvm::Value *structPtr = structs.createStructInstance(varDecl);
 
         // Register in symbol table
         compiler.getContext().namedValues[varName] = structPtr;
@@ -274,7 +236,7 @@ namespace Cryo
             namespaceName,
             varName,
             structPtr,
-            structType);
+            compiler.getContext().structTypes[varNode->type->container->custom.structDef->name]);
 
         return structPtr;
     }

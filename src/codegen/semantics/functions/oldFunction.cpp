@@ -140,8 +140,8 @@ namespace Cryo
                 continue;
             }
 
-            // llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
-            // argTypes.push_back(argType);
+            llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
+            argTypes.push_back(argType);
         }
 
         // Get the function Body
@@ -528,7 +528,6 @@ namespace Cryo
                 {
                 case PRIM_INT:
                 {
-
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning int");
                     llvm::Type *retType = types.getType(createPrimitiveIntType(), 0);
                     return retType;

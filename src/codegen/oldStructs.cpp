@@ -227,25 +227,63 @@ namespace Cryo
             // For implicit constructor call with single value
             if (varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
             {
+                DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling single value initializer");
                 DataType *initType = varDecl->initializer->data.literal->type;
+                bool isString = isStringDataType(initType);
+                if (isString)
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Structs", "String initializer found of type string");
+                    Variables &variables = compiler.getVariables();
+                    llvm::Value *initVal = variables.createStringVariable(varDecl->initializer);
+                    if (!initVal)
+                    {
+                        DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Initializer value not found");
+                        CONDITION_FAILED;
+                    }
+
+                    // Call constructor
+                    std::vector<llvm::Value *> args;
+                    args.push_back(structPtr);
+                    args.push_back(initVal);
+
+                    llvm::Function *ctor = compiler.getContext().module->getFunction(structName + ".constructor");
+                    compiler.getContext().builder.CreateCall(ctor, args);
+
+                    return structPtr;
+                }
                 llvm::Value *initValue = compiler.getGenerator().getInitilizerValue(varDecl->initializer);
                 if (!initValue)
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Initializer value not found");
                     CONDITION_FAILED;
                 }
-                
+
                 // Call constructor
                 std::vector<llvm::Value *> args;
                 args.push_back(structPtr);
                 args.push_back(initValue);
 
+                DevDebugger::logMessage("INFO", __LINE__, "Structs", "Calling constructor");
                 llvm::Function *ctor = compiler.getContext().module->getFunction(structName + ".constructor");
                 compiler.getContext().builder.CreateCall(ctor, args);
             }
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct Instance Created");
         return structPtr;
+    }
+
+    void Structs::callConstructor(const std::string &structName, llvm::Value *structPtr, llvm::Value *initValue)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Calling constructor");
+        llvm::Function *ctor = compiler.getContext().module->getFunction(structName + ".constructor");
+        if (!ctor)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Constructor not found for struct: " + structName);
+            CONDITION_FAILED;
+        }
+        std::vector<llvm::Value *> args = {structPtr, initValue};
+        compiler.getContext().builder.CreateCall(ctor, args);
     }
 
 };

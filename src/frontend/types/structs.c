@@ -51,6 +51,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
     container->baseType = STRUCT_TYPE;
     container->custom.name = name;
     container->custom.structDef = structDef;
+    container->primitive = PRIM_CUSTOM;
 
     return container;
 }
@@ -102,7 +103,11 @@ DataType *createDataTypeFromStructNode(
     TypeContainer *structContainer = createStructType(typeName, structType);
     logMessage("INFO", __LINE__, "DataTypes", "Created struct type: %s", structType->name);
 
-    return wrapTypeContainer(structContainer);
+    DataType *dataType = wrapTypeContainer(structContainer);
+    dataType->container->baseType = STRUCT_TYPE;
+    dataType->container->primitive = PRIM_CUSTOM;
+
+    return dataType;
 }
 
 void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)

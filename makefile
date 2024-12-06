@@ -38,8 +38,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang-18
-	CXX_COMPILER = clang++-18
+	C_COMPILER = clang
+	CXX_COMPILER = clang++
 endif
 
 # >>=======--------------------------------------------------=======<< #
@@ -79,7 +79,7 @@ else
     CXX =           $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CFLAGS =        $(LINUX_INCLUDES) $(LLVM_CFLAGS) -fexceptions
     CXXFLAGS =      $(LINUX_INCLUDES) $(LLVM_CXXFLAGS) -fexceptions
-    LLVM_CONFIG =   llvm-config-18
+    LLVM_CONFIG =   llvm-config
     LLVM_CFLAGS =   $(shell $(LLVM_CONFIG) --cflags)
 	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
     LLVM_LDFLAGS =  $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
