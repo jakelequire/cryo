@@ -620,6 +620,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatArgListNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "ObjectInst") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatObjectInstNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatObjectInstNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1391,15 +1402,17 @@ char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output)
     ASTNode **argsNode = node->args;
     for (int i = 0; i < node->argCount; i++)
     {
-        char *argBuffer = ASTNodeValueBuffer(argsNode[i]);
-        if (argBuffer)
+        ASTNode *argNode = argsNode[i];
+        DataType *argType = getDataTypeFromASTNode(argNode);
+        char *argTypeString = DataTypeToString(argType);
+
+        if (i == node->argCount - 1)
         {
-            sprintf(argumentBuffer, "%s%s%s%s%s", argumentBuffer, DARK_GRAY, ITALIC, argBuffer, COLOR_RESET);
-            if (i < node->argCount - 1)
-            {
-                sprintf(argumentBuffer, "%s, ", argumentBuffer);
-            }
-            free(argBuffer);
+            sprintf(argumentBuffer, "%s%s%s", argumentBuffer, argTypeString, COLOR_RESET);
+        }
+        else
+        {
+            sprintf(argumentBuffer, "%s%s%s, ", argumentBuffer, argTypeString, COLOR_RESET);
         }
     }
 
@@ -1411,6 +1424,56 @@ char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output)
     return buffer;
 }
 // </ArgList>
+// ============================================================
+// ============================================================
+// <ObjectInst>
+char *formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<ObjectInst> [%s] <0:0>",
+            node->nodeName,
+            DataTypeToString(node->dataType));
+    return buffer;
+}
+char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+
+    ASTNode *objectNode = node->sourceNode;
+
+    bool isNew = objectNode->data.objectNode->isNewInstance;
+    int argCount = objectNode->data.objectNode->argCount;
+    ASTNode **args = objectNode->data.objectNode->args;
+    DataType **argumentTypes = (DataType **)malloc(sizeof(DataType *) * argCount);
+    for (int i = 0; i < argCount; i++)
+    {
+        argumentTypes[i] = getDataTypeFromASTNode(args[i]);
+        logDataType(argumentTypes[i]);
+    }
+    char *argTypeArray = printFormattedDataTypeArray(argumentTypes, argCount);
+
+    if (isNew)
+    {
+        char *newKeyword = formattedNewKeyword();
+        sprintf(buffer, "%s%s%s<ObjectInst>%s %s %s[%s]%s %s %s%s<0:0>%s",
+                COLOR_RESET, BOLD, LIGHT_MAGENTA, COLOR_RESET,
+                newKeyword,
+                YELLOW, node->nodeName, COLOR_RESET,
+                argTypeArray,
+                DARK_GRAY, ITALIC, COLOR_RESET);
+    }
+    else
+    {
+        sprintf(buffer, "%s%s<ObjectInst>%s %s[%s]%s %s%s<0:0>%s",
+                BOLD, LIGHT_MAGENTA, COLOR_RESET,
+                YELLOW, node->nodeName, COLOR_RESET,
+                DARK_GRAY, ITALIC, COLOR_RESET);
+    }
+    return buffer;
+}
+// </ObjectInst>
 // ============================================================
 
 // # ============================================================ #
@@ -1658,6 +1721,23 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             free(literalValue);
             break;
         }
+
+        case PRIM_I128:
+        case PRIM_I64:
+        case PRIM_I32:
+        case PRIM_I16:
+        case PRIM_I8:
+        {
+            char *literalValue = (char *)malloc(sizeof(char) * 32);
+            int intValue = node->data.literal->value.intValue;
+            sprintf(literalValue, "%i", intValue);
+            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
+            output->nodes[output->nodeCount] = *intLiteralNode;
+            output->nodeCount++;
+            free(literalValue);
+            break;
+        }
+
         case PRIM_FLOAT:
         {
             char *literalValue = (char *)malloc(sizeof(char) * 32);
@@ -1937,6 +2017,17 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         break;
     }
 
+    case NODE_OBJECT_INST:
+    {
+        __LINE_AND_COLUMN__
+        char *objectName = strdup(node->data.objectNode->name);
+        DataType *objectType = node->data.objectNode->objType;
+        ASTDebugNode *objectNode = createASTDebugNode("ObjectInst", objectName, objectType, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *objectNode;
+        output->nodeCount++;
+        break;
+    }
+
     default:
     {
         printf("Unknown Node Type @debugOutputAST.c | Node Type: %s\n", CryoNodeTypeToString(nodeType));
@@ -2008,4 +2099,42 @@ char *ASTNodeValueBuffer(ASTNode *node)
     }
 
     return NULL;
+}
+
+char *formattedNewKeyword(void)
+{
+    char *buffer = (char *)malloc(sizeof(char) * 32);
+    sprintf(buffer, BOLD CYAN "new" COLOR_RESET);
+    // Another color reset on the buffer to be safe
+    strcat(buffer, COLOR_RESET);
+    return buffer;
+}
+
+char *printFormattedDataTypeArray(DataType **typeArray, int typeCount)
+{
+    // Yellow `[]` brackets and Light Cyan for the type
+    char *buffer = (char *)malloc(sizeof(char) * 512);
+    if (!buffer)
+    {
+        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for type buffer");
+        return NULL;
+    }
+
+    sprintf(buffer, COLOR_RESET YELLOW "[" COLOR_RESET);
+    for (int i = 0; i < typeCount; i++)
+    {
+        DataType *type = typeArray[i];
+        char *typeString = DataTypeToString(type);
+        if (i == typeCount - 1)
+        {
+            sprintf(buffer, "%s%s%s", buffer, typeString, COLOR_RESET);
+        }
+        else
+        {
+            sprintf(buffer, "%s%s%s, ", buffer, typeString, COLOR_RESET);
+        }
+    }
+
+    sprintf(buffer, "%s" COLOR_RESET YELLOW "]" COLOR_RESET, buffer);
+    return buffer;
 }

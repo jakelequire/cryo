@@ -132,7 +132,7 @@ namespace Cryo
                 continue;
             }
 
-            if (_argType->container->baseType == PRIM_INT)
+            else if (_argType->container->baseType == PRIM_INT)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting int to LLVM type");
                 llvm::Type *argType = types.getType(_argType, 0);
@@ -140,8 +140,20 @@ namespace Cryo
                 continue;
             }
 
-            llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
-            argTypes.push_back(argType);
+            else if (_argType->container->custom.structDef)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting struct to LLVM type");
+                llvm::Type *argType = types.getType(_argType, 0);
+                argTypes.push_back(argType->getPointerTo());
+                continue;
+            }
+
+            else
+            {
+
+                llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
+                argTypes.push_back(argType);
+            }
         }
 
         // Get the function Body
@@ -371,6 +383,7 @@ namespace Cryo
     {
         Generator &generator = compiler.getGenerator();
         CryoContext &cryoContext = compiler.getContext();
+        Structs &structs = compiler.getStructs();
         if (node->metaData->type != NODE_RETURN_STATEMENT)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Node is not a return statement");
@@ -427,11 +440,43 @@ namespace Cryo
                 CONDITION_FAILED;
             }
 
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Getting var type, name: " + varName);
+            DataType *varDataType = stVarNode->dataType;
+            if (!varDataType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable data type not found");
+                CONDITION_FAILED;
+            }
+
+            std::string varDataTypeStr;
+            if (varDataType->container->baseType == STRUCT_TYPE)
+            {
+                varDataTypeStr = varDataType->container->custom.structDef->name;
+            }
+            else
+            {
+                varDataTypeStr = DataTypeToString(varDataType);
+            }
+
+            llvm::Type *existingStructTy = structs.findExistingStruct(varDataTypeStr);
+            if (existingStructTy)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Struct Type");
+                DevDebugger::logLLVMType(existingStructTy);
+                llvm::Value *returnValue = cryoContext.builder.CreateLoad(existingStructTy, varValue, varName + ".retload");
+                cryoContext.builder.CreateRet(returnValue);
+                return;
+            }
+
             llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(varValue);
             llvm::Type *instTy = types.parseInstForType(inst);
 
-            llvm::Value *returnValue = cryoContext.builder.CreateLoad(instTy, varValue, varName + ".retload");
+            llvm::Value *returnValue = cryoContext.builder.CreateLoad(varValue->getType(), varValue, varName + ".retload");
             cryoContext.builder.CreateRet(returnValue);
+
+            // Get the current Function
+            llvm::Function *currentFunction = cryoContext.currentFunction;
+            DevDebugger::logLLVMFunction(currentFunction);
 
             break;
         }

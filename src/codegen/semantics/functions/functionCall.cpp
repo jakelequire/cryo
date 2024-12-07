@@ -474,6 +474,15 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        DataType *varDataType = var->dataType;
+        if (!varDataType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable data type not found");
+            CONDITION_FAILED;
+        }
+
+        bool isStructType = varDataType->container->baseType == STRUCT_TYPE;
+
         std::cout << "@createVarNameCall Variable Name: " << varName << std::endl;
         llvm::Value *varValue = var->LLVMValue;
         if (!varValue)
@@ -505,6 +514,18 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable Value Found");
         llvm::Type *varType = varValue->getType();
 
+        if (varDataType->container->baseType == STRUCT_TYPE)
+        {
+            llvm::Type *structType = compiler.getTypes().getType(varDataType, 0);
+            if (!structType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Struct type not found");
+                CONDITION_FAILED;
+            }
+
+            varType = structType;
+        }
+
         llvm::StoreInst *storeInst = var->LLVMStoreInst;
         if (!storeInst)
         {
@@ -513,12 +534,39 @@ namespace Cryo
             if (var->LLVMFunctionPtr)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable is a function reference");
+                DevDebugger::logLLVMValue(var->LLVMFunctionPtr);
                 return var->LLVMFunctionPtr;
             }
 
             if (var->LLVMValue)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable is a value reference");
+                DevDebugger::logLLVMValue(var->LLVMValue);
+                if (isStructType)
+                {
+                    llvm::Value *structPtr = compiler.getContext().builder.CreateAlloca(varType->getPointerTo(), nullptr, varName + ".ptr");
+                    if (!structPtr)
+                    {
+                        DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Struct pointer not created");
+                        CONDITION_FAILED;
+                    }
+
+                    llvm::Value *structStore = compiler.getContext().builder.CreateStore(var->LLVMValue, structPtr);
+                    if (!structStore)
+                    {
+                        DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Struct value not stored");
+                        CONDITION_FAILED;
+                    }
+
+                    llvm::LoadInst *structLoad = compiler.getContext().builder.CreateLoad(varType->getPointerTo(), structPtr, varName + ".load");
+                    if (!structLoad)
+                    {
+                        DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Struct value not loaded");
+                        CONDITION_FAILED;
+                    }
+
+                    return structLoad;
+                }
                 return var->LLVMValue;
             }
 
@@ -547,10 +595,12 @@ namespace Cryo
             varLoadValue->setAlignment(llvm::Align(8));
 
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Var Name Call Created with dereference. For Variable: " + varName);
+            DevDebugger::logLLVMValue(varLoadValue);
             return varLoadValue;
         }
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Var Name Call Created without dereference. For Variable: " + varName);
+        DevDebugger::logLLVMValue(varValue);
         return varValue;
     }
 

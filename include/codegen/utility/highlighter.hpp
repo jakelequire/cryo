@@ -21,6 +21,9 @@
 #include <unordered_map>
 #include <algorithm>
 #include <vector>
+#include <numeric>
+#include <iostream>
+#include <functional>
 
 #include "llvm/IR/AssemblyAnnotationWriter.h"
 #include "llvm/Support/raw_ostream.h"
@@ -61,15 +64,23 @@ private:
 
     std::vector<TokenPattern> patterns;
 
+    std::vector<std::string> LLVM_ERROR_MESSAGES = {
+        "Function return type does not match operand type of return inst!",
+        "GEP base pointer is not a vector or a vector of pointers",
+        "Load operand must be a pointer.",
+        "Call parameter type does not match function signature!",
+        "Function context does not match Module context!",
+    };
+
     void initializePatterns()
     {
-
         // Higher priority patterns are processed first
         patterns = {
-            // Error messages - highest priority
-            {std::regex("Error:|does not match|failed"), Colors::ERROR, 1100},
-            {std::regex("Function context does not match Module context!"), Colors::ERROR, 1100},
-            {std::regex("Call parameter type does not match function signature!"), Colors::ERROR, 1100},
+            // Error messages (Using the LLVM_ERROR_MESSAGES vector) with iterator
+            {std::regex("(" + std::accumulate(LLVM_ERROR_MESSAGES.begin(), LLVM_ERROR_MESSAGES.end(), std::string(""), [](std::string &a, std::string &b)
+                                              { return a + (a.length() > 0 ? "|" : "") + b; }) +
+                        ")"),
+             Colors::ERROR, 1100},
 
             // Comments
             {std::regex(";.*$"), Colors::COMMENT, 1000},

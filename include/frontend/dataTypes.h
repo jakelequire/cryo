@@ -61,7 +61,13 @@ typedef struct ProtectedMembers ProtectedMembers;
 
 typedef enum PrimitiveDataType
 {
-    PRIM_INT,     // `int`
+    PRIM_INT,  // `int` (32-bit default)
+    PRIM_I8,   // `i8`
+    PRIM_I16,  // `i16`
+    PRIM_I32,  // `i32`
+    PRIM_I64,  // `i64`
+    PRIM_I128, // `i128`
+
     PRIM_FLOAT,   // `float`
     PRIM_STRING,  // `string`
     PRIM_BOOLEAN, // `boolean`

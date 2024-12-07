@@ -291,4 +291,18 @@ namespace Cryo
         compiler.getContext().builder.CreateCall(ctor, args);
     }
 
+    llvm::Type *Structs::findExistingStruct(const std::string &structName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Finding existing struct");
+        // Look for the existing globals
+        llvm::StructType *structType = llvm::StructType::getTypeByName(compiler.getContext().context, structName);
+        if (structType)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct found: " + structName);
+            return structType;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct not found: " + structName);
+        return nullptr;
+    }
 };

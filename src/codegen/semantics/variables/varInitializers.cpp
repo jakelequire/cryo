@@ -226,6 +226,8 @@ namespace Cryo
         std::string varName = std::string(varNode->name);
         std::string namespaceName = compiler.getContext().currentNamespace;
 
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Name: " + varName);
+
         // Create struct instance using the dedicated method
         Structs &structs = compiler.getStructs();
         llvm::Value *structPtr = structs.createStructInstance(varDecl);
@@ -237,6 +239,7 @@ namespace Cryo
             varName,
             structPtr,
             compiler.getContext().structTypes[varNode->type->container->custom.structDef->name]);
+        compiler.getSymTable().addDataTypeToVar(namespaceName, varName, varNode->type);
 
         return structPtr;
     }

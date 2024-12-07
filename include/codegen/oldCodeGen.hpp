@@ -126,6 +126,7 @@ namespace Cryo
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
+
         std::unordered_map<std::string, DataType *> structDataTypes;
         std::unordered_map<std::string, DataType *> classDataTypes;
 
@@ -424,6 +425,8 @@ namespace Cryo
         llvm::Type *getReturnType(DataType *type);
 
         llvm::Type *getFunctionReturnType(DataType *returnType);
+
+        llvm::Type *getIntegerTypeFromPrimitive(PrimitiveDataType type);
 
         /**
          * @brief Returns the length of a string literal or Array type.
@@ -763,6 +766,7 @@ namespace Cryo
         void handleMethod(ASTNode *methodNode, const std::string &structName, llvm::StructType *structType);
         void handleStructConstructor(StructNode *node, llvm::StructType *structType);
         llvm::Value *createStructInstance(ASTNode *node);
+        llvm::Type *findExistingStruct(const std::string &structName);
 
     private:
         CryoCompiler &compiler;

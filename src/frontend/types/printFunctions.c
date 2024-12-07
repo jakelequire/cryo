@@ -72,6 +72,17 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
     {
     case PRIM_INT:
         return LIGHT_CYAN BOLD "int" COLOR_RESET;
+    case PRIM_I8:
+        return LIGHT_CYAN BOLD "i8" COLOR_RESET;
+    case PRIM_I16:
+        return LIGHT_CYAN BOLD "i16" COLOR_RESET;
+    case PRIM_I32:
+        return LIGHT_CYAN BOLD "i32" COLOR_RESET;
+    case PRIM_I64:
+        return LIGHT_CYAN BOLD "i64" COLOR_RESET;
+    case PRIM_I128:
+        return LIGHT_CYAN BOLD "i128" COLOR_RESET;
+
     case PRIM_FLOAT:
         return LIGHT_CYAN BOLD "float" COLOR_RESET;
     case PRIM_STRING:
@@ -101,6 +112,17 @@ char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
     {
     case PRIM_INT:
         return "int";
+    case PRIM_I8:
+        return "i8";
+    case PRIM_I16:
+        return "i16";
+    case PRIM_I32:
+        return "i32";
+    case PRIM_I64:
+        return "i64";
+    case PRIM_I128:
+        return "i128";
+
     case PRIM_FLOAT:
         return "float";
     case PRIM_STRING:

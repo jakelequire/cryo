@@ -1422,5 +1422,9 @@ ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
 
+    node->genericTypes = (DataType **)calloc(1, sizeof(DataType *) * GENERIC_CAPACITY);
+    node->genericCount = 0;
+    node->genericCapacity = GENERIC_CAPACITY;
+
     return node;
 }

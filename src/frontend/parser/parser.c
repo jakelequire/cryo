@@ -1598,6 +1598,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 
     char *argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     bool isLiteral = false;
+    DataType *argType = NULL;
     CryoNodeType nodeType = NODE_UNKNOWN;
 
     // Resolve the type if it's not a literal
@@ -1607,18 +1608,21 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         logMessage("INFO", __LINE__, "Parser", "Argument is an integer literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
+        argType = createPrimitiveIntType();
     }
     else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a string literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
+        argType = createPrimitiveStringType(lexer->currentToken.length);
     }
     else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a boolean literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
+        argType = createPrimitiveBooleanType();
     }
     else if (lexer->currentToken.type == TOKEN_KW_THIS)
     {
@@ -1630,6 +1634,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is an identifier");
         nodeType = NODE_VAR_DECLARATION;
+        argType = createPrimitiveVoidType();
     }
     else
     {
@@ -1638,7 +1643,6 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 
     // Resolve the type using the symbol table
     logMessage("INFO", __LINE__, "Parser", "Resolving argument type...");
-    DataType *argType = NULL;
     if (!isLiteral)
     {
         CryoSymbol *symbol = findSymbol(table, argName, arena);
@@ -1673,6 +1677,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
 ASTNode *parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing argument list...");
+    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start argument list.", "parseArgumentList", table, arena, state, typeTable, context);
     ASTNode *argListNode = createArgumentListNode(arena, state, typeTable, lexer);
     if (argListNode == NULL)
     {
@@ -1696,12 +1701,12 @@ ASTNode *parseArgumentList(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 
         if (lexer->currentToken.type == TOKEN_COMMA)
         {
+            logMessage("INFO", __LINE__, "Parser", "Consuming comma...");
             getNextToken(lexer, arena, state, typeTable);
         }
     }
 
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end argument list.", "parseArgumentList", table, arena, state, typeTable, context);
-    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after argument list.", "parseArgumentList", table, arena, state, typeTable, context);
     return argListNode;
 }
 // </parseArgumentList>
@@ -2759,6 +2764,7 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 
     const char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseNewExpression", table, arena, state, typeTable, context);
+    int argCount = 0;
 
     logMessage("INFO", __LINE__, "Parser", "Type name: %s", typeName);
 
@@ -2773,8 +2779,6 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     logMessage("INFO", __LINE__, "Parser", "Type found.");
     logDataType(type);
 
-    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start new expression.", "parseNewExpression", table, arena, state, typeTable, context);
-
     ASTNode *args = parseArgumentList(lexer, table, context, arena, state, typeTable);
     if (!args)
     {
@@ -2785,5 +2789,45 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 
     logASTNode(args);
 
-    DEBUG_BREAKPOINT;
+    // We need to check if the type is a struct or a class
+    if (type->container->baseType == STRUCT_TYPE)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Type is a struct.");
+        StructType *structType = type->container->custom.structDef;
+        logStructType(structType);
+
+        int ctorArgCount = structType->ctorParamCount;
+        logMessage("INFO", __LINE__, "Parser", "Constructor argument count: %d", ctorArgCount);
+
+        argCount = args->data.argList->argCount;
+        logMessage("INFO", __LINE__, "Parser", "Argument count: %d", argCount);
+
+        // Check if the argument count matches the constructor argument count
+        if (ctorArgCount != argCount)
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Argument count mismatch.");
+            parsingError("Argument count mismatch.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+            CONDITION_FAILED;
+        }
+    }
+
+    // TODO: Implement
+    // if (type->container->baseType == CLASS_TYPE)
+    // {
+    //     logMessage("INFO", __LINE__, "Parser", "Type is a class.");
+    // }
+
+    ASTNode **arguments = args->data.argList->args;
+
+    ASTNode *objectNode = createObject(typeName, type, true, arguments, argCount, arena, state, typeTable, lexer);
+    if (!objectNode)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to create object node.");
+        parsingError("Failed to create object node.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
+
+    logASTNode(objectNode);
+
+    return objectNode;
 }

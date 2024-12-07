@@ -93,6 +93,31 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
         container->baseType = PRIMITIVE_TYPE;
         container->primitive = PRIM_INT;
     }
+    else if (strcmp(baseTypeStr, "i8") == 0)
+    {
+        container->baseType = PRIMITIVE_TYPE;
+        container->primitive = PRIM_I8;
+    }
+    else if (strcmp(baseTypeStr, "i16") == 0)
+    {
+        container->baseType = PRIMITIVE_TYPE;
+        container->primitive = PRIM_I16;
+    }
+    else if (strcmp(baseTypeStr, "i32") == 0)
+    {
+        container->baseType = PRIMITIVE_TYPE;
+        container->primitive = PRIM_I32;
+    }
+    else if (strcmp(baseTypeStr, "i64") == 0)
+    {
+        container->baseType = PRIMITIVE_TYPE;
+        container->primitive = PRIM_I64;
+    }
+    else if (strcmp(baseTypeStr, "i128") == 0)
+    {
+        container->baseType = PRIMITIVE_TYPE;
+        container->primitive = PRIM_I128;
+    }
     else if (strcmp(baseTypeStr, "float") == 0)
     {
         container->baseType = PRIMITIVE_TYPE;
@@ -381,6 +406,7 @@ const char *getDataTypeName(DataType *type)
     }
 }
 
+// Very unsafe function. Will only allocate memory for the first 64 types.
 DataType **getTypeArrayFromASTNode(ASTNode **node)
 {
     if (!node)
@@ -401,6 +427,8 @@ DataType **getTypeArrayFromASTNode(ASTNode **node)
         logMessage("INFO", __LINE__, "DataTypes", "Getting data type from AST node");
         if (!node[i])
         {
+            char *nodeType = CryoNodeTypeToString(node[i]->metaData->type);
+            logMessage("INFO", __LINE__, "DataTypes", "Node type: %s", nodeType);
             logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop");
             break;
         }
@@ -422,23 +450,32 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
     switch (node->metaData->type)
     {
     case NODE_LITERAL_EXPR:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from literal expression");
         return node->data.literal->type;
     case NODE_VAR_NAME:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var name");
         return node->data.varName->type;
     case NODE_STRUCT_DECLARATION:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from struct declaration");
         return node->data.structNode->type;
     case NODE_FUNCTION_DECLARATION:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from function declaration");
         return node->data.functionDecl->type;
     case NODE_PROPERTY:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from property");
         return node->data.property->type;
     case NODE_PARAM:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from param");
         return node->data.param->type;
     case NODE_VAR_DECLARATION:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var declaration");
         return node->data.varDecl->type;
     case NODE_METHOD:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from method");
         return node->data.method->type;
     case NODE_PROPERTY_ACCESS:
     {
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from property access");
         // Get the object type
         DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object);
         if (!objectType)

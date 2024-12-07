@@ -1,0 +1,7 @@
+#__compiler_testing__
+namespace Testing;
+
+
+function main() -> void {
+    return;
+}

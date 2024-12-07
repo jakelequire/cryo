@@ -48,6 +48,9 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     int methodCount = 0;
     bool hasDefaultProperty = false;
     bool hasConstructor = false;
+    int ctorArgCount = 0;
+    DataType **ctorArgs = (DataType **)ARENA_ALLOC(arena, sizeof(DataType *) * ARG_CAPACITY);
+
     int defaultPropertyCount = 0;
     ASTNode *constructorNode = NULL;
 
@@ -110,6 +113,22 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             hasConstructor = true;
             ConstructorMetaData *constructorMetaData = createConstructorMetaData(structName, NODE_STRUCT_DECLARATION, hasDefaultProperty);
             constructorNode = parseConstructor(lexer, table, context, arena, state, constructorMetaData, typeTable);
+            if (constructorNode)
+            {
+                // Get the constructor arguments and add them to the struct data type
+                int argCount = constructorNode->data.structConstructor->argCount;
+                for (int i = 0; i < argCount; i++)
+                {
+                    logMessage("INFO", __LINE__, "Parser", "Adding constructor argument to struct data type.");
+                    ASTNode *arg = constructorNode->data.structConstructor->args[i];
+                    if (arg)
+                    {
+                        logMessage("INFO", __LINE__, "Parser", "Adding constructor argument to struct data type.");
+                        ctorArgs[ctorArgCount] = getDataTypeFromASTNode(arg);
+                        ctorArgCount++;
+                    }
+                }
+            }
         }
 
         // This is for the method declarations
@@ -154,6 +173,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                                                             state, typeTable);
     structNode->data.structNode->type = structDataType;
     structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
+    structNode->data.structNode->type->container->custom.structDef->ctorParamCount = ctorArgCount;
+    structNode->data.structNode->type->container->custom.structDef->ctorParams = ctorArgs;
     logMessage("INFO", __LINE__, "Parser::TypeParsing", "Created struct data type:");
 
     logVerboseDataType(structDataType);
@@ -548,8 +569,6 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTab
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected struct name in struct instance.",
             "parseStructInstance", table, arena, state, typeTable, context);
-    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` in struct instance.",
-            "parseStructInstance", table, arena, state, typeTable, context);
 
     // Parse struct arguments
     ASTNode *args = parseArgumentList(lexer, table, context, arena, state, typeTable);
@@ -559,9 +578,6 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTab
                      table, arena, state, lexer, lexer->source, typeTable);
         return NULL;
     }
-
-    consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` after struct arguments.",
-            "parseStructInstance", table, arena, state, typeTable, context);
 
     DEBUG_BREAKPOINT;
 }

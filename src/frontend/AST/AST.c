@@ -599,6 +599,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
     {
         node->data.varName->varName = strdup(name);
         node->data.varName->isRef = false;
+        node->data.varName->type = type;
         break;
     }
     case NODE_VAR_DECLARATION:
@@ -611,6 +612,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
         node->data.varDecl->isMutable = false;
         node->data.varDecl->isIterator = false;
         node->data.varDecl->initializer = NULL;
+        node->data.varDecl->type = type;
         break;
     }
     default:
@@ -995,6 +997,7 @@ ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **
 }
 
 ASTNode *createObject(const char *objectName, DataType *objectType, bool isNew,
+                      ASTNode **args, int argCount,
                       Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
     ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
@@ -1007,6 +1010,33 @@ ASTNode *createObject(const char *objectName, DataType *objectType, bool isNew,
     node->data.objectNode->name = strdup(objectName);
     node->data.objectNode->objType = objectType;
     node->data.objectNode->isNewInstance = isNew;
+    node->data.objectNode->args = args;
+    node->data.objectNode->argCount = argCount;
+
+    return node;
+}
+
+ASTNode *createObjectWithGenerics(const char *objectName, DataType *objectType, bool isNew,
+                                  ASTNode **args, int argCount,
+                                  DataType **generics, int genericCount,
+                                  Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+{
+    ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create object node");
+        return NULL;
+    }
+
+    node->data.objectNode->name = strdup(objectName);
+    node->data.objectNode->objType = objectType;
+    node->data.objectNode->isNewInstance = isNew;
+
+    node->data.objectNode->args = args;
+    node->data.objectNode->argCount = argCount;
+
+    node->data.objectNode->genericTypes = generics;
+    node->data.objectNode->genericCount = genericCount;
 
     return node;
 }
