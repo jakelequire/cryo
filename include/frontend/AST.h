@@ -193,6 +193,10 @@ typedef struct VariableNameNode
     DataType *type;
     bool isRef; // Remove Later
     char *varName;
+
+    // Unary operators
+    bool hasUnaryOp;
+    ASTNode *unaryOp;
 } VariableNameNode;
 
 typedef struct CryoExpressionNode

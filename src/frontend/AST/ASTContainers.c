@@ -606,6 +606,9 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
     node->isRef = false;
     node->varName = strdup(varName);
 
+    node->hasUnaryOp = false;
+    node->unaryOp = NULL;
+
     return node;
 }
 

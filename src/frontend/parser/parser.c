@@ -1969,6 +1969,7 @@ void addArgumentToList(CryoSymbolTable *table, ASTNode *argListNode, ASTNode *ar
             }
         }
 
+        logMessage("INFO", __LINE__, "Parser", "Adding argument to list...");
         argList->args[argList->argCount++] = arg;
     }
     else
