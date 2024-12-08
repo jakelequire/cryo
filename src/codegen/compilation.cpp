@@ -14,21 +14,31 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "codegen/utility/highlighter.hpp"
 #include "codegen/oldCodeGen.hpp"
 
 namespace Cryo
 {
     void Compilation::compileIRFile(void)
     {
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
         CryoContext &cryoContext = compiler.getContext();
         CompilerSettings *settings = compiler.getCompilerSettings();
 
-        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
-        std::cout << "\n\n";
-        if (llvm::verifyModule(*cryoContext.module, &llvm::errs()))
+        Linker *linker = compiler.getLinker();
+
+        // Hoist the declarations from the linker
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Hoisting Declarations");
+        linker->hoistDeclarations(compiler.getContext().module.get());
+
+        if (llvm::verifyModule(*cryoContext.module, nullptr))
         {
             LLVM_MODULE_FAILED_MESSAGE_START;
-            cryoContext.module->print(llvm::errs(), nullptr);
+
+            LLVMIRHighlighter highlighter;
+            llvm::formatted_raw_ostream formatted_errs(llvm::errs());
+            highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
+
             LLVM_MODULE_FAILED_MESSAGE_END;
             LLVM_MODULE_ERROR_START;
             // Get the error itself without the module showing up
@@ -43,7 +53,19 @@ namespace Cryo
 
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
 
+            // Output the broken IR to a file
+            outputFailedIR();
+
             exit(1);
+        }
+
+        bool isPreprocessing = compiler.isPreprocessing;
+        if (isPreprocessing)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Preprocessing Compilation");
+            std::string outputPath = compiler.customOutputPath;
+            compileUniquePath(outputPath);
+            return;
         }
 
         std::cout << "\n Getting the output path\n";
@@ -61,11 +83,11 @@ namespace Cryo
         std::string outputFileIR = trimmedFileExt + ".ll";
         std::string outputFileDir = outputPath + outputFileIR;
 
-        std::cout << "\n\n\n Output Path: " << outputPath << "\n\n\n";
-        std::cout << "\n\n\n Trimmed File: " << trimmedOutputFile << "\n\n\n";
-        std::cout << "\n\n\n Trimmed File Ext: " << trimmedFileExt << "\n\n\n";
-        std::cout << "\n\n\n Output File IR: " << outputFileIR << "\n\n\n";
-        std::cout << "\n\n\n Output File Dir: " << outputFileDir << "\n\n\n";
+        std::cout << "\n\n\n Output Path: " << outputPath << "\n";
+        std::cout << "Trimmed File: " << trimmedOutputFile << "\n";
+        std::cout << "Trimmed File Ext: " << trimmedFileExt << "\n";
+        std::cout << "Output File IR: " << outputFileIR << "\n";
+        std::cout << "Output File Dir: " << outputFileDir << "\n\n\n";
         if (settings->customOutputPath)
         {
             // outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
@@ -98,6 +120,112 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
             return;
         }
+        LLVM_MODULE_COMPLETE_START;
+
+        LLVMIRHighlighter highlighter;
+        // We need to print the highlighted version to the console
+        // and the raw version to the file
+        cryoContext.module->print(dest, nullptr);
+        llvm::formatted_raw_ostream formatted_out(llvm::outs());
+        highlighter.printWithHighlighting(cryoContext.module.get(), formatted_out);
+        LLVM_MODULE_COMPLETE_END;
+
+        dest.close();
+
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
+        return;
+    }
+
+    void Compilation::outputFailedIR(void)
+    {
+        // Put the broken IR in the build directory under /out/errors/{MODULE_NAME}.error.ll
+        std::string outputPath = compiler.getCompilerSettings()->inputFile;
+        std::filesystem::path cwd = std::filesystem::current_path();
+        std::string cwd_str = cwd.c_str();
+        std::string outputDir = cwd_str + "/build/out/errors/";
+        std::string outputFileName = outputPath.substr(outputPath.find_last_of("/\\") + 1);
+        std::string outputFilePath = outputDir + outputFileName + ".error.ll";
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(outputFilePath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing");
+            return;
+        }
+
+        LLVM_MODULE_COMPLETE_START;
+        LoadStoreWhitespaceAnnotator LSWA;
+
+        // Use the custom annotator when printing
+        compiler.getContext().module->print(dest, &LSWA);
+        compiler.getContext().module->print(llvm::outs(), &LSWA);
+
+        LLVM_MODULE_COMPLETE_END;
+
+        dest.close();
+
+        return;
+    }
+
+    void Compilation::DumpModuleToDebugFile(void)
+    {
+        // Put the broken IR in the build directory under /out/errors/{MODULE_NAME}.debug.ll
+        std::filesystem::path cwd = std::filesystem::current_path();
+        std::string cwd_str = cwd.c_str();
+        std::string outputDir = cwd_str + "/build/out/errors/";
+        std::string outputFileName = "debug.ll";
+        std::string outputFilePath = outputDir + outputFileName;
+
+        // Make the directory
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Creating output directory:\n " + outputDir);
+        makeOutputDir(outputDir);
+
+        // Clean the directory
+        cleanErrorDir();
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(outputFilePath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
+            std::cout << "File Path: " << outputFilePath << std::endl;
+            CONDITION_FAILED;
+            return;
+        }
+
+        LLVM_MODULE_COMPLETE_START;
+        LoadStoreWhitespaceAnnotator LSWA;
+
+        // Use the custom annotator when printing
+        compiler.getContext().module->print(dest, &LSWA);
+        compiler.getContext().module->print(llvm::outs(), &LSWA);
+
+        LLVM_MODULE_COMPLETE_END;
+
+        dest.close();
+
+        return;
+    }
+
+    void Compilation::compileUniquePath(std::string outputPath)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling Unique Path");
+        CryoContext &cryoContext = compiler.getContext();
+
+        // Ensure the output directory exists
+        std::string outputDir = outputPath.substr(0, outputPath.find_last_of("/\\"));
+        isValidDir(outputDir);
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing");
+            return;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Code CodeGen Complete");
 
         LLVM_MODULE_COMPLETE_START;
         LoadStoreWhitespaceAnnotator LSWA;
@@ -105,12 +233,10 @@ namespace Cryo
         // Use the custom annotator when printing
         cryoContext.module->print(dest, &LSWA);
         cryoContext.module->print(llvm::outs(), &LSWA);
-
         LLVM_MODULE_COMPLETE_END;
 
         dest.close();
 
-        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
         return;
     }
 
@@ -120,22 +246,21 @@ namespace Cryo
         std::string ErrorMsg;
         llvm::raw_string_ostream ErrorStream(ErrorMsg);
 
-        bool Err = llvm::verifyModule(*cryoContext.module, &llvm::errs());
+        // Verify module and capture output in our string stream instead of errs()
+        bool Err = llvm::verifyModule(*cryoContext.module, &ErrorStream);
+        ErrorStream.flush();
 
-        return ErrorStream.str();
+        // Apply syntax highlighting to the error message
+        LLVMIRHighlighter highlighter;
+        std::string highlighted = highlighter.highlightText(ErrorMsg);
+
+        return highlighted;
     }
 
     /// @private
     void Compilation::compile(std::string inputFile, std::string outputPath)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "outputPath: " + outputPath);
-        // Check if the file exists
-        // std::ifstream file(outputPath);
-        // if (!file)
-        // {
-        //     DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Source file not found");
-        //     CONDITION_FAILED;
-        // }
 
         std::error_code EC;
         llvm::raw_fd_ostream dest(outputPath, EC, llvm::sys::fs::OF_None);
@@ -167,6 +292,23 @@ namespace Cryo
 
             return;
         }
+    }
+
+    llvm::Module *Compilation::compileAndMergeModule(std::string inputFile)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling and Merging Module");
+
+        llvm::LLVMContext &context = compiler.getContext().context;
+        llvm::SMDiagnostic err;
+
+        std::unique_ptr<llvm::Module> module = llvm::parseIRFile(inputFile, err, context);
+        if (!module)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Failed to parse IR file");
+            CONDITION_FAILED;
+        }
+
+        return module.release();
     }
 
     /// @private
@@ -207,7 +349,30 @@ namespace Cryo
         std::filesystem::path dir(dirPath);
         if (!std::filesystem::exists(dir))
         {
-            std::filesystem::create_directories(dir);
+            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Creating directory: " + dirPath);
+            if (!std::filesystem::create_directories(dir))
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Failed to create directory");
+                std::cout << "Error: " << std::strerror(errno) << std::endl;
+                CONDITION_FAILED;
+            }
         }
+
+        return;
+    }
+
+    void Compilation::cleanErrorDir(void)
+    {
+        std::filesystem::path cwd = std::filesystem::current_path();
+        std::string cwd_str = cwd.c_str();
+        std::string outputDir = cwd_str + "/build/out/errors/";
+
+        // Only clear the files, keep the directory
+        for (const auto &entry : std::filesystem::directory_iterator(outputDir))
+        {
+            std::filesystem::remove(entry.path());
+        }
+
+        return;
     }
 }

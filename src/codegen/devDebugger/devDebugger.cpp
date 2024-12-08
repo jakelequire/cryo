@@ -29,7 +29,7 @@ namespace Cryo
 
     /**
      * @public
-     * @brief Used to log a specific node.
+     * @brief Used to log a specific AST node.
      */
     void DevDebugger::logNode(ASTNode *node)
     {
@@ -121,6 +121,13 @@ namespace Cryo
         case NODE_THIS_ASSIGNMENT:
         case NODE_PROPERTY_ACCESS:
         case NODE_PROPERTY_REASSIGN:
+        case NODE_METHOD:
+        case NODE_METHOD_CALL:
+        case NODE_GENERIC_DECL:
+        case NODE_GENERIC_INST:
+        case NODE_CLASS:
+        case NODE_CLASS_CONSTRUCTOR:
+        case NODE_OBJECT_INST:
         {
             // std::cout << "✅ Node is Valid!\n"
             //           << std::endl;
@@ -298,7 +305,7 @@ namespace Cryo
             assertNode(node);
             for (int i = 0; i < node->data.argList->argCount; ++i)
             {
-                lintTree(node->data.argList->args[i]->initializer);
+                lintTree(node->data.argList->args[i]);
             }
             break;
 
@@ -365,6 +372,42 @@ namespace Cryo
             break;
 
         case NODE_THIS:
+            assertNode(node);
+            break;
+
+        case NODE_PROPERTY_REASSIGN:
+            assertNode(node);
+            break;
+
+        case NODE_METHOD:
+            assertNode(node);
+            break;
+
+        case NODE_PROPERTY:
+            assertNode(node);
+            break;
+
+        case NODE_METHOD_CALL:
+            assertNode(node);
+            break;
+
+        case NODE_GENERIC_DECL:
+            assertNode(node);
+            break;
+
+        case NODE_GENERIC_INST:
+            assertNode(node);
+            break;
+
+        case NODE_CLASS:
+            assertNode(node);
+            break;
+
+        case NODE_CLASS_CONSTRUCTOR:
+            assertNode(node);
+            break;
+
+        case NODE_OBJECT_INST:
             assertNode(node);
             break;
 
@@ -850,6 +893,69 @@ namespace Cryo
             break;
         }
 
+        case NODE_PROPERTY_REASSIGN:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Property reassign passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_METHOD:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Method passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_PROPERTY:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Property passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_METHOD_CALL:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Method call passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_GENERIC_DECL:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Generic type passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_GENERIC_INST:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Generic instance passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_CLASS:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Class passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_CLASS_CONSTRUCTOR:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Class constructor passed assertion.");
+            logNode(node);
+            break;
+        }
+
+        case NODE_OBJECT_INST:
+        {
+            logMessage("INFO", __LINE__, "Debugger", "Object instance passed assertion.");
+            logNode(node);
+            break;
+        }
+
         case NODE_UNKNOWN:
         {
             logMessage("ERROR", __LINE__, "Debugger", "Unknown node type");
@@ -899,8 +1005,6 @@ namespace Cryo
         std::cout << ">>===--------------------------------------===<<" << std::endl;
         std::cout << "\n";
     }
-
-    // -----------------------------------------------------------------------------------------------
 
     void DevDebugger::logLLVMStruct(llvm::StructType *structTy)
     {
@@ -980,6 +1084,70 @@ namespace Cryo
         // Print out the address of the instruction
         std::cout << "Address: " << inst << std::endl;
         std::cout << ">>===-------------------------------------------===<<" << std::endl;
+    }
+
+    void DevDebugger::logLLVMFunction(llvm::Function *func)
+    {
+        if (func == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Function is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Function Node>-----------===<<" << std::endl;
+
+        // Print out the name of the function
+        std::string funcName = func->getName().str();
+        std::cout << "Name: " << funcName << std::endl;
+
+        // Print out the instruction of the function
+        std::string funcInst;
+        llvm::raw_string_ostream rso(funcInst);
+        func->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the function
+        std::cout << "Address: " << func << std::endl;
+        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+    }
+
+    void DevDebugger::logLLVMBlock(llvm::BasicBlock *block)
+    {
+        if (block == nullptr)
+        {
+            logMessage("ERROR", __LINE__, "Debugger", "LLVM Basic Block is null");
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Basic Block Node>-----------===<<" << std::endl;
+
+        // Print out the name of the block
+        std::string blockName = block->getName().str();
+        std::cout << "Name: " << blockName << std::endl;
+
+        // Check for a parent function (if any)
+        llvm::Function *parentFunc = block->getParent();
+        if (parentFunc != nullptr)
+        {
+            std::string parentFuncName = parentFunc->getName().str();
+            std::cout << "Parent Function: " << parentFuncName << std::endl;
+        }
+        else
+        {
+            std::cout << "Parent Function: " << "<None>" << std::endl;
+        }
+
+        // Print out the instruction of the block
+        std::string blockInst;
+        llvm::raw_string_ostream rso(blockInst);
+        block->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the block
+        std::cout << "Address: " << block << std::endl;
+        std::cout << ">>===---------------------------------------------===<<" << std::endl;
     }
 
     // -----------------------------------------------------------------------------------------------

@@ -1,0 +1,36 @@
+namespace Types;
+
+
+struct String {
+    value: string;
+
+    constructor(val: string) {
+        this.value = val;
+    }
+}
+
+struct Int {
+    value: int;
+
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> String {
+        const str: string = intToString(this.value);
+        const strObj: String = new String(str);
+        return strObj;
+    }
+}
+
+// Just testing functions within this file to see if they work.
+function printString(s: String) -> void {
+    printStr(s.value);
+    return;
+}
+
+function main(argc: int, argv: string[]) -> void {
+    const testString: String = "Types Test";
+    printString(testString);
+    return;
+}

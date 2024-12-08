@@ -201,3 +201,8 @@ void dumpSymbolTableCXX(CompilerState state)
 {
     dumpSymbolTable(state);
 }
+
+void freeAll(void *ptr)
+{
+    free(ptr);
+}

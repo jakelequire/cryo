@@ -67,6 +67,18 @@ namespace Cryo
         }
     }
 
+    llvm::Function *Functions::getFunction(std::string functionName)
+    {
+        CryoContext &context = compiler.getContext();
+        llvm::Function *function = context.module->getFunction(functionName);
+        if (!function)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            CONDITION_FAILED;
+        }
+        return function;
+    }
+
     // -----------------------------------------------------------------------------------------------
 
     void Functions::createFunctionDeclaration(ASTNode *node)
@@ -83,8 +95,16 @@ namespace Cryo
         assert(functionNode != nullptr);
 
         // Get the function name
-        char *functionName = functionNode->name;
+        std::string functionName = std::string(functionNode->name);
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
+
+        // Check if the function is the main function
+        if (functionName.compare("main") == 0)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Main Function Found, creating entry point");
+            this->createCryoMainFunction(node);
+            return;
+        }
 
         // Get the return type
         DataType *returnType = functionNode->type;
@@ -112,7 +132,7 @@ namespace Cryo
                 continue;
             }
 
-            if (_argType->container->baseType == PRIM_INT)
+            else if (_argType->container->baseType == PRIM_INT)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting int to LLVM type");
                 llvm::Type *argType = types.getType(_argType, 0);
@@ -120,8 +140,20 @@ namespace Cryo
                 continue;
             }
 
-            // llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
-            // argTypes.push_back(argType);
+            else if (_argType->container->custom.structDef)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting struct to LLVM type");
+                llvm::Type *argType = types.getType(_argType, 0);
+                argTypes.push_back(argType->getPointerTo());
+                continue;
+            }
+
+            else
+            {
+
+                llvm::Type *argType = compiler.getTypes().getType(argNode->type, 0);
+                argTypes.push_back(argType);
+            }
         }
 
         // Get the function Body
@@ -269,7 +301,7 @@ namespace Cryo
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement);
-                    llvm::Type *returnType = types.getType(createPrimitiveStringType(), _len);
+                    llvm::Type *returnType = types.getType(createPrimitiveStringType(_len), _len);
                     llvm::Value *returnValue = generator.getInitilizerValue(statement);
                     compiler.getContext().builder.CreateRet(returnValue);
 
@@ -351,6 +383,7 @@ namespace Cryo
     {
         Generator &generator = compiler.getGenerator();
         CryoContext &cryoContext = compiler.getContext();
+        Structs &structs = compiler.getStructs();
         if (node->metaData->type != NODE_RETURN_STATEMENT)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Node is not a return statement");
@@ -364,6 +397,18 @@ namespace Cryo
 
         DataType *returnType = returnNode->type;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
+
+        if (!returnNode->expression && returnType->container->primitive != PRIM_VOID)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Return expression is null");
+            CONDITION_FAILED;
+        }
+        if (!returnNode->expression && returnType->container->primitive == PRIM_VOID)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return expression is null");
+            cryoContext.builder.CreateRetVoid();
+            return;
+        }
 
         CryoNodeType nodeType = returnNode->expression->metaData->type;
         std::cout << "Return Node Type: " << CryoNodeTypeToString(nodeType) << std::endl;
@@ -395,11 +440,43 @@ namespace Cryo
                 CONDITION_FAILED;
             }
 
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Getting var type, name: " + varName);
+            DataType *varDataType = stVarNode->dataType;
+            if (!varDataType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable data type not found");
+                CONDITION_FAILED;
+            }
+
+            std::string varDataTypeStr;
+            if (varDataType->container->baseType == STRUCT_TYPE)
+            {
+                varDataTypeStr = varDataType->container->custom.structDef->name;
+            }
+            else
+            {
+                varDataTypeStr = DataTypeToString(varDataType);
+            }
+
+            llvm::Type *existingStructTy = structs.findExistingStruct(varDataTypeStr);
+            if (existingStructTy)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Struct Type");
+                DevDebugger::logLLVMType(existingStructTy);
+                llvm::Value *returnValue = cryoContext.builder.CreateLoad(existingStructTy, varValue, varName + ".retload");
+                cryoContext.builder.CreateRet(returnValue);
+                return;
+            }
+
             llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(varValue);
             llvm::Type *instTy = types.parseInstForType(inst);
 
-            llvm::Value *returnValue = cryoContext.builder.CreateLoad(instTy, varValue, varName + ".retload");
+            llvm::Value *returnValue = cryoContext.builder.CreateLoad(varValue->getType(), varValue, varName + ".retload");
             cryoContext.builder.CreateRet(returnValue);
+
+            // Get the current Function
+            llvm::Function *currentFunction = cryoContext.currentFunction;
+            DevDebugger::logLLVMFunction(currentFunction);
 
             break;
         }
@@ -408,6 +485,24 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Binary Expression");
             llvm::Value *returnValue = generator.getInitilizerValue(node);
             cryoContext.builder.CreateRet(returnValue);
+            break;
+        }
+        case NODE_FUNCTION_CALL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
+            ASTNode *functionCall = returnNode->expression;
+            llvm::Value *funcCallVal = createFunctionCall(functionCall);
+            // Return the value of the function call
+            llvm::Function *currentFunction = cryoContext.currentFunction;
+            llvm::Type *returnType = currentFunction->getReturnType();
+            if (returnType->isVoidTy())
+            {
+                cryoContext.builder.CreateRetVoid();
+            }
+            else
+            {
+                cryoContext.builder.CreateRet(funcCallVal);
+            }
             break;
         }
         default:
@@ -443,10 +538,14 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        std::cout << "\n\nReturn Expression: " << std::endl;
-        std::cout << "Return Type: " << DataTypeToString(returnType) << std::endl;
-        std::cout << "Return Expression Type: " << CryoNodeTypeToString(returnExpression->metaData->type) << std::endl;
-        DevDebugger::logNode(returnExpression);
+        llvm::Value *returnValue = compiler.getGenerator().getInitilizerValue(returnExpression);
+        if (!returnValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to get return value");
+            CONDITION_FAILED;
+        }
+
+        return returnValue;
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -468,15 +567,22 @@ namespace Cryo
             ASTNode *statement = statements[i];
             if (statement->metaData->type == NODE_RETURN_STATEMENT)
             {
-                DataType *nodeDataType = statement->data.returnStatement->type;
+                CryoReturnNode *returnNode = statement->data.returnStatement;
+                DataType *nodeDataType = returnNode->type;
+
+                if (!returnNode->expression)
+                {
+                    llvm::Type *retType = types.getReturnType(createPrimitiveVoidType());
+                    return retType;
+                }
 
                 switch (nodeDataType->container->baseType)
                 {
                 case PRIM_INT:
                 {
-
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning int");
                     llvm::Type *retType = types.getType(createPrimitiveIntType(), 0);
+                    DevDebugger::logLLVMType(retType);
                     return retType;
                 }
                 case PRIM_STRING:
@@ -484,7 +590,7 @@ namespace Cryo
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement->data.returnStatement->expression);
                     // +1 for the null terminator
-                    returnType = types.getType(createPrimitiveStringType(), _len + 1);
+                    returnType = types.getType(createPrimitiveStringType(_len), _len + 1);
                     break;
                 }
                 case PRIM_VOID:
@@ -528,6 +634,14 @@ namespace Cryo
         // Get the function name
         char *functionName = functionNode->name;
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
+
+        // Check if the function already exists
+        if (doesExternFunctionExist(functionName))
+        {
+            // If the function is already found, we will throw a warning but continue
+            DevDebugger::logMessage("WARN", __LINE__, "Functions", "Function already exists");
+            return;
+        }
 
         // Get the return type
         DataType *returnType = functionNode->type;
@@ -582,219 +696,22 @@ namespace Cryo
         return;
     }
 
-    // -----------------------------------------------------------------------------------------------
-
-    llvm::Value *Functions::createFunctionCall(ASTNode *node)
+    bool Functions::doesExternFunctionExist(std::string functionName)
     {
-        Generator &generator = compiler.getGenerator();
-        Arrays &arrays = compiler.getArrays();
-        Variables &variables = compiler.getVariables();
-        OldTypes &types = compiler.getTypes();
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call");
-
-        FunctionCallNode *functionCallNode = node->data.functionCall;
-        assert(functionCallNode != nullptr);
-
-        // Get the function name
-        char *functionName = functionCallNode->name;
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
-
-        // get the current modules name
-        std::string moduleName = compiler.getContext().module->getName().str();
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Module Name: " + moduleName);
-
-        // Get the symbol table
-        SymTableNode symbolTable = compiler.getSymTable().getSymTableNode(moduleName);
-
-        // Get the function arguments
-        int argCount = functionCallNode->argCount;
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Call Argument Count: " + std::to_string(argCount));
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Callee Name: " + std::string(functionName));
-
-        // STFunction *stFunction = compiler.getSymTable().getFunction(compiler.getContext().currentNamespace, functionName);
-
-        // Get the argument values
-        std::vector<llvm::Value *> argValues;
-        for (int i = 0; i < argCount; ++i)
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Processing Argument " + std::to_string(i + 1) + " of " + std::to_string(argCount));
-            ASTNode *argNode = functionCallNode->args[i];
-            CryoNodeType argNodeType = argNode->metaData->type;
-
-            std::cout << "===----------------------===" << std::endl;
-            std::cout << "Argument #: " << i + 1 << std::endl;
-            std::cout << "Function Name: " << functionName << std::endl;
-            std::cout << "Argument Node Type: " << CryoNodeTypeToString(argNodeType) << std::endl;
-            std::cout << "===----------------------===" << std::endl;
-
-            std::string funcName = std::string(functionName);
-            std::cout << "\n\nFunction Name: " << funcName << "\n";
-
-            // Callee's name:
-            llvm::Function *calleeF = compiler.getContext().module->getFunction(funcName);
-            if (!calleeF)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
-                CONDITION_FAILED;
-            }
-
-            // Get the argument type values
-            llvm::FunctionType *calleeFT = calleeF->getFunctionType();
-            llvm::Type *expectedType = calleeFT->getParamType(i);
-            std::cout << "Argument Type: " << std::endl;
-
-            // Get the current callee function return type
-            llvm::Type *returnType = calleeF->getReturnType();
-
-            // Get the argument value
-            switch (argNodeType)
-            {
-            case NODE_VAR_NAME:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a variable name");
-                VariableNameNode *varNameNode = argNode->data.varName;
-                assert(varNameNode != nullptr);
-
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument Variable Name: " + std::string(varNameNode->varName));
-
-                llvm::Value *argNode = createVarNameCall(varNameNode);
-                if (!argNode)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-
-                argValues.push_back(argNode);
-                break;
-            }
-            case NODE_LITERAL_EXPR:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a literal expression");
-                LiteralNode *literalNode = argNode->data.literal;
-                assert(literalNode != nullptr);
-
-                llvm::Value *argNode = createLiteralCall(literalNode);
-                if (!argNode)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-
-                argValues.push_back(argNode);
-                break;
-            }
-            case NODE_VAR_DECLARATION:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a variable declaration");
-                CryoVariableNode *varNode = argNode->data.varDecl;
-                assert(varNode != nullptr);
-
-                llvm::Value *argNode = createVarDeclCall(varNode);
-                if (!argNode)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-
-                argValues.push_back(argNode);
-                break;
-            }
-            case NODE_ARRAY_LITERAL:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is an array literal");
-                CryoArrayNode *arrayNode = argNode->data.array;
-                assert(arrayNode != nullptr);
-
-                llvm::Value *argNode = createArrayCall(arrayNode);
-                if (!argNode)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-
-                argValues.push_back(argNode);
-                break;
-            }
-            case NODE_INDEX_EXPR:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is an index expression");
-                IndexExprNode *indexNode = argNode->data.indexExpr;
-                assert(indexNode != nullptr);
-
-                llvm::Value *argNode = createIndexExprCall(indexNode);
-                if (!argNode)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-
-                argValues.push_back(argNode);
-                break;
-            }
-            case NODE_PROPERTY_ACCESS:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a property access");
-                PropertyAccessNode *propNode = argNode->data.propertyAccess;
-                assert(propNode != nullptr);
-
-                llvm::Value *argNode = createPropertyAccessCall(propNode);
-                if (!argNode)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-
-                argValues.push_back(argNode);
-                break;
-            }
-            default:
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
-                std::cout << "Received: " << CryoNodeTypeToString(argNodeType) << std::endl;
-                compiler.dumpModule();
-                CONDITION_FAILED;
-            }
-            }
-        }
-
-        // If there are no arguments, just create the function call
-        if (argCount == 0)
-        {
-            llvm::Function *function = compiler.getContext().module->getFunction(functionName);
-            if (!function)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
-                CONDITION_FAILED;
-            }
-
-            llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
-            if (!functionCall)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function call not created");
-                CONDITION_FAILED;
-            }
-
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Call Created");
-
-            return functionCall;
-        }
-
-        // If there are arguments, create the function call with the arguments
-        // We will verify the arguments in the function call
         llvm::Function *function = compiler.getContext().module->getFunction(functionName);
-        std::vector<llvm::Value *> verifiedArgs = verifyCalleeArguments(function, argValues);
-
-        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, verifiedArgs);
-        if (!functionCall)
+        if (!function)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function call not created");
-            CONDITION_FAILED;
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            return false;
         }
-
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Call Created");
-
-        return functionCall;
+        else
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function found");
+            return true;
+        }
     }
+
+    // -----------------------------------------------------------------------------------------------
 
     llvm::Value *Functions::createParameter(llvm::Argument *param, llvm::Type *argTypes, ASTNode *paramNode)
     {
@@ -815,17 +732,27 @@ namespace Cryo
 
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(param, alloca);
         storeInst->setAlignment(llvm::Align(8));
+
         // Load the value of the parameter
-        // llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
+        llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
 
         std::string _paramName = param->getName().str();
-        compiler.getContext().namedValues[param->getName().str()] = alloca;
+        compiler.getContext().namedValues[param->getName().str()] = loadInst;
 
-        symTable.addParamAsVariable(namespaceName, _paramName, alloca, argTypes, storeInst);
+        DataType *paramDataType = paramNode->data.param->type;
+
+        symTable.addParamAsVariable(namespaceName, _paramName, paramDataType, loadInst, argTypes, storeInst);
+        DataType *paramType = paramNode->data.param->type;
+        if (!paramType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Parameter type not found");
+            CONDITION_FAILED;
+        }
+        symTable.addDataTypeToVar(namespaceName, _paramName, paramType);
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
-        return alloca;
+        return loadInst;
     }
 
     llvm::Value *Functions::createParamFromParamNode(ASTNode *paramNode)
@@ -854,7 +781,6 @@ namespace Cryo
         if (!insertBlock)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Insert block not found");
-            compiler.dumpModule();
             CONDITION_FAILED;
         }
 
@@ -869,7 +795,8 @@ namespace Cryo
         std::string _paramName = paramName;
         compiler.getContext().namedValues[paramName] = alloca;
 
-        symTable.addParamAsVariable(namespaceName, _paramName, alloca, paramLLVMType, storeInst);
+        symTable.addParamAsVariable(namespaceName, _paramName, paramType, alloca, paramLLVMType, storeInst);
+        DataType *paramDataType = paramNode->data.param->type;
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
@@ -878,407 +805,6 @@ namespace Cryo
 
     llvm::Value *Functions::anyTypeParam(std::string functionName, llvm::Value *argValue)
     {
-    }
-
-    void Functions::createScopedFunctionCall(ASTNode *node)
-    {
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Scoped Function Call");
-
-        ScopedFunctionCallNode *functionCallNode = node->data.scopedFunctionCall;
-        assert(functionCallNode != nullptr);
-
-        // Get the function name
-        char *functionName = functionCallNode->functionName;
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Name: " + std::string(functionName));
-
-        // Get the function arguments
-        int argCount = functionCallNode->argCount;
-        std::cout << "Argument Count: " << argCount << std::endl;
-
-        // Get the argument values
-        std::vector<llvm::Value *> argValues;
-        for (int i = 0; i < argCount; ++i)
-        {
-            ASTNode *argNode = functionCallNode->args[i];
-            CryoNodeType argType = argNode->metaData->type;
-            switch (argType)
-            {
-            case NODE_VAR_DECLARATION:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Variable Declaration");
-                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
-                if (!argValue)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-                argValues.push_back(argValue);
-                break;
-            }
-            case NODE_LITERAL_EXPR:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Literal Expression");
-                llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
-                if (!argValue)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
-                    CONDITION_FAILED;
-                }
-                // Create a new variable for the literal
-                llvm::Value *literalVar = compiler.getVariables().createLocalVariable(argNode);
-                if (!literalVar)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
-                    CONDITION_FAILED;
-                }
-
-                // Store the literal value in the variable
-                compiler.getContext().builder.CreateStore(argValue, literalVar);
-                argValues.push_back(literalVar);
-                break;
-            }
-            default:
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
-                CONDITION_FAILED;
-            }
-            }
-        }
-
-        // Get the function
-        llvm::Function *function = compiler.getContext().module->getFunction(functionName);
-        if (!function)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
-            CONDITION_FAILED;
-        }
-
-        // If there are no arguments, just create the function call
-        llvm::Value *functionCall = compiler.getContext().builder.CreateCall(function, argValues);
-        if (!functionCall)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function call not created");
-            CONDITION_FAILED;
-        }
-
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Scoped Function Call Created");
-
-        return;
-    }
-
-    /// ### ============================================================================= ###
-    /// ###
-    /// ### Specialized Functions (For Function Calls Specifically)
-    /// ### These functions are used to handle specific types of function calls
-    /// ###
-    /// ### ============================================================================= ###
-
-    llvm::Value *Functions::createPropertyAccessCall(PropertyAccessNode *propAccess)
-    {
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Handling property access");
-
-        ASTNode *objNode = propAccess->object;
-        std::string structVarName;
-        if (objNode->metaData->type == NODE_VAR_DECLARATION)
-        {
-            structVarName = std::string(objNode->data.varDecl->name);
-        }
-        std::string fieldName = std::string(propAccess->propertyName);
-        std::string namespaceName = compiler.getContext().currentNamespace;
-
-        DevDebugger::logMessage("INFO", __LINE__, "Functions",
-                                "Accessing " + structVarName + "." + fieldName);
-
-        // Get the struct variable from symbol table
-        STVariable *var = compiler.getSymTable().getVariable(namespaceName, structVarName);
-        if (!var)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
-                                    "Struct variable not found: " + structVarName);
-            CONDITION_FAILED;
-        }
-
-        DevDebugger::logMessage("INFO", __LINE__, "Functions",
-                                "Struct variable found: " + structVarName);
-
-        // Get the struct pointer and type
-        llvm::Value *structPtr = var->LLVMValue;
-
-        DataType *structDataType = var->dataType;
-        StructType *structDef = structDataType->container->custom.structDef;
-        std::string structTypeName = std::string(structDataType->container->custom.structDef->name);
-        llvm::StructType *structType = compiler.getContext().getStruct(structTypeName);
-        if (!structType)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
-                                    "Struct type not found");
-            CONDITION_FAILED;
-        }
-
-        DevDebugger::logMessage("INFO", __LINE__, "Functions",
-                                "Struct type found: " + structType->getName().str());
-
-        // Find field index
-        int fieldIndex = -1;
-        int propertyCount = structDef->propertyCount;
-        for (int i = 0; i < propertyCount; i++)
-        {
-            PropertyNode *prop = structDef->properties[i]->data.property;
-            if (std::string(prop->name) == fieldName)
-            {
-                fieldIndex = i;
-                break;
-            }
-        }
-
-        if (fieldIndex == -1)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
-                                    "Field not found: " + fieldName);
-            CONDITION_FAILED;
-        }
-
-        // Get field pointer using GEP
-        llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
-            structType,
-            structPtr,
-            fieldIndex,
-            structVarName + "." + fieldName);
-
-        // Load and return field value
-        return compiler.getContext().builder.CreateLoad(
-            structType->getElementType(fieldIndex),
-            fieldPtr,
-            structVarName + "." + fieldName + ".load");
-    }
-
-    llvm::Value *Functions::createVarNameCall(VariableNameNode *varNameNode)
-    {
-        Variables &variables = compiler.getVariables();
-        OldTypes &types = compiler.getTypes();
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Variable Name Call");
-
-        std::string varName = std::string(varNameNode->varName);
-        std::string namespaceName = compiler.getContext().currentNamespace;
-
-        STVariable *var = compiler.getSymTable().getVariable(namespaceName, varName);
-        if (!var)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-            CONDITION_FAILED;
-        }
-
-        std::cout << "@createVarNameCall Variable Name: " << varName << std::endl;
-        llvm::Value *varValue = var->LLVMValue;
-        if (!varValue)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
-            CONDITION_FAILED;
-        }
-
-        llvm::StoreInst *storeInst = var->LLVMStoreInst;
-        if (!storeInst)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Store instruction not found");
-            CONDITION_FAILED;
-        }
-
-        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(storeInst);
-        llvm::Type *varInstType = types.parseInstForType(inst);
-
-        // This is to dereference an integer type
-        bool isIntType = varInstType->isIntegerTy();
-        if (varValue->getType()->isPointerTy() && isIntType)
-        {
-            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(storeInst);
-            std::cout << "Instruction: " << std::endl;
-            DevDebugger::logLLVMInst(inst);
-            llvm::Type *varInstType = types.parseInstForType(inst);
-            llvm::LoadInst *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, varValue, varName + ".load.funcCall");
-            if (!varLoadValue)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not loaded");
-                CONDITION_FAILED;
-            }
-            varLoadValue->setAlignment(llvm::Align(8));
-
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Var Name Call Created with dereference. For Variable: " + varName);
-            return varLoadValue;
-        }
-
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Var Name Call Created without dereference. For Variable: " + varName);
-        return varValue;
-    }
-
-    llvm::Value *Functions::createVarDeclCall(CryoVariableNode *varDeclNode)
-    {
-        IRSymTable &symTable = compiler.getSymTable();
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Variable Declaration Call");
-
-        std::string varName = std::string(varDeclNode->name);
-
-        std::string namespaceName = compiler.getContext().currentNamespace;
-
-        STVariable *var = compiler.getSymTable().getVariable(namespaceName, varName);
-        if (!var)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-            CONDITION_FAILED;
-        }
-
-        std::cout << "@createVarDeclCall Variable Name: " << varName << std::endl;
-        STVariable *varValueNode = symTable.getVariable(namespaceName, varName);
-        if (!varValueNode)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable not found");
-            CONDITION_FAILED;
-        }
-        llvm::Value *varValue = varValueNode->LLVMValue;
-        if (!varValue)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found, creating variable");
-            CryoNodeType nodeType = varDeclNode->initializer->metaData->type;
-            std::cout << "Node Type of VarDecl: " << CryoNodeTypeToString(nodeType) << std::endl;
-            DataType *dataType = varDeclNode->type;
-            std::cout << "Data Type of VarDecl: " << DataTypeToString(dataType) << std::endl;
-
-            if (nodeType == NODE_LITERAL_EXPR)
-            {
-                llvm::Value *varValue = compiler.getGenerator().getLiteralValue(varDeclNode->initializer->data.literal);
-                if (!varValue)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not created");
-                    CONDITION_FAILED;
-                }
-                return varValue;
-            }
-            return varValue;
-        }
-        return varValue;
-    }
-
-    llvm::Value *Functions::createLiteralCall(LiteralNode *literalNode)
-    {
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Literal Call");
-
-        llvm::Value *literalValue = compiler.getGenerator().getLiteralValue(literalNode);
-        if (!literalValue)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal value not found");
-            CONDITION_FAILED;
-        }
-
-        DataType *dataType = literalNode->type;
-        if (dataType->container->baseType == PRIMITIVE_TYPE)
-        {
-            switch (dataType->container->primitive)
-            {
-            case PRIM_INT:
-            {
-                // Create the integer literal
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
-                int literalValue = literalNode->value.intValue;
-                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
-                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
-                if (!literalVarPtr)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
-                    CONDITION_FAILED;
-                }
-
-                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
-
-                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
-                if (!literalVar)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
-                    CONDITION_FAILED;
-                }
-                literalVar->setAlignment(llvm::Align(8));
-
-                // Add the literal to the named values
-                std::string literalName = literalVarPtr->getName().str();
-                compiler.getContext().namedValues[literalName] = literalVarPtr;
-
-                return literalVar;
-            }
-            case PRIM_STRING:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
-                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str.ptr");
-                if (!literalVarPtr)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
-                    CONDITION_FAILED;
-                }
-                llvm::Value *literalVar = compiler.getContext().builder.CreateStore(literalValue, literalVarPtr);
-                if (!literalVar)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not stored");
-                    CONDITION_FAILED;
-                }
-
-                return literalVarPtr;
-            }
-            case PRIM_BOOLEAN:
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(), 0);
-                bool literalValue = literalNode->value.booleanValue;
-                llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
-                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
-                if (!literalVarPtr)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
-                    CONDITION_FAILED;
-                }
-
-                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalBool, literalVarPtr);
-
-                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.bool.load.funcCall");
-                if (!literalVar)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
-                    CONDITION_FAILED;
-                }
-                literalVar->setAlignment(llvm::Align(8));
-
-                // Add the literal to the named values
-                std::string literalName = literalVarPtr->getName().str();
-                compiler.getContext().namedValues[literalName] = literalVarPtr;
-
-                return literalVar;
-            }
-            default:
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown literal type");
-                CONDITION_FAILED;
-            }
-            }
-        }
-
-        return nullptr;
-    }
-
-    llvm::Value *Functions::createIndexExprCall(IndexExprNode *indexNode)
-    {
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Index Expression Call");
-
-        DEBUG_BREAKPOINT;
-    }
-
-    llvm::Value *Functions::createFunctionCallCall(FunctionCallNode *functionCallNode)
-    {
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call Call");
-
-        DEBUG_BREAKPOINT;
-    }
-
-    llvm::Value *Functions::createArrayCall(CryoArrayNode *arrayNode)
-    {
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Array Call");
-
         DEBUG_BREAKPOINT;
     }
 
@@ -1420,6 +946,24 @@ namespace Cryo
         }
 
         return argVar;
+    }
+
+    llvm::Function *Functions::findClassMethod(std::string className, std::string methodName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Finding Class Method");
+        std::cout << "Class Name: " << className << std::endl;
+        std::cout << "Method Name: " << methodName << std::endl;
+
+        // All methods have the syntax of `class.{className}.{methodName}`
+        std::string classMethodName = "class." + className + "." + methodName;
+        llvm::Function *method = compiler.getContext().module->getFunction(classMethodName);
+        if (!method)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Method not found");
+            CONDITION_FAILED;
+        }
+
+        return method;
     }
 
 } // namespace Cryo

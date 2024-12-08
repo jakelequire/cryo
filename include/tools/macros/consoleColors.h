@@ -63,6 +63,7 @@
 
 #define BG_RESET "\033[49m"
 #define ITALIC "\033[3m"
+#define UNDERLINE "\033[4m"
 
 // Makes text 2x larger
 #define FONT_LARGE "\x1b#3"

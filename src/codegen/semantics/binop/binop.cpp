@@ -112,6 +112,17 @@ namespace Cryo
                 }
                 break;
             }
+            case NODE_LITERAL_EXPR:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Getting left value");
+                leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+                if (!leftValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                    CONDITION_FAILED;
+                }
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Getting left value");
@@ -151,6 +162,17 @@ namespace Cryo
                         DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create temporary value for pointer");
                         CONDITION_FAILED;
                     }
+                }
+                break;
+            }
+            case NODE_LITERAL_EXPR:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Getting right value");
+                rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
+                if (!rightValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                    CONDITION_FAILED;
                 }
                 break;
             }
@@ -216,17 +238,23 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        DataType *leftDataType = node->data.bin_op->left->data.literal->type;
-        DataType *rightDataType = node->data.bin_op->right->data.literal->type;
-        llvm::Type *leftType = types.getType(leftDataType, 0);
-        llvm::Type *rightType = types.getType(rightDataType, 0);
-        bool sameType = leftType == rightType;
-
-        if (!leftType || !rightType)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get types for binary expression");
-            CONDITION_FAILED;
-        }
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Getting data types for binary expression");
+        logASTNode(node);
+        // DataType *leftDataType = node->data.bin_op->left->data.literal->type;
+        // DataType *rightDataType = node->data.bin_op->right->data.literal->type;
+        // llvm::Type *leftType = types.getType(leftDataType, 0);
+        // llvm::Type *rightType = types.getType(rightDataType, 0);
+        // bool sameType = leftType == rightType;
+        // if (!sameType)
+        // {
+        //     DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Operands are not the same type");
+        //     CONDITION_FAILED;
+        // }
+        // if (!leftType || !rightType)
+        // {
+        //     DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get types for binary expression");
+        //     CONDITION_FAILED;
+        // }
 
         llvm::Value *result = nullptr;
         CryoOperatorType operatorType = node->data.bin_op->op;
@@ -234,45 +262,57 @@ namespace Cryo
         {
         case OPERATOR_ADD:
         {
-            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp", false, true);
-            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(result);
-            inst->setHasNoSignedWrap(true);
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating addition expression");
+            result = compiler.getContext().builder.CreateAdd(leftValue, rightValue, "addtmp");
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Setting no signed wrap");
             break;
         }
         case OPERATOR_SUB:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating subtraction expression");
             result = compiler.getContext().builder.CreateSub(leftValue, rightValue, "subtmp");
             break;
         case OPERATOR_MUL:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating multiplication expression");
             result = compiler.getContext().builder.CreateMul(leftValue, rightValue, "multmp");
             break;
         case OPERATOR_DIV:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating division expression");
             result = compiler.getContext().builder.CreateSDiv(leftValue, rightValue, "divtmp");
             break;
         case OPERATOR_MOD:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating modulo expression");
             result = compiler.getContext().builder.CreateSRem(leftValue, rightValue, "modtmp");
             break;
         case OPERATOR_AND:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating and expression");
             result = compiler.getContext().builder.CreateAnd(leftValue, rightValue, "andtmp");
             break;
         case OPERATOR_OR:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating or expression");
             result = compiler.getContext().builder.CreateOr(leftValue, rightValue, "ortmp");
             break;
         case OPERATOR_LT:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating less than expression");
             result = compiler.getContext().builder.CreateICmpSLT(leftValue, rightValue, "ltcmp");
             break;
         case OPERATOR_LTE:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating less than or equal expression");
             result = compiler.getContext().builder.CreateICmpSLE(leftValue, rightValue, "ltecmp");
             break;
         case OPERATOR_GT:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating greater than expression");
             result = compiler.getContext().builder.CreateICmpSGT(leftValue, rightValue, "gtcmp");
             break;
         case OPERATOR_GTE:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating greater than or equal expression");
             result = compiler.getContext().builder.CreateICmpSGE(leftValue, rightValue, "gtecmp");
             break;
         case OPERATOR_EQ:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating equal expression");
             result = compiler.getContext().builder.CreateICmpEQ(leftValue, rightValue, "eqcmp");
             break;
         case OPERATOR_NEQ:
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating not equal expression");
             result = compiler.getContext().builder.CreateICmpNE(leftValue, rightValue, "neqcmp");
             break;
         default:
@@ -286,6 +326,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Binary expression created successfully");
         return result;
     }
 

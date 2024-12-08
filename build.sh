@@ -88,6 +88,14 @@ function usage {
     # No arguments - compiles the project how it is
     # -libs - compiles the project libs
     echo "Usage: $0 [-f {filename}]"
+    echo "AST Dump: $0 --ast-dump"
+    echo "Options:"
+    echo "  -f, --file          The input file to compile"
+    echo "  -d, --debug-level   The debug level for the compiler"
+    echo "  -L, --enable-logs   Enable specific logs"
+    echo "  -o, --output        The output file"
+    echo "  --ast-dump          Dump the AST"
+    echo "  -h, --help          Display this help and exit"
     exit 1
 }
 

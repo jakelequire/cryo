@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 // Primitive int Type `(default/baseline)`
 DataType *createPrimitiveIntType(void)
@@ -37,11 +37,12 @@ DataType *createPrimitiveFloatType(void)
 }
 
 // Primitive string Type creation `(default/baseline)`
-DataType *createPrimitiveStringType(void)
+DataType *createPrimitiveStringType(int length)
 {
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_STRING;
+    container->length = length;
 
     return wrapTypeContainer(container);
 }
@@ -76,6 +77,16 @@ DataType *createPrimitiveNullType(void)
     return wrapTypeContainer(container);
 }
 
+// Primitive any Type creation `(default/baseline)`
+DataType *createPrimitiveAnyType(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_ANY;
+
+    return wrapTypeContainer(container);
+}
+
 // Unknown Type `(will be resolved later in the compiler)`
 DataType *createUnknownType(void)
 {
@@ -96,4 +107,46 @@ TypeContainer *createPrimitiveType(PrimitiveDataType primType)
     container->primitive = primType;
 
     return container;
+}
+
+PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
+{
+    if (strcmp(typeStr, "int") == 0)
+    {
+        return PRIM_INT;
+    }
+    else if (strcmp(typeStr, "float") == 0)
+    {
+        return PRIM_FLOAT;
+    }
+    else if (strcmp(typeStr, "string") == 0)
+    {
+        return PRIM_STRING;
+    }
+    else if (strcmp(typeStr, "boolean") == 0)
+    {
+        return PRIM_BOOLEAN;
+    }
+    else if (strcmp(typeStr, "void") == 0)
+    {
+        return PRIM_VOID;
+    }
+    else if (strcmp(typeStr, "null") == 0)
+    {
+        return PRIM_NULL;
+    }
+    else
+    {
+        return PRIM_UNKNOWN;
+    }
+}
+
+bool isPrimitiveType(const char *typeStr)
+{
+    return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
+}
+
+bool isStringType(DataType *type)
+{
+    return type->container->baseType == PRIMITIVE_TYPE && type->container->primitive == PRIM_STRING;
 }

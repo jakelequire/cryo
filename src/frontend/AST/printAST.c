@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "frontend/AST.h"
 
-// <printAST>
+/// @deprecated This function is no longer used
 void printAST(ASTNode *node, int indent, Arena *arena)
 {
     if (!node)

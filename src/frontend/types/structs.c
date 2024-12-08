@@ -14,10 +14,32 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 // # ========================================================= #
 // # Structs
+
+// Create an empty struct definition
+DataType *createStructDefinition(const char *structName)
+{
+    StructType *structDef = (StructType *)malloc(sizeof(StructType));
+    if (!structDef)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate StructType\n");
+        return NULL;
+    }
+
+    structDef->name = strdup(structName);
+    structDef->size = 0;
+    structDef->propertyCount = 0;
+    structDef->methodCount = 0;
+    structDef->properties = NULL;
+    structDef->methods = NULL;
+    structDef->hasDefaultValue = false;
+    structDef->hasConstructor = false;
+
+    return wrapStructType(structDef);
+}
 
 // Create struct type
 TypeContainer *createStructType(const char *name, StructType *structDef)
@@ -29,6 +51,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
     container->baseType = STRUCT_TYPE;
     container->custom.name = name;
     container->custom.structDef = structDef;
+    container->primitive = PRIM_CUSTOM;
 
     return container;
 }
@@ -52,7 +75,13 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
     structType->properties = NULL;
     structType->methods = NULL;
     structType->hasDefaultValue = structNode->data.structNode->hasDefaultValue;
+
     structType->hasConstructor = structNode->data.structNode->hasConstructor;
+    structType->ctorParamCount = structNode->data.structNode->ctorArgCount;
+    structType->ctorParamCapacity = structNode->data.structNode->ctorArgCapacity;
+    structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs);
+
+    printf("Struct Created, name: %s\n", structType->name);
 
     return structType;
 }
@@ -68,11 +97,21 @@ DataType *createDataTypeFromStructNode(
         fprintf(stderr, "[TypeTable] Error: Failed to create struct type from node.\n");
         CONDITION_FAILED;
     }
-
+    logMessage("INFO", __LINE__, "DataTypes", "Created struct type from node: %s", structType->name);
     addPropertiesToStruct(properties, propCount, structType);
     addMethodsToStruct(methods, methodCount, structType);
 
-    return wrapTypeContainer(createStructType(structType->name, structType));
+    logMessage("INFO", __LINE__, "DataTypes", "Creating data type from struct node: %s", structType->name);
+    const char *typeName = structType->name;
+    logMessage("INFO", __LINE__, "DataTypes", "Type name: %s", typeName);
+    TypeContainer *structContainer = createStructType(typeName, structType);
+    logMessage("INFO", __LINE__, "DataTypes", "Created struct type: %s", structType->name);
+
+    DataType *dataType = wrapTypeContainer(structContainer);
+    dataType->container->baseType = STRUCT_TYPE;
+    dataType->container->primitive = PRIM_CUSTOM;
+
+    return dataType;
 }
 
 void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)
@@ -121,4 +160,91 @@ void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structTy
     {
         structType->methods[structType->methodCount++] = methods[i];
     }
+}
+
+int getPropertyAccessIndex(DataType *type, const char *propertyName)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
+        return -1;
+    }
+
+    if (type->container->baseType == STRUCT_TYPE)
+    {
+        StructType *structType = type->container->custom.structDef;
+        if (!structType)
+        {
+            fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
+            return -1;
+        }
+
+        for (int i = 0; i < structType->propertyCount; i++)
+        {
+            ASTNode *property = structType->properties[i];
+            if (strcmp(property->data.property->name, propertyName) == 0)
+            {
+                return i;
+            }
+        }
+
+        fprintf(stderr, "[TypeTable] Error: Property '%s' not found in struct '%s'.\n", propertyName, structType->name);
+        return -1;
+    }
+    else
+    {
+        fprintf(stderr, "[TypeTable] Error: Property access on non-struct type.\n");
+        return -1;
+    }
+}
+
+int calculateStructSize(StructType *structType)
+{
+    if (!structType)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
+        return -1;
+    }
+
+    int size = 0;
+    for (int i = 0; i < structType->propertyCount; i++)
+    {
+        ASTNode *property = structType->properties[i];
+        DataType *propertyType = getDataTypeFromASTNode(property);
+        if (!propertyType)
+        {
+            fprintf(stderr, "[TypeTable] Error: Failed to get data type for property.\n");
+            return -1;
+        }
+
+        size += propertyType->container->size;
+    }
+
+    return size;
+}
+
+DataType *wrapStructType(StructType *structDef)
+{
+    TypeContainer *container = createStructType(structDef->name, structDef);
+    if (!container)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to wrap struct type.\n");
+        return NULL;
+    }
+
+    return wrapTypeContainer(container);
+}
+
+bool isStructDeclaration(TypeTable *table, const char *name)
+{
+    DataType *type = lookupType(table, name);
+    if (!type)
+        return false;
+
+    return type->container->baseType == STRUCT_TYPE;
+}
+
+bool isStructType(DataType *type)
+{
+    return type->container->baseType == STRUCT_TYPE;
 }

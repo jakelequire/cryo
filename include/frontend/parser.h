@@ -35,10 +35,10 @@
 #include "compiler/compiler.h"
 #include "settings/compilerSettings.h"
 #include "tools/macros/consoleColors.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 #define INITIAL_STATEMENT_CAPACITY 512
-#define INITIAL_PARAM_CAPACITY 8
+#define INITIAL_PARAM_CAPACITY 16
 #define MAX_ARGUMENTS 255
 
 typedef struct Lexer Lexer;
@@ -59,6 +59,7 @@ typedef struct ThisContext
     int propertyCount;
     ASTNode **methods;
     int methodCount;
+    bool isStatic;
 } ThisContext;
 
 /**
@@ -92,14 +93,13 @@ typedef struct ParsingContext
     /// int propertyCount;
     /// ASTNode **methods;
     /// int methodCount;
+    /// bool isStatic;
     ///```
     ThisContext *thisContext;
 
     // An array of the last 16 tokens
     Token lastTokens[16];
     int lastTokenCount;
-
-    //
 
     // Add other context flags as needed
 } ParsingContext;
@@ -133,7 +133,8 @@ int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *st
 void addStatementToProgram(ASTNode *program, CryoSymbolTable *table, ASTNode *statement, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @ASTNode_Parsing - Expressions & Statements*/
-void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseStaticKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, const char *functionName, const char *scopeName, TypeTable *typeTable);
 ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -144,6 +145,9 @@ ASTNode *parseExpressionStatement(Lexer *lexer, CryoSymbolTable *table, ParsingC
 ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, int minPrecedence, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseUnaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parsePrivateDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+void parseDebugger(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @ASTNode_Parsing - Blocks*/
 ASTNode *parseBlock(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -189,12 +193,6 @@ ASTNode *parseArrayIndexing(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 
 ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, char *varName, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
-/* @ASTNode_Parsing - Structures */
-ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
-ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
-ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData, TypeTable *typeTable);
-ASTNode *parseMethodDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
-
 ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
@@ -202,8 +200,6 @@ ASTNode *parseLHSIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
-
-bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 
 // # ============================================================ #
 
@@ -215,11 +211,67 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTa
 
 ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable);
 ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *typeTable);
+ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *instanceType,
+                         Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 void addTokenToContext(ParsingContext *context, Token token);
+void addStaticIdentifierToContext(ParsingContext *context, bool value);
 
 void logThisContext(ParsingContext *context);
 void logTokenArray(ParsingContext *context);
 void logParsingContext(ParsingContext *context);
+
+// # =========================================================================== #
+// # Struct & Type Parsing
+// # (typeParsing.c)
+// # =========================================================================== #
+
+ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData, TypeTable *typeTable);
+ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
+
+ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseStructInstance(const char *structName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeType parentNodeType, bool hasDefaultFlag);
+
+// # =========================================================================== #
+// # Class Parsing
+// # =========================================================================== #
+
+ASTNode *parseClassDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic,
+                        Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
+void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+
+void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
+                     Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
+                       Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
+                          Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+
+static void ensureCapacity(ASTNode **array, int *capacity, int count, int increment);
+void addDataTypeToClassNode(ASTNode *classNode, DataType *type);
+
+ASTNode *parseMethodScopeResolution(const char *scopeName,
+                                    Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+// New Keyword Parsing
+ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 #endif // PARSER_H

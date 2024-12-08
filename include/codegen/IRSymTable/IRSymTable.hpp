@@ -33,7 +33,7 @@
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 namespace Cryo
 {
@@ -52,6 +52,7 @@ namespace Cryo
         llvm::Type *LLVMType;
         llvm::StoreInst *LLVMStoreInst;
         llvm::LoadInst *LLVMLoadInst;
+        llvm::Value *LLVMFunctionPtr;
         ASTNode *ASTNode;
         CryoNodeType nodeType;
         DataType *dataType;
@@ -97,6 +98,15 @@ namespace Cryo
         DataType *structType;
     };
 
+    struct STClass
+    {
+        llvm::StructType *LLVMStruct;
+        llvm::Function *LLVMConstructor;
+        std::vector<llvm::Function *> LLVMMethods;
+        ClassNode *ASTNode;
+        DataType *classType;
+    };
+
     // -----------------------------------------------------------------------------------------------
 
     // For each file, we will have a SymTable that contains all the variables and functions
@@ -115,6 +125,7 @@ namespace Cryo
         std::unordered_map<std::string, STExternFunction> externFunctionNode;
         std::unordered_map<std::string, STParameter> parameterNode;
         std::unordered_map<std::string, STStruct> structNode;
+        std::unordered_map<std::string, STClass> classNode;
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program
@@ -144,6 +155,7 @@ namespace Cryo
         STFunction createFuncContainer(FunctionDeclNode *funcNode);
         STExternFunction createExternFuncContainer(ExternFunctionNode *externNode);
         STParameter createParamContainer(void);
+        STClass createClassContainer(ClassNode *classNode);
 
         // Getters
         SymTable getSymTable();
@@ -153,20 +165,26 @@ namespace Cryo
         STVariable *getVariable(std::string namespaceName, std::string varName);
         STParameter *getParameter(std::string namespaceName, std::string paramName);
         STStruct *getStruct(std::string namespaceName, std::string structName);
+        PropertyNode *getPropertyNode(std::string namespaceName, std::string propName, std::string structName);
 
         // Setters
-        void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode);
+        void addClass(std::string namespaceName, llvm::StructType *classTy, ClassNode *classNode, DataType *classType);
+        void addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode, DataType *structType);
         void addVariable(std::string namespaceName, std::string varName, ASTNode *varNode);
         void addFunction(std::string namespaceName, std::string funcName, FunctionDeclNode funcNode, llvm::Function *llvmFunction, llvm::Type *llvmReturnType);
         void addExternFunciton(std::string namespaceName, std::string funcName, ExternFunctionNode externNode);
         void addParameter(std::string namespaceName, std::string paramName, ASTNode *paramNode);
+        void addValueToParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue);
         void addStructMethod(std::string namespaceName, std::string structName, llvm::Function *llvmFunction);
 
         // Updates
         void updateVariableNode(std::string namespaceName, std::string varName, llvm::Value *llvmValue, llvm::Type *llvmType);
         void addStoreInstToVar(std::string namespaceName, std::string varName, llvm::StoreInst *storeInst);
         void addLoadInstToVar(std::string namespaceName, std::string varName, llvm::LoadInst *loadInst);
-        void addParamAsVariable(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst);
+        void addFunctionToVar(std::string namespaceName, std::string varName, llvm::Value *functionPtr);
+        void addDataTypeToVar(std::string namespaceName, std::string varName, DataType *dataType);
+
+        void addParamAsVariable(std::string namespaceName, std::string paramName, DataType *dataType, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst);
         void updateFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
         void updateExternFunctionNode(std::string namespaceName, std::string funcName, llvm::Function *llvmFunction, llvm::Type *llvmReturnType, std::vector<llvm::Type *> llvmParamTypes);
         void updateParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType);

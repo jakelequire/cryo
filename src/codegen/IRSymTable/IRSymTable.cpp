@@ -137,6 +137,30 @@ namespace Cryo
         return structNode;
     }
 
+    PropertyNode *IRSymTable::getPropertyNode(std::string namespaceName, std::string propName, std::string structName)
+    {
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the struct in the SymTable
+        STStruct structNode = symNode.structNode[structName];
+        if (structNode.ASTNode)
+        {
+            // Find the property in the struct
+            for (int i = 0; i < structNode.ASTNode->propertyCount; ++i)
+            {
+                PropertyNode *propNode = structNode.ASTNode->properties[i]->data.property;
+                if (propNode->name == propName)
+                {
+                    return propNode;
+                }
+            }
+        }
+        else
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Struct Node not found");
+        }
+    }
+
     // -----------------------------------------------------------------------------------------------
     /// Struct Containers
 
@@ -149,6 +173,7 @@ namespace Cryo
         varContainer.LLVMType = nullptr;
         varContainer.LLVMStoreInst = nullptr;
         varContainer.LLVMLoadInst = nullptr;
+        varContainer.LLVMFunctionPtr = nullptr;
         varContainer.dataType = varNode->data.varDecl->type;
         return varContainer;
     }
@@ -191,22 +216,56 @@ namespace Cryo
         return paramContainer;
     }
 
+    STClass IRSymTable::createClassContainer(ClassNode *classNode)
+    {
+        STClass classContainer;
+        classContainer.ASTNode = classNode;
+        classContainer.LLVMStruct = nullptr;
+        classContainer.LLVMConstructor = nullptr;
+        classContainer.LLVMMethods.clear();
+        classContainer.classType = classNode->type;
+        return classContainer;
+    }
+
     // -----------------------------------------------------------------------------------------------
     ///
     /// Setters
     ///
 
-    void IRSymTable::addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode)
+    void IRSymTable::addClass(std::string namespaceName, llvm::StructType *classTy, ClassNode *classNode, DataType *classType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Class to SymTable");
+        // Add the class to the SymTable
+        std::string className = classTy->getName().str();
+        std::cout << "Class Name: " << className << std::endl;
+
+        STClass classContainer;
+        classContainer.LLVMStruct = classTy;
+        classContainer.ASTNode = classNode;
+        classContainer.classType = classType;
+
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        symNode.classNode[className] = classContainer;
+        symTable.namespaces[namespaceName] = symNode;
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Class Added to SymTable");
+
+        return;
+    }
+
+    void IRSymTable::addStruct(std::string namespaceName, llvm::StructType *structTy, StructNode *structNode, DataType *structType)
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Struct to SymTable");
         // Add the struct to the SymTable
         std::string structName = structTy->getName().str();
         std::cout << "Struct Name: " << structName << std::endl;
+
         STStruct structContainer;
         structContainer.LLVMStruct = structTy;
         structContainer.ASTNode = structNode;
-        structContainer.structType = structNode->type;
+        structContainer.structType = structType;
+
         SymTableNode symNode = getSymTableNode(namespaceName);
         symNode.structNode[structName] = structContainer;
         symTable.namespaces[namespaceName] = symNode;
@@ -261,6 +320,7 @@ namespace Cryo
         funcContainer.LLVMFunction = llvmFunction;
         funcContainer.LLVMReturnType = llvmReturnType;
         funcContainer.ASTNode = &funcNode;
+
         // Add the function to the SymTable
         symNode.functionNode[funcName] = funcContainer;
         symTable.namespaces[namespaceName] = symNode;
@@ -312,6 +372,23 @@ namespace Cryo
         return;
     }
 
+    void IRSymTable::addValueToParam(std::string namespaceName, std::string paramName, llvm::Value *llvmValue)
+    {
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Value to Parameter");
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the parameter in the SymTable
+        STParameter paramNode = symNode.parameterNode[paramName];
+        // Add the value to the parameter node
+        paramNode.LLVMValue = llvmValue;
+        // Update the parameter in the SymTable
+        symNode.parameterNode[paramName] = paramNode;
+        symTable.namespaces[namespaceName] = symNode;
+        std::cout << "[IRSymTable] Value Added to Parameter" << std::endl;
+        return;
+    }
+
     // -----------------------------------------------------------------------------------------------
     /// ### ============================================================================= ###
     /// ###
@@ -355,6 +432,41 @@ namespace Cryo
         return;
     }
 
+    void IRSymTable::addDataTypeToVar(std::string namespaceName, std::string varName, DataType *dataType)
+    {
+        // This should only update the data type if the data type in the `STVariable` is a nullptr or a `UnknownType`
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Data Type to Variable");
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+        // Add the data type to the variable node
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Updating Data Type");
+        varNode.dataType = dataType;
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+        std::cout << "[IRSymTable] Data Type Added to Variable" << std::endl;
+        return;
+    }
+
+    void IRSymTable::addFunctionToVar(std::string namespaceName, std::string varName, llvm::Value *functionPtr)
+    {
+
+        DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Function to Variable");
+        // Find the namespace in the SymTable
+        SymTableNode symNode = getSymTableNode(namespaceName);
+        // Find the variable in the SymTable
+        STVariable varNode = symNode.variableNode[varName];
+        // Add the function to the variable node
+        varNode.LLVMFunctionPtr = functionPtr;
+        // Update the variable in the SymTable
+        symNode.variableNode[varName] = varNode;
+        symTable.namespaces[namespaceName] = symNode;
+        std::cout << "[IRSymTable] Function Added to Variable" << std::endl;
+        return;
+    }
+
     void IRSymTable::addLoadInstToVar(std::string namespaceName, std::string varName, llvm::LoadInst *loadInst)
     {
 
@@ -372,7 +484,8 @@ namespace Cryo
         return;
     }
 
-    void IRSymTable::addParamAsVariable(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst)
+    void IRSymTable::addParamAsVariable(std::string namespaceName, std::string paramName, DataType *dataType,
+                                        llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst)
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Parameter as Variable");
@@ -383,11 +496,12 @@ namespace Cryo
         varContainer.LLVMValue = llvmValue;
         varContainer.LLVMType = llvmType;
         varContainer.LLVMStoreInst = storeInst;
+        varContainer.dataType = dataType;
         varContainer.ASTNode = nullptr;
         // Add the variable to the SymTable
         symNode.variableNode[paramName] = varContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Parameter Added as Variable" << std::endl;
+        std::cout << "[IRSymTable] Parameter Added as Variable: " << paramName << std::endl;
         return;
     }
 
@@ -692,9 +806,6 @@ namespace Cryo
         case NODE_ARRAY_LITERAL:
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing ARRAY_LITERAL node");
             break;
-        case NODE_INDEX_EXPR:
-            DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing INDEX_EXPR node");
-            break;
         case NODE_VAR_REASSIGN:
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing VAR_REASSIGNMENT node");
             break;
@@ -704,6 +815,15 @@ namespace Cryo
         case NODE_SCOPED_FUNCTION_CALL:
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing SCOPED_FUNCTION_CALL node");
             break;
+        case NODE_INDEX_EXPR:
+        {
+            if (node->data.indexExpr)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing INDEX_EXPR node");
+                traverseASTNode(node->data.indexExpr->array, symTable);
+                traverseASTNode(node->data.indexExpr->index, symTable);
+            }
+        }
         case NODE_PARAM:
         {
             DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Processing PARAM node");

@@ -60,9 +60,9 @@ void parsingError(
            LIGHT_RED, COLOR_RESET);
 
     // Function name
-    printf("%s%s  Function: %s%s%s %s%s\n",
+    printf("%s%s  Function: %s%s%s%s%s %s%s\n",
            LIGHT_RED, COLOR_RESET,
-           MAGENTA, functionName, COLOR_RESET,
+           LIGHT_GREEN, BOLD, UNDERLINE, functionName, COLOR_RESET,
            LIGHT_RED, COLOR_RESET);
 
     // Middle border
@@ -70,8 +70,8 @@ void parsingError(
     printf("%s╠══════════════════════════════════════════════════════════════════════════════╣%s\n", LIGHT_RED, COLOR_RESET);
 
     printf("\n");
-    // Show 3 lines before the error line
-    for (int i = 3; i > 0; i--)
+    // Show 2 lines before the error line
+    for (int i = 2; i > 0; i--)
     {
         int contextLine = line - i;
         if (contextLine > 0)
@@ -90,15 +90,15 @@ void parsingError(
     printLine(source, line, arena, state);
 
     // Error pointer with message
-    printf("%s%s     │ ", LIGHT_RED, COLOR_RESET);
+    printf("%s     │ %s", LIGHT_RED, COLOR_RESET);
     for (int i = 0; i < column; i++)
     {
         printf(" ");
     }
     printf("%s^%s %s%s%s\n", BRIGHT_RED, COLOR_RESET, BRIGHT_RED, message, COLOR_RESET);
 
-    // Show 3 lines after the error line
-    for (int i = 1; i <= 3; i++)
+    // Show 5 lines after the error line
+    for (int i = 1; i <= 5; i++)
     {
         int contextLine = line + i;
         printf("%s%s %s%3d │%s ",

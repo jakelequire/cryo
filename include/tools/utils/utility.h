@@ -63,6 +63,10 @@ int charToInt(char *str);
 ///
 char *concatStrings(const char *str1, const char *str2);
 
+char *intToSafeString(int value);
+
+char *stringToUFString(const char *str);
+
 #define START_STDOUT_REDIRECT redirectStdout();
 #define END_STDOUT_REDIRECT restoreStdout();
 

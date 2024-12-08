@@ -21,16 +21,36 @@
 #include "compiler/compiler.h"
 #include "tools/utils/compileTimer.h"
 #include "tools/utils/buildStats.h"
+#include "tools/utils/env.h"
 
 int main(int argc, char *argv[])
 {
+    // Get the parent directory of the compiler executable
+    char *parent = getCompilerRootPath(argv[0]);
+    if (parent)
+    {
+        printf("Parent directory: %s\n", parent);
+    }
+
+    // Initialize environment variables
+    int envResult = initEnvVars(parent);
+    if (envResult != 0)
+    {
+        fprintf(stderr, "Error: Failed to initialize environment variables\n");
+        return 1;
+    }
+    // Free the parent directory string
+    free(parent);
+
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
     logCompilerSettings(&settings);
 
+    // Initialize the build stats
     BuildStats *buildStats = createBuildStats();
     addCompilerSettings(buildStats, &settings);
 
+    // Initialize the compile timer
     CompileTimer *compileTimer = createCompileTimer();
     startTimer(compileTimer);
 
@@ -50,6 +70,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Wrap up everything
     double elapsed = stopTimer(compileTimer);
     getSystemInfo(buildStats);
     addElapsedTime(buildStats, elapsed);

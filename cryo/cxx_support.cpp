@@ -16,24 +16,41 @@
  ********************************************************************************/
 #include "support_lib.h"
 
-__EXTERN_C__ void printInt(int value)
+__EXTERN_C__ void __c_printInt(int value)
 {
     printf("%d\n", value);
 }
 
-__EXTERN_C__ void printIntPtr(int *value)
+__EXTERN_C__ void __c_printIntPtr(int *value)
 {
     printf("%d\n", *value);
 }
 
-__EXTERN_C__ void printStr(char *value)
+__EXTERN_C__ void __c_printStr(char *value)
 {
-    printf("%s\n", value);
+    printf("%s\n", (char *)value);
 }
 
-__EXTERN_C__ char *intToString(int value)
+// __EXTERN_C__ void printStr(char *value)
+// {
+//     printf("%s\n", value);
+// }
+
+__EXTERN_C__ char *__c_intToString(int value)
 {
     char *buffer = (char *)malloc(sizeof(char) * 1024);
     sprintf(buffer, "%d", value);
     return buffer;
+}
+
+// __EXTERN_C__ char *intToString(int value)
+// {
+//     char *buffer = (char *)malloc(sizeof(char) * 1024);
+//     sprintf(buffer, "%d", value);
+//     return buffer;
+// }
+
+__EXTERN_C__ void __c_sys_exit(int code)
+{
+    exit(code);
 }

@@ -25,9 +25,13 @@
 #include <dirent.h>
 #include <unistd.h>
 
-
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/c_logger.h"
+
+typedef struct CryoSrcLocations
+{
+    const char *rootDir;
+} CryoSrcLocations;
 
 #ifdef __cplusplus
 extern "C"
@@ -48,6 +52,12 @@ void createDir(const char *path);
 void removeFile(const char *filePath);
 const char *getSTDFilePath(const char *subModule);
 const char *trimFilePath(const char *filePath);
+
+const char *getCurRootDir(void);
+const char *getCryoSrcLocation(void);
+char *getCRuntimePath(void);
+
+const char *appendStrings(const char *str1, const char *str2);
 
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL

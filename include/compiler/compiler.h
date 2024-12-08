@@ -26,22 +26,24 @@
 #include "frontend/parser.h"
 #include "frontend/tokens.h"
 #include "frontend/symTable.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"
+#include "runtime/bootstrap.h"
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
+typedef struct Bootstrapper Bootstrapper;
 
 // C++ headers
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-    int generateCodeWrapper(ASTNode *node, CompilerState *state);
+    typedef struct CryoLinker_t *CryoLinker;
+    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker linker);
 
 #ifdef __cplusplus
 }

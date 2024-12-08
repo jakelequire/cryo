@@ -37,6 +37,7 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
     thisContext->propertyCount = 0;
     thisContext->methods = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
     thisContext->methodCount = 0;
+    thisContext->isStatic = false;
     context->thisContext = thisContext;
 }
 
@@ -99,6 +100,14 @@ ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *t
         }
     }
     return NULL;
+}
+
+void addStaticIdentifierToContext(ParsingContext *context, bool value)
+{
+    if (context->thisContext)
+    {
+        context->thisContext->isStatic = value;
+    }
 }
 
 // This functions adds a token to the lastTokens array in the parsing context

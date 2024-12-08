@@ -1,0 +1,18 @@
+namespace Classes;
+
+class IO {
+    public exampleProp: string;
+
+    constructor() {}
+
+    public static print(msg: string) -> void {
+        printStr(msg);
+        return;
+    }
+}
+
+function main(argc: int, argv: string[]) -> void {
+    const fooStr: string = "Classes Test";
+    IO::print(fooStr);
+    return;
+}

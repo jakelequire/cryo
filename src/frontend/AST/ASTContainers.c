@@ -57,8 +57,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    const int initialCapacity = 128;
-    node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    node->statements = (ASTNode **)calloc(PROGRAM_CAPACITY, sizeof(ASTNode *));
     if (!node->statements)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
@@ -67,7 +66,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
     }
 
     node->statementCount = 0;
-    node->statementCapacity = initialCapacity;
+    node->statementCapacity = PROGRAM_CAPACITY;
 
     return node;
 }
@@ -92,7 +91,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    int initialCapacity = 128; // Or any other small, non-zero value
+    int initialCapacity = BLOCK_CAPACITY;
     node->statements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->statements)
     {
@@ -121,14 +120,26 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state)
 ///
 CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState *state)
 {
+    int initialCapacity = FUNCTION_BLOCK_CAPACITY;
     CryoFunctionBlock *block = (CryoFunctionBlock *)ARENA_ALLOC(arena, sizeof(CryoFunctionBlock));
-    if (block)
+    if (!block)
     {
-        block->function = NULL;
-        block->statements = NULL;
-        block->statementCount = 0;
-        block->statementCapacity = 128;
+        fprintf(stderr, "[AST] Error: Failed to allocate CryoFunctionBlock node.");
+        return NULL;
     }
+
+    block->function = NULL;
+    block->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    if (!block->statements)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
+        free(block);
+        return NULL;
+    }
+
+    block->statementCount = 0;
+    block->statementCapacity = initialCapacity;
+
     return block;
 }
 
@@ -303,7 +314,7 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerStat
     node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 128;
+    node->paramCapacity = PARAM_CAPACITY;
     node->type = wrapTypeContainer(createTypeContainer());
 
     return node;
@@ -339,6 +350,7 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
+    node->functionType = wrapTypeContainer(createTypeContainer());
 
     return node;
 }
@@ -352,6 +364,7 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
 ///     struct ASTNode **args;
 ///     int argCount;
 ///     int argCapacity;
+///     DataType *eturnType;
 /// } FunctionCallNode;
 ///```
 ///
@@ -367,7 +380,8 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *s
     node->name = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
+    node->returnType = wrapTypeContainer(createTypeContainer());
 
     return node;
 }
@@ -562,6 +576,10 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state
     node->hasIndexExpr = false;
     node->indexExpr = NULL;
 
+    node->isNewInstance = false;
+    node->hasUnaryOp = false;
+    node->unaryOp = NULL;
+
     return node;
 }
 
@@ -588,6 +606,9 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
     node->type = wrapTypeContainer(createTypeContainer());
     node->isRef = false;
     node->varName = strdup(varName);
+
+    node->hasUnaryOp = false;
+    node->unaryOp = NULL;
 
     return node;
 }
@@ -649,7 +670,7 @@ ParamNode *createParamNodeContainer(Arena *arena, CompilerState *state)
     node->nodeType = NODE_UNKNOWN;
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 128;
+    node->paramCapacity = PARAM_CAPACITY;
     node->funcRefName = NULL;
 
     return node;
@@ -678,10 +699,10 @@ ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->nodeType = NODE_UNKNOWN;
-    node->args = NULL;
+    node->args = (ASTNode **)calloc(ARG_CAPACITY, sizeof(ASTNode *));
     node->argCount = 0;
-    node->argCapacity = 128;
-    node->funcRefName = NULL;
+    node->argCapacity = ARG_CAPACITY;
+    node->funcRefName = (char *)calloc(1, sizeof(char));
 
     return node;
 }
@@ -786,7 +807,7 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    const int initialCapacity = 64; // Or any other small, non-zero value
+    const int initialCapacity = ARRAY_CAPACITY;
     node->elements = (ASTNode **)ARENA_ALLOC(arena, initialCapacity * sizeof(ASTNode *));
     if (!node->elements)
     {
@@ -797,6 +818,8 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
 
     node->elementCount = 0;
     node->elementCapacity = initialCapacity;
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->elementTypes = (DataType **)calloc(initialCapacity, sizeof(DataType *));
 
     return node;
 }
@@ -866,9 +889,17 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
 /// typedef struct StructNode
 /// {
 ///     char *name;
-///     struct PropertyNode **properties;
+///     ASTNode **properties;
+///     ASTNode **methods;
+///     ASTNode *constructor;
 ///     int propertyCount;
 ///     int propertyCapacity;
+///     int methodCount;
+///     int methodCapacity;
+///     bool hasConstructor;
+///     bool hasDefaultValue;
+///     DataType *type;
+///     bool isStatic;
 /// } StructNode;
 ///```
 ///
@@ -882,15 +913,23 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->name = (char *)calloc(1, sizeof(char));
+
     node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->propertyCount = 0;
-    node->propertyCapacity = 128;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
     node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
     node->methodCount = 0;
-    node->methodCapacity = 128;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->constructor = NULL;
+    node->ctorArgCount = 0;
+    node->ctorArgCapacity = ARG_CAPACITY;
+    node->ctorArgs = (ASTNode **)calloc(1, sizeof(ASTNode *));
+
     node->hasConstructor = false;
     node->hasDefaultValue = false;
-    node->constructor = NULL;
+    node->isStatic = false;
     node->type = wrapTypeContainer(createTypeContainer());
 
     return node;
@@ -905,6 +944,8 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
 ///     struct ASTNode *value;
 ///     CryoDataType type;
 ///     bool defaultProperty;
+///     const char *parentName;
+///     CryoNodeType parentNodeType;
 /// } PropertyNode;
 ///```
 ///
@@ -921,6 +962,8 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
     node->value = NULL;
     node->type = wrapTypeContainer(createTypeContainer());
     node->defaultProperty = false;
+    node->parentName = (char *)calloc(1, sizeof(char));
+    node->parentNodeType = NODE_UNKNOWN;
 
     return node;
 }
@@ -949,7 +992,7 @@ ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState
     node->functionName = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
 
     return node;
 }
@@ -979,7 +1022,7 @@ StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, Compil
     node->name = (char *)calloc(1, sizeof(char));
     node->args = NULL;
     node->argCount = 0;
-    node->argCapacity = 128;
+    node->argCapacity = ARG_CAPACITY;
     node->metaData = createConstructorMetaDataContainer(arena, state);
     node->constructorBody = NULL;
 
@@ -1019,7 +1062,10 @@ ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerSt
 /// typedef struct PropertyAccessNode
 /// {
 ///     struct ASTNode *object;
+///     struct ASTNode *object;
 ///     const char *property;
+///     struct ASTNode *property;
+///     int propertyIndex;
 /// } PropertyAccessNode;
 ///```
 ///
@@ -1036,6 +1082,7 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
     node->object = NULL;
     node->propertyName = (char *)calloc(1, sizeof(char));
     node->property = NULL;
+    node->propertyIndex = 0;
 
     return node;
 }
@@ -1102,6 +1149,7 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
 ///     int paramCount;
 ///     int paramCapacity;
 ///     struct ASTNode *body;
+///     bool isStatic;
 /// } MethodNode;
 ///```
 ///
@@ -1117,10 +1165,267 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->name = (char *)calloc(1, sizeof(char));
     node->params = NULL;
     node->paramCount = 0;
-    node->paramCapacity = 128;
+    node->paramCapacity = PARAM_CAPACITY;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
+    node->functionType = wrapTypeContainer(createTypeContainer());
+    node->isStatic = false;
+    node->parentName = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct MethodCallNode
+/// {
+///     DataType *instanceType;
+///     DataType *returnType;
+///     const char *instanceName;
+///     ASTNode *accessorObj;
+///     const char *name;
+///     struct ASTNode **args;
+///     int argCount;
+///     int argCapacity;
+///     bool isStatic;
+/// } MethodCallNode;
+///```
+///
+MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state)
+{
+    MethodCallNode *node = (MethodCallNode *)ARENA_ALLOC(arena, sizeof(MethodCallNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate MethodCallNode node.");
+        return NULL;
+    }
+
+    node->instanceType = wrapTypeContainer(createTypeContainer());
+    node->returnType = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->instanceName = (char *)calloc(1, sizeof(char));
+    node->accessorObj = NULL;
+    node->args = NULL;
+    node->argCount = 0;
+    node->argCapacity = ARG_CAPACITY;
+    node->isStatic = false;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct GenericDeclNode
+/// {
+///     DataType *type;             // e.g., List<T>
+///     const char *name;           // e.g., "List"
+///     ASTNode **properties;       // e.g., <T>
+///     int propertyCount;          // e.g., 1
+///     DataType **constraintTypes; // e.g., T extends Number
+///     bool hasConstraint;
+/// } GenericDeclNode;
+///```
+///
+GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *state)
+{
+    GenericDeclNode *node = (GenericDeclNode *)ARENA_ALLOC(arena, sizeof(GenericDeclNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate GenericDeclNode node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->properties = NULL;
+    node->propertyCount = 0;
+    node->constraintTypes = NULL;
+    node->hasConstraint = false;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct GenericInstNode
+/// {
+///     const char *baseName;     // e.g., "List"
+///     DataType **typeArguments; // e.g., <int>
+///     int argumentCount;
+///     DataType *resultType; // The concrete type after substitution
+/// } GenericInstNode;
+///```
+///
+GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *state)
+{
+    GenericInstNode *node = (GenericInstNode *)ARENA_ALLOC(arena, sizeof(GenericInstNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate GenericInstNode node.");
+        return NULL;
+    }
+
+    node->baseName = (char *)calloc(1, sizeof(char));
+    node->typeArguments = NULL;
+    node->argumentCount = 0;
+    node->resultType = wrapTypeContainer(createTypeContainer());
+
+    return node;
+}
+
+PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
+{
+    PublicMembers *node = (PublicMembers *)ARENA_ALLOC(arena, sizeof(PublicMembers));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
+        return NULL;
+    }
+
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    return node;
+}
+
+PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state)
+{
+    PrivateMembers *node = (PrivateMembers *)ARENA_ALLOC(arena, sizeof(PrivateMembers));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
+        return NULL;
+    }
+
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    return node;
+}
+
+ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *state)
+{
+    ProtectedMembers *node = (ProtectedMembers *)ARENA_ALLOC(arena, sizeof(ProtectedMembers));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
+        return NULL;
+    }
+
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    return node;
+}
+
+/// ---
+/// ### Structure
+///```
+/// typedef struct ClassNode
+/// {
+///     DataType *type;
+///     const char *name;
+///     ASTNode *constructor;
+///     int propertyCount;
+///     int propertyCapacity;
+///     int methodCount;
+///     int methodCapacity;
+///     bool hasConstructor;
+///     bool hasDefaultValue;
+///     bool isStatic;
+///     // For Private Members
+///     PrivateMembers *privateMembers;
+///     // For Public Members
+///     PublicMembers *publicMembers;
+///     // For Protected Members
+///     ProtectedMembers *protectedMembers;
+/// } ClassNode;
+///```
+///
+ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
+{
+    ClassNode *node = (ClassNode *)ARENA_ALLOC(arena, sizeof(ClassNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ClassNode node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->constructor = NULL;
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+    node->hasConstructor = false;
+    node->hasDefaultValue = false;
+    node->isStatic = false;
+    node->privateMembers = createPrivateMembersContainer(arena, state);
+    node->publicMembers = createPublicMembersContainer(arena, state);
+    node->protectedMembers = createProtectedMembersContainer(arena, state);
+
+    return node;
+}
+
+ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, CompilerState *state)
+{
+    StructConstructorNode *node = (StructConstructorNode *)ARENA_ALLOC(arena, sizeof(StructConstructorNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate StructConstructorNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->args = (ASTNode **)calloc(ARG_CAPACITY, sizeof(ASTNode *));
+    node->argCount = 0;
+    node->argCapacity = ARG_CAPACITY;
+    node->metaData = createConstructorMetaDataContainer(arena, state);
+    node->constructorBody = NULL;
+
+    return node;
+}
+
+ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
+{
+    ObjectNode *node = (ObjectNode *)ARENA_ALLOC(arena, sizeof(ObjectNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ObjectNode node.");
+        return NULL;
+    }
+
+    node->objType = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+    node->isNewInstance = false;
+
+    node->args = (ASTNode **)calloc(ARG_CAPACITY, sizeof(ASTNode *));
+    node->argCount = 0;
+    node->argCapacity = ARG_CAPACITY;
+
+    node->genericTypes = (DataType **)calloc(1, sizeof(DataType *) * GENERIC_CAPACITY);
+    node->genericCount = 0;
+    node->genericCapacity = GENERIC_CAPACITY;
 
     return node;
 }

@@ -98,7 +98,7 @@ namespace Cryo
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
         case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning string type");
-            return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
         case PRIM_FLOAT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning float type");
             return llvm::Type::getFloatTy(CryoContext::getInstance().context);
@@ -128,9 +128,24 @@ namespace Cryo
 
         switch (type->container->primitive)
         {
-        case PRIM_INT:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int to LLVM type");
+        case PRIM_INT: // 32-bit Default Integer
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type (default)");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I8:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 8-bit integer type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
+        case PRIM_I16:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 16-bit integer type");
+            return llvm::Type::getInt16Ty(CryoContext::getInstance().context);
+        case PRIM_I32:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type");
+            return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I64:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 64-bit integer type");
+            return llvm::Type::getInt64Ty(CryoContext::getInstance().context);
+        case PRIM_I128:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 128-bit integer type");
+            return llvm::Type::getInt128Ty(CryoContext::getInstance().context);
 
         case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting string to LLVM type");
@@ -156,10 +171,55 @@ namespace Cryo
             //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
             //     return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
 
+        case PRIM_CUSTOM:
+        {
+            if (type->container->baseType == FUNCTION_TYPE)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting function to LLVM type");
+                DataType *returntype = type->container->custom.funcDef->returnType;
+
+                return getFunctionReturnType(returntype);
+            }
+            if (type->container->baseType == STRUCT_TYPE)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting struct to LLVM type");
+                return getStructType(type);
+            }
+        }
+
         default:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
-            return nullptr;
+            std::cout << "Received: " << DataTypeToString(type) << std::endl;
+            CONDITION_FAILED;
         }
+    }
+
+    llvm::Type *OldTypes::getIntegerTypeFromPrimitive(PrimitiveDataType type)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting integer type from primitive");
+
+        switch (type)
+        {
+        case PRIM_INT: // 32-bit Default Integer
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type (default)");
+            return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I8:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 8-bit integer type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
+        case PRIM_I16:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 16-bit integer type");
+            return llvm::Type::getInt16Ty(CryoContext::getInstance().context);
+        case PRIM_I32:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type");
+            return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I64:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 64-bit integer type");
+            return llvm::Type::getInt64Ty(CryoContext::getInstance().context);
+        case PRIM_I128:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 128-bit integer type");
+            return llvm::Type::getInt128Ty(CryoContext::getInstance().context);
+        }
+        return nullptr;
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -189,6 +249,30 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
             return nullptr;
         }
+    }
+
+    llvm::Type *OldTypes::getFunctionReturnType(DataType *returnType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting function return type");
+        logDataType(returnType);
+        std::cout << "Primitive: " << PrimitiveDataTypeToString(returnType->container->primitive) << std::endl;
+        std::cout << "Typeof DataType: " << TypeofDataTypeToString(returnType->container->baseType) << std::endl;
+
+        TypeofDataType baseType = returnType->container->baseType;
+        if (baseType == STRUCT_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning struct type");
+            return getStructType(returnType);
+        }
+
+        if (baseType == PRIMITIVE_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning primitive type");
+            return convertSimpleType(returnType);
+        }
+
+        DEBUG_BREAKPOINT; // Safeguard
+        return nullptr;
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -398,12 +482,16 @@ namespace Cryo
             return nullptr;
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Parsing instruction");
+
         llvm::Value *op = inst->getOperand(0);
         if (!op)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Operand is null");
             return nullptr;
         }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Operand");
 
         llvm::Type *ty = op->getType();
         if (!ty)
@@ -442,10 +530,11 @@ namespace Cryo
         }
 
         // Check if the struct already exists
+        std::string structName = type->container->custom.structDef->name;
         llvm::Type *structType = doesStructExist(type->container->custom.structDef->name);
         if (structType)
         {
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct already exists");
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct already exists: " + structName);
             return structType;
         }
 
@@ -457,6 +546,9 @@ namespace Cryo
             llvm::Type *llvmType = this->getType(propertyType, 0);
             structTypes.push_back(llvmType);
         }
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Creating struct type");
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct Name: " + structName);
 
         return llvm::StructType::create(CryoContext::getInstance().context, structTypes);
     }
@@ -505,6 +597,40 @@ namespace Cryo
         }
 
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Type is not custom");
+        return false;
+    }
+
+    bool OldTypes::isLLVMStringType(llvm::Value *val)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Checking if value is LLVM string type");
+
+        if (val->getType()->isPointerTy())
+        {
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(val);
+            if (!inst)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Types", "Instruction is null");
+                return false;
+            }
+            DevDebugger::logLLVMInst(inst);
+            llvm::Type *ty = parseInstForType(inst);
+            if (ty->isPointerTy())
+            {
+                llvm::Type *ptrTy = ty;
+                if (ptrTy->isIntegerTy(8))
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Types", "Value is an LLVM string type");
+                    return true;
+                }
+            }
+
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Value is not an LLVM string type");
+            DevDebugger::logLLVMType(ty);
+            return false;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Value is not a pointer");
+        DevDebugger::logLLVMValue(val);
         return false;
     }
 } // namespace Cryo

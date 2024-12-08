@@ -65,8 +65,7 @@
 #include "frontend/AST.h"
 #include "common/common.h"
 #include "tools/macros/printMacros.h"
-
-extern "C" CompiledFile compileFile(const char *filePath, const char *compilerFlags);
+#include "linker/linker.hpp"
 
 namespace Cryo
 {
@@ -89,6 +88,8 @@ namespace Cryo
     class Structs;
     class Imports;
     class WhileStatements;
+    class ErrorHandler;
+    class Classes;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -126,6 +127,9 @@ namespace Cryo
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes;
 
+        std::unordered_map<std::string, DataType *> structDataTypes;
+        std::unordered_map<std::string, DataType *> classDataTypes;
+
         std::string currentNamespace;
         llvm::Function *currentFunction;
 
@@ -134,6 +138,39 @@ namespace Cryo
         std::vector<llvm::Module *> *getModules() { return modules.get(); }
 
         bool inGlobalScope = true;
+
+        std::unordered_map<std::string, llvm::GlobalVariable *> stringTable;
+        size_t stringCounter = 0;
+
+        llvm::GlobalVariable *getOrCreateGlobalString(const std::string &content)
+        {
+            // First check if we already have this string
+            auto it = stringTable.find(content);
+            if (it != stringTable.end())
+            {
+                return it->second;
+            }
+
+            // Create a new global string constant
+            llvm::Constant *stringConstant = llvm::ConstantDataArray::getString(context, content);
+
+            // Generate a unique name for this string
+            std::string globalName = "str." + std::to_string(stringCounter++);
+
+            // Create the global variable
+            llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(
+                *module,
+                stringConstant->getType(),
+                true, // isConstant
+                llvm::GlobalValue::PrivateLinkage,
+                stringConstant,
+                globalName);
+
+            // Store in our table
+            stringTable[content] = globalStr;
+
+            return globalStr;
+        }
 
         void initializeContext()
         {
@@ -157,6 +194,16 @@ namespace Cryo
         void addStructToInstance(std::string name, llvm::StructType *structType)
         {
             structTypes[name] = structType;
+        }
+
+        void addStructDataType(std::string name, DataType *dataType)
+        {
+            structDataTypes[name] = dataType;
+        }
+
+        void addClassDataType(std::string name, DataType *dataType)
+        {
+            classDataTypes[name] = dataType;
         }
 
         llvm::StructType *getStruct(std::string name)
@@ -195,8 +242,21 @@ namespace Cryo
         Structs &getStructs() { return *structs; }
         Imports &getImports() { return *imports; }
         WhileStatements &getWhileStatements() { return *whileStatements; }
+        ErrorHandler &getErrorHandler() { return *errorHandler; }
+        Classes &getClasses() { return *classes; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
+        Linker *getLinker() { return linker.get(); }
+        void setLinker(Linker *newLinker)
+        {
+            if (newLinker)
+            {
+                linker = std::unique_ptr<Linker>(newLinker);
+            }
+        }
+
+        std::string customOutputPath = "";
+        bool isPreprocessing = false;
 
         void compile(ASTNode *root);
         void dumpModule(void);
@@ -204,6 +264,36 @@ namespace Cryo
         void setModuleIdentifier(std::string name)
         {
             CryoContext::getInstance().setModuleIdentifier(name);
+        }
+
+        void setCustomOutputPath(std::string path)
+        {
+            customOutputPath = path;
+            isPreprocessing = true;
+        }
+
+        void initDependencies()
+        {
+            if (linker)
+            {
+                linker->newInitDependencies(&getModule());
+            }
+            else
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "CryoCompiler", "Linker not set");
+            }
+        }
+
+        void linkDependencies(void)
+        {
+            if (linker)
+            {
+                linker->appendDependenciesToRoot(&getModule());
+            }
+            else
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "CryoCompiler", "Linker not set");
+            }
         }
 
     private:
@@ -222,6 +312,9 @@ namespace Cryo
         std::unique_ptr<Structs> structs;
         std::unique_ptr<Imports> imports;
         std::unique_ptr<WhileStatements> whileStatements;
+        std::unique_ptr<ErrorHandler> errorHandler;
+        std::unique_ptr<Linker> linker;
+        std::unique_ptr<Classes> classes;
     };
 
     /**
@@ -263,6 +356,7 @@ namespace Cryo
 
         void generateCode(ASTNode *root);
         void parseTree(ASTNode *root);
+        void generateBlock(ASTNode *node);
         llvm::Value *getInitilizerValue(ASTNode *node);
         llvm::Value *getNamedValue(std::string name);
         std::string getNamespace(ASTNode *node);
@@ -363,6 +457,10 @@ namespace Cryo
          */
         llvm::Type *getReturnType(DataType *type);
 
+        llvm::Type *getFunctionReturnType(DataType *returnType);
+
+        llvm::Type *getIntegerTypeFromPrimitive(PrimitiveDataType type);
+
         /**
          * @brief Returns the length of a string literal or Array type.
          * All other types return `0`.
@@ -392,11 +490,13 @@ namespace Cryo
 
         /**
          * @brief Mutates an explicit type to a pointer.
+         * Note: This is a dangerous operation and should be used with caution.
          */
         llvm::Value *explicitTypeToPtr(llvm::Value *value);
 
         /**
          * @brief Mutate a values type to the given type.
+         * Note: This is a dangerous operation and should be used with caution.
          */
         llvm::Value *castTyToVal(llvm::Value *val, llvm::Type *ty);
 
@@ -420,11 +520,25 @@ namespace Cryo
          */
         llvm::Type *getStructType(DataType *type);
 
+        /**
+         * @brief Checks if a struct exists from the given name, returns the llvm::Type if it does.
+         */
         llvm::Type *doesStructExist(std::string structName);
 
+        /**
+         * @brief Creates an alloca from a struct type.
+         */
         llvm::Value *createAllocaFromStructProps(llvm::StructType *structType, llvm::Value *thisPtr);
 
+        /**
+         * @brief Checks if a type is a custom type.
+         */
         bool isCustomType(DataType *type);
+
+        /**
+         * @brief Checks if a value is an LLVM string type.
+         */
+        bool isLLVMStringType(llvm::Value *val);
 
     private:
         CryoCompiler &compiler;
@@ -453,18 +567,19 @@ namespace Cryo
         void handleRefVariable(ASTNode *node);
         void handleMutableVariable(ASTNode *node);
         void handleVariableReassignment(ASTNode *node);
+
         llvm::Value *createLocalVariable(ASTNode *node);
         llvm::Value *getVariable(std::string name);
         llvm::Value *getLocalScopedVariable(std::string name);
-        llvm::Value *createStructVariable(CryoVariableNode *varDecl);
+        llvm::Value *createStructVariable(ASTNode *varDecl);
         llvm::Value *getStructFieldValue(const std::string &structVarName,
                                          const std::string &fieldName);
+        llvm::Value *createStringIndexExpr(IndexExprNode *indexExprNode, std::string varName);
 
         void processConstVariable(CryoVariableNode *varNode);
         void createMutableVariable(ASTNode *node);
 
-        void initCustomTypeVar(DataType *type, std::string varName);
-        void createStructPropVar(DataType *structType, std::string propName);
+        llvm::Value *createStringVariable(ASTNode *node);
 
         // DEBUGGING PURPOSES
         llvm::Value *createTestGlobalVariable(void);
@@ -475,8 +590,11 @@ namespace Cryo
         llvm::Value *createVarNameInitializer(VariableNameNode *varNameNode, std::string varName, std::string refVarName);
         llvm::Value *createArrayLiteralInitializer(CryoArrayNode *arrayNode, DataType *dataType, std::string varName);
         llvm::Value *createIndexExprInitializer(IndexExprNode *indexExprNode, CryoNodeType nodeType, std::string varName);
+
         llvm::Value *createVarWithFuncCallInitilizer(ASTNode *node);
         llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);
+        llvm::Value *createMethodCallVariable(MethodCallNode *node, std::string varName, DataType *varType);
+        llvm::Value *createPropertyAccessVariable(PropertyAccessNode *propAccessNode, std::string varName, DataType *varType);
 
         CryoCompiler &compiler;
     };
@@ -504,7 +622,10 @@ namespace Cryo
         llvm::Value *createArrayLiteral(CryoArrayNode *array, std::string varName = "array");
         void handleArrayLiteral(ASTNode *node);
         llvm::ArrayType *getArrayType(ASTNode *node);
+
         int getArrayLength(ASTNode *node);
+        llvm::Value *getArrayLength(std::string arrayName);
+
         void handleIndexExpression(ASTNode *node, std::string varName);
         llvm::Value *indexArrayForValue(ASTNode *array, int index);
         llvm::Value *getIndexExpressionValue(ASTNode *node);
@@ -528,6 +649,12 @@ namespace Cryo
         llvm::Value *createArgumentVar(ASTNode *node);
 
         void handleFunction(ASTNode *node);
+        void handleMethodCall(ASTNode *node);
+        void handleStaticMethodCall(ASTNode *node);
+
+        llvm::Function *getFunction(std::string functionName);
+        llvm::Function *findClassMethod(std::string className, std::string methodName);
+        bool doesExternFunctionExist(std::string functionName);
 
     private:
         CryoCompiler &compiler;
@@ -536,9 +663,20 @@ namespace Cryo
         void createFunctionBlock(ASTNode *node);
         void createReturnStatement(ASTNode *node);
         void createExternFunction(ASTNode *node);
-        void createScopedFunctionCall(ASTNode *node);
+
         llvm::Type *traverseBlockReturnType(CryoFunctionBlock *blockNode);
 
+        llvm::Value *anyTypeParam(std::string functionName, llvm::Value *argValue);
+        llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);
+        std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
+
+        // -----------------------------------
+        // Function Calls
+
+        void createScopedFunctionCall(ASTNode *node);
+
+        llvm::Value *createMethodCall(MethodCallNode *node);
+        llvm::Value *createPropertyCall(PropertyNode *property);
         llvm::Value *createPropertyAccessCall(PropertyAccessNode *propAccess);
         llvm::Value *createVarNameCall(VariableNameNode *varNameNode);
         llvm::Value *createLiteralCall(LiteralNode *literalNode);
@@ -547,10 +685,10 @@ namespace Cryo
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
 
-        llvm::Value *anyTypeParam(std::string functionName, llvm::Value *argValue);
+        // -----------------------------------
+        // Cryo entry point functions
 
-        std::vector<llvm::Value *> verifyCalleeArguments(llvm::Function *callee, const std::vector<llvm::Value *> &argValues);
-        llvm::Value *createArgCast(llvm::Value *argValue, llvm::Type *expectedType);
+        void createCryoMainFunction(ASTNode *node);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -658,13 +796,15 @@ namespace Cryo
          */
         llvm::Type *getStructFieldType(PropertyNode *property);
 
-        void handleMethod(ASTNode *methodNode, llvm::StructType *structType,
-                          const std::string &structName);
+        void handleMethod(ASTNode *methodNode, const std::string &structName, llvm::StructType *structType);
         void handleStructConstructor(StructNode *node, llvm::StructType *structType);
         llvm::Value *createStructInstance(ASTNode *node);
+        llvm::Type *findExistingStruct(const std::string &structName);
 
     private:
         CryoCompiler &compiler;
+
+        void callConstructor(const std::string &structName, llvm::Value *structPtr, llvm::Value *initValue);
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -720,15 +860,71 @@ namespace Cryo
         Compilation(CryoCompiler &compiler) : compiler(compiler) {}
 
         void compileIRFile(void);
+        llvm::Module *compileAndMergeModule(std::string inputFile);
+
+        void DumpModuleToDebugFile(void);
 
     private:
         CryoCompiler &compiler;
+        void outputFailedIR(void);
 
         std::string getErrorMessage(void);
         void isValidDir(std::string dirPath);
         void isValidFile(std::string filePath);
         void makeOutputDir(std::string dirPath);
         void compile(std::string inputFile, std::string outputPath);
+        void compileUniquePath(std::string outputPath);
+        void cleanErrorDir(void);
+    };
+
+    // -----------------------------------------------------------------------------------------------
+
+    class ErrorHandler
+    {
+    public:
+        ErrorHandler(CryoCompiler &compiler) : compiler(compiler),
+                                               sharedOutOfBoundsBlock(nullptr),
+                                               sharedErrorFunc(nullptr),
+                                               isInitialized(false) {}
+
+        void IsOutOfBoundsException(llvm::Value *index, std::string arrayName, llvm::Type *arrayType);
+        llvm::BasicBlock *getOrCreateErrorBlock(llvm::Function *function);
+
+    private:
+        CryoCompiler &compiler;
+        llvm::BasicBlock *sharedOutOfBoundsBlock;
+        llvm::Function *sharedErrorFunc;
+        bool isInitialized;
+        std::unordered_map<llvm::Function *, llvm::BasicBlock *> functionErrorBlocks;
+
+        void initializeErrorBlocks();
+    };
+
+    // -----------------------------------------------------------------------------------------------
+
+    class Classes
+    {
+    public:
+        Classes(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Handles class declarations in the AST.
+         */
+        void handleClassDeclaration(ASTNode *node);
+
+        std::vector<llvm::Type *> handleFieldDeclarations(ASTNode *classNode, PrivateMembers *privateMembers, PublicMembers *publicMembers, ProtectedMembers *protectedMembers);
+        llvm::Type *getClassFieldType(ASTNode *property);
+        void handleClassConstructor(ClassConstructorNode *ctorNode, llvm::StructType *structType);
+        void handleClassMethods(ASTNode *node, std::string className, llvm::StructType *classType);
+        void createClassMethod(ASTNode *methodNode, llvm::StructType *classType);
+        void createParameterVar(ASTNode **paramNode, llvm::Function *function);
+        void addParametersToSymTable(ASTNode *paramNode, std::string paramName,
+                                     llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst);
+
+    private:
+        CryoCompiler &compiler;
     };
 
     // -----------------------------------------------------------------------------------------------
@@ -747,6 +943,8 @@ namespace Cryo
           structs(std::make_unique<Structs>(*this)),
           imports(std::make_unique<Imports>(*this)),
           whileStatements(std::make_unique<WhileStatements>(*this)),
+          errorHandler(std::make_unique<ErrorHandler>(*this)),
+          classes(std::make_unique<Classes>(*this)),
           symTable(std::make_unique<IRSymTable>())
     {
         context.initializeContext();
@@ -766,6 +964,10 @@ namespace Cryo
         std::cout << "══════════════════════════════════════════════════════════════════════" << std::endl;
         std::cout << COLOR_RESET;
         std::cout << "\n";
+
+        // Call the Compilation class to output the current module to a file
+        // Compilation compileCode = Compilation(*this);
+        // compileCode.DumpModuleToDebugFile();
     }
 
 } // namespace Cryo

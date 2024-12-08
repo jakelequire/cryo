@@ -31,7 +31,7 @@
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"
-#include "frontend/typeTable.h"
+#include "frontend/dataTypes.h"
 
 typedef struct ASTNode ASTNode;
 typedef struct CompilerState CompilerState;
@@ -62,6 +62,7 @@ typedef struct CryoSymbolTable
 } CryoSymbolTable;
 
 CryoSymbolTable *createSymbolTable(Arena *arena);
+void setNamespace(CryoSymbolTable *table, const char *name);
 void freeSymbolTable(CryoSymbolTable *table, Arena *arena);
 void printSymbolTable(CryoSymbolTable *table);
 void enterScope(CryoSymbolTable *table, Arena *arena);
@@ -81,10 +82,9 @@ void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena);
 char *getCurrentNamespace(CryoSymbolTable *table);
 CryoSymbol *findImportedSymbol(CryoSymbolTable *table, const char *name, const char *module, Arena *arena);
 void importAstTreeDefs(ASTNode *root, CryoSymbolTable *table, Arena *arena, CompilerState *state);
+void importRuntimeDefinitionsToSymTable(CryoSymbolTable *table, ASTNode *runtimeNode, Arena *arena);
 
-void setNamespace(CryoSymbolTable *table, const char *name);
-
-bool analyzeNode(ASTNode *node, CryoSymbolTable *table, Arena *arena);
+CryoSymbol *resolveModuleSymbol(const char *moduleName, const char *symbolName, CryoSymbolTable *table, Arena *arena);
 
 // C++ Accessable Functions
 #ifdef __cplusplus

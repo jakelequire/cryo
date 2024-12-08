@@ -118,6 +118,8 @@ char *getErrorTypeString(ErrorType type);
 void dumpCompilerState(CompilerState state);
 void dumpSymbolTable(CompilerState state);
 
+void freeAll(void *ptr);
+
 // Function Prototypes for C++ Calls
 #ifdef __cplusplus
 extern "C"

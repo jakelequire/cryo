@@ -174,6 +174,20 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "METHOD";
     case NODE_IDENTIFIER:
         return "IDENTIFIER";
+    case NODE_METHOD_CALL:
+        return "METHOD_CALL";
+    case NODE_ENUM:
+        return "ENUM";
+    case NODE_GENERIC_DECL:
+        return "GENERIC_DECL";
+    case NODE_GENERIC_INST:
+        return "GENERIC_INST";
+    case NODE_CLASS:
+        return "CLASS";
+    case NODE_CLASS_CONSTRUCTOR:
+        return "CLASS_CONSTRUCTOR";
+    case NODE_OBJECT_INST:
+        return "OBJECT_INST";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -251,6 +265,18 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_TYPE_STRING_ARRAY";
     case TOKEN_TYPE_BOOLEAN_ARRAY:
         return "TOKEN_TYPE_BOOLEAN_ARRAY";
+
+    case TOKEN_TYPE_I8:
+        return "TOKEN_TYPE_I8";
+    case TOKEN_TYPE_I16:
+        return "TOKEN_TYPE_I16";
+    case TOKEN_TYPE_I32:
+        return "TOKEN_TYPE_I32";
+    case TOKEN_TYPE_I64:
+        return "TOKEN_TYPE_I64";
+    case TOKEN_TYPE_I128:
+        return "TOKEN_TYPE_I128";
+
     case TOKEN_RESULT_ARROW:
         return "TOKEN_RESULT_ARROW";
 
@@ -638,7 +664,7 @@ CryoOperatorType CryoTokenToOperator(CryoTokenType token)
         return OPERATOR_MUL;
     case TOKEN_SLASH:
         return OPERATOR_DIV;
-    case TOKEN_OP_MOD:
+    case TOKEN_PERCENT:
         return OPERATOR_MOD;
     case TOKEN_OP_AND:
         return OPERATOR_AND;

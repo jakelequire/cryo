@@ -55,7 +55,14 @@ extern "C"
         TOKEN_TYPE_FLOAT_ARRAY,    // `float[]`
         TOKEN_TYPE_STRING_ARRAY,   // `string[]`
         TOKEN_TYPE_BOOLEAN_ARRAY,  // `boolean[]`
-        TOKEN_RESULT_ARROW,        // `->` token
+
+        TOKEN_TYPE_I8,   // `i8`
+        TOKEN_TYPE_I16,  // `i16`
+        TOKEN_TYPE_I32,  // `i32`
+        TOKEN_TYPE_I64,  // `i64`
+        TOKEN_TYPE_I128, // `i128`
+
+        TOKEN_RESULT_ARROW, // `->` token
 
         TOKEN_INT_LITERAL,     // `123`
         TOKEN_FLOAT_LITERAL,   // `123.0`
@@ -297,7 +304,14 @@ extern "C"
         NODE_PROPERTY_REASSIGN,    // 41
         NODE_METHOD,               // 42
         NODE_IDENTIFIER,           // 43
-        NODE_UNKNOWN,              // 44
+        NODE_METHOD_CALL,          // 44
+        NODE_ENUM,                 // 45
+        NODE_GENERIC_DECL,         // 46
+        NODE_GENERIC_INST,         // 47
+        NODE_CLASS,                // 48
+        NODE_CLASS_CONSTRUCTOR,    // 49
+        NODE_OBJECT_INST,          // 50
+        NODE_UNKNOWN,              // 51
     } CryoNodeType;
 
     typedef enum CryoVisibilityType
@@ -309,7 +323,7 @@ extern "C"
         VISIBILITY_UNKNOWN,   // `<UNKNOWN>`      4
     } CryoVisibilityType;
 
-    typedef struct
+    typedef struct KeywordToken
     {
         char *keyword;
         CryoTokenType type;
@@ -328,13 +342,13 @@ extern "C"
         TagType type;
     } TagToken;
 
-    typedef struct
+    typedef struct DataTypeToken
     {
         char *baseType;
         CryoTokenType dataType;
     } DataTypeToken;
 
-    typedef union
+    typedef union TokenValue
     {
         int intValue;
         float floatValue;

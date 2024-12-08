@@ -20,7 +20,7 @@ void logMessage(const char *type, int line, const char *module, const char *mess
 {
     va_list args;
     va_start(args, message);
-    printf("[%-5s]  \t@%-4d { %-7s}  ", typeBufferFormatter(type), line, module);
+    printf("[%-5s] @%-7d { %-7s}  ", typeBufferFormatter(type), line, module);
     vprintf(message, args);
     printf("\n");
     va_end(args);

@@ -58,3 +58,11 @@ output.o
 *.userosscache
 *.sln.docstates
 *.cache
+
+# Test Files
+foo.cpp
+foo.ll
+foo.c
+foo.o
+note.md
+note.txt

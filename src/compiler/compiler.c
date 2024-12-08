@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "linker/linker.hpp"
 #include "compiler/compiler.h"
 
 int cryoCompiler(const char *filePath, CompilerSettings *settings)
@@ -28,13 +29,32 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
     const char *fileName = trimFilePath(filePath);
 
+    const char *rootDirectory = settings->rootDir;
+    if (!rootDirectory)
+    {
+        fprintf(stderr, "Error: Root directory not set\n");
+        return 1;
+    }
+    const char *buildDir = appendStrings(rootDirectory, "/build");
+
+    // Create and initialize linker
+    CryoLinker linker = CryoLinker_Create();
+    CryoLinker_SetBuildSrcDirectory(linker, buildDir);
+
+    CryoLinker_LogState(linker);
+
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
 
+    // Initialize the type table
     TypeTable *typeTable = initTypeTable();
+
+    // Import the runtime definitions and initialize the global dependencies
+    boostrapRuntimeDefinitions(table, typeTable);
+    CryoLinker_LogState(linker);
 
     // Initialize the lexer
     Lexer lex;
@@ -56,25 +76,24 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     // Outputs the SymTable into a file in the build directory.
     outputSymTable(table, settings);
-
     initASTDebugOutput(programCopy, settings);
+    printTypeTable(typeTable);
     logASTNodeDebugView(programCopy);
 
-    printTypeTable(typeTable);
-
-    // Generate code
-    int result = generateCodeWrapper(programNode, state);
+    // Generate code (The C++ backend process)
+    int result = generateCodeWrapper(programNode, state, linker);
     if (result != 0)
     {
         CONDITION_FAILED;
         return 1;
     }
 
+    // Before returning, add cleanup
+    // CryoLinker_Destroy(linker); <- This was causing a problem at the end of compilation, unsure why
+
     END_COMPILATION_MESSAGE;
 
-    initASTConsoleOutput(programNode, filePath);
-
-    printTypeTable(typeTable);
+    logASTNodeDebugView(programCopy);
 
     return 0;
 }
@@ -114,7 +133,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     }
 
     // Generate code
-    int result = generateCodeWrapper(programNode, state);
+    int result = generateCodeWrapper(programNode, state, NULL);
     if (result != 0)
     {
         CONDITION_FAILED;

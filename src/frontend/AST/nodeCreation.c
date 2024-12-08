@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "frontend/AST.h"
 
-ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
     ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     if (!node)
@@ -39,6 +39,8 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);
+    node->metaData->line = lexer->line;
+    node->metaData->column = lexer->column;
 
     switch (type)
     {
@@ -138,6 +140,24 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     case NODE_METHOD:
         node->data.method = createMethodNodeContainer(arena, state);
         break;
+    case NODE_METHOD_CALL:
+        node->data.methodCall = createMethodCallNodeContainer(arena, state);
+        break;
+    case NODE_GENERIC_DECL:
+        node->data.genericDecl = createGenericDeclNodeContainer(arena, state);
+        break;
+    case NODE_GENERIC_INST:
+        node->data.genericInst = createGenericInstNodeContainer(arena, state);
+        break;
+    case NODE_CLASS:
+        node->data.classNode = createClassNodeContainer(arena, state);
+        break;
+    case NODE_CLASS_CONSTRUCTOR:
+        node->data.classConstructor = createClassConstructorNodeContainer(arena, state);
+        break;
+    case NODE_OBJECT_INST:
+        node->data.objectNode = createObjectNodeContainer(arena, state);
+        break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
         return NULL;
@@ -173,7 +193,7 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
 // </addChildNode>
 
 // <addStatementToBlock>
-void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, CompilerState *state)
+void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     if (blockNode->metaData->type != NODE_BLOCK && blockNode->metaData->type != NODE_FUNCTION_BLOCK)
     {
@@ -207,7 +227,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, C
 }
 // </addStatementToBlock>
 
-void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena, CompilerState *state)
+void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     if (!functionBlock || !statement || !functionBlock->metaData || functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
     {
@@ -259,7 +279,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
 }
 
 // <addFunctionToProgram>
-void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, CompilerState *state)
+void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     if (!program || !function)
     {

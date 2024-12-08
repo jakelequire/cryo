@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "codegen/oldCodeGen.hpp"
 
-int generateCodeWrapper(ASTNode *node, CompilerState *state)
+int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker cLinker)
 {
     std::cout << ">===------------- CPP Code Generation -------------===<\n"
               << std::endl;
@@ -24,12 +24,47 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state)
     Cryo::CryoCompiler compiler;
     compiler.setCompilerState(state);
     compiler.setCompilerSettings(state->settings);
+    compiler.isPreprocessing = false;
 
     std::string moduleName = state->fileName;
     std::cout << "Module Name: " << moduleName << std::endl;
     compiler.setModuleIdentifier(moduleName);
 
+    // Convert C opaque pointer back to C++ type
+    Cryo::Linker *cppLinker = reinterpret_cast<Cryo::Linker *>(cLinker);
+    compiler.setLinker(cppLinker);
+    compiler.initDependencies();
+
     compiler.compile(node);
+
+    return 0;
+}
+
+int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath)
+{
+    std::cout << ">===------------- CPP Runtime Generation -------------===<\n"
+              << std::endl;
+
+    std::cout << "Starting Runtime IR Generation" << std::endl;
+    Cryo::CryoCompiler compiler;
+    std::cout << "Compiler Initialized" << std::endl;
+
+    compiler.setCompilerState(state);
+    std::cout << "Compiler State set" << std::endl;
+
+    compiler.setCompilerSettings(state->settings);
+    std::cout << "Compiler Settings set" << std::endl;
+
+    std::string moduleName = "runtime";
+    compiler.setModuleIdentifier(moduleName);
+
+    std::cout << "Module Identifier set | " << moduleName << std::endl;
+    // Set the output path for the runtime
+    compiler.setCustomOutputPath(outputPath);
+
+    std::cout << "Custom Output Path set | " << outputPath << std::endl;
+
+    compiler.compile(runtimeNode);
 
     return 0;
 }
@@ -103,6 +138,12 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
         return;
+    }
+
+    // Just a name wrapper around `parseTree` to look cleaner
+    void Generator::generateBlock(ASTNode *node)
+    {
+        parseTree(node);
     }
 
     /**
@@ -196,6 +237,11 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Block");
             ASTNode **statements = root->data.block->statements;
             int statementCount = root->data.block->statementCount;
+            if (statementCount == 0)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Empty Block");
+                break;
+            }
             for (int i = 0; i < statementCount; i++)
             {
                 generator.parseTree(statements[i]);
@@ -228,6 +274,18 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Scoped Function Call");
             generator.handleScopedFunctionCall(root);
+            break;
+        }
+        case NODE_METHOD_CALL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Method Call");
+            compiler.getFunctions().handleMethodCall(root);
+            break;
+        }
+        case NODE_CLASS:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Class");
+            compiler.getClasses().handleClassDeclaration(root);
             break;
         }
         default:
@@ -328,7 +386,7 @@ namespace Cryo
         case NODE_FUNCTION_CALL:
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Function Call");
-            generator.handleFunctionCall(node);
+            llvmValue = functions.createFunctionCall(node);
             break;
         }
         case NODE_PARAM:
@@ -390,6 +448,13 @@ namespace Cryo
                 const char *cString = strdup(literalNode->value.stringValue);
                 std::string formattedString = formatString(std::string(cString));
                 llvmValue = llvm::ConstantDataArray::getString(compiler.getContext().context, formattedString);
+                break;
+            }
+            case PRIM_ANY:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Any Literal");
+                // Handle Any type
+                DEBUG_BREAKPOINT;
                 break;
             }
             case PRIM_VOID:
