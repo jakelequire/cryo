@@ -57,8 +57,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    const int initialCapacity = PROGRAM_CAPACITY;
-    node->statements = (ASTNode **)calloc(initialCapacity, sizeof(ASTNode *));
+    node->statements = (ASTNode **)calloc(PROGRAM_CAPACITY, sizeof(ASTNode *));
     if (!node->statements)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
@@ -67,7 +66,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
     }
 
     node->statementCount = 0;
-    node->statementCapacity = initialCapacity;
+    node->statementCapacity = PROGRAM_CAPACITY;
 
     return node;
 }

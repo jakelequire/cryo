@@ -21,12 +21,14 @@ namespace Cryo
 {
     void Compilation::compileIRFile(void)
     {
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compiling IR File");
         CryoContext &cryoContext = compiler.getContext();
         CompilerSettings *settings = compiler.getCompilerSettings();
 
         Linker *linker = compiler.getLinker();
 
         // Hoist the declarations from the linker
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Hoisting Declarations");
         linker->hoistDeclarations(compiler.getContext().module.get());
 
         if (llvm::verifyModule(*cryoContext.module, nullptr))

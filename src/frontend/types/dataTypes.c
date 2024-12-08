@@ -690,3 +690,34 @@ DataType *findClassTypeFromName(const char *name, TypeTable *typeTable)
 
     return type;
 }
+
+DataType **getParamTypeArray(ASTNode **node)
+{
+    if (!node)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid node.\n");
+        CONDITION_FAILED;
+    }
+
+    DataType **types = (DataType **)malloc(sizeof(DataType *) * 64);
+    if (!types)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type array.\n");
+        CONDITION_FAILED;
+    }
+
+    for (int i = 0; i < 64; i++)
+    {
+        printf("Viewing Node Type: %s\n", CryoNodeTypeToString(node[i]->metaData->type));
+        if (!node[i])
+        {
+            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop");
+            break;
+        }
+        types[i] = node[i]->data.param->type;
+        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node");
+    }
+
+    logMessage("INFO", __LINE__, "DataTypes", "Returning param type array");
+    return types;
+}

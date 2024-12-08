@@ -477,7 +477,7 @@ namespace Cryo
         DataType *varDataType = var->dataType;
         if (!varDataType)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable data type not found");
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable data type not found for: " + varName);
             CONDITION_FAILED;
         }
 
@@ -544,6 +544,7 @@ namespace Cryo
                 DevDebugger::logLLVMValue(var->LLVMValue);
                 if (isStructType)
                 {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Struct Type Found");
                     llvm::Value *structPtr = compiler.getContext().builder.CreateAlloca(varType->getPointerTo(), nullptr, varName + ".ptr");
                     if (!structPtr)
                     {
@@ -567,6 +568,8 @@ namespace Cryo
 
                     return structLoad;
                 }
+
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable Value Found");
                 return var->LLVMValue;
             }
 
@@ -700,12 +703,18 @@ namespace Cryo
             case PRIM_STRING:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
-                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalValue->getType(), nullptr, "literal.str.ptr");
+                llvm::Type *literalType = compiler.getTypes().getType(dataType, 0);
+                std::cout << "\n\nTEST" << std::endl;
+                std::string literalName = "literal.str.ptr";
+                DevDebugger::logLLVMType(literalType);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, literalName);
                 if (!literalVarPtr)
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
                     CONDITION_FAILED;
                 }
+
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Storing String Literal");
                 llvm::Value *literalVar = compiler.getContext().builder.CreateStore(literalValue, literalVarPtr);
                 if (!literalVar)
                 {
@@ -713,6 +722,7 @@ namespace Cryo
                     CONDITION_FAILED;
                 }
 
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning String Literal");
                 return literalVarPtr;
             }
             case PRIM_BOOLEAN:

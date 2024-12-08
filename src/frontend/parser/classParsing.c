@@ -523,8 +523,6 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
     if (sym->node->metaData->type == NODE_METHOD)
     {
         bool isStaticMethod = sym->node->data.method->isStatic;
-        consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start method arguments.", "parseMethodScopeResolution", table, arena, state, typeTable, context);
-
         ASTNode *argList = parseArgumentList(lexer, table, context, arena, state, typeTable);
         if (!argList)
         {

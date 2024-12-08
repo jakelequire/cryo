@@ -892,6 +892,7 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
     node->data.method->params = args;
     node->data.method->paramCount = argCount;
     node->data.method->type = type;
+    node->data.method->functionType = type;
     node->data.method->parentName = parentName;
     node->data.method->isStatic = isStatic;
 

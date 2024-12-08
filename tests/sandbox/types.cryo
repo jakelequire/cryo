@@ -38,7 +38,7 @@ function printString(s: String) -> void {
 }
 
 function main() -> void {
-    const testString: String = "Hello, world!";
+    const testString: String = "Types Test";
     printString(testString);
     return;
 }

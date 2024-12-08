@@ -42,6 +42,7 @@ namespace Cryo
                 {
                 case PRIM_INT:
                 {
+                    DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating Int Literal");
                     llvmType = compiler.getTypes().getType(element->data.literal->type, 0);
                     int index = element->data.literal->value.intValue;
                     llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
@@ -50,11 +51,18 @@ namespace Cryo
                 }
                 case PRIM_STRING:
                 {
+                    DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating String Literal");
                     int _len = compiler.getTypes().getLiteralValLength(element);
                     llvmType = compiler.getTypes().getType(element->data.literal->type, _len + 1);
                     llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
                     elements.push_back(llvmElement);
                     break;
+                }
+                default:
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Unknown primitive type");
+                    std::cout << "Received: " << DataTypeToString(dataType) << std::endl;
+                    DEBUG_BREAKPOINT;
                 }
                 }
             }
@@ -130,9 +138,11 @@ namespace Cryo
                     case PRIM_INT:
                     {
                         DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating Int Literal");
-                        llvmType = compiler.getTypes().getType(element->data.literal->type, 0);
+                        DataType *litType = element->data.literal->type;
+                        logDataType(litType);
+                        llvmType = compiler.getTypes().getType(litType, 0);
                         int index = element->data.literal->value.intValue;
-                        llvm::Constant *llvmElement = llvm::ConstantInt::get(llvmType, index);
+                        llvm::Constant *llvmElement = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, index, true));
                         elements.push_back(llvmElement);
                         break;
                     }
@@ -141,7 +151,8 @@ namespace Cryo
                         DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating String Literal");
                         int _len = compiler.getTypes().getLiteralValLength(element);
                         llvmType = compiler.getTypes().getType(element->data.literal->type, _len + 1);
-                        llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, element->data.literal->value.stringValue);
+                        std::string str = element->data.literal->value.stringValue;
+                        llvm::Constant *llvmElement = llvm::ConstantDataArray::getString(compiler.getContext().context, str);
                         elements.push_back(llvmElement);
                         break;
                     }
@@ -349,7 +360,7 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Array length not found");
             CONDITION_FAILED;
         }
-        
+
         return arrayLength;
     }
 

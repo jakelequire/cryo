@@ -414,9 +414,11 @@ namespace Cryo
 
         IRSymTable &symTable = compiler.getSymTable();
 
+        DataType *paramType = paramNode->data.param->type;
+
         // Add the parameter to the symbol table
         symTable.addParameter(namespaceName, paramName, paramNode);
-        symTable.addParamAsVariable(namespaceName, paramName, llvmValue, llvmType, storeInst);
+        symTable.addParamAsVariable(namespaceName, paramName, paramType, llvmValue, llvmType, storeInst);
 
         return;
     }

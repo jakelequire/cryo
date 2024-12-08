@@ -567,7 +567,14 @@ namespace Cryo
             ASTNode *statement = statements[i];
             if (statement->metaData->type == NODE_RETURN_STATEMENT)
             {
-                DataType *nodeDataType = statement->data.returnStatement->type;
+                CryoReturnNode *returnNode = statement->data.returnStatement;
+                DataType *nodeDataType = returnNode->type;
+
+                if (!returnNode->expression)
+                {
+                    llvm::Type *retType = types.getReturnType(createPrimitiveVoidType());
+                    return retType;
+                }
 
                 switch (nodeDataType->container->baseType)
                 {
@@ -575,6 +582,7 @@ namespace Cryo
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning int");
                     llvm::Type *retType = types.getType(createPrimitiveIntType(), 0);
+                    DevDebugger::logLLVMType(retType);
                     return retType;
                 }
                 case PRIM_STRING:
@@ -731,7 +739,9 @@ namespace Cryo
         std::string _paramName = param->getName().str();
         compiler.getContext().namedValues[param->getName().str()] = loadInst;
 
-        symTable.addParamAsVariable(namespaceName, _paramName, loadInst, argTypes, storeInst);
+        DataType *paramDataType = paramNode->data.param->type;
+
+        symTable.addParamAsVariable(namespaceName, _paramName, paramDataType, loadInst, argTypes, storeInst);
         DataType *paramType = paramNode->data.param->type;
         if (!paramType)
         {
@@ -785,7 +795,7 @@ namespace Cryo
         std::string _paramName = paramName;
         compiler.getContext().namedValues[paramName] = alloca;
 
-        symTable.addParamAsVariable(namespaceName, _paramName, alloca, paramLLVMType, storeInst);
+        symTable.addParamAsVariable(namespaceName, _paramName, paramType, alloca, paramLLVMType, storeInst);
         DataType *paramDataType = paramNode->data.param->type;
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");

@@ -484,7 +484,8 @@ namespace Cryo
         return;
     }
 
-    void IRSymTable::addParamAsVariable(std::string namespaceName, std::string paramName, llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst)
+    void IRSymTable::addParamAsVariable(std::string namespaceName, std::string paramName, DataType *dataType,
+                                        llvm::Value *llvmValue, llvm::Type *llvmType, llvm::StoreInst *storeInst)
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Parameter as Variable");
@@ -495,11 +496,12 @@ namespace Cryo
         varContainer.LLVMValue = llvmValue;
         varContainer.LLVMType = llvmType;
         varContainer.LLVMStoreInst = storeInst;
+        varContainer.dataType = dataType;
         varContainer.ASTNode = nullptr;
         // Add the variable to the SymTable
         symNode.variableNode[paramName] = varContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Parameter Added as Variable" << std::endl;
+        std::cout << "[IRSymTable] Parameter Added as Variable: " << paramName << std::endl;
         return;
     }
 

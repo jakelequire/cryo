@@ -126,19 +126,26 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting simple type to LLVM type");
 
-        // Check if it's an int type, this is a temporary solution
-        llvm::Type *intType = getIntegerTypeFromPrimitive(type->container->primitive);
-        if (intType)
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int type");
-            return intType;
-        }
-
         switch (type->container->primitive)
         {
-        case PRIM_INT:
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int to LLVM type");
+        case PRIM_INT: // 32-bit Default Integer
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type (default)");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I8:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 8-bit integer type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
+        case PRIM_I16:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 16-bit integer type");
+            return llvm::Type::getInt16Ty(CryoContext::getInstance().context);
+        case PRIM_I32:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type");
+            return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I64:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 64-bit integer type");
+            return llvm::Type::getInt64Ty(CryoContext::getInstance().context);
+        case PRIM_I128:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 128-bit integer type");
+            return llvm::Type::getInt128Ty(CryoContext::getInstance().context);
 
         case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting string to LLVM type");
@@ -194,7 +201,7 @@ namespace Cryo
         switch (type)
         {
         case PRIM_INT: // 32-bit Default Integer
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type");
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type (default)");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
         case PRIM_I8:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 8-bit integer type");

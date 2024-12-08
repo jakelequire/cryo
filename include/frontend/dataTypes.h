@@ -299,7 +299,10 @@ extern "C"
     DataType *CryoDataTypeStringToType(const char *typeStr);
     DataType *DataTypeFromNode(ASTNode *node);
     const char *getDataTypeName(DataType *type);
+
     DataType **getTypeArrayFromASTNode(ASTNode **node);
+    DataType **getParamTypeArray(ASTNode **node);
+
     DataType *getDataTypeFromASTNode(ASTNode *node);
     void setNewDataTypeForNode(ASTNode *node, DataType *type);
     DataType *cloneDataType(DataType *type);

@@ -650,6 +650,83 @@ namespace Cryo
             }
             }
         }
+        case NODE_VAR_DECLARATION:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Variable Declaration");
+            CryoVariableNode *varNode = node->data.varDecl;
+            DataType *varType = varNode->type;
+            ASTNode *initializer = varNode->initializer;
+            std::string varName = std::string(varNode->name);
+            std::cout << "Variable Name: " << varName << std::endl;
+
+            llvm::Value *llvmValue = nullptr;
+            llvmValue = compiler.getContext().namedValues[varName];
+            if (llvmValue)
+            {
+                DevDebugger::logMessage("WARN", __LINE__, "Variables", "Variable already exists");
+                return llvmValue;
+            }
+
+            if (initializer)
+            {
+                if (initializer->metaData->type == NODE_LITERAL_EXPR)
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Literal Expression");
+                    DataType *literalType = initializer->data.literal->type;
+                    switch (literalType->container->primitive)
+                    {
+                    case PRIM_STRING:
+                    {
+                        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Literal Expression");
+                        std::string literalValue = initializer->data.literal->value.stringValue;
+                        std::cout << "Literal Value: " << literalValue << std::endl;
+
+                        varName += "string";
+
+                        llvm::Type *stringType = llvm::Type::getInt8Ty(compiler.getContext().context)->getPointerTo();
+                        llvm::Constant *stringConstVal = llvm::ConstantDataArray::getString(compiler.getContext().context, literalValue);
+                        llvm::Type *stringDataType = stringConstVal->getType();
+                        llvm::Value *stringVal = stringConstVal;
+
+                        llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(stringDataType, nullptr, varName);
+
+                        // Store the string value
+                        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(stringVal, allocaInst);
+                        if (!storeInst)
+                        {
+                            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to store string value");
+                            CONDITION_FAILED;
+                        }
+
+                        // Load the string value
+                        llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(stringDataType->getPointerTo(), allocaInst, varName + ".load.var");
+                        if (!loadedValue)
+                        {
+                            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to load string value");
+                            CONDITION_FAILED;
+                        }
+
+                        return allocaInst;
+                    }
+                    default:
+                    {
+                        DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown primitive type");
+                        CONDITION_FAILED;
+                    }
+                    }
+                }
+                else
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown initializer type");
+                    CONDITION_FAILED;
+                }
+            }
+            else
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "No initializer found");
+                CONDITION_FAILED;
+            }
+        }
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown node type");
