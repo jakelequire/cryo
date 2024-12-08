@@ -54,7 +54,9 @@ This will be a basic overview of the language and its features. This will be upd
 | `const`       | `true`   | `boolean`  | `while`        |
 | `mut`         | `false`  | `float`    | `for`          |
 | `namespace`   | `public` | `void`     |                |
-| `private`     |          |            |                |
+| `private`     | `class`  |            |                |
+| `constructor` | `static` |            |                |
+| `this`        | `new`    |            |                |
 
 
 ### <u>Operators</u>
@@ -75,7 +77,7 @@ Here is a simple hello world program in Cryo:
 ```cpp
 namespace Main;
 
-extern function printStr(str: string) -> void;
+// Note: `printStr` is a runtime function that is baked into the main program before compiling.
 
 function main() -> void {
     printStr("Hello, world!");
@@ -94,9 +96,6 @@ Here is a simple program that will print the first 16 numbers of the Fibonacci s
 
 ```cpp
 namespace Fibonacci;
-
-extern function printStr(str: string) -> void;
-extern function printInt(num: int) -> void;
 
 function fibonacci(n: int) -> void {
     mut a: int = 0;
@@ -201,6 +200,8 @@ There is a small LSP within the project under the [`./assets/`](./assets/) direc
 ## Conclusion
 
 Once again, this is just a side project that I wanted to build for fun and to learn new things. The only real goal of this project is to have a very minimalistic general purpose programming language. I have no intention on a serious roadmap and just adding things as I see fit.
+
+To view more about the language, you can view the language overview [here](./docs/langOverview.md).
 
 ### License
 

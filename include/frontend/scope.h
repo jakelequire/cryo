@@ -14,62 +14,16 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef UTILITY_H
-#define UTILITY_H
-#ifdef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#ifndef SCOPE_H
+#define SCOPE_H
 
-#else // UNIX
-#include <aio.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
+#include <malloc.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <stddef.h>
 
-// >==------ Prototypes ------==< //
-
-///
-/// @brief          Converts an integer to a constant character pointer.
-/// @param num      The integer to convert
-/// @return         The constant character pointer
-///
-const char *intToConstChar(int num);
-
-///
-/// @brief          Converts an integer to a character pointer.
-/// @param num      The integer to convert
-/// @return         The character pointer
-///
-char *intToChar(int num);
-
-///
-/// @brief          Converts a character pointer to an integer.
-/// @param str      The character pointer to convert
-/// @return         The integer
-///
-int charToInt(char *str);
-
-///
-/// @brief          Concatenates two strings together.
-/// @param str1     The first string
-/// @param str2     The second string
-/// @return         The concatenated string
-///
-char *concatStrings(const char *str1, const char *str2);
-
-char *intToSafeString(int value);
-
-char *stringToUFString(const char *str);
-
-#define START_STDOUT_REDIRECT redirectStdout();
-#define END_STDOUT_REDIRECT restoreStdout();
-
-void redirectStdout();
-void restoreStdout();
-#endif // UTILITY_H
+#endif // SCOPE_H

@@ -21,95 +21,95 @@ struct Int {
 function stringTesting() -> void {
     printStr("------- String Testing --------");
 
-    // const testString: string = "Hello";
+    const testString: string = "Hello";
+    printStr(testString);
 
-    // const indexStringOne: string = testString[0];
-    // const indexStringTwo: string = testString[1];
-    // const indexStringThree: string = testString[2];
-    
-    // printStr(indexStringOne);
-    // printStr(indexStringTwo);
-    // printStr(indexStringThree);
-
-    // printStr(testString[0]);
+    //const indexStringOne: string = testString[0];
+    //const indexStringTwo: string = testString[1];
+    //const indexStringThree: string = testString[2];
+    //
+    //printStr(indexStringOne);
+    //printStr(indexStringTwo);
+    //printStr(indexStringThree);
+    //
+    //printStr(testString[0]);
 
     return;
 }
 
-// function arrayTesting() -> void {
-//     printStr("--------- Array Testing ---------");
-//     const fooArr: int[] = [1, 2, 3, 4, 5];
-//     
-//     printInt(fooArr[0]);
-//     printInt(fooArr[1]);
-//     printInt(fooArr[2]);
-//     printInt(fooArr[3]);
-//     printInt(fooArr[4]);
-// 
-//     // This should throw an error and calls `sys_exit()` (for now).
-//     // Eventually, I'll just return null and move on with execution.
-//     // printInt(fooArr[5]);
-// 
-//     return;
-// }
+function arrayTesting() -> void {
+    printStr("--------- Array Testing ---------");
+    const fooArr: int[] = [1, 2, 3, 4, 5];
+    
+    printInt(fooArr[0]);
+    printInt(fooArr[1]);
+    printInt(fooArr[2]);
+    printInt(fooArr[3]);
+    printInt(fooArr[4]);
 
+    // This should throw an error and calls `sys_exit()` (for now).
+    // Eventually, I'll just return null and move on with execution.
+    // printInt(fooArr[5]);
 
-// function structTesting() -> void {
-//     printStr("-------- Struct Testing --------");
-//     const intTest: Int = 1234; // WE ARE BREAKING HERE
-//     const intTestTwo: int = intTest.value;
-//     printInt(intTestTwo);
-//     printInt(intTest.value);
-// 
-//     const strVal: string = intTest.toString();
-//     printStr(strVal);
-//     printStr(intTest.toString());
-// 
-//     intTest.fooMethod();
-// 
-//     return;
-// }
+    return;
+}
 
+function structTesting() -> void {
+    printStr("-------- Struct Testing --------");
+    const intTest: Int = 1234; // WE ARE BREAKING HERE
+    const intTestTwo: int = intTest.value;
+    printInt(intTestTwo);
+    printInt(intTest.value);
 
-// function binOpTest() -> void {
-//     printStr("------ Binary Ops Testing ------");
-//     const addTest: int = 34 + 36;
-//     printStr("Addition test: ");
-//     printInt(addTest);
-//     
-//     const subTest: int = 36 - 34;
-//     printStr("Subtraction test: ");
-//     printInt(subTest);
-// 
-//     const mulTest: int = 16 * 16;
-//     printStr("Multiplication test: ");
-//     printInt(mulTest);
-// 
-//     const divTest: int = 10 / 2;
-//     printStr("Division test: ");
-//     printInt(divTest);
-// 
-//     const modTest: int = 10 % 3;
-//     printStr("Modulus test: ");
-//     printInt(modTest);
-// 
-//     return;
-// }
+    const strVal: string = intTest.toString();
+    printStr(strVal);
+    printStr(intTest.toString());
 
+    intTest.fooMethod();
 
-function main() -> int {
+    return;
+}
+
+function binOpTest() -> void {
+    printStr("------ Binary Ops Testing ------");
+    const addTest: int = 34 + 36;
+    printStr("Addition test: ");
+    printInt(addTest);
+    
+    const subTest: int = 36 - 34;
+    printStr("Subtraction test: ");
+    printInt(subTest);
+
+    const mulTest: int = 16 * 16;
+    printStr("Multiplication test: ");
+    printInt(mulTest);
+
+    const divTest: int = 10 / 2;
+    printStr("Division test: ");
+    printInt(divTest);
+
+    const modTest: int = 10 % 3;
+    printStr("Modulus test: ");
+    printInt(modTest);
+
+    return;
+}
+
+function main(argc: int, argv: string[]) -> int {
     printStr("-------- Main Function --------");
     printStr("Arg count: ");
-    // printInt(argc);
+    printInt(argc);
 
     printStr("\nArgv[0]:");
-    // const argOne: string = argv[0];
-    // printStr(argOne);
+    const argOne: string = argv[0];
+    printStr(argOne);
 
-    // structTesting();
-    // binOpTest();
+    stringTesting();
+    structTesting();
+    binOpTest();
     // arrayTesting();
-    // stringTesting();
+
+    sys_exit(0);
 
     return 0;
 }

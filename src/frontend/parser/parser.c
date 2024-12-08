@@ -581,7 +581,8 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     case TOKEN_INT_LITERAL:
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing integer literal");
-        node = createIntLiteralNode(atoi(lexer->currentToken.start), arena, state, typeTable, lexer);
+        char *intStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        node = createIntLiteralNode(atoi(intStr), arena, state, typeTable, lexer);
         getNextToken(lexer, arena, state, typeTable);
         return node;
     }
@@ -1477,6 +1478,11 @@ ASTNode *parseReturnStatement(Lexer *lexer, CryoSymbolTable *table, ParsingConte
         if (expression->metaData->type == NODE_BINARY_EXPR)
         {
             returnType = createPrimitiveIntType();
+            printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
+        }
+        if (expression->metaData->type == NODE_FUNCTION_CALL)
+        {
+            returnType = expression->data.functionCall->returnType;
             printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
         }
     }

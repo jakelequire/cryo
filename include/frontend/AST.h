@@ -148,6 +148,7 @@ typedef struct FunctionCallNode
     struct ASTNode **args;
     int argCount;
     int argCapacity;
+    DataType *returnType;
 } FunctionCallNode;
 
 typedef struct LiteralNode

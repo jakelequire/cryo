@@ -382,27 +382,47 @@ namespace Cryo
         case PRIM_STRING:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is a string literal");
-            int _len = compiler.getTypes().getLiteralValLength(literalNode) + 1;
-            llvmType = compiler.getTypes().getType(dataType, _len);
-            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(DataTypeToString(dataType)));
 
-            llvm::Value *varValue = compiler.getGenerator().getLiteralValue(literalNode);
-            if (!varValue)
+            // Get the string content from the literal node
+            std::string strContent = literalNode->value.stringValue;
+            const std::string &strContentRef = strContent;
+            std::cout << "String Content: " << strContentRef << std::endl;
+
+            // Get or create the global string constant
+            llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(strContentRef);
+            if (!globalStr)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Global string not created");
                 CONDITION_FAILED;
             }
-            llvmValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
-            llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(varValue, llvmValue);
-            storeInst->setAlignment(llvm::Align(8));
 
-            compiler.getContext().namedValues[varName] = llvmValue;
+            // Get pointer to the first character of the global string
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Getting pointer to first character");
+            std::vector<llvm::Value *> indices = {
+                llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0),
+                llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0)};
 
-            llvm::Type *strType = types.getType(createPrimitiveStringType(_len), _len);
-            symTable.updateVariableNode(namespaceName, varName, llvmValue, strType);
-            symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating GEP instruction");
+            llvm::Value *strPtr = compiler.getContext().builder.CreateInBoundsGEP(
+                globalStr->getValueType(),
+                globalStr,
+                indices,
+                varName + ".str.ptr");
 
-            return llvmValue;
+            if (!strPtr)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to create GEP instruction");
+                CONDITION_FAILED;
+            }
+
+            int strLen = strContentRef.length();
+            std::cout << "String Length: " << strLen << std::endl;
+
+            llvm::Type *strType = types.getType(createPrimitiveStringType(strLen), strLen);
+            symTable.updateVariableNode(namespaceName, varName, strPtr, strType);
+            compiler.getContext().namedValues[varName] = strPtr;
+
+            return strPtr;
         }
         default:
         {

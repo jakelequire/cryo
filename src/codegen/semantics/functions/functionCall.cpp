@@ -703,27 +703,39 @@ namespace Cryo
             case PRIM_STRING:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating String Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(dataType, 0);
-                std::cout << "\n\nTEST" << std::endl;
-                std::string literalName = "literal.str.ptr";
-                DevDebugger::logLLVMType(literalType);
-                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, literalName);
-                if (!literalVarPtr)
+
+                // Get the string content from the literal node
+                std::string strContent = literalNode->value.stringValue;
+                const std::string &strContentRef = strContent;
+                std::cout << "String Content: " << strContentRef << std::endl;
+
+                // Get or create the global string constant
+                llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(strContentRef);
+                if (!globalStr)
                 {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to create global string");
                     CONDITION_FAILED;
                 }
 
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Storing String Literal");
-                llvm::Value *literalVar = compiler.getContext().builder.CreateStore(literalValue, literalVarPtr);
-                if (!literalVar)
+                // Create GEP to get pointer to the first character
+                std::vector<llvm::Value *> indices = {
+                    llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0),
+                    llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0)};
+
+                llvm::Value *strPtr = compiler.getContext().builder.CreateInBoundsGEP(
+                    globalStr->getValueType(),
+                    globalStr,
+                    indices,
+                    "str.arg.ptr");
+
+                if (!strPtr)
                 {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not stored");
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to create string pointer");
                     CONDITION_FAILED;
                 }
 
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning String Literal");
-                return literalVarPtr;
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Successfully created string argument");
+                return strPtr;
             }
             case PRIM_BOOLEAN:
             {

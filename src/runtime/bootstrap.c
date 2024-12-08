@@ -26,6 +26,46 @@ char *runtimePaths[] = {
 #define RUNTIME_SRC_FILE runtimePaths[0]
 #define RUINTIME_OBJ_FILE runtimePaths[1]
 
+// CRYO_ROOT/cryo/runtime.cryo (CRYO_ROOT is an environment variable)
+char *getRuntimeSrcFile(void)
+{
+    char *runtimeBuffer = (char *)malloc(sizeof(char) * 1024);
+    char *envRoot = getenv("CRYO_ROOT");
+    if (!envRoot)
+    {
+        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set, using fallback that may not work!!\n" COLOR_RESET);
+        return RUNTIME_SRC_FILE;
+    }
+
+    sprintf(runtimeBuffer, "%scryo/runtime.cryo", envRoot);
+
+    printf("\n");
+    printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
+    printf("\n");
+
+    return runtimeBuffer;
+}
+
+// CRYO_ROOT/build/out/deps/runtime.ll (CRYO_ROOT is an environment variable)
+char *getRuntimeObjFile(void)
+{
+    char *runtimeBuffer = (char *)malloc(sizeof(char) * 1024);
+    char *envRoot = getenv("CRYO_ROOT");
+    if (!envRoot)
+    {
+        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set, using fallback that may not work!!\n" COLOR_RESET);
+        return RUINTIME_OBJ_FILE;
+    }
+
+    sprintf(runtimeBuffer, "%sbuild/out/deps/runtime.ll", envRoot);
+
+    printf("\n");
+    printf(LIGHT_GREEN BOLD "Runtime Object Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
+    printf("\n");
+
+    return runtimeBuffer;
+}
+
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
 // compile the runtime into the program.
@@ -33,7 +73,7 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
 {
     logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapping runtime definitions...");
 
-    char *runtimePath = RUNTIME_SRC_FILE;
+    char *runtimePath = getRuntimeSrcFile();
     Bootstrapper *bootstrap = initBootstrapper(runtimePath);
 
     logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapper initialized");
@@ -68,8 +108,8 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
     logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions bootstrapped successfully");
 
     // Create the runtime object file
-    const char *outputFile = RUINTIME_OBJ_FILE;
-    bootstrap->state->settings->inputFile = RUNTIME_SRC_FILE;
+    const char *outputFile = getRuntimeObjFile();
+    bootstrap->state->settings->inputFile = getRuntimeSrcFile();
 
     preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile);
 

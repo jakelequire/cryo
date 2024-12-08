@@ -2,7 +2,6 @@ namespace Classes;
 
 class IO {
     public exampleProp: string;
-    // private examplePrivateProp: string = "private";
 
     constructor() {}
 

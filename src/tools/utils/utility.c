@@ -52,3 +52,51 @@ char *concatStrings(const char *str1, const char *str2)
     strcat(result, str2);
     return result;
 }
+
+char *intToSafeString(int value)
+{
+    // Size for maximum int (-2147483648) plus null terminator
+    const size_t BUFFER_SIZE = 12;
+    char *buffer = (char *)malloc(BUFFER_SIZE);
+
+    if (buffer == NULL)
+    {
+        return NULL; // Handle allocation failure
+    }
+
+    int written = snprintf(buffer, BUFFER_SIZE, "%d", value);
+
+    if (written < 0 || written >= BUFFER_SIZE)
+    {
+        free(buffer); // Clean up on error
+        return NULL;
+    }
+
+    return buffer;
+}
+
+// #### String To Unformatted String
+// This function is to strip away any escape characters from a string
+// Such as \n, \t, \r, etc. This is useful for printing strings but not their escape characters for debugging
+// (Makes a copy of the original string)
+char *stringToUFString(const char *str)
+{
+    // We make a string copy of the input string, do not modify the original
+    char *buffer = strdup(str);
+    if (buffer == NULL)
+    {
+        perror("Failed to allocate memory for UF string");
+        return NULL;
+    }
+
+    // We iterate through the string and remove any escape characters
+    for (int i = 0; buffer[i] != '\0'; i++)
+    {
+        if (buffer[i] == '\n' || buffer[i] == '\t' || buffer[i] == '\r')
+        {
+            buffer[i] = 0x20; // Replace with a space
+        }
+    }
+
+    return buffer;
+}

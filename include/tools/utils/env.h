@@ -14,62 +14,34 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef UTILITY_H
-#define UTILITY_H
-#ifdef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#ifndef CRYO_ENV_H
+#define CRYO_ENV_H
 
-#else // UNIX
-#include <aio.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <libgen.h>
+#include <limits.h>
+
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#endif
+#include <sys/types.h>
 
-// >==------ Prototypes ------==< //
+#include "tools/macros/consoleColors.h"
 
-///
-/// @brief          Converts an integer to a constant character pointer.
-/// @param num      The integer to convert
-/// @return         The constant character pointer
-///
-const char *intToConstChar(int num);
+extern const char *ENV_VECTOR[];
 
-///
-/// @brief          Converts an integer to a character pointer.
-/// @param num      The integer to convert
-/// @return         The character pointer
-///
-char *intToChar(int num);
+// Initialize all environment variables based on CRYO_ROOT directory
+int initEnvVars(const char *cryo_dir);
 
-///
-/// @brief          Converts a character pointer to an integer.
-/// @param str      The character pointer to convert
-/// @return         The integer
-///
-int charToInt(char *str);
+// Ensure a specific environment variable is set
+int ensureEnvVar(const char *env_name, const char *env_value);
 
-///
-/// @brief          Concatenates two strings together.
-/// @param str1     The first string
-/// @param str2     The second string
-/// @return         The concatenated string
-///
-char *concatStrings(const char *str1, const char *str2);
+// Verify all required environment variables are properly set
+int verifyEnvSetup(void);
 
-char *intToSafeString(int value);
+char *getCompilerRootPath(const char *argv0);
 
-char *stringToUFString(const char *str);
-
-#define START_STDOUT_REDIRECT redirectStdout();
-#define END_STDOUT_REDIRECT restoreStdout();
-
-void redirectStdout();
-void restoreStdout();
-#endif // UTILITY_H
+#endif // CRYO_ENV_H

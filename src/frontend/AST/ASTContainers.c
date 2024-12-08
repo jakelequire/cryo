@@ -364,6 +364,7 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
 ///     struct ASTNode **args;
 ///     int argCount;
 ///     int argCapacity;
+///     DataType *eturnType;
 /// } FunctionCallNode;
 ///```
 ///
@@ -380,6 +381,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *s
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
+    node->returnType = wrapTypeContainer(createTypeContainer());
 
     return node;
 }

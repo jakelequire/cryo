@@ -139,6 +139,39 @@ namespace Cryo
 
         bool inGlobalScope = true;
 
+        std::unordered_map<std::string, llvm::GlobalVariable *> stringTable;
+        size_t stringCounter = 0;
+
+        llvm::GlobalVariable *getOrCreateGlobalString(const std::string &content)
+        {
+            // First check if we already have this string
+            auto it = stringTable.find(content);
+            if (it != stringTable.end())
+            {
+                return it->second;
+            }
+
+            // Create a new global string constant
+            llvm::Constant *stringConstant = llvm::ConstantDataArray::getString(context, content);
+
+            // Generate a unique name for this string
+            std::string globalName = "str." + std::to_string(stringCounter++);
+
+            // Create the global variable
+            llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(
+                *module,
+                stringConstant->getType(),
+                true, // isConstant
+                llvm::GlobalValue::PrivateLinkage,
+                stringConstant,
+                globalName);
+
+            // Store in our table
+            stringTable[content] = globalStr;
+
+            return globalStr;
+        }
+
         void initializeContext()
         {
             // Get the filename from the CompilerState

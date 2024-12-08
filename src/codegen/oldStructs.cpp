@@ -226,6 +226,9 @@ namespace Cryo
             nullptr,
             varDecl->name);
 
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct Pointer Allocated");
+        DevDebugger::logLLVMValue(structPtr);
+
         // If there's an initializer, handle it
         if (varDecl->initializer)
         {
@@ -234,7 +237,9 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling single value initializer");
                 DataType *initType = varDecl->initializer->data.literal->type;
+                logDataType(initType);
                 bool isString = isStringDataType(initType);
+
                 if (isString)
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Structs", "String initializer found of type string");

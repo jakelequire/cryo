@@ -1257,11 +1257,11 @@ char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
     // <MethodCall> [NAME] { RETURN_TYPE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<MethodCall>%s %s[%s]:%s%s%s %s %s%s<0:0>%s",
+    sprintf(buffer, "%s%s<MethodCall>%s %s[%s]:%s%s%s %s %s%s<0:0>%s%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
-            DARK_GRAY, ITALIC, COLOR_RESET);
+            DARK_GRAY, ITALIC, COLOR_RESET, COLOR_RESET);
     return buffer;
 }
 // </MethodCall>
@@ -1521,13 +1521,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         {
             if (node->data.functionDecl->paramCount == 0)
                 break;
+
+            indentLevel++;
             createASTDebugView(node->data.functionDecl->params[i], output, indentLevel);
             indentLevel--;
         }
-
         indentLevel++;
         createASTDebugView(node->data.functionDecl->body, output, indentLevel);
-        indentLevel--;
         break;
     }
 
@@ -1712,9 +1712,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         {
         case PRIM_INT:
         {
-            char *literalValue = (char *)malloc(sizeof(char) * 32);
             int intValue = node->data.literal->value.intValue;
-            sprintf(literalValue, "%i", intValue);
+            char *literalValue = intToSafeString(intValue);
+            if (literalValue == NULL)
+            {
+                logMessage("ERROR", __LINE__, "AST::DBG", "Failed to convert int to string");
+                return;
+            }
             ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
@@ -1728,9 +1732,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         case PRIM_I16:
         case PRIM_I8:
         {
-            char *literalValue = (char *)malloc(sizeof(char) * 32);
             int intValue = node->data.literal->value.intValue;
-            sprintf(literalValue, "%i", intValue);
+            char *literalValue = intToSafeString(intValue);
+            if (literalValue == NULL)
+            {
+                logMessage("ERROR", __LINE__, "AST::DBG", "Failed to convert int to string");
+                return;
+            }
             ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
@@ -1751,7 +1759,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         case PRIM_STRING:
         {
             char *literalValue = strdup(node->data.literal->value.stringValue);
-            ASTDebugNode *stringLiteralNode = createASTDebugNode("StringLiteral", literalValue, dataType, line, column, indentLevel, node);
+            char *strippedStr = stringToUFString(literalValue);
+            ASTDebugNode *stringLiteralNode = createASTDebugNode("StringLiteral", strippedStr, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *stringLiteralNode;
             output->nodeCount++;
             free(literalValue);
@@ -2070,7 +2079,8 @@ char *ASTNodeValueBuffer(ASTNode *node)
         {
             char *buffer = (char *)malloc(sizeof(char) * 32);
             sprintf(buffer, "%s", node->data.literal->value.stringValue);
-            return buffer;
+            char *strippedStr = stringToUFString(buffer);
+            return strippedStr;
         }
         case PRIM_BOOLEAN:
         {

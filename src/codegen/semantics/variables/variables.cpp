@@ -600,7 +600,6 @@ namespace Cryo
         CryoNodeType nodeType = node->metaData->type;
         std::string nodeTypeStr = CryoNodeTypeToString(nodeType);
         std::cout << "Node Type: " << nodeTypeStr << std::endl;
-        std::string varName = "literal.";
 
         switch (nodeType)
         {
@@ -616,32 +615,19 @@ namespace Cryo
                 std::string literalValue = node->data.literal->value.stringValue;
                 std::cout << "Literal Value: " << literalValue << std::endl;
 
-                varName += "string";
+                // Get or create global string
+                llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(literalValue);
 
-                llvm::Type *stringType = llvm::Type::getInt8Ty(compiler.getContext().context)->getPointerTo();
-                llvm::Constant *stringConstVal = llvm::ConstantDataArray::getString(compiler.getContext().context, literalValue);
-                llvm::Type *stringDataType = stringConstVal->getType();
-                llvm::Value *stringVal = stringConstVal;
+                // Create a GEP to get pointer to first character
+                std::vector<llvm::Value *> indices = {
+                    llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0),
+                    llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0)};
 
-                llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(stringDataType, nullptr, varName);
-
-                // Store the string value
-                llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(stringVal, allocaInst);
-                if (!storeInst)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to store string value");
-                    CONDITION_FAILED;
-                }
-
-                // Load the string value
-                llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(stringDataType->getPointerTo(), allocaInst, varName + ".load.var");
-                if (!loadedValue)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to load string value");
-                    CONDITION_FAILED;
-                }
-
-                return allocaInst;
+                return compiler.getContext().builder.CreateInBoundsGEP(
+                    globalStr->getValueType(),
+                    globalStr,
+                    indices,
+                    "str.ptr");
             }
             default:
             {
@@ -681,30 +667,32 @@ namespace Cryo
                         std::string literalValue = initializer->data.literal->value.stringValue;
                         std::cout << "Literal Value: " << literalValue << std::endl;
 
-                        varName += "string";
+                        // Get or create global string
+                        llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(literalValue);
 
-                        llvm::Type *stringType = llvm::Type::getInt8Ty(compiler.getContext().context)->getPointerTo();
-                        llvm::Constant *stringConstVal = llvm::ConstantDataArray::getString(compiler.getContext().context, literalValue);
-                        llvm::Type *stringDataType = stringConstVal->getType();
-                        llvm::Value *stringVal = stringConstVal;
+                        // Create an alloca for the string pointer
+                        llvm::Type *stringPtrType = globalStr->getType()->getPointerTo();
+                        llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(
+                            stringPtrType,
+                            nullptr,
+                            varName + ".ptr");
 
-                        llvm::AllocaInst *allocaInst = compiler.getContext().builder.CreateAlloca(stringDataType, nullptr, varName);
+                        // Get pointer to first character
+                        std::vector<llvm::Value *> indices = {
+                            llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0),
+                            llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0)};
 
-                        // Store the string value
-                        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(stringVal, allocaInst);
-                        if (!storeInst)
-                        {
-                            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to store string value");
-                            CONDITION_FAILED;
-                        }
+                        llvm::Value *strPtr = compiler.getContext().builder.CreateInBoundsGEP(
+                            globalStr->getValueType(),
+                            globalStr,
+                            indices,
+                            varName + ".str.ptr");
 
-                        // Load the string value
-                        llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(stringDataType->getPointerTo(), allocaInst, varName + ".load.var");
-                        if (!loadedValue)
-                        {
-                            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Failed to load string value");
-                            CONDITION_FAILED;
-                        }
+                        // Store the string pointer
+                        compiler.getContext().builder.CreateStore(strPtr, allocaInst);
+
+                        // Add to named values table
+                        compiler.getContext().namedValues[varName] = allocaInst;
 
                         return allocaInst;
                     }
