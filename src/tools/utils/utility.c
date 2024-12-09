@@ -68,6 +68,7 @@ char *intToSafeString(int value)
 
     if (written < 0 || written >= BUFFER_SIZE)
     {
+        perror("Failed to write int to string");
         free(buffer); // Clean up on error
         return NULL;
     }

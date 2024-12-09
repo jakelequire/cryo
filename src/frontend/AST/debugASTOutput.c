@@ -1186,7 +1186,7 @@ char *CONSOLE_formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
     // <IntLiteral> [VALUE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<IntLiteral>%s %s[%i]%s %s%s<%i:%i>%s",
+    sprintf(buffer, "%s%s<IntLiteral>%s %s[%s]%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
@@ -1713,13 +1713,15 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         case PRIM_INT:
         {
             int intValue = node->data.literal->value.intValue;
+            printf("Int Value: %d\n", intValue);
             char *literalValue = intToSafeString(intValue);
             if (literalValue == NULL)
             {
                 logMessage("ERROR", __LINE__, "AST::DBG", "Failed to convert int to string");
                 return;
             }
-            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
+            printf("Literal Value: %s\n", strdup(literalValue));
+            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", strdup(literalValue), dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
             free(literalValue);
@@ -1797,7 +1799,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 
         if (node->data.returnStatement->expression != NULL)
         {
-            createASTDebugView(node->data.returnStatement->expression, output, indentLevel + 1);
+            ASTNode *expr = node->data.returnStatement->expression;
+            createASTDebugView(expr, output, indentLevel + 1);
         }
 
         break;
