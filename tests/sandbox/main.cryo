@@ -56,7 +56,7 @@ function arrayTesting() -> void {
 
 function structTesting() -> void {
     printStr("-------- Struct Testing --------");
-    const intTest: Int = 1234; // WE ARE BREAKING HERE
+    const intTest: Int = 1234;
     const intTestTwo: int = intTest.value;
     printInt(intTestTwo);
     printInt(intTest.value);

@@ -50,6 +50,15 @@ extern "C"
         return nullptr;
     }
 
+    int CryoIDGen_Generate32BitIntID(CryoIDGen idGen)
+    {
+        if (idGen)
+        {
+            return reinterpret_cast<Cryo::IDGen *>(idGen)->generate32BitIntID();
+        }
+        return 0;
+    }
+
 } // extern "C"
 
 namespace Cryo
@@ -61,6 +70,16 @@ namespace Cryo
         for (int i = 0; i < 32; i++)
         {
             id += std::to_string(rand() % 2);
+        }
+        return id;
+    }
+
+    int IDGen::generate32BitIntID(void)
+    {
+        int id = 0;
+        for (int i = 0; i < 32; i++)
+        {
+            id += rand() % 2;
         }
         return id;
     }

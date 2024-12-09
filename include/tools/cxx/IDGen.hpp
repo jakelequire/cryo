@@ -30,6 +30,7 @@ extern "C"
     CryoIDGen CryoIDGen_Create(void);
     void CryoIDGen_Destroy(CryoIDGen idGen);
     const char *CryoIDGen_Generate32BitID(CryoIDGen idGen);
+    int CryoIDGen_Generate32BitIntID(CryoIDGen idGen);
 
 #ifdef __cplusplus
 } // C API
@@ -53,6 +54,7 @@ namespace Cryo
     {
     public:
         static std::string generate32BitID(void);
+        static int generate32BitIntID(void);
 
     private:
         std::string id;

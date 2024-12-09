@@ -26,4 +26,56 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#include "frontend/symTable.h"
+#include "frontend/dataTypes.h"
+
+typedef struct ScopeBlock
+{
+    const char *name;
+    size_t id;
+    size_t depth;
+
+    // Symbol management
+    CryoSymbol **symbols;
+    size_t symbolCount;
+    size_t symbolCapacity;
+
+    // Type management
+    DataType **types;
+    size_t typeCount;
+    size_t typeCapacity;
+
+    // Scope hierarchy
+    struct ScopeBlock *parent;
+    struct ScopeBlock **children;
+    size_t childCount;
+    size_t childCapacity;
+
+    // Track visibility
+    CryoVisibilityType visibility;
+} ScopeBlock;
+
+typedef struct ScopeManager
+{
+    ScopeBlock *globalScope;  // Root scope
+    ScopeBlock *currentScope; // Current active scope
+
+    // Scope tracking
+    size_t scopeDepth;  // Current nesting level
+    size_t nextScopeId; // Unique ID generator
+
+    // Integration with compiler state
+    CryoSymbolTable *symbolTable;
+    TypeTable *typeTable;
+    Arena *arena;
+} ScopeManager;
+
+// -----------------------------------------------------------------------------------------------
+// Core scope operations
+
+ScopeManager *createScopeManager(CryoSymbolTable *symTable, TypeTable *typeTable, Arena *arena);
+ScopeBlock *createScope(ScopeManager *manager, const char *name);
+void enterScope(ScopeManager *manager, const char *name);
+void exitScope(ScopeManager *manager);
+
 #endif // SCOPE_H

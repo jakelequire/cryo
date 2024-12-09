@@ -262,7 +262,8 @@
     "diagnosticinfo.h": "c",
     "errorcodes.h": "c",
     "env.h": "c",
-    "libgen.h": "c"
+    "libgen.h": "c",
+    "scope.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

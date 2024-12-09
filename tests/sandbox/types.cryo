@@ -1,6 +1,5 @@
 namespace Types;
 
-
 struct String {
     value: string;
 
