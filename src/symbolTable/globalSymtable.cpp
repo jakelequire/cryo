@@ -105,6 +105,11 @@ namespace Cryo
             }
         }
 
+        if (dependencyTableVector.empty())
+        {
+            std::cout << "    └── [Empty]" << std::endl;
+        }
+
         std::cout << "\n=== End Global Symbol Table State ===\n"
                   << std::endl;
     }

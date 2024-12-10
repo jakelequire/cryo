@@ -78,8 +78,8 @@ namespace Cryo
         TypesTable *typeTable = nullptr;
 
         SymbolTable **dependencyTables; // For C interfacing
-        size_t dependencyCount;         //
-        size_t dependencyCapacity;      //
+        size_t dependencyCount = 0;     //
+        size_t dependencyCapacity = 0;  //
 
         std::vector<SymbolTable *> dependencyTableVector; // Easier for C++ to manage
 
@@ -93,9 +93,9 @@ namespace Cryo
         {
             std::string rootDir = getCryoRootPath();
             std::string buildDir = rootDir + "build";
-            std::string dependencyDir = buildDir + "out/deps";
-            std::string DBdir = buildDir + "db";
-            std::string debugDir = buildDir + "debug";
+            std::string dependencyDir = buildDir + "/out/deps";
+            std::string DBdir = buildDir + "/db";
+            std::string debugDir = buildDir + "/debug";
 
             return {buildDir, dependencyDir, debugDir, DBdir};
         }
