@@ -228,3 +228,27 @@ int verifyEnvSetup(void)
     }
     return 0;
 }
+
+// ----------------------------------------------------------------
+
+char *getCryoRootPath(void)
+{
+    char *cryoRoot = getenv("CRYO_ROOT");
+    if (!cryoRoot)
+    {
+        fprintf(stderr, "Error: CRYO_ROOT environment variable not set\n");
+        return NULL;
+    }
+    return strdup(cryoRoot);
+}
+
+char *getCryoCompilerPath(void)
+{
+    char *compilerPath = getenv("CRYO_COMPILER");
+    if (!compilerPath)
+    {
+        fprintf(stderr, "Error: CRYO_COMPILER environment variable not set\n");
+        return NULL;
+    }
+    return strdup(compilerPath);
+}

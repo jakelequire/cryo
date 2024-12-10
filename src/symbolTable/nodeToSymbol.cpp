@@ -14,40 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_ENV_H
-#define CRYO_ENV_H
+#include "symbolTable/globalSymtable.hpp"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <libgen.h>
-#include <limits.h>
+namespace Cryo
+{
 
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include "tools/macros/consoleColors.h"
-
-extern const char *ENV_VECTOR[];
-
-// Initialize all environment variables based on CRYO_ROOT directory
-int initEnvVars(const char *cryo_dir);
-
-// Ensure a specific environment variable is set
-int ensureEnvVar(const char *env_name, const char *env_value);
-
-// Verify all required environment variables are properly set
-int verifyEnvSetup(void);
-
-char *getCompilerRootPath(const char *argv0);
-
-/// @public Get the CRYO_ROOT environment variable
-char *getCryoRootPath(void);
-
-/// @public Get the CRYO_COMPILER environment variable
-char *getCryoCompilerPath(void);
-
-#endif // CRYO_ENV_H
+} // namespace Cryo

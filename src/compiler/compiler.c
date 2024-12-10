@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
+#include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
 
 int cryoCompiler(const char *filePath, CompilerSettings *settings)
@@ -36,6 +37,16 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return 1;
     }
     const char *buildDir = appendStrings(rootDirectory, "/build");
+
+    // Initialize the new Symbol Table
+    CryoGlobalSymbolTable globalSymbolTable = CryoGlobalSymbolTable_Create();
+    if (!globalSymbolTable)
+    {
+        fprintf(stderr, "Error: Failed to create global symbol table\n");
+        return 1;
+    }
+
+    CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);
 
     // Create and initialize linker
     CryoLinker linker = CryoLinker_Create();

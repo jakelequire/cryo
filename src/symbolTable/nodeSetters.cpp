@@ -14,64 +14,28 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "tools/cxx/IDGen.hpp"
-#include "frontend/scope.h"
+#include "symbolTable/globalSymtable.hpp"
 
-/*
-typedef struct ScopeManager
+namespace Cryo
 {
-    ScopeBlock *globalScope;  // Root scope
-    ScopeBlock *currentScope; // Current active scope
+    /*
+    struct ProgramTable
+    {
+        SymbolTable *primaryTable;
 
-    // Scope tracking
-    size_t scopeDepth;  // Current nesting level
-    size_t nextScopeId; // Unique ID generator
+        // Dependency tables
+        SymbolTable **dependencyTables;
+        size_t dependencyCount;
+        size_t dependencyCapacity;
 
-    // Integration with compiler state
-    CryoSymbolTable *symbolTable;
-    TypeTable *typeTable;
-    Arena *arena;
-} ScopeManager;
-*/
-ScopeManager *createScopeManager(CryoSymbolTable *symTable, TypeTable *typeTable, Arena *arena)
-{
-}
+        // Type Specific Table
+        TypesTable *typeTable;
+        size_t typeTableCount;
+        size_t typeTableCapacity;
 
-/*
-typedef struct ScopeBlock
-{
-    const char *name;
-    size_t id;
-    size_t depth;
+        const char *namespaceName;
+        ASTNode *programNode;
+    };
+    */
 
-    // Symbol management
-    CryoSymbol **symbols;
-    size_t symbolCount;
-    size_t symbolCapacity;
-
-    // Type management
-    DataType **types;
-    size_t typeCount;
-    size_t typeCapacity;
-
-    // Scope hierarchy
-    struct ScopeBlock *parent;
-    struct ScopeBlock **children;
-    size_t childCount;
-    size_t childCapacity;
-
-    // Track visibility
-    CryoVisibilityType visibility;
-} ScopeBlock;
-*/
-ScopeBlock *createScope(ScopeManager *manager, const char *name)
-{
-}
-
-void enterScope(ScopeManager *manager, const char *name)
-{
-}
-
-void exitScope(ScopeManager *manager)
-{
-}
+} // namespace Cryo
