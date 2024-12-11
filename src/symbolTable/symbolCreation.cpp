@@ -127,7 +127,7 @@ namespace Cryo
         table->count = 0;
         table->capacity = 0;
         table->scopeDepth = 0;
-        table->scopeId = 0;
+        table->scopeId = IDGen::generate32BitIntID();
         table->currentScope = nullptr;
         table->symbols = nullptr;
         return table;

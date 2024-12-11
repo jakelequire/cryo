@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "runtime/bootstrap.h"
 
 char *runtimePaths[] = {
@@ -69,9 +70,11 @@ char *getRuntimeObjFile(void)
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
 // compile the runtime into the program.
-void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
+void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapping runtime definitions...");
+
+    setDependencyTableStatus(globalTable, true);
 
     char *runtimePath = getRuntimeSrcFile();
     Bootstrapper *bootstrap = initBootstrapper(runtimePath);
@@ -82,7 +85,7 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
     updateBootstrapStatus(bootstrap, BOOTSTRAP_IN_PROGRESS);
 
     // Compile the runtime file
-    ASTNode *runtimeNode = compileForRuntimeNode(bootstrap, runtimePath);
+    ASTNode *runtimeNode = compileForRuntimeNode(bootstrap, runtimePath, globalTable);
 
     if (!runtimeNode)
     {
@@ -142,7 +145,7 @@ Bootstrapper *initBootstrapper(const char *filePath)
     return bootstrapper;
 }
 
-ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
+ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Bootstrap", "@compileForRuntimeNode Reading file: %s", filePath);
     // This needs to create a whole separate compiler state & arena for each program node
@@ -166,7 +169,7 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
     logMessage("INFO", __LINE__, "Bootstrap", "Lexer initialized");
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, bootstrap->table, bootstrap->arena, state, bootstrap->typeTable);
+    ASTNode *programNode = parseProgram(&lexer, bootstrap->table, bootstrap->arena, state, bootstrap->typeTable, globalTable);
 
     if (programNode == NULL)
     {

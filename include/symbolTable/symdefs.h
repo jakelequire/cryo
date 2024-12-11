@@ -14,11 +14,15 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_SYM_DEFS_H
-#define CRYO_SYM_DEFS_H
+#pragma once
 
 #include "frontend/AST.h"
 #include "frontend/dataTypes.h"
+
+#define MAX_SYMBOLS 1024
+
+typedef struct ASTNode ASTNode;
+typedef struct DataType DataType;
 
 typedef enum TypeOfSymbol
 {
@@ -134,5 +138,3 @@ struct TypesTable
     ScopeBlock *currentScope;
     DataType **types;
 };
-
-#endif // CRYO_SYM_DEFS_H

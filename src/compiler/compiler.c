@@ -38,14 +38,14 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
     const char *buildDir = appendStrings(rootDirectory, "/build");
 
+    // **New global symbol table**
     // Initialize the new Symbol Table
-    CryoGlobalSymbolTable globalSymbolTable = CryoGlobalSymbolTable_Create();
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create();
     if (!globalSymbolTable)
     {
         fprintf(stderr, "Error: Failed to create global symbol table\n");
         return 1;
     }
-
     CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);
 
     // Create and initialize linker
@@ -64,8 +64,11 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     TypeTable *typeTable = initTypeTable();
 
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(table, typeTable);
+    boostrapRuntimeDefinitions(table, typeTable, globalSymbolTable);
     CryoLinker_LogState(linker);
+
+    // Update the global symbol table to be the primary table.
+    setPrimaryTableStatus(globalSymbolTable, true);
 
     // Initialize the lexer
     Lexer lex;
@@ -74,7 +77,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     state->settings = settings;
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, table, arena, state, typeTable);
+    ASTNode *programNode = parseProgram(&lex, table, arena, state, typeTable, globalSymbolTable);
 
     if (programNode == NULL)
     {
@@ -135,7 +138,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable);
+    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, NULL);
 
     if (programNode == NULL)
     {
@@ -184,7 +187,7 @@ ASTNode *compileForProgramNode(const char *filePath)
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable);
+    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, NULL);
 
     if (programNode == NULL)
     {

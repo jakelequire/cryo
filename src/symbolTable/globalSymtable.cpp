@@ -19,12 +19,12 @@
 extern "C"
 {
 
-    CryoGlobalSymbolTable CryoGlobalSymbolTable_Create()
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create()
     {
         try
         {
             auto symTable = new Cryo::GlobalSymbolTable();
-            return reinterpret_cast<CryoGlobalSymbolTable>(symTable);
+            return reinterpret_cast<CryoGlobalSymbolTable *>(symTable);
         }
         catch (...)
         {
@@ -42,14 +42,36 @@ extern "C"
     //     }
     // }
 
-    void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable symTable)
+    void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable)
     {
         if (symTable)
         {
-            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->printGlobalTable(reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable));
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->printGlobalTable(
+                reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable));
         }
     }
-}
+
+    bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable)
+    {
+        return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getIsPrimaryTable();
+    }
+
+    bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable)
+    {
+        return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getIsDependencyTable();
+    }
+
+    void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary)
+    {
+        reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->setIsPrimaryTable(isPrimary);
+    }
+
+    void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency)
+    {
+        reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->setIsDependencyTable(isDependency);
+    }
+} // C API ----------------------------------------------------------
+// ================================================================================================
 
 namespace Cryo
 {
@@ -112,6 +134,19 @@ namespace Cryo
 
         std::cout << "\n=== End Global Symbol Table State ===\n"
                   << std::endl;
+    }
+
+    // -------------------------------------------------------
+
+    void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
+    {
+
+        return;
+    }
+
+    SymbolTable *GlobalSymbolTable::initDependencyTable(void)
+    {
+        return nullptr;
     }
 
 } // namespace Cryo

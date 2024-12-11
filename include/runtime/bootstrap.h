@@ -38,6 +38,8 @@ typedef struct Lexer Lexer;
 typedef struct Arena Arena;
 typedef struct ASTNode ASTNode;
 
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
+
 // C++ headers
 #ifdef __cplusplus
 extern "C"
@@ -69,10 +71,10 @@ typedef struct Bootstrapper
     enum BootstrapStatus status;
 } Bootstrapper;
 
-void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable);
+void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 Bootstrapper *initBootstrapper(const char *filePath);
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 
-ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath);
+ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, CryoGlobalSymbolTable *globalTable);
 
 #endif // CRYO_BOOTSTRAP_H

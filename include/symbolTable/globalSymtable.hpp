@@ -26,10 +26,25 @@ extern "C"
     typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
     // C API
-    CryoGlobalSymbolTable CryoGlobalSymbolTable_Create(void);
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
     // void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable);
 
-    void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable symTable);
+    void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
+
+    bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable);
+    bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable);
+#define isPrimaryTable(symTable) CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
+#define isDependencyTable(symTable) CryoGlobalSymbolTable_GetIsDependencyTable(symTable)
+
+    void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary);
+    void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency);
+#define setPrimaryTableStatus(symTable, isPrimary) CryoGlobalSymbolTable_SetPrimaryTableStatus(symTable, isPrimary)
+#define setDependencyTableStatus(symTable, isDependency) CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
+
+    void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
+    void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable);
+#define createPrimarySymbolTable(symTable, namespaceName) CryoGlobalSymbolTable_CreatePrimaryTable(symTable, namespaceName)
+#define initDependencySymbolTable(symTable) CryoGlobalSymbolTable_InitDependencyTable(symTable)
 
 #ifdef __cplusplus
 } // C API ----------------------------------------------------------
@@ -49,6 +64,10 @@ extern "C"
 #include "symbolTable/symdefs.h"
 #include "symbolTable/debugSymbols.hpp"
 #include "tools/utils/env.h" // getCryoRootPath()
+#include "tools/cxx/IDGen.hpp"
+
+typedef struct ASTNode ASTNode;
+typedef struct DataType DataType;
 
 struct DebugInfo
 {
@@ -56,6 +75,12 @@ struct DebugInfo
     std::string dependencyDir;
     std::string debugDir;
     std::string DBdir;
+};
+
+struct TableContext
+{
+    bool isPrimary;
+    bool isDependency;
 };
 
 namespace Cryo
@@ -69,10 +94,12 @@ namespace Cryo
         GlobalSymbolTable()
         {
             debugInfo = getDebugInfo();
+            tableContext = setDefaultContext();
         };
         ~GlobalSymbolTable();
 
         DebugInfo debugInfo;
+        TableContext tableContext;
 
         SymbolTable *symbolTable = nullptr;
         TypesTable *typeTable = nullptr;
@@ -83,9 +110,28 @@ namespace Cryo
 
         std::vector<SymbolTable *> dependencyTableVector; // Easier for C++ to manage
 
+        bool getIsPrimaryTable(void) { return tableContext.isPrimary; }
+        bool getIsDependencyTable(void) { return tableContext.isDependency; }
+
+        void setIsPrimaryTable(bool isPrimary)
+        {
+            tableContext.isPrimary = isPrimary;
+            tableContext.isDependency = !isPrimary;
+        }
+        void setIsDependencyTable(bool isDependency)
+        {
+            tableContext.isDependency = isDependency;
+            tableContext.isPrimary = !isDependency;
+        }
+
         // -------------------------------------------------------
 
         void printGlobalTable(GlobalSymbolTable *table);
+
+        void createPrimaryTable(const char *namespaceName);
+        SymbolTable *initDependencyTable(void);
+
+        SymbolTable *processProgramNode(ASTNode *node);
 
     private:
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
@@ -99,6 +145,15 @@ namespace Cryo
 
             return {buildDir, dependencyDir, debugDir, DBdir};
         }
+        TableContext setDefaultContext(void) { return {false, false}; }
+
+        Symbol *ASTNodeToSymbol(ASTNode *node);
+        const char *getRootNamespace(ASTNode *root);
+
+        // -------------------------------------------------------
+        // Node Setters
+
+        void addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table);
 
     protected:
         ScopeBlock *createScopeBlock(const char *name, size_t depth);
@@ -113,10 +168,11 @@ namespace Cryo
         TypesTable *createTypeTable(const char *namespaceName);
     };
 
+    // -------------------------------------------------------
     // C API Implementation
-    inline CryoGlobalSymbolTable CryoGlobalSymbolTable_Create()
+    inline CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create()
     {
-        return reinterpret_cast<CryoGlobalSymbolTable>(new GlobalSymbolTable());
+        return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable());
     }
 
     // inline void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable)
@@ -124,12 +180,33 @@ namespace Cryo
     //     delete reinterpret_cast<GlobalSymbolTable *>(symTable);
     // }
 
-    inline void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable symTable)
+    inline void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable)
     {
         if (symTable)
         {
-            reinterpret_cast<GlobalSymbolTable *>(symTable)->printGlobalTable(reinterpret_cast<GlobalSymbolTable *>(symTable));
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->printGlobalTable(
+                reinterpret_cast<GlobalSymbolTable *>(symTable));
         }
+    }
+
+    inline bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable)
+    {
+        return reinterpret_cast<GlobalSymbolTable *>(symTable)->getIsPrimaryTable();
+    }
+
+    inline bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable)
+    {
+        return reinterpret_cast<GlobalSymbolTable *>(symTable)->getIsDependencyTable();
+    }
+
+    inline void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary)
+    {
+        reinterpret_cast<GlobalSymbolTable *>(symTable)->setIsPrimaryTable(isPrimary);
+    }
+
+    inline void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency)
+    {
+        reinterpret_cast<GlobalSymbolTable *>(symTable)->setIsDependencyTable(isDependency);
     }
 
 } // namespace Cryo

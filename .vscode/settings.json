@@ -263,7 +263,10 @@
     "errorcodes.h": "c",
     "env.h": "c",
     "libgen.h": "c",
-    "scope.h": "c"
+    "scope.h": "c",
+    "globalsymtable.hpp": "c",
+    "cinterfacetable.h": "c",
+    "debugsymbols.hpp": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

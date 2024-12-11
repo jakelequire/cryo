@@ -14,15 +14,31 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 
 /* ====================================================================== */
 /* @Entry_Point | Lexer passes tokens to the entry point to be processed. */
 
 // <parseProgram>
-ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable)
+ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing program...");
+
+    bool isPrimaryTable = isPrimaryTable(globalTable);
+    bool isDependencyTable = isDependencyTable(globalTable);
+    if (isPrimaryTable)
+    {
+        printf("\n");
+        logMessage("INFO", __LINE__, "Parser", "%s%sPrimary Table Parsing%s", BOLD, GREEN, COLOR_RESET);
+        printf("\n");
+    }
+    if (isDependencyTable)
+    {
+        printf("\n");
+        logMessage("INFO", __LINE__, "Parser", "%s%sDependency Table Parsing%s", BOLD, GREEN, COLOR_RESET);
+        printf("\n");
+    }
 
     ParsingContext context = {
         false,

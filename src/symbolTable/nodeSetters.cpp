@@ -18,24 +18,33 @@
 
 namespace Cryo
 {
-    /*
-    struct ProgramTable
+
+    void GlobalSymbolTable::addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table)
     {
-        SymbolTable *primaryTable;
+        if (!symbols || symbols == nullptr)
+        {
+            std::cout << "addSymbolsToSymbolTable: Symbols are null" << std::endl;
+            return;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "addSymbolsToSymbolTable: Symbol Table is null" << std::endl;
+            return;
+        }
 
-        // Dependency tables
-        SymbolTable **dependencyTables;
-        size_t dependencyCount;
-        size_t dependencyCapacity;
+        if (table->count + 1 >= table->capacity)
+        {
+            table->capacity *= 2;
+            table->symbols = (Symbol **)realloc(table->symbols, sizeof(Symbol *) * table->capacity);
+        }
 
-        // Type Specific Table
-        TypesTable *typeTable;
-        size_t typeTableCount;
-        size_t typeTableCapacity;
+        for (size_t i = 0; i < table->count; i++)
+        {
+            table->symbols[table->count] = symbols[i];
+            table->count++;
+        }
 
-        const char *namespaceName;
-        ASTNode *programNode;
-    };
-    */
+        return;
+    }
 
 } // namespace Cryo
