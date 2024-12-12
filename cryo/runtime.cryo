@@ -9,20 +9,7 @@ extern function __c_fs_mkdir(path: string) -> void;
 extern function __c_fs_rmdir(path: string) -> void;
 extern function __c_fs_rmfile(path: string) -> void;
 extern function __c_fs_mvfile(src: string, dest: string) -> void;
-extern function __c_fs_readFile(path: string) -> string;
-
-struct Error {
-    message: string;
-}
-
-class FS {
-    constructor() {}
-    
-    public static readFile(path: string) -> string {
-        const fileContents: string = __c_fs_readFile(path);
-        return fileContents;
-    }
-}
+extern function __c_fs_readFile(path: string, mode: string) -> string;
 
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);
@@ -48,4 +35,29 @@ function outOfBoundsError() -> void {
     return;
 }
 
+// =============================================== //
+// ============== Type Definitions =============== //
+// =============================================== //
 
+struct Error {
+    message: string;
+}
+
+struct String {
+    value: string;
+
+    constructor(val: string) {
+        this.value = val;
+    }
+}
+
+class FS {
+    constructor() {}
+    
+    public static readFile(path: string, mode: string) -> string {
+        __c_printStr(path);
+        __c_printStr(mode);
+        const fileContents: string = __c_fs_readFile(path, mode);
+        return fileContents;
+    }
+}

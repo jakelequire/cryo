@@ -2080,8 +2080,18 @@ char *ASTNodeValueBuffer(ASTNode *node)
         }
         case PRIM_STRING:
         {
-            char *buffer = (char *)malloc(sizeof(char) * 32);
+            char *buffer = (char *)malloc(sizeof(char) * 1024);
+            if (!node->data.literal->value.stringValue)
+            {
+                logMessage("ERROR", __LINE__, "AST::DBG", "Failed to convert string to buffer");
+                return NULL;
+            }
             sprintf(buffer, "%s", node->data.literal->value.stringValue);
+            if (buffer == NULL)
+            {
+                logMessage("ERROR", __LINE__, "AST::DBG", "Failed to convert string to buffer");
+                return NULL;
+            }
             char *strippedStr = stringToUFString(buffer);
             return strippedStr;
         }

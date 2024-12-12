@@ -520,6 +520,11 @@ typedef struct ObjectNode
     int genericCapacity;
 } ObjectNode;
 
+typedef struct NullNode
+{
+    DataType *type;
+} NullNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -607,6 +612,8 @@ typedef struct ASTNode
         ClassConstructorNode *classConstructor;
         // For Objects
         ObjectNode *objectNode;
+        // For Null Values
+        NullNode *nullNode;
     } data;
 } ASTNode;
 
@@ -993,6 +1000,9 @@ extern "C"
         DataType **generics, int genericCount,
         Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
+    ASTNode *createNullNode(
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
     /**
      * String Utility Functions
      */
@@ -1051,6 +1061,7 @@ void *createMembersContainer(Arena *arena, CompilerState *state);
 ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state);
 ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, CompilerState *state);
 ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state);
+NullNode *createNullNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

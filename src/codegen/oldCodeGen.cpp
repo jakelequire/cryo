@@ -401,6 +401,18 @@ namespace Cryo
             llvmValue = arrays.createArrayLiteral(node);
             break;
         }
+        case NODE_NULL_LITERAL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Null Literal");
+            llvmValue = llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(cryoContext.context), 0));
+            break;
+        }
+        case NODE_PROPERTY_ACCESS:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Property Access");
+            llvmValue = functions.createPropertyAccessCall(node->data.propertyAccess);
+            break;
+        }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown node type");
             std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
@@ -412,7 +424,6 @@ namespace Cryo
 
     llvm::Value *Generator::getLiteralValue(LiteralNode *literalNode)
     {
-
         OldTypes &types = compiler.getTypes();
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Getting Literal Value");
 

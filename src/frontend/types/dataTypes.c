@@ -277,7 +277,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
     logMessage("INFO", __LINE__, "DataTypes", "Added type '%s' to type table", name);
 }
 
-ASTNode *findStructProperty(StructType *structType, const char *propertyName)
+ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable)
 {
     if (!structType)
     {
@@ -297,6 +297,8 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName)
         }
     }
 
+    fprintf(stderr, "[TypeTable] Error: Failed to find property '%s' in struct '%s'.\n", propertyName, structType->name);
+    printTypeTable(typeTable);
     CONDITION_FAILED;
 }
 

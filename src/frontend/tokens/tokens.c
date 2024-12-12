@@ -188,6 +188,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "CLASS_CONSTRUCTOR";
     case NODE_OBJECT_INST:
         return "OBJECT_INST";
+    case NODE_NULL_LITERAL:
+        return "NULL_LITERAL";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

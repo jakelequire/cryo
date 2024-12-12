@@ -655,6 +655,11 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         logMessage("INFO", __LINE__, "Parser", "Parsing new expression");
         return parseNewExpression(lexer, table, context, arena, state, typeTable);
     }
+    case TOKEN_KW_NULL:
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing null expression");
+        return parseNullExpression(lexer, table, context, arena, state, typeTable);
+    }
     case TOKEN_INCREMENT:
     case TOKEN_DECREMENT:
     case TOKEN_MINUS:
@@ -1678,6 +1683,11 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
     else if (lexer->currentToken.type == TOKEN_IDENTIFIER)
     {
+        if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_DOT)
+        {
+            logMessage("INFO", __LINE__, "Parser", "Argument is a dot notation");
+            return parseDotNotation(lexer, table, context, arena, state, typeTable);
+        }
         logMessage("INFO", __LINE__, "Parser", "Argument is an identifier");
         nodeType = NODE_VAR_DECLARATION;
         argType = createPrimitiveVoidType();
@@ -2727,7 +2737,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         logMessage("INFO", __LINE__, "Parser", "Struct name: %s", structName);
         logMessage("INFO", __LINE__, "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
 
-        ASTNode *property = findStructProperty(structType, (const char *)propName);
+        ASTNode *property = findStructProperty(structType, (const char *)propName, typeTable);
         if (property)
         {
             logMessage("INFO", __LINE__, "Parser", "Property found in struct, name: %s", propName);
@@ -2877,4 +2887,12 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     logASTNode(objectNode);
 
     return objectNode;
+}
+
+ASTNode *parseNullExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing null expression...");
+    consume(__LINE__, lexer, TOKEN_KW_NULL, "Expected `null` keyword.", "parseNullExpression", table, arena, state, typeTable, context);
+
+    return createNullNode(arena, state, typeTable, lexer);
 }

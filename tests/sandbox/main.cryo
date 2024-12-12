@@ -1,38 +1,27 @@
 namespace Main;
 
-// struct Int {
-//     value: int;
-// 
-//     constructor(val: int) {
-//         this.value = val;
-//     }
-// 
-//     toString() -> string {
-//         return intToString(this.value);
-//     }
-// 
-//     fooMethod() -> void {
-//         printStr("Foo method called");
-//         return;
-//     }
-// }
+struct Int {
+    value: int;
 
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> string {
+        return intToString(this.value);
+    }
+
+    fooMethod() -> void {
+        printStr("Foo method called");
+        return;
+    }
+}
 
 function stringTesting() -> void {
     printStr("------- String Testing --------");
 
     const testString: string = "Hello";
     printStr(testString);
-
-    //const indexStringOne: string = testString[0];
-    //const indexStringTwo: string = testString[1];
-    //const indexStringThree: string = testString[2];
-    //
-    //printStr(indexStringOne);
-    //printStr(indexStringTwo);
-    //printStr(indexStringThree);
-    //
-    //printStr(testString[0]);
 
     return;
 }
@@ -43,9 +32,9 @@ function arrayTesting() -> void {
     
     printInt(fooArr[0]);
     printInt(fooArr[1]);
-    printInt(fooArr[2]);
-    printInt(fooArr[3]);
-    printInt(fooArr[4]);
+    // printInt(fooArr[2]);
+    // printInt(fooArr[3]);
+    // printInt(fooArr[4]);
 
     // This should throw an error and calls `sys_exit()` (for now).
     // Eventually, I'll just return null and move on with execution.
@@ -56,16 +45,16 @@ function arrayTesting() -> void {
 
 function structTesting() -> void {
     printStr("-------- Struct Testing --------");
-//     const intTest: Int = 1234;
-//     const intTestTwo: int = intTest.value;
-//     printInt(intTestTwo);
-//     printInt(intTest.value);
-// 
-//     const strVal: string = intTest.toString();
-//     printStr(strVal);
-//     printStr(intTest.toString());
-// 
-//     intTest.fooMethod();
+    const intTest: Int = 1234;
+    const intTestTwo: int = intTest.value;
+    printInt(intTestTwo);
+    printInt(intTest.value);
+
+    const strVal: string = intTest.toString();
+    printStr(strVal);
+    printStr(intTest.toString());
+
+    intTest.fooMethod();
 
     return;
 }
@@ -97,8 +86,12 @@ function binOpTest() -> void {
 
 function runtimeClassTesting() -> void {
     printStr("------ Runtime Class Testing ------");
+    const filePathStr: String = "/workspaces/cryo/testing.txt";
+    const mode: String = "r";
 
-    const file: string = FS::readFile("tests/sandbox/main.cryo");
+    const file: string = FS::readFile(filePathStr.value, mode.value);
+    
+    printStr("File contents:");
     printStr(file);
 
     return;
@@ -116,10 +109,9 @@ function main(argc: int, argv: string[]) -> int {
     stringTesting();
     structTesting();
     binOpTest();
-    // arrayTesting();
+    arrayTesting();
     runtimeClassTesting();
 
     sys_exit(0);
-
     return 0;
 }

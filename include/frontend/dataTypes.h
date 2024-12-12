@@ -295,7 +295,7 @@ extern "C"
     DataType *lookupType(TypeTable *table, const char *name);
     void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
 
-    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
+    ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable);
     DataType *CryoDataTypeStringToType(const char *typeStr);
     DataType *DataTypeFromNode(ASTNode *node);
     const char *getDataTypeName(DataType *type);

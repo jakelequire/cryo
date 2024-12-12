@@ -173,8 +173,15 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                                                             state, typeTable);
     structNode->data.structNode->type = structDataType;
     structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
-    structNode->data.structNode->type->container->custom.structDef->ctorParamCount = ctorArgCount;
-    structNode->data.structNode->type->container->custom.structDef->ctorParams = ctorArgs;
+
+    StructType *structDef = structNode->data.structNode->type->container->custom.structDef;
+    structDef->properties = properties;
+    structDef->propertyCount = propertyCount;
+    structDef->methods = methods;
+    structDef->methodCount = methodCount;
+    structDef->ctorParamCount = ctorArgCount;
+    structDef->ctorParams = ctorArgs;
+
     logMessage("INFO", __LINE__, "Parser::TypeParsing", "Created struct data type:");
 
     logVerboseDataType(structDataType);

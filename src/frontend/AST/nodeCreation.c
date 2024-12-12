@@ -158,6 +158,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     case NODE_OBJECT_INST:
         node->data.objectNode = createObjectNodeContainer(arena, state);
         break;
+    case NODE_NULL_LITERAL:
+        node->data.nullNode = createNullNodeContainer(arena, state);
+        break;
     default:
         logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
         return NULL;

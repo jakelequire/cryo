@@ -195,6 +195,7 @@ namespace Cryo
         {
             args.push_back(compiler.getContext().namedValues[accessorName]);
         }
+
         // Get the arguments (after the first argument, which is the instance)
         int argCount = methodCall->argCount;
         for (int i = 0; i < argCount; ++i)
@@ -202,6 +203,7 @@ namespace Cryo
             ASTNode *argNode = methodCall->args[i];
             DataType *argType = argNode->data.varDecl->type;
             bool isStringType = isStringDataType(argType);
+
             llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
             if (!argValue)
             {
@@ -212,6 +214,8 @@ namespace Cryo
 
             if (isStringType)
             {
+                DevDebugger::logMessage("INFO", __LINE__, "Variables",
+                                        "Creating string variable: " + varName);
                 // Make the function arg make it a pointer to the string and not the string itself
                 llvm::StringRef argValueName = argValue->getName();
                 argValue = compiler.getContext().builder.CreateGlobalStringPtr(
@@ -985,6 +989,7 @@ namespace Cryo
 
         // Add the variable to the named values map & symbol table
         compiler.getContext().namedValues[varName] = varValue;
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating Symbol Table with Function Call for: " + varName);
         symTable.updateVariableNode(moduleName, varName, varValue, varType);
         symTable.addStoreInstToVar(moduleName, varName, storeInst);
         symTable.addDataTypeToVar(moduleName, varName, initType);

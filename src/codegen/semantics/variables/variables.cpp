@@ -574,6 +574,19 @@ namespace Cryo
             llvmValue = nullptr;
         }
 
+        // Try to find the variable in the symbol table
+        STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, name);
+        if (!var)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            llvmValue = nullptr;
+        }
+        else
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Found");
+            llvmValue = var->LLVMValue;
+        }
+
         if (llvmValue != nullptr)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Found");

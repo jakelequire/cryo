@@ -1041,3 +1041,15 @@ ASTNode *createObjectWithGenerics(const char *objectName, DataType *objectType, 
 
     return node;
 }
+
+ASTNode *createNullNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+{
+    ASTNode *node = createASTNode(NODE_NULL_LITERAL, arena, state, typeTable, lexer);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create null node");
+        return NULL;
+    }
+
+    return node;
+}

@@ -22,5 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
+#include <cstring>
 
 #define __EXTERN_C__ extern "C"

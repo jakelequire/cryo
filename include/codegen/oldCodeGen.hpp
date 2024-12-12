@@ -651,6 +651,8 @@ namespace Cryo
         void handleFunction(ASTNode *node);
         void handleMethodCall(ASTNode *node);
         void handleStaticMethodCall(ASTNode *node);
+        
+        llvm::Value *createPropertyAccessCall(PropertyAccessNode *propAccess);
 
         llvm::Function *getFunction(std::string functionName);
         llvm::Function *findClassMethod(std::string className, std::string methodName);
@@ -677,7 +679,6 @@ namespace Cryo
 
         llvm::Value *createMethodCall(MethodCallNode *node);
         llvm::Value *createPropertyCall(PropertyNode *property);
-        llvm::Value *createPropertyAccessCall(PropertyAccessNode *propAccess);
         llvm::Value *createVarNameCall(VariableNameNode *varNameNode);
         llvm::Value *createLiteralCall(LiteralNode *literalNode);
         llvm::Value *createVarDeclCall(CryoVariableNode *varDeclNode);

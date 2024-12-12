@@ -82,6 +82,12 @@ char *intToSafeString(int value)
 // (Makes a copy of the original string)
 char *stringToUFString(const char *str)
 {
+    if (str == NULL || str[0] == '\0')
+    {
+        perror("Cannot convert NULL string to UF string");
+        return NULL;
+    }
+    printf("Converting string to UF string: %s\n", str);
     // We make a string copy of the input string, do not modify the original
     char *buffer = strdup(str);
     if (buffer == NULL)

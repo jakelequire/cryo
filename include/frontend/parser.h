@@ -273,4 +273,7 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
 // New Keyword Parsing
 ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
+// Null Expression Parsing
+ASTNode *parseNullExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
+
 #endif // PARSER_H

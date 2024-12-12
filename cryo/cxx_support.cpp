@@ -76,11 +76,18 @@ __EXTERN_C__ void __c_fs_mvfile(const char *oldPath, const char *newPath)
     rename(oldPath, newPath);
 }
 
-__EXTERN_C__ char *__c_fs_readFile(const char *path)
+__EXTERN_C__ bool __c_fs_dirExists(const char *path)
 {
-    FILE *file = fopen(path, "r");
+    struct stat statbuf;
+    return stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode);
+}
+
+__EXTERN_C__ char *__c_fs_readFile(const char *path, const char *mode)
+{
+    FILE *file = fopen(path, mode);
     if (!file)
     {
+        printf("Error: Failed to open file: %s\n", path);
         return NULL;
     }
 
@@ -89,15 +96,10 @@ __EXTERN_C__ char *__c_fs_readFile(const char *path)
     fseek(file, 0, SEEK_SET);
 
     char *buffer = (char *)malloc(length + 1);
-    if (!buffer)
-    {
-        fclose(file);
-        return NULL;
-    }
-
     fread(buffer, 1, length, file);
-    fclose(file);
     buffer[length] = '\0';
+
+    fclose(file);
 
     return buffer;
 }

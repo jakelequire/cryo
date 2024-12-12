@@ -355,6 +355,7 @@ namespace Cryo
         if (!stStoreInst)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get store instruction from symtable");
+            compiler.dumpModule();
             CONDITION_FAILED;
         }
 
@@ -452,7 +453,7 @@ namespace Cryo
             leftEval = compiler.getVariables().getVariable(varName);
             if (!leftEval)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value: " + varName);
                 compiler.dumpModule();
                 CONDITION_FAILED;
             }
@@ -507,6 +508,16 @@ namespace Cryo
             break;
         }
         case NODE_LITERAL_EXPR:
+        {
+            rightEval = compiler.getGenerator().getInitilizerValue(right);
+            if (!rightEval)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                CONDITION_FAILED;
+            }
+            break;
+        }
+        case NODE_NULL_LITERAL:
         {
             rightEval = compiler.getGenerator().getInitilizerValue(right);
             if (!rightEval)

@@ -505,6 +505,20 @@ namespace Cryo
             }
             break;
         }
+        case NODE_NULL_LITERAL:
+        {
+            // Returning null is always valid unless the functions return type is void.
+            llvm::Type *returnType = cryoContext.currentFunction->getReturnType();
+            if (returnType->isVoidTy())
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Cannot return null from a void function");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *nullValue = llvm::Constant::getNullValue(returnType);
+            cryoContext.builder.CreateRet(nullValue);
+            break;
+        }
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown node type");

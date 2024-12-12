@@ -1432,3 +1432,17 @@ ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
 
     return node;
 }
+
+NullNode *createNullNodeContainer(Arena *arena, CompilerState *state)
+{
+    NullNode *node = (NullNode *)ARENA_ALLOC(arena, sizeof(NullNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate NullNode node.");
+        return NULL;
+    }
+
+    node->type = createPrimitiveNullType();
+
+    return node;
+}
