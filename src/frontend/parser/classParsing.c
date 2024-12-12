@@ -55,7 +55,15 @@ ASTNode *parseClassDeclaration(bool isStatic,
     }
 
     DataType *classType = createClassDataType(className, classNode->data.classNode);
+    if (!classType)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to create class data type.");
+        parsingError("Failed to create class data type.", "parseclassNodearation", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
     classNode->data.classNode->type = classType;
+    classNode->data.classNode->type->container->custom.name = strdup(className);
+    classNode->data.classNode->type->container->primitive = PRIM_CUSTOM;
 
     // Add to the symbol table
     addASTNodeSymbol(table, classNode, arena);
@@ -538,6 +546,18 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
             parsingError("Failed to create method call node.", "parseMethodScopeResolution", table, arena, state, lexer, lexer->source, typeTable);
             CONDITION_FAILED;
         }
+
+        // Look up the class in the symbol table
+        CryoSymbol *classSym = findSymbol(table, scopeName, arena);
+        if (!classSym)
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Failed to find class symbol.");
+            parsingError("Failed to find class symbol.", "parseMethodScopeResolution", table, arena, state, lexer, lexer->source, typeTable);
+            CONDITION_FAILED;
+        }
+
+        ASTNode *classASTNode = classSym->node;
+        methodCall->data.methodCall->accessorObj = classASTNode;
 
         logASTNode(methodCall);
 

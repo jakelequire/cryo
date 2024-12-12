@@ -175,9 +175,14 @@ char *DataTypeToStringUnformatted(DataType *type)
 
     case CLASS_TYPE:
         sprintf(typeString, "%s", type->container->custom.classDef->name);
+        break;
+
+    case FUNCTION_TYPE:
+        sprintf(typeString, "%s", getFunctionTypeStr_UF(type->container->custom.funcDef));
+        break;
 
     default:
-        sprintf(typeString, "<UNKNOWN>");
+        sprintf(typeString, "<?>");
         break;
     }
 
@@ -643,4 +648,52 @@ void printFunctionType(FunctionType *funcType)
     sprintf(typeString, "%s" COLOR_RESET, typeString);
 
     printf(COLOR_RESET);
+}
+
+void printFunctionType_UF(FunctionType *funcType)
+{
+    // Make it look like a function signature (e.g., `function (int, float) -> string`)
+
+    // (param1Type, param2Type, ...) → returnType
+    char typeString[128];
+
+    sprintf(typeString, "(");
+    for (int i = 0; i < funcType->paramCount; i++)
+    {
+        DataType *paramType = funcType->paramTypes[i];
+        char *paramTypeStr = DataTypeToString(paramType);
+        sprintf(typeString, "%s%s", typeString, paramTypeStr);
+        if (i < funcType->paramCount - 1)
+        {
+            sprintf(typeString, "%s, ", typeString);
+        }
+    }
+    sprintf(typeString, "%s) → ", typeString);
+    sprintf(typeString, "%s%s", typeString, DataTypeToString(funcType->returnType));
+
+    printf(COLOR_RESET);
+}
+
+char *getFunctionTypeStr_UF(FunctionType *funcType)
+{
+    // Make it look like a function signature (e.g., `function (int, float) -> string`)
+
+    // (param1Type, param2Type, ...) → returnType
+    char typeString[128];
+
+    sprintf(typeString, "(");
+    for (int i = 0; i < funcType->paramCount; i++)
+    {
+        DataType *paramType = funcType->paramTypes[i];
+        char *paramTypeStr = DataTypeToStringUnformatted(paramType);
+        sprintf(typeString, "%s%s", typeString, paramTypeStr);
+        if (i < funcType->paramCount - 1)
+        {
+            sprintf(typeString, "%s, ", typeString);
+        }
+    }
+    sprintf(typeString, "%s) → ", typeString);
+    sprintf(typeString, "%s%s", typeString, DataTypeToStringUnformatted(funcType->returnType));
+
+    return strdup(typeString);
 }

@@ -103,6 +103,8 @@ namespace Cryo
         std::string methodDefName = std::string(methodCall->name);
         std::string namespaceName = compiler.getContext().currentNamespace;
         DataType *instanceType = methodCall->instanceType;
+        bool isStatic = methodCall->isStatic;
+        bool isClass = false;
 
         std::string instanceName = std::string(methodCall->instanceName);
         DataType *returnType = methodCall->returnType;
@@ -120,6 +122,12 @@ namespace Cryo
             CryoVariableNode *varNode = accessorNode->data.varDecl;
             accessorName = std::string(varNode->name);
         }
+        else if (accessorNode->metaData->type == NODE_CLASS)
+        {
+            ClassNode *classNode = accessorNode->data.classNode;
+            accessorName = "class." + std::string(classNode->name);
+            isClass = true;
+        }
         else
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables",
@@ -133,16 +141,30 @@ namespace Cryo
         std::cout << "Instance Name: " << instanceName << std::endl;
         std::cout << "Accessor Name: " << accessorName << std::endl;
 
-        llvm::Value *accessorValue = compiler.getContext().namedValues[accessorName];
-        if (!accessorValue)
+        if (!isStatic)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables",
-                                    "Accessor value not found: " + accessorName);
-            CONDITION_FAILED;
+
+            llvm::Value *accessorValue = compiler.getContext().namedValues[accessorName];
+            if (!accessorValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                        "Accessor value not found: " + accessorName);
+                CONDITION_FAILED;
+            }
         }
 
         // Combine instance name and method name to get the function name
-        std::string methodName = instanceName + "." + methodDefName;
+        std::string methodName;
+        if (isClass)
+        {
+            // "class.{className}.{methodName}"
+            methodName = "class." + instanceName + "." + methodDefName;
+        }
+        else
+        {
+            // "{instanceName}.{methodName}"
+            methodName = instanceName + "." + methodDefName;
+        }
 
         // Get the function
         llvm::Function *function = compiler.getContext().module->getFunction(methodName);
@@ -150,6 +172,7 @@ namespace Cryo
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables",
                                     "Function not found: " + methodName);
+            compiler.dumpModule();
             CONDITION_FAILED;
         }
 
@@ -167,12 +190,18 @@ namespace Cryo
         }
 
         // Set the accessor object as the first argument
-        std::vector<llvm::Value *> args = {accessorValue};
+        std::vector<llvm::Value *> args;
+        if (!isStatic)
+        {
+            args.push_back(compiler.getContext().namedValues[accessorName]);
+        }
         // Get the arguments (after the first argument, which is the instance)
         int argCount = methodCall->argCount;
         for (int i = 0; i < argCount; ++i)
         {
             ASTNode *argNode = methodCall->args[i];
+            DataType *argType = argNode->data.varDecl->type;
+            bool isStringType = isStringDataType(argType);
             llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
             if (!argValue)
             {
@@ -180,6 +209,23 @@ namespace Cryo
                                         "Argument value not found");
                 CONDITION_FAILED;
             }
+
+            if (isStringType)
+            {
+                // Make the function arg make it a pointer to the string and not the string itself
+                llvm::StringRef argValueName = argValue->getName();
+                argValue = compiler.getContext().builder.CreateGlobalStringPtr(
+                    argValueName,
+                    argValue->getName() + ".ptr");
+
+                if (!argValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables",
+                                            "Failed to create global string pointer");
+                    CONDITION_FAILED;
+                }
+            }
+
             args.push_back(argValue);
         }
 

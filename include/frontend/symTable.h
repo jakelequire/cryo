@@ -112,5 +112,6 @@ void outputSymTable(CryoSymbolTable *table, CompilerSettings *settings);
 char *symTableOutBuffer(CryoSymbolTable *table);
 void createSymTableOutputFile(const char *buffer, SymTableOutput *symTableOutput);
 void removePrevSymTableOutput(const char *filePath);
+void addClassMethodsToTable(ASTNode *classNode, CryoSymbolTable *table, Arena *arena);
 
 #endif // SYMTABLE_H

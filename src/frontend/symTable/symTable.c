@@ -50,7 +50,7 @@ void printSymbolTable(CryoSymbolTable *table)
     printf("\n\n");
     printf("Namespace: %s\n", table->namespaceName ? table->namespaceName : "Unnamed");
     printf("\n");
-    printf("Name                 Node Type               Data Type       L:C    Args     Module\n");
+    printf("Name                 Node Type               Data Type             Args     Module\n");
     printf("----------------------------------------------------------------------------------------\n");
     for (int i = 0; i < table->count; i++)
     {
@@ -77,11 +77,10 @@ void printSymbolTable(CryoSymbolTable *table)
                  table->symbols[i]->line,
                  table->symbols[i]->column);
 
-        printf("%-20s %-24s %-14s %-7s %-7d %-15s\n",
+        printf("%-20s %-24s %-21s %-7d %-15s\n",
                table->symbols[i]->name ? table->symbols[i]->name : "Unnamed",
                CryoNodeTypeToString(table->symbols[i]->nodeType),
                DataTypeToStringUnformatted(table->symbols[i]->type),
-               locationStr,
                table->symbols[i]->argCount,
                table->symbols[i]->module ? table->symbols[i]->module : "Unnamed");
     }
@@ -604,10 +603,50 @@ void importRuntimeDefinitionsToSymTable(CryoSymbolTable *table, ASTNode *runtime
     for (int i = 0; i < runtimeNode->data.program->statementCount; i++)
     {
         ASTNode *node = runtimeNode->data.program->statements[i];
+        if (node->metaData->type == NODE_CLASS)
+        {
+            addClassMethodsToTable(node, table, arena);
+
+            logMessage("INFO", __LINE__, "SymTable", "Adding runtime class definition to symbol table %s%s%s%s",
+                       BOLD, GREEN, node->data.classNode->name, COLOR_RESET);
+
+            continue;
+        }
         addASTNodeSymbol(table, node, arena);
         logMessage("INFO", __LINE__, "SymTable", "Adding runtime definition to symbol table %s%s%s%s",
                    BOLD, GREEN, CryoNodeTypeToString(node->metaData->type), COLOR_RESET);
     }
+}
+
+void addClassMethodsToTable(ASTNode *classNode, CryoSymbolTable *table, Arena *arena)
+{
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        logMessage("ERROR", __LINE__, "SymTable", "Expected class declaration node.");
+        return;
+    }
+
+    // Add the class itself to the symbol table
+    addASTNodeSymbol(table, classNode, arena);
+
+    // Iterate over the public/private/protected methods and add them to the symbol table
+    ClassNode *classData = classNode->data.classNode;
+    for (int i = 0; i < classData->publicMembers->methodCount; i++)
+    {
+        addASTNodeSymbol(table, classData->publicMembers->methods[i], arena);
+    }
+
+    for (int i = 0; i < classData->privateMembers->methodCount; i++)
+    {
+        addASTNodeSymbol(table, classData->privateMembers->methods[i], arena);
+    }
+
+    for (int i = 0; i < classData->protectedMembers->methodCount; i++)
+    {
+        addASTNodeSymbol(table, classData->protectedMembers->methods[i], arena);
+    }
+
+    return;
 }
 
 CryoSymbol *resolveModuleSymbol(const char *moduleName, const char *symbolName, CryoSymbolTable *table, Arena *arena)

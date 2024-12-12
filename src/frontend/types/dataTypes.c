@@ -652,6 +652,12 @@ void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
             DataType *type = node->data.structNode->type;
             addTypeToTypeTable(typeTable, name, type);
         }
+        if (node->metaData->type == NODE_CLASS)
+        {
+            const char *name = node->data.classNode->name;
+            DataType *type = node->data.classNode->type;
+            addTypeToTypeTable(typeTable, name, type);
+        }
     }
 }
 

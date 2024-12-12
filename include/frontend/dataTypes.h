@@ -465,6 +465,8 @@ extern "C"
     void logVerboseDataType(DataType *type);
     void printClassType(ClassType *type);
     void printFunctionType(FunctionType *funcType);
+    void printFunctionType_UF(FunctionType *funcType);
+    char *getFunctionTypeStr_UF(FunctionType *funcType);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);

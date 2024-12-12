@@ -16,7 +16,6 @@ struct Error {
 }
 
 class FS {
-
     constructor() {}
     
     public static readFile(path: string) -> string {
@@ -24,10 +23,6 @@ class FS {
         return fileContents;
     }
 }
-
-// + ============================================== + //
-// |  CRYO RUNTIME FUNCTIONS                        | //
-// + ============================================== + //
 
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);

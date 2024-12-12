@@ -99,6 +99,7 @@ function runtimeClassTesting() -> void {
     printStr("------ Runtime Class Testing ------");
 
     const file: string = FS::readFile("tests/sandbox/main.cryo");
+    printStr(file);
 
     return;
 }
