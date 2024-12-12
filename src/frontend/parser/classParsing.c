@@ -55,6 +55,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
     }
 
     DataType *classType = createClassDataType(className, classNode->data.classNode);
+    classNode->data.classNode->type = classType;
 
     // Add to the symbol table
     addASTNodeSymbol(table, classNode, arena);
@@ -62,9 +63,6 @@ ASTNode *parseClassDeclaration(bool isStatic,
     addTypeToTypeTable(typeTable, className, classType);
     // Clear the context
     clearThisContext(context, typeTable);
-
-    // Add the class type to the node
-    addDataTypeToClassNode(classNode, classType);
 
     return classNode;
 }
@@ -164,8 +162,10 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                         parsingError("Failed to parse method declaration.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
                         CONDITION_FAILED;
                     }
+                    // Add the method to the symbol table
+                    addASTNodeSymbol(table, methodNode, arena);
                     logMessage("INFO", __LINE__, "Parser", "Method node created.");
-                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, typeTable, context);
+                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, typeTable, context, table);
 
                     publicMethodCount++;
 
@@ -288,7 +288,7 @@ void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *
 }
 
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table)
 {
     logMessage("INFO", __LINE__, "Parser", "Adding method to class...");
     if (classNode->metaData->type != NODE_CLASS)
@@ -301,15 +301,15 @@ void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityTyp
     {
     case VISIBILITY_PRIVATE:
         logMessage("INFO", __LINE__, "Parser", "Adding private method to class...");
-        addPrivateMethod(classNode, methodNode, arena, state, typeTable, context);
+        addPrivateMethod(classNode, methodNode, arena, state, typeTable, context, table);
         break;
     case VISIBILITY_PUBLIC:
         logMessage("INFO", __LINE__, "Parser", "Adding public method to class...");
-        addPublicMethod(classNode, methodNode, arena, state, typeTable, context);
+        addPublicMethod(classNode, methodNode, arena, state, typeTable, context, table);
         break;
     case VISIBILITY_PROTECTED:
         logMessage("INFO", __LINE__, "Parser", "Adding protected method to class...");
-        addProtectedMethod(classNode, methodNode, arena, state, typeTable, context);
+        addProtectedMethod(classNode, methodNode, arena, state, typeTable, context, table);
         break;
     default:
         logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
@@ -346,7 +346,7 @@ void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityTyp
 }
 
 void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table)
 {
     logMessage("INFO", __LINE__, "Parser", "Adding private method to class...");
     if (classNode->metaData->type != NODE_CLASS)
@@ -374,7 +374,7 @@ void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
 }
 
 void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
-                     Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
+                     Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table)
 {
     logMessage("INFO", __LINE__, "Parser", "Adding public method to class...");
     if (classNode->metaData->type != NODE_CLASS)
@@ -392,7 +392,7 @@ void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
 }
 
 void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
-                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table)
 {
     logMessage("INFO", __LINE__, "Parser", "Adding protected method to class...");
     if (classNode->metaData->type != NODE_CLASS)
@@ -483,19 +483,6 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
                    classData->protectedMembers->propertyCount, 1);
 
     classData->protectedMembers->properties[classData->protectedMembers->propertyCount++] = propNode;
-}
-
-void addDataTypeToClassNode(ASTNode *classNode, DataType *type)
-{
-    logMessage("INFO", __LINE__, "Parser", "Adding data type to class node...");
-    if (classNode->metaData->type != NODE_CLASS)
-    {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
-        return;
-    }
-
-    classNode->data.classNode->type = type;
-    logMessage("INFO", __LINE__, "Parser", "Data type added to class node.");
 }
 
 ASTNode *parseMethodScopeResolution(const char *scopeName,

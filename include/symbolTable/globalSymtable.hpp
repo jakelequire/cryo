@@ -22,6 +22,8 @@ extern "C"
 {
 #endif
 
+    typedef struct ASTNode ASTNode;
+
     // Opaque pointer type for C
     typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
@@ -30,6 +32,8 @@ extern "C"
     // void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable);
 
     void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
+
+    // Class State Functions ---------------------------------------
 
     bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable);
     bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable);
@@ -41,10 +45,14 @@ extern "C"
 #define setPrimaryTableStatus(symTable, isPrimary) CryoGlobalSymbolTable_SetPrimaryTableStatus(symTable, isPrimary)
 #define setDependencyTableStatus(symTable, isDependency) CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
 
+    // Symbol Table Functions ---------------------------------------
+    void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
+#define initDependencySymbolTable(symTable, namespaceName) CryoGlobalSymbolTable_InitDependencyTable(symTable, namespaceName)
     void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
-    void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable);
 #define createPrimarySymbolTable(symTable, namespaceName) CryoGlobalSymbolTable_CreatePrimaryTable(symTable, namespaceName)
-#define initDependencySymbolTable(symTable) CryoGlobalSymbolTable_InitDependencyTable(symTable)
+
+    void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
+#define addNodeToSymbolTable(symTable, node) CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
 
 #ifdef __cplusplus
 } // C API ----------------------------------------------------------
@@ -68,6 +76,9 @@ extern "C"
 
 typedef struct ASTNode ASTNode;
 typedef struct DataType DataType;
+
+#define MAX_SYMBOLS 1024
+#define MAX_DEPENDENCIES 1024
 
 struct DebugInfo
 {
@@ -103,10 +114,11 @@ namespace Cryo
 
         SymbolTable *symbolTable = nullptr;
         TypesTable *typeTable = nullptr;
+        SymbolTable *currentDependencyTable = nullptr;
 
         SymbolTable **dependencyTables; // For C interfacing
-        size_t dependencyCount = 0;     //
-        size_t dependencyCapacity = 0;  //
+        size_t dependencyCount = 0;
+        size_t dependencyCapacity = MAX_DEPENDENCIES;
 
         std::vector<SymbolTable *> dependencyTableVector; // Easier for C++ to manage
 
@@ -124,14 +136,18 @@ namespace Cryo
             tableContext.isPrimary = !isDependency;
         }
 
+        void setCurrentDependencyTable(SymbolTable *table) { currentDependencyTable = table; }
+        void setPrimaryTable(SymbolTable *table) { symbolTable = table; }
         // -------------------------------------------------------
 
         void printGlobalTable(GlobalSymbolTable *table);
 
         void createPrimaryTable(const char *namespaceName);
-        SymbolTable *initDependencyTable(void);
+        void initDependencyTable(const char *namespaceName);
 
-        SymbolTable *processProgramNode(ASTNode *node);
+        void addNodeToTable(ASTNode *node);
+
+        void completeDependencyTable();
 
     private:
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
@@ -154,11 +170,12 @@ namespace Cryo
         // Node Setters
 
         void addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table);
+        void addSingleSymbolToTable(Symbol *symbol, SymbolTable *table);
 
     protected:
         ScopeBlock *createScopeBlock(const char *name, size_t depth);
         VariableSymbol *createVariableSymbol(const char *name, DataType *type, ASTNode *node, size_t scopeId);
-        FunctionSymbol *createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, size_t scopeId);
+        FunctionSymbol *createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node);
         TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, size_t scopeId);
         PropertySymbol *createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, size_t scopeId);
         MethodSymbol *createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, size_t scopeId);
@@ -175,11 +192,6 @@ namespace Cryo
         return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable());
     }
 
-    // inline void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable)
-    // {
-    //     delete reinterpret_cast<GlobalSymbolTable *>(symTable);
-    // }
-
     inline void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable)
     {
         if (symTable)
@@ -188,6 +200,8 @@ namespace Cryo
                 reinterpret_cast<GlobalSymbolTable *>(symTable));
         }
     }
+
+    // Class State Functions ---------------------------------------
 
     inline bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable)
     {
@@ -207,6 +221,32 @@ namespace Cryo
     inline void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency)
     {
         reinterpret_cast<GlobalSymbolTable *>(symTable)->setIsDependencyTable(isDependency);
+    }
+
+    // Symbol Table Functions ---------------------------------------
+
+    inline void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, const char *namespaceName)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->initDependencyTable(namespaceName);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, const char *namespaceName)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->createPrimaryTable(namespaceName);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->addNodeToTable(node);
+        }
     }
 
 } // namespace Cryo

@@ -16,69 +16,98 @@
  ********************************************************************************/
 #include "symbolTable/globalSymtable.hpp"
 
-extern "C"
-{
-
-    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create()
-    {
-        try
-        {
-            auto symTable = new Cryo::GlobalSymbolTable();
-            return reinterpret_cast<CryoGlobalSymbolTable *>(symTable);
-        }
-        catch (...)
-        {
-            logMessage("ERROR", __LINE__, "CryoGlobalSymbolTable", "Failed to create global symbol table");
-            return nullptr;
-        }
-    }
-
-    // void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable)
-    // {
-    //     if (symTable)
-    //     {
-    //         logMessage("INFO", __LINE__, "CryoGlobalSymbolTable", "Destroying global symbol table");
-    //         delete reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable);
-    //     }
-    // }
-
-    void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable)
-    {
-        if (symTable)
-        {
-            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->printGlobalTable(
-                reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable));
-        }
-    }
-
-    bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable)
-    {
-        return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getIsPrimaryTable();
-    }
-
-    bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable)
-    {
-        return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getIsDependencyTable();
-    }
-
-    void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary)
-    {
-        reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->setIsPrimaryTable(isPrimary);
-    }
-
-    void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency)
-    {
-        reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->setIsDependencyTable(isDependency);
-    }
-} // C API ----------------------------------------------------------
-// ================================================================================================
-
 namespace Cryo
 {
 
+    // -------------------------------------------------------
+
+    void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
+    {
+        SymbolTable *symbolTable = createSymbolTable(namespaceName);
+        if (symbolTable)
+        {
+            setIsPrimaryTable(symbolTable);
+            return;
+        }
+        return;
+    }
+
+    void GlobalSymbolTable::initDependencyTable(const char *namespaceName)
+    {
+        SymbolTable *table = createSymbolTable(namespaceName);
+        if (table)
+        {
+            setCurrentDependencyTable(table);
+            dependencyTableVector.push_back(table);
+            dependencyCount++;
+            return;
+        }
+
+        return;
+    }
+
+    void GlobalSymbolTable::addNodeToTable(ASTNode *node)
+    {
+        if (!node || node == nullptr)
+        {
+            return;
+        }
+
+        // Check wether we are in the primary table or a dependency table
+        if (tableContext.isPrimary)
+        {
+            std::cout << "Adding to Primary Table" << std::endl;
+            // Add to primary table
+            if (symbolTable && symbolTable != nullptr)
+            {
+                // Add the node to the primary table
+                Symbol *symbol = ASTNodeToSymbol(node);
+                if (symbol)
+                {
+                    // Add the symbol to the symbol table
+                    addSingleSymbolToTable(symbol, symbolTable);
+                    return;
+                }
+                return;
+            }
+        }
+        else if (tableContext.isDependency)
+        {
+            std::cout << "Adding to Dependency Table" << std::endl;
+            // Add to dependency table
+            if (currentDependencyTable && currentDependencyTable != nullptr)
+            {
+                // Add the node to the dependency table
+                Symbol *symbol = ASTNodeToSymbol(node);
+                if (symbol)
+                {
+                    // Add the symbol to the dependency table
+                    addSingleSymbolToTable(symbol, currentDependencyTable);
+                    return;
+                }
+                return;
+            }
+        }
+    }
+
+    void GlobalSymbolTable::completeDependencyTable()
+    {
+        if (currentDependencyTable)
+        {
+            // Clear the current dependency table, add to the dependency table vector
+            currentDependencyTable = nullptr;
+            return;
+        }
+    }
+
+    // ========================================================
+    // Table Debug View
+
     void GlobalSymbolTable::printGlobalTable(GlobalSymbolTable *table)
     {
-        std::cout << "\n=== Global Symbol Table State ===\n"
+        std::cout << "\n"
+                  << std::endl;
+        std::cout << "\n============ Global Symbol Table State ============\n"
                   << std::endl;
 
         // Print Debug Info
@@ -132,21 +161,10 @@ namespace Cryo
             std::cout << "    └── [Empty]" << std::endl;
         }
 
-        std::cout << "\n=== End Global Symbol Table State ===\n"
+        std::cout << "\n============ End Global Symbol Table State ============\n"
                   << std::endl;
-    }
-
-    // -------------------------------------------------------
-
-    void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
-    {
-
-        return;
-    }
-
-    SymbolTable *GlobalSymbolTable::initDependencyTable(void)
-    {
-        return nullptr;
+        std::cout << "\n"
+                  << std::endl;
     }
 
 } // namespace Cryo

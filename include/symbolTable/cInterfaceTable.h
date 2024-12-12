@@ -45,9 +45,12 @@ void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTa
 #define setPrimaryTableStatus(symTable, isPrimary) CryoGlobalSymbolTable_SetPrimaryTableStatus(symTable, isPrimary)
 #define setDependencyTableStatus(symTable, isDependency) CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
 
+void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
+#define initDependencySymbolTable(symTable, namespaceName) CryoGlobalSymbolTable_InitDependencyTable(symTable, namespaceName)
 void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
-void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable);
 #define createPrimarySymbolTable(symTable, namespaceName) CryoGlobalSymbolTable_CreatePrimaryTable(symTable, namespaceName)
-#define initDependencySymbolTable(symTable) CryoGlobalSymbolTable_InitDependencyTable(symTable)
+
+void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
+#define addNodeToSymbolTable(symTable, node) CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
 
 #endif // C_INTERFACE_TABLE_H

@@ -906,6 +906,8 @@ namespace Cryo
         ASTNode *variable = node;
         assert(initializer != nullptr);
 
+        DataType *initType = getDataTypeFromASTNode(initializer);
+
         std::string moduleName = compiler.getContext().currentNamespace;
 
         // Create the variable
@@ -939,6 +941,7 @@ namespace Cryo
         compiler.getContext().namedValues[varName] = varValue;
         symTable.updateVariableNode(moduleName, varName, varValue, varType);
         symTable.addStoreInstToVar(moduleName, varName, storeInst);
+        symTable.addDataTypeToVar(moduleName, varName, initType);
 
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Function Call Created");
         return functionCall;

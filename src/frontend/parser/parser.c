@@ -64,13 +64,23 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
         if (statement)
         {
             // traverseAST(statement, table);
-            addStatementToProgram(program, table, statement, arena, state, typeTable);
+            addStatementToProgram(program, table, statement, arena, state, typeTable, globalTable);
             logMessage("INFO", __LINE__, "Parser", "Statement added to program");
             printTypeTable(typeTable);
             if (statement->metaData->type == NODE_NAMESPACE)
             {
+                const char *namespaceName = statement->data.cryoNamespace->name;
                 // Initialize the `this`context to the namespace
-                setDefaultThisContext(statement->data.cryoNamespace->name, &context, typeTable);
+                setDefaultThisContext(namespaceName, &context, typeTable);
+                // Initialize the global symbol table
+                if (isPrimaryTable)
+                {
+                    createPrimarySymbolTable(globalTable, namespaceName);
+                }
+                if (isDependencyTable)
+                {
+                    initDependencySymbolTable(globalTable, namespaceName);
+                }
             }
         }
         else
@@ -291,7 +301,7 @@ int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *st
 /* @Parser_Management                                                     */
 
 // <addStatementToProgram>
-void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode *statement, Arena *arena, CompilerState *state, TypeTable *typeTable)
+void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode *statement, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     char *curModule = getCurrentNamespace(table);
     if (!curModule)
@@ -304,6 +314,12 @@ void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode
     {
         fprintf(stderr, "[AST_ERROR] Invalid program node\n");
         return;
+    }
+
+    // Add the statement to the Gobal Symbol Table
+    if (globalTable)
+    {
+        addNodeToSymbolTable(globalTable, statement);
     }
 
     CryoProgram *program = programNode->data.program;
@@ -728,6 +744,12 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, CryoSymbolTable *table, Parsing
         char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
         return parseFunctionCall(lexer, table, context, functionName, arena, state, typeTable);
     }
+    // Peek to see if the next token is `::` for a scope call
+    else if (nextToken == TOKEN_DOUBLE_COLON)
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing scope call");
+        return parseScopeCall(lexer, table, context, arena, state, typeTable);
+    }
     else
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena, state, typeTable).type));
@@ -1138,6 +1160,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
         parsingError("Failed to create function node.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
         return NULL;
     }
+    functionDefNode->data.functionDecl->paramTypes = paramTypes;
+    functionDefNode->data.functionDecl->paramCount = paramCount;
     addASTNodeSymbol(table, functionDefNode, arena);
 
     // Parse the function block

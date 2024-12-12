@@ -59,6 +59,9 @@ namespace Cryo
         static void logSymbolTable(SymbolTable *table);
         static void logTypeTable(TypesTable *table);
 
+        static const char *getTypeofSymbol(TypeOfSymbol symbolType);
+        static void logTypeofSymbol(TypeOfSymbol symbolType);
+
     private:
         static Logger *logger;
     };

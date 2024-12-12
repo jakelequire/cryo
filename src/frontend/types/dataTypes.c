@@ -473,6 +473,9 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
     case NODE_METHOD:
         logMessage("INFO", __LINE__, "DataTypes", "Getting data type from method");
         return node->data.method->type;
+    case NODE_FUNCTION_CALL:
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from function call");
+        return node->data.functionCall->returnType;
     case NODE_PROPERTY_ACCESS:
     {
         logMessage("INFO", __LINE__, "DataTypes", "Getting data type from property access");

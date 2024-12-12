@@ -46,7 +46,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         fprintf(stderr, "Error: Failed to create global symbol table\n");
         return 1;
     }
-    CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);
+    // Debug print the global symbol table
+    // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);
 
     // Create and initialize linker
     CryoLinker linker = CryoLinker_Create();
@@ -67,6 +68,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     boostrapRuntimeDefinitions(table, typeTable, globalSymbolTable);
     CryoLinker_LogState(linker);
 
+    // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable); // DEBUG
+
     // Update the global symbol table to be the primary table.
     setPrimaryTableStatus(globalSymbolTable, true);
 
@@ -85,6 +88,9 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return 1;
     }
 
+    // Debug print the global symbol table
+    // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);
+
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
 
@@ -93,6 +99,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
     logASTNodeDebugView(programCopy);
+
+    printSymbolTable(table);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);
@@ -194,6 +202,8 @@ ASTNode *compileForProgramNode(const char *filePath)
         fprintf(stderr, "Error: Failed to parse program node\n");
         return NULL;
     }
+
+    printSymbolTable(table);
 
     return programNode;
 }

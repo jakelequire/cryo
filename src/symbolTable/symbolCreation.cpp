@@ -24,6 +24,7 @@ namespace Cryo
         ScopeBlock *block = new ScopeBlock();
         block->name = name;
         block->depth = depth;
+        block->id = IDGen::generate32BitIntID();
         block->childCount = 0;
         block->childCapacity = 0;
         block->children = nullptr;
@@ -41,7 +42,7 @@ namespace Cryo
         return symbol;
     }
 
-    FunctionSymbol *GlobalSymbolTable::createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, size_t scopeId)
+    FunctionSymbol *GlobalSymbolTable::createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node)
     {
         FunctionSymbol *symbol = new FunctionSymbol();
         symbol->name = name;
@@ -50,7 +51,7 @@ namespace Cryo
         symbol->paramCount = paramCount;
         symbol->visibility = visibility;
         symbol->node = node;
-        symbol->scopeId = scopeId;
+        symbol->scopeId = IDGen::generate32BitIntID();
         return symbol;
     }
 
@@ -125,11 +126,11 @@ namespace Cryo
         SymbolTable *table = new SymbolTable();
         table->namespaceName = namespaceName;
         table->count = 0;
-        table->capacity = 0;
+        table->capacity = MAX_SYMBOLS;
         table->scopeDepth = 0;
         table->scopeId = IDGen::generate32BitIntID();
         table->currentScope = nullptr;
-        table->symbols = nullptr;
+        table->symbols = (Symbol **)malloc(sizeof(Symbol *) * table->capacity);
         return table;
     }
 

@@ -5,8 +5,24 @@ extern function __c_printStr(s: string) -> void;
 extern function __c_sys_exit(code: int) -> void;
 extern function __c_intToString(num: int) -> string;
 
+extern function __c_fs_mkdir(path: string) -> void;
+extern function __c_fs_rmdir(path: string) -> void;
+extern function __c_fs_rmfile(path: string) -> void;
+extern function __c_fs_mvfile(src: string, dest: string) -> void;
+extern function __c_fs_readFile(path: string) -> string;
+
 struct Error {
     message: string;
+}
+
+class FS {
+
+    constructor() {}
+    
+    public static readFile(path: string) -> string {
+        const fileContents: string = __c_fs_readFile(path);
+        return fileContents;
+    }
 }
 
 // + ============================================== + //
@@ -36,3 +52,5 @@ function outOfBoundsError() -> void {
     printStr("Array index out of bounds error");
     return;
 }
+
+

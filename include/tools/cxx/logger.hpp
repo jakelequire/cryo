@@ -55,6 +55,14 @@ namespace Cryo
         }
 
         template <typename... Args>
+        void debugNode(const char *format, Args... args)
+        {
+            char buffer[1024];
+            snprintf(buffer, sizeof(buffer), format, args...);
+            logNode(DEBUG, buffer);
+        }
+
+        template <typename... Args>
         void debug(const char *format, Args... args)
         {
             if (currentLevel <= DEBUG)
@@ -89,6 +97,7 @@ namespace Cryo
 
     private:
         void logMessage(LogLevel level, const char *message);
+        void logNode(LogLevel level, const char *message);
         const char *getLevelString(LogLevel level);
 
         LogLevel currentLevel;

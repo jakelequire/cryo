@@ -54,3 +54,50 @@ __EXTERN_C__ void __c_sys_exit(int code)
 {
     exit(code);
 }
+
+// For the FS Class in Cryo
+__EXTERN_C__ void __c_fs_mkdir(const char *path)
+{
+    mkdir(path, 0777);
+}
+
+__EXTERN_C__ void __c_fs_rmdir(const char *path)
+{
+    rmdir(path);
+}
+
+__EXTERN_C__ void __c_fs_rmfile(const char *path)
+{
+    remove(path);
+}
+
+__EXTERN_C__ void __c_fs_mvfile(const char *oldPath, const char *newPath)
+{
+    rename(oldPath, newPath);
+}
+
+__EXTERN_C__ char *__c_fs_readFile(const char *path)
+{
+    FILE *file = fopen(path, "r");
+    if (!file)
+    {
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buffer = (char *)malloc(length + 1);
+    if (!buffer)
+    {
+        fclose(file);
+        return NULL;
+    }
+
+    fread(buffer, 1, length, file);
+    fclose(file);
+    buffer[length] = '\0';
+
+    return buffer;
+}

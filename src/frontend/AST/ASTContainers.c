@@ -351,6 +351,9 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
     node->functionType = wrapTypeContainer(createTypeContainer());
+    node->paramCount = 0;
+    node->paramCapacity = PARAM_CAPACITY;
+    node->paramTypes = NULL;
 
     return node;
 }

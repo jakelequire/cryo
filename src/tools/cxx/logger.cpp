@@ -80,6 +80,23 @@ namespace Cryo
         }
     }
 
+    void Logger::logNode(LogLevel level, const char *message)
+    {
+        if (level < currentLevel)
+            return;
+
+        if (useConsole)
+        {
+            std::cout << message << std::endl;
+        }
+
+        if (logFile && logFile->is_open())
+        {
+            *logFile << message << std::endl;
+            logFile->flush();
+        }
+    }
+
     const char *Logger::getLevelString(LogLevel level)
     {
         switch (level)

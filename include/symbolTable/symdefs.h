@@ -30,7 +30,8 @@ typedef enum TypeOfSymbol
     FUNCTION_SYMBOL,
     TYPE_SYMBOL,
     PROPERTY_SYMBOL,
-    METHOD_SYMBOL
+    METHOD_SYMBOL,
+    UNKNOWN_SYMBOL
 } TypeOfSymbol;
 
 struct ScopeBlock

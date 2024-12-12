@@ -139,6 +139,7 @@ typedef struct FunctionDeclNode
     struct ASTNode **params;
     int paramCount;
     int paramCapacity;
+    DataType **paramTypes;
     struct ASTNode *body;
 } FunctionDeclNode;
 

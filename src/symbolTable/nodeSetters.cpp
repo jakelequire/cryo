@@ -47,4 +47,23 @@ namespace Cryo
         return;
     }
 
+    void GlobalSymbolTable::addSingleSymbolToTable(Symbol *symbol, SymbolTable *table)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cout << "addSingleSymbolToTable: Symbol is null" << std::endl;
+            return;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "addSingleSymbolToTable: Symbol Table is null" << std::endl;
+            return;
+        }
+
+        table->symbols[table->count] = symbol;
+        table->count++;
+
+        return;
+    }
+
 } // namespace Cryo

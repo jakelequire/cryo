@@ -513,6 +513,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         symbolNode->column = node->metaData->position.column;
         symbolNode->type = node->data.classNode->type;
         symbolNode->module = strdup(node->metaData->moduleName);
+
         break;
     }
 
