@@ -1004,9 +1004,14 @@ namespace Cryo
         IRSymTable &symTable = compiler.getSymTable();
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Variable with Binary Operation Initializer");
 
-        // llvm::Value * llvmValue = compiler.getBinaryExpressions().handleComplexBinOp(initializer);
-        // compiler.getContext().namedValues[varName] = llvmValue;
-        // llvmValue->setName(varName);
+        DataType *varType = node->data.varDecl->type;
+        bool isStringType = isStringDataType(varType);
+        if (isStringType)
+        {
+            // In this situation, we need to handle the binary operation differently.
+            // We are concatenating two strings together.
+            return compiler.getBinaryExpressions().createStringBinOpInitializer(node, varName);
+        }
 
         std::cout << "Variable Name: " << varName << std::endl;
         llvm::Value *initValue = compiler.getBinaryExpressions().handleComplexBinOp(node);

@@ -1,0 +1,9 @@
+namespace Imports;
+
+import Std::IO;         // Absolute import (from the standard library)
+import "./types.cryo";  // Relative import (from the same directory)
+
+function main(argc: int, argv: string[]) -> void {
+    printStr("Hello from imports.cryo!");
+    return;
+}

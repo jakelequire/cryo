@@ -65,9 +65,11 @@ namespace Cryo
 
     void Structs::handleStructConstructor(StructNode *node, llvm::StructType *structType)
     {
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling Struct Constructor");
         ASTNode *constructor = node->constructor;
         std::string structName = std::string(node->name);
 
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct Name: " + structName);
         // Create constructor function type
         std::vector<llvm::Type *> paramTypes;
         paramTypes.push_back(structType->getPointerTo()); // 'this' pointer
@@ -75,6 +77,7 @@ namespace Cryo
         // Add constructor parameters
         for (int i = 0; i < constructor->data.structConstructor->argCount; ++i)
         {
+            DevDebugger::logMessage("INFO", __LINE__, "Structs", "Adding constructor parameter " + std::to_string(i));
             CryoParameterNode *param = constructor->data.structConstructor->args[i]->data.param;
             paramTypes.push_back(compiler.getTypes().getType(param->type, 0));
         }
@@ -85,11 +88,15 @@ namespace Cryo
             paramTypes,
             false);
 
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Creating constructor function");
+
         llvm::Function *ctorFunc = llvm::Function::Create(
             ctorType,
             llvm::Function::ExternalLinkage,
             structName + ".constructor",
             *compiler.getContext().module);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Constructor function created");
 
         // Create entry block
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(
@@ -98,20 +105,25 @@ namespace Cryo
             ctorFunc);
         compiler.getContext().builder.SetInsertPoint(entry);
 
+        DevDebugger::logMessage("INFO", __LINE__, "Structs", "Creating entry block");
+
         // Initialize fields
         auto argIt = ctorFunc->arg_begin();
         llvm::Value *thisPtr = argIt++; // First argument is 'this' pointer
 
         for (int i = 0; i < node->propertyCount; ++i)
         {
-            PropertyNode *prop = node->properties[i]->data.property;
+            DevDebugger::logMessage("INFO", __LINE__, "Structs", "Initializing field " + std::to_string(i));
             llvm::Value *fieldPtr = compiler.getContext().builder.CreateStructGEP(
                 structType,
                 thisPtr,
                 i,
                 "field" + std::to_string(i));
+            DevDebugger::logMessage("INFO", __LINE__, "Structs", "Field pointer created");
             llvm::Value *argValue = argIt++;
+            DevDebugger::logMessage("INFO", __LINE__, "Structs", "Getting argument value");
             compiler.getContext().builder.CreateStore(argValue, fieldPtr);
+            DevDebugger::logMessage("INFO", __LINE__, "Structs", "Field initialized");
         }
 
         compiler.getContext().builder.CreateRetVoid();

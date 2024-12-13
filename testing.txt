@@ -1,1 +1,2 @@
+Hello from testing.txt!
 This is a test for reading a file!

@@ -651,7 +651,7 @@ namespace Cryo
         void handleFunction(ASTNode *node);
         void handleMethodCall(ASTNode *node);
         void handleStaticMethodCall(ASTNode *node);
-        
+
         llvm::Value *createPropertyAccessCall(PropertyAccessNode *propAccess);
 
         llvm::Function *getFunction(std::string functionName);
@@ -773,6 +773,8 @@ namespace Cryo
         llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
         llvm::Value *handleComplexBinOp(ASTNode *node);
         llvm::Value *dereferenceElPointer(llvm::Value *value, std::string varName = "unknown");
+        llvm::Value *createStringBinOpInitializer(ASTNode *node, std::string varName);
+        llvm::Value *createStringConcatenation(llvm::Value *leftValue, llvm::Value *rightValue, std::string varName);
 
     private:
         CryoCompiler &compiler;

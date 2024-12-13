@@ -20,8 +20,15 @@ struct Int {
 function stringTesting() -> void {
     printStr("------- String Testing --------");
 
-    const testString: string = "Hello";
+    const testString: string = "Hello ";
     printStr(testString);
+
+    const testStringTwo: string = "World";
+    printStr(testStringTwo);
+
+    const testStringThree: string = testString + testStringTwo;
+    printStr(testStringThree);
+
 
     return;
 }
@@ -32,9 +39,9 @@ function arrayTesting() -> void {
     
     printInt(fooArr[0]);
     printInt(fooArr[1]);
-    // printInt(fooArr[2]);
-    // printInt(fooArr[3]);
-    // printInt(fooArr[4]);
+    printInt(fooArr[2]);
+    printInt(fooArr[3]);
+    printInt(fooArr[4]);
 
     // This should throw an error and calls `sys_exit()` (for now).
     // Eventually, I'll just return null and move on with execution.
@@ -85,12 +92,12 @@ function binOpTest() -> void {
 }
 
 function runtimeClassTesting() -> void {
-    printStr("------ Runtime Class Testing ------");
+    printStr("----- Runtime Class Testing -----");
     const filePathStr: String = "/workspaces/cryo/testing.txt";
     const mode: String = "r";
 
     const file: string = FS::readFile(filePathStr.value, mode.value);
-    
+
     printStr("File contents:");
     printStr(file);
 

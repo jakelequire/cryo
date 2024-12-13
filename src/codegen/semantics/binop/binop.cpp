@@ -619,4 +619,60 @@ namespace Cryo
         return compiler.getContext().builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");
     }
 
+    llvm::Value *BinaryExpressions::createStringBinOpInitializer(ASTNode *node, std::string varName)
+    {
+        IRSymTable &symTable = compiler.getSymTable();
+        OldTypes &types = compiler.getTypes();
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating String Binary Operation Initializer");
+
+        if (node->metaData->type != NODE_BINARY_EXPR)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Node is not a binary expression");
+            CONDITION_FAILED;
+        }
+
+        ASTNode *leftNode = node->data.bin_op->left;
+        ASTNode *rightNode = node->data.bin_op->right;
+
+        llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(leftNode);
+        llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rightNode);
+
+        if (!leftValue || !rightValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get values for binary operation");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *result = nullptr;
+        CryoOperatorType operatorType = node->data.bin_op->op;
+        switch (operatorType)
+        {
+        case OPERATOR_ADD:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating string concatenation expression");
+            result = createStringConcatenation(leftValue, rightValue, varName);
+            break;
+        }
+        default:
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Unknown operator type");
+            CONDITION_FAILED;
+        }
+        }
+
+        if (!result)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create string binary operation initializer");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "String binary operation initializer created successfully");
+        return result;
+    }
+
+    llvm::Value *BinaryExpressions::createStringConcatenation(llvm::Value *leftValue, llvm::Value *rightValue, std::string varName)
+    {
+        return nullptr;
+    }
 } // namespace Cryo

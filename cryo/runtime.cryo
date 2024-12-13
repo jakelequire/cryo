@@ -4,6 +4,7 @@ extern function __c_printInt(i: int) -> void;
 extern function __c_printStr(s: string) -> void;
 extern function __c_sys_exit(code: int) -> void;
 extern function __c_intToString(num: int) -> string;
+extern function __c_strLen(s: string) -> int;
 
 extern function __c_fs_mkdir(path: string) -> void;
 extern function __c_fs_rmdir(path: string) -> void;
@@ -55,8 +56,6 @@ class FS {
     constructor() {}
     
     public static readFile(path: string, mode: string) -> string {
-        __c_printStr(path);
-        __c_printStr(mode);
         const fileContents: string = __c_fs_readFile(path, mode);
         return fileContents;
     }
