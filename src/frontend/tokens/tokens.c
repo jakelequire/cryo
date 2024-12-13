@@ -190,6 +190,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "OBJECT_INST";
     case NODE_NULL_LITERAL:
         return "NULL_LITERAL";
+    case NODE_TYPEOF:
+        return "TYPEOF";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -380,14 +382,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_ENUM";
     case TOKEN_KW_TRAIT:
         return "TOKEN_KW_TRAIT";
-    case TOKEN_KW_IMPL:
-        return "TOKEN_KW_IMPL";
-    case TOKEN_KW_USE:
-        return "TOKEN_KW_USE";
     case TOKEN_KW_AS:
         return "TOKEN_KW_AS";
-    case TOKEN_KW_MODULE:
-        return "TOKEN_KW_MODULE";
     case TOKEN_KW_NAMESPACE:
         return "TOKEN_KW_NAMESPACE";
     case TOKEN_KW_TYPE:

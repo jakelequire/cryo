@@ -1053,3 +1053,17 @@ ASTNode *createNullNode(Arena *arena, CompilerState *state, TypeTable *typeTable
 
     return node;
 }
+
+ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+{
+    ASTNode *node = createASTNode(NODE_TYPEOF, arena, state, typeTable, lexer);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create typeof node");
+        return NULL;
+    }
+
+    node->data.typeofNode->expression = expression;
+
+    return node;
+}

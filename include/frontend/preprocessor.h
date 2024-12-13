@@ -32,4 +32,9 @@
 #include "frontend/symTable.h"
 #include "frontend/dataTypes.h"
 
+typedef struct Preprocessor
+{
+
+} Preprocessor;
+
 #endif // PREPROCESSOR_H

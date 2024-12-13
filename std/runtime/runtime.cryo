@@ -35,33 +35,3 @@ function outOfBoundsError() -> void {
     printStr("Array index out of bounds error");
     return;
 }
-
-function getCryoNullValue() -> any {
-    printStr("Returning null value");
-    return null;
-}
-
-// =============================================== //
-// ============== Type Definitions =============== //
-// =============================================== //
-
-struct Error {
-    message: string;
-}
-
-struct String {
-    value: string;
-
-    constructor(val: string) {
-        this.value = val;
-    }
-}
-
-class FS {
-    constructor() {}
-    
-    public static readFile(path: string, mode: string) -> string {
-        const fileContents: string = __c_fs_readFile(path, mode);
-        return fileContents;
-    }
-}

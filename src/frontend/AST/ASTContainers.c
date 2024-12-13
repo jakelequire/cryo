@@ -1446,3 +1446,18 @@ NullNode *createNullNodeContainer(Arena *arena, CompilerState *state)
 
     return node;
 }
+
+TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state)
+{
+    TypeofNode *node = (TypeofNode *)ARENA_ALLOC(arena, sizeof(TypeofNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate TypeofNode node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
+
+    return node;
+}

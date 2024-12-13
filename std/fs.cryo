@@ -1,0 +1,10 @@
+namespace FS;
+
+class FS {
+    constructor() {}
+
+    public static readFile(path: string, mode: string) -> string {
+        const fileContents: string = __c_fs_readFile(path, mode);
+        return fileContents;
+    }
+}

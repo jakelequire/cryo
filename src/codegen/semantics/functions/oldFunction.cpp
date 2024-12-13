@@ -307,6 +307,13 @@ namespace Cryo
 
                     break;
                 }
+                case PRIM_ANY:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning any");
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
+                    break;
+                }
                 default:
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
@@ -329,7 +336,8 @@ namespace Cryo
         if (!currentBlock->getTerminator())
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Adding terminator to function");
-            CONDITION_FAILED;
+            // Set the return type to void if the function is not terminated
+            compiler.getContext().builder.CreateRetVoid();
         }
         else
         {

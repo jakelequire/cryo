@@ -660,6 +660,11 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         logMessage("INFO", __LINE__, "Parser", "Parsing null expression");
         return parseNullExpression(lexer, table, context, arena, state, typeTable);
     }
+    case TOKEN_KW_TYPEOF:
+    {
+        logMessage("INFO", __LINE__, "Parser", "Parsing typeof expression");
+        return parseTypeofIdentifier(lexer, table, context, arena, state, typeTable);
+    }
     case TOKEN_INCREMENT:
     case TOKEN_DECREMENT:
     case TOKEN_MINUS:
@@ -1455,6 +1460,23 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                     }
                 }
                 break;
+            }
+
+            case TOKEN_KW_TYPEOF:
+            {
+                ASTNode *arg = parseExpression(lexer, table, context, arena, state, typeTable);
+                addArgumentToFunctionCall(table, functionCallNode, arg, arena, state, typeTable);
+                break;
+            }
+
+            default:
+            {
+                const char *tokenStr = CryoTokenToString(token);
+                const char *errorStr = "Invalid argument, received: ";
+                const char *fullErrorMessage = concatStrings(errorStr, tokenStr);
+                parsingError((char *)fullErrorMessage, "parseFunctionCall",
+                             table, arena, state, lexer, lexer->source, typeTable);
+                return NULL;
             }
             }
 
@@ -2895,4 +2917,18 @@ ASTNode *parseNullExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     consume(__LINE__, lexer, TOKEN_KW_NULL, "Expected `null` keyword.", "parseNullExpression", table, arena, state, typeTable, context);
 
     return createNullNode(arena, state, typeTable, lexer);
+}
+
+// The `typeof` keyword is used to get the type of an identifier.
+// e.g. `typeof(x)` would return the type of the variable `x` as a string.
+ASTNode *parseTypeofIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+{
+    logMessage("INFO", __LINE__, "Parser", "Parsing typeof identifier...");
+    consume(__LINE__, lexer, TOKEN_KW_TYPEOF, "Expected `typeof` keyword.", "parseTypeofIdentifier", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start typeof expression.", "parseTypeofIdentifier", table, arena, state, typeTable, context);
+
+    ASTNode *identifier = parseExpression(lexer, table, context, arena, state, typeTable);
+    consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end typeof expression.", "parseTypeofIdentifier", table, arena, state, typeTable, context);
+
+    return createTypeofNode(identifier, arena, state, typeTable, lexer);
 }

@@ -734,13 +734,6 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        llvm::Value *namedVal = compiler.getContext().namedValues[arrayName];
-        if (!namedVal)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Named value not found");
-            CONDITION_FAILED;
-        }
-
         llvm::Value *arrayPtr = var->LLVMValue;
         if (!arrayPtr)
         {
@@ -769,16 +762,6 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        llvm::StoreInst *arrStoreInst = var->LLVMStoreInst;
-        if (!arrStoreInst)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
-            CONDITION_FAILED;
-        }
-
-        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(arrStoreInst);
-        llvm::Type *arrInstType = compiler.getTypes().parseInstForType(inst);
-
         // Get the index value
         llvm::Value *indexValue = compiler.getGenerator().getInitilizerValue(indexExprNode->index);
         if (!indexValue)
@@ -789,21 +772,16 @@ namespace Cryo
 
         // Create GEP for array access
         llvm::Value *arrayValue = compiler.getContext().builder.CreateGEP(
-            arrInstType,
+            arrayType,
             arrayPtr,
             indexValue,
             varName + ".array");
 
         // Load and return array value
         llvm::LoadInst *loadedArr = compiler.getContext().builder.CreateLoad(
-            arrInstType,
+            arrayType,
             arrayValue,
             varName + ".load");
-
-        // Store the array value in the variable
-        llvm::Value *varValue = compiler.getContext().builder.CreateAlloca(arrInstType, nullptr, varName);
-        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(loadedArr, varValue);
-        storeInst->setAlignment(llvm::Align(8));
 
         // Update the symbol table
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
@@ -812,7 +790,7 @@ namespace Cryo
             compiler.getContext().currentNamespace,
             varName,
             loadedArr,
-            arrInstType);
+            arrayType);
 
         // Add load inst to var with `addLoadInstToVar`
         compiler.getSymTable().addLoadInstToVar(
@@ -868,16 +846,6 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        llvm::StoreInst *arrStoreInst = var->LLVMStoreInst;
-        if (!arrStoreInst)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Store instruction not found");
-            CONDITION_FAILED;
-        }
-
-        llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(arrStoreInst);
-        llvm::Type *arrInstType = compiler.getTypes().parseInstForType(inst);
-
         // Get the index value
         llvm::Value *indexValue = compiler.getGenerator().getInitilizerValue(indexExprNode->index);
         if (!indexValue)
@@ -892,7 +860,7 @@ namespace Cryo
 
         // Create GEP for array access
         llvm::Value *elementPtr = compiler.getContext().builder.CreateGEP(
-            arrInstType,
+            arrayType,
             arrayPtr,
             indices,
             varName + ".array");
@@ -909,24 +877,16 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "String Load Value");
         DevDebugger::logLLVMValue(charValue);
 
-        // Allocate space for the character and store it
-        llvm::AllocaInst *charPtr = compiler.getContext().builder.CreateAlloca(
-            llvm::Type::getInt8Ty(compiler.getContext().context),
-            nullptr,
-            varName + ".char.ptr");
-
-        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(charValue, charPtr);
-
         // Update the symbol table
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
-        compiler.getContext().namedValues[varName] = charPtr;
+        compiler.getContext().namedValues[varName] = charValue;
         compiler.getSymTable().updateVariableNode(
             compiler.getContext().currentNamespace,
             varName,
-            charPtr,
+            charValue,
             llvm::Type::getInt8Ty(compiler.getContext().context));
 
-        return charPtr;
+        return charValue;
     }
 
     ///
@@ -1002,23 +962,25 @@ namespace Cryo
     {
         OldTypes &types = compiler.getTypes();
         IRSymTable &symTable = compiler.getSymTable();
+        BinaryExpressions &binOps = compiler.getBinaryExpressions();
+        std::string namespaceName = compiler.getContext().currentNamespace;
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Variable with Binary Operation Initializer");
 
-        DataType *varType = node->data.varDecl->type;
-        bool isStringType = isStringDataType(varType);
-        if (isStringType)
-        {
-            // In this situation, we need to handle the binary operation differently.
-            // We are concatenating two strings together.
-            return compiler.getBinaryExpressions().createStringBinOpInitializer(node, varName);
-        }
-
         std::cout << "Variable Name: " << varName << std::endl;
-        llvm::Value *initValue = compiler.getBinaryExpressions().handleComplexBinOp(node);
+        llvm::Value *initValue = binOps.handleComplexBinOp(node);
         if (!initValue)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Initializer value not found");
             CONDITION_FAILED;
+        }
+
+        bool isStringOp = binOps.isStringBinOp(node);
+        if (isStringOp)
+        {
+            // Early return. The initValue will be a pointer to the string
+            compiler.getContext().namedValues[varName] = initValue;
+            symTable.updateVariableNode(namespaceName, varName, initValue, initValue->getType());
+            return initValue;
         }
 
         llvm::Value *initializer = compiler.getContext().builder.CreateAlloca(initValue->getType(), nullptr, varName);
@@ -1027,7 +989,6 @@ namespace Cryo
 
         compiler.getContext().namedValues[varName] = initializer;
 
-        std::string namespaceName = compiler.getContext().currentNamespace;
         symTable.updateVariableNode(namespaceName, varName, initializer, initValue->getType());
         symTable.addStoreInstToVar(namespaceName, varName, storeInst);
 

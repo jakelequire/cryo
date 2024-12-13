@@ -56,6 +56,9 @@ KeywordToken keywords[] = {
     {"static", TOKEN_KW_STATIC},
     {"protected", TOKEN_KW_PROTECTED},
     {"class", TOKEN_KW_CLASS},
+    {"using", TOKEN_KW_USING},
+    {"extends", TOKEN_KW_EXTENDS},
+    {"typeof", TOKEN_KW_TYPEOF},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

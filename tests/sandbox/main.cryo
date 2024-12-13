@@ -30,6 +30,14 @@ function stringTesting() -> void {
     const testStringThree: string = testString + testStringTwo;
     printStr(testStringThree);
 
+    const testStringFour: string = testString + "World";
+    printStr(testStringFour);
+
+    const testStringFive: string = "Hello " + testStringTwo;
+    printStr(testStringFive);
+
+    const testStringSix: string = "Hello " + "World";
+    printStr(testStringSix);
 
     return;
 }
@@ -109,6 +117,50 @@ function runtimeClassTesting() -> void {
     return;
 }
 
+function typeofTesting() -> void {
+    printStr("-------- Typeof Testing --------");
+    const foo: string = "Hello"; 
+    const bar: int = 1234;
+    const baz: boolean = true;
+    const qux: Int = 1234;
+
+    printStr("Type of foo: ");
+    printStr(typeof(foo));
+
+    printStr("Type of bar: ");
+    printStr(typeof(bar));
+
+    printStr("Type of baz: ");
+    printStr(typeof(baz));
+
+    printStr("Type of qux: ");
+    printStr(typeof(qux));
+
+    printStr("Type of int literal: ");
+    printStr(typeof(1234));
+
+    printStr("Type of string literal: ");
+    printStr(typeof("Hello"));
+
+    printStr("Type of boolean literal: ");
+    printStr(typeof(true));
+}
+
+function anyTypeTesting() -> void {
+    printStr("-------- Any Type Testing --------");
+
+    return;
+}
+
+function forLoopTesting() -> void {
+    printStr("-------- For Loop Testing --------");
+
+    for (mut i: int = 0; i < 10; i = i++) {
+        printInt(i);
+    }
+
+    return;
+}
 
 function main(argc: int, argv: string[]) -> int {
     printStr("-------- Main Function --------");
@@ -124,6 +176,9 @@ function main(argc: int, argv: string[]) -> int {
     binOpTest();
     arrayTesting();
     runtimeClassTesting();
+    typeofTesting();
+    anyTypeTesting();
+    forLoopTesting();
 
     sys_exit(0);
     return 0;

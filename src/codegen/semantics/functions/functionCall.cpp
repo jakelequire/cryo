@@ -217,6 +217,22 @@ namespace Cryo
                 argValues.push_back(argNode);
                 break;
             }
+            case NODE_TYPEOF:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a typeof expression");
+                TypeofNode *typeofNode = argNode->data.typeofNode;
+                assert(typeofNode != nullptr);
+
+                llvm::Value *argNode = createTypeofCall(typeofNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
@@ -230,6 +246,7 @@ namespace Cryo
         // If there are no arguments, just create the function call
         if (argCount == 0)
         {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call with no arguments");
             llvm::Function *function = compiler.getContext().module->getFunction(functionName);
             if (!function)
             {
@@ -249,6 +266,7 @@ namespace Cryo
             return functionCall;
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call with arguments");
         // If there are arguments, create the function call with the arguments
         // We will verify the arguments in the function call
         llvm::Function *function = compiler.getContext().module->getFunction(functionName);
@@ -1254,6 +1272,27 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Static Method Call Handled");
 
         return;
+    }
+
+    llvm::Value *Functions::createTypeofCall(TypeofNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Typeof Call");
+
+        ASTNode *exprNode = node->expression;
+        DataType *exprType = getDataTypeFromASTNode(exprNode);
+        if (!exprType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Expression type not found");
+            CONDITION_FAILED;
+        }
+        std::string exprTypeStr = DataTypeToStringUnformatted(exprType);
+        std::cout << "Typeof Expression Type: " << exprTypeStr << std::endl;
+
+        // Always return the type as a string
+        llvm::Value *typeValue = compiler.getContext().builder.CreateGlobalStringPtr(exprTypeStr, "typeof");
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Typeof Call Created");
+        return typeValue;
     }
 
 } // namespace Cryo

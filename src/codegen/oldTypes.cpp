@@ -108,6 +108,9 @@ namespace Cryo
         case PRIM_VOID:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning void type");
             return llvm::Type::getVoidTy(CryoContext::getInstance().context);
+        case PRIM_ANY:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning any type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
             // case DATA_TYPE_INT_ARRAY:
             //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int array type");
             //     return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
@@ -117,6 +120,12 @@ namespace Cryo
             // case DATA_TYPE_ARRAY:
             //    DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning array type");
             //    return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
+        default:
+        {
+            std::string typeStr = DataTypeToString(type);
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type, received: " + typeStr);
+            return nullptr;
+        }
         }
     }
 

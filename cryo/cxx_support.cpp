@@ -16,6 +16,8 @@
  ********************************************************************************/
 #include "support_lib.h"
 
+extern void *getCryoNullValue();
+
 __EXTERN_C__ void __c_printInt(int value)
 {
     printf("%d\n", value);
@@ -86,7 +88,7 @@ __EXTERN_C__ char *__c_fs_readFile(const char *path, const char *mode)
     if (!file)
     {
         printf("Error: Failed to open file: %s\n", path);
-        return NULL;
+        return nullptr;
     }
 
     fseek(file, 0, SEEK_END);

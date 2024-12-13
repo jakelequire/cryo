@@ -685,6 +685,7 @@ namespace Cryo
         llvm::Value *createFunctionCallCall(FunctionCallNode *functionCallNode);
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
+        llvm::Value *createTypeofCall(TypeofNode *node);
 
         // -----------------------------------
         // Cryo entry point functions
@@ -773,11 +774,15 @@ namespace Cryo
         llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
         llvm::Value *handleComplexBinOp(ASTNode *node);
         llvm::Value *dereferenceElPointer(llvm::Value *value, std::string varName = "unknown");
-        llvm::Value *createStringBinOpInitializer(ASTNode *node, std::string varName);
+        llvm::Value *createStringBinOpInitializer(ASTNode *lhs, ASTNode *rhs, CryoOperatorType op, std::string varName);
         llvm::Value *createStringConcatenation(llvm::Value *leftValue, llvm::Value *rightValue, std::string varName);
+        bool isStringBinOp(ASTNode *binOpNode);
 
     private:
         CryoCompiler &compiler;
+
+        bool isStringOperation(ASTNode *lhs, ASTNode *rhs);
+        bool isStringLiteral(ASTNode *node);
     };
 
     // -----------------------------------------------------------------------------------------------
