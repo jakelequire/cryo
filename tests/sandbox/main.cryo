@@ -106,7 +106,7 @@ function binOpTest() -> void {
 
 function runtimeClassTesting() -> void {
     printStr("----- Runtime Class Testing -----");
-    const filePathStr: String = "/workspaces/cryo/testing.txt";
+    const filePathStr: String = "/home/phock/Programming/apps/cryo/testing.txt";
     const mode: String = "r";
 
     const file: string = FS::readFile(filePathStr.value, mode.value);
@@ -156,9 +156,9 @@ function forLoopTesting() -> void {
     printStr("-------- For Loop Testing --------");
 
     // {VAR_DECL}? ; {CONDITION} ; {INCREMENT} 
-    for (mut i: int = 0; i < 10; i = i++) {
-        printInt(i);
-    }
+    // for (mut i: int = 0; i < 10; i = i++) {
+    //     printInt(i);
+    // }
 
     return;
 }
@@ -178,8 +178,8 @@ function main(argc: int, argv: string[]) -> int {
     arrayTesting();
     runtimeClassTesting();
     typeofTesting();
-    anyTypeTesting();
-    forLoopTesting();
+    // anyTypeTesting();
+    // forLoopTesting();
 
     sys_exit(0);
     return 0;

@@ -56,19 +56,22 @@ __EXTERN_C__ void __c_sys_exit(int code)
 }
 
 // For the FS Class in Cryo
-__EXTERN_C__ void __c_fs_mkdir(const char *path)
+__EXTERN_C__ int __c_fs_mkdir(const char *path)
 {
-    mkdir(path, 0777);
+    int result = mkdir(path, 0777);
+    return result;
 }
 
-__EXTERN_C__ void __c_fs_rmdir(const char *path)
+__EXTERN_C__ int __c_fs_rmdir(const char *path)
 {
-    rmdir(path);
+    int result = rmdir(path);
+    return result;
 }
 
-__EXTERN_C__ void __c_fs_rmfile(const char *path)
+__EXTERN_C__ int __c_fs_rmfile(const char *path)
 {
-    remove(path);
+    int result = remove(path);
+    return result;
 }
 
 __EXTERN_C__ void __c_fs_mvfile(const char *oldPath, const char *newPath)
@@ -76,10 +79,18 @@ __EXTERN_C__ void __c_fs_mvfile(const char *oldPath, const char *newPath)
     rename(oldPath, newPath);
 }
 
-__EXTERN_C__ bool __c_fs_dirExists(const char *path)
+__EXTERN_C__ int __c_fs_dirExists(const char *path)
 {
-    struct stat statbuf;
-    return stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode);
+    struct stat buffer;
+    int exists = stat(path, &buffer);
+    return exists == 0;
+}
+
+__EXTERN_C__ int __c_fs_fileExists(const char *path)
+{
+    struct stat buffer;
+    int exists = stat(path, &buffer);
+    return exists == 0;
 }
 
 __EXTERN_C__ char *__c_fs_readFile(const char *path, const char *mode)
@@ -102,4 +113,47 @@ __EXTERN_C__ char *__c_fs_readFile(const char *path, const char *mode)
     fclose(file);
 
     return buffer;
+}
+
+__EXTERN_C__ int __c_fs_writeFile(const char *path, const char *data, const char *mode)
+{
+    FILE *file = fopen(path, mode);
+    if (!file)
+    {
+        printf("Error: Failed to open file: %s\n", path);
+        return -1;
+    }
+
+    fwrite(data, 1, strlen(data), file);
+    fclose(file);
+}
+
+__EXTERN_C__ char **__c_fs_listDir(const char *path)
+{
+    DIR *dir;
+    struct dirent *ent;
+    int capacity = 1024;
+    char **array = (char **)malloc(sizeof(char *) * capacity);
+    int count = 0;
+
+    if ((dir = opendir(path)) != NULL)
+    {
+        while ((ent = readdir(dir)) != NULL)
+        {
+            if (count >= capacity)
+            {
+                capacity *= 2;
+                array = (char **)realloc(array, sizeof(char *) * capacity);
+            }
+            array[count] = (char *)malloc(strlen(ent->d_name) + 1);
+            strcpy(array[count], ent->d_name);
+            count++;
+        }
+        closedir(dir);
+    }
+    else
+    {
+        perror("");
+        return nullptr;
+    }
 }

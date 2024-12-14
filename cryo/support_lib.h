@@ -24,5 +24,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <cstring>
+#include <fstream>
+#include <dirent.h>
 
 #define __EXTERN_C__ extern "C"

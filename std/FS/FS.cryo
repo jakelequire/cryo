@@ -1,5 +1,15 @@
 namespace FS;
 
+extern function __c_fs_mkdir(path: string) -> int;
+extern function __c_fs_rmdir(path: string) -> int;
+extern function __c_fs_rmfile(path: string) -> int;
+extern function __c_fs_mvfile(src: string, dest: string) -> void;
+extern function __c_fs_readFile(path: string, mode: string) -> string;
+extern function __c_fs_writeFile(path: string, data: string, mode: string) -> void;
+extern function __c_fs_listDir(path: string) -> string[];
+extern function __c_fs_fileExists(path: string) -> int;
+extern function __c_fs_dirExists(path: string) -> int;
+
 
 class FS {
     constructor() {}
@@ -9,31 +19,52 @@ class FS {
         return fileContents;
     }
 
-    public static writeFile(path: string, contents: string) -> void {
-        // TODO: Implement 
+    public static writeFile(path: string, contents: string, mode: string) -> void {
+        __c_fs_writeFile(path, contents, mode);
     }
 
     public static createDir(path: string) -> void {
-        // TODO: Implement
+        const result: int =__c_fs_mkdir(path);
+        if (result == -1) {
+            printStr("Error creating directory");
+        }
+        return;
     }
 
     public static removeDir(path: string) -> void {
-        // TODO: Implement
+        const result: int = __c_fs_rmdir(path);
+        if (result == -1) {
+            printStr("Error removing directory");
+        }
+        return;
     }
 
     public static removeFile(path: string) -> void {
-        // TODO: Implement
+        const result: int = __c_fs_rmfile(path);
+        if (result == -1) {
+            printStr("Error removing file");
+        }
+        return;
     }
 
     public static listDir(path: string) -> string[] {
-        // TODO: Implement
+        const files: string[] = __c_listDir(path);
+        return files;
     }
 
     public static fileExists(path: string) -> boolean {
-        // TODO: Implement
+        const result: int = __c_fs_fileExists(path);
+        if (result == 1) {
+            return true;
+        }
+        return false;
     }
 
     public static dirExists(path: string) -> boolean {
-        // TODO: Implement
+        const result: int = __c_fs_dirExists(path);
+        if (result == 1) {
+            return true;
+        }
+        return false;
     }
 }
