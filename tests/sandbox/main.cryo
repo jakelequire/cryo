@@ -155,6 +155,7 @@ function anyTypeTesting() -> void {
 function forLoopTesting() -> void {
     printStr("-------- For Loop Testing --------");
 
+    // {VAR_DECL}? ; {CONDITION} ; {INCREMENT} 
     for (mut i: int = 0; i < 10; i = i++) {
         printInt(i);
     }

@@ -171,6 +171,33 @@ char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTab
 }
 // </getNamespaceName>
 
+// <isOperator>
+bool isOperator(CryoTokenType type)
+{
+    switch (type)
+    {
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+    case TOKEN_STAR:
+    case TOKEN_SLASH:
+    case TOKEN_PERCENT:
+    case TOKEN_OP_LT:
+    case TOKEN_OP_GT:
+    case TOKEN_OP_LTE:
+    case TOKEN_OP_GTE:
+    case TOKEN_OP_EQ:
+    case TOKEN_OP_NEQ:
+    case TOKEN_OP_AND:
+    case TOKEN_OP_OR:
+    case TOKEN_INCREMENT:
+    case TOKEN_DECREMENT:
+        return true;
+    default:
+        logMessage("INFO", __LINE__, "Parser", "Not an operator: %s", CryoTokenToString(type));
+        return false;
+    }
+}
+
 /* ====================================================================== */
 /* @DataType_Management                                                   */
 
@@ -2296,57 +2323,41 @@ ASTNode *parseIfCondition(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 // <parseForLoop>
 ASTNode *parseForLoop(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
+    // {VAR_DECL}? ; {CONDITION} ; {INCREMENT} {BLOCK}
     logMessage("INFO", __LINE__, "Parser", "Parsing for loop...");
     consume(__LINE__, lexer, TOKEN_KW_FOR, "Expected `for` keyword.", "parseForLoop", table, arena, state, typeTable, context);
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start for loop.", "parseForLoop", table, arena, state, typeTable, context);
-    consume(__LINE__, lexer, TOKEN_DOLLAR, "Expected `$` to start initilizer with an iterable.", "parseForLoop", table, arena, state, typeTable, context);
 
-    // The current token is <TOKEN_IDENTIFIER> which is the name of the iterable
-    char *iterableName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    ASTNode *init = NULL;
+    ASTNode *condition = NULL;
+    ASTNode *increment = NULL;
+    ASTNode *body = NULL;
 
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for the iterable.", "parseForLoop", table, arena, state, typeTable, context);
-    // Check the type of for loop were in.
-    // For now, the structure is:
-    // for($iterable: <type> = <expression>; <condition>; <update>)
-    DataType *iterDataType = createUnknownType();
-    getNextToken(lexer, arena, state, typeTable);
-    char *iterableType = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    printf("\n\nType: %s\n\n", iterableType);
-    DataType *dataType = CryoDataTypeStringToType(iterableType);
-    if (dataType == NULL || dataType->container->baseType == UNKNOWN_TYPE)
+    if (lexer->currentToken.type != TOKEN_SEMICOLON)
     {
-        parsingError("Unknown data type.", "parseForLoop", table, arena, state, lexer, lexer->source, typeTable);
+        init = parseVarDeclaration(lexer, table, context, arena, state, typeTable);
     }
-    printf("DataType: %s\n", DataTypeToString(dataType));
+    logASTNode(init);
 
-    getNextToken(lexer, arena, state, typeTable);
-    consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` after iterable type.", "parseForLoop", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after for loop initialization.", "parseForLoop", table, arena, state, typeTable, context);
 
-    ASTNode *iterable = parseExpression(lexer, table, context, arena, state, typeTable);
+    if (lexer->currentToken.type != TOKEN_SEMICOLON)
+    {
+        condition = parseExpression(lexer, table, context, arena, state, typeTable);
+    }
+    logASTNode(condition);
 
-    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after for loop condition.", "parseForLoop", table, arena, state, typeTable, context);
 
-    printf("\n\nDataType in ForLoop init: %s\n\n", DataTypeToString(dataType));
-    ASTNode *init = createVarDeclarationNode(iterableName, dataType, iterable, false, false, false, true, arena, state, typeTable, lexer);
-
-    addASTNodeSymbol(table, init, arena);
-
-    ASTNode *condition = parseExpression(lexer, table, context, arena, state, typeTable);
-    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon to separate for loop condition.", "parseForLoop", table, arena, state, typeTable, context);
-
-    char *__curToken = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    printf("Current Token Going into `parseExpression`: %s\n", __curToken);
-
-    ASTNode *update = parseExpression(lexer, table, context, arena, state, typeTable);
-    char *cur_token = strndup(lexer->currentToken.start, lexer->currentToken.length);
-
-    printf("\n\n[Parser] Current token: %s\n\n", cur_token);
+    if (lexer->currentToken.type != TOKEN_RPAREN)
+    {
+        increment = parseExpression(lexer, table, context, arena, state, typeTable);
+    }
+    logASTNode(increment);
 
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end for loop.", "parseForLoop", table, arena, state, typeTable, context);
 
-    ASTNode *body = parseBlock(lexer, table, context, arena, state, typeTable);
-
-    return createForStatement(init, condition, update, body, arena, state, typeTable, lexer);
+    DEBUG_BREAKPOINT;
 }
 // </parseForLoop>
 
