@@ -1,0 +1,39 @@
+namespace FS;
+
+
+class FS {
+    constructor() {}
+
+    public static readFile(path: string, mode: string) -> string {
+        const fileContents: string = __c_fs_readFile(path, mode);
+        return fileContents;
+    }
+
+    public static writeFile(path: string, contents: string) -> void {
+        // TODO: Implement 
+    }
+
+    public static createDir(path: string) -> void {
+        // TODO: Implement
+    }
+
+    public static removeDir(path: string) -> void {
+        // TODO: Implement
+    }
+
+    public static removeFile(path: string) -> void {
+        // TODO: Implement
+    }
+
+    public static listDir(path: string) -> string[] {
+        // TODO: Implement
+    }
+
+    public static fileExists(path: string) -> boolean {
+        // TODO: Implement
+    }
+
+    public static dirExists(path: string) -> boolean {
+        // TODO: Implement
+    }
+}
