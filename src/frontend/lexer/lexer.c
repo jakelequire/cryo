@@ -288,9 +288,35 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
 
     if (isDigit(c))
     {
-        *token = number(lexer, state);
+        *token = number(lexer, state, false);
         // logMessage("INFO", __LINE__, "Lexer", "Number token created");
         return *token;
+    }
+
+    if (c == '-')
+    {
+        // For negative numbers
+        if (isDigit(peek(lexer, state)))
+        {
+            *token = number(lexer, state, true);
+            // logMessage("INFO", __LINE__, "Lexer", "Negative number token created");
+            return *token;
+        }
+        // For arrow operator
+        else if (peek(lexer, state) == '>')
+        {
+            advance(lexer, state);
+            *token = makeToken(lexer, TOKEN_RESULT_ARROW, state);
+            // logMessage("INFO", __LINE__, "Lexer", "Result arrow token created");
+            return *token;
+        }
+        // For minus operator
+        else
+        {
+            *token = makeToken(lexer, TOKEN_MINUS, state);
+            // logMessage("INFO", __LINE__, "Lexer", "Minus token created");
+            return *token;
+        }
     }
 
     if (c == '"')
@@ -406,14 +432,31 @@ Token errorToken(Lexer *lexer, const char *message, CompilerState *state)
 // </errorToken>
 
 // <number>
-Token number(Lexer *lexer, CompilerState *state)
+Token number(Lexer *lexer, CompilerState *state, bool isNegative)
 {
+    if (isNegative)
+    {
+        advance(lexer, state); // Consume the minus sign
+    }
+
     while (isDigit(peek(lexer, state)))
     {
         advance(lexer, state);
     }
+
     Token token = makeToken(lexer, TOKEN_INT_LITERAL, state);
-    // printf("[Lexer] Number token: %.*s\n", token.length, token.start);
+    if (isNegative)
+    {
+        // Prepend the minus sign to the lexeme
+        char *negativeLexeme = (char *)malloc(token.length + 2); // +1 for '-' and +1 for '\0'
+        negativeLexeme[0] = '-';
+        strncpy(negativeLexeme + 1, token.lexeme, token.length);
+        negativeLexeme[token.length + 1] = '\0';
+
+        token.lexeme = negativeLexeme;
+        token.length += 1;
+    }
+
     return token;
 }
 // </number>

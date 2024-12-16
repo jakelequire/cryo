@@ -413,6 +413,13 @@ namespace Cryo
             llvmValue = functions.createPropertyAccessCall(node->data.propertyAccess);
             break;
         }
+        case NODE_BOOLEAN_LITERAL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Boolean Literal");
+            bool boolValue = node->data.literal->value.booleanValue;
+            llvmValue = llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context), boolValue, true);
+            break;
+        }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown node type");
             std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;

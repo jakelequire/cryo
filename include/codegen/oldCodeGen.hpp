@@ -771,7 +771,7 @@ namespace Cryo
         llvm::Value *createBinaryExpression(ASTNode *node, llvm::Value *leftValue, llvm::Value *rightValue);
 
         llvm::Value *createTempValueForPointer(llvm::Value *value, std::string varName);
-        llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op);
+        llvm::Value *createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op, llvm::BasicBlock *ifBlock);
         llvm::Value *handleComplexBinOp(ASTNode *node);
         llvm::Value *dereferenceElPointer(llvm::Value *value, std::string varName = "unknown");
         llvm::Value *createStringBinOpInitializer(ASTNode *lhs, ASTNode *rhs, CryoOperatorType op, std::string varName);

@@ -6,11 +6,6 @@ extern function __c_sys_exit(code: int) -> void;
 extern function __c_intToString(num: int) -> string;
 extern function __c_strLen(s: string) -> int;
 
-extern function __c_fs_mkdir(path: string) -> void;
-extern function __c_fs_rmdir(path: string) -> void;
-extern function __c_fs_rmfile(path: string) -> void;
-extern function __c_fs_mvfile(src: string, dest: string) -> void;
-extern function __c_fs_readFile(path: string, mode: string) -> string;
 
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);
@@ -57,11 +52,11 @@ struct String {
     }
 }
 
-class FS {
-    constructor() {}
-    
-    public static readFile(path: string, mode: string) -> string {
-        const fileContents: string = __c_fs_readFile(path, mode);
-        return fileContents;
-    }
-}
+// class FS {
+//     constructor() {}
+//     
+//     public static readFile(path: string, mode: string) -> string {
+//         const fileContents: string = __c_fs_readFile(path, mode);
+//         return fileContents;
+//     }
+// }

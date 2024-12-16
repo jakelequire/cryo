@@ -758,8 +758,8 @@ namespace Cryo
             case PRIM_BOOLEAN:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(), 0);
                 bool literalValue = literalNode->value.booleanValue;
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(literalValue), 0);
                 llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
                 if (!literalVarPtr)

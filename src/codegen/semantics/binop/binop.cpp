@@ -444,7 +444,7 @@ namespace Cryo
         return tempValue;
     }
 
-    llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op)
+    llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op, llvm::BasicBlock *ifBlock)
     {
         llvm::IRBuilder<> &builder = compiler.getContext().builder;
         DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating Comparison Expression");
@@ -557,6 +557,9 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        // Set the insert point to the if block
+        builder.SetInsertPoint(ifBlock);
+
         // // Load value if right is a pointer (a variable)
         if (rightValue->getType()->isPointerTy())
         {
@@ -633,7 +636,17 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        return compiler.getContext().builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");
+        // Set the insert point to the if block
+        builder.SetInsertPoint(ifBlock);
+
+        llvm::Value *compareResult = builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");
+        if (!compareResult)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create comparison expression");
+            CONDITION_FAILED;
+        }
+
+        return compareResult;
     }
 
     llvm::Value *BinaryExpressions::createStringBinOpInitializer(ASTNode *lhs, ASTNode *rhs, CryoOperatorType op, std::string varName)

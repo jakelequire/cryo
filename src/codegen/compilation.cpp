@@ -54,7 +54,7 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
 
             // Output the broken IR to a file
-            outputFailedIR();
+            // outputFailedIR();
 
             exit(1);
         }

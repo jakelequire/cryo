@@ -200,17 +200,9 @@ namespace Cryo
         case PRIM_BOOLEAN:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Boolean Constant");
-            int boolVal;
-            bool boolValue = literalNode->value.booleanValue;
-            if (boolValue)
-            {
-                boolVal = 1;
-            }
-            else
-            {
-                boolVal = 0;
-            }
-            llvmConstant = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(boolVal, boolVal, true));
+            bool boolValue = node->data.literal->value.booleanValue;
+            llvmValue = llvm::ConstantInt::get(llvm::Type::getInt1Ty(compiler.getContext().context), boolValue, true);
+            llvmConstant = llvm::dyn_cast<llvm::Constant>(llvmValue);
             break;
         }
         case PRIM_NULL:

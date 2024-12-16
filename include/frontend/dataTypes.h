@@ -230,6 +230,7 @@ typedef struct TypeContainer
     int length;                  // Length of the type
     bool isArray;                // Array flag
     int arrayDimensions;         // Number of array dimensions
+    bool boolValue;              // Boolean value
     struct custom
     {
         const char *name; // Type identifier name
@@ -321,7 +322,7 @@ extern "C"
     DataType *createPrimitiveIntType(void);
     DataType *createPrimitiveFloatType(void);
     DataType *createPrimitiveStringType(int length);
-    DataType *createPrimitiveBooleanType(void);
+    DataType *createPrimitiveBooleanType(bool booleanValue);
     DataType *createPrimitiveVoidType(void);
     DataType *createPrimitiveNullType(void);
     DataType *createPrimitiveAnyType(void);

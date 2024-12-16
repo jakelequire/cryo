@@ -78,7 +78,7 @@ Token peekNextToken(Lexer *lexer, CompilerState *state);
 /* @Token_Creation */
 Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state);
 Token errorToken(Lexer *lexer, const char *message, CompilerState *state);
-Token number(Lexer *lexer, CompilerState *state);
+Token number(Lexer *lexer, CompilerState *state, bool isNegative);
 Token string(Lexer *lexer, CompilerState *state);
 Token boolean(Lexer *lexer, CompilerState *state);
 Token symbolChar(Lexer *lexer, char symbol, CompilerState *state);

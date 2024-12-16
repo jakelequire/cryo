@@ -53,6 +53,7 @@ TypeContainer *createTypeContainer(void)
     container->size = 0;
     container->length = 0;
     container->isArray = false;
+    container->boolValue = false;
     container->arrayDimensions = 0;
     container->custom.name = (char *)malloc(sizeof(char) * 64);
     container->custom.structDef = NULL;
@@ -321,7 +322,7 @@ DataType *CryoDataTypeStringToType(const char *typeStr)
     }
     else if (strcmp(typeStr, "boolean") == 0)
     {
-        return createPrimitiveBooleanType();
+        return createPrimitiveBooleanType(false);
     }
     else if (strcmp(typeStr, "void") == 0)
     {

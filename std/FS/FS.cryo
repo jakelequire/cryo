@@ -21,6 +21,7 @@ class FS {
 
     public static writeFile(path: string, contents: string, mode: string) -> void {
         __c_fs_writeFile(path, contents, mode);
+        return;
     }
 
     public static createDir(path: string) -> void {
@@ -48,7 +49,7 @@ class FS {
     }
 
     public static listDir(path: string) -> string[] {
-        const files: string[] = __c_listDir(path);
+        const files: string[] = __c_fs_listDir(path);
         return files;
     }
 
@@ -67,4 +68,9 @@ class FS {
         }
         return false;
     }
+}
+
+function main() -> void {
+
+    return;
 }

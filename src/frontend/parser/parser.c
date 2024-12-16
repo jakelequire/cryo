@@ -1398,7 +1398,8 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 
             case TOKEN_BOOLEAN_LITERAL:
             {
-                DataType *expectedType = createPrimitiveBooleanType();
+                bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
+                DataType *expectedType = createPrimitiveBooleanType(booleanValue);
                 ASTNode *arg = parsePrimaryExpression(lexer, table, context, arena, state, typeTable);
                 addArgumentToFunctionCall(table, functionCallNode, arg, arena, state, typeTable);
                 break;
@@ -1722,7 +1723,8 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         logMessage("INFO", __LINE__, "Parser", "Argument is a boolean literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
-        argType = createPrimitiveBooleanType();
+        bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
+        argType = createPrimitiveBooleanType(booleanValue);
     }
     else if (lexer->currentToken.type == TOKEN_KW_THIS)
     {
@@ -1767,7 +1769,8 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         }
         else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
         {
-            argType = createPrimitiveBooleanType();
+            bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
+            argType = createPrimitiveBooleanType(booleanValue);
         }
     }
 
@@ -1867,7 +1870,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is a boolean literal");
-        expectedType = createPrimitiveBooleanType();
+        bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
+        expectedType = createPrimitiveBooleanType(booleanValue);
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
     }

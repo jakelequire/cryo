@@ -109,10 +109,10 @@ function runtimeClassTesting() -> void {
     const filePathStr: String = "/home/phock/Programming/apps/cryo/testing.txt";
     const mode: String = "r";
 
-    const file: string = FS::readFile(filePathStr.value, mode.value);
+    // const file: string = FS::readFile(filePathStr.value, mode.value);
 
     printStr("File contents:");
-    printStr(file);
+    //printStr(file);
 
     return;
 }

@@ -100,7 +100,8 @@ namespace Cryo
             conditionValue = binExp.createComparisonExpression(
                 node->data.forStatement->condition->data.bin_op->left,
                 node->data.forStatement->condition->data.bin_op->right,
-                node->data.forStatement->condition->data.bin_op->op);
+                node->data.forStatement->condition->data.bin_op->op,
+                loopBB);
         }
         else
         {

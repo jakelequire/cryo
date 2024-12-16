@@ -527,6 +527,13 @@ namespace Cryo
             cryoContext.builder.CreateRet(nullValue);
             break;
         }
+        case NODE_BOOLEAN_LITERAL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
+            llvm::Value *returnValue = generator.getInitilizerValue(node);
+            cryoContext.builder.CreateRet(returnValue);
+            break;
+        }
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown node type");

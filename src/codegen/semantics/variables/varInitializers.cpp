@@ -920,6 +920,16 @@ namespace Cryo
 
         std::string moduleName = compiler.getContext().currentNamespace;
 
+        // Make sure we are in the entry block
+        llvm::BasicBlock *entryBlock = compiler.getContext().builder.GetInsertBlock();
+        if (!entryBlock)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Entry block not found");
+            CONDITION_FAILED;
+        }
+        // Set the insertion point to the entry block
+        compiler.getContext().builder.SetInsertPoint(entryBlock);
+
         // Create the variable
         std::string varName = std::string(variable->data.varDecl->name);
         llvm::Type *varType = compiler.getTypes().getType(variable->data.varDecl->type, 0);
@@ -954,7 +964,7 @@ namespace Cryo
         symTable.addStoreInstToVar(moduleName, varName, storeInst);
         symTable.addDataTypeToVar(moduleName, varName, initType);
 
-        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Function Call Created");
+        DevDebugger::logMessage("INFO", __LINE__, "Variabvles", "Function Call Created");
         return functionCall;
     }
 

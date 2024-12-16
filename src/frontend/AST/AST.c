@@ -290,8 +290,9 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
 
     logMessage("INFO", __LINE__, "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
 
-    node->data.literal->type = createPrimitiveBooleanType();
+    node->data.literal->type = createPrimitiveBooleanType(value);
     node->data.literal->value.booleanValue = value;
+
     return node;
 }
 
