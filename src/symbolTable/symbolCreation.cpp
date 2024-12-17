@@ -55,6 +55,19 @@ namespace Cryo
         return symbol;
     }
 
+    ExternSymbol *GlobalSymbolTable::createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, size_t scopeId)
+    {
+        ExternSymbol *symbol = new ExternSymbol();
+        symbol->name = name;
+        symbol->returnType = returnType;
+        symbol->paramTypes = paramTypes;
+        symbol->paramCount = paramCount;
+        symbol->nodeType = nodeType;
+        symbol->visibility = visibility;
+        symbol->scopeId = scopeId;
+        return symbol;
+    }
+
     TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, size_t scopeId)
     {
         TypeSymbol *symbol = new TypeSymbol();

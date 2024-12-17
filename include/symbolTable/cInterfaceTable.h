@@ -34,6 +34,7 @@ CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
 // void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable);
 
 void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
+#define printGlobalSymbolTable(symTable) CryoGlobalSymbolTable_PrintGlobalTable(symTable)
 
 bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable);
 bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable);

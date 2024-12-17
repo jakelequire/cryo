@@ -75,10 +75,12 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
                 // Initialize the global symbol table
                 if (isPrimaryTable)
                 {
+                    logMessage("INFO", __LINE__, "Parser", "Creating primary symbol table for namespace: %s", namespaceName);
                     createPrimarySymbolTable(globalTable, namespaceName);
                 }
                 if (isDependencyTable)
                 {
+                    logMessage("INFO", __LINE__, "Parser", "Creating dependency symbol table for namespace: %s", namespaceName);
                     initDependencySymbolTable(globalTable, namespaceName);
                 }
             }

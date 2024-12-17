@@ -51,6 +51,11 @@ typedef struct ConstructorMetaData ConstructorMetaData;
 typedef struct TypeTable TypeTable;
 typedef struct DataType DataType;
 
+typedef struct ScopeContext
+{
+
+} ScopeContext;
+
 typedef struct ThisContext
 {
     CryoNodeType nodeType;

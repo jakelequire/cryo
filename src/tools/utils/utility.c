@@ -87,7 +87,6 @@ char *stringToUFString(const char *str)
         perror("Cannot convert NULL string to UF string");
         return NULL;
     }
-    printf("Converting string to UF string: %s\n", str);
     // We make a string copy of the input string, do not modify the original
     char *buffer = strdup(str);
     if (buffer == NULL)

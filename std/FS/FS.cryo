@@ -33,41 +33,41 @@ class FS {
     }
 
     public static removeDir(path: string) -> void {
-        const result: int = __c_fs_rmdir(path);
-        if (result == -1) {
+        const results: int = __c_fs_rmdir(path);
+        if (results == -1) {
             printStr("Error removing directory");
         }
         return;
     }
 
-    public static removeFile(path: string) -> void {
-        const result: int = __c_fs_rmfile(path);
-        if (result == -1) {
-            printStr("Error removing file");
-        }
-        return;
-    }
+    // public static removeFile(path: string) -> void {
+    //     const result: int = __c_fs_rmfile(path);
+    //     if (result == -1) {
+    //         printStr("Error removing file");
+    //     }
+    //     return;
+    // }
 
-    public static listDir(path: string) -> string[] {
-        const files: string[] = __c_fs_listDir(path);
-        return files;
-    }
+    // public static listDir(path: string) -> string[] {
+    //     const files: string[] = __c_fs_listDir(path);
+    //     return files;
+    // }
 
-    public static fileExists(path: string) -> boolean {
-        const result: int = __c_fs_fileExists(path);
-        if (result == 1) {
-            return true;
-        }
-        return false;
-    }
+    // public static fileExists(path: string) -> boolean {
+    //     const result: int = __c_fs_fileExists(path);
+    //     if (result == 1) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
-    public static dirExists(path: string) -> boolean {
-        const result: int = __c_fs_dirExists(path);
-        if (result == 1) {
-            return true;
-        }
-        return false;
-    }
+    // public static dirExists(path: string) -> boolean {
+    //     const result: int = __c_fs_dirExists(path);
+    //     if (result == 1) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 }
 
 function main() -> void {

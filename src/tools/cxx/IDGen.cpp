@@ -79,9 +79,15 @@ namespace Cryo
         int id = 0;
         for (int i = 0; i < 32; i++)
         {
-            id += rand() % 2;
+            int multiplier = 1 << i;
+            id += rand() % 2 * multiplier;
         }
         return id;
+    }
+
+    const char *IDGen::generate16BitHashID(const char *seed)
+    {
+        // TODO: Implement a 16-bit hash function
     }
 
 } // namespace Cryo

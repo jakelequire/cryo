@@ -55,6 +55,7 @@ namespace Cryo
     public:
         static std::string generate32BitID(void);
         static int generate32BitIntID(void);
+        static const char *generate16BitHashID(const char *seed);
 
     private:
         std::string id;

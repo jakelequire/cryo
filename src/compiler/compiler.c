@@ -47,7 +47,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return 1;
     }
     // Debug print the global symbol table
-    // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);
+    printGlobalSymbolTable(globalSymbolTable);
 
     // Create and initialize linker
     CryoLinker linker = CryoLinker_Create();
@@ -68,7 +68,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     boostrapRuntimeDefinitions(table, typeTable, globalSymbolTable);
     CryoLinker_LogState(linker);
 
-    // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable); // DEBUG
+    printGlobalSymbolTable(globalSymbolTable);
 
     // Update the global symbol table to be the primary table.
     setPrimaryTableStatus(globalSymbolTable, true);
@@ -115,6 +115,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     END_COMPILATION_MESSAGE;
 
+    printGlobalSymbolTable(globalSymbolTable);
     logASTNodeDebugView(programCopy);
 
     return 0;

@@ -69,6 +69,19 @@ struct FunctionSymbol
     size_t scopeId;
 };
 
+struct ExternSymbol
+{
+    const char *name;
+    DataType *returnType;
+    DataType **paramTypes;
+    size_t paramCount;
+    ASTNode *node;
+    CryoNodeType nodeType;
+    CryoVisibilityType visibility;
+
+    size_t scopeId;
+};
+
 struct TypeSymbol
 {
     const char *name;

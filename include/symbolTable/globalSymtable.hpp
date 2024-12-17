@@ -32,6 +32,7 @@ extern "C"
     // void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable);
 
     void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
+#define printGlobalSymbolTable(symTable) CryoGlobalSymbolTable_PrintGlobalTable(symTable)
 
     // Class State Functions ---------------------------------------
 
@@ -179,6 +180,7 @@ namespace Cryo
         TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, size_t scopeId);
         PropertySymbol *createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, size_t scopeId);
         MethodSymbol *createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, size_t scopeId);
+        ExternSymbol *createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, size_t scopeId);
 
         Symbol *createSymbol(TypeOfSymbol symbolType, void *symbol);
         SymbolTable *createSymbolTable(const char *namespaceName);
