@@ -28,6 +28,7 @@ typedef enum TypeOfSymbol
 {
     VARIABLE_SYMBOL,
     FUNCTION_SYMBOL,
+    EXTERN_SYMBOL,
     TYPE_SYMBOL,
     PROPERTY_SYMBOL,
     METHOD_SYMBOL,
@@ -38,7 +39,7 @@ struct ScopeBlock
 {
     const char *namespaceName;
     const char *name;
-    size_t id;
+    const char *id;
     size_t depth;
 
     // Scope hierarchy
@@ -54,7 +55,7 @@ struct VariableSymbol
     DataType *type;
     ASTNode *node;
 
-    size_t scopeId;
+    const char *scopeId;
 };
 
 struct FunctionSymbol
@@ -66,7 +67,7 @@ struct FunctionSymbol
     CryoVisibilityType visibility;
     ASTNode *node;
 
-    size_t scopeId;
+    const char *scopeId;
 };
 
 struct ExternSymbol
@@ -79,7 +80,7 @@ struct ExternSymbol
     CryoNodeType nodeType;
     CryoVisibilityType visibility;
 
-    size_t scopeId;
+    const char *scopeId;
 };
 
 struct TypeSymbol
@@ -90,7 +91,7 @@ struct TypeSymbol
     bool isStatic;
     bool isGeneric;
 
-    size_t scopeId;
+    const char *scopeId;
 };
 
 struct PropertySymbol
@@ -102,7 +103,7 @@ struct PropertySymbol
     bool hasDefaultExpr;
     bool isStatic;
 
-    size_t scopeId;
+    const char *scopeId;
 };
 
 struct MethodSymbol
@@ -115,7 +116,7 @@ struct MethodSymbol
     ASTNode *node;
     bool isStatic;
 
-    size_t scopeId;
+    const char *scopeId;
 };
 
 struct Symbol
@@ -125,6 +126,7 @@ struct Symbol
     {
         VariableSymbol *variable;
         FunctionSymbol *function;
+        ExternSymbol *externSymbol;
         TypeSymbol *type;
         PropertySymbol *property;
         MethodSymbol *method;
@@ -137,7 +139,7 @@ struct SymbolTable
     size_t count;
     size_t capacity;
     size_t scopeDepth;
-    size_t scopeId;
+    const char *scopeId;
     ScopeBlock *currentScope;
     Symbol **symbols;
 };
@@ -148,7 +150,7 @@ struct TypesTable
     size_t count;
     size_t capacity;
     size_t scopeDepth;
-    size_t scopeId;
+    const char *scopeId;
     ScopeBlock *currentScope;
     DataType **types;
 };

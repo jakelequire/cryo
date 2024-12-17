@@ -40,13 +40,10 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
         printf("\n");
     }
 
-    ParsingContext context = {
-        false,
-        0,
-        "default",
-        NULL,
-        {TOKEN_UNKNOWN}};
+    // Initialize the parsing context
+    ParsingContext *context = createParsingContext();
 
+    // Create the program node
     ASTNode *program = createProgramNode(arena, state, typeTable, lexer);
     if (!program)
     {
@@ -55,12 +52,11 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
     }
 
     getNextToken(lexer, arena, state, typeTable);
-
     logMessage("INFO", __LINE__, "Parser", "Parsing statements...");
 
     while (lexer->currentToken.type != TOKEN_EOF)
     {
-        ASTNode *statement = parseStatement(lexer, table, &context, arena, state, typeTable);
+        ASTNode *statement = parseStatement(lexer, table, context, arena, state, typeTable);
         if (statement)
         {
             // traverseAST(statement, table);
@@ -71,7 +67,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
             {
                 const char *namespaceName = statement->data.cryoNamespace->name;
                 // Initialize the `this`context to the namespace
-                setDefaultThisContext(namespaceName, &context, typeTable);
+                setDefaultThisContext(namespaceName, context, typeTable);
                 // Initialize the global symbol table
                 if (isPrimaryTable)
                 {
@@ -619,6 +615,7 @@ ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         parsingError("Expected a namespace name", "parseNamespace", table, arena, state, lexer, lexer->source, typeTable);
     }
 
+    createNamespaceScope(context, namespaceName);
     setNamespace(table, namespaceName);
     addASTNodeSymbol(table, node, arena);
 

@@ -92,4 +92,31 @@ extern "C"
         }
     }
 
+    // Scope Functions ---------------------------------------
+
+    void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->enterScope(name);
+        }
+    }
+
+    void CryoGlobalSymbolTable_ExitScope(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->exitScope();
+        }
+    }
+
+    const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getScopeID(name);
+        }
+        return nullptr;
+    }
+
 } // C API ----------------------------------------------------------

@@ -55,6 +55,15 @@ extern "C"
     void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
 #define addNodeToSymbolTable(symTable, node) CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
 
+    // Scope Functions ---------------------------------------
+    void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name);
+#define EnterScope(symTable, name) CryoGlobalSymbolTable_EnterScope(symTable, name)
+    void CryoGlobalSymbolTable_ExitScope(CryoGlobalSymbolTable *symTable);
+#define ExitScope(symTable) CryoGlobalSymbolTable_ExitScope(symTable)
+
+    const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, const char *name);
+#define GetScopeID(symTable, name) CryoGlobalSymbolTable_GetScopeID(symTable, name)
+
 #ifdef __cplusplus
 } // C API ----------------------------------------------------------
 
@@ -81,6 +90,8 @@ typedef struct DataType DataType;
 #define MAX_SYMBOLS 1024
 #define MAX_DEPENDENCIES 1024
 
+/// @brief Debugging information for the symbol table.
+/// Which includes: `buildDir`, `dependencyDir`, `debugDir`, and `DBdir`.
 struct DebugInfo
 {
     std::string buildDir;
@@ -89,6 +100,8 @@ struct DebugInfo
     std::string DBdir;
 };
 
+/// @brief Context for the symbol table.
+/// Which includes: `isPrimary`, and `isDependency` flags.
 struct TableContext
 {
     bool isPrimary;
@@ -110,18 +123,31 @@ namespace Cryo
         };
         ~GlobalSymbolTable();
 
-        DebugInfo debugInfo;
-        TableContext tableContext;
+        // ======================================================= //
+        // Public Variables & state for the symbol table           //
+        // ======================================================= //
 
-        SymbolTable *symbolTable = nullptr;
-        TypesTable *typeTable = nullptr;
-        SymbolTable *currentDependencyTable = nullptr;
+        DebugInfo debugInfo;       // Debugging information (build, dependency, debug, and DB directories)
+        TableContext tableContext; // Context & stateful flags for the symbol table (isPrimary, isDependency)
 
-        SymbolTable **dependencyTables; // For C interfacing
-        size_t dependencyCount = 0;
-        size_t dependencyCapacity = MAX_DEPENDENCIES;
+        SymbolTable *symbolTable = nullptr;            // The main entry point namespace
+        SymbolTable *currentDependencyTable = nullptr; // Runtime & other dependencies
+        SymbolTable **dependencyTables;                // For C interfacing (Array of dependency tables)
+        SymbolTable *stdImportTable = nullptr;         // The `using` keyword table for standard library imports
+        TypesTable *typeTable = nullptr;               // Global types table
 
-        std::vector<SymbolTable *> dependencyTableVector; // Easier for C++ to manage
+        size_t dependencyCount = 0;                   // For C interfacing
+        size_t dependencyCapacity = MAX_DEPENDENCIES; // For C interfacing
+
+        std::vector<SymbolTable *> dependencyTableVector; // For C++ interfacing
+
+        ScopeBlock *currentScope = nullptr; // The current scope block
+        const char *scopeId = "null";       // The current scope ID
+        size_t scopeDepth = 0;              // The current scope depth
+
+        // ======================================================= //
+        // Public Functions for interfacing with the symbol table  //
+        // ======================================================= //
 
         bool getIsPrimaryTable(void) { return tableContext.isPrimary; }
         bool getIsDependencyTable(void) { return tableContext.isDependency; }
@@ -139,16 +165,34 @@ namespace Cryo
 
         void setCurrentDependencyTable(SymbolTable *table) { currentDependencyTable = table; }
         void setPrimaryTable(SymbolTable *table) { symbolTable = table; }
-        // -------------------------------------------------------
 
-        void printGlobalTable(GlobalSymbolTable *table);
+        // ======================================================= //
+        // Symbol Table Management Functions                       //
+        // ======================================================= //
 
         void createPrimaryTable(const char *namespaceName);
         void initDependencyTable(const char *namespaceName);
-
         void addNodeToTable(ASTNode *node);
+        void completeDependencyTable(void);
 
-        void completeDependencyTable();
+        // ======================================================= //
+        // Scope Management Functions                              //
+        // ======================================================= //
+
+        const char *getScopeID(void) { return scopeId; }
+        size_t getScopeDepth(void) { return scopeDepth; }
+
+        void enterScope(const char *name);
+        void exitScope(void);
+        const char *getScopeID(const char *name);
+
+        void initNamepsaceScope(const char *namespaceName);
+
+        // ======================================================= //
+        // Debug Functions other than the `SymbolTableDebugger`    //
+        // ======================================================= //
+
+        void printGlobalTable(GlobalSymbolTable *table);
 
     private:
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
@@ -175,12 +219,12 @@ namespace Cryo
 
     protected:
         ScopeBlock *createScopeBlock(const char *name, size_t depth);
-        VariableSymbol *createVariableSymbol(const char *name, DataType *type, ASTNode *node, size_t scopeId);
+        VariableSymbol *createVariableSymbol(const char *name, DataType *type, ASTNode *node, const char *scopeId);
         FunctionSymbol *createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node);
-        TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, size_t scopeId);
-        PropertySymbol *createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, size_t scopeId);
-        MethodSymbol *createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, size_t scopeId);
-        ExternSymbol *createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, size_t scopeId);
+        TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId);
+        PropertySymbol *createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, const char *scopeId);
+        MethodSymbol *createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, const char *scopeId);
+        ExternSymbol *createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, const char *scopeId);
 
         Symbol *createSymbol(TypeOfSymbol symbolType, void *symbol);
         SymbolTable *createSymbolTable(const char *namespaceName);
@@ -249,6 +293,33 @@ namespace Cryo
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->addNodeToTable(node);
         }
+    }
+
+    // Scope Functions ---------------------------------------
+
+    inline void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->enterScope(name);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_ExitScope(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->exitScope();
+        }
+    }
+
+    inline const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getScopeID(name);
+        }
+        return nullptr;
     }
 
 } // namespace Cryo

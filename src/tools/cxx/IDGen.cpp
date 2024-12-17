@@ -85,9 +85,20 @@ namespace Cryo
         return id;
     }
 
-    const char *IDGen::generate16BitHashID(const char *seed)
+    const char *IDGen::generate64BitHashID(const char *seed)
     {
-        // TODO: Implement a 16-bit hash function
+        uint64_t hash = 0;
+        size_t len = strlen(seed);
+        for (size_t i = 0; i < len; ++i)
+        {
+            hash = (hash << 5) + hash + seed[i]; // hash * 33 + seed[i]
+        }
+        hash = hash & 0xFFFFFFFFFFFFFFFF; // Ensure it's 64-bit
+
+        // Convert hash to string
+        char *hashStr = (char *)std::malloc(17); // 16 digits + null terminator
+        std::sprintf(hashStr, "%016lX", hash);
+        return hashStr;
     }
 
 } // namespace Cryo

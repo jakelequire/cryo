@@ -267,7 +267,9 @@
     "globalsymtable.hpp": "c",
     "cinterfacetable.h": "c",
     "debugsymbols.hpp": "c",
-    "sys_errlist.h": "c"
+    "sys_errlist.h": "c",
+    "symdefs.h": "c",
+    "std_function.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

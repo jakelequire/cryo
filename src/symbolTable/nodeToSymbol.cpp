@@ -104,13 +104,14 @@ namespace Cryo
         {
             std::cout << "ASTNodeToSymbol: Processing Extern Function Node" << std::endl;
             const char *externName = node->data.externFunction->name;
-            FunctionSymbol *externSymbol = createFunctionSymbol(externName,
-                                                                node->data.externFunction->type,
-                                                                nullptr,
-                                                                node->data.externFunction->paramCount,
-                                                                VISIBILITY_PUBLIC,
-                                                                node);
-            return createSymbol(FUNCTION_SYMBOL, externSymbol);
+            ExternSymbol *externSymbol = createExternSymbol(externName,
+                                                            node->data.externFunction->type,
+                                                            nullptr, // Will implement later (param types)
+                                                            node->data.externFunction->paramCount,
+                                                            node->metaData->type,
+                                                            VISIBILITY_PUBLIC,
+                                                            0);
+            return createSymbol(EXTERN_SYMBOL, externSymbol);
         }
         case NODE_STRUCT_DECLARATION:
         {

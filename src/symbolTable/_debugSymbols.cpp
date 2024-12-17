@@ -33,7 +33,7 @@ namespace Cryo
         logger->debugNode("Scope Block:");
         logger->debugNode("\tNamespace: %s", block->namespaceName ? block->namespaceName : "global");
         logger->debugNode("\tName: %s", block->name ? block->name : "<anonymous>");
-        logger->debugNode("\tID: %zu", block->id);
+        logger->debugNode("\tID: %s", block->id);
         logger->debugNode("\tDepth: %zu", block->depth);
         logger->debugNode("\tChild Count: %zu", block->childCount);
 
@@ -55,7 +55,7 @@ namespace Cryo
 
         logger->debugNode("Variable Symbol:");
         logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %zu", symbol->scopeId);
+        logger->debugNode("\tScope ID: %s", symbol->scopeId);
         logger->debugNode("\tType: %s", symbol->type ? DataTypeToString(symbol->type) : "unknown");
         logger->debugNode("\tAST Node: %p", (void *)symbol->node);
     }
@@ -70,7 +70,7 @@ namespace Cryo
 
         logger->debugNode("Function Symbol:");
         logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %zu", symbol->scopeId);
+        logger->debugNode("\tScope ID: %s", symbol->scopeId);
         logger->debugNode("\tReturn Type: %s",
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
         logger->debugNode("\tParameters: %zu", symbol->paramCount);
@@ -79,6 +79,30 @@ namespace Cryo
         // {
         //     DataType *paramType = symbol->paramTypes[i];
         //     logger->debugNode("    Param %zu: %s", i, paramType ? DataTypeToString(paramType) : "unknown");
+        // }
+
+        logger->debugNode("\tVisibility: %s", CryoVisibilityTypeToString(symbol->visibility));
+    }
+
+    void SymbolTableDebugger::logExternSymbol(ExternSymbol *symbol)
+    {
+        if (!symbol)
+        {
+            logger->debugNode("NULL extern symbol");
+            return;
+        }
+
+        logger->debugNode("Extern Symbol:");
+        logger->debugNode("\tName: %s", symbol->name);
+        logger->debugNode("\tScope ID: %s", symbol->scopeId);
+        logger->debugNode("\tReturn Type: %s",
+                          symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
+        logger->debugNode("\tParameters: %zu", symbol->paramCount);
+
+        // for (size_t i = 0; i < symbol->paramCount; i++)
+        // {
+        //      logger->debugNode("    Param %zu: %s", i,
+        //                      symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
         // }
 
         logger->debugNode("\tVisibility: %s", CryoVisibilityTypeToString(symbol->visibility));
@@ -94,7 +118,7 @@ namespace Cryo
 
         logger->debugNode("Type Symbol:");
         logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %zu", symbol->scopeId);
+        logger->debugNode("\tScope ID: %s", symbol->scopeId);
         logger->debugNode("\tType Of: %s", TypeofDataTypeToString(symbol->typeOf));
         logger->debugNode("\tIs Static: %s", symbol->isStatic ? "true" : "false");
         logger->debugNode("\tIs Generic: %s", symbol->isGeneric ? "true" : "false");
@@ -110,7 +134,7 @@ namespace Cryo
 
         logger->debugNode("Property Symbol:");
         logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %zu", symbol->scopeId);
+        logger->debugNode("\tScope ID: %s", symbol->scopeId);
         logger->debugNode("\tType: %s", symbol->type ? DataTypeToString(symbol->type) : "unknown");
         logger->debugNode("\tIs Static: %s", symbol->isStatic ? "true" : "false");
         logger->debugNode("\tHas Default: %s", symbol->hasDefaultExpr ? "true" : "false");
@@ -126,7 +150,7 @@ namespace Cryo
 
         logger->debugNode("Method Symbol:");
         logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %zu", symbol->scopeId);
+        logger->debugNode("\tScope ID: %s", symbol->scopeId);
         logger->debugNode("\tReturn Type: %s",
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
         logger->debugNode("\tParameters: %zu", symbol->paramCount);
@@ -157,6 +181,9 @@ namespace Cryo
         case FUNCTION_SYMBOL:
             logFunctionSymbol(symbol->function);
             break;
+        case EXTERN_SYMBOL:
+            logExternSymbol(symbol->externSymbol);
+            break;
         case TYPE_SYMBOL:
             logTypeSymbol(symbol->type);
             break;
@@ -183,7 +210,7 @@ namespace Cryo
         logger->debugNode("\tNamespace: %s", table->namespaceName ? table->namespaceName : "global");
         logger->debugNode("\tSymbol Count: %zu", table->count);
         logger->debugNode("\tScope Depth: %zu", table->scopeDepth);
-        logger->debugNode("\tScope ID: %zu", table->scopeId);
+        logger->debugNode("\tScope ID: %s", table->scopeId);
 
         if (table->currentScope)
         {
@@ -210,7 +237,7 @@ namespace Cryo
         logger->debugNode("\tNamespace: %s", table->namespaceName ? table->namespaceName : "global");
         logger->debugNode("\tType Count: %zu", table->count);
         logger->debugNode("\tScope Depth: %zu", table->scopeDepth);
-        logger->debugNode("\tScope ID: %zu", table->scopeId);
+        logger->debugNode("\tScope ID: %s", table->scopeId);
 
         logger->debugNode("Types:");
         for (size_t i = 0; i < table->count; i++)
@@ -227,6 +254,8 @@ namespace Cryo
             return "Variable";
         case FUNCTION_SYMBOL:
             return "Function";
+        case EXTERN_SYMBOL:
+            return "Extern";
         case TYPE_SYMBOL:
             return "Type";
         case PROPERTY_SYMBOL:

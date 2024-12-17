@@ -14,66 +14,46 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef IDGEN_H
-#define IDGEN_H
-
-// C API
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-    // Opaque pointer type for C
-    typedef struct CryoIDGen_t *CryoIDGen;
-
-    // C API functions
-    CryoIDGen CryoIDGen_Create(void);
-    void CryoIDGen_Destroy(CryoIDGen idGen);
-    const char *CryoIDGen_Generate32BitID(CryoIDGen idGen);
-    int CryoIDGen_Generate32BitIntID(CryoIDGen idGen);
-    const char *CryoIDGen_Generate64BitHashID(CryoIDGen idGen, const char *seed);
-#define Generate64BitHashID(seed) Cryo_Generate64BitHashID(seed)
-
-#ifdef __cplusplus
-} // C API
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdint.h>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
-#include <functional>
-#include <string.h>
+#include "symbolTable/globalSymtable.hpp"
 
 namespace Cryo
 {
-
-    class IDGen
+    void GlobalSymbolTable::enterScope(const char *name)
     {
-    public:
-        static std::string generate32BitID(void);
-        static int generate32BitIntID(void);
+        ScopeBlock *newScope = createScopeBlock(name, currentScope ? currentScope->depth + 1 : 0);
+        newScope->parent = currentScope;
+        if (currentScope)
+        {
+            if (currentScope->childCount >= currentScope->childCapacity)
+            {
+                currentScope->childCapacity = currentScope->childCapacity ? currentScope->childCapacity * 2 : 1;
+                currentScope->children = (ScopeBlock **)realloc(currentScope->children, sizeof(ScopeBlock *) * currentScope->childCapacity);
+            }
+            currentScope->children[currentScope->childCount++] = newScope;
+        }
+        currentScope = newScope;
+        scopeDepth++;
+    }
 
-        /// @brief Generate a 64-bit hash ID from a seed string.
-        /// This is a -deteministic- hash ID generator.
-        static const char *generate64BitHashID(const char *seed);
+    void GlobalSymbolTable::exitScope()
+    {
+        if (currentScope)
+        {
+            currentScope = currentScope->parent;
+            scopeDepth--;
+        }
+    }
 
-    private:
-        std::string id;
-    };
+    void GlobalSymbolTable::initNamepsaceScope(const char *namespaceName)
+    {
+        ScopeBlock *newScope = createScopeBlock(namespaceName, 0);
+        currentScope = newScope;
+        scopeDepth = 0;
+    }
+
+    const char *GlobalSymbolTable::getScopeID(const char *name)
+    {
+        return IDGen::generate64BitHashID(name);
+    }
 
 } // namespace Cryo
-
-// Implementation of the new function
-inline const char *Cryo_Generate64BitHashID(const char *seed)
-{
-    return Cryo::IDGen::generate64BitHashID(seed);
-}
-
-#endif // __cplusplus
-#endif // IDGEN_H

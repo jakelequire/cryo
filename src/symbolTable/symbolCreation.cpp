@@ -24,7 +24,7 @@ namespace Cryo
         ScopeBlock *block = new ScopeBlock();
         block->name = name;
         block->depth = depth;
-        block->id = IDGen::generate32BitIntID();
+        block->id = IDGen::generate64BitHashID(name);
         block->childCount = 0;
         block->childCapacity = 0;
         block->children = nullptr;
@@ -32,7 +32,7 @@ namespace Cryo
         return block;
     }
 
-    VariableSymbol *GlobalSymbolTable::createVariableSymbol(const char *name, DataType *type, ASTNode *node, size_t scopeId)
+    VariableSymbol *GlobalSymbolTable::createVariableSymbol(const char *name, DataType *type, ASTNode *node, const char *scopeId)
     {
         VariableSymbol *symbol = new VariableSymbol();
         symbol->name = name;
@@ -51,11 +51,11 @@ namespace Cryo
         symbol->paramCount = paramCount;
         symbol->visibility = visibility;
         symbol->node = node;
-        symbol->scopeId = IDGen::generate32BitIntID();
+        symbol->scopeId = IDGen::generate64BitHashID(name);
         return symbol;
     }
 
-    ExternSymbol *GlobalSymbolTable::createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, size_t scopeId)
+    ExternSymbol *GlobalSymbolTable::createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, const char *scopeId)
     {
         ExternSymbol *symbol = new ExternSymbol();
         symbol->name = name;
@@ -68,7 +68,7 @@ namespace Cryo
         return symbol;
     }
 
-    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, size_t scopeId)
+    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId)
     {
         TypeSymbol *symbol = new TypeSymbol();
         symbol->name = name;
@@ -80,7 +80,7 @@ namespace Cryo
         return symbol;
     }
 
-    PropertySymbol *GlobalSymbolTable::createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, size_t scopeId)
+    PropertySymbol *GlobalSymbolTable::createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, const char *scopeId)
     {
         PropertySymbol *symbol = new PropertySymbol();
         symbol->name = name;
@@ -93,7 +93,7 @@ namespace Cryo
         return symbol;
     }
 
-    MethodSymbol *GlobalSymbolTable::createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, size_t scopeId)
+    MethodSymbol *GlobalSymbolTable::createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, const char *scopeId)
     {
         MethodSymbol *symbol = new MethodSymbol();
         symbol->name = name;
@@ -119,6 +119,9 @@ namespace Cryo
         case FUNCTION_SYMBOL:
             symbolNode->function = (FunctionSymbol *)symbol;
             break;
+        case EXTERN_SYMBOL:
+            symbolNode->externSymbol = (ExternSymbol *)symbol;
+            break;
         case TYPE_SYMBOL:
             symbolNode->type = (TypeSymbol *)symbol;
             break;
@@ -141,7 +144,7 @@ namespace Cryo
         table->count = 0;
         table->capacity = MAX_SYMBOLS;
         table->scopeDepth = 0;
-        table->scopeId = IDGen::generate32BitIntID();
+        table->scopeId = IDGen::generate64BitHashID(namespaceName);
         table->currentScope = nullptr;
         table->symbols = (Symbol **)malloc(sizeof(Symbol *) * table->capacity);
         return table;
@@ -154,7 +157,7 @@ namespace Cryo
         table->count = 0;
         table->capacity = 0;
         table->scopeDepth = 0;
-        table->scopeId = 0;
+        table->scopeId = IDGen::generate64BitHashID(namespaceName);
         table->currentScope = nullptr;
         table->types = nullptr;
         return table;

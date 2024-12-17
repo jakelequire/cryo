@@ -98,9 +98,9 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     outputSymTable(table, settings);
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
-    logASTNodeDebugView(programCopy);
+    // logASTNodeDebugView(programCopy);
 
-    printSymbolTable(table);
+    // printSymbolTable(table);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);

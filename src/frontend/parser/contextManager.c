@@ -14,7 +14,22 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/cxx/IDGen.hpp"
 #include "frontend/parser.h"
+
+ParsingContext *createParsingContext(void)
+{
+    ParsingContext *context = (ParsingContext *)malloc(sizeof(ParsingContext));
+    context->lastTokenCount = 0;
+    context->thisContext = NULL;
+    context->functionName = (char *)malloc(sizeof(char) * 128);
+    context->currentNamespace = (char *)malloc(sizeof(char) * 128);
+    context->isParsingIfCondition = false;
+    context->scopeLevel = 0;
+    context->lastTokenCount = 0;
+
+    return context;
+}
 
 void setDefaultThisContext(const char *currentNamespace, ParsingContext *context, TypeTable *typeTable)
 {
@@ -39,6 +54,14 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
     thisContext->methodCount = 0;
     thisContext->isStatic = false;
     context->thisContext = thisContext;
+}
+
+void setCurrentFunction(ParsingContext *context, const char *functionName)
+{
+    clearScopeContext(context);
+    context->functionName = functionName;
+    createFunctionScope(context, functionName);
+    return;
 }
 
 void clearThisContext(ParsingContext *context, TypeTable *typeTable)
@@ -125,6 +148,43 @@ void addTokenToContext(ParsingContext *context, Token token)
     context->lastTokenCount++;
 }
 
+// --------------------------------------------------------------
+// Scope Parsing Context Functions
+
+ScopeParsingContext *createScopeParsingContext(const char *name, int level, CryoNodeType nodeType)
+{
+    ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
+    scopeContext->name = name;
+    scopeContext->scopeID = Generate64BitHashID(name);
+    scopeContext->level = level;
+    scopeContext->isStatic = false;
+    scopeContext->nodeType = nodeType;
+    return scopeContext;
+}
+
+void createNamespaceScope(ParsingContext *context, const char *namespaceName)
+{
+    ScopeParsingContext *scopeContext = createScopeParsingContext(namespaceName, 0, NODE_NAMESPACE);
+    context->scopeContext = scopeContext;
+    return;
+}
+
+void createFunctionScope(ParsingContext *context, const char *functionName)
+{
+    ScopeParsingContext *scopeContext = createScopeParsingContext(functionName, context->scopeLevel, NODE_FUNCTION_DECLARATION);
+    context->scopeContext = scopeContext;
+    return;
+}
+
+void clearScopeContext(ParsingContext *context)
+{
+    if (context->scopeContext)
+    {
+        free(context->scopeContext);
+        context->scopeContext = NULL;
+    }
+}
+
 // # ============================================================ #
 
 void logThisContext(ParsingContext *context)
@@ -168,6 +228,17 @@ void logParsingContext(ParsingContext *context)
 {
     printf(BOLD CYAN "\n╔══════════════════════════════ Parsing Context ══════════════════════════════╗\n" COLOR_RESET);
     logThisContext(context);
-    logTokenArray(context);
+    //  logTokenArray(context);
     printf(BOLD CYAN "╚═════════════════════════════════════════════════════════════════════════════╝\n" COLOR_RESET);
+}
+
+void logScopeInformation(ParsingContext *context)
+{
+    printf(BOLD GREEN "\n┌───────────────── Scope Information ─────────────────┐\n" COLOR_RESET);
+    printf("Scope ID: %s\n", context->scopeContext->scopeID);
+    printf("Scope Name: %s\n", context->scopeContext->name);
+    printf("Scope Level: %d\n", context->scopeContext->level);
+    printf("Scope Type: %s\n", CryoNodeTypeToString(context->scopeContext->nodeType));
+    printf("Scope Static: %s\n", context->scopeContext->isStatic ? "true" : "false");
+    printf(BOLD GREEN "└────────────────────────────────────────────────────┘\n" COLOR_RESET);
 }

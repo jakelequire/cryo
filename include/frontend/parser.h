@@ -51,10 +51,14 @@ typedef struct ConstructorMetaData ConstructorMetaData;
 typedef struct TypeTable TypeTable;
 typedef struct DataType DataType;
 
-typedef struct ScopeContext
+typedef struct ScopeParsingContext
 {
-
-} ScopeContext;
+    const char *name;
+    const char *scopeID;
+    int level;
+    bool isStatic;
+    CryoNodeType nodeType;
+} ScopeParsingContext;
 
 typedef struct ThisContext
 {
@@ -65,6 +69,7 @@ typedef struct ThisContext
     ASTNode **methods;
     int methodCount;
     bool isStatic;
+
 } ThisContext;
 
 /**
@@ -88,25 +93,15 @@ typedef struct ParsingContext
     bool isParsingIfCondition;
     int scopeLevel;
     const char *currentNamespace;
+    const char *functionName;
 
-    /// #### The ThisContext struct is used to manage the state of the 'this' keyword.
-    /// ---
-    ///``` c
-    /// CryoNodeType nodeType;
-    /// const char *nodeName;
-    /// ASTNode **properties;
-    /// int propertyCount;
-    /// ASTNode **methods;
-    /// int methodCount;
-    /// bool isStatic;
-    ///```
     ThisContext *thisContext;
 
     // An array of the last 16 tokens
     Token lastTokens[16];
     int lastTokenCount;
 
-    // Add other context flags as needed
+    ScopeParsingContext *scopeContext;
 } ParsingContext;
 
 /* =========================================================== */
@@ -208,7 +203,10 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
 ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 // # ============================================================ #
+// # Context Management
+// # ============================================================ #
 
+ParsingContext *createParsingContext(void);
 void setDefaultThisContext(const char *currentNamespace, ParsingContext *context, TypeTable *typeTable);
 void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType, TypeTable *typeTable);
 void clearThisContext(ParsingContext *context, TypeTable *typeTable);
@@ -223,9 +221,19 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
 void addTokenToContext(ParsingContext *context, Token token);
 void addStaticIdentifierToContext(ParsingContext *context, bool value);
 
+// Scope Parsing Context Functions
+
+ScopeParsingContext *createScopeParsingContext(const char *name, int level, CryoNodeType nodeType);
+void createNamespaceScope(ParsingContext *context, const char *namespaceName);
+void createFunctionScope(ParsingContext *context, const char *functionName);
+void clearScopeContext(ParsingContext *context);
+
+// Debugging Functions
+
 void logThisContext(ParsingContext *context);
 void logTokenArray(ParsingContext *context);
 void logParsingContext(ParsingContext *context);
+void logScopeInformation(ParsingContext *context);
 
 // # =========================================================================== #
 // # Struct & Type Parsing

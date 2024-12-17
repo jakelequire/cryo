@@ -19,14 +19,14 @@
 namespace Cryo
 {
 
-    // -------------------------------------------------------
-
     void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
     {
         SymbolTable *symbolTable = createSymbolTable(namespaceName);
         if (symbolTable)
         {
             setIsPrimaryTable(symbolTable);
+            setPrimaryTable(symbolTable);
+            initNamepsaceScope(namespaceName);
             return;
         }
         return;
@@ -40,6 +40,7 @@ namespace Cryo
             setCurrentDependencyTable(table);
             dependencyTableVector.push_back(table);
             dependencyCount++;
+            initNamepsaceScope(namespaceName);
             return;
         }
 
@@ -71,6 +72,7 @@ namespace Cryo
                 return;
             }
         }
+        // Check wether we are in the dependency table
         else if (tableContext.isDependency)
         {
             std::cout << "Adding to Dependency Table" << std::endl;
@@ -112,10 +114,15 @@ namespace Cryo
 
         // Print Debug Info
         std::cout << "Debug Information:" << std::endl;
-        std::cout << "├── Build Dir: " << debugInfo.buildDir << std::endl;
+        std::cout << "├── Build Dir: \t    " << debugInfo.buildDir << std::endl;
         std::cout << "├── Dependency Dir: " << debugInfo.dependencyDir << std::endl;
-        std::cout << "├── Debug Dir: " << debugInfo.debugDir << std::endl;
-        std::cout << "└── DB Dir: " << debugInfo.DBdir << std::endl;
+        std::cout << "├── Debug Dir: \t    " << debugInfo.debugDir << std::endl;
+        std::cout << "└── DB Dir: \t    " << debugInfo.DBdir << std::endl;
+
+        // Scope Information
+        std::cout << "\nScope Information:" << std::endl;
+        std::cout << "├── Scope ID:    " << scopeId << std::endl;
+        std::cout << "└── Scope Depth: " << scopeDepth << std::endl;
 
         // Print Main Symbol Table
         std::cout << "\nMain Symbol Table:" << std::endl;

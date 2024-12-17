@@ -54,4 +54,13 @@ void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, c
 void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
 #define addNodeToSymbolTable(symTable, node) CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
 
+// Scope Functions ---------------------------------------
+void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name);
+#define EnterScope(symTable, name) CryoGlobalSymbolTable_EnterScope(symTable, name)
+void CryoGlobalSymbolTable_ExitScope(CryoGlobalSymbolTable *symTable);
+#define ExitScope(symTable) CryoGlobalSymbolTable_ExitScope(symTable)
+
+const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, const char *name);
+#define GetScopeID(symTable, name) CryoGlobalSymbolTable_GetScopeID(symTable, name)
+
 #endif // C_INTERFACE_TABLE_H

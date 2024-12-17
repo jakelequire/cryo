@@ -51,6 +51,7 @@ namespace Cryo
         static void logScopeBlock(ScopeBlock *block);
         static void logVariableSymbol(VariableSymbol *symbol);
         static void logFunctionSymbol(FunctionSymbol *symbol);
+        static void logExternSymbol(ExternSymbol *symbol);
         static void logTypeSymbol(TypeSymbol *symbol);
         static void logPropertySymbol(PropertySymbol *symbol);
         static void logMethodSymbol(MethodSymbol *symbol);
