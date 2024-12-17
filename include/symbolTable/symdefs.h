@@ -23,6 +23,7 @@
 
 typedef struct ASTNode ASTNode;
 typedef struct DataType DataType;
+typedef struct Symbol Symbol;
 
 typedef enum TypeOfSymbol
 {

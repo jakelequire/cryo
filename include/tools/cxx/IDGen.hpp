@@ -60,7 +60,7 @@ namespace Cryo
         static int generate32BitIntID(void);
 
         /// @brief Generate a 64-bit hash ID from a seed string.
-        /// This is a -deteministic- hash ID generator.
+        /// This is a *deterministic* hash ID generator.
         static const char *generate64BitHashID(const char *seed);
 
     private:

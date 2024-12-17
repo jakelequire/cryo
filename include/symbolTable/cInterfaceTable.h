@@ -29,38 +29,59 @@
 #include "symbolTable/globalSymtable.hpp"
 #include "symbolTable/symdefs.h"
 
-// C API
+// C API -------------------------------------------------------
 CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
-// void CryoGlobalSymbolTable_Destroy(CryoGlobalSymbolTable symTable);
-
 void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
-#define printGlobalSymbolTable(symTable) CryoGlobalSymbolTable_PrintGlobalTable(symTable)
+
+// Class State Functions ---------------------------------------
 
 bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable);
 bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable);
-#define isPrimaryTable(symTable) CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
-#define isDependencyTable(symTable) CryoGlobalSymbolTable_GetIsDependencyTable(symTable)
 
 void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary);
 void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency);
-#define setPrimaryTableStatus(symTable, isPrimary) CryoGlobalSymbolTable_SetPrimaryTableStatus(symTable, isPrimary)
-#define setDependencyTableStatus(symTable, isDependency) CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
+
+// Symbol Table Functions ---------------------------------------
 
 void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
-#define initDependencySymbolTable(symTable, namespaceName) CryoGlobalSymbolTable_InitDependencyTable(symTable, namespaceName)
 void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
-#define createPrimarySymbolTable(symTable, namespaceName) CryoGlobalSymbolTable_CreatePrimaryTable(symTable, namespaceName)
 
 void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
-#define addNodeToSymbolTable(symTable, node) CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
 
 // Scope Functions ---------------------------------------
-void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name);
-#define EnterScope(symTable, name) CryoGlobalSymbolTable_EnterScope(symTable, name)
-void CryoGlobalSymbolTable_ExitScope(CryoGlobalSymbolTable *symTable);
-#define ExitScope(symTable) CryoGlobalSymbolTable_ExitScope(symTable)
 
+void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name);
+void CryoGlobalSymbolTable_ExitScope(CryoGlobalSymbolTable *symTable);
 const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, const char *name);
-#define GetScopeID(symTable, name) CryoGlobalSymbolTable_GetScopeID(symTable, name)
+
+// Class State Functions
+#define isPrimaryTable(symTable) \
+    CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
+#define isDependencyTable(symTable) \
+    CryoGlobalSymbolTable_GetIsDependencyTable(symTable)
+#define setPrimaryTableStatus(symTable, isPrimary) \
+    CryoGlobalSymbolTable_SetPrimaryTableStatus(symTable, isPrimary)
+#define setDependencyTableStatus(symTable, isDependency) \
+    CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
+
+// Symbol Table Functions
+#define initDependencySymbolTable(symTable, namespaceName) \
+    CryoGlobalSymbolTable_InitDependencyTable(symTable, namespaceName)
+#define createPrimarySymbolTable(symTable, namespaceName) \
+    CryoGlobalSymbolTable_CreatePrimaryTable(symTable, namespaceName)
+#define addNodeToSymbolTable(symTable, node) \
+    CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
+
+// Scope Functions
+#define EnterScope(symTable, name) \
+    CryoGlobalSymbolTable_EnterScope(symTable, name)
+#define ExitScope(symTable) \
+    CryoGlobalSymbolTable_ExitScope(symTable)
+#define GetScopeID(symTable, name) \
+    CryoGlobalSymbolTable_GetScopeID(symTable, name)
+
+// Debug Functions
+#define printGlobalSymbolTable(symTable) \
+    CryoGlobalSymbolTable_PrintGlobalTable(symTable)
 
 #endif // C_INTERFACE_TABLE_H
