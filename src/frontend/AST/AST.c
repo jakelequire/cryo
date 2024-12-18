@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/AST.h"
 
 /* ====================================================================== */
@@ -296,7 +297,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
     return node;
 }
 
-ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
     ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, typeTable, lexer);
     if (!node)
@@ -320,6 +321,19 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
         node->data.varName->isRef = true;
         node->data.varName->type = createUnknownType();
     }
+
+    // Testing new symbol table
+    const char *currentScopeID = getCurrentScopeID(context);
+    VariableSymbol *varSym = GetFrontendVariableSymbol(globalTable, varName, currentScopeID);
+    if (varSym)
+    {
+        logMessage("INFO", __LINE__, "AST", "Found symbol in global symbol table: %s", varSym->name);
+    }
+    else
+    {
+        logMessage("INFO", __LINE__, "AST", "Symbol not found in global symbol table: %s", varName);
+    }
+
     return node;
 }
 

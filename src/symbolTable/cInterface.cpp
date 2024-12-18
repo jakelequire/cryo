@@ -43,8 +43,9 @@ extern "C"
                 reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable));
         }
     }
-
-    // Class State Functions ---------------------------------------
+    
+    // --------------------------------------------------------------
+    // Class State Functions
 
     bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable)
     {
@@ -66,7 +67,8 @@ extern "C"
         reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->setIsDependencyTable(isDependency);
     }
 
-    // Symbol Table Functions ---------------------------------------
+    // --------------------------------------------------------------
+    // Symbol Table Functions
 
     void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, const char *namespaceName)
     {
@@ -92,7 +94,25 @@ extern "C"
         }
     }
 
-    // Scope Functions ---------------------------------------
+    void CryoGlobalSymbolTable_AddVariableToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *scopeID)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->addVariableToSymbolTable(node, scopeID);
+        }
+    }
+
+    SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getCurrentSymbolTable();
+        }
+        return nullptr;
+    }
+
+    // --------------------------------------------------------------
+    // Scope Functions
 
     void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
     {
@@ -115,6 +135,18 @@ extern "C"
         if (symTable)
         {
             return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getScopeID(name);
+        }
+        return nullptr;
+    }
+
+    // --------------------------------------------------------------
+    // Symbol Resolution Functions
+
+    VariableSymbol *CryoGlobalSymbolTable_GetFrontendVariableSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getFrontendVariableSymbol(name, scopeID);
         }
         return nullptr;
     }

@@ -64,6 +64,22 @@ void setCurrentFunction(ParsingContext *context, const char *functionName)
     return;
 }
 
+void resetCurrentFunction(ParsingContext *context)
+{
+    clearScopeContext(context);
+    context->functionName = NULL;
+    return;
+}
+
+const char *getCurrentScopeID(ParsingContext *context)
+{
+    if (context->scopeContext)
+    {
+        return context->scopeContext->scopeID;
+    }
+    return NULL;
+}
+
 void clearThisContext(ParsingContext *context, TypeTable *typeTable)
 {
     if (context->thisContext)

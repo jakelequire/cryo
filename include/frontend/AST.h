@@ -759,7 +759,8 @@ extern "C"
     ASTNode *createIdentifierNode(
         char *name,
         CryoSymbolTable *symTable,
-        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context,
+        CryoGlobalSymbolTable *globalTable);
 
     /**
      * Function-Related Nodes

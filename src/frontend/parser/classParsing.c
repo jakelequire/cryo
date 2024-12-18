@@ -17,7 +17,7 @@
 #include "frontend/parser.h"
 
 ASTNode *parseClassDeclaration(bool isStatic,
-                               Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+                               Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing class declaration");
     consume(__LINE__, lexer, TOKEN_KW_CLASS, "Expected `class` keyword.", "parseclassNodearation", table, arena, state, typeTable, context);
@@ -46,7 +46,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
 
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start class body.", "parseclassNodearation", table, arena, state, typeTable, context);
 
-    ASTNode *classBody = parseClassBody(classNode, className, isStatic, lexer, table, context, arena, state, typeTable);
+    ASTNode *classBody = parseClassBody(classNode, className, isStatic, lexer, table, context, arena, state, typeTable, globalTable);
     if (!classBody)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to parse class body.");
@@ -76,7 +76,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
 }
 
 ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic,
-                        Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+                        Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing class body...");
 
@@ -97,7 +97,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
         case TOKEN_KW_CONSTRUCTOR:
         {
             ConstructorMetaData *constructorMetaData = createConstructorMetaData(className, NODE_CLASS, false);
-            ASTNode *constructor = parseConstructor(lexer, table, context, arena, state, constructorMetaData, typeTable);
+            ASTNode *constructor = parseConstructor(lexer, table, context, arena, state, constructorMetaData, typeTable, globalTable);
             if (!constructor)
             {
                 logMessage("ERROR", __LINE__, "Parser", "Failed to parse method declaration.");
@@ -141,7 +141,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     getNextToken(lexer, arena, state, typeTable);
 
                     logMessage("INFO", __LINE__, "Parser", "Parsing property declaration...");
-                    DataType *type = parseType(lexer, context, table, arena, state, typeTable);
+                    DataType *type = parseType(lexer, context, table, arena, state, typeTable, globalTable);
                     type->container->custom.name = strdup(identifier);
 
                     // Move past the data type token
@@ -163,7 +163,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN)
                 {
                     logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
-                    ASTNode *methodNode = parseMethodDeclaration(isStatic, lexer, table, context, arena, state, typeTable);
+                    ASTNode *methodNode = parseMethodDeclaration(isStatic, lexer, table, context, arena, state, typeTable, globalTable);
                     if (!methodNode)
                     {
                         logMessage("ERROR", __LINE__, "Parser", "Failed to parse method declaration.");
@@ -494,7 +494,7 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
 }
 
 ASTNode *parseMethodScopeResolution(const char *scopeName,
-                                    Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+                                    Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing method scope resolution...");
 
@@ -518,7 +518,7 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
     if (sym->node->metaData->type == NODE_METHOD)
     {
         bool isStaticMethod = sym->node->data.method->isStatic;
-        ASTNode *argList = parseArgumentList(lexer, table, context, arena, state, typeTable);
+        ASTNode *argList = parseArgumentList(lexer, table, context, arena, state, typeTable, globalTable);
         if (!argList)
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to parse method arguments.");

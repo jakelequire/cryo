@@ -47,6 +47,9 @@ void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, 
 void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
 
 void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
+void CryoGlobalSymbolTable_AddVariableToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *scopeID);
+
+SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable);
 
 // Scope Functions ---------------------------------------
 
@@ -72,6 +75,11 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define addNodeToSymbolTable(symTable, node) \
     CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
 
+#define AddVariableToSymbolTable(symTable, node, scopeID) \
+    CryoGlobalSymbolTable_AddVariableToSymbolTable(symTable, node, scopeID)
+#define GetCurrentSymbolTable(symTable) \
+    CryoGlobalSymbolTable_GetCurrentSymbolTable(symTable)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)
@@ -79,6 +87,10 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_ExitScope(symTable)
 #define GetScopeID(symTable, name) \
     CryoGlobalSymbolTable_GetScopeID(symTable, name)
+
+// Symbol Resolution Functions
+#define GetFrontendVariableSymbol(symTable, name, scopeID) \
+    CryoGlobalSymbolTable_GetFrontendVariableSymbol(symTable, name, scopeID)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \

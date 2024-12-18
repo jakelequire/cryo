@@ -18,7 +18,6 @@
 
 namespace Cryo
 {
-
     // Define the static member
     Logger *SymbolTableDebugger::logger = new Logger(Logger::DEBUG);
 
@@ -71,7 +70,7 @@ namespace Cryo
         logger->debugNode("Function Symbol:");
         logger->debugNode("\tName: %s", symbol->name);
         logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tReturn Type: %s",
+        logger->debugNode("\tFunction Type: %s",
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
         logger->debugNode("\tParameters: %zu", symbol->paramCount);
 
@@ -95,7 +94,7 @@ namespace Cryo
         logger->debugNode("Extern Symbol:");
         logger->debugNode("\tName: %s", symbol->name);
         logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tReturn Type: %s",
+        logger->debugNode("\tFunction Type: %s",
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
         logger->debugNode("\tParameters: %zu", symbol->paramCount);
 

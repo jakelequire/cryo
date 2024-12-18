@@ -19,4 +19,51 @@
 namespace Cryo
 {
 
+    VariableSymbol *GlobalSymbolTable::getFrontendVariableSymbol(const char *name, const char *scopeID)
+    {
+        if (!name || name == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!scopeID || scopeID == nullptr)
+        {
+            return nullptr;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            if (symbols[i]->symbolType == VARIABLE_SYMBOL)
+            {
+                Symbol *symbol = symbols[i];
+                VariableSymbol *varSymbol = symbol->variable;
+                if (strcmp(varSymbol->name, name) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
+                {
+                    std::cout << "Variable Symbol Resolved!" << std::endl;
+                    return varSymbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        std::cout << "<!> Variable Symbol not found <!>" << std::endl;
+        return nullptr;
+    }
+
 } // namespace Cryo

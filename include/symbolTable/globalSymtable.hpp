@@ -23,6 +23,14 @@ extern "C"
 #endif
 
     typedef struct ASTNode ASTNode;
+    typedef struct SymbolTable SymbolTable;
+    typedef struct VariableSymbol VariableSymbol;
+    typedef struct FunctionSymbol FunctionSymbol;
+    typedef struct ExternSymbol ExternSymbol;
+    typedef struct TypeSymbol TypeSymbol;
+    typedef struct PropertySymbol PropertySymbol;
+    typedef struct MethodSymbol MethodSymbol;
+    typedef struct ScopeBlock ScopeBlock;
 
     // Opaque pointer type for C
     typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
@@ -45,12 +53,19 @@ extern "C"
     void CryoGlobalSymbolTable_CreatePrimaryTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
 
     void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
+    void CryoGlobalSymbolTable_AddVariableToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *scopeID);
+
+    SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable);
 
     // Scope Functions ---------------------------------------
 
     void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name);
     void CryoGlobalSymbolTable_ExitScope(CryoGlobalSymbolTable *symTable);
     const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, const char *name);
+
+    // Symbol Resolution Functions ---------------------------------------
+
+    VariableSymbol *CryoGlobalSymbolTable_GetFrontendVariableSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID);
 
 // Class State Functions
 #define isPrimaryTable(symTable) \
@@ -70,6 +85,11 @@ extern "C"
 #define addNodeToSymbolTable(symTable, node) \
     CryoGlobalSymbolTable_AddNodeToSymbolTable(symTable, node)
 
+#define AddVariableToSymbolTable(symTable, node, scopeID) \
+    CryoGlobalSymbolTable_AddVariableToSymbolTable(symTable, node, scopeID)
+#define GetCurrentSymbolTable(symTable) \
+    CryoGlobalSymbolTable_GetCurrentSymbolTable(symTable)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)
@@ -77,6 +97,10 @@ extern "C"
     CryoGlobalSymbolTable_ExitScope(symTable)
 #define GetScopeID(symTable, name) \
     CryoGlobalSymbolTable_GetScopeID(symTable, name)
+
+// Symbol Resolution Functions
+#define GetFrontendVariableSymbol(symTable, name, scopeID) \
+    CryoGlobalSymbolTable_GetFrontendVariableSymbol(symTable, name, scopeID)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
@@ -192,6 +216,9 @@ namespace Cryo
         void initDependencyTable(const char *namespaceName);
         void addNodeToTable(ASTNode *node);
         void completeDependencyTable(void);
+        void addVariableToSymbolTable(ASTNode *node, const char *scopeID);
+
+        SymbolTable *getCurrentSymbolTable(void);
 
         // ======================================================= //
         // Scope Management Functions                              //
@@ -205,6 +232,12 @@ namespace Cryo
         const char *getScopeID(const char *name);
 
         void initNamepsaceScope(const char *namespaceName);
+
+        // ======================================================= //
+        // Symbol Retrieval Functions                              //
+        // ======================================================= //
+
+        VariableSymbol *getFrontendVariableSymbol(const char *name, const char *scopeID);
 
         // ======================================================= //
         // Debug Functions other than the `SymbolTableDebugger`    //
@@ -251,8 +284,6 @@ namespace Cryo
         Symbol *createSymbol(TypeOfSymbol symbolType, void *symbol);
         SymbolTable *createSymbolTable(const char *namespaceName);
         TypesTable *createTypeTable(const char *namespaceName);
-
-        void addLocalFunctionSymbols(FunctionSymbol *functionSymbol, ASTNode *functionNode);
     };
 
     // -------------------------------------------------------
@@ -319,6 +350,23 @@ namespace Cryo
         }
     }
 
+    inline SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getCurrentSymbolTable();
+        }
+        return nullptr;
+    }
+
+    inline void CryoGlobalSymbolTable_AddVariableToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *scopeID)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->addVariableToSymbolTable(node, scopeID);
+        }
+    }
+
     // Scope Functions ---------------------------------------
 
     inline void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
@@ -342,6 +390,17 @@ namespace Cryo
         if (symTable)
         {
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->getScopeID(name);
+        }
+        return nullptr;
+    }
+
+    // Symbol Resolution Functions ---------------------------------------
+
+    inline VariableSymbol *CryoGlobalSymbolTable_GetFrontendVariableSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getFrontendVariableSymbol(name, scopeID);
         }
         return nullptr;
     }

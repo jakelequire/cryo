@@ -101,4 +101,34 @@ namespace Cryo
             return;
         }
     }
+
+    void GlobalSymbolTable::addVariableToSymbolTable(ASTNode *node, const char *scopeID)
+    {
+        if (!node || node == nullptr)
+        {
+            std::cout << "addVariableToSymbolTable: Node is null" << std::endl;
+            return;
+        }
+
+        VariableSymbol *variableSymbol = createVariableSymbol(node->data.varDecl->name,
+                                                              node->data.varDecl->type,
+                                                              node,
+                                                              scopeID);
+        Symbol *symbol = createSymbol(VARIABLE_SYMBOL, variableSymbol);
+        addSingleSymbolToTable(symbol, getCurrentSymbolTable());
+    }
+
+    SymbolTable *GlobalSymbolTable::getCurrentSymbolTable(void)
+    {
+        if (tableContext.isPrimary)
+        {
+            return symbolTable;
+        }
+        else if (tableContext.isDependency)
+        {
+            return currentDependencyTable;
+        }
+        return nullptr;
+    }
+
 } // namespace Cryo
