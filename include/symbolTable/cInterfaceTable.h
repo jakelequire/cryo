@@ -29,6 +29,16 @@
 #include "symbolTable/globalSymtable.hpp"
 #include "symbolTable/symdefs.h"
 
+typedef struct ASTNode ASTNode;
+typedef struct SymbolTable SymbolTable;
+typedef struct VariableSymbol VariableSymbol;
+typedef struct FunctionSymbol FunctionSymbol;
+typedef struct ExternSymbol ExternSymbol;
+typedef struct TypeSymbol TypeSymbol;
+typedef struct PropertySymbol PropertySymbol;
+typedef struct MethodSymbol MethodSymbol;
+typedef struct ScopeBlock ScopeBlock;
+
 // C API -------------------------------------------------------
 CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
 void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);

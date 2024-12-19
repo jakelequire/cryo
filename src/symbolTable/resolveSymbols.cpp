@@ -66,4 +66,56 @@ namespace Cryo
         return nullptr;
     }
 
+    MethodSymbol *GlobalSymbolTable::getFrontendMethodSymbol(const char *methodName, const char *className, const char *scopeID)
+    {
+        if (!methodName || methodName == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!className || className == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!scopeID || scopeID == nullptr)
+        {
+            return nullptr;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            if (symbols[i]->symbolType == METHOD_SYMBOL)
+            {
+                Symbol *symbol = symbols[i];
+                MethodSymbol *methodSymbol = symbol->method;
+                if (strcmp(methodSymbol->name, methodName) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
+                {
+                    std::cout << "Method Symbol Resolved!" << std::endl;
+                    return methodSymbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        std::cout << "<!> Method Symbol not found <!>" << std::endl;
+        return nullptr;
+    }
+
 } // namespace Cryo

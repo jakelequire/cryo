@@ -58,6 +58,8 @@ typedef struct ScopeParsingContext
     int level;
     bool isStatic;
     CryoNodeType nodeType;
+    // Parent Scope for classes
+    struct ScopeParsingContext *parent;
 } ScopeParsingContext;
 
 typedef struct ThisContext
@@ -226,10 +228,18 @@ const char *getCurrentScopeID(ParsingContext *context);
 
 // Scope Parsing Context Functions
 
-ScopeParsingContext *createScopeParsingContext(const char *name, int level, CryoNodeType nodeType);
+ScopeParsingContext *createScopeParsingContext(const char *name, int level, bool isStatic, CryoNodeType nodeType);
+ScopeParsingContext *createClassScopeContext(const char *className, int level, bool isStatic);
+ScopeParsingContext *createMethodScopeContext(const char *methodName, int level, bool isStatic, ScopeParsingContext *parent);
+
 void createNamespaceScope(ParsingContext *context, const char *namespaceName);
 void createFunctionScope(ParsingContext *context, const char *functionName);
+void createClassScope(ParsingContext *context, const char *className);
+void createMethodScope(ParsingContext *context, const char *methodName, const char *className);
 void clearScopeContext(ParsingContext *context);
+
+// This is a helper function to generate a unique scope ID
+const char *getScopeID(const char *name);
 
 // Debugging Functions
 

@@ -167,27 +167,88 @@ void addTokenToContext(ParsingContext *context, Token token)
 // --------------------------------------------------------------
 // Scope Parsing Context Functions
 
-ScopeParsingContext *createScopeParsingContext(const char *name, int level, CryoNodeType nodeType)
+ScopeParsingContext *createScopeParsingContext(const char *name, int level, bool isStatic, CryoNodeType nodeType)
 {
     ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
     scopeContext->name = name;
     scopeContext->scopeID = Generate64BitHashID(name);
     scopeContext->level = level;
-    scopeContext->isStatic = false;
+    scopeContext->isStatic = isStatic;
     scopeContext->nodeType = nodeType;
+    scopeContext->parent = NULL;
+    return scopeContext;
+}
+
+ScopeParsingContext *createClassScopeContext(const char *className, int level, bool isStatic)
+{
+    ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
+    scopeContext->name = className;
+    scopeContext->scopeID = Generate64BitHashID(className);
+    scopeContext->level = level;
+    scopeContext->isStatic = isStatic;
+    scopeContext->nodeType = NODE_CLASS;
+    scopeContext->parent = NULL;
+    return scopeContext;
+}
+
+ScopeParsingContext *createMethodScopeContext(const char *methodName, int level, bool isStatic, ScopeParsingContext *parent)
+{
+    ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
+    scopeContext->name = methodName;
+    scopeContext->scopeID = Generate64BitHashID(methodName);
+    scopeContext->level = level;
+    scopeContext->isStatic = isStatic;
+    scopeContext->nodeType = NODE_METHOD;
+    scopeContext->parent = parent;
     return scopeContext;
 }
 
 void createNamespaceScope(ParsingContext *context, const char *namespaceName)
 {
-    ScopeParsingContext *scopeContext = createScopeParsingContext(namespaceName, 0, NODE_NAMESPACE);
+    ScopeParsingContext *scopeContext = createScopeParsingContext(
+        namespaceName,
+        0,
+        false,
+        NODE_NAMESPACE);
+
     context->scopeContext = scopeContext;
     return;
 }
 
 void createFunctionScope(ParsingContext *context, const char *functionName)
 {
-    ScopeParsingContext *scopeContext = createScopeParsingContext(functionName, context->scopeLevel, NODE_FUNCTION_DECLARATION);
+    ScopeParsingContext *scopeContext = createScopeParsingContext(
+        functionName,
+        context->scopeLevel,
+        false,
+        NODE_FUNCTION_DECLARATION);
+
+    context->scopeContext = scopeContext;
+    return;
+}
+
+void createClassScope(ParsingContext *context, const char *className)
+{
+    ScopeParsingContext *scopeContext = createScopeParsingContext(
+        className,
+        context->scopeLevel,
+        false,
+        NODE_CLASS);
+
+    context->scopeContext = scopeContext;
+    return;
+}
+
+// A methods scope is a little different from a functions scope. It is a child of the class scope,
+// which means that properties of the class are accessible from the method.
+void createMethodScope(ParsingContext *context, const char *methodName, const char *className)
+{
+    ScopeParsingContext *scopeContext = createScopeParsingContext(
+        methodName,
+        context->scopeLevel,
+        false,
+        NODE_METHOD);
+
     context->scopeContext = scopeContext;
     return;
 }
@@ -257,4 +318,9 @@ void logScopeInformation(ParsingContext *context)
     printf("Scope Type: %s\n", CryoNodeTypeToString(context->scopeContext->nodeType));
     printf("Scope Static: %s\n", context->scopeContext->isStatic ? "true" : "false");
     printf(BOLD GREEN "└────────────────────────────────────────────────────┘\n" COLOR_RESET);
+}
+
+const char *getScopeID(const char *name)
+{
+    return Generate64BitHashID(name);
 }

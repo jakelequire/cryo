@@ -31,6 +31,8 @@ ASTNode *parseClassDeclaration(bool isStatic,
     char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Class name: %s", className);
 
+    createClassScope(context, className);
+
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for class name.", "parseclassNodearation", table, arena, state, typeTable, context);
 
     ASTNode *classNode = createClassDeclarationNode(className, arena, state, typeTable, lexer);
@@ -71,6 +73,8 @@ ASTNode *parseClassDeclaration(bool isStatic,
     addTypeToTypeTable(typeTable, className, classType);
     // Clear the context
     clearThisContext(context, typeTable);
+    // Clear Scope
+    clearScopeContext(context);
 
     return classNode;
 }

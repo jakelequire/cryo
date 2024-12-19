@@ -361,6 +361,54 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
     logMessage("INFO", __LINE__, "Parser", "Method name: %s", methodName);
     logMessage("INFO", __LINE__, "Parser", "Param count: %d", paramCount);
 
+    char *instanceTypeName = (char *)malloc(sizeof(char) * 128);
+    if (!instanceTypeName)
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Failed to allocate memory for instance type name.");
+        return NULL;
+    }
+
+    switch (accessorObj->metaData->type)
+    {
+    case NODE_CLASS:
+    {
+        strcpy(instanceTypeName, accessorObj->data.classNode->name);
+        break;
+    }
+    case NODE_STRUCT_DECLARATION:
+    {
+        strcpy(instanceTypeName, accessorObj->data.structNode->name);
+        break;
+    }
+    case NODE_VAR_DECLARATION:
+    {
+        // This is a variable that is of a class or struct type (e.g., const obj: MyClass = new MyClass())
+        // and accessing member methods. We need to get the DataType * from the ASTNode
+        DataType *varType = accessorObj->data.varDecl->type;
+        if (varType->container->baseType == CLASS_TYPE)
+        {
+            strcpy(instanceTypeName, varType->container->custom.name);
+        }
+        else if (varType->container->baseType == STRUCT_TYPE)
+        {
+            strcpy(instanceTypeName, varType->container->custom.name);
+        }
+        else
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Invalid instance type, received: %s", DataTypeToString(varType));
+            parsingError("Invalid instance type.", "parseMethodCall", table, arena, state, lexer, lexer->source, typeTable);
+            CONDITION_FAILED;
+        }
+        break;
+    }
+    default:
+    {
+        logMessage("ERROR", __LINE__, "Parser", "Invalid instance type, received: %s", CryoNodeTypeToString(accessorObj->metaData->type));
+        parsingError("Invalid instance type.", "parseMethodCall", table, arena, state, lexer, lexer->source, typeTable);
+        CONDITION_FAILED;
+    }
+    }
+
     // Find the method in the symbol table
     CryoSymbol *symbol = findSymbol(table, methodName, arena);
     if (!symbol)

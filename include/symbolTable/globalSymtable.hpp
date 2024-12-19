@@ -150,6 +150,17 @@ struct TableContext
     bool isDependency;
 };
 
+enum ScopeType
+{
+    GLOBAL_SCOPE = 1000,
+    NAMESPACE_SCOPE,
+    FUNCTION_SCOPE,
+    BLOCK_SCOPE,
+    CLASS_SCOPE,
+    METHOD_SCOPE,
+    UNKNOWN_SCOPE = -1
+};
+
 namespace Cryo
 {
     class GlobalSymbolTable;
@@ -158,10 +169,11 @@ namespace Cryo
     class GlobalSymbolTable
     {
     public:
-        GlobalSymbolTable()
+        GlobalSymbolTable(ScopeType scopeType = GLOBAL_SCOPE)
         {
             debugInfo = getDebugInfo();
             tableContext = setDefaultContext();
+            currentScopeType = scopeType;
         };
         ~GlobalSymbolTable();
 
@@ -172,6 +184,7 @@ namespace Cryo
         DebugInfo debugInfo;       // Debugging information (build, dependency, debug, and DB directories)
         TableContext tableContext; // Context & stateful flags for the symbol table (isPrimary, isDependency)
 
+        ScopeType currentScopeType = UNKNOWN_SCOPE;    // The current scope type
         SymbolTable *symbolTable = nullptr;            // The main entry point namespace
         SymbolTable *currentDependencyTable = nullptr; // Runtime & other dependencies
         SymbolTable **dependencyTables;                // For C interfacing (Array of dependency tables)
@@ -238,6 +251,7 @@ namespace Cryo
         // ======================================================= //
 
         VariableSymbol *getFrontendVariableSymbol(const char *name, const char *scopeID);
+        MethodSymbol *getFrontendMethodSymbol(const char *methodName, const char *className, const char *scopeID);
 
         // ======================================================= //
         // Debug Functions other than the `SymbolTableDebugger`    //

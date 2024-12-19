@@ -305,35 +305,27 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
 
     logMessage("INFO", __LINE__, "AST", "Created identifier node with name: %s", name);
     char *varName = strdup(name);
+    // Testing new symbol table.
+    // Replacing the old `findSymbol` from the old symbol table seems to be working fine so far.
     // Attempt to find the symbol in the symbol table (It's okay if it can't find and can just create the node)
-    CryoSymbol *sym = findSymbol(symTable, varName, arena);
-    if (sym)
-    {
-        logMessage("INFO", __LINE__, "AST", "Found symbol in symbol table: %s", sym->name);
-        node->data.varName->varName = strdup(sym->name);
-        node->data.varName->isRef = true;
-        node->data.varName->type = sym->type;
-    }
-    else
-    {
-        logMessage("INFO", __LINE__, "AST", "Symbol not found in symbol table: %s", varName);
-        node->data.varName->varName = strdup(varName);
-        node->data.varName->isRef = true;
-        node->data.varName->type = createUnknownType();
-    }
-
-    // Testing new symbol table
     const char *currentScopeID = getCurrentScopeID(context);
     VariableSymbol *varSym = GetFrontendVariableSymbol(globalTable, varName, currentScopeID);
     if (varSym)
     {
         logMessage("INFO", __LINE__, "AST", "Found symbol in global symbol table: %s", varSym->name);
+        node->data.varName->varName = strdup(varSym->name);
+        node->data.varName->isRef = true;
+        node->data.varName->type = varSym->type;
     }
     else
     {
+        // Unsure if I want to keep this, but it's a good fallback for now.
         logMessage("INFO", __LINE__, "AST", "Symbol not found in global symbol table: %s", varName);
+        node->data.varName->varName = strdup(varName);
+        node->data.varName->isRef = true;
+        node->data.varName->type = createUnknownType();
     }
-
+ 
     return node;
 }
 

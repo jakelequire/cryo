@@ -36,6 +36,7 @@
 
 typedef struct DataType DataType;
 typedef struct GenericType GenericType;
+typedef struct ParsingContext ParsingContext;
 
 #define INITIAL_CAPACITY 8
 #define PROGRAM_CAPACITY 512
@@ -196,6 +197,7 @@ typedef struct VariableNameNode
     DataType *type;
     bool isRef; // Remove Later
     char *varName;
+    const char *scopeID;
 
     // Unary operators
     bool hasUnaryOp;

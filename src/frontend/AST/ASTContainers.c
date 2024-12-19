@@ -609,6 +609,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
     node->type = wrapTypeContainer(createTypeContainer());
     node->isRef = false;
     node->varName = strdup(varName);
+    node->scopeID = (char *)calloc(1, sizeof(char));
 
     node->hasUnaryOp = false;
     node->unaryOp = NULL;
