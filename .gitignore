@@ -66,3 +66,7 @@ foo.c
 foo.o
 note.md
 note.txt
+
+# Ignore the target directory under ./libs/cncMerger
+/libs/cncMerger/target/
+/libs/cncMerger/target/*
