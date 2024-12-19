@@ -16,6 +16,16 @@
  ********************************************************************************/
 #include "symbolTable/debugSymbols.hpp"
 
+/*
+New format to implement later for logging:
+
+{Typeof Symbol} | Name: {Symbol Name} Type: {Symbol Type}
+ID: {Scope ID} Depth: {INT} | Visibility: {Symbol Visibility}
+{SYMBOL_SPECIFIC_DATA}
+------------------------------------------------------------
+
+*/
+
 namespace Cryo
 {
     // Define the static member
