@@ -46,6 +46,16 @@ namespace Cryo
         case NODE_FUNCTION_BLOCK:
         {
             std::cout << "ASTNodeToSymbol: Processing Block Node" << std::endl;
+            int blockCount = node->data.functionBlock->statementCount;
+            ASTNode **block = node->data.functionBlock->statements;
+            for (int i = 0; i < blockCount; i++)
+            {
+                Symbol *sym = ASTNodeToSymbol(block[i]);
+                if (sym)
+                {
+                    addSingleSymbolToTable(sym, getCurrentSymbolTable());
+                }
+            }
             break;
         }
         case NODE_ARG_LIST:
@@ -74,6 +84,7 @@ namespace Cryo
                                                                   paramCount,
                                                                   visibility,
                                                                   node);
+
             return createSymbol(FUNCTION_SYMBOL, functionSymbol);
         }
         case NODE_VAR_DECLARATION:
@@ -250,7 +261,5 @@ namespace Cryo
         std::cout << "Unable to find Namespace Node" << std::endl;
         return nullptr;
     }
-
-
 
 } // namespace Cryo

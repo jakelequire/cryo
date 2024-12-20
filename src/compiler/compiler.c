@@ -87,6 +87,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         CONDITION_FAILED;
         return 1;
     }
+    TableFinished(globalSymbolTable); // Finish the global symbol table
 
     // Debug print the global symbol table
     // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);

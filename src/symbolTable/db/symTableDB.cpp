@@ -224,15 +224,9 @@ namespace Cryo
         const FunctionSymbol *func = symbol->function;
 
         // Build argument types string
-        std::stringstream argTypes;
-        for (size_t i = 0; i < func->paramCount; i++)
-        {
-            if (i > 0)
-                argTypes << ",";
-            // Assuming there's a way to get string representation of DataType
-            // You'll need to implement this based on your DataType structure
-            argTypes << "type_placeholder"; // Replace with actual type string
-        }
+        ASTNode *functionNode = func->node;
+        const char *funcArgsStr = getFunctionArgTypeArrayStr(functionNode);
+        std::stringstream argTypes = std::stringstream(funcArgsStr);
 
         entry.columns = {
             symbolTypeToString(symbol->symbolType),        // Symbol type
@@ -399,7 +393,21 @@ namespace Cryo
 
     bool SymbolTableDB::validateEntry(TableType type, const TableEntry &entry) const
     {
-        return entry.columns.size() == getColumnCount(type);
+        auto formats = getColumnFormats(type);
+        if (entry.columns.size() != formats.size())
+        {
+            return false;
+        }
+
+        // Validate each column's content length
+        for (size_t i = 0; i < entry.columns.size(); ++i)
+        {
+            if (entry.columns[i].length() > formats[i].width - 2)
+            {
+                // Either truncate here or return false depending on your needs
+            }
+        }
+        return true;
     }
 
     bool SymbolTableDB::dropTable(TableType type)

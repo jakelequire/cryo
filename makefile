@@ -166,6 +166,7 @@ CLEAN_TARGETS := codegen common compiler diagnostics frontend linker runtime set
 clean-%:
 	python3 ./scripts/custom_clean.py $*
 
+# Clean all components
 clean:
 	python3 ./scripts/clean.py
 

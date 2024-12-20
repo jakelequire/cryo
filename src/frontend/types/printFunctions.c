@@ -699,3 +699,31 @@ char *getFunctionTypeStr_UF(FunctionType *funcType)
 
     return strdup(typeString);
 }
+
+char *getFunctionArgTypeArrayStr(ASTNode *functionNode)
+{
+    if (!functionNode)
+        return NULL;
+
+    char *typeString = (char *)malloc(128);
+    if (!typeString)
+    {
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
+        return NULL;
+    }
+
+    sprintf(typeString, "(");
+    for (int i = 0; i < functionNode->data.functionDecl->paramCount; i++)
+    {
+        ASTNode *param = functionNode->data.functionDecl->params[i];
+        char *paramTypeStr = DataTypeToStringUnformatted(param->data.param->type);
+        sprintf(typeString, "%s%s", typeString, paramTypeStr);
+        if (i < functionNode->data.functionDecl->paramCount - 1)
+        {
+            sprintf(typeString, "%s, ", typeString);
+        }
+    }
+    sprintf(typeString, "%s)", typeString);
+
+    return typeString;
+}

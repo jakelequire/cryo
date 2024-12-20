@@ -249,7 +249,7 @@ namespace Cryo
             }
             else if (tableContext.isDependency)
             {
-                if (currentDependencyTable)
+                if (currentDependencyTable && dependencyCount == 1)
                 {
                     db->serializeSymbolTable(currentDependencyTable);
                 }

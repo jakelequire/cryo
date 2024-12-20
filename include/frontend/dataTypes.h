@@ -468,6 +468,7 @@ extern "C"
     void printFunctionType(FunctionType *funcType);
     void printFunctionType_UF(FunctionType *funcType);
     char *getFunctionTypeStr_UF(FunctionType *funcType);
+    char *getFunctionArgTypeArrayStr(ASTNode *functionNode);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
