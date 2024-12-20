@@ -47,6 +47,8 @@ extern "C"
     void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary);
     void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency);
 
+    void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable);
+
     // Symbol Table Functions ---------------------------------------
 
     void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
@@ -76,6 +78,8 @@ extern "C"
     CryoGlobalSymbolTable_SetPrimaryTableStatus(symTable, isPrimary)
 #define setDependencyTableStatus(symTable, isDependency) \
     CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
+#define TableFinished(symTable) \
+    CryoGlobalSymbolTable_TableFinished(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \
@@ -125,6 +129,7 @@ extern "C"
 #include "symbolTable/debugSymbols.hpp"
 #include "tools/utils/env.h" // getCryoRootPath()
 #include "tools/cxx/IDGen.hpp"
+#include "symbolTable/symTableDB.hpp"
 
 typedef struct ASTNode ASTNode;
 typedef struct DataType DataType;
@@ -140,6 +145,7 @@ struct DebugInfo
     std::string dependencyDir;
     std::string debugDir;
     std::string DBdir;
+    std::string rootDir;
 };
 
 /// @brief Context for the symbol table.
@@ -150,17 +156,6 @@ struct TableContext
     bool isDependency;
 };
 
-enum ScopeType
-{
-    GLOBAL_SCOPE = 1000,
-    NAMESPACE_SCOPE,
-    FUNCTION_SCOPE,
-    BLOCK_SCOPE,
-    CLASS_SCOPE,
-    METHOD_SCOPE,
-    UNKNOWN_SCOPE = -1
-};
-
 namespace Cryo
 {
     class GlobalSymbolTable;
@@ -169,11 +164,31 @@ namespace Cryo
     class GlobalSymbolTable
     {
     public:
+        enum TABLE_STATE
+        {
+            TABLE_UNINITIALIZED,
+            TABLE_INITIALIZED,
+            TABLE_IDLE,
+            TABLE_IN_PROGRESS,
+            TABLE_COMPLETE,
+            TABLE_ERROR
+        };
+        enum ScopeType
+        {
+            GLOBAL_SCOPE = 1000,
+            NAMESPACE_SCOPE,
+            FUNCTION_SCOPE,
+            BLOCK_SCOPE,
+            CLASS_SCOPE,
+            METHOD_SCOPE,
+            UNKNOWN_SCOPE = -1
+        };
         GlobalSymbolTable(ScopeType scopeType = GLOBAL_SCOPE)
         {
             debugInfo = getDebugInfo();
             tableContext = setDefaultContext();
             currentScopeType = scopeType;
+            tableState = TABLE_INITIALIZED;
         };
         ~GlobalSymbolTable();
 
@@ -211,15 +226,39 @@ namespace Cryo
         {
             tableContext.isPrimary = isPrimary;
             tableContext.isDependency = !isPrimary;
+            tableState = TABLE_IN_PROGRESS;
         }
         void setIsDependencyTable(bool isDependency)
         {
             tableContext.isDependency = isDependency;
             tableContext.isPrimary = !isDependency;
+            tableState = TABLE_IN_PROGRESS;
         }
 
         void setCurrentDependencyTable(SymbolTable *table) { currentDependencyTable = table; }
         void setPrimaryTable(SymbolTable *table) { symbolTable = table; }
+        void tableFinished(void)
+        {
+            tableState = TABLE_COMPLETE;
+            if (tableContext.isPrimary)
+            {
+                if (symbolTable)
+                {
+                    db->appendSerializedTable(symbolTable);
+                }
+            }
+            else if (tableContext.isDependency)
+            {
+                if (currentDependencyTable)
+                {
+                    db->serializeSymbolTable(currentDependencyTable);
+                }
+            }
+            else
+            {
+                tableState = TABLE_ERROR;
+            }
+        }
 
         // ======================================================= //
         // Symbol Table Management Functions                       //
@@ -260,6 +299,8 @@ namespace Cryo
         void printGlobalTable(GlobalSymbolTable *table);
 
     private:
+        TABLE_STATE tableState = TABLE_UNINITIALIZED;
+        std::unique_ptr<SymbolTableDB> db = std::make_unique<SymbolTableDB>(debugInfo.rootDir);
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
         DebugInfo getDebugInfo(void)
         {
@@ -269,7 +310,8 @@ namespace Cryo
             std::string DBdir = buildDir + "/db";
             std::string debugDir = buildDir + "/debug";
 
-            return {buildDir, dependencyDir, debugDir, DBdir};
+            DebugInfo info = {buildDir, dependencyDir, debugDir, DBdir, rootDir};
+            return info;
         }
         TableContext setDefaultContext(void) { return {false, false}; }
 
@@ -336,6 +378,11 @@ namespace Cryo
     inline void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency)
     {
         reinterpret_cast<GlobalSymbolTable *>(symTable)->setIsDependencyTable(isDependency);
+    }
+
+    inline void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable)
+    {
+        reinterpret_cast<GlobalSymbolTable *>(symTable)->tableFinished();
     }
 
     // Symbol Table Functions ---------------------------------------

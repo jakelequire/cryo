@@ -219,6 +219,19 @@ char *CryoVisibilityTypeToString(CryoVisibilityType visibility)
 }
 // </CryoVisibilityTypeToString>
 
+CryoVisibilityType stringToVisibilityType(const char *visibility)
+{
+    if (strcmp(visibility, "public") == 0)
+        return VISIBILITY_PUBLIC;
+    if (strcmp(visibility, "private") == 0)
+        return VISIBILITY_PRIVATE;
+    if (strcmp(visibility, "protected") == 0)
+        return VISIBILITY_PROTECTED;
+    if (strcmp(visibility, "extern") == 0)
+        return VISIBILITY_EXTERN;
+    return VISIBILITY_UNKNOWN;
+}
+
 // <CryoTokenToString>
 char *CryoTokenToString(CryoTokenType node)
 {

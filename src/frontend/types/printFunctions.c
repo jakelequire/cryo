@@ -186,6 +186,8 @@ char *DataTypeToStringUnformatted(DataType *type)
         break;
     }
 
+    sprintf(typeString, "%s ", typeString);
+
     return typeString;
 }
 
@@ -689,10 +691,10 @@ char *getFunctionTypeStr_UF(FunctionType *funcType)
         sprintf(typeString, "%s%s", typeString, paramTypeStr);
         if (i < funcType->paramCount - 1)
         {
-            sprintf(typeString, "%s, ", typeString);
+            sprintf(typeString, "%s,", typeString);
         }
     }
-    sprintf(typeString, "%s) → ", typeString);
+    sprintf(typeString, "%s) -> ", typeString);
     sprintf(typeString, "%s%s", typeString, DataTypeToStringUnformatted(funcType->returnType));
 
     return strdup(typeString);

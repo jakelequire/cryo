@@ -379,6 +379,7 @@ extern "C"
     char *CryoOperatorToString(CryoOperatorType op);
     char *TokenToString(Token token);
 
+    CryoVisibilityType stringToVisibilityType(const char *visibility);
     CryoOperatorType CryoTokenToOperator(CryoTokenType token);
 
 #ifdef __cplusplus

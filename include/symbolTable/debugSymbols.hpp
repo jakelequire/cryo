@@ -45,6 +45,7 @@ extern "C"
 
 namespace Cryo
 {
+
     class SymbolTableDebugger
     {
     public:
@@ -65,6 +66,26 @@ namespace Cryo
 
     private:
         static Logger *logger;
+
+        static constexpr const char *ANSI_RESET = "\033[0m";
+        static constexpr const char *ANSI_BOLD = "\033[1m";
+
+        // Colors for different symbol types
+        struct SymbolColors
+        {
+            static const char *VARIABLE() { return "\033[38;5;45m"; }  // Blue
+            static const char *FUNCTION() { return "\033[38;5;214m"; } // Orange
+            static const char *EXTERN() { return "\033[38;5;147m"; }   // Purple
+            static const char *TYPE() { return "\033[38;5;84m"; }      // Green
+            static const char *PROPERTY() { return "\033[38;5;219m"; } // Pink
+            static const char *METHOD() { return "\033[38;5;203m"; }   // Red
+            static const char *SCOPE() { return "\033[38;5;226m"; }    // Yellow
+            static const char *TABLE() { return "\033[38;5;123m"; }    // Cyan
+        };
+
+        static std::string getColoredSymbolType(TypeOfSymbol symbolType);
+        static std::string getColoredTableType(const char *tableType);
+        static std::string getColoredScopeType();
     };
 }
 

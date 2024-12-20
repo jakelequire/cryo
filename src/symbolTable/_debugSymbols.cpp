@@ -22,14 +22,14 @@ New format to implement later for logging:
 {Typeof Symbol} | Name: {Symbol Name} Type: {Symbol Type}
 ID: {Scope ID} Depth: {INT} | Visibility: {Symbol Visibility}
 {SYMBOL_SPECIFIC_DATA}
-------------------------------------------------------------
+───────────────────────────────────────────────────────────────────
 
 */
 
 namespace Cryo
 {
-    // Define the static member
     Logger *SymbolTableDebugger::logger = new Logger(Logger::DEBUG);
+    const char *SEPARATOR = "───────────────────────────────────────────────────────────────────";
 
     void SymbolTableDebugger::logScopeBlock(ScopeBlock *block)
     {
@@ -39,19 +39,16 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("Scope Block:");
-        logger->debugNode("\tNamespace: %s", block->namespaceName ? block->namespaceName : "global");
-        logger->debugNode("\tName: %s", block->name ? block->name : "<anonymous>");
-        logger->debugNode("\tID: %s", block->id);
-        logger->debugNode("\tDepth: %zu", block->depth);
-        logger->debugNode("\tChild Count: %zu", block->childCount);
-
-        if (block->parent)
-        {
-            logger->debugNode("\tParent Scope: %s (ID: %zu)",
-                              block->parent->name ? block->parent->name : "<anonymous>",
-                              block->parent->id);
-        }
+        logger->debugNode("%s | Name: %s Namespace: %s",
+                          getColoredScopeType().c_str(),
+                          block->name ? block->name : "<anonymous>",
+                          block->namespaceName ? block->namespaceName : "global");
+        logger->debugNode("ID: %s Depth: %zu | Parent: %s",
+                          block->id,
+                          block->depth,
+                          block->parent ? block->parent->name : "none");
+        logger->debugNode("Child Count: %zu", block->childCount);
+        logger->debugNode(SEPARATOR);
     }
 
     void SymbolTableDebugger::logVariableSymbol(VariableSymbol *symbol)
@@ -62,11 +59,13 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("Variable Symbol:");
-        logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tType: %s", symbol->type ? DataTypeToString(symbol->type) : "unknown");
-        logger->debugNode("\tAST Node: %p", (void *)symbol->node);
+        logger->debugNode("%s | %s: %s",
+                          getColoredSymbolType(VARIABLE_SYMBOL).c_str(),
+                          symbol->name,
+                          symbol->type ? DataTypeToString(symbol->type) : "unknown");
+        logger->debugNode("ID: %s",
+                          symbol->scopeId);
+        logger->debugNode(SEPARATOR);
     }
 
     void SymbolTableDebugger::logFunctionSymbol(FunctionSymbol *symbol)
@@ -77,20 +76,15 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("Function Symbol:");
-        logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tFunction Type: %s",
+        logger->debugNode("%s | %s: %s",
+                          getColoredSymbolType(FUNCTION_SYMBOL).c_str(),
+                          symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
-        logger->debugNode("\tParameters: %zu", symbol->paramCount);
-
-        // for (size_t i = 0; i < symbol->paramCount; i++)
-        // {
-        //     DataType *paramType = symbol->paramTypes[i];
-        //     logger->debugNode("    Param %zu: %s", i, paramType ? DataTypeToString(paramType) : "unknown");
-        // }
-
-        logger->debugNode("\tVisibility: %s", CryoVisibilityTypeToString(symbol->visibility));
+        logger->debugNode("ID: %s | Visibility: %s",
+                          symbol->scopeId,
+                          CryoVisibilityTypeToString(symbol->visibility));
+        logger->debugNode("Parameters: %zu", symbol->paramCount);
+        logger->debugNode(SEPARATOR);
     }
 
     void SymbolTableDebugger::logExternSymbol(ExternSymbol *symbol)
@@ -101,20 +95,15 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("Extern Symbol:");
-        logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tFunction Type: %s",
+        logger->debugNode("%s | %s: %s",
+                          getColoredSymbolType(EXTERN_SYMBOL).c_str(),
+                          symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
-        logger->debugNode("\tParameters: %zu", symbol->paramCount);
-
-        // for (size_t i = 0; i < symbol->paramCount; i++)
-        // {
-        //      logger->debugNode("    Param %zu: %s", i,
-        //                      symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
-        // }
-
-        logger->debugNode("\tVisibility: %s", CryoVisibilityTypeToString(symbol->visibility));
+        logger->debugNode("ID: %s | Visibility: %s",
+                          symbol->scopeId,
+                          CryoVisibilityTypeToString(symbol->visibility));
+        logger->debugNode("Parameters: %zu", symbol->paramCount);
+        logger->debugNode(SEPARATOR);
     }
 
     void SymbolTableDebugger::logTypeSymbol(TypeSymbol *symbol)
@@ -125,12 +114,15 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("Type Symbol:");
-        logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tType Of: %s", TypeofDataTypeToString(symbol->typeOf));
-        logger->debugNode("\tIs Static: %s", symbol->isStatic ? "true" : "false");
-        logger->debugNode("\tIs Generic: %s", symbol->isGeneric ? "true" : "false");
+        logger->debugNode("%s | %s TypeOf: %s",
+                          getColoredSymbolType(TYPE_SYMBOL).c_str(),
+                          symbol->name,
+                          TypeofDataTypeToString(symbol->typeOf));
+        logger->debugNode("ID: %s | Static: %s Generic: %s",
+                          symbol->scopeId,
+                          symbol->isStatic ? "true" : "false",
+                          symbol->isGeneric ? "true" : "false");
+        logger->debugNode(SEPARATOR);
     }
 
     void SymbolTableDebugger::logPropertySymbol(PropertySymbol *symbol)
@@ -141,12 +133,15 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("Property Symbol:");
-        logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tType: %s", symbol->type ? DataTypeToString(symbol->type) : "unknown");
-        logger->debugNode("\tIs Static: %s", symbol->isStatic ? "true" : "false");
-        logger->debugNode("\tHas Default: %s", symbol->hasDefaultExpr ? "true" : "false");
+        logger->debugNode("%s | %s Type: %s",
+                          getColoredSymbolType(PROPERTY_SYMBOL).c_str(),
+                          symbol->name,
+                          symbol->type ? DataTypeToString(symbol->type) : "unknown");
+        logger->debugNode("ID: %s | Static: %s HasDefault: %s",
+                          symbol->scopeId,
+                          symbol->isStatic ? "true" : "false",
+                          symbol->hasDefaultExpr ? "true" : "false");
+        logger->debugNode(SEPARATOR);
     }
 
     void SymbolTableDebugger::logMethodSymbol(MethodSymbol *symbol)
@@ -157,21 +152,81 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("Method Symbol:");
-        logger->debugNode("\tName: %s", symbol->name);
-        logger->debugNode("\tScope ID: %s", symbol->scopeId);
-        logger->debugNode("\tReturn Type: %s",
+        logger->debugNode("%s | %s ReturnType: %s",
+                          getColoredSymbolType(METHOD_SYMBOL).c_str(),
+                          symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
-        logger->debugNode("\tParameters: %zu", symbol->paramCount);
+        logger->debugNode("ID: %s | Static: %s Visibility: %d",
+                          symbol->scopeId,
+                          symbol->isStatic ? "true" : "false",
+                          symbol->visibility);
+        logger->debugNode("Parameters: %zu", symbol->paramCount);
 
-        for (size_t i = 0; i < symbol->paramCount; i++)
+        // Only log parameters if they exist
+        if (symbol->paramCount > 0)
         {
-            logger->debugNode("    Param %zu: %s", i,
-                              symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
+            for (size_t i = 0; i < symbol->paramCount; i++)
+            {
+                logger->debugNode("  Param %zu: %s", i,
+                                  symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
+            }
+        }
+        logger->debugNode(SEPARATOR);
+    }
+
+    void SymbolTableDebugger::logSymbolTable(SymbolTable *table)
+    {
+        if (!table)
+        {
+            logger->debugNode("NULL symbol table");
+            return;
         }
 
-        logger->debugNode("\tVisibility: %d", symbol->visibility);
-        logger->debugNode("\tIs Static: %s", symbol->isStatic ? "true" : "false");
+        logger->debugNode("SymbolTable | Namespace: %s Count: %zu",
+                          table->namespaceName ? table->namespaceName : "global",
+                          table->count);
+        logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
+
+        if (table->currentScope)
+        {
+            logger->debugNode("\nCurrent Scope:");
+            logScopeBlock(table->currentScope);
+        }
+
+        if (table->count > 0)
+        {
+            logger->debugNode("\nSymbols:\n");
+            logger->debugNode(SEPARATOR);
+            for (size_t i = 0; i < table->count; i++)
+            {
+                logSymbol(table->symbols[i]);
+            }
+        }
+        logger->debugNode(SEPARATOR);
+    }
+
+    void SymbolTableDebugger::logTypeTable(TypesTable *table)
+    {
+        if (!table)
+        {
+            logger->debugNode("NULL type table");
+            return;
+        }
+
+        logger->debugNode("TypeTable | Namespace: %s Count: %zu",
+                          table->namespaceName ? table->namespaceName : "global",
+                          table->count);
+        logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
+
+        if (table->count > 0)
+        {
+            logger->debugNode("\nTypes:");
+            for (size_t i = 0; i < table->count; i++)
+            {
+                logger->debugNode("  Type %zu: %s", i, DataTypeToString(table->types[i]));
+            }
+        }
+        logger->debugNode(SEPARATOR);
     }
 
     void SymbolTableDebugger::logSymbol(Symbol *symbol)
@@ -207,54 +262,6 @@ namespace Cryo
         }
     }
 
-    void SymbolTableDebugger::logSymbolTable(SymbolTable *table)
-    {
-        if (!table)
-        {
-            logger->debugNode("NULL symbol table");
-            return;
-        }
-
-        logger->debugNode("Symbol Table");
-        logger->debugNode("\tNamespace: %s", table->namespaceName ? table->namespaceName : "global");
-        logger->debugNode("\tSymbol Count: %zu", table->count);
-        logger->debugNode("\tScope Depth: %zu", table->scopeDepth);
-        logger->debugNode("\tScope ID: %s", table->scopeId);
-
-        if (table->currentScope)
-        {
-            logger->debugNode("Current Scope:");
-            logScopeBlock(table->currentScope);
-        }
-
-        logger->debugNode("\tSymbols:");
-        for (size_t i = 0; i < table->count; i++)
-        {
-            logSymbol(table->symbols[i]);
-        }
-    }
-
-    void SymbolTableDebugger::logTypeTable(TypesTable *table)
-    {
-        if (!table)
-        {
-            logger->debugNode("NULL type table");
-            return;
-        }
-
-        logger->debugNode("Type Table:");
-        logger->debugNode("\tNamespace: %s", table->namespaceName ? table->namespaceName : "global");
-        logger->debugNode("\tType Count: %zu", table->count);
-        logger->debugNode("\tScope Depth: %zu", table->scopeDepth);
-        logger->debugNode("\tScope ID: %s", table->scopeId);
-
-        logger->debugNode("Types:");
-        for (size_t i = 0; i < table->count; i++)
-        {
-            logger->debugNode("Type %zu: %s", i, DataTypeToString(table->types[i]));
-        }
-    }
-
     const char *SymbolTableDebugger::getTypeofSymbol(TypeOfSymbol symbolType)
     {
         switch (symbolType)
@@ -279,6 +286,50 @@ namespace Cryo
     void SymbolTableDebugger::logTypeofSymbol(TypeOfSymbol symbolType)
     {
         logger->debugNode("Type of Symbol: %s", getTypeofSymbol(symbolType));
+    }
+
+    std::string SymbolTableDebugger::getColoredSymbolType(TypeOfSymbol symbolType)
+    {
+        std::string baseType = getTypeofSymbol(symbolType);
+        std::string colorCode;
+
+        switch (symbolType)
+        {
+        case VARIABLE_SYMBOL:
+            colorCode = SymbolColors::VARIABLE();
+            break;
+        case FUNCTION_SYMBOL:
+            colorCode = SymbolColors::FUNCTION();
+            break;
+        case EXTERN_SYMBOL:
+            colorCode = SymbolColors::EXTERN();
+            break;
+        case TYPE_SYMBOL:
+            colorCode = SymbolColors::TYPE();
+            break;
+        case PROPERTY_SYMBOL:
+            colorCode = SymbolColors::PROPERTY();
+            break;
+        case METHOD_SYMBOL:
+            colorCode = SymbolColors::METHOD();
+            break;
+        default:
+            return baseType; // No color for unknown types
+        }
+
+        return std::string(colorCode) + std::string(ANSI_BOLD) + baseType + std::string(ANSI_RESET);
+    }
+
+    // Helper function for table types
+    std::string SymbolTableDebugger::getColoredTableType(const char *tableType)
+    {
+        return std::string(SymbolColors::TABLE()) + std::string(ANSI_BOLD) + tableType + std::string(ANSI_RESET);
+    }
+
+    // Helper function for scope blocks
+    std::string SymbolTableDebugger::getColoredScopeType()
+    {
+        return std::string(SymbolColors::SCOPE()) + std::string(ANSI_BOLD) + "ScopeBlock" + std::string(ANSI_RESET);
     }
 
 } // namespace Cryo

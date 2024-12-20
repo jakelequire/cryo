@@ -43,7 +43,7 @@ extern "C"
                 reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable));
         }
     }
-    
+
     // --------------------------------------------------------------
     // Class State Functions
 
@@ -65,6 +65,11 @@ extern "C"
     void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency)
     {
         reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->setIsDependencyTable(isDependency);
+    }
+
+    void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable)
+    {
+        reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->tableFinished();
     }
 
     // --------------------------------------------------------------

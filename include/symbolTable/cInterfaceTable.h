@@ -76,6 +76,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_SetPrimaryTableStatus(symTable, isPrimary)
 #define setDependencyTableStatus(symTable, isDependency) \
     CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
+#define TableFinished(symTable) \
+    CryoGlobalSymbolTable_TableFinished(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \

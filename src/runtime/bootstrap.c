@@ -112,6 +112,9 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, Cr
 
     logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions bootstrapped successfully");
 
+    // Signal the completion of the dependency table
+    TableFinished(globalTable);
+
     // Create the runtime object file
     const char *outputFile = getRuntimeObjFile();
     bootstrap->state->settings->inputFile = getRuntimeSrcFile();
