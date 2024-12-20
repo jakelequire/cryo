@@ -954,41 +954,95 @@ namespace Cryo
 
     void SymbolTableDB::writeChunkHeader(FILE *file) const
     {
+        auto formats = getColumnFormats(TableType::FUNCTION_TABLE);
+        size_t totalWidth = std::accumulate(formats.begin(), formats.end(), 0,
+                                            [](size_t sum, const ColumnFormat &fmt)
+                                            { return sum + fmt.width; });
+        totalWidth += formats.size() + 1; // Add width for separators and edges
+
         std::stringstream ss;
 
-        // Top border with scope ID
-        ss << _TOP_LEFT << std::string(20, _HORIZONTAL[0]) << "SCOPE ID"
-           << std::string(20, _HORIZONTAL[0]) << _TOP_RIGHT << "\n";
+        // Top border
+        ss << _TOP_LEFT << std::string(totalWidth - 2, _HORIZONTAL[0]) << _TOP_RIGHT << "\n";
 
-        std::string header = ss.str();
-        fwrite(header.c_str(), 1, header.length(), file);
+        // Title
+        ss << _VERTICAL << std::setw((totalWidth + 10) / 2) << "SCOPE TABLE"
+           << std::setw((totalWidth - 10) / 2) << _VERTICAL << "\n";
+
+        // Bottom border
+        ss << _T_RIGHT << std::string(totalWidth - 2, _HORIZONTAL[0]) << _T_LEFT << "\n";
+
+        std::string headerStr = ss.str();
+        fwrite(headerStr.c_str(), 1, headerStr.length(), file);
     }
 
     void SymbolTableDB::writeChunkEntry(FILE *file, const ChunkEntry &chunk) const
     {
-        // Write scope ID header
-        std::string id = chunk.functionEntry.columns[3]; // ID is in column 3
-        std::stringstream ss;
-        ss << _VERTICAL << " SCOPE: " << std::left << std::setw(35) << id << _VERTICAL << "\n";
+        auto formats = getColumnFormats(TableType::FUNCTION_TABLE);
+        size_t totalWidth = std::accumulate(formats.begin(), formats.end(), 0,
+                                            [](size_t sum, const ColumnFormat &fmt)
+                                            { return sum + fmt.width; });
+        totalWidth += formats.size() + 1;
 
-        // Write function entry
+        std::stringstream ss;
+
+        // Add initial newline before new chunk starts (except for first chunk)
+        static bool firstChunk = true;
+        if (!firstChunk)
+        {
+            ss << "\n";
+        }
+        firstChunk = false;
+
+        // Write scope header
+        ss << _VERTICAL << " SCOPE: " << std::left << std::setw(20) << chunk.functionEntry.columns[3]
+           << std::right << std::setw(totalWidth - 29) << _VERTICAL << "\n";
+
+        // Rest of the function remains the same until the end separator
+        ss << _T_RIGHT;
+        for (size_t i = 0; i < formats.size(); ++i)
+        {
+            ss << std::string(formats[i].width, _HORIZONTAL[0]);
+            ss << (i < formats.size() - 1 ? _CROSS : _T_LEFT);
+        }
+        ss << "\n";
+
         std::string functionStr;
         serializeEntry(chunk.functionEntry, functionStr);
         ss << functionStr;
 
-        // Write variables
-        for (const auto &var : chunk.variables)
+        if (!chunk.variables.empty())
         {
-            std::string varStr;
-            serializeEntry(var, varStr);
-            ss << varStr;
+            ss << _VERTICAL << " Variables:" << std::right << std::setw(totalWidth - 12) << _VERTICAL << "\n";
+
+            ss << _T_RIGHT;
+            for (size_t i = 0; i < formats.size(); ++i)
+            {
+                ss << std::string(formats[i].width, _HORIZONTAL[0]);
+                ss << (i < formats.size() - 1 ? _CROSS : _T_LEFT);
+            }
+            ss << "\n";
+
+            for (const auto &var : chunk.variables)
+            {
+                std::string varStr;
+                serializeEntry(var, varStr);
+                ss << varStr;
+            }
         }
 
-        // Write chunk separator
-        ss << std::string(45, _HORIZONTAL[0]) << "\n";
+        ss << "\n"; // Only one newline at the end
 
-        std::string output = ss.str();
-        fwrite(output.c_str(), 1, output.length(), file);
+        // Write end separator
+        ss << _T_RIGHT;
+        for (size_t i = 0; i < formats.size(); ++i)
+        {
+            ss << std::string(formats[i].width, _HORIZONTAL[0]);
+            ss << (i < formats.size() - 1 ? _CROSS : _T_LEFT);
+        }
+
+        std::string outputStr = ss.str();
+        fwrite(outputStr.c_str(), 1, outputStr.length(), file);
     }
 
     std::vector<SymbolTableDB::ChunkEntry> SymbolTableDB::groupEntriesByID() const

@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <numeric>
 
 #include "symbolTable/symdefs.h"
 
