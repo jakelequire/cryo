@@ -73,6 +73,12 @@ extern "C"
 
     void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable);
 
+    // Declaration Functions (incomplete definitions) ---------------------------------------
+
+    void CryoGlobalSymbolTable_InitClassDeclaration(CryoGlobalSymbolTable *symTable, const char *className);
+    void CryoGlobalSymbolTable_AddPropertyToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *property);
+    void CryoGlobalSymbolTable_AddMethodToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method);
+
 // Class State Functions
 #define isPrimaryTable(symTable) \
     CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
@@ -116,6 +122,14 @@ extern "C"
 #define MergeDBChunks(symTable) \
     CryoGlobalSymbolTable_MergeDBChunks(symTable)
 
+// Declaration Functions
+#define InitClassDeclaration(symTable, className) \
+    CryoGlobalSymbolTable_InitClassDeclaration(symTable, className)
+#define AddPropertyToClass(symTable, className, property) \
+    CryoGlobalSymbolTable_AddPropertyToClass(symTable, className, property)
+#define AddMethodToClass(symTable, className, method) \
+    CryoGlobalSymbolTable_AddMethodToClass(symTable, className, method)
+
 #ifdef __cplusplus
 } // C API ----------------------------------------------------------
 
@@ -142,6 +156,8 @@ typedef struct DataType DataType;
 
 #define MAX_SYMBOLS 1024
 #define MAX_DEPENDENCIES 1024
+#define MAX_PROPERTY_COUNT 128
+#define MAX_METHOD_COUNT 128
 
 /// @brief Debugging information for the symbol table.
 /// Which includes: `buildDir`, `dependencyDir`, `debugDir`, and `DBdir`.
@@ -244,33 +260,8 @@ namespace Cryo
 
         void setCurrentDependencyTable(SymbolTable *table) { currentDependencyTable = table; }
         void setPrimaryTable(SymbolTable *table) { symbolTable = table; }
-        void tableFinished(void)
-        {
-            tableState = TABLE_COMPLETE;
-            if (tableContext.isPrimary)
-            {
-                if (symbolTable)
-                {
-                    db->appendSerializedTable(symbolTable);
-                }
-            }
-            else if (tableContext.isDependency)
-            {
-                if (currentDependencyTable && dependencyCount == 1)
-                {
-                    db->serializeSymbolTable(currentDependencyTable);
-                }
-            }
-            else
-            {
-                tableState = TABLE_ERROR;
-            }
-        }
-
-        void mergeDBChunks(void)
-        {
-            db->createScopedDB();
-        }
+        void mergeDBChunks(void) { db->createScopedDB(); }
+        void tableFinished(void);
 
         // ======================================================= //
         // Symbol Table Management Functions                       //
@@ -283,6 +274,7 @@ namespace Cryo
         void addVariableToSymbolTable(ASTNode *node, const char *scopeID);
 
         SymbolTable *getCurrentSymbolTable(void);
+        Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
 
         // ======================================================= //
         // Scope Management Functions                              //
@@ -336,6 +328,8 @@ namespace Cryo
         void addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table);
         void addSingleSymbolToTable(Symbol *symbol, SymbolTable *table);
 
+        void addSymbolToCurrentTable(Symbol *symbol);
+
     protected:
         // ======================================================= //
         // Symbol Creation Functions                               //
@@ -345,13 +339,33 @@ namespace Cryo
         VariableSymbol *createVariableSymbol(const char *name, DataType *type, ASTNode *node, const char *scopeId);
         FunctionSymbol *createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node);
         TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId);
-        PropertySymbol *createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, const char *scopeId);
-        MethodSymbol *createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, const char *scopeId);
+        TypeSymbol *createIncompleteTypeSymbol(const char *name, TypeofDataType typeOf);
+
+        PropertySymbol *createPropertySymbol(ASTNode *propNode);
+        MethodSymbol *createMethodSymbol(ASTNode *methodNode);
         ExternSymbol *createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, const char *scopeId);
 
         Symbol *createSymbol(TypeOfSymbol symbolType, void *symbol);
         SymbolTable *createSymbolTable(const char *namespaceName);
         TypesTable *createTypeTable(const char *namespaceName);
+
+    public:
+        // ======================================================= //
+        // Declaration Functions (incomplete definitions)          //
+        // ======================================================= //
+
+        void initClassDeclaration(const char *className);
+        void addPropertyToClass(const char *className, ASTNode *property);
+        void addMethodToClass(const char *className, ASTNode *method);
+
+    private:
+        Symbol *createClassDeclarationSymbol(std::string className);
+        Symbol *updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount);
+        Symbol *updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount);
+        Symbol *getClassSymbol(const char *className);
+
+        void addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table);
+        void updateClassSymbol(Symbol *classSymbol, SymbolTable *table);
     };
 
     // -------------------------------------------------------
@@ -485,6 +499,32 @@ namespace Cryo
         if (symTable)
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->mergeDBChunks();
+        }
+    }
+
+    // Declaration Functions ---------------------------------------
+
+    inline void CryoGlobalSymbolTable_InitClassDeclaration(CryoGlobalSymbolTable *symTable, const char *className)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->initClassDeclaration(className);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_AddPropertyToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *property)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->addPropertyToClass(className, property);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_AddMethodToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->addMethodToClass(className, method);
         }
     }
 

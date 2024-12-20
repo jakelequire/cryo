@@ -92,6 +92,13 @@ struct TypeSymbol
     bool isStatic;
     bool isGeneric;
 
+    Symbol **properties;
+    int propertyCount;
+    int propertyCapacity;
+    Symbol **methods;
+    int methodCount;
+    int methodCapacity;
+
     const char *scopeId;
 };
 
@@ -154,4 +161,5 @@ struct TypesTable
     const char *scopeId;
     ScopeBlock *currentScope;
     DataType **types;
+    TypeSymbol **typeSymbols;
 };

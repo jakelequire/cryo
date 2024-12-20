@@ -110,4 +110,12 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define MergeDBChunks(symTable) \
     CryoGlobalSymbolTable_MergeDBChunks(symTable)
 
+// Declaration Functions
+#define InitClassDeclaration(symTable, className) \
+    CryoGlobalSymbolTable_InitClassDeclaration(symTable, className)
+#define AddPropertyToClass(symTable, className, property) \
+    CryoGlobalSymbolTable_AddPropertyToClass(symTable, className, property)
+#define AddMethodToClass(symTable, className, method) \
+    CryoGlobalSymbolTable_AddMethodToClass(symTable, className, method)
+
 #endif // C_INTERFACE_TABLE_H

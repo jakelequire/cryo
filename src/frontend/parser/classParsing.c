@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 
 ASTNode *parseClassDeclaration(bool isStatic,
@@ -28,9 +29,10 @@ ASTNode *parseClassDeclaration(bool isStatic,
         CONDITION_FAILED;
     }
 
-    char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    const char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Class name: %s", className);
 
+    InitClassDeclaration(globalTable, className);
     createClassScope(context, className);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for class name.", "parseclassNodearation", table, arena, state, typeTable, context);
@@ -154,7 +156,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseClassBody", table, arena, state, typeTable, context);
 
                     ASTNode *propNode = createFieldNode(identifier, type, className, NODE_CLASS, NULL, arena, state, typeTable, lexer);
-                    addPropertyToClass(classNode, propNode, VISIBILITY_PUBLIC, arena, state, typeTable, context);
+                    addPropertyToClass(classNode, propNode, VISIBILITY_PUBLIC, arena, state, typeTable, context, globalTable);
 
                     logMessage("INFO", __LINE__, "Parser", "Property added to class.");
 
@@ -177,7 +179,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     // Add the method to the symbol table
                     addASTNodeSymbol(table, methodNode, arena);
                     logMessage("INFO", __LINE__, "Parser", "Method node created.");
-                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, typeTable, context, table);
+                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, typeTable, context, table, globalTable);
 
                     publicMethodCount++;
 
@@ -300,7 +302,7 @@ void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *
 }
 
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table)
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Adding method to class...");
     if (classNode->metaData->type != NODE_CLASS)
@@ -327,12 +329,15 @@ void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityTyp
         logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
     }
 
+    const char *className = classNode->data.classNode->name;
+    AddMethodToClass(globalTable, className, methodNode); // Update Global Symbol Table
+
     logMessage("INFO", __LINE__, "Parser", "Method added to class.");
     return;
 }
 
 void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
-                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Adding property to class...");
     if (classNode->metaData->type != NODE_CLASS)
@@ -355,6 +360,12 @@ void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityTyp
     default:
         logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
     }
+
+    const char *className = classNode->data.classNode->name;
+    AddPropertyToClass(globalTable, className, propNode); // Update Global Symbol Table
+
+    logMessage("INFO", __LINE__, "Parser", "Property added to class.");
+    return;
 }
 
 void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,

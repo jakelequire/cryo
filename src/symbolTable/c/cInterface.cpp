@@ -167,4 +167,31 @@ extern "C"
         }
     }
 
+    // --------------------------------------------------------------
+    // Declaration Functions
+
+    void CryoGlobalSymbolTable_InitClassDeclaration(CryoGlobalSymbolTable *symTable, const char *className)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->initClassDeclaration(className);
+        }
+    }
+
+    void CryoGlobalSymbolTable_AddPropertyToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *property)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->addPropertyToClass(className, property);
+        }
+    }
+
+    void CryoGlobalSymbolTable_AddMethodToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->addMethodToClass(className, method);
+        }
+    }
+
 } // C API ----------------------------------------------------------

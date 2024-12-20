@@ -156,14 +156,7 @@ namespace Cryo
             size_t paramCount = node->data.method->paramCount;
             CryoVisibilityType visibility = node->data.method->visibility;
 
-            MethodSymbol *methodSymbol = createMethodSymbol(methodName,
-                                                            returnType,
-                                                            nullptr, // Will implement later (param types)
-                                                            paramCount,
-                                                            visibility,
-                                                            node,
-                                                            false,
-                                                            0);
+            MethodSymbol *methodSymbol = createMethodSymbol(node);
 
             return createSymbol(METHOD_SYMBOL, methodSymbol);
         }

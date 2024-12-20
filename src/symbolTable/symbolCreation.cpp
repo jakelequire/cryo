@@ -77,33 +77,77 @@ namespace Cryo
         symbol->isStatic = isStatic;
         symbol->isGeneric = isGeneric;
         symbol->scopeId = scopeId;
+
+        symbol->propertyCapacity = MAX_PROPERTY_COUNT;
+        symbol->methodCapacity = MAX_METHOD_COUNT;
+        symbol->propertyCount = 0;
+        symbol->methodCount = 0;
+        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * symbol->propertyCapacity);
+        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * symbol->methodCapacity);
+
         return symbol;
     }
 
-    PropertySymbol *GlobalSymbolTable::createPropertySymbol(const char *name, DataType *type, ASTNode *node, ASTNode *defaultExpr, bool hasDefaultExpr, bool isStatic, const char *scopeId)
+    TypeSymbol *GlobalSymbolTable::createIncompleteTypeSymbol(const char *name, TypeofDataType typeOf)
     {
+        TypeSymbol *symbol = new TypeSymbol();
+        symbol->name = name;
+        symbol->type = nullptr;
+        symbol->typeOf = typeOf;
+        symbol->isStatic = false;
+        symbol->isGeneric = false;
+        symbol->scopeId = IDGen::generate64BitHashID(name);
+
+        symbol->propertyCapacity = MAX_PROPERTY_COUNT;
+        symbol->methodCapacity = MAX_METHOD_COUNT;
+        symbol->propertyCount = 0;
+        symbol->methodCount = 0;
+        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * symbol->propertyCapacity);
+        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * symbol->methodCapacity);
+
+        return symbol;
+    }
+
+    PropertySymbol *GlobalSymbolTable::createPropertySymbol(ASTNode *propNode)
+    {
+        if (propNode->metaData->type != NODE_PROPERTY)
+        {
+            std::cout << "Error: Failed to create Property Symbol, typeof node mismatch." << std::endl;
+            return nullptr;
+        }
+        PropertyNode *prop = propNode->data.property;
         PropertySymbol *symbol = new PropertySymbol();
-        symbol->name = name;
-        symbol->type = type;
-        symbol->node = node;
-        symbol->defaultExpr = defaultExpr;
-        symbol->hasDefaultExpr = hasDefaultExpr;
-        symbol->isStatic = isStatic;
-        symbol->scopeId = scopeId;
+
+        symbol->name = prop->name;
+        symbol->type = prop->type;
+        symbol->node = propNode;
+        symbol->defaultExpr = nullptr;
+        symbol->hasDefaultExpr = prop->defaultProperty;
+        symbol->isStatic = false;
+        symbol->scopeId = IDGen::generate64BitHashID(prop->parentName);
         return symbol;
     }
 
-    MethodSymbol *GlobalSymbolTable::createMethodSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node, bool isStatic, const char *scopeId)
+    MethodSymbol *GlobalSymbolTable::createMethodSymbol(ASTNode *methodNode)
     {
+        if (methodNode->metaData->type != NODE_METHOD)
+        {
+            std::cout << "Error: Failed to create Method Symbol, typeof node mismatch" << std::endl;
+            return nullptr;
+        }
+
+        MethodNode *method = methodNode->data.method;
         MethodSymbol *symbol = new MethodSymbol();
-        symbol->name = name;
-        symbol->returnType = returnType;
-        symbol->paramTypes = paramTypes;
-        symbol->paramCount = paramCount;
-        symbol->visibility = visibility;
-        symbol->node = node;
-        symbol->isStatic = isStatic;
-        symbol->scopeId = scopeId;
+
+        symbol->name = method->name;
+        symbol->returnType = method->functionType;
+        symbol->node = methodNode;
+        symbol->visibility = method->visibility;
+        symbol->isStatic = method->isStatic;
+        symbol->scopeId = IDGen::generate64BitHashID(method->parentName);
+        symbol->paramCount = method->paramCount;
+        symbol->paramTypes = getParamTypeArray(method->params);
+
         return symbol;
     }
 

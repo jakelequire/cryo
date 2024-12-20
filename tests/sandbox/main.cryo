@@ -17,6 +17,16 @@ struct Int {
     }
 }
 
+class FooBaz {
+    public anotherFooProp: string;
+
+    constructor() {}
+
+    public static anotherFooMethod() -> void {
+        printStr("Another foo method called");
+        return;
+    }
+}
 
 
 function stringTesting() -> void {

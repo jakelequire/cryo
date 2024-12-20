@@ -30,6 +30,7 @@ namespace Cryo
 {
     Logger *SymbolTableDebugger::logger = new Logger(Logger::DEBUG);
     const char *SEPARATOR = "───────────────────────────────────────────────────────────────────";
+    const char *CHILD_SEPARATOR = "------------------------------";
 
     void SymbolTableDebugger::logScopeBlock(ScopeBlock *block)
     {
@@ -113,6 +114,11 @@ namespace Cryo
             logger->debugNode("NULL type symbol");
             return;
         }
+        if (symbol->typeOf == CLASS_TYPE)
+        {
+            logClassTypeSymbol(symbol);
+            return;
+        }
 
         logger->debugNode("%s | %s TypeOf: %s",
                           getColoredSymbolType(TYPE_SYMBOL).c_str(),
@@ -123,6 +129,63 @@ namespace Cryo
                           symbol->isStatic ? "true" : "false",
                           symbol->isGeneric ? "true" : "false");
         logger->debugNode(SEPARATOR);
+    }
+
+    void SymbolTableDebugger::logClassTypeSymbol(TypeSymbol *symbol)
+    {
+        if (!symbol)
+        {
+            logger->debugNode("NULL class type symbol");
+            return;
+        }
+
+        logger->debugNode("%s | %s TypeOf: %s",
+                          getColoredSymbolType(TYPE_SYMBOL).c_str(),
+                          symbol->name,
+                          TypeofDataTypeToString(symbol->typeOf));
+        logger->debugNode("ID: %s | Static: %s Generic: %s",
+                          symbol->scopeId,
+                          symbol->isStatic ? "true" : "false",
+                          symbol->isGeneric ? "true" : "false");
+        logger->debugNode("Properties: %d | Methods: %d",
+                          symbol->propertyCount,
+                          symbol->methodCount);
+
+        // log the properties
+        int propCount = symbol->propertyCount;
+        for (int i = 0; i < propCount; i++)
+        {
+            PropertySymbol *propSymbol = symbol->properties[i]->property;
+            if (!propSymbol)
+            {
+                logger->debugNode("NULL PROPERTY");
+            }
+
+            logPropertySymbolChild(propSymbol);
+        }
+
+        logger->debugNode(SEPARATOR);
+    }
+
+    // Only difference between this function and `logPropertySymbol` is not having the same
+    // seperator at the end. It should be shorter then the main one to show that it's a child
+    void SymbolTableDebugger::logPropertySymbolChild(PropertySymbol *symbol)
+    {
+        if (!symbol)
+        {
+            logger->debugNode("NULL property symbol");
+            return;
+        }
+
+        logger->debugNode("%s | %s Type: %s",
+                          getColoredSymbolType(PROPERTY_SYMBOL).c_str(),
+                          symbol->name,
+                          symbol->type ? DataTypeToString(symbol->type) : "unknown");
+        logger->debugNode("ID: %s | Static: %s HasDefault: %s",
+                          symbol->scopeId,
+                          symbol->isStatic ? "true" : "false",
+                          symbol->hasDefaultExpr ? "true" : "false");
+        logger->debugNode(CHILD_SEPARATOR);
     }
 
     void SymbolTableDebugger::logPropertySymbol(PropertySymbol *symbol)

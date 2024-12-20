@@ -275,9 +275,9 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 
 void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *arena, CompilerState *state, TypeTable *typeTable);
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table);
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table, CryoGlobalSymbolTable *globalTable);
 void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
-                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoGlobalSymbolTable *globalTable);
 
 void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
                       Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoSymbolTable *table);

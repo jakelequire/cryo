@@ -52,11 +52,14 @@ struct String {
     }
 }
 
-// class FS {
-//     constructor() {}
-//     
-//     public static readFile(path: string, mode: string) -> string {
-//         const fileContents: string = __c_fs_readFile(path, mode);
-//         return fileContents;
-//     }
-// }
+class FooClass
+{
+    public fooProp: string;
+
+    constructor() {}
+
+    public static barMethod() -> void {
+        printStr("Bar method called");
+        return;
+    }
+}
