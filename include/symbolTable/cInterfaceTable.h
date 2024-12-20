@@ -107,5 +107,7 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
     CryoGlobalSymbolTable_PrintGlobalTable(symTable)
+#define MergeDBChunks(symTable) \
+    CryoGlobalSymbolTable_MergeDBChunks(symTable)
 
 #endif // C_INTERFACE_TABLE_H

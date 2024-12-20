@@ -69,6 +69,10 @@ extern "C"
 
     VariableSymbol *CryoGlobalSymbolTable_GetFrontendVariableSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID);
 
+    // Debug Functions ---------------------------------------
+
+    void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable);
+
 // Class State Functions
 #define isPrimaryTable(symTable) \
     CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
@@ -109,6 +113,8 @@ extern "C"
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
     CryoGlobalSymbolTable_PrintGlobalTable(symTable)
+#define MergeDBChunks(symTable) \
+    CryoGlobalSymbolTable_MergeDBChunks(symTable)
 
 #ifdef __cplusplus
 } // C API ----------------------------------------------------------
@@ -171,6 +177,7 @@ namespace Cryo
             TABLE_IDLE,
             TABLE_IN_PROGRESS,
             TABLE_COMPLETE,
+            TABLE_DONE,
             TABLE_ERROR
         };
         enum ScopeType
@@ -258,6 +265,11 @@ namespace Cryo
             {
                 tableState = TABLE_ERROR;
             }
+        }
+
+        void mergeDBChunks(void)
+        {
+            db->createScopedDB();
         }
 
         // ======================================================= //
@@ -464,6 +476,16 @@ namespace Cryo
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->getFrontendVariableSymbol(name, scopeID);
         }
         return nullptr;
+    }
+
+    // Debug Functions ---------------------------------------
+
+    inline void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->mergeDBChunks();
+        }
     }
 
 } // namespace Cryo

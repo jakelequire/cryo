@@ -88,6 +88,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return 1;
     }
     TableFinished(globalSymbolTable); // Finish the global symbol table
+    MergeDBChunks(globalSymbolTable); // Merge the DB chunks
 
     // Debug print the global symbol table
     // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);

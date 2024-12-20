@@ -156,4 +156,15 @@ extern "C"
         return nullptr;
     }
 
+    // --------------------------------------------------------------
+    // Debug Functions
+
+    void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->mergeDBChunks();
+        }
+    }
+
 } // C API ----------------------------------------------------------

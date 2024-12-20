@@ -23,7 +23,9 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
-#include <stdio.h>
+#include <algorithm>
+#include <functional>
+#include <map>
 
 #include "symbolTable/symdefs.h"
 
@@ -71,6 +73,7 @@ namespace Cryo
     struct TableEntry
     {
         std::vector<std::string> columns;
+        TableType type;
     };
 
     class SymbolTableDB
@@ -83,6 +86,7 @@ namespace Cryo
         bool serializeSymbolTable(const SymbolTable *table);
         bool appendSerializedTable(const SymbolTable *table);
         bool deserializeToSymbolTable(SymbolTable *table);
+        bool createScopedDB() const;
 
         // Table operations
         bool createTable(TableType type);
@@ -94,7 +98,7 @@ namespace Cryo
         bool updateRow(TableType type, size_t rowId, const TableEntry &entry);
 
         // Query operations
-        std::vector<TableEntry> queryTable(TableType type);
+        std::vector<TableEntry> queryTable(TableType type) const;
         TableEntry queryRow(TableType type, size_t rowId);
         std::vector<TableEntry> queryByColumn(TableType type, size_t columnIndex, const std::string &value);
 
@@ -127,7 +131,7 @@ namespace Cryo
 
         // File operations
         bool writeEntry(FILE *file, const TableEntry &entry);
-        TableEntry readEntry(FILE *file);
+        TableEntry readEntry(FILE *file) const;
         bool seekToRow(FILE *file, size_t rowId);
 
         // Validation
@@ -144,8 +148,8 @@ namespace Cryo
         std::string visibilityToString(CryoVisibilityType visibility) const;
 
         // Table file management
-        FILE *openTable(TableType type, const char *mode);
-        void closeTable(FILE *file);
+        FILE *openTable(TableType type, const char *mode) const;
+        void closeTable(FILE *file) const;
 
         // Entry Conversion
         Symbol *functionEntryToSymbol(const TableEntry &entry) const;
@@ -177,6 +181,19 @@ namespace Cryo
             size_t width;
         };
         std::vector<ColumnFormat> getColumnFormats(TableType type) const;
+        const std::vector<size_t> getColumnWidths(const std::vector<ColumnFormat> &formats) const;
+
+        struct ChunkEntry
+        {
+            TableEntry functionEntry;
+            std::vector<TableEntry> variables;
+        };
+
+        std::string getChunkPath() const;
+        void writeChunkHeader(FILE *file) const;
+        void writeChunkEntry(FILE *file, const ChunkEntry &chunk) const;
+        std::vector<ChunkEntry> groupEntriesByID() const;
+        bool validateChunkEntry(const ChunkEntry &chunk) const;
     };
 }
 

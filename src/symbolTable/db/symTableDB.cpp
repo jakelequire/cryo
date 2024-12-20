@@ -16,6 +16,8 @@
  ********************************************************************************/
 #include "symbolTable/symTableDB.hpp"
 
+#define READ_BUFFER_SIZE 1024 * 1024 // 1MB
+
 namespace Cryo
 {
     SymbolTableDB::SymbolTableDB(std::string rootDir)
@@ -237,6 +239,7 @@ namespace Cryo
             std::to_string(func->paramCount),              // Parameter count
             argTypes.str(),                                // Argument types
             visibilityToString(func->visibility)};         // Visibility
+        entry.type = TableType::FUNCTION_TABLE;
 
         return entry;
     }
@@ -256,6 +259,7 @@ namespace Cryo
             var->scopeId,                           // ID
             std::to_string(0),                      // Scope depth
             visibilityToString(VISIBILITY_PUBLIC)}; // Visibility
+        entry.type = TableType::VARIABLE_TABLE;
 
         return entry;
     }
@@ -286,6 +290,7 @@ namespace Cryo
             std::to_string(0),                       // Property count
             paramTypes.str(),                        // Parameter types
             visibilityToString(VISIBILITY_PUBLIC)};  // Visibility
+        entry.type = TableType::TYPE_TABLE;
 
         return entry;
     }
@@ -354,24 +359,43 @@ namespace Cryo
         return success;
     }
 
-    std::vector<TableEntry> SymbolTableDB::queryTable(TableType type)
+    std::vector<TableEntry> SymbolTableDB::queryTable(TableType type) const
     {
         std::vector<TableEntry> results;
         FILE *file = openTable(type, "r");
         if (!file)
+        {
+            std::cerr << "Failed to open table file" << std::endl;
             return results;
+        }
 
-        std::string line;
+        char buffer[READ_BUFFER_SIZE];
+
+        // Skip the header (3 lines: top border, column names, separator)
+        for (int i = 0; i < 3; i++)
+        {
+            if (fgets(buffer, sizeof(buffer), file) == nullptr)
+            {
+                std::cerr << "Failed to read header line " << i << std::endl;
+                closeTable(file);
+                return results;
+            }
+        }
+
+        // Read entries
         while (!feof(file))
         {
             TableEntry entry = readEntry(file);
             if (!entry.columns.empty())
             {
+                entry.type = type; // Set the table type
                 results.push_back(entry);
             }
         }
 
         closeTable(file);
+
+        std::cout << "Read " << results.size() << " entries from table" << std::endl;
         return results;
     }
 
@@ -610,17 +634,8 @@ namespace Cryo
 
     void SymbolTableDB::serializeEntry(const TableEntry &entry, std::string &output) const
     {
-        const std::vector<size_t> columnWidths = {
-            10, // Type column
-            20, // Name column
-            25, // Return type column
-            20, // ID column
-            6,  // Depth column
-            6,  // Arg count
-            20, // Types
-            10  // Visibility
-        };
-
+        std::vector<Cryo::SymbolTableDB::ColumnFormat> formats = getColumnFormats(entry.type);
+        const std::vector<size_t> columnWidths = getColumnWidths(formats);
         std::stringstream ss;
 
         // Add entry data
@@ -648,6 +663,16 @@ namespace Cryo
         output = ss.str();
     }
 
+    const std::vector<size_t> SymbolTableDB::getColumnWidths(const std::vector<ColumnFormat> &formats) const
+    {
+        std::vector<size_t> widths;
+        for (const auto &col : formats)
+        {
+            widths.push_back(col.width);
+        }
+        return widths;
+    }
+
     TableEntry SymbolTableDB::deserializeEntry(const std::string &input) const
     {
         TableEntry entry;
@@ -662,12 +687,12 @@ namespace Cryo
         return entry;
     }
 
-    FILE *SymbolTableDB::openTable(TableType type, const char *mode)
+    FILE *SymbolTableDB::openTable(TableType type, const char *mode) const
     {
         return fopen(getTablePath(type).c_str(), mode);
     }
 
-    void SymbolTableDB::closeTable(FILE *file)
+    void SymbolTableDB::closeTable(FILE *file) const
     {
         if (file)
             fclose(file);
@@ -680,14 +705,53 @@ namespace Cryo
         return fwrite(serialized.c_str(), 1, serialized.length(), file) == serialized.length();
     }
 
-    TableEntry SymbolTableDB::readEntry(FILE *file)
+    TableEntry SymbolTableDB::readEntry(FILE *file) const
     {
-        char buffer[1024];
-        if (fgets(buffer, sizeof(buffer), file))
+        TableEntry entry;
+        char buffer[READ_BUFFER_SIZE];
+
+        // Read a line
+        if (!fgets(buffer, sizeof(buffer), file))
         {
-            return deserializeEntry(buffer);
+            return entry;
         }
-        return TableEntry();
+
+        std::string line(buffer);
+
+        // Skip separator lines
+        if (line.empty() || line[0] == '+' || line.find_first_not_of("-+| \n\r\t") == std::string::npos)
+        {
+            return entry;
+        }
+
+        // Split the line by '|' character
+        std::vector<std::string> parts;
+        std::string part;
+        std::stringstream ss(line);
+
+        // Skip the first empty part (before first '|')
+        if (!std::getline(ss, part, '|'))
+        {
+            return entry;
+        }
+
+        // Read the actual columns
+        while (std::getline(ss, part, '|'))
+        {
+            // Trim whitespace
+            auto start = part.find_first_not_of(" \t\r\n");
+            auto end = part.find_last_not_of(" \t\r\n");
+
+            if (start != std::string::npos && end != std::string::npos)
+            {
+                entry.columns.push_back(part.substr(start, end - start + 1));
+            }
+        }
+
+        // Skip the separator line after the entry
+        fgets(buffer, sizeof(buffer), file);
+
+        return entry;
     }
 
     bool SymbolTableDB::seekToRow(FILE *file, size_t rowId)
@@ -830,8 +894,9 @@ namespace Cryo
                 {"NAME", 20},
                 {"VAR_TYPE", 25},
                 {"ID", 20},
-                {"DEPTH", 6},
-                {"VISIBLE", 10}};
+                {"DEPTH", 10},
+                {"VISIBLE", 25}};
+
             break;
 
         case TableType::TYPE_TABLE:
@@ -848,6 +913,171 @@ namespace Cryo
         }
 
         return formats;
+    }
+
+    bool SymbolTableDB::createScopedDB() const
+    {
+        // Create chunks.db file
+        std::string chunkPath = getChunkPath();
+        FILE *chunkFile = fopen(chunkPath.c_str(), "w+");
+        if (!chunkFile)
+        {
+            std::cerr << "Failed to create chunks.db" << std::endl;
+            return false;
+        }
+
+        // Write header
+        writeChunkHeader(chunkFile);
+
+        // Group entries by ID
+        std::vector<ChunkEntry> chunks = groupEntriesByID();
+
+        // Write each chunk
+        for (const auto &chunk : chunks)
+        {
+            if (validateChunkEntry(chunk))
+            {
+                writeChunkEntry(chunkFile, chunk);
+            }
+        }
+
+        // Write footer and close
+        writeTableFooter(chunkFile);
+        closeTable(chunkFile);
+        return true;
+    }
+
+    std::string SymbolTableDB::getChunkPath() const
+    {
+        return dirs.DBdir + "/chunks.db";
+    }
+
+    void SymbolTableDB::writeChunkHeader(FILE *file) const
+    {
+        std::stringstream ss;
+
+        // Top border with scope ID
+        ss << _TOP_LEFT << std::string(20, _HORIZONTAL[0]) << "SCOPE ID"
+           << std::string(20, _HORIZONTAL[0]) << _TOP_RIGHT << "\n";
+
+        std::string header = ss.str();
+        fwrite(header.c_str(), 1, header.length(), file);
+    }
+
+    void SymbolTableDB::writeChunkEntry(FILE *file, const ChunkEntry &chunk) const
+    {
+        // Write scope ID header
+        std::string id = chunk.functionEntry.columns[3]; // ID is in column 3
+        std::stringstream ss;
+        ss << _VERTICAL << " SCOPE: " << std::left << std::setw(35) << id << _VERTICAL << "\n";
+
+        // Write function entry
+        std::string functionStr;
+        serializeEntry(chunk.functionEntry, functionStr);
+        ss << functionStr;
+
+        // Write variables
+        for (const auto &var : chunk.variables)
+        {
+            std::string varStr;
+            serializeEntry(var, varStr);
+            ss << varStr;
+        }
+
+        // Write chunk separator
+        ss << std::string(45, _HORIZONTAL[0]) << "\n";
+
+        std::string output = ss.str();
+        fwrite(output.c_str(), 1, output.length(), file);
+    }
+
+    std::vector<SymbolTableDB::ChunkEntry> SymbolTableDB::groupEntriesByID() const
+    {
+        std::vector<ChunkEntry> chunks;
+        try
+        {
+            std::map<std::string, ChunkEntry> idToChunk;
+
+            // Get all functions
+            std::vector<TableEntry> functions = queryTable(TableType::FUNCTION_TABLE);
+            std::cout << "Processing " << functions.size() << " functions" << std::endl;
+
+            // Get all variables
+            std::vector<TableEntry> variables = queryTable(TableType::VARIABLE_TABLE);
+            std::cout << "Processing " << variables.size() << " variables" << std::endl;
+
+            // Group functions by ID with safety checks
+            for (const auto &func : functions)
+            {
+                if (func.columns.size() <= 3)
+                {
+                    std::cerr << "Invalid function entry (column count: " << func.columns.size() << ")" << std::endl;
+                    continue;
+                }
+
+                std::string id;
+                try
+                {
+                    id = std::string(func.columns[3]);
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << "Error copying function ID: " << e.what() << std::endl;
+                    continue;
+                }
+
+                ChunkEntry chunk;
+                chunk.functionEntry = func;
+                chunk.variables.reserve(10);
+                idToChunk.emplace(id, std::move(chunk));
+            }
+
+            // Add variables to chunks
+            for (const auto &var : variables)
+            {
+                if (var.columns.size() <= 3)
+                    continue;
+                std::string id = var.columns[3];
+
+                auto it = idToChunk.find(id);
+                if (it != idToChunk.end())
+                {
+                    it->second.variables.push_back(var);
+                }
+            }
+
+            chunks.reserve(idToChunk.size());
+            for (auto &pair : idToChunk)
+            {
+                chunks.push_back(std::move(pair.second));
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Fatal error in groupEntriesByID: " << e.what() << std::endl;
+        }
+
+        return chunks;
+    }
+
+    bool SymbolTableDB::validateChunkEntry(const ChunkEntry &chunk) const
+    {
+        // Validate function entry
+        if (!validateEntry(TableType::FUNCTION_TABLE, chunk.functionEntry))
+        {
+            return false;
+        }
+
+        // Validate all variable entries
+        for (const auto &var : chunk.variables)
+        {
+            if (!validateEntry(TableType::VARIABLE_TABLE, var))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 } // namespace Cryo
