@@ -14,4 +14,26 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cli/cli.h"
+#ifndef COMMANDS_H
+#define COMMANDS_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+#include "../utils.h"
+#include "../consoleColors.h"
+
+// =============================================================================
+// Help Command (./commands/help.c)
+
+void exe_CLI_help(void);
+
+// =============================================================================
+//
+
+#endif // COMMANDS_H
