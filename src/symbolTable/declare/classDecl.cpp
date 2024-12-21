@@ -22,8 +22,8 @@ namespace Cryo
 
     void GlobalSymbolTable::initClassDeclaration(const char *className)
     {
-        std::string classNameStr(className);
-        Symbol *classSymbol = createClassDeclarationSymbol(classNameStr);
+        std::cout << "Creating Class Definition for: " << className << std::endl;
+        Symbol *classSymbol = createClassDeclarationSymbol(className);
         if (classSymbol)
         {
             addSymbolToCurrentTable(classSymbol);
@@ -46,6 +46,11 @@ namespace Cryo
         }
 
         PropertySymbol *propertySymbol = createPropertySymbol(property);
+        if (!propertySymbol)
+        {
+            std::cout << "Failed to create property symbol" << std::endl;
+            return;
+        }
         updateClassSymbolProperties(classSymbol, propertySymbol, classSymbol->type->propertyCount + 1);
 
         // Increment the property count
@@ -73,17 +78,24 @@ namespace Cryo
 
     // Class Symbol Management
 
-    Symbol *GlobalSymbolTable::createClassDeclarationSymbol(std::string className)
+    Symbol *GlobalSymbolTable::createClassDeclarationSymbol(const char *className)
     {
-        TypeSymbol *typeSymbol = createIncompleteTypeSymbol(className.c_str(), CLASS_TYPE);
+        TypeSymbol *typeSymbol = createIncompleteTypeSymbol(className, CLASS_TYPE);
         Symbol *classSymbol = new Symbol();
         classSymbol->symbolType = TYPE_SYMBOL;
         classSymbol->type = typeSymbol;
+        classSymbol->type->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
+        classSymbol->type->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
+        classSymbol->type->propertyCapacity = MAX_PROPERTY_COUNT;
+        classSymbol->type->methodCapacity = MAX_METHOD_COUNT;
+        classSymbol->type->propertyCount = 0;
+        classSymbol->type->methodCount = 0;
+        classSymbol->type->scopeId = IDGen::generate64BitHashID(className);
 
         return classSymbol;
     }
 
-    Symbol *GlobalSymbolTable::updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount)
+    void GlobalSymbolTable::updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount)
     {
         Symbol *methodSymbol = createSymbol(METHOD_SYMBOL, method);
         size_t methodCap = classSymbol->type->methodCapacity;
@@ -95,13 +107,22 @@ namespace Cryo
             classSymbol->type->methodCapacity = methodCap * 2;
         }
 
-        classSymbol->type->methods[methodCount] = methodSymbol;
+        SymbolTable *table = getCurrentSymbolTable();
+        for (int i = 0; i < table->count; i++)
+        {
+            if (table->symbols[i] == classSymbol)
+            {
+                std::cout << "Method Added to Class Symbol" << std::endl;
+                table->symbols[i]->type->methods[methodCount] = methodSymbol;
+                return;
+            }
+        }
 
-        std::cout << "Method Added to Class Symbol" << std::endl;
-        return classSymbol;
+        std::cout << "Method Failed to Add to Class Symbol" << std::endl;
+        return;
     }
 
-    Symbol *GlobalSymbolTable::updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount)
+    void GlobalSymbolTable::updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount)
     {
         Symbol *propertySymbol = createSymbol(PROPERTY_SYMBOL, property);
         size_t propCapacity = classSymbol->type->propertyCapacity;
@@ -113,10 +134,19 @@ namespace Cryo
             classSymbol->type->propertyCapacity = propCapacity * 2;
         }
 
-        classSymbol->type->properties[propertyCount] = propertySymbol;
+        SymbolTable *table = getCurrentSymbolTable();
+        for (int i = 0; i < table->count; i++)
+        {
+            if (table->symbols[i] == classSymbol)
+            {
+                std::cout << "Property Added to Class Symbol" << std::endl;
+                table->symbols[i]->type->properties[propertyCount] = propertySymbol;
+                return;
+            }
+        }
 
-        std::cout << "Property Added to Class Symbol" << std::endl;
-        return classSymbol;
+        std::cout << "Property Failed to Add to Class Symbol" << std::endl;
+        return;
     }
 
     Symbol *GlobalSymbolTable::getClassSymbol(const char *className)

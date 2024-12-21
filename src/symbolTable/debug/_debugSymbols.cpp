@@ -153,16 +153,16 @@ namespace Cryo
 
         // log the properties
         int propCount = symbol->propertyCount;
-        for (int i = 0; i < propCount; i++)
-        {
-            PropertySymbol *propSymbol = symbol->properties[i]->property;
-            if (!propSymbol)
-            {
-                logger->debugNode("NULL PROPERTY");
-            }
-
-            logPropertySymbolChild(propSymbol);
-        }
+        // for (int i = 0; i < propCount; i++)
+        // {
+        //     PropertySymbol *propSymbol = symbol->properties[i]->property;
+        //     if (!propSymbol)
+        //     {
+        //         logger->debugNode("NULL PROPERTY");
+        //     }
+        //
+        //     logPropertySymbolChild(propSymbol);
+        // }
 
         logger->debugNode(SEPARATOR);
     }

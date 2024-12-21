@@ -19,6 +19,7 @@ struct Int {
 
 class FooBaz {
     public anotherFooProp: string;
+    public anotherFooPropTwo: int;
 
     constructor() {}
 

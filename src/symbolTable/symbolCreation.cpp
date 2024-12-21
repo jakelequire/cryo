@@ -102,8 +102,8 @@ namespace Cryo
         symbol->methodCapacity = MAX_METHOD_COUNT;
         symbol->propertyCount = 0;
         symbol->methodCount = 0;
-        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * symbol->propertyCapacity);
-        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * symbol->methodCapacity);
+        symbol->properties = nullptr;
+        symbol->methods = nullptr;
 
         return symbol;
     }
@@ -146,7 +146,7 @@ namespace Cryo
         symbol->isStatic = method->isStatic;
         symbol->scopeId = IDGen::generate64BitHashID(method->parentName);
         symbol->paramCount = method->paramCount;
-        symbol->paramTypes = getParamTypeArray(method->params);
+        symbol->paramTypes = nullptr;
 
         return symbol;
     }

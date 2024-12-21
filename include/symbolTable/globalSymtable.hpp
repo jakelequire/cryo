@@ -215,6 +215,8 @@ namespace Cryo
         };
         ~GlobalSymbolTable();
 
+        friend class SymbolTableDebugger;
+
         // ======================================================= //
         // Public Variables & state for the symbol table           //
         // ======================================================= //
@@ -225,9 +227,10 @@ namespace Cryo
         ScopeType currentScopeType = UNKNOWN_SCOPE;    // The current scope type
         SymbolTable *symbolTable = nullptr;            // The main entry point namespace
         SymbolTable *currentDependencyTable = nullptr; // Runtime & other dependencies
-        SymbolTable **dependencyTables;                // For C interfacing (Array of dependency tables)
-        SymbolTable *stdImportTable = nullptr;         // The `using` keyword table for standard library imports
-        TypesTable *typeTable = nullptr;               // Global types table
+
+        SymbolTable **dependencyTables;        // For C interfacing (Array of dependency tables)
+        SymbolTable *stdImportTable = nullptr; // The `using` keyword table for standard library imports
+        TypesTable *typeTable = nullptr;       // Global types table
 
         size_t dependencyCount = 0;                   // For C interfacing
         size_t dependencyCapacity = MAX_DEPENDENCIES; // For C interfacing
@@ -258,7 +261,12 @@ namespace Cryo
             tableState = TABLE_IN_PROGRESS;
         }
 
-        void setCurrentDependencyTable(SymbolTable *table) { currentDependencyTable = table; }
+        void resetCurrentDepsTable(void) { currentDependencyTable = nullptr; }
+        void setCurrentDependencyTable(SymbolTable *table)
+        {
+            resetCurrentDepsTable();
+            currentDependencyTable = table;
+        }
         void setPrimaryTable(SymbolTable *table) { symbolTable = table; }
         void mergeDBChunks(void) { db->createScopedDB(); }
         void tableFinished(void);
@@ -359,9 +367,9 @@ namespace Cryo
         void addMethodToClass(const char *className, ASTNode *method);
 
     private:
-        Symbol *createClassDeclarationSymbol(std::string className);
-        Symbol *updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount);
-        Symbol *updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount);
+        Symbol *createClassDeclarationSymbol(const char *className);
+        void updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount);
+        void updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount);
         Symbol *getClassSymbol(const char *className);
 
         void addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table);

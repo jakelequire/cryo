@@ -56,12 +56,17 @@ namespace Cryo
     class IDGen
     {
     public:
-        static std::string generate32BitID(void);
-        static int generate32BitIntID(void);
-
         /// @brief Generate a 64-bit hash ID from a seed string.
         /// This is a *deterministic* hash ID generator.
         static const char *generate64BitHashID(const char *seed);
+
+        /// @brief Generate a 32-bit hash ID from a seed string.
+        /// This is a *deterministic* hash ID generator.
+        const char *generate32BitHashID(const char *seed);
+
+        /// @brief Generate a 16-bit hash ID from a seed string.
+        /// This is a *deterministic* hash ID generator.
+        const char *generate16BitHashID(const char *seed);
 
     private:
         std::string id;

@@ -37,11 +37,23 @@ namespace Cryo
         SymbolTable *table = createSymbolTable(namespaceName);
         if (table)
         {
-            setCurrentDependencyTable(table);
-            dependencyTableVector.push_back(table);
-            dependencyCount++;
-            initNamepsaceScope(namespaceName);
-            return;
+            if (dependencyCount == 0)
+            {
+                setIsDependencyTable(table);
+                setCurrentDependencyTable(table);
+                dependencyTableVector.push_back(table);
+                dependencyCount++;
+                initNamepsaceScope(namespaceName);
+                return;
+            }
+            else
+            {
+                dependencyTableVector.push_back(table);
+                dependencyCount++;
+                setCurrentDependencyTable(table);
+                initNamepsaceScope(namespaceName);
+                return;
+            }
         }
 
         return;
@@ -183,6 +195,10 @@ namespace Cryo
         {
             return nullptr;
         }
+
+        // DEBUG
+        std::cout << "DEBUG: Querying Table" << std::endl;
+        SymbolTableDebugger::logSymbolTable(table);
 
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
