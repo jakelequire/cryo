@@ -333,6 +333,7 @@ typedef struct MethodNode
     ASTNode **params;
     int paramCount;
     int paramCapacity;
+    DataType **paramTypes;
     ASTNode *body;
     CryoVisibilityType visibility;
     bool isStatic;

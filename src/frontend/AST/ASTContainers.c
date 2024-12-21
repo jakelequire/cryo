@@ -1170,6 +1170,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
+    node->paramTypes = NULL;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());

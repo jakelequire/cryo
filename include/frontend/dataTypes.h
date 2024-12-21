@@ -54,6 +54,7 @@ typedef struct Arena Arena;
 typedef struct DataType DataType;
 typedef struct TypeContainer TypeContainer;
 typedef struct ClassNode ClassNode;
+typedef struct CryoVariableNode CryoVariableNode;
 
 typedef struct PublicMembers PublicMembers;
 typedef struct PrivateMembers PrivateMembers;
@@ -301,7 +302,9 @@ extern "C"
     DataType *DataTypeFromNode(ASTNode *node);
     const char *getDataTypeName(DataType *type);
 
-    DataType **getTypeArrayFromASTNode(ASTNode **node);
+    DataType **getDataTypeArrayFromASTNode(ASTNode *node);
+    DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount);
+    DataType **getTypeArrayFromASTNode(ASTNode **node, int size);
     DataType **getParamTypeArray(ASTNode **node);
 
     DataType *getDataTypeFromASTNode(ASTNode *node);

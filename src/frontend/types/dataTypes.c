@@ -409,8 +409,7 @@ const char *getDataTypeName(DataType *type)
     }
 }
 
-// Very unsafe function. Will only allocate memory for the first 64 types.
-DataType **getTypeArrayFromASTNode(ASTNode **node)
+DataType **getTypeArrayFromASTNode(ASTNode **node, int size)
 {
     if (!node)
     {
@@ -418,28 +417,101 @@ DataType **getTypeArrayFromASTNode(ASTNode **node)
         CONDITION_FAILED;
     }
 
-    DataType **types = (DataType **)malloc(sizeof(DataType *) * 64);
+    DataType **types = (DataType **)malloc(sizeof(DataType *) * size);
     if (!types)
     {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type array.\n");
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type array. size: %d\n", size);
         CONDITION_FAILED;
     }
 
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < size; i++)
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from AST node");
         if (!node[i])
         {
             char *nodeType = CryoNodeTypeToString(node[i]->metaData->type);
-            logMessage("INFO", __LINE__, "DataTypes", "Node type: %s", nodeType);
-            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop");
+            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop! Node type: %s", nodeType);
             break;
         }
         types[i] = DataTypeFromNode(node[i]);
-        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node");
+        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node: %s", DataTypeToString(types[i]));
     }
 
     return types;
+}
+
+DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount)
+{
+    if (!params)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
+        CONDITION_FAILED;
+    }
+
+    DataType **types = (DataType **)malloc(sizeof(DataType *) * paramCount);
+    if (!types)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type array. size: %d\n", paramCount);
+        CONDITION_FAILED;
+    }
+
+    for (int i = 0; i < paramCount; i++)
+    {
+        if (!params[i])
+        {
+            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop!");
+            break;
+        }
+        types[i] = params[i]->type;
+        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node: %s", DataTypeToString(types[i]));
+    }
+
+    return types;
+}
+
+/// @brief This function should be used to get a DataType array from an ASTNode that is a **valid array of data types**.
+/// This includes function parameters/arguments, array declarations, and other similar constructs.
+/// This will return a `nullptr` if the node is not an array of data types and will not stop the program.
+/// @param node
+/// @return
+DataType **getDataTypeArrayFromASTNode(ASTNode *node)
+{
+    if (!node)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
+        return NULL;
+    }
+
+    switch (node->metaData->type)
+    {
+    case NODE_PARAM_LIST:
+    {
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from param list");
+        return getTypeFromParamList(node->data.paramList->params, node->data.paramList->paramCount);
+    }
+    case NODE_METHOD:
+    {
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from method");
+        return getTypeArrayFromASTNode(node->data.method->params, node->data.method->paramCount);
+    }
+    case NODE_FUNCTION_CALL:
+    {
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from function call");
+        return getTypeArrayFromASTNode(node->data.functionCall->args, node->data.functionCall->argCount);
+    }
+    case NODE_ARRAY_LITERAL:
+    {
+        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from array declaration");
+        return getTypeArrayFromASTNode(node->data.array->elements, node->data.array->elementCount);
+    }
+    default:
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to get data type array from AST node, received node type: %s\n",
+                CryoNodeTypeToString(node->metaData->type));
+        return NULL;
+    }
+    }
+
+    return NULL;
 }
 
 DataType *getDataTypeFromASTNode(ASTNode *node)

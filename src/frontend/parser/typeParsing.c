@@ -336,6 +336,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *ta
     // Create the method type
     DataType *methodType = createMethodType(strdup(methodName), returnType, paramTypes, paramCount, arena, state, typeTable);
     methodNode->data.method->type = methodType;
+    methodNode->data.method->paramTypes = paramTypes;
 
     // Add the method to the symbol table
     addASTNodeSymbol(table, methodNode, arena);
