@@ -14,63 +14,27 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "cli.h"
+#include "commands.h"
 
-DirectoryInfo *get_directory_info(char *argv[])
+int handleCommandArguments(int argc, char *argv[])
 {
-    DirectoryInfo *info = (DirectoryInfo *)malloc(sizeof(DirectoryInfo));
-    char *absolute = getAbsolutePath(argv[0]);
-    char *cryoRoot = trimLastDir(trimLastDir(absolute));
-    // Bin Dir = cryoRoot + /bin
-    char *binDir = concatStrings(cryoRoot, "/bin");
-
-    info->cryo_abs_dir = strdup(cryoRoot);
-    info->bin_dir = strdup(binDir);
-
-    return info;
-}
-
-bool doesCompilerExeExist(DirectoryInfo *info)
-{
-    char *compiler = concatStrings((char *)info->bin_dir, "/compiler");
-
-    FILE *file = fopen(compiler, "r");
-    if (file)
-    {
-        fclose(file);
-        return true;
-    }
-
-    return false;
-}
-
-void printDirectoryInfo(DirectoryInfo *info)
-{
-    printf("Cryo Directory: %s\n", info->cryo_abs_dir);
-    printf("Bin Directory: %s\n", info->bin_dir);
-}
-
-int main(int argc, char *argv[])
-{
-    DirectoryInfo *info = get_directory_info(argv);
-
-    // Check for no arguments
     if (argc == 1)
     {
         exe_CLI_help();
         return 0;
     }
 
-    if (doesCompilerExeExist(info))
+    if (strcmp(argv[1], "help") == 0)
     {
-        printf("Compiler exists!\n");
-    }
-    else
-    {
-        printf("Compiler does not exist!\n");
+        exe_CLI_help();
+        return 0;
     }
 
-    int result = handleCommandArguments(argc, argv);
+    if (strcmp(argv[1], "env") == 0)
+    {
+        exe_env_cmd();
+        return 0;
+    }
 
-    return result;
+    return 0;
 }

@@ -24,9 +24,12 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <termios.h>
 
 #include "../utils.h"
 #include "../consoleColors.h"
+
+int handleCommandArguments(int argc, char *argv[]);
 
 // =============================================================================
 // Help Command (./commands/help.c)
