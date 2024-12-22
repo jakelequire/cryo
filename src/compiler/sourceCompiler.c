@@ -18,24 +18,17 @@
 #include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
 
-int cryoCompiler(const char *filePath, CompilerSettings *settings)
+int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
 {
-    START_COMPILATION_MESSAGE;
-
-    bool isSource = settings->isSource;
-    if (isSource)
+    const char *fileName = "sourceText";
+    if (!sourceBuffer)
     {
-        char *sourceText = settings->sourceText;
-        return sourceTextCompiler(sourceText, settings);
-    }
-
-    const char *source = readFile(filePath);
-    if (!source)
-    {
-        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        fprintf(stderr, "Error: No source text specified\n");
+        fprintf(stderr, "Received: %s\n", sourceBuffer);
         return 1;
     }
-    const char *fileName = trimFilePath(filePath);
+
+    const char *source = handleTextBuffer(sourceBuffer);
 
     const char *rootDirectory = settings->rootDir;
     if (!rootDirectory)
@@ -130,95 +123,20 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     return 0;
 }
 
-int compileImportFile(const char *filePath, CompilerSettings *settings)
+const char *handleTextBuffer(char *source)
 {
-    // This needs to create a whole separate compiler state & arena for each program node
-    // This is because the program node is the root of the AST and needs to be compiled separately
-    char *source = readFile(filePath);
     if (!source)
     {
-        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
-        return 1;
-    }
-
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
-    TypeTable *typeTable = initTypeTable();
-
-    // Initialize the lexer
-    Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
-    state->settings = settings;
-    initLexer(&lexer, source, filePath, state);
-
-    // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, NULL);
-
-    if (programNode == NULL)
-    {
-        fprintf(stderr, "Error: Failed to parse program node\n");
-        return 1;
-    }
-
-    // Generate code
-    int result = generateCodeWrapper(programNode, state, NULL);
-    if (result != 0)
-    {
-        CONDITION_FAILED;
-        return 1;
-    }
-
-    return 0;
-}
-
-ASTNode *compileForProgramNode(const char *filePath)
-{
-    // This needs to create a whole separate compiler state & arena for each program node
-    // This is because the program node is the root of the AST and needs to be compiled separately
-    char *source = readFile(filePath);
-    if (!source)
-    {
-        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        fprintf(stderr, "Error: No source text specified\n");
         return NULL;
     }
 
-    CompilerSettings settings = createCompilerSettings();
-    settings.inputFile = trimFilePath(filePath);
-    settings.inputFilePath = filePath;
-
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
-    TypeTable *typeTable = initTypeTable();
-
-    // Initialize the lexer
-    Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
-    state->settings = &settings;
-    initLexer(&lexer, source, filePath, state);
-
-    // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, NULL);
-
-    if (programNode == NULL)
+    // Check if the source text is empty
+    if (strlen(source) == 0)
     {
-        fprintf(stderr, "Error: Failed to parse program node\n");
+        fprintf(stderr, "Error: Source text is empty\n");
         return NULL;
     }
 
-    printSymbolTable(table);
-
-    return programNode;
-}
-
-int compileImportFileCXX(const char *filePath, CompilerSettings *settings)
-{
-    return compileImportFile(filePath, settings);
+    return (const char *)source;
 }

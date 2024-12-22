@@ -13,7 +13,11 @@
 #    See the License for the specific language governing permissions and       *
 #    limitations under the License.                                            *
 #                                                                              *
-#*******************************************************************************/
+#*******************************************************************************
+
+#*******************************************************************************
+# Cryo CLI Makefile                                                            *
+#*******************************************************************************
 
 # --------------------------------------------- #
 # `-O0`    - No optimization					#
@@ -38,8 +42,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang-18
-	CXX_COMPILER = clang++-18
+	C_COMPILER = clang
+	CXX_COMPILER = clang++
 endif
 
 # >>=======--------------------------------------------------=======<< #
@@ -97,7 +101,7 @@ DEBUG_BIN_DIR = $(BIN_DIR)debug/
 SRC_DIR =   ./src/
 MAIN_FILE = $(SRC_DIR)cli.c
 CWD = $(shell pwd)
-# Move Up One Directory
+# Move Up One Directory from CWD
 ROOT_DIR = $(shell dirname $(CWD))
 
 # >>=======--------------------------------------------------=======<< #

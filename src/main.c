@@ -39,8 +39,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error: Failed to initialize environment variables\n");
         return 1;
     }
-    // Free the parent directory string
-    free(parent);
+    free(parent); // Free the parent directory string
 
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);

@@ -17,6 +17,8 @@
 #include "settings/compilerSettings.h"
 int DEBUG_LEVEL = 0;
 
+#define MAX_SOURCE_BUFFER 1024 * 1024 // 1MB
+
 void printUsage(const char *programName)
 {
     printf("\n");
@@ -67,7 +69,6 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->customOutputPath = NULL;
     settings->debugLevel = DEBUG_NONE;
     settings->buildType = BUILD_DEV;
-    settings->enabledLogs = createEnabledLogs();
 
     printf("Parsing Command Line Arguments\n");
     printf("Argc: %i\n", argc);
@@ -88,7 +89,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             break;
         case 's':
             settings->isSource = true;
-            settings->inputFile = optarg;
+            settings->sourceText = optarg;
             break;
         case 'o':
         {
@@ -124,14 +125,11 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         case 'd':
             settings->debugLevel = getDebugLevel(atoi(optarg));
             break;
-        case 'L':
-            parseEnabledLogsArgs(optarg, &settings->enabledLogs);
-            break;
 
         // Long-only options
         case OPT_AST_DUMP:
             settings->astDump = true;
-            if(!inputFilePath)
+            if (!inputFilePath)
             {
                 fprintf(stderr, "Error: No input file specified\n");
                 printUsage(argv[0]);
@@ -202,16 +200,6 @@ void logCompilerSettings(CompilerSettings *settings)
     printf("  Verbose: %s\n", settings->verbose ? "true" : "false");
     printf("  Custom Output Path: %s\n", settings->customOutputPath);
     printf("  Source Text: %s\n", settings->isSource ? "true" : "false");
-    printf("  Enabled Logs:\n");
-    printf("    Lexer: %s\n", settings->enabledLogs.logLexer ? "true" : "false");
-    printf("    Parser: %s\n", settings->enabledLogs.logParser ? "true" : "false");
-    printf("    AST: %s\n", settings->enabledLogs.logAST ? "true" : "false");
-    printf("    Symtable: %s\n", settings->enabledLogs.logSymtable ? "true" : "false");
-    printf("    Compiler: %s\n", settings->enabledLogs.logCompiler ? "true" : "false");
-    printf("    Utility: %s\n", settings->enabledLogs.logUtility ? "true" : "false");
-    printf("    Arena: %s\n", settings->enabledLogs.logArena ? "true" : "false");
-    printf("    Common: %s\n", settings->enabledLogs.logCommon ? "true" : "false");
-    printf("    Settings: %s\n", settings->enabledLogs.logSettings ? "true" : "false");
     printf("# =========================================== #\n");
     printf("\n");
 }
@@ -265,21 +253,6 @@ const char *BuildTypeToString(BuildType type)
     }
 }
 
-EnabledLogs createEnabledLogs()
-{
-    EnabledLogs logs;
-    logs.logLexer = false;
-    logs.logParser = false;
-    logs.logAST = false;
-    logs.logSymtable = false;
-    logs.logCompiler = false;
-    logs.logUtility = false;
-    logs.logArena = false;
-    logs.logCommon = false;
-    logs.logSettings = false;
-    return logs;
-}
-
 CompiledFile createCompiledFile(void)
 {
     CompiledFile file;
@@ -297,10 +270,10 @@ CompilerSettings createCompilerSettings(void)
     settings.activeBuild = false;
     settings.verbose = false;
     settings.isSource = false;
+    settings.sourceText = (char *)malloc(sizeof(char) * MAX_SOURCE_BUFFER);
     settings.customOutputPath = NULL;
     settings.debugLevel = DEBUG_NONE;
     settings.buildType = BUILD_DEV;
-    settings.enabledLogs = createEnabledLogs();
     settings.compiledFiles = (CompiledFile **)malloc(sizeof(CompiledFile *) * 64);
     settings.version = COMPILER_VERSION;
     settings.totalFiles = 0;
@@ -321,69 +294,12 @@ void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file)
     }
 }
 
-EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs)
-{
-    char *logStr = strdup(logArgs);
-    char *token = strtok(logStr, ",");
-    while (token != NULL)
-    {
-        if (strcmp(token, "LEXER") == 0)
-        {
-            printf("Lexer Enabled\n");
-            logs->logLexer = true;
-        }
-        else if (strcmp(token, "PARSER") == 0)
-        {
-            printf("Parser Enabled\n");
-            logs->logParser = true;
-        }
-        else if (strcmp(token, "AST") == 0)
-        {
-            printf("AST Enabled\n");
-            logs->logAST = true;
-        }
-        else if (strcmp(token, "SYMTABLE") == 0)
-        {
-            printf("Symtable Enabled\n");
-            logs->logSymtable = true;
-        }
-        else if (strcmp(token, "COMPILER") == 0)
-        {
-            printf("Compiler Enabled\n");
-            logs->logCompiler = true;
-        }
-        else if (strcmp(token, "UTILITY") == 0)
-        {
-            printf("Utility Enabled\n");
-            logs->logUtility = true;
-        }
-        else if (strcmp(token, "ARENA") == 0)
-        {
-            printf("Arena Enabled\n");
-            logs->logArena = true;
-        }
-        else if (strcmp(token, "COMMON") == 0)
-        {
-            printf("Common Enabled\n");
-            logs->logCommon = true;
-        }
-        else if (strcmp(token, "SETTINGS") == 0)
-        {
-            printf("Settings Enabled\n");
-            logs->logSettings = true;
-        }
-        else
-        {
-            fprintf(stderr, "Unknown log type: %s\n", token);
-        }
-        token = strtok(NULL, ",");
-    }
-    free(logStr);
-
-    return *logs;
-}
-
 bool isASTDumpEnabled(CompilerSettings *settings)
 {
     return settings->astDump;
+}
+
+bool isSourceText(CompilerSettings *settings)
+{
+    return settings->isSource;
 }

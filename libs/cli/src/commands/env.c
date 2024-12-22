@@ -14,28 +14,15 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef COMMANDS_H
-#define COMMANDS_H
+#include "commands.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <unistd.h>
-#include <stdbool.h>
+typedef struct CryoEnviornment
+{
+    char *codeBuffer;
+    char *completedBuffer;
+} CryoEnviornment;
 
-#include "../utils.h"
-#include "../consoleColors.h"
-
-// =============================================================================
-// Help Command (./commands/help.c)
-
-void exe_CLI_help(void);
-
-// =============================================================================
-// Env Command (./commands/env.c)
-
-int exe_env_cmd(void);
-
-#endif // COMMANDS_H
+// Entry point to the `cryo env` command
+int exe_env_cmd(void)
+{
+}

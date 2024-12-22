@@ -49,19 +49,6 @@ typedef enum BuildType
     BUILD_RELEASE = 2
 } BuildType;
 
-typedef struct EnabledLogs
-{
-    bool logLexer;
-    bool logParser;
-    bool logAST;
-    bool logSymtable;
-    bool logCompiler;
-    bool logUtility;
-    bool logArena;
-    bool logCommon;
-    bool logSettings;
-} EnabledLogs;
-
 typedef enum
 {
     OPT_AST_DUMP = 1000, // Start after ASCII range to avoid conflicts
@@ -74,10 +61,10 @@ typedef struct CompilerSettings
     const char *customOutputPath;
     const char *inputFile;
     const char *inputFilePath;
+    char *sourceText;
     bool activeBuild;
     bool isSource;
     bool verbose;
-    EnabledLogs enabledLogs;
     DebugLevel debugLevel;
     /**
      * typedef enum BuildType
@@ -111,13 +98,12 @@ const char *DebugLevelToString(DebugLevel level);
 DebugLevel getDebugLevel(int level);
 const char *BuildTypeToString(BuildType type);
 void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file);
-EnabledLogs createEnabledLogs(void);
 CompiledFile createCompiledFile(void);
-EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs);
 CompilerSettings createCompilerSettings();
 
 void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings);
 
 bool isASTDumpEnabled(CompilerSettings *settings);
+bool isSourceText(CompilerSettings *settings);
 
 #endif // COMPILER_SETTINGS_H

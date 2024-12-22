@@ -53,6 +53,9 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings);
 ASTNode *compileForProgramNode(const char *filePath);
 int compileImportFile(const char *filePath, CompilerSettings *settings);
 
+int sourceTextCompiler(char *filePath, CompilerSettings *settings);
+const char *handleTextBuffer(char *source);
+
 // C++ Accessable Functions
 #ifdef __cplusplus
 extern "C"
