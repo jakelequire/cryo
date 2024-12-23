@@ -24,9 +24,12 @@ void exe_CLI_help(void)
     printf("  " BOLD "help" COLOR_RESET "       - Display this help message\n");
     printf("  " BOLD "build" COLOR_RESET "      - Build the project\n");
     printf("  " BOLD "version" COLOR_RESET "    - Display the version of the CLI\n");
+    printf("  " BOLD "env" COLOR_RESET "        - Enter the Cryo environment\n");
     printf("\n" BOLD "Options:" COLOR_RESET "\n");
+
     printf("  " BOLD "build" COLOR_RESET "\n");
     printf("    --release    Build in release mode\n");
     printf("    --debug      Build in debug mode\n");
+
     printf("\n");
 }
