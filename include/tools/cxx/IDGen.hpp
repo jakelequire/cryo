@@ -60,6 +60,9 @@ namespace Cryo
         /// This is a *deterministic* hash ID generator.
         static const char *generate64BitHashID(const char *seed);
 
+        /// @brief Reverse a 64-bit hash ID back to the original seed string.
+        static const char *reverse64BitHashID(const char *hash);
+
         /// @brief Generate a 32-bit hash ID from a seed string.
         /// This is a *deterministic* hash ID generator.
         const char *generate32BitHashID(const char *seed);

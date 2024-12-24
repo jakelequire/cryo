@@ -60,6 +60,15 @@ namespace Cryo
         return hashStr;
     }
 
+    const char *IDGen::reverse64BitHashID(const char *hash)
+    {
+        uint64_t reversed = 0;
+        std::sscanf(hash, "%016lX", &reversed);
+        char *reversedStr = (char *)std::malloc(17); // 16 digits + null terminator
+        std::sprintf(reversedStr, "%016lX", reversed);
+        return reversedStr;
+    }
+
     const char *IDGen::generate32BitHashID(const char *seed)
     {
         uint32_t hash = 0;

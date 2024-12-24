@@ -166,6 +166,7 @@ namespace Cryo
                 }
                 else
                 {
+                    printGlobalTable(this);
                     DEBUG_BREAKPOINT;
                 }
             }
@@ -260,6 +261,9 @@ namespace Cryo
                 continue;
             }
         }
+
+        std::cout << "<!> Function Symbol not found <!>" << std::endl;
+        return nullptr;
     }
 
     Symbol *GlobalSymbolTable::resolveExternSymbol(const char *symbolName)
