@@ -22,6 +22,8 @@ extern "C"
 {
 #endif
 
+#include "symbolTable/symdefs.h"
+
     typedef struct ASTNode ASTNode;
     typedef struct SymbolTable SymbolTable;
     typedef struct VariableSymbol VariableSymbol;
@@ -79,6 +81,9 @@ extern "C"
     void CryoGlobalSymbolTable_AddPropertyToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *property);
     void CryoGlobalSymbolTable_AddMethodToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method);
 
+    // Symbol Resolution Functions ---------------------------------------
+    Symbol *CryoGlobalSymbolTable_GetFrontendSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID, TypeOfSymbol symbolType);
+
 // Class State Functions
 #define isPrimaryTable(symTable) \
     CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
@@ -129,6 +134,10 @@ extern "C"
     CryoGlobalSymbolTable_AddPropertyToClass(symTable, className, property)
 #define AddMethodToClass(symTable, className, method) \
     CryoGlobalSymbolTable_AddMethodToClass(symTable, className, method)
+
+// Symbol Resolution Functions
+#define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
+    CryoGlobalSymbolTable_GetFrontendSymbol(symTable, name, scopeID, symbolType)
 
 #ifdef __cplusplus
 } // C API ----------------------------------------------------------
@@ -236,6 +245,8 @@ namespace Cryo
         size_t dependencyCapacity = MAX_DEPENDENCIES; // For C interfacing
 
         std::vector<SymbolTable *> dependencyTableVector; // For C++ interfacing
+        std::vector<FunctionSymbol *> globalFunctions;    // For C++ interfacing
+        std::vector<ExternSymbol *> externFunctions;      // For C++ interfacing
 
         ScopeBlock *currentScope = nullptr; // The current scope block
         const char *scopeId = "null";       // The current scope ID
@@ -271,6 +282,9 @@ namespace Cryo
         void mergeDBChunks(void) { db->createScopedDB(); }
         void tableFinished(void);
 
+        void addGlobalFunctionToTable(FunctionSymbol *function) { globalFunctions.push_back(function); }
+        void addExternFunctionToTable(ExternSymbol *function) { externFunctions.push_back(function); }
+
         // ======================================================= //
         // Symbol Table Management Functions                       //
         // ======================================================= //
@@ -283,6 +297,7 @@ namespace Cryo
 
         SymbolTable *getCurrentSymbolTable(void);
         Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
+        Symbol *getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType);
 
         // ======================================================= //
         // Scope Management Functions                              //
@@ -303,6 +318,8 @@ namespace Cryo
 
         VariableSymbol *getFrontendVariableSymbol(const char *name, const char *scopeID);
         MethodSymbol *getFrontendMethodSymbol(const char *methodName, const char *className, const char *scopeID);
+        Symbol *resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType);
+        Symbol *resolveExternSymbol(const char *symbolName);
 
         // ======================================================= //
         // Debug Functions other than the `SymbolTableDebugger`    //
@@ -356,6 +373,9 @@ namespace Cryo
         Symbol *createSymbol(TypeOfSymbol symbolType, void *symbol);
         SymbolTable *createSymbolTable(const char *namespaceName);
         TypesTable *createTypeTable(const char *namespaceName);
+        void processParamList(ASTNode **node, int paramCount, const char *scopeID);
+
+        bool isParamSymbol(ASTNode *node);
 
     public:
         // ======================================================= //
@@ -375,6 +395,10 @@ namespace Cryo
         void addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table);
         void updateClassSymbol(Symbol *classSymbol, SymbolTable *table);
     };
+
+    // ========================================================================================== //
+    // ========================================================================================== //
+    // ========================================================================================== //
 
     // -------------------------------------------------------
     // C API Implementation
@@ -534,6 +558,17 @@ namespace Cryo
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->addMethodToClass(className, method);
         }
+    }
+
+    // Symbol Resolution Functions ---------------------------------------
+
+    inline Symbol *CryoGlobalSymbolTable_GetFrontendSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID, TypeOfSymbol symbolType)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getFrontendSymbol(name, scopeID, symbolType);
+        }
+        return nullptr;
     }
 
 } // namespace Cryo

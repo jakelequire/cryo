@@ -258,7 +258,7 @@ void addDefinitionToSymbolTable(CryoSymbolTable *table, ASTNode *node, Arena *ar
 }
 // </addDefinitionToSymbol>
 
-// <getNameOfNode>
+// <getNameOfNode> *KEEP*
 char *getNameOfNode(ASTNode *node)
 {
     if (!node)

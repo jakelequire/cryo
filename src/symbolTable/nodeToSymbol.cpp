@@ -73,6 +73,7 @@ namespace Cryo
         {
             std::cout << "ASTNodeToSymbol: Processing Function Declaration Node" << std::endl;
             const char *functionName = node->data.functionDecl->name;
+            const char *scopeID = Generate64BitHashID(functionName);
             std::cout << "Function Name: " << functionName << std::endl;
             DataType *returnType = node->data.functionDecl->functionType;
             DataType **paramTypes = node->data.functionDecl->paramTypes;
@@ -84,6 +85,7 @@ namespace Cryo
                                                                   paramCount,
                                                                   visibility,
                                                                   node);
+            processParamList(node->data.functionDecl->params, paramCount, scopeID);
 
             return createSymbol(FUNCTION_SYMBOL, functionSymbol);
         }
@@ -99,7 +101,11 @@ namespace Cryo
         case NODE_PARAM:
         {
             std::cout << "ASTNodeToSymbol: Processing Parameter Node" << std::endl;
-            break;
+            VariableSymbol *variableSymbol = createVariableSymbol(node->data.param->name,
+                                                                  node->data.param->type,
+                                                                  node,
+                                                                  0);
+            return createSymbol(VARIABLE_SYMBOL, variableSymbol);
         }
         case NODE_TYPE:
         {
@@ -123,6 +129,7 @@ namespace Cryo
                                                             node->metaData->type,
                                                             VISIBILITY_PUBLIC,
                                                             scopeID);
+            addExternFunctionToTable(externSymbol);
             return createSymbol(EXTERN_SYMBOL, externSymbol);
         }
         case NODE_STRUCT_DECLARATION:

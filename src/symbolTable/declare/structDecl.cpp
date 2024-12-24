@@ -14,27 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef PREPROCESSOR_H
-#define PREPROCESSOR_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <errno.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include "symbolTable/globalSymtable.hpp"
 
-#include "frontend/AST.h"
-#include "frontend/lexer.h"
-#include "frontend/symTable.h"
-#include "frontend/dataTypes.h"
-
-typedef struct Preprocessor
+namespace Cryo
 {
 
-} Preprocessor;
-
-#endif // PREPROCESSOR_H
+} // namespace Cryo

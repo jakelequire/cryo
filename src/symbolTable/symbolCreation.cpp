@@ -38,6 +38,7 @@ namespace Cryo
         symbol->name = name;
         symbol->type = type;
         symbol->node = node;
+        symbol->isParam = isParamSymbol(node);
         symbol->scopeId = scopeId;
         return symbol;
     }
@@ -205,6 +206,30 @@ namespace Cryo
         table->currentScope = nullptr;
         table->types = nullptr;
         return table;
+    }
+
+    void GlobalSymbolTable::processParamList(ASTNode **node, int paramCount, const char *scopeId)
+    {
+        for (int i = 0; i < paramCount; i++)
+        {
+            ASTNode *paramNode = node[i];
+            VariableSymbol *paramSymbol = createVariableSymbol(paramNode->data.param->name,
+                                                               paramNode->data.param->type,
+                                                               paramNode,
+                                                               scopeId);
+            Symbol *param = createSymbol(VARIABLE_SYMBOL, paramSymbol);
+            addSymbolToCurrentTable(param);
+        }
+    }
+
+    bool GlobalSymbolTable::isParamSymbol(ASTNode *node)
+    {
+        CryoNodeType nodeType = node->metaData->type;
+        if (nodeType == NODE_PARAM)
+        {
+            return true;
+        }
+        return false;
     }
 
 }

@@ -118,4 +118,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define AddMethodToClass(symTable, className, method) \
     CryoGlobalSymbolTable_AddMethodToClass(symTable, className, method)
 
+// Symbol Resolution Functions
+#define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
+    CryoGlobalSymbolTable_GetFrontendSymbol(symTable, name, scopeID, symbolType)
+
 #endif // C_INTERFACE_TABLE_H

@@ -118,4 +118,178 @@ namespace Cryo
         return nullptr;
     }
 
+    Symbol *GlobalSymbolTable::getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType)
+    {
+        if (!symbolName || symbolName == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!scopeID || scopeID == nullptr)
+        {
+            return nullptr;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            Symbol *symbol = symbols[i];
+            switch (symbolType)
+            {
+            case VARIABLE_SYMBOL:
+            {
+                VariableSymbol *varSymbol = symbol->variable;
+                if (strcmp(varSymbol->name, symbolName) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            case FUNCTION_SYMBOL:
+            {
+                // Look for function declarations
+                Symbol *resolvedSymbol = resolveFunctionSymbol(symbolName, scopeID, symbolType);
+                if (resolvedSymbol)
+                {
+                    return resolvedSymbol;
+                }
+                else
+                {
+                    DEBUG_BREAKPOINT;
+                }
+            }
+            case EXTERN_SYMBOL:
+            {
+                // Look for extern functions
+                Symbol *resolvedSymbol = resolveExternSymbol(symbolName);
+                if (resolvedSymbol)
+                {
+                    return resolvedSymbol;
+                }
+                else
+                {
+                    DEBUG_BREAKPOINT;
+                }
+            }
+            case TYPE_SYMBOL:
+            {
+                TypeSymbol *typeSymbol = symbol->type;
+                if (strcmp(typeSymbol->name, symbolName) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            case PROPERTY_SYMBOL:
+            {
+                PropertySymbol *propSymbol = symbol->property;
+                if (strcmp(propSymbol->name, symbolName) == 0 && strcmp(propSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    DEBUG_BREAKPOINT;
+                }
+            }
+            case METHOD_SYMBOL:
+            {
+                MethodSymbol *methodSymbol = symbol->method;
+                if (strcmp(methodSymbol->name, symbolName) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    DEBUG_BREAKPOINT;
+                }
+            }
+            default:
+                std::cerr << "Symbol Type not recognized!" << std::endl;
+                return nullptr;
+            }
+        }
+    }
+
+    Symbol *GlobalSymbolTable::resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType)
+    {
+        if (!symbolName || symbolName == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!scopeID || scopeID == nullptr)
+        {
+            return nullptr;
+        }
+
+        // Check for the extern functions first
+        Symbol *externSymbol = resolveExternSymbol(symbolName);
+        if (externSymbol != nullptr)
+        {
+            std::cout << "Extern Symbol Resolved!" << std::endl;
+            return externSymbol;
+        }
+
+        // Check for the global functions (REMOVE THIS LATER)
+        // SET FUNCTIONS SCOPE ID TO THE NAMESPACE SCOPE ID
+        int globalCount = globalFunctions.size();
+        for (int i = 0; i < globalCount; i++)
+        {
+            FunctionSymbol *functionSymbol = globalFunctions[i];
+            if (strcmp(functionSymbol->name, symbolName) == 0)
+            {
+                return createSymbol(FUNCTION_SYMBOL, functionSymbol);
+            }
+            else
+            {
+                continue;
+            }
+        }
+    }
+
+    Symbol *GlobalSymbolTable::resolveExternSymbol(const char *symbolName)
+    {
+        // Look at the extern functions in `externFunctions` and resolve the symbol
+        // if it exists.
+
+        if (!symbolName || symbolName == nullptr)
+        {
+            return nullptr;
+        }
+
+        int externCount = externFunctions.size();
+        for (int i = 0; i < externCount; i++)
+        {
+            ExternSymbol *externSymbol = externFunctions[i];
+            if (strcmp(externSymbol->name, symbolName) == 0)
+            {
+                std::cout << "Extern Symbol Resolved!" << std::endl;
+                return createSymbol(EXTERN_SYMBOL, externSymbol);
+            }
+            else
+            {
+                std::cout << "Checked Extern Symbol: " << externSymbol->name << " Expected: " << symbolName << std::endl;
+                continue;
+            }
+        }
+
+        std::cout << "<!> Extern Symbol not found <!>" << std::endl;
+        return nullptr;
+    }
+
 } // namespace Cryo

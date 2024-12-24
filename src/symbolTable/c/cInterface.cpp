@@ -30,7 +30,7 @@ extern "C"
         }
         catch (...)
         {
-            logMessage("ERROR", __LINE__, "CryoGlobalSymbolTable", "Failed to create global symbol table");
+            fprintf(stderr, "Failed to create GlobalSymbolTable\n");
             return nullptr;
         }
     }
@@ -192,6 +192,18 @@ extern "C"
         {
             reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->addMethodToClass(className, method);
         }
+    }
+
+    // --------------------------------------------------------------
+    // Symbol Resolution Functions
+
+    Symbol *CryoGlobalSymbolTable_GetFrontendSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID, TypeOfSymbol symbolType)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getFrontendSymbol(name, scopeID, symbolType);
+        }
+        return nullptr;
     }
 
 } // C API ----------------------------------------------------------

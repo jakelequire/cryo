@@ -1152,7 +1152,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Function name: %s", functionName);
 
-    setCurrentFunction(context, functionName); // Context Manager
+    const char *namespaceScopeID = getCurrentScopeID(context);
+    setCurrentFunction(context, functionName, namespaceScopeID); // Context Manager
 
     getNextToken(lexer, arena, state, typeTable);
 
@@ -1299,13 +1300,38 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     functionCallNode->data.functionCall->args = (ASTNode **)ARENA_ALLOC(arena,
                                                                         functionCallNode->data.functionCall->argCapacity * sizeof(ASTNode *));
 
-    // Look up function in symbol table
-    CryoSymbol *funcSymbol = findSymbol(table, functionName, arena);
+    // Look up function in global symbol table (NEW)
+    const char *currentScopeID = getCurrentScopeID(context);
+    Symbol *funcSymbol = GetFrontendSymbol(globalTable, functionName, currentScopeID, FUNCTION_SYMBOL);
     if (!funcSymbol)
     {
         logMessage("ERROR", __LINE__, "Parser",
                    "Function not found: %s", functionName);
+        printGlobalSymbolTable(globalTable);
         parsingError("Function not found.", "parseFunctionCall", table, arena, state,
+                     lexer, lexer->source, typeTable);
+        return NULL;
+    }
+    TypeOfSymbol typeofSymbol = funcSymbol->symbolType;
+    ASTNode *functionNode = NULL;
+    int _paramCount = 0;
+    if (typeofSymbol == FUNCTION_SYMBOL)
+    {
+        printf("Function Symbol\n");
+        functionNode = funcSymbol->function->node;
+        _paramCount = funcSymbol->function->paramCount;
+    }
+    else if (typeofSymbol == EXTERN_SYMBOL)
+    {
+        printf("Extern Symbol\n");
+        functionNode = funcSymbol->externSymbol->node;
+        _paramCount = funcSymbol->externSymbol->paramCount;
+    }
+    else
+    {
+        logMessage("ERROR", __LINE__, "Parser",
+                   "Invalid symbol type: %s", typeofSymbol);
+        parsingError("Invalid symbol type.", "parseFunctionCall", table, arena, state,
                      lexer, lexer->source, typeTable);
         return NULL;
     }
@@ -1321,12 +1347,13 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     DataType **expectedTypes = (DataType **)ARENA_ALLOC(arena, 8 * sizeof(DataType *));
 
     // Parse arguments
-    CryoNodeType functionType = funcSymbol->node->metaData->type;
-    switch (functionType)
+    printf("Parsing arguments...\n");
+    switch (typeofSymbol)
     {
-    case NODE_EXTERN_FUNCTION:
+    case EXTERN_SYMBOL:
     {
-        ASTNode *externFuncNode = funcSymbol->node;
+        printf("Arguments for extern function...\n");
+        ASTNode *externFuncNode = functionNode;
         logASTNode(externFuncNode);
         ASTNode **params = externFuncNode->data.externFunction->params;
         int paramCount = externFuncNode->data.externFunction->paramCount;
@@ -1337,9 +1364,10 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 
         break;
     }
-    case NODE_FUNCTION_DECLARATION:
+    case FUNCTION_SYMBOL:
     {
-        ASTNode *funcDeclNode = funcSymbol->node;
+        printf("Arguments for function...\n");
+        ASTNode *funcDeclNode = functionNode;
         logASTNode(funcDeclNode);
         ASTNode **params = funcDeclNode->data.functionDecl->params;
         int paramCount = funcDeclNode->data.functionDecl->paramCount;
@@ -1353,7 +1381,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     default:
     {
         logMessage("ERROR", __LINE__, "Parser",
-                   "Invalid function type: %s", CryoNodeTypeToString(functionType));
+                   "Invalid function type: ");
         parsingError("Invalid function type.", "parseFunctionCall",
                      table, arena, state, lexer, lexer->source, typeTable);
         return NULL;
@@ -1538,11 +1566,11 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
             "parseFunctionCall", table, arena, state, typeTable, context);
 
     // Validate argument count
-    if (functionCallNode->data.functionCall->argCount != funcSymbol->argCount)
+    if (functionCallNode->data.functionCall->argCount != _paramCount)
     {
         logMessage("ERROR", __LINE__, "Parser",
                    "Argument count mismatch. Expected: %d, Got: %d",
-                   funcSymbol->argCount, functionCallNode->data.functionCall->argCount);
+                   _paramCount, functionCallNode->data.functionCall->argCount);
         parsingError("Argument count mismatch.", "parseFunctionCall",
                      table, arena, state, lexer, lexer->source, typeTable);
         return NULL;
@@ -1664,6 +1692,11 @@ ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
                 logMessage("INFO", __LINE__, "Parser", "Adding parameter: %s", param->data.param->name);
                 paramListNode[paramCount] = param;
                 paramCount++;
+
+                if (globalTable)
+                {
+                    AddVariableToSymbolTable(globalTable, param, functionName);
+                }
             }
         }
         else
@@ -1760,8 +1793,17 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     logMessage("INFO", __LINE__, "Parser", "Resolving argument type...");
     if (!isLiteral)
     {
-        CryoSymbol *symbol = findSymbol(table, argName, arena);
-        argType = symbol->type;
+        // Old Symbol Table Lookup
+        // CryoSymbol *symbol = findSymbol(table, argName, arena);
+        // argType = symbol->type;
+        // New Global Symbol Table Lookup
+        const char *curScopeID = getCurrentScopeID(context);
+        Symbol *sym = GetFrontendSymbol(globalTable, argName, curScopeID, VARIABLE_SYMBOL);
+        if (sym)
+        {
+            logMessage("INFO", __LINE__, "Parser", "Symbol found in global table.");
+            argType = sym->variable->type;
+        }
     }
     else
     {
@@ -1924,17 +1966,34 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
         }
 
         nodeType = NODE_VAR_NAME;
-        // Try to find the symbol in the symbol table
-        CryoSymbol *symbol = findSymbol(table, argName, arena);
-        if (!symbol)
+
+        // Try to find the symbol in the symbol table (OLD)
+        // CryoSymbol *symbol = findSymbol(table, argName, arena);
+        // if (!symbol)
+        // {
+        //     logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the symbol table. < %s >", argName);
+        //     parsingError("Symbol not found in the symbol table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
+        //     CONDITION_FAILED;
+        //     return NULL;
+        // }
+        // expectedType = symbol->type;
+        // isLiteral = false;
+
+        // New Global Symbol Table Lookup
+        const char *curScopeID = getCurrentScopeID(context);
+        Symbol *sym = GetFrontendSymbol(globalTable, argName, curScopeID, VARIABLE_SYMBOL);
+        if (sym)
         {
-            logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the symbol table. < %s >", argName);
-            parsingError("Symbol not found in the symbol table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
-            CONDITION_FAILED;
-            return NULL;
+            logMessage("INFO", __LINE__, "Parser", "Symbol found in global table.");
+            expectedType = sym->variable->type;
+            isLiteral = false;
         }
-        expectedType = symbol->type;
-        isLiteral = false;
+        else
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Symbol not found in global table.");
+            parsingError("Symbol not found in global table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
+            CONDITION_FAILED;
+        }
     }
     else if (lexer->currentToken.type == TOKEN_KW_THIS)
     {

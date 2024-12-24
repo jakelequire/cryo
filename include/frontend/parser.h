@@ -222,7 +222,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
 void addTokenToContext(ParsingContext *context, Token token);
 void addStaticIdentifierToContext(ParsingContext *context, bool value);
 
-void setCurrentFunction(ParsingContext *context, const char *functionName);
+void setCurrentFunction(ParsingContext *context, const char *functionName, const char *namespaceScopeID);
 void resetCurrentFunction(ParsingContext *context);
 const char *getCurrentScopeID(ParsingContext *context);
 
@@ -233,7 +233,7 @@ ScopeParsingContext *createClassScopeContext(const char *className, int level, b
 ScopeParsingContext *createMethodScopeContext(const char *methodName, int level, bool isStatic, ScopeParsingContext *parent);
 
 void createNamespaceScope(ParsingContext *context, const char *namespaceName);
-void createFunctionScope(ParsingContext *context, const char *functionName);
+void createFunctionScope(ParsingContext *context, const char *functionName, const char *namespaceScopeID);
 void createClassScope(ParsingContext *context, const char *className);
 void createMethodScope(ParsingContext *context, const char *methodName, const char *className);
 void clearScopeContext(ParsingContext *context);

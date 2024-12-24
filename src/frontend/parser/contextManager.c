@@ -56,11 +56,11 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
     context->thisContext = thisContext;
 }
 
-void setCurrentFunction(ParsingContext *context, const char *functionName)
+void setCurrentFunction(ParsingContext *context, const char *functionName, const char *namespaceScopeID)
 {
     clearScopeContext(context);
     context->functionName = functionName;
-    createFunctionScope(context, functionName);
+    createFunctionScope(context, functionName, namespaceScopeID);
     return;
 }
 
@@ -215,7 +215,7 @@ void createNamespaceScope(ParsingContext *context, const char *namespaceName)
     return;
 }
 
-void createFunctionScope(ParsingContext *context, const char *functionName)
+void createFunctionScope(ParsingContext *context, const char *functionName, const char *namespaceScopeID)
 {
     ScopeParsingContext *scopeContext = createScopeParsingContext(
         functionName,

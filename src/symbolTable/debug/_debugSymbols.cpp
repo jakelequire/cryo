@@ -60,12 +60,18 @@ namespace Cryo
             return;
         }
 
+        bool isParam = symbol->isParam;
+        const char *trueStr = BOLD GREEN "true" COLOR_RESET;
+        const char *falseStr = BOLD RED "false" COLOR_RESET;
+        const char *paramStr = isParam ? trueStr : falseStr;
+
         logger->debugNode("%s | %s: %s",
                           getColoredSymbolType(VARIABLE_SYMBOL).c_str(),
                           symbol->name,
                           symbol->type ? DataTypeToString(symbol->type) : "unknown");
-        logger->debugNode("ID: %s",
-                          symbol->scopeId);
+        logger->debugNode("ID: %s | Param: %s",
+                          symbol->scopeId,
+                          paramStr);
         logger->debugNode(SEPARATOR);
     }
 

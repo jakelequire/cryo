@@ -55,6 +55,7 @@ struct VariableSymbol
     const char *name;
     DataType *type;
     ASTNode *node;
+    bool isParam;
 
     const char *scopeId;
 };
