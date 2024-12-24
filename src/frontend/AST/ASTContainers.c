@@ -22,6 +22,8 @@
 /// typedef struct CryoNamespace
 /// {
 ///     char *name;
+///     const char *parentName;
+///     bool hasParent;
 /// } CryoNamespace;
 ///```
 CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state)
@@ -34,6 +36,8 @@ CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *sta
     }
 
     node->name = "defaulted";
+    node->parentName = (const char *)malloc(64 * sizeof(char));
+    node->hasParent = false;
 
     return node;
 }
@@ -354,6 +358,9 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
     node->paramTypes = NULL;
+
+    node->parentScopeID = (const char *)malloc(sizeof(char) * 65);
+    node->functionScopeID = (const char *)malloc(sizeof(char) * 65);
 
     return node;
 }

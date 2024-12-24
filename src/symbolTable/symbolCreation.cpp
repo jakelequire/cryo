@@ -43,7 +43,7 @@ namespace Cryo
         return symbol;
     }
 
-    FunctionSymbol *GlobalSymbolTable::createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node)
+    FunctionSymbol *GlobalSymbolTable::createFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node)
     {
         FunctionSymbol *symbol = new FunctionSymbol();
         symbol->name = name;
@@ -52,7 +52,8 @@ namespace Cryo
         symbol->paramCount = paramCount;
         symbol->visibility = visibility;
         symbol->node = node;
-        symbol->scopeId = IDGen::generate64BitHashID(name);
+        symbol->functionScopeId = IDGen::generate64BitHashID(name);
+        symbol->parentScopeID = parentScopeID;
         return symbol;
     }
 

@@ -65,6 +65,8 @@ typedef struct CryoModule
 typedef struct CryoNamespace
 {
     char *name;
+    const char *parentName;
+    bool hasParent;
     Position position;
 } CryoNamespace;
 
@@ -127,6 +129,8 @@ typedef struct ExternFunctionNode
     int paramCount;
     int paramCapacity;
     DataType *type;
+
+    const char *parentScopeID;
 } ExternFunctionNode;
 
 typedef struct FunctionDeclNode
@@ -142,6 +146,9 @@ typedef struct FunctionDeclNode
     int paramCapacity;
     DataType **paramTypes;
     struct ASTNode *body;
+
+    const char *parentScopeID;
+    const char *functionScopeID;
 } FunctionDeclNode;
 
 typedef struct FunctionCallNode

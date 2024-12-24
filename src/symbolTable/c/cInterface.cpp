@@ -72,6 +72,14 @@ extern "C"
         reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->tableFinished();
     }
 
+    void CryoGlobalSymbolTable_InitNamespace(CryoGlobalSymbolTable *symTable, const char *namespaceName)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->initNamespace(namespaceName);
+        }
+    }
+
     // --------------------------------------------------------------
     // Symbol Table Functions
 

@@ -69,7 +69,8 @@ struct FunctionSymbol
     CryoVisibilityType visibility;
     ASTNode *node;
 
-    const char *scopeId;
+    const char *parentScopeID;
+    const char *functionScopeId;
 };
 
 struct ExternSymbol

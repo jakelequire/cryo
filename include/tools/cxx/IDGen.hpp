@@ -29,8 +29,6 @@ extern "C"
     // C API functions
     CryoIDGen CryoIDGen_Create(void);
     void CryoIDGen_Destroy(CryoIDGen idGen);
-    const char *CryoIDGen_Generate32BitID(CryoIDGen idGen);
-    int CryoIDGen_Generate32BitIntID(CryoIDGen idGen);
     const char *CryoIDGen_Generate64BitHashID(CryoIDGen idGen, const char *seed);
 #define Generate64BitHashID(seed) Cryo_Generate64BitHashID(seed)
 
@@ -59,9 +57,6 @@ namespace Cryo
         /// @brief Generate a 64-bit hash ID from a seed string.
         /// This is a *deterministic* hash ID generator.
         static const char *generate64BitHashID(const char *seed);
-
-        /// @brief Reverse a 64-bit hash ID back to the original seed string.
-        static const char *reverse64BitHashID(const char *hash);
 
         /// @brief Generate a 32-bit hash ID from a seed string.
         /// This is a *deterministic* hash ID generator.

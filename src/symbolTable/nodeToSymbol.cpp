@@ -38,11 +38,13 @@ namespace Cryo
             std::cout << "ASTNodeToSymbol: Processing Program Node" << std::endl;
             break;
         }
+
         case NODE_BLOCK:
         {
             std::cout << "ASTNodeToSymbol: Processing Block Node" << std::endl;
             break;
         }
+
         case NODE_FUNCTION_BLOCK:
         {
             std::cout << "ASTNodeToSymbol: Processing Block Node" << std::endl;
@@ -58,11 +60,13 @@ namespace Cryo
             }
             break;
         }
+
         case NODE_ARG_LIST:
         {
             std::cout << "ASTNodeToSymbol: Processing Argument List Node" << std::endl;
             break;
         }
+
         case NODE_PARAM_LIST:
         {
             std::cout << "ASTNodeToSymbol: Processing Parameter List Node" << std::endl;
@@ -79,7 +83,9 @@ namespace Cryo
             DataType **paramTypes = node->data.functionDecl->paramTypes;
             size_t paramCount = node->data.functionDecl->paramCount;
             CryoVisibilityType visibility = node->data.functionDecl->visibility;
+            const char *parentScopeID = node->data.functionDecl->parentScopeID;
             FunctionSymbol *functionSymbol = createFunctionSymbol(functionName,
+                                                                  parentScopeID,
                                                                   returnType,
                                                                   paramTypes,
                                                                   paramCount,
@@ -89,6 +95,7 @@ namespace Cryo
 
             return createSymbol(FUNCTION_SYMBOL, functionSymbol);
         }
+
         case NODE_VAR_DECLARATION:
         {
             std::cout << "ASTNodeToSymbol: Processing Variable Declaration Node" << std::endl;
@@ -98,6 +105,7 @@ namespace Cryo
                                                                   0);
             return createSymbol(VARIABLE_SYMBOL, variableSymbol);
         }
+
         case NODE_PARAM:
         {
             std::cout << "ASTNodeToSymbol: Processing Parameter Node" << std::endl;
@@ -107,16 +115,19 @@ namespace Cryo
                                                                   0);
             return createSymbol(VARIABLE_SYMBOL, variableSymbol);
         }
+
         case NODE_TYPE:
         {
             std::cout << "ASTNodeToSymbol: Processing Type Node" << std::endl;
             break;
         }
+
         case NODE_EXTERN_STATEMENT:
         {
             std::cout << "ASTNodeToSymbol: Processing Extern Statement Node" << std::endl;
             break;
         }
+
         case NODE_EXTERN_FUNCTION:
         {
             std::cout << "ASTNodeToSymbol: Processing Extern Function Node" << std::endl;
@@ -130,8 +141,10 @@ namespace Cryo
                                                             VISIBILITY_PUBLIC,
                                                             scopeID);
             addExternFunctionToTable(externSymbol);
+
             return createSymbol(EXTERN_SYMBOL, externSymbol);
         }
+
         case NODE_STRUCT_DECLARATION:
         {
             std::cout << "ASTNodeToSymbol: Processing Struct Declaration Node" << std::endl;
@@ -145,6 +158,7 @@ namespace Cryo
                                                         scopeID);
             return createSymbol(TYPE_SYMBOL, structSymbol);
         }
+
         case NODE_PROPERTY:
         {
             std::cout << "ASTNodeToSymbol: Processing Property Node" << std::endl;

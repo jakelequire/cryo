@@ -87,9 +87,9 @@ namespace Cryo
                           getColoredSymbolType(FUNCTION_SYMBOL).c_str(),
                           symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
-        logger->debugNode("ID: %s | Visibility: %s",
+        logger->debugNode("Parent ID: %s | Function ID: %s",
                           symbol->scopeId,
-                          CryoVisibilityTypeToString(symbol->visibility));
+                          symbol->functionScopeId);
         logger->debugNode("Parameters: %zu", symbol->paramCount);
         logger->debugNode(SEPARATOR);
     }

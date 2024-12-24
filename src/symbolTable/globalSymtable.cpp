@@ -59,6 +59,22 @@ namespace Cryo
         return;
     }
 
+    void GlobalSymbolTable::initNamespace(const char *namespaceName)
+    {
+        if (!namespaceName || namespaceName == nullptr)
+        {
+            return;
+        }
+
+        if (tableState == TABLE_COMPLETE)
+        {
+            tableState = TABLE_IN_PROGRESS;
+        }
+
+        const char *scopeID = IDGen::generate64BitHashID(namespaceName);
+        setScopeID(scopeID);
+    }
+
     void GlobalSymbolTable::addNodeToTable(ASTNode *node)
     {
         if (!node || node == nullptr)
@@ -122,7 +138,9 @@ namespace Cryo
             return;
         }
 
-        VariableSymbol *variableSymbol = createVariableSymbol(node->data.varDecl->name,
+        const char *varName = node->data.varDecl->name;
+
+        VariableSymbol *variableSymbol = createVariableSymbol(varName,
                                                               node->data.varDecl->type,
                                                               node,
                                                               scopeID);

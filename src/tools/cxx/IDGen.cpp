@@ -40,6 +40,15 @@ extern "C"
         }
     }
 
+    const char *CryoIDGen_Generate64BitHashID(CryoIDGen idGen, const char *seed)
+    {
+        if (idGen)
+        {
+            return reinterpret_cast<Cryo::IDGen *>(idGen)->generate64BitHashID(seed);
+        }
+        return nullptr;
+    }
+
 } // extern "C"
 
 namespace Cryo
@@ -58,15 +67,6 @@ namespace Cryo
         char *hashStr = (char *)std::malloc(17); // 16 digits + null terminator
         std::sprintf(hashStr, "%016lX", hash);
         return hashStr;
-    }
-
-    const char *IDGen::reverse64BitHashID(const char *hash)
-    {
-        uint64_t reversed = 0;
-        std::sscanf(hash, "%016lX", &reversed);
-        char *reversedStr = (char *)std::malloc(17); // 16 digits + null terminator
-        std::sprintf(reversedStr, "%016lX", reversed);
-        return reversedStr;
     }
 
     const char *IDGen::generate32BitHashID(const char *seed)

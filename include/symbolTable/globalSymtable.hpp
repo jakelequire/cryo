@@ -51,6 +51,8 @@ extern "C"
 
     void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable);
 
+    void CryoGlobalSymbolTable_InitNamespace(CryoGlobalSymbolTable *symTable, const char *namespaceName);
+
     // Symbol Table Functions ---------------------------------------
 
     void CryoGlobalSymbolTable_InitDependencyTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
@@ -95,6 +97,8 @@ extern "C"
     CryoGlobalSymbolTable_SetDependencyTableStatus(symTable, isDependency)
 #define TableFinished(symTable) \
     CryoGlobalSymbolTable_TableFinished(symTable)
+#define InitNamespace(symTable, namespaceName) \
+    CryoGlobalSymbolTable_InitNamespace(symTable, namespaceName)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \
@@ -225,6 +229,7 @@ namespace Cryo
         ~GlobalSymbolTable();
 
         friend class SymbolTableDebugger;
+        friend class SymbolTableDB;
 
         // ======================================================= //
         // Public Variables & state for the symbol table           //
@@ -285,6 +290,8 @@ namespace Cryo
         void addGlobalFunctionToTable(FunctionSymbol *function) { globalFunctions.push_back(function); }
         void addExternFunctionToTable(ExternSymbol *function) { externFunctions.push_back(function); }
 
+        void initNamespace(const char *namespaceName);
+
         // ======================================================= //
         // Symbol Table Management Functions                       //
         // ======================================================= //
@@ -309,6 +316,7 @@ namespace Cryo
         void enterScope(const char *name);
         void exitScope(void);
         const char *getScopeID(const char *name);
+        void setScopeID(const char *id) { scopeId = id; }
 
         void initNamepsaceScope(const char *namespaceName);
 
@@ -362,7 +370,7 @@ namespace Cryo
 
         ScopeBlock *createScopeBlock(const char *name, size_t depth);
         VariableSymbol *createVariableSymbol(const char *name, DataType *type, ASTNode *node, const char *scopeId);
-        FunctionSymbol *createFunctionSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node);
+        FunctionSymbol *createFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node);
         TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId);
         TypeSymbol *createIncompleteTypeSymbol(const char *name, TypeofDataType typeOf);
 

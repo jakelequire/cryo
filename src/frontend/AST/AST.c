@@ -325,7 +325,7 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
         node->data.varName->isRef = true;
         node->data.varName->type = createUnknownType();
     }
- 
+
     return node;
 }
 
@@ -468,6 +468,7 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     node->data.functionDecl->body = function_body;
     node->data.functionDecl->type = returnType;
     node->data.functionDecl->functionType = createFunctionType(strdup(function_name), returnType, NULL, 0, arena, state, typeTable);
+
     return node;
 }
 

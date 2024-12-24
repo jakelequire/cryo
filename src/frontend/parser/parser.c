@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/cxx/IDGen.hpp"
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 
@@ -414,6 +415,9 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         parseDebugger(lexer, table, context, arena, state, typeTable);
         return NULL;
 
+    case TOKEN_KW_USING:
+        return parseUsingKeyword(lexer, table, context, arena, state, typeTable, globalTable);
+
     case TOKEN_KW_THIS:
         logMessage("INFO", __LINE__, "Parser", "Parsing `this` context...");
         return parseThisContext(lexer, table, context, arena, state, typeTable, globalTable);
@@ -614,6 +618,8 @@ ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     {
         parsingError("Expected a namespace name", "parseNamespace", table, arena, state, lexer, lexer->source, typeTable);
     }
+
+    InitNamespace(globalTable, namespaceName);
 
     createNamespaceScope(context, namespaceName);
     setNamespace(table, namespaceName);
@@ -1152,7 +1158,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Function name: %s", functionName);
 
-    const char *namespaceScopeID = getCurrentScopeID(context);
+    const char *namespaceScopeID = getNamespaceScopeID(context);
     setCurrentFunction(context, functionName, namespaceScopeID); // Context Manager
 
     getNextToken(lexer, arena, state, typeTable);
@@ -1205,6 +1211,9 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     }
     functionDefNode->data.functionDecl->paramTypes = paramTypes;
     functionDefNode->data.functionDecl->paramCount = paramCount;
+    functionDefNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
+    functionDefNode->data.functionDecl->functionScopeID = Generate64BitHashID(functionName);
+
     addASTNodeSymbol(table, functionDefNode, arena);
 
     // Parse the function block
@@ -1218,6 +1227,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, returnType, arena, state, typeTable, lexer);
     DataType *functionType = createFunctionType(strdup(functionName), returnType, paramTypes, paramCount, arena, state, typeTable);
     functionNode->data.functionDecl->functionType = functionType;
+    functionNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
+
     addASTNodeSymbol(table, functionNode, arena);
 
     resetCurrentFunction(context); // Context Manager

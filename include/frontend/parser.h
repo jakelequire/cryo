@@ -94,6 +94,7 @@ typedef struct ParsingContext
     bool isParsingIfCondition;
     int scopeLevel;
     const char *currentNamespace;
+    const char *namespaceScopeID;
     const char *functionName;
 
     ThisContext *thisContext;
@@ -225,12 +226,15 @@ void addStaticIdentifierToContext(ParsingContext *context, bool value);
 void setCurrentFunction(ParsingContext *context, const char *functionName, const char *namespaceScopeID);
 void resetCurrentFunction(ParsingContext *context);
 const char *getCurrentScopeID(ParsingContext *context);
+const char *getNamespaceScopeID(ParsingContext *context);
 
 // Scope Parsing Context Functions
 
 ScopeParsingContext *createScopeParsingContext(const char *name, int level, bool isStatic, CryoNodeType nodeType);
 ScopeParsingContext *createClassScopeContext(const char *className, int level, bool isStatic);
 ScopeParsingContext *createMethodScopeContext(const char *methodName, int level, bool isStatic, ScopeParsingContext *parent);
+ScopeParsingContext *createFunctionScopeContext(const char *functionName, int level, ScopeParsingContext *parent);
+ScopeParsingContext *createNamespaceScopeContext(const char *namespaceName);
 
 void createNamespaceScope(ParsingContext *context, const char *namespaceName);
 void createFunctionScope(ParsingContext *context, const char *functionName, const char *namespaceScopeID);
@@ -305,5 +309,11 @@ ASTNode *parseNullExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 
 // `typeof` keyword
 ASTNode *parseTypeofIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+
+// # =========================================================================== #
+// # `Using` Keyword Parsing
+// # =========================================================================== #
+
+ASTNode *parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 
 #endif // PARSER_H

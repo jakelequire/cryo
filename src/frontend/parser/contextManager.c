@@ -24,6 +24,7 @@ ParsingContext *createParsingContext(void)
     context->thisContext = NULL;
     context->functionName = (char *)malloc(sizeof(char) * 128);
     context->currentNamespace = (char *)malloc(sizeof(char) * 128);
+    context->namespaceScopeID = (char *)malloc(sizeof(char) * 128);
     context->isParsingIfCondition = false;
     context->scopeLevel = 0;
     context->lastTokenCount = 0;
@@ -77,6 +78,8 @@ const char *getCurrentScopeID(ParsingContext *context)
     {
         return context->scopeContext->scopeID;
     }
+
+    fprintf(stderr, "getCurrentScopeID: Scope Context is NULL\n");
     return NULL;
 }
 
@@ -203,27 +206,52 @@ ScopeParsingContext *createMethodScopeContext(const char *methodName, int level,
     return scopeContext;
 }
 
+ScopeParsingContext *createFunctionScopeContext(const char *functionName, int level, ScopeParsingContext *parent)
+{
+    ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
+    scopeContext->name = functionName;
+    scopeContext->scopeID = Generate64BitHashID(functionName);
+    scopeContext->level = level;
+    scopeContext->isStatic = false;
+    scopeContext->nodeType = NODE_FUNCTION_DECLARATION;
+    scopeContext->parent = parent;
+    return scopeContext;
+}
+
+ScopeParsingContext *createNamespaceScopeContext(const char *namespaceName)
+{
+    ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
+    scopeContext->name = namespaceName;
+    scopeContext->scopeID = Generate64BitHashID(namespaceName);
+    scopeContext->level = 0;
+    scopeContext->isStatic = false;
+    scopeContext->nodeType = NODE_NAMESPACE;
+    scopeContext->parent = NULL;
+    return scopeContext;
+}
+
 void createNamespaceScope(ParsingContext *context, const char *namespaceName)
 {
-    ScopeParsingContext *scopeContext = createScopeParsingContext(
-        namespaceName,
-        0,
-        false,
-        NODE_NAMESPACE);
-
+    ScopeParsingContext *scopeContext = createNamespaceScopeContext(namespaceName);
     context->scopeContext = scopeContext;
+    context->namespaceScopeID = Generate64BitHashID(namespaceName);
     return;
+}
+
+const char *getNamespaceScopeID(ParsingContext *context)
+{
+    return context->namespaceScopeID;
 }
 
 void createFunctionScope(ParsingContext *context, const char *functionName, const char *namespaceScopeID)
 {
-    ScopeParsingContext *scopeContext = createScopeParsingContext(
+    ScopeParsingContext *scopeContext = createFunctionScopeContext(
         functionName,
         context->scopeLevel,
-        false,
-        NODE_FUNCTION_DECLARATION);
+        context->scopeContext);
 
     context->scopeContext = scopeContext;
+
     return;
 }
 

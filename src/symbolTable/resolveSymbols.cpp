@@ -18,7 +18,6 @@
 
 namespace Cryo
 {
-
     VariableSymbol *GlobalSymbolTable::getFrontendVariableSymbol(const char *name, const char *scopeID)
     {
         if (!name || name == nullptr)
@@ -246,15 +245,41 @@ namespace Cryo
             return externSymbol;
         }
 
-        // Check for the global functions (REMOVE THIS LATER)
-        // SET FUNCTIONS SCOPE ID TO THE NAMESPACE SCOPE ID
-        int globalCount = globalFunctions.size();
-        for (int i = 0; i < globalCount; i++)
+        const char *currentNamespaceScopeID = getScopeID();
+
+        // Check the namespace scope functions
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
         {
-            FunctionSymbol *functionSymbol = globalFunctions[i];
-            if (strcmp(functionSymbol->name, symbolName) == 0)
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        // {NamespaceID}::{FunctionName}
+        // The namespace ID is the scope ID of the namespace
+        // This is the key to resolving the function symbol
+
+        std::cout << "Resolving Function Symbol: " << symbolName << " in Scope: " << currentNamespaceScopeID << std::endl;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            if (symbols[i]->symbolType == FUNCTION_SYMBOL)
             {
-                return createSymbol(FUNCTION_SYMBOL, functionSymbol);
+                Symbol *symbol = symbols[i];
+                FunctionSymbol *funcSymbol = symbol->function;
+                const char *funcParentScopeID = funcSymbol->parentScopeID;
+                std::cout << "Checking Function Symbol: " << funcSymbol->name << std::endl;
+                if (strcmp(funcSymbol->name, symbolName) == 0 && strcmp(funcParentScopeID, currentNamespaceScopeID) == 0)
+                {
+                    std::cout << "Function Symbol Resolved!" << std::endl;
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
             }
             else
             {
@@ -262,7 +287,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "<!> Function Symbol not found <!>" << std::endl;
+        std::cout << "<!> Function Symbol not found: " << symbolName << " <!>" << std::endl;
         return nullptr;
     }
 
@@ -292,7 +317,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "<!> Extern Symbol not found <!>" << std::endl;
+        std::cout << "<!> Extern Symbol not found: " << symbolName << " <!>" << std::endl;
         return nullptr;
     }
 
