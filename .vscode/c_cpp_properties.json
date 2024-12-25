@@ -79,7 +79,12 @@
             "compilerPath": "/usr/local/bin/clang++",
             "compilerArgs": [
                 "-Wall",
-                "-Wextra"
+                "-Wextra",
+                "-Wpedantic",
+                "-Wunused-variable",
+                "-Wuninitialized",
+                "-Wunused-parameter",
+                "-Wunused-function"
             ],
             "cStandard": "c17",
             "cppStandard": "c++17",

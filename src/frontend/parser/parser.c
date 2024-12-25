@@ -516,6 +516,8 @@ ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
     logMessage("INFO", __LINE__, "Parser", "Symbol found: %s", symbol->name);
 
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", table, arena, state, typeTable, context);
+
     CryoNodeType nodeType = symbol->nodeType;
     printf("Node Type: %s\n", CryoNodeTypeToString(nodeType));
     ASTNode *node = NULL;
@@ -547,28 +549,34 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingCo
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing scoped function call...");
 
-    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected a left parenthesis", "parseScopedFunctionCall", table, arena, state, typeTable, context);
-
     ASTNode *node = createScopedFunctionCall(arena, state, strdup(functionName), typeTable, lexer);
+
+    const char *scopeNameID = Generate64BitHashID(scopeName);
+    FunctionSymbol *funcSymbol = GetFrontendScopedFunctionSymbol(globalTable, functionName, scopeNameID);
+    if (!funcSymbol)
+    {
+        parsingError("Function symbol not found", "parseScopedFunctionCall", table, arena, state, lexer, lexer->source, typeTable);
+        return NULL;
+    }
 
     // Get the arguments
     int argCount = 0;
+    DataType **argTypes = (DataType **)malloc(sizeof(DataType *) * 64);
     ASTNode **args = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
-    while (lexer->currentToken.type != TOKEN_RPAREN)
+    ASTNode *argList = parseArgumentList(lexer, table, context, arena, state, typeTable, globalTable);
+    if (!argList)
     {
-        ASTNode *arg = parseExpression(lexer, table, context, arena, state, typeTable, globalTable);
-        if (arg)
+        parsingError("Failed to parse argument list", "parseScopedFunctionCall", table, arena, state, lexer, lexer->source, typeTable);
+        return NULL;
+    }
+    if (argList->metaData->type == NODE_ARG_LIST)
+    {
+        int i = 0;
+        for (i = 0; i < argList->data.argList->argCount; i++)
         {
-            args[argCount++] = arg;
-        }
-        else
-        {
-            parsingError("Failed to parse argument", "parseScopedFunctionCall", table, arena, state, lexer, lexer->source, typeTable);
-        }
-
-        if (lexer->currentToken.type != TOKEN_RPAREN)
-        {
-            consume(__LINE__, lexer, TOKEN_COMMA, "Expected a comma", "parseScopedFunctionCall", table, arena, state, typeTable, context);
+            args[i] = argList->data.argList->args[i];
+            argTypes[i] = getDataTypeFromASTNode(args[i]);
+            argCount++;
         }
     }
 

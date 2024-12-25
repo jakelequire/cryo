@@ -214,4 +214,13 @@ extern "C"
         return nullptr;
     }
 
+    FunctionSymbol *CryoGlobalSymbolTable_ResolveScopedFunctionSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->resolveScopedFunctionCall(scopeID, name);
+        }
+        return nullptr;
+    }
+
 } // C API ----------------------------------------------------------

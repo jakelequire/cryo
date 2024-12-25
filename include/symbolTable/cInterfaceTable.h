@@ -105,6 +105,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 // Symbol Resolution Functions
 #define GetFrontendVariableSymbol(symTable, name, scopeID) \
     CryoGlobalSymbolTable_GetFrontendVariableSymbol(symTable, name, scopeID)
+#define GetFrontendScopedFunctionSymbol(symTable, name, scopeID) \
+    CryoGlobalSymbolTable_ResolveScopedFunctionSymbol(symTable, name, scopeID)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \

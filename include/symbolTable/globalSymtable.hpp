@@ -85,6 +85,7 @@ extern "C"
 
     // Symbol Resolution Functions ---------------------------------------
     Symbol *CryoGlobalSymbolTable_GetFrontendSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID, TypeOfSymbol symbolType);
+    FunctionSymbol *CryoGlobalSymbolTable_ResolveScopedFunctionSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID);
 
 // Class State Functions
 #define isPrimaryTable(symTable) \
@@ -124,6 +125,8 @@ extern "C"
 // Symbol Resolution Functions
 #define GetFrontendVariableSymbol(symTable, name, scopeID) \
     CryoGlobalSymbolTable_GetFrontendVariableSymbol(symTable, name, scopeID)
+#define GetFrontendScopedFunctionSymbol(symTable, name, scopeID) \
+    CryoGlobalSymbolTable_ResolveScopedFunctionSymbol(symTable, name, scopeID)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
@@ -209,6 +212,7 @@ namespace Cryo
             TABLE_DONE,
             TABLE_ERROR
         };
+
         enum ScopeType
         {
             GLOBAL_SCOPE = 1000,
@@ -219,6 +223,8 @@ namespace Cryo
             METHOD_SCOPE,
             UNKNOWN_SCOPE = -1
         };
+
+        // Constructor & Destructor
         GlobalSymbolTable(ScopeType scopeType = GLOBAL_SCOPE)
         {
             debugInfo = getDebugInfo();
@@ -231,114 +237,108 @@ namespace Cryo
         friend class SymbolTableDebugger;
         friend class SymbolTableDB;
 
-        // ======================================================= //
-        // Public Variables & state for the symbol table           //
-        // ======================================================= //
+        //===================================================================
+        // Public Member Variables
+        //===================================================================
 
-        DebugInfo debugInfo;       // Debugging information (build, dependency, debug, and DB directories)
-        TableContext tableContext; // Context & stateful flags for the symbol table (isPrimary, isDependency)
+        DebugInfo debugInfo;                        // Debugging information for the symbol table (buildDir, dependencyDir, debugDir, DBdir)
+        TableContext tableContext;                  // Context for the symbol table (isPrimary, isDependency)
+        ScopeType currentScopeType = UNKNOWN_SCOPE; // Current scope type
 
-        ScopeType currentScopeType = UNKNOWN_SCOPE;    // The current scope type
-        SymbolTable *symbolTable = nullptr;            // The main entry point namespace
-        SymbolTable *currentDependencyTable = nullptr; // Runtime & other dependencies
+        SymbolTable *symbolTable = nullptr;            // Primary symbol table
+        SymbolTable *currentDependencyTable = nullptr; // Current dependency table
+        SymbolTable **dependencyTables = nullptr;      // Array of dependency tables (for multiple dependencies)
+        SymbolTable *stdImportTable = nullptr;         // Standard library import table
+        TypesTable *typeTable = nullptr;               // Global type table
+        size_t dependencyCount = 0;                    // Number of dependencies (C interface)
+        size_t dependencyCapacity = MAX_DEPENDENCIES;  // Maximum number of dependencies
 
-        SymbolTable **dependencyTables;        // For C interfacing (Array of dependency tables)
-        SymbolTable *stdImportTable = nullptr; // The `using` keyword table for standard library imports
-        TypesTable *typeTable = nullptr;       // Global types table
+        std::vector<SymbolTable *> dependencyTableVector; // Vector of dependency tables (C++ interface)
+        std::vector<FunctionSymbol *> globalFunctions;    // Vector of global functions
+        std::vector<ExternSymbol *> externFunctions;      // Vector of external functions
 
-        size_t dependencyCount = 0;                   // For C interfacing
-        size_t dependencyCapacity = MAX_DEPENDENCIES; // For C interfacing
+        ScopeBlock *currentScope = nullptr; // Current scope block
+        const char *scopeId = "null";       // Current scope ID
+        size_t scopeDepth = 0;              // Current scope depth
 
-        std::vector<SymbolTable *> dependencyTableVector; // For C++ interfacing
-        std::vector<FunctionSymbol *> globalFunctions;    // For C++ interfacing
-        std::vector<ExternSymbol *> externFunctions;      // For C++ interfacing
+        //===================================================================
+        // Table State Management
+        //===================================================================
 
-        ScopeBlock *currentScope = nullptr; // The current scope block
-        const char *scopeId = "null";       // The current scope ID
-        size_t scopeDepth = 0;              // The current scope depth
-
-        // ======================================================= //
-        // Public Functions for interfacing with the symbol table  //
-        // ======================================================= //
-
-        bool getIsPrimaryTable(void) { return tableContext.isPrimary; }
-        bool getIsDependencyTable(void) { return tableContext.isDependency; }
-
-        void setIsPrimaryTable(bool isPrimary)
-        {
-            tableContext.isPrimary = isPrimary;
-            tableContext.isDependency = !isPrimary;
-            tableState = TABLE_IN_PROGRESS;
-        }
-        void setIsDependencyTable(bool isDependency)
-        {
-            tableContext.isDependency = isDependency;
-            tableContext.isPrimary = !isDependency;
-            tableState = TABLE_IN_PROGRESS;
-        }
-
-        void resetCurrentDepsTable(void) { currentDependencyTable = nullptr; }
-        void setCurrentDependencyTable(SymbolTable *table)
-        {
-            resetCurrentDepsTable();
-            currentDependencyTable = table;
-        }
-        void setPrimaryTable(SymbolTable *table) { symbolTable = table; }
-        void mergeDBChunks(void) { db->createScopedDB(); }
+        bool getIsPrimaryTable(void);
+        bool getIsDependencyTable(void);
+        void setIsPrimaryTable(bool isPrimary);
+        void setIsDependencyTable(bool isDependency);
+        void resetCurrentDepsTable(void);
+        void setCurrentDependencyTable(SymbolTable *table);
+        void setPrimaryTable(SymbolTable *table);
         void tableFinished(void);
-
-        void addGlobalFunctionToTable(FunctionSymbol *function) { globalFunctions.push_back(function); }
-        void addExternFunctionToTable(ExternSymbol *function) { externFunctions.push_back(function); }
-
         void initNamespace(const char *namespaceName);
 
-        // ======================================================= //
-        // Symbol Table Management Functions                       //
-        // ======================================================= //
+        //===================================================================
+        // Symbol Table Operations
+        //===================================================================
 
         void createPrimaryTable(const char *namespaceName);
         void initDependencyTable(const char *namespaceName);
         void addNodeToTable(ASTNode *node);
         void completeDependencyTable(void);
         void addVariableToSymbolTable(ASTNode *node, const char *scopeID);
+        void addGlobalFunctionToTable(FunctionSymbol *function);
+        void addExternFunctionToTable(ExternSymbol *function);
 
         SymbolTable *getCurrentSymbolTable(void);
         Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
+        Symbol *querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table);
         Symbol *getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType);
 
-        // ======================================================= //
-        // Scope Management Functions                              //
-        // ======================================================= //
+        //===================================================================
+        // Scope Management
+        //===================================================================
 
         const char *getScopeID(void) { return scopeId; }
         size_t getScopeDepth(void) { return scopeDepth; }
-
         void enterScope(const char *name);
         void exitScope(void);
         const char *getScopeID(const char *name);
         void setScopeID(const char *id) { scopeId = id; }
-
         void initNamepsaceScope(const char *namespaceName);
 
-        // ======================================================= //
-        // Symbol Retrieval Functions                              //
-        // ======================================================= //
+        //===================================================================
+        // Symbol Resolution
+        //===================================================================
 
         VariableSymbol *getFrontendVariableSymbol(const char *name, const char *scopeID);
         MethodSymbol *getFrontendMethodSymbol(const char *methodName, const char *className, const char *scopeID);
         Symbol *resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType);
         Symbol *resolveExternSymbol(const char *symbolName);
+        FunctionSymbol *resolveScopedFunctionCall(const char *scopeID, const char *functionName);
+        SymbolTable *findSymbolTable(const char *scopeID);
+        Symbol *seekFunctionSymbolInAllTables(const char *symbolName);
 
-        // ======================================================= //
-        // Debug Functions other than the `SymbolTableDebugger`    //
-        // ======================================================= //
+        //===================================================================
+        // Class Declaration Management
+        //===================================================================
+
+        void initClassDeclaration(const char *className);
+        void addPropertyToClass(const char *className, ASTNode *property);
+        void addMethodToClass(const char *className, ASTNode *method);
+
+        //===================================================================
+        // Debug Operations
+        //===================================================================
 
         void printGlobalTable(GlobalSymbolTable *table);
+        void mergeDBChunks(void);
 
     private:
         TABLE_STATE tableState = TABLE_UNINITIALIZED;
         std::unique_ptr<SymbolTableDB> db = std::make_unique<SymbolTableDB>(debugInfo.rootDir);
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
+
+        //===================================================================
+        // Private Helper Functions
+        //===================================================================
         DebugInfo getDebugInfo(void)
         {
             std::string rootDir = getCryoRootPath();
@@ -351,55 +351,42 @@ namespace Cryo
             return info;
         }
         TableContext setDefaultContext(void) { return {false, false}; }
-
         Symbol *ASTNodeToSymbol(ASTNode *node);
         const char *getRootNamespace(ASTNode *root);
-
-        // -------------------------------------------------------
-        // Node Setters
-
         void addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table);
         void addSingleSymbolToTable(Symbol *symbol, SymbolTable *table);
-
         void addSymbolToCurrentTable(Symbol *symbol);
+        bool isParamSymbol(ASTNode *node);
 
     protected:
-        // ======================================================= //
-        // Symbol Creation Functions                               //
-        // ======================================================= //
-
+        //===================================================================
+        // Symbol Creation
+        //===================================================================
         ScopeBlock *createScopeBlock(const char *name, size_t depth);
         VariableSymbol *createVariableSymbol(const char *name, DataType *type, ASTNode *node, const char *scopeId);
-        FunctionSymbol *createFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node);
-        TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId);
+        FunctionSymbol *createFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType,
+                                             DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility,
+                                             ASTNode *node);
+        TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf,
+                                     bool isStatic, bool isGeneric, const char *scopeId);
         TypeSymbol *createIncompleteTypeSymbol(const char *name, TypeofDataType typeOf);
-
         PropertySymbol *createPropertySymbol(ASTNode *propNode);
         MethodSymbol *createMethodSymbol(ASTNode *methodNode);
-        ExternSymbol *createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, const char *scopeId);
-
+        ExternSymbol *createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes,
+                                         size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility,
+                                         const char *scopeId);
         Symbol *createSymbol(TypeOfSymbol symbolType, void *symbol);
         SymbolTable *createSymbolTable(const char *namespaceName);
         TypesTable *createTypeTable(const char *namespaceName);
         void processParamList(ASTNode **node, int paramCount, const char *scopeID);
 
-        bool isParamSymbol(ASTNode *node);
-
-    public:
-        // ======================================================= //
-        // Declaration Functions (incomplete definitions)          //
-        // ======================================================= //
-
-        void initClassDeclaration(const char *className);
-        void addPropertyToClass(const char *className, ASTNode *property);
-        void addMethodToClass(const char *className, ASTNode *method);
-
-    private:
+        //===================================================================
+        // Class Symbol Management
+        //===================================================================
         Symbol *createClassDeclarationSymbol(const char *className);
         void updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount);
         void updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount);
         Symbol *getClassSymbol(const char *className);
-
         void addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table);
         void updateClassSymbol(Symbol *classSymbol, SymbolTable *table);
     };

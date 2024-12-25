@@ -287,7 +287,45 @@ namespace Cryo
             }
         }
 
+        std::cout << "Checking all tables for function symbol: " << symbolName << std::endl;
+
+        Symbol *fallbackSymbol = seekFunctionSymbolInAllTables(symbolName);
+        if (fallbackSymbol != nullptr)
+        {
+            return fallbackSymbol;
+        }
+
         std::cout << "<!> Function Symbol not found: " << symbolName << " <!>" << std::endl;
+        return nullptr;
+    }
+
+    Symbol *GlobalSymbolTable::seekFunctionSymbolInAllTables(const char *symbolName)
+    {
+        if (!symbolName || symbolName == nullptr)
+        {
+            return nullptr;
+        }
+
+        Symbol *symbol = nullptr;
+
+        // Check the dependency tables
+        int depCount = dependencyTableVector.size();
+        for (int i = 0; i < depCount; i++)
+        {
+            SymbolTable *depTable = dependencyTableVector[i];
+            symbol = querySpecifiedTable(symbolName, FUNCTION_SYMBOL, depTable);
+            if (symbol != nullptr)
+            {
+                std::cout << "Function Symbol Resolved in Dependency Table!" << std::endl;
+                return symbol;
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        std::cout << "<!> Function Symbol not found in any table: " << symbolName << " <!>" << std::endl;
         return nullptr;
     }
 
@@ -318,6 +356,100 @@ namespace Cryo
         }
 
         std::cout << "<!> Extern Symbol not found: " << symbolName << " <!>" << std::endl;
+        return nullptr;
+    }
+
+    FunctionSymbol *GlobalSymbolTable::resolveScopedFunctionCall(const char *scopeID, const char *functionName)
+    {
+        if (!scopeID || scopeID == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!functionName || functionName == nullptr)
+        {
+            return nullptr;
+        }
+
+        SymbolTable *table = findSymbolTable(scopeID);
+        if (!table)
+        {
+            std::cerr << "Error: Failed to resolve scoped function call, table not found!" << std::endl;
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        std::cout << "Resolving Scoped Function Symbol: " << functionName << " in Scope: " << scopeID << std::endl;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            if (symbols[i]->symbolType == FUNCTION_SYMBOL)
+            {
+                Symbol *symbol = symbols[i];
+                FunctionSymbol *funcSymbol = symbol->function;
+                if (strcmp(funcSymbol->name, functionName) == 0 && strcmp(funcSymbol->parentScopeID, scopeID) == 0)
+                {
+                    std::cout << "Scoped Function Symbol Resolved!" << std::endl;
+                    return funcSymbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+    }
+
+    SymbolTable *GlobalSymbolTable::findSymbolTable(const char *scopeID)
+    {
+        if (!scopeID || scopeID == nullptr)
+        {
+            std::cerr << "Error: Failed to find symbol table, scope ID is null!" << std::endl;
+            return nullptr;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            std::cerr << "Error: Failed to find symbol table, current table is null!" << std::endl;
+            return nullptr;
+        }
+
+        std::cout << "Checking for Symbol Table: " << scopeID << std::endl;
+
+        if (strcmp(table->scopeId, scopeID) == 0)
+        {
+            std::cout << "Found Current Table!" << std::endl;
+            return table;
+        }
+
+        std::cout << "Checking Dependency Tables..." << std::endl;
+
+        // If it is not the current table, check the dependency tables
+        int depCount = dependencyTableVector.size();
+        for (int i = 0; i < depCount; i++)
+        {
+            std::cout << "Checking Dependency Table: " << i << std::endl;
+            SymbolTable *depTable = dependencyTableVector[i];
+            if (strcmp(depTable->scopeId, scopeID) == 0)
+            {
+                std::cout << "Found Dependency Table!" << std::endl;
+                return depTable;
+            }
+            else
+            {
+                std::cout << "Dependency Table: " << i << " not found! Expected: " << scopeID << " Found: " << depTable->scopeId << std::endl;
+                continue;
+            }
+        }
+
+        std::cerr << "Error: Failed to find symbol table!" << std::endl;
         return nullptr;
     }
 

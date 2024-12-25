@@ -234,7 +234,7 @@ namespace Cryo
             symbolTypeToString(symbol->symbolType),        // Symbol type
             func->name,                                    // Name
             DataTypeToStringUnformatted(func->returnType), // Return type
-            func->scopeId,                                 // ID
+            func->functionScopeId,                         // ID
             std::to_string(0),                             // Scope depth
             std::to_string(func->paramCount),              // Parameter count
             argTypes.str(),                                // Argument types
@@ -520,7 +520,7 @@ namespace Cryo
         func->paramCount = std::stoi(entry.columns[5]);
         // func->paramTypes = new DataType *[func->paramCount]; // Implement this
         func->visibility = stringToVisibilityType(entry.columns[7].c_str());
-        func->scopeId = entry.columns[3].c_str();
+        func->functionScopeId = entry.columns[3].c_str();
 
         return symbol;
     }

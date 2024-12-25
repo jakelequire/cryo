@@ -88,7 +88,7 @@ namespace Cryo
                           symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
         logger->debugNode("Parent ID: %s | Function ID: %s",
-                          symbol->scopeId,
+                          symbol->functionScopeId,
                           symbol->functionScopeId);
         logger->debugNode("Parameters: %zu", symbol->paramCount);
         logger->debugNode(SEPARATOR);
