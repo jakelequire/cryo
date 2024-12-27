@@ -72,7 +72,6 @@ namespace Cryo
 
         // Increment the method count
         classSymbol->type->methodCount++;
-
         return;
     }
 
@@ -166,8 +165,44 @@ namespace Cryo
         return nullptr;
     }
 
+    void GlobalSymbolTable::completeClassDeclaration(ASTNode *classNode, const char *className)
+    {
+        if (!classNode || classNode == nullptr)
+        {
+            std::cout << "Error: Class Node is null" << std::endl;
+            return;
+        }
+        if (!className || className == nullptr)
+        {
+            std::cout << "Error: Class Symbol is null" << std::endl;
+            return;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            std::cout << "Error: Symbol Table is null" << std::endl;
+            return;
+        }
+
+        Symbol *classSymbol = getClassSymbol(className);
+        if (!classSymbol)
+        {
+            std::cout << "Error: Class Symbol not found" << std::endl;
+            return;
+        }
+
+        // Add the node to the class symbol
+        classSymbol->type->node = classNode;
+
+        // Update the class symbol in the table
+        updateClassSymbol(classSymbol, table);
+
+        return;
+    }
+
     // -------------------------------------------------------
-    // Updates Symbol Table with Class Declaration
+    // Updates Symbol Table with the Class Declaration
 
     void GlobalSymbolTable::addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table)
     {

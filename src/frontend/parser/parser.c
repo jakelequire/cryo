@@ -85,7 +85,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
         else
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to parse statement.");
-            parsingError("Failed to parse statement.", "parseProgram", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Failed to parse statement.", "parseProgram", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
         logMessage("INFO", __LINE__, "Parser", "Next token after statement: %s", CryoTokenToString(lexer->currentToken.type));
@@ -113,7 +113,7 @@ void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, co
     }
     else
     {
-        parsingError((char *)message, (char *)functionName, table, arena, state, lexer, lexer->source, typeTable);
+        parsingError((char *)message, (char *)functionName, table, arena, state, lexer, lexer->source, typeTable, NULL);
     }
 
     debugCurrentToken(lexer, arena, state, typeTable);
@@ -164,7 +164,7 @@ char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTab
     }
     else
     {
-        parsingError("Expected a namespace name", "getNamespaceName", NULL, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected a namespace name", "getNamespaceName", NULL, arena, state, lexer, lexer->source, typeTable, NULL);
     }
     return namespaceName;
 }
@@ -207,7 +207,7 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
     DataType *type = parseDataType(typeStr, typeTable);
     if (!type)
     {
-        parsingError("Unknown data type", "getCryoDataType", NULL, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Unknown data type", "getCryoDataType", NULL, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
 
     logMessage("INFO", __LINE__, "Parser", "Data type: %s", DataTypeToString(type));
@@ -236,7 +236,7 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *tabl
         break;
 
     default:
-        parsingError("Expected a type identifier", "getNextToken", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected a type identifier", "getNextToken", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         break;
     }
 
@@ -460,7 +460,7 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         return NULL;
 
     default:
-        parsingError("Expected a statement", "parseStatement", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected a statement", "parseStatement", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 }
@@ -487,7 +487,7 @@ ASTNode *parseStaticKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     }
     default:
     {
-        parsingError("Expected 'class', 'struct', or 'function' keyword", "parseStaticKeyword", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected 'class', 'struct', or 'function' keyword", "parseStaticKeyword", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
     }
     DEBUG_BREAKPOINT;
@@ -508,17 +508,17 @@ ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     printf("Function Name: %s\n", functionName);
 
-    // Check the symbol table for the identifier and find what kind of symbol it is.
-    CryoSymbol *symbol = findSymbol(table, functionName, arena);
-    if (!symbol)
+    Symbol *sym = FindSymbol(globalTable, functionName, getCurrentScopeID(context));
+    if (!sym)
     {
-        parsingError("Symbol not found", "parseScopeCall", table, arena, state, lexer, lexer->source, typeTable);
+        logMessage("ERROR", __LINE__, "Parser", "Symbol not found in global table: %s", functionName);
+        parsingError("Symbol not found", "parseScopeCall", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
-    logMessage("INFO", __LINE__, "Parser", "Symbol found: %s", symbol->name);
+    ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", table, arena, state, typeTable, context);
 
-    CryoNodeType nodeType = symbol->nodeType;
+    CryoNodeType nodeType = symbolNode->metaData->type;
     printf("Node Type: %s\n", CryoNodeTypeToString(nodeType));
     ASTNode *node = NULL;
     switch (nodeType)
@@ -555,7 +555,7 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingCo
     FunctionSymbol *funcSymbol = GetFrontendScopedFunctionSymbol(globalTable, functionName, scopeNameID);
     if (!funcSymbol)
     {
-        parsingError("Function symbol not found", "parseScopedFunctionCall", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Function symbol not found", "parseScopedFunctionCall", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -566,7 +566,7 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingCo
     ASTNode *argList = parseArgumentList(lexer, table, context, arena, state, typeTable, globalTable);
     if (!argList)
     {
-        parsingError("Failed to parse argument list", "parseScopedFunctionCall", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Failed to parse argument list", "parseScopedFunctionCall", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
     if (argList->metaData->type == NODE_ARG_LIST)
@@ -624,7 +624,7 @@ ASTNode *parseNamespace(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     }
     else
     {
-        parsingError("Expected a namespace name", "parseNamespace", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected a namespace name", "parseNamespace", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
 
     InitNamespace(globalTable, namespaceName);
@@ -673,7 +673,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         char *booleanValueStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
         if (strcmp(booleanValueStr, "true") != 0 && strcmp(booleanValueStr, "false") != 0)
         {
-            parsingError("Invalid boolean value", "parsePrimaryExpression", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Invalid boolean value", "parsePrimaryExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         }
         int booleanValue = strcmp(booleanValueStr, "true") == 0 ? 1 : 0;
         node = createBooleanLiteralNode(booleanValue, arena, state, typeTable, lexer);
@@ -716,7 +716,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     default:
     {
         NEW_COMPILER_ERROR(state, "ERROR", "Expected an expression or statement.", "parsePrimaryExpression");
-        parsingError("Expected an expression", "parsePrimaryExpression", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an expression", "parsePrimaryExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
     }
@@ -842,7 +842,7 @@ ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCont
     ASTNode *left = parsePrimaryExpression(lexer, table, context, arena, state, typeTable, globalTable);
     if (!left)
     {
-        parsingError("Expected an expression.", "parseBinaryExpression", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an expression.", "parseBinaryExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -875,7 +875,7 @@ ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCont
         ASTNode *right = parseBinaryExpression(lexer, table, context, precedence + 1, arena, state, typeTable, globalTable);
         if (!right)
         {
-            parsingError("Expected an expression on the right side of the operator.", "parseBinaryExpression", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Expected an expression on the right side of the operator.", "parseBinaryExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
 
@@ -883,7 +883,7 @@ ASTNode *parseBinaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingCont
         CryoOperatorType op = CryoTokenToOperator(opToken);
         if (op == OPERATOR_NA)
         {
-            parsingError("Invalid operator.", "parseBinaryExpression", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Invalid operator.", "parseBinaryExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
 
@@ -924,7 +924,7 @@ ASTNode *parseUnaryExpression(Lexer *lexer, CryoSymbolTable *table, ParsingConte
         right = parsePrimaryExpression(lexer, table, context, arena, state, typeTable, globalTable);
         if (!right)
         {
-            parsingError("Expected an operand", "parseUnaryExpression", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Expected an operand", "parseUnaryExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
     }
@@ -948,7 +948,7 @@ ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         return parseFunctionDeclaration(lexer, table, context, VISIBILITY_PUBLIC, arena, state, typeTable, globalTable);
 
     default:
-        parsingError("Expected a declaration.", "parsePublicDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected a declaration.", "parsePublicDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 }
@@ -969,7 +969,7 @@ ASTNode *parsePrivateDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCo
         return parseFunctionDeclaration(lexer, table, context, VISIBILITY_PRIVATE, arena, state, typeTable, globalTable);
 
     default:
-        parsingError("Expected a declaration.", "parsePrivateDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected a declaration.", "parsePrivateDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 }
@@ -1075,7 +1075,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
         logMessage("ERROR", __LINE__, "Parser", "Expected variable name.");
-        parsingError("[Parser] Expected variable name.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("[Parser] Expected variable name.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
     char *var_name = strndup(lexer->currentToken.start, lexer->currentToken.length);
     getNextToken(lexer, arena, state, typeTable);
@@ -1090,19 +1090,19 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
         dataType = getCryoDataType(varType, arena, state, lexer, typeTable, globalTable);
         if (!dataType)
         {
-            parsingError("[Parser] Unknown data type.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("[Parser] Unknown data type.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         }
         getNextToken(lexer, arena, state, typeTable);
     }
     else
     {
-        parsingError("[Parser] Expected ':' after variable name.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("[Parser] Expected ':' after variable name.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
 
     // Parse the variable initializer
     if (lexer->currentToken.type != TOKEN_EQUAL)
     {
-        parsingError("[Parser] Expected '=' after type.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("[Parser] Expected '=' after type.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
     getNextToken(lexer, arena, state, typeTable);
 
@@ -1117,7 +1117,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingContex
     ASTNode *initializer = parseExpression(lexer, table, context, arena, state, typeTable, globalTable);
     if (initializer == NULL)
     {
-        parsingError("[Parser] Expected expression after '='.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("[Parser] Expected expression after '='.", "parseVarDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
 
     if (initializer->metaData->type == NODE_FUNCTION_CALL)
@@ -1159,7 +1159,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1196,7 +1196,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     }
     else
     {
-        parsingError("Expected `->` for return type.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected `->` for return type.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
 
     logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", DataTypeToString(returnType));
@@ -1205,7 +1205,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     if (lexer->currentToken.type != TOKEN_LBRACE)
     {
         logMessage("ERROR", __LINE__, "Parser", "Expected `{` to start function block.");
-        parsingError("Expected `{` to start function block.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected `{` to start function block.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1214,7 +1214,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     if (!functionDefNode)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to create function node.");
-        parsingError("Failed to create function node.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Failed to create function node.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
     functionDefNode->data.functionDecl->paramTypes = paramTypes;
@@ -1228,7 +1228,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     ASTNode *functionBlock = parseFunctionBlock(lexer, table, context, arena, state, typeTable, globalTable);
     if (!functionBlock)
     {
-        parsingError("Failed to parse function block.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Failed to parse function block.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1253,7 +1253,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier.", "parseExternFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier.", "parseExternFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1280,7 +1280,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     }
     else
     {
-        parsingError("Expected `->` for return type.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected `->` for return type.", "parseFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
 
     logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", DataTypeToString(returnType));
@@ -1328,7 +1328,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                    "Function not found: %s", functionName);
         printGlobalSymbolTable(globalTable);
         parsingError("Function not found.", "parseFunctionCall", table, arena, state,
-                     lexer, lexer->source, typeTable);
+                     lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
     TypeOfSymbol typeofSymbol = funcSymbol->symbolType;
@@ -1351,7 +1351,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         logMessage("ERROR", __LINE__, "Parser",
                    "Invalid symbol type: %s", typeofSymbol);
         parsingError("Invalid symbol type.", "parseFunctionCall", table, arena, state,
-                     lexer, lexer->source, typeTable);
+                     lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1402,7 +1402,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
         logMessage("ERROR", __LINE__, "Parser",
                    "Invalid function type: ");
         parsingError("Invalid function type.", "parseFunctionCall",
-                     table, arena, state, lexer, lexer->source, typeTable);
+                     table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
     }
@@ -1413,7 +1413,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                    "Expected '(' after function name, got: %s", CryoTokenToString(lexer->currentToken.type));
 
         parsingError("Expected '(' after function name.", "parseFunctionCall",
-                     table, arena, state, lexer, lexer->source, typeTable);
+                     table, arena, state, lexer, lexer->source, typeTable, globalTable);
 
         CONDITION_FAILED;
     }
@@ -1492,7 +1492,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                 if (!context->thisContext)
                 {
                     parsingError("Invalid use of `this` keyword.", "parseFunctionCall",
-                                 table, arena, state, lexer, lexer->source, typeTable);
+                                 table, arena, state, lexer, lexer->source, typeTable, globalTable);
                     return NULL;
                 }
 
@@ -1509,7 +1509,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                 else
                 {
                     parsingError("Expected `.` after `this` keyword.", "parseFunctionCall",
-                                 table, arena, state, lexer, lexer->source, typeTable);
+                                 table, arena, state, lexer, lexer->source, typeTable, globalTable);
                     return NULL;
                 }
 
@@ -1533,7 +1533,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                     if (i == thisContextPropCount - 1)
                     {
                         parsingError("Property not found in `this` context.", "parseFunctionCall",
-                                     table, arena, state, lexer, lexer->source, typeTable);
+                                     table, arena, state, lexer, lexer->source, typeTable, globalTable);
                         return NULL;
                     }
 
@@ -1558,7 +1558,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                 const char *errorStr = "Invalid argument, received: ";
                 const char *fullErrorMessage = concatStrings(errorStr, tokenStr);
                 parsingError((char *)fullErrorMessage, "parseFunctionCall",
-                             table, arena, state, lexer, lexer->source, typeTable);
+                             table, arena, state, lexer, lexer->source, typeTable, globalTable);
                 return NULL;
             }
             }
@@ -1591,7 +1591,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
                    "Argument count mismatch. Expected: %d, Got: %d",
                    _paramCount, functionCallNode->data.functionCall->argCount);
         parsingError("Argument count mismatch.", "parseFunctionCall",
-                     table, arena, state, lexer, lexer->source, typeTable);
+                     table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1668,7 +1668,7 @@ ASTNode *parseParameter(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         currentToken.type != TOKEN_BOOLEAN_LITERAL &&
         currentToken.type != TOKEN_KW_THIS)
     {
-        parsingError("Expected an identifier.", "parseParameter", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier.", "parseParameter", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1714,7 +1714,8 @@ ASTNode **parseParameterList(Lexer *lexer, CryoSymbolTable *table, ParsingContex
 
                 if (globalTable)
                 {
-                    AddVariableToSymbolTable(globalTable, param, functionName);
+                    const char *functionScopeID = Generate64BitHashID(functionName);
+                    AddParamToSymbolTable(globalTable, param, functionScopeID);
                 }
             }
         }
@@ -1753,7 +1754,7 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         currentToken.type != TOKEN_KW_THIS)
     {
         logMessage("ERROR", __LINE__, "Parser", "Expected an identifier or literal, received: %s", CryoTokenToString(currentToken.type));
-        parsingError("Expected an identifier or literal.", "parseArguments", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier or literal.", "parseArguments", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1812,10 +1813,6 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     logMessage("INFO", __LINE__, "Parser", "Resolving argument type...");
     if (!isLiteral)
     {
-        // Old Symbol Table Lookup
-        // CryoSymbol *symbol = findSymbol(table, argName, arena);
-        // argType = symbol->type;
-        // New Global Symbol Table Lookup
         const char *curScopeID = getCurrentScopeID(context);
         Symbol *sym = GetFrontendSymbol(globalTable, argName, curScopeID, VARIABLE_SYMBOL);
         if (sym)
@@ -1904,7 +1901,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
         lexer->currentToken.type != TOKEN_BOOLEAN_LITERAL)
     {
         logMessage("ERROR", __LINE__, "Parser", "Expected an identifier, got: %s", CryoTokenToString(lexer->currentToken.type));
-        parsingError("Expected an identifier.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -1966,7 +1963,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
             if (!dotExpr)
             {
                 logMessage("ERROR", __LINE__, "Parser", "Failed to parse dot expression.");
-                parsingError("Failed to parse dot expression.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
+                parsingError("Failed to parse dot expression.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
                 return NULL;
             }
 
@@ -1986,18 +1983,6 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
 
         nodeType = NODE_VAR_NAME;
 
-        // Try to find the symbol in the symbol table (OLD)
-        // CryoSymbol *symbol = findSymbol(table, argName, arena);
-        // if (!symbol)
-        // {
-        //     logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the symbol table. < %s >", argName);
-        //     parsingError("Symbol not found in the symbol table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
-        //     CONDITION_FAILED;
-        //     return NULL;
-        // }
-        // expectedType = symbol->type;
-        // isLiteral = false;
-
         // New Global Symbol Table Lookup
         const char *curScopeID = getCurrentScopeID(context);
         Symbol *sym = GetFrontendSymbol(globalTable, argName, curScopeID, VARIABLE_SYMBOL);
@@ -2010,7 +1995,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
         else
         {
             logMessage("ERROR", __LINE__, "Parser", "Symbol not found in global table.");
-            parsingError("Symbol not found in global table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Symbol not found in global table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
     }
@@ -2022,15 +2007,22 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, CryoSymbolTable *table, Pa
     else
     {
         logMessage("INFO", __LINE__, "Parser", "Argument is not a literal");
-        // Resolve the type using the symbol table
-        CryoSymbol *symbol = findSymbol(table, argName, arena);
-        if (!symbol)
+        Symbol *sym = GetFrontendSymbol(globalTable, argName, getCurrentScopeID(context), VARIABLE_SYMBOL);
+        if (!sym)
         {
-            logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the symbol table.");
-            parsingError("Symbol not found in the symbol table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable);
+            logMessage("ERROR", __LINE__, "Parser", "Symbol not found in the global table.");
+            parsingError("Symbol not found in the global table.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
-        expectedType = symbol->type;
+
+        DataType *symbolType = GetDataTypeFromSymbol(globalTable, sym);
+        if (!symbolType)
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Failed to get data type from symbol.");
+            parsingError("Failed to get data type from symbol.", "parseArgumentsWithExpectedType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
+            return NULL;
+        }
+        expectedType = symbolType;
         logMessage("INFO", __LINE__, "Parser", "Argument type: %s", DataTypeToString(expectedType));
         isLiteral = false;
     }
@@ -2063,7 +2055,7 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Cr
         if (context->thisContext == NULL)
         {
             logMessage("ERROR", __LINE__, "Parser", "Expected 'this' keyword to be used inside a struct.");
-            parsingError("Expected 'this' keyword to be used inside a struct.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Expected 'this' keyword to be used inside a struct.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
 
@@ -2076,7 +2068,7 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Cr
         if (lexer->currentToken.type != TOKEN_IDENTIFIER)
         {
             logMessage("ERROR", __LINE__, "Parser", "Expected identifier after 'this' keyword. Received: %s", CryoTokenToString(lexer->currentToken.type));
-            parsingError("Expected identifier after 'this' keyword.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Expected identifier after 'this' keyword.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
 
@@ -2100,7 +2092,7 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Cr
         if (!matchedProperty)
         {
             logMessage("ERROR", __LINE__, "Parser", "Property not found in struct.");
-            parsingError("Property not found in struct.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Property not found in struct.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
 
@@ -2108,7 +2100,7 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Cr
         if (!propAccessNode)
         {
             logMessage("ERROR", __LINE__, "Parser", "Failed to create property access node.");
-            parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
 
@@ -2120,7 +2112,7 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Cr
     // If the this keyword is not using dot notation, then it's just a reference to the struct
     // For now though, the compiler will only support dot notation for accessing struct properties
     logMessage("ERROR", __LINE__, "Parser", "Expected dot notation after 'this' keyword.");
-    parsingError("Expected dot notation after 'this' keyword.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+    parsingError("Expected dot notation after 'this' keyword.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
 }
 // </parseExpectedTypeArgWithThisKW>
 
@@ -2249,7 +2241,7 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier.", "parseImport", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier.", "parseImport", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
@@ -2261,7 +2253,7 @@ ASTNode *parseImport(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
         getNextToken(lexer, arena, state, typeTable);
         if (lexer->currentToken.type != TOKEN_IDENTIFIER)
         {
-            parsingError("Expected an identifier.", "parseImport", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Expected an identifier.", "parseImport", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
 
@@ -2352,7 +2344,7 @@ ASTNode *parseExtern(Lexer *lexer, CryoSymbolTable *table, ParsingContext *conte
         return parseExternFunctionDeclaration(lexer, table, context, arena, state, typeTable, globalTable);
 
     default:
-        parsingError("Expected an extern declaration.", "parseExtern", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an extern declaration.", "parseExtern", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -2564,19 +2556,20 @@ ASTNode *parseArrayIndexing(Lexer *lexer, CryoSymbolTable *table, ParsingContext
 
     printf("[Parser] Array name: %s\n", arrCpyName);
     ASTNode *arrNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+
     // Find the array in the symbol table
-    CryoSymbol *symbol = findSymbol(table, arrCpyName, arena);
-    if (!symbol)
+    Symbol *sym = FindSymbol(globalTable, arrCpyName, getCurrentScopeID(context));
+    if (!sym)
     {
         logMessage("ERROR", __LINE__, "Parser", "Array not found.");
-        parsingError("Array not found.", "parseArrayIndexing", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Array not found.", "parseArrayIndexing", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         exit(1);
         return NULL;
     }
     else
     {
         logMessage("INFO", __LINE__, "Parser", "Array found.");
-        arrNode = symbol->node;
+        arrNode = GetASTNodeFromSymbol(globalTable, sym);
     }
 
     ASTNode *index = parseExpression(lexer, table, context, arena, state, typeTable, globalTable);
@@ -2598,15 +2591,15 @@ ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *c
     consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` for assignment.", "parseAssignment", table, arena, state, typeTable, context);
     logMessage("INFO", __LINE__, "Parser", "Variable name: %s", varNameCpy);
 
-    // Find the variable in the symbol table
-    CryoSymbol *symbol = findSymbol(table, varNameCpy, arena);
-    if (!symbol)
+    Symbol *sym = FindSymbol(globalTable, varNameCpy, getCurrentScopeID(context));
+    if (!sym)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Variable not found.");
-        parsingError("Variable not found.", "parseAssignment", table, arena, state, lexer, lexer->source, typeTable);
+        logMessage("ERROR", __LINE__, "Parser", "Failed to find symbol.");
+        parsingError("Failed to find symbol.", "parseAssignment", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
-    ASTNode *oldValue = symbol->node;
+    ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
+    ASTNode *oldValue = symbolNode;
     ASTNode *newValue = parseExpression(lexer, table, context, arena, state, typeTable, globalTable);
 
     bool isMutable = false;
@@ -2628,7 +2621,7 @@ ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *c
     default:
     {
         logMessage("ERROR", __LINE__, "Parser", "Old value is not a variable declaration.");
-        parsingError("Old value is not a variable declaration.", "parseAssignment", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Old value is not a variable declaration.", "parseAssignment", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
     }
@@ -2637,7 +2630,7 @@ ASTNode *parseAssignment(Lexer *lexer, CryoSymbolTable *table, ParsingContext *c
     if (!isMutable)
     {
         logMessage("ERROR", __LINE__, "Parser", "Variable is not mutable.");
-        parsingError("Variable is not mutable.", "parseAssignment", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Variable is not mutable.", "parseAssignment", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -2656,13 +2649,13 @@ ASTNode *parseThisContext(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     if (context->thisContext == NULL)
     {
-        parsingError("This context not in scope.", "parseThisContext", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("This context not in scope.", "parseThisContext", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
     if (context->thisContext->isStatic)
     {
-        parsingError("Cannot use `this` keyword in static context.", "parseThisContext", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Cannot use `this` keyword in static context.", "parseThisContext", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -2702,7 +2695,7 @@ ASTNode *parseLHSIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     logMessage("INFO", __LINE__, "Parser", "Parsing LHS identifier...");
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier.", "parseLHSIdentifier", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier.", "parseLHSIdentifier", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -2731,7 +2724,7 @@ ASTNode *parseDotNotation(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     }
     default:
     {
-        parsingError("Expected `this` keyword.", "parseDotNotation", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected `this` keyword.", "parseDotNotation", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
     }
@@ -2773,12 +2766,12 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
                 }
             }
 
-            parsingError("Property not found in struct.", "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Property not found in struct.", "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
         else
         {
-            parsingError("Expected a struct declaration.", "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Expected a struct declaration.", "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
     }
@@ -2789,17 +2782,18 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
         printf("Identifier name: %s\n", identifierName);
         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseIdentifierDotNotation", table, arena, state, typeTable, context);
 
-        // Look up the identifier in the symbol table
-        CryoSymbol *symbol = findSymbol(table, identifierName, arena);
-        if (!symbol)
+        Symbol *sym = FindSymbol(globalTable, identifierName, getCurrentScopeID(context));
+        if (!sym)
         {
-            parsingError("Identifier not found.", "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable);
+            logMessage("ERROR", __LINE__, "Parser", "Failed to find symbol.");
+            parsingError("Failed to find symbol.", "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
 
-        ASTNode *identifierNode = symbol->node;
+        ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
+        ASTNode *identifierNode = symbolNode;
         DataType *typeOfNode = DataTypeFromNode(identifierNode);
-        DataType *typeFromSymbol = symbol->type;
+        DataType *typeFromSymbol = GetDataTypeFromSymbol(globalTable, sym);
 
         VALIDATE_TYPE(typeOfNode);
         VALIDATE_TYPE(typeFromSymbol);
@@ -2819,7 +2813,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, CryoSymbolTable *table, Parsin
     char *unexpectedTokenStr = (char *)malloc(256);
     char *tokenStr = CryoTokenToString(lexer->currentToken.type);
     sprintf(unexpectedTokenStr, "Unexpected token in dot notation. Received: %s", tokenStr);
-    parsingError(unexpectedTokenStr, "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable);
+    parsingError(unexpectedTokenStr, "parseIdentifierDotNotation", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     return NULL;
 }
 
@@ -2830,7 +2824,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
     // The first identifier is the type of the node we are accessing
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier after `.`.", "parseDotNotationWithType", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier after `.`.", "parseDotNotationWithType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
 
@@ -2870,7 +2864,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         {
             printTypeTable(typeTable);
             printf("Property Attempted: %s\n", propName);
-            parsingError("Property not found in struct.", "parseDotNotationWithType", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Property not found in struct.", "parseDotNotationWithType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
     }
@@ -2884,7 +2878,7 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
     if (context->thisContext == NULL)
     {
         logMessage("ERROR", __LINE__, "Parser", "Expected 'this' keyword to be used inside a struct.");
-        parsingError("Expected 'this' keyword to be used inside a struct.", "parseForThisValueProperty", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected 'this' keyword to be used inside a struct.", "parseForThisValueProperty", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
@@ -2896,7 +2890,7 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
         logMessage("ERROR", __LINE__, "Parser", "Expected identifier after 'this' keyword. Received: %s", CryoTokenToString(lexer->currentToken.type));
-        parsingError("Expected identifier after 'this' keyword.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected identifier after 'this' keyword.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
@@ -2920,7 +2914,7 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
         logMessage("ERROR", __LINE__, "Parser", "Property not found in struct.");
         logMessage("ERROR", __LINE__, "Parser", "Property name: %s", propertyName);
 
-        parsingError("Property not found in struct.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Property not found in struct.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
@@ -2928,7 +2922,7 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSym
     if (!propAccessNode)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to create property access node.");
-        parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
@@ -2952,7 +2946,7 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     if (!type)
     {
         logMessage("ERROR", __LINE__, "Parser", "Type not found.");
-        parsingError("Type not found.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Type not found.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
@@ -2963,7 +2957,7 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     if (!args)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to parse argument list.");
-        parsingError("Failed to parse argument list.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Failed to parse argument list.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
@@ -2986,7 +2980,7 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
         if (ctorArgCount != argCount)
         {
             logMessage("ERROR", __LINE__, "Parser", "Argument count mismatch.");
-            parsingError("Argument count mismatch.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Argument count mismatch.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
     }
@@ -3003,7 +2997,7 @@ ASTNode *parseNewExpression(Lexer *lexer, CryoSymbolTable *table, ParsingContext
     if (!objectNode)
     {
         logMessage("ERROR", __LINE__, "Parser", "Failed to create object node.");
-        parsingError("Failed to create object node.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Failed to create object node.", "parseNewExpression", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 

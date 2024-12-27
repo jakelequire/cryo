@@ -81,6 +81,7 @@ namespace Cryo
             std::cout << "Function Name: " << functionName << std::endl;
             DataType *returnType = node->data.functionDecl->functionType;
             DataType **paramTypes = node->data.functionDecl->paramTypes;
+            ASTNode **paramNodes = node->data.functionDecl->params;
             size_t paramCount = node->data.functionDecl->paramCount;
             CryoVisibilityType visibility = node->data.functionDecl->visibility;
             const char *parentScopeID = node->data.functionDecl->parentScopeID;
@@ -91,8 +92,6 @@ namespace Cryo
                                                                   paramCount,
                                                                   visibility,
                                                                   node);
-            processParamList(node->data.functionDecl->params, paramCount, scopeID);
-
             return createSymbol(FUNCTION_SYMBOL, functionSymbol);
         }
 
@@ -151,6 +150,7 @@ namespace Cryo
             const char *structName = node->data.structNode->name;
             const char *scopeID = currentScope->id;
             TypeSymbol *structSymbol = createTypeSymbol(structName,
+                                                        node,
                                                         node->data.structNode->type,
                                                         STRUCT_TYPE,
                                                         false,
@@ -164,11 +164,13 @@ namespace Cryo
             std::cout << "ASTNodeToSymbol: Processing Property Node" << std::endl;
             break;
         }
+
         case NODE_CUSTOM_TYPE:
         {
             std::cout << "ASTNodeToSymbol: Processing Custom Type Node" << std::endl;
             break;
         }
+
         case NODE_METHOD:
         {
             std::cout << "ASTNodeToSymbol: Processing Method Node" << std::endl;
@@ -181,21 +183,25 @@ namespace Cryo
 
             return createSymbol(METHOD_SYMBOL, methodSymbol);
         }
+
         case NODE_CLASS:
         {
             std::cout << "ASTNodeToSymbol: Processing Class Node" << std::endl;
             break;
         }
+
         case NODE_ENUM:
         {
             std::cout << "ASTNodeToSymbol: Processing Enum Node" << std::endl;
             break;
         }
+
         case NODE_EXTERNAL_SYMBOL:
         {
             std::cout << "ASTNodeToSymbol: Processing External Symbol Node" << std::endl;
             break;
         }
+        
         case NODE_NAMESPACE:
         case NODE_INDEX_EXPR:
         case NODE_VAR_REASSIGN:

@@ -134,6 +134,67 @@ namespace Cryo
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",
                           symbol->isGeneric ? "true" : "false");
+
+        if (symbol->typeOf == STRUCT_TYPE)
+        {
+            logger->debugNode("Properties: %d | Methods: %d",
+                              symbol->propertyCount,
+                              symbol->methodCount);
+            // Log the properties
+            // int propCount = symbol->propertyCount;
+            // for (int i = 0; i < propCount; i++)
+            // {
+            //     PropertySymbol *propSymbol = symbol->properties[i]->property;
+            //     if (!propSymbol)
+            //     {
+            //         logger->debugNode("NULL PROPERTY");
+            //     }
+            //
+            //     // logPropertySymbolChild(propSymbol);
+            // }
+            // int methodCount = symbol->methodCount;
+            // for (int i = 0; i < methodCount; i++)
+            // {
+            //     MethodSymbol *methodSymbol = symbol->methods[i]->method;
+            //     if (!methodSymbol)
+            //     {
+            //         logger->debugNode("NULL METHOD");
+            //     }
+            //
+            //     // logMethodSymbolChild(methodSymbol);
+            // }
+        }
+
+        if (symbol->typeOf == CLASS_TYPE)
+        {
+            logger->debugNode("Properties: %d | Methods: %d",
+                              symbol->propertyCount,
+                              symbol->methodCount);
+            // Log the properties
+            int propCount = symbol->propertyCount;
+            for (int i = 0; i < propCount; i++)
+            {
+                PropertySymbol *propSymbol = symbol->properties[i]->property;
+                if (!propSymbol)
+                {
+                    logger->debugNode("NULL PROPERTY");
+                }
+
+                logPropertySymbolChild(propSymbol);
+            }
+            int methodCount = symbol->methodCount;
+            for (int i = 0; i < methodCount; i++)
+            {
+                MethodSymbol *methodSymbol = symbol->methods[i]->method;
+                if (!methodSymbol)
+                {
+                    logger->debugNode("NULL METHOD");
+                }
+
+                logMethodSymbolChild(methodSymbol);
+            }
+        }
+
         logger->debugNode(SEPARATOR);
     }
 
@@ -191,6 +252,36 @@ namespace Cryo
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",
                           symbol->hasDefaultExpr ? "true" : "false");
+        logger->debugNode(CHILD_SEPARATOR);
+    }
+
+    void SymbolTableDebugger::logMethodSymbolChild(MethodSymbol *symbol)
+    {
+        if (!symbol)
+        {
+            logger->debugNode("NULL method symbol");
+            return;
+        }
+
+        logger->debugNode("%s | %s ReturnType: %s",
+                          getColoredSymbolType(METHOD_SYMBOL).c_str(),
+                          symbol->name,
+                          symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
+        logger->debugNode("ID: %s | Static: %s Visibility: %d",
+                          symbol->scopeId,
+                          symbol->isStatic ? "true" : "false",
+                          symbol->visibility);
+        logger->debugNode("Parameters: %zu", symbol->paramCount);
+
+        // Only log parameters if they exist
+        if (symbol->paramCount > 0)
+        {
+            for (size_t i = 0; i < symbol->paramCount; i++)
+            {
+                logger->debugNode("  Param %zu: %s", i,
+                                  symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
+            }
+        }
         logger->debugNode(CHILD_SEPARATOR);
     }
 

@@ -225,6 +225,177 @@ namespace Cryo
         }
     }
 
+    Symbol *GlobalSymbolTable::findSymbol(const char *symbolName, const char *scopeID)
+    {
+        if (!symbolName || symbolName == nullptr)
+        {
+            std::cerr << "Error: Failed to find symbol, symbol name is null!" << std::endl;
+            return nullptr;
+        }
+        if (!scopeID || scopeID == nullptr)
+        {
+            std::cerr << "Error: Failed to find symbol, scope ID is null!" << std::endl;
+            return nullptr;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            std::cerr << "Error: Failed to find symbol, table is null!" << std::endl;
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            Symbol *symbol = symbols[i];
+            switch (symbol->symbolType)
+            {
+            case VARIABLE_SYMBOL:
+            {
+                VariableSymbol *varSymbol = symbol->variable;
+                if (strcmp(varSymbol->name, symbolName) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            case FUNCTION_SYMBOL:
+            {
+                FunctionSymbol *funcSymbol = symbol->function;
+                if (strcmp(funcSymbol->name, symbolName) == 0 && strcmp(funcSymbol->parentScopeID, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            case EXTERN_SYMBOL:
+            {
+                ExternSymbol *externSymbol = symbol->externSymbol;
+                if (strcmp(externSymbol->name, symbolName) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            case TYPE_SYMBOL:
+            {
+                TypeSymbol *typeSymbol = symbol->type;
+                if (strcmp(typeSymbol->name, symbolName) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            case PROPERTY_SYMBOL:
+            {
+                PropertySymbol *propSymbol = symbol->property;
+                if (strcmp(propSymbol->name, symbolName) == 0 && strcmp(propSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            case METHOD_SYMBOL:
+            {
+                MethodSymbol *methodSymbol = symbol->method;
+                if (strcmp(methodSymbol->name, symbolName) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
+                {
+                    return symbol;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            default:
+                std::cerr << "Error: Failed to find symbol, symbol type not recognized!" << std::endl;
+                return nullptr;
+            }
+        }
+
+        std::cerr << "Error: Failed to find symbol, symbol not found!" << std::endl;
+        return nullptr;
+    }
+
+    Symbol *GlobalSymbolTable::findMethodSymbol(const char *methodName, const char *className, TypeofDataType typeOfNode)
+    {
+        if (!methodName || methodName == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!className || className == nullptr)
+        {
+            return nullptr;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        // Look for the method symbol in the current table
+        for (int i = 0; i < symbolCount; i++)
+        {
+            if (symbols[i]->symbolType == TYPE_SYMBOL)
+            {
+                TypeSymbol *typeSymbol = symbols[i]->type;
+                if (strcmp(typeSymbol->name, className) == 0)
+                {
+                    // Check the methods
+                    for (int j = 0; j < typeSymbol->methodCount; j++)
+                    {
+                        MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
+                        if (strcmp(methodSymbol->name, methodName) == 0)
+                        {
+                            return typeSymbol->methods[j];
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+            }
+        }
+
+        // Check the dependency tables
+        Symbol *fallbackSymbol = seekMethodSymbolInAllTables(methodName, className, typeOfNode);
+        if (fallbackSymbol != nullptr)
+        {
+            return fallbackSymbol;
+        }
+
+        std::cerr << "Error: Failed to find method symbol, symbol not found!" << std::endl;
+        return nullptr;
+    }
+
     Symbol *GlobalSymbolTable::resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType)
     {
         if (!symbolName || symbolName == nullptr)
@@ -326,6 +497,55 @@ namespace Cryo
         }
 
         std::cout << "<!> Function Symbol not found in any table: " << symbolName << " <!>" << std::endl;
+        return nullptr;
+    }
+
+    Symbol *GlobalSymbolTable::seekMethodSymbolInAllTables(const char *methodName, const char *className, TypeofDataType typeOfNode)
+    {
+        if (!methodName || methodName == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!className || className == nullptr)
+        {
+            return nullptr;
+        }
+
+        Symbol *symbol = nullptr;
+        std::cout << "Seeking Method Symbol: " << methodName << " in Class: " << className << std::endl;
+
+        // Check the dependency tables
+        int depCount = dependencyTableVector.size();
+        for (int i = 0; i < depCount; i++)
+        {
+            SymbolTable *depTable = dependencyTableVector[i];
+            symbol = querySpecifiedTable(methodName, TYPE_SYMBOL, depTable);
+            if (symbol != nullptr)
+            {
+                std::cout << "Type Symbol Found in Dependency Table! Checking Methods..." << std::endl;
+                TypeSymbol *typeSymbol = symbol->type;
+                for (int j = 0; j < typeSymbol->methodCount; j++)
+                {
+                    MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
+                    if (strcmp(methodSymbol->name, methodName) == 0)
+                    {
+                        std::cout << "Method Symbol Resolved in Dependency Table!" << std::endl;
+                        return typeSymbol->methods[j];
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        std::cout << "<!> Method Symbol not found in any table: " << methodName << " <!>" << std::endl;
         return nullptr;
     }
 
@@ -450,6 +670,94 @@ namespace Cryo
         }
 
         std::cerr << "Error: Failed to find symbol table!" << std::endl;
+        return nullptr;
+    }
+
+    DataType *GlobalSymbolTable::getDataTypeFromSymbol(Symbol *symbol)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cerr << "Error: Failed to get data type from symbol, symbol is null!" << std::endl;
+            return nullptr;
+        }
+
+        switch (symbol->symbolType)
+        {
+        case VARIABLE_SYMBOL:
+        {
+            VariableSymbol *varSymbol = symbol->variable;
+            return varSymbol->type;
+        }
+        case FUNCTION_SYMBOL:
+        {
+            FunctionSymbol *funcSymbol = symbol->function;
+            return funcSymbol->returnType;
+        }
+        case TYPE_SYMBOL:
+        {
+            TypeSymbol *typeSymbol = symbol->type;
+            return typeSymbol->type;
+        }
+        case PROPERTY_SYMBOL:
+        {
+            PropertySymbol *propSymbol = symbol->property;
+            return propSymbol->type;
+        }
+        case METHOD_SYMBOL:
+        {
+            MethodSymbol *methodSymbol = symbol->method;
+            return methodSymbol->returnType;
+        }
+        default:
+            std::cerr << "Error: Failed to get data type from symbol, symbol type not recognized!" << std::endl;
+            return nullptr;
+        }
+
+        std::cerr << "Error: Failed to get data type from symbol, symbol type not recognized!" << std::endl;
+        return nullptr;
+    }
+
+    ASTNode *GlobalSymbolTable::getASTNodeFromSymbol(Symbol *symbol)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cerr << "Error: Failed to get AST node from symbol, symbol is null!" << std::endl;
+            return nullptr;
+        }
+
+        switch (symbol->symbolType)
+        {
+        case VARIABLE_SYMBOL:
+        {
+            VariableSymbol *varSymbol = symbol->variable;
+            return varSymbol->node;
+        }
+        case FUNCTION_SYMBOL:
+        {
+            FunctionSymbol *funcSymbol = symbol->function;
+            return funcSymbol->node;
+        }
+        case TYPE_SYMBOL:
+        {
+            TypeSymbol *typeSymbol = symbol->type;
+            return typeSymbol->node;
+        }
+        case PROPERTY_SYMBOL:
+        {
+            PropertySymbol *propSymbol = symbol->property;
+            return propSymbol->node;
+        }
+        case METHOD_SYMBOL:
+        {
+            MethodSymbol *methodSymbol = symbol->method;
+            return methodSymbol->node;
+        }
+        default:
+            std::cerr << "Error: Failed to get AST node from symbol, symbol type not recognized!" << std::endl;
+            return nullptr;
+        }
+
+        std::cerr << "Error: Failed to get AST node from symbol, symbol type not recognized!" << std::endl;
         return nullptr;
     }
 

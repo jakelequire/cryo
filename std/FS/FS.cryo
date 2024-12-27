@@ -1,4 +1,4 @@
-namespace FS;
+namespace FileSystem;
 
 extern function __c_fs_mkdir(path: string) -> int;
 extern function __c_fs_rmdir(path: string) -> int;
@@ -70,7 +70,12 @@ class FS {
     // }
 }
 
-function main() -> void {
+function foo() -> void {
+    const bar: int = 1234;
+    return;
+}
 
+function main() -> void {
+    foo();
     return;
 }

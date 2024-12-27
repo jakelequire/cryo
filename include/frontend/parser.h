@@ -120,7 +120,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
 /* @Helper_Functions | Debugging, Errors, Walkers */
 void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context);
 void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
-void parsingError(char *message, char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, Lexer *lexer, const char *source, TypeTable *typeTable);
+void parsingError(char *message, char *functionName, CryoSymbolTable *table, Arena *arena, CompilerState *state, Lexer *lexer, const char *source, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
 char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);
 Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable);

@@ -60,10 +60,69 @@ namespace Cryo
             return;
         }
 
+        // Check if the symbol exists in the table
+        if (doesSymbolExist(symbol, table))
+        {
+            std::cout << "addSingleSymbolToTable: Symbol already exists in table" << std::endl;
+            return;
+        }
+
         table->symbols[table->count] = symbol;
         table->count++;
 
         return;
+    }
+
+    bool GlobalSymbolTable::doesSymbolExist(Symbol *symbol, SymbolTable *table)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cout << "doesSymbolExist: Symbol is null" << std::endl;
+            return false;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "doesSymbolExist: Symbol Table is null" << std::endl;
+            return false;
+        }
+
+        for (size_t i = 0; i < table->count; i++)
+        {
+            if (table->symbols[i] == symbol)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool GlobalSymbolTable::doesStructSymbolExist(const char *name, SymbolTable *table)
+    {
+        if (!name || name == nullptr)
+        {
+            std::cout << "doesStructSymbolExist: Name is null" << std::endl;
+            return false;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "doesStructSymbolExist: Symbol Table is null" << std::endl;
+            return false;
+        }
+
+        for (size_t i = 0; i < table->count; i++)
+        {
+            if (table->symbols[i]->symbolType == TYPE_SYMBOL)
+            {
+                TypeSymbol *typeSymbol = table->symbols[i]->type;
+                if (strcmp(typeSymbol->name, name) == 0)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 } // namespace Cryo

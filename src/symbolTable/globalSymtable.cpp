@@ -195,6 +195,24 @@ namespace Cryo
         addSingleSymbolToTable(symbol, getCurrentSymbolTable());
     }
 
+    void GlobalSymbolTable::addParamToSymbolTable(ASTNode *node, const char *functionScopeID)
+    {
+        if (!node || node == nullptr)
+        {
+            std::cout << "addParamToSymbolTable: Node is null" << std::endl;
+            return;
+        }
+
+        const char *paramName = node->data.param->name;
+
+        VariableSymbol *paramSymbol = createVariableSymbol(paramName,
+                                                          node->data.param->type,
+                                                          node,
+                                                          functionScopeID);
+        Symbol *symbol = createSymbol(VARIABLE_SYMBOL, paramSymbol);
+        addSingleSymbolToTable(symbol, getCurrentSymbolTable());
+    }
+
     SymbolTable *GlobalSymbolTable::getCurrentSymbolTable(void)
     {
         if (tableContext.isPrimary)

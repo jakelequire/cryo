@@ -93,7 +93,7 @@ struct TypeSymbol
     TypeofDataType typeOf;
     bool isStatic;
     bool isGeneric;
-
+    ASTNode *node;
     Symbol **properties;
     int propertyCount;
     int propertyCapacity;
@@ -102,6 +102,7 @@ struct TypeSymbol
     int methodCapacity;
 
     const char *scopeId;
+    const char *parentNameID;
 };
 
 struct PropertySymbol

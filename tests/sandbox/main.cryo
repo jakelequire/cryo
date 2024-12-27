@@ -1,21 +1,21 @@
 namespace Main;
 
-// struct Int {
-//     value: int;
-// 
-//     constructor(val: int) {
-//         this.value = val;
-//     }
-// 
-//     toString() -> string {
-//         return Std::intToString(this.value);
-//     }
-// 
-//     fooMethod() -> void {
-//         printStr("Foo method called");
-//         return;
-//     }
-// }
+struct Int {
+    value: int;
+
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> string {
+        return intToString(this.value);
+    }
+
+    fooMethod() -> void {
+        printStr("Foo method called");
+        return;
+    }
+}
 
 class FooBaz {
     public anotherFooProp: string;
@@ -73,21 +73,21 @@ function arrayTesting() -> void {
 }
 
 
-// function structTesting() -> void {
-//     printStr("-------- Struct Testing --------");
-//     const intTest: Int = 1234;
-//     const intTestTwo: int = intTest.value;
-//     printInt(intTestTwo);
-//     printInt(intTest.value);
-// 
-//     const strVal: string = intTest.toString();
-//     printStr(strVal);
-//     printStr(intTest.toString());
-// 
-//     intTest.fooMethod();
-// 
-//     return;
-// }
+function structTesting() -> void {
+    printStr("-------- Struct Testing --------");
+    const intTest: Int = 1234;
+    const intTestTwo: int = intTest.value;
+    printInt(intTestTwo);
+    printInt(intTest.value);
+
+    const strVal: string = intTest.toString();
+    printStr(strVal);
+    printStr(intTest.toString());
+
+    intTest.fooMethod();
+
+    return;
+}
 
 
 function binOpTest() -> void {
@@ -134,7 +134,7 @@ function typeofTesting() -> void {
     const foo: string = "Hello"; 
     const bar: int = 1234;
     const baz: boolean = true;
-    // const qux: Int = 1234;
+    const qux: Int = 1234;
 
     printStr("Type of foo: ");
     printStr(typeof(foo));
@@ -185,7 +185,7 @@ function main(argc: int, argv: string[]) -> int {
     printStr(argOne);
 
     stringTesting();
-    // structTesting();
+    structTesting();
     binOpTest();
     arrayTesting();
     runtimeClassTesting();

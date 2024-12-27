@@ -25,6 +25,7 @@ extern "C"
 #include "symbolTable/symdefs.h"
 
     typedef struct ASTNode ASTNode;
+    typedef struct DataType DataType;
     typedef struct SymbolTable SymbolTable;
     typedef struct VariableSymbol VariableSymbol;
     typedef struct FunctionSymbol FunctionSymbol;
@@ -60,6 +61,7 @@ extern "C"
 
     void CryoGlobalSymbolTable_AddNodeToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node);
     void CryoGlobalSymbolTable_AddVariableToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *scopeID);
+    void CryoGlobalSymbolTable_AddParamToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *functionScopeID);
 
     SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable);
 
@@ -77,15 +79,25 @@ extern "C"
 
     void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable);
 
-    // Declaration Functions (incomplete definitions) ---------------------------------------
+    // Declaration Functions  ---------------------------------------
 
     void CryoGlobalSymbolTable_InitClassDeclaration(CryoGlobalSymbolTable *symTable, const char *className);
     void CryoGlobalSymbolTable_AddPropertyToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *property);
     void CryoGlobalSymbolTable_AddMethodToClass(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method);
+    void CryoGlobalSymbolTable_CompleteClassDeclaration(CryoGlobalSymbolTable *symTable, ASTNode *classNode, const char *className);
+
+    void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentName);
+    void CryoGlobalSymbolTable_AddPropertyToStruct(CryoGlobalSymbolTable *symTable, const char *structName, ASTNode *property);
+    void CryoGlobalSymbolTable_AddMethodToStruct(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method);
+    void CryoGlobalSymbolTable_CompleteStructDeclaration(CryoGlobalSymbolTable *symTable, ASTNode *structNode, const char *structName);
 
     // Symbol Resolution Functions ---------------------------------------
     Symbol *CryoGlobalSymbolTable_GetFrontendSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID, TypeOfSymbol symbolType);
     FunctionSymbol *CryoGlobalSymbolTable_ResolveScopedFunctionSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID);
+    DataType *CryoGlobalSymbolTable_GetDataTypeFromSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol);
+    Symbol *CryoGlobalSymbolTable_FindSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID);
+    ASTNode *CryoGlobalSymbolTable_GetASTNodeFromSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol);
+    Symbol *CryoGlobalSymbolTable_FindMethodSymbol(CryoGlobalSymbolTable *symTable, const char *methodName, const char *className, TypeofDataType typeOfNode);
 
 // Class State Functions
 #define isPrimaryTable(symTable) \
@@ -111,6 +123,8 @@ extern "C"
 
 #define AddVariableToSymbolTable(symTable, node, scopeID) \
     CryoGlobalSymbolTable_AddVariableToSymbolTable(symTable, node, scopeID)
+#define AddParamToSymbolTable(symTable, node, functionScopeID) \
+    CryoGlobalSymbolTable_AddParamToSymbolTable(symTable, node, functionScopeID)
 #define GetCurrentSymbolTable(symTable) \
     CryoGlobalSymbolTable_GetCurrentSymbolTable(symTable)
 
@@ -127,6 +141,14 @@ extern "C"
     CryoGlobalSymbolTable_GetFrontendVariableSymbol(symTable, name, scopeID)
 #define GetFrontendScopedFunctionSymbol(symTable, name, scopeID) \
     CryoGlobalSymbolTable_ResolveScopedFunctionSymbol(symTable, name, scopeID)
+#define GetDataTypeFromSymbol(symTable, symbol) \
+    CryoGlobalSymbolTable_GetDataTypeFromSymbol(symTable, symbol)
+#define FindSymbol(symTable, name, scopeID) \
+    CryoGlobalSymbolTable_FindSymbol(symTable, name, scopeID)
+#define GetASTNodeFromSymbol(symTable, symbol) \
+    CryoGlobalSymbolTable_GetASTNodeFromSymbol(symTable, symbol)
+#define FindMethodSymbol(symTable, methodName, className, typeOfNode) \
+    CryoGlobalSymbolTable_FindMethodSymbol(symTable, methodName, className, typeOfNode)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
@@ -134,13 +156,25 @@ extern "C"
 #define MergeDBChunks(symTable) \
     CryoGlobalSymbolTable_MergeDBChunks(symTable)
 
-// Declaration Functions
+// Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
     CryoGlobalSymbolTable_InitClassDeclaration(symTable, className)
 #define AddPropertyToClass(symTable, className, property) \
     CryoGlobalSymbolTable_AddPropertyToClass(symTable, className, property)
 #define AddMethodToClass(symTable, className, method) \
     CryoGlobalSymbolTable_AddMethodToClass(symTable, className, method)
+#define CompleteClassDeclaration(symTable, classNode, className) \
+    CryoGlobalSymbolTable_CompleteClassDeclaration(symTable, classNode, className)
+
+// Declaration Functions (Structs)
+#define InitStructDeclaration(symTable, structName, parentNameID) \
+    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID)
+#define AddPropertyToStruct(symTable, structName, property) \
+    CryoGlobalSymbolTable_AddPropertyToStruct(symTable, structName, property)
+#define AddMethodToStruct(symTable, structName, method) \
+    CryoGlobalSymbolTable_AddMethodToStruct(symTable, structName, method)
+#define CompleteStructDeclaration(symTable, structNode, structName) \
+    CryoGlobalSymbolTable_CompleteStructDeclaration(symTable, structNode, structName)
 
 // Symbol Resolution Functions
 #define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
@@ -284,6 +318,7 @@ namespace Cryo
         void addNodeToTable(ASTNode *node);
         void completeDependencyTable(void);
         void addVariableToSymbolTable(ASTNode *node, const char *scopeID);
+        void addParamToSymbolTable(ASTNode *node, const char *functionScopeID);
         void addGlobalFunctionToTable(FunctionSymbol *function);
         void addExternFunctionToTable(ExternSymbol *function);
 
@@ -308,21 +343,34 @@ namespace Cryo
         // Symbol Resolution
         //===================================================================
 
+        /// @brief Get a variable symbol with the given name and scope ID.
         VariableSymbol *getFrontendVariableSymbol(const char *name, const char *scopeID);
+        /// @brief Get a method symbol with the given name, class name, and scope ID. (frontend)
         MethodSymbol *getFrontendMethodSymbol(const char *methodName, const char *className, const char *scopeID);
+        /// @brief Resolves a function symbol with the given name, scope ID, and symbol type. (frontend)
         Symbol *resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType);
+        /// @brief Resolve an external symbol by the given name (Can be a function or variable). (frontend)
         Symbol *resolveExternSymbol(const char *symbolName);
+        /// @brief Resolve a function symbol in a scoped context (namespace, class, etc). (frontend)
         FunctionSymbol *resolveScopedFunctionCall(const char *scopeID, const char *functionName);
+        /// @brief Finds a symbol table by the namespace scope ID. (frontend)
         SymbolTable *findSymbolTable(const char *scopeID);
+        /// @brief Find a function symbol in all possible tables. (frontend)
         Symbol *seekFunctionSymbolInAllTables(const char *symbolName);
+        /// @brief Find a method symbol in all possible tables. (frontend)
+        Symbol *seekMethodSymbolInAllTables(const char *methodName, const char *className, TypeofDataType typeOfNode);
+        /// @brief Get the `DataType` from a `Symbol`. (frontend)
+        DataType *getDataTypeFromSymbol(Symbol *symbol);
+        /// @brief Find a symbol that matches the name without needing the `TypeOfSymbol`. (frontend)
+        Symbol *findSymbol(const char *symbolName, const char *scopeID);
+        /// @brief Convert a `Symbol` to an `ASTNode`.
+        ASTNode *getASTNodeFromSymbol(Symbol *symbol);
+        /// @brief Find a method symbol by the method name, class name, and type of node. (frontend)
+        Symbol *findMethodSymbol(const char *methodName, const char *className, TypeofDataType typeOfNode);
 
         //===================================================================
         // Class Declaration Management
         //===================================================================
-
-        void initClassDeclaration(const char *className);
-        void addPropertyToClass(const char *className, ASTNode *property);
-        void addMethodToClass(const char *className, ASTNode *method);
 
         //===================================================================
         // Debug Operations
@@ -351,12 +399,15 @@ namespace Cryo
             return info;
         }
         TableContext setDefaultContext(void) { return {false, false}; }
+
         Symbol *ASTNodeToSymbol(ASTNode *node);
         const char *getRootNamespace(ASTNode *root);
         void addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table);
         void addSingleSymbolToTable(Symbol *symbol, SymbolTable *table);
         void addSymbolToCurrentTable(Symbol *symbol);
         bool isParamSymbol(ASTNode *node);
+        bool doesSymbolExist(Symbol *symbol, SymbolTable *table);
+        bool doesStructSymbolExist(const char *name, SymbolTable *table);
 
     protected:
         //===================================================================
@@ -367,7 +418,7 @@ namespace Cryo
         FunctionSymbol *createFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType,
                                              DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility,
                                              ASTNode *node);
-        TypeSymbol *createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf,
+        TypeSymbol *createTypeSymbol(const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf,
                                      bool isStatic, bool isGeneric, const char *scopeId);
         TypeSymbol *createIncompleteTypeSymbol(const char *name, TypeofDataType typeOf);
         PropertySymbol *createPropertySymbol(ASTNode *propNode);
@@ -378,17 +429,40 @@ namespace Cryo
         Symbol *createSymbol(TypeOfSymbol symbolType, void *symbol);
         SymbolTable *createSymbolTable(const char *namespaceName);
         TypesTable *createTypeTable(const char *namespaceName);
-        void processParamList(ASTNode **node, int paramCount, const char *scopeID);
 
+    public:
         //===================================================================
         // Class Symbol Management
         //===================================================================
+
+        void initClassDeclaration(const char *className);
+        void addPropertyToClass(const char *className, ASTNode *property);
+        void addMethodToClass(const char *className, ASTNode *method);
         Symbol *createClassDeclarationSymbol(const char *className);
         void updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount);
         void updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount);
         Symbol *getClassSymbol(const char *className);
         void addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table);
         void updateClassSymbol(Symbol *classSymbol, SymbolTable *table);
+        void completeClassDeclaration(ASTNode *classNode, const char *className);
+
+        //===================================================================
+        // Struct Symbol Management
+        //===================================================================
+
+        void initStructDeclaration(const char *structName, const char *parentNameID);
+        Symbol *createStructDeclarationSymbol(const char *structName, const char *parentNameID);
+        Symbol *getStructSymbol(const char *structName);
+        void addPropertyToStruct(const char *structName, ASTNode *property);
+        void addMethodToStruct(const char *className, ASTNode *method);
+
+        void updateStructSymbolMethods(Symbol *structSymbol, MethodSymbol *method, size_t methodCount);
+        void updateStructSymbolProperties(Symbol *structSymbol, PropertySymbol *property, size_t propertyCount);
+
+        void addStructDeclarationToTable(Symbol *structSymbol, SymbolTable *table);
+        void updateStructSymbol(Symbol *structSymbol, SymbolTable *table);
+
+        void completeStructDeclaration(ASTNode *structNode, const char *structName);
     };
 
     // ========================================================================================== //
@@ -481,6 +555,14 @@ namespace Cryo
         }
     }
 
+    inline void CryoGlobalSymbolTable_AddParamToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *functionScopeID)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->addParamToSymbolTable(node, functionScopeID);
+        }
+    }
+
     // Scope Functions ---------------------------------------
 
     inline void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
@@ -519,6 +601,42 @@ namespace Cryo
         return nullptr;
     }
 
+    inline DataType *CryoGlobalSymbolTable_GetDataTypeFromSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getDataTypeFromSymbol(symbol);
+        }
+        return nullptr;
+    }
+
+    inline Symbol *CryoGlobalSymbolTable_FindSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->findSymbol(name, scopeID);
+        }
+        return nullptr;
+    }
+
+    inline ASTNode *CryoGlobalSymbolTable_GetASTNodeFromSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getASTNodeFromSymbol(symbol);
+        }
+        return nullptr;
+    }
+
+    inline Symbol *CryoGlobalSymbolTable_FindMethodSymbol(CryoGlobalSymbolTable *symTable, const char *methodName, const char *className, TypeofDataType typeOfNode)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->findMethodSymbol(methodName, className, typeOfNode);
+        }
+        return nullptr;
+    }
+
     // Debug Functions ---------------------------------------
 
     inline void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable)
@@ -529,7 +647,7 @@ namespace Cryo
         }
     }
 
-    // Declaration Functions ---------------------------------------
+    // Declaration Functions (Classes) ---------------------------------------
 
     inline void CryoGlobalSymbolTable_InitClassDeclaration(CryoGlobalSymbolTable *symTable, const char *className)
     {
@@ -552,6 +670,48 @@ namespace Cryo
         if (symTable)
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->addMethodToClass(className, method);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_CompleteClassDeclaration(CryoGlobalSymbolTable *symTable, ASTNode *classNode, const char *className)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->completeClassDeclaration(classNode, className);
+        }
+    }
+
+    // Declaration Functions (Structs) ---------------------------------------
+
+    inline void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentNameID)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->initStructDeclaration(structName, parentNameID);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_AddPropertyToStruct(CryoGlobalSymbolTable *symTable, const char *structName, ASTNode *property)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->addPropertyToStruct(structName, property);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_AddMethodToStruct(CryoGlobalSymbolTable *symTable, const char *structName, ASTNode *method)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->addMethodToStruct(structName, method);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_CompleteStructDeclaration(CryoGlobalSymbolTable *symTable, ASTNode *structNode, const char *structName)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->completeStructDeclaration(structNode, structName);
         }
     }
 

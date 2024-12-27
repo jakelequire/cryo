@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/misc/syntaxHighlighter.h"
 
@@ -25,7 +26,8 @@ void parsingError(
     CompilerState *state,
     Lexer *lexer,
     const char *source,
-    TypeTable *typeTable)
+    TypeTable *typeTable,
+    CryoGlobalSymbolTable *globalTable)
 {
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
@@ -112,8 +114,8 @@ void parsingError(
     // Bottom border
     printf("%s╚══════════════════════════════════════════════════════════════════════════════╝%s\n\n", LIGHT_RED, COLOR_RESET);
 
-    printSymbolTable(table);
-
+    // printSymbolTable(table);
+    printGlobalSymbolTable(globalTable);
     exit(1);
 }
 

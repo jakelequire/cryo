@@ -70,7 +70,7 @@ namespace Cryo
         return symbol;
     }
 
-    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId)
+    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId)
     {
         TypeSymbol *symbol = new TypeSymbol();
         symbol->name = name;
@@ -79,6 +79,7 @@ namespace Cryo
         symbol->isStatic = isStatic;
         symbol->isGeneric = isGeneric;
         symbol->scopeId = scopeId;
+        symbol->node = node;
 
         symbol->propertyCapacity = MAX_PROPERTY_COUNT;
         symbol->methodCapacity = MAX_METHOD_COUNT;
@@ -106,6 +107,8 @@ namespace Cryo
         symbol->methodCount = 0;
         symbol->properties = nullptr;
         symbol->methods = nullptr;
+
+        symbol->parentNameID = nullptr;
 
         return symbol;
     }
@@ -207,20 +210,6 @@ namespace Cryo
         table->currentScope = nullptr;
         table->types = nullptr;
         return table;
-    }
-
-    void GlobalSymbolTable::processParamList(ASTNode **node, int paramCount, const char *scopeId)
-    {
-        for (int i = 0; i < paramCount; i++)
-        {
-            ASTNode *paramNode = node[i];
-            VariableSymbol *paramSymbol = createVariableSymbol(paramNode->data.param->name,
-                                                               paramNode->data.param->type,
-                                                               paramNode,
-                                                               scopeId);
-            Symbol *param = createSymbol(VARIABLE_SYMBOL, paramSymbol);
-            addSymbolToCurrentTable(param);
-        }
     }
 
     bool GlobalSymbolTable::isParamSymbol(ASTNode *node)

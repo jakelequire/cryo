@@ -91,6 +91,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 
 #define AddVariableToSymbolTable(symTable, node, scopeID) \
     CryoGlobalSymbolTable_AddVariableToSymbolTable(symTable, node, scopeID)
+#define AddParamToSymbolTable(symTable, node, functionScopeID) \
+    CryoGlobalSymbolTable_AddParamToSymbolTable(symTable, node, functionScopeID)
 #define GetCurrentSymbolTable(symTable) \
     CryoGlobalSymbolTable_GetCurrentSymbolTable(symTable)
 
@@ -107,6 +109,12 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_GetFrontendVariableSymbol(symTable, name, scopeID)
 #define GetFrontendScopedFunctionSymbol(symTable, name, scopeID) \
     CryoGlobalSymbolTable_ResolveScopedFunctionSymbol(symTable, name, scopeID)
+#define GetDataTypeFromSymbol(symTable, symbol) \
+    CryoGlobalSymbolTable_GetDataTypeFromSymbol(symTable, symbol)
+#define FindSymbol(symTable, name, scopeID) \
+    CryoGlobalSymbolTable_FindSymbol(symTable, name, scopeID)
+#define GetASTNodeFromSymbol(symTable, symbol) \
+    CryoGlobalSymbolTable_GetASTNodeFromSymbol(symTable, symbol)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
@@ -114,13 +122,25 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define MergeDBChunks(symTable) \
     CryoGlobalSymbolTable_MergeDBChunks(symTable)
 
-// Declaration Functions
+// Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
     CryoGlobalSymbolTable_InitClassDeclaration(symTable, className)
 #define AddPropertyToClass(symTable, className, property) \
     CryoGlobalSymbolTable_AddPropertyToClass(symTable, className, property)
 #define AddMethodToClass(symTable, className, method) \
     CryoGlobalSymbolTable_AddMethodToClass(symTable, className, method)
+#define CompleteClassDeclaration(symTable, classNode, classSymbol) \
+    CryoGlobalSymbolTable_CompleteClassDeclaration(symTable, classNode, classSymbol)
+
+// Declaration Functions (Structs)
+#define InitStructDeclaration(symTable, structName, parentNameID) \
+    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID)
+#define AddPropertyToStruct(symTable, structName, property) \
+    CryoGlobalSymbolTable_AddPropertyToStruct(symTable, structName, property)
+#define AddMethodToStruct(symTable, structName, method) \
+    CryoGlobalSymbolTable_AddMethodToStruct(symTable, structName, method)
+#define CompleteStructDeclaration(symTable, structNode, structName) \
+    CryoGlobalSymbolTable_CompleteStructDeclaration(symTable, structNode, structName)
 
 // Symbol Resolution Functions
 #define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
