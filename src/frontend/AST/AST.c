@@ -751,7 +751,7 @@ ASTNode *createFieldNode(const char *fieldName, DataType *type, const char *pare
     return node;
 }
 
-ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
+ASTNode *createStructNode(const char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
                           ASTNode **methods, int methodCount,
                           Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
@@ -762,7 +762,7 @@ ASTNode *createStructNode(char *structName, ASTNode **properties, int propertyCo
         return NULL;
     }
 
-    node->data.structNode->name = strdup(structName);
+    node->data.structNode->name = structName;
     node->data.structNode->properties = properties;
     node->data.structNode->propertyCount = propertyCount;
     node->data.structNode->propertyCapacity = 64;

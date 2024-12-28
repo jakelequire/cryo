@@ -291,6 +291,8 @@ namespace Cryo
         std::vector<FunctionSymbol *> globalFunctions;    // Vector of global functions
         std::vector<ExternSymbol *> externFunctions;      // Vector of external functions
 
+        std::unordered_map<std::string, SymbolTable *> queryMap; // Map of namespace tables
+
         ScopeBlock *currentScope = nullptr; // Current scope block
         const char *scopeId = "null";       // Current scope ID
         size_t scopeDepth = 0;              // Current scope depth
@@ -377,6 +379,7 @@ namespace Cryo
         //===================================================================
 
         void printGlobalTable(GlobalSymbolTable *table);
+        void logSymbol(Symbol *symbol);
         void mergeDBChunks(void);
 
     private:
@@ -408,6 +411,7 @@ namespace Cryo
         bool isParamSymbol(ASTNode *node);
         bool doesSymbolExist(Symbol *symbol, SymbolTable *table);
         bool doesStructSymbolExist(const char *name, SymbolTable *table);
+        const char *getSymbolName(Symbol *symbol);
 
     protected:
         //===================================================================

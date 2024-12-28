@@ -85,8 +85,10 @@ namespace Cryo
         symbol->methodCapacity = MAX_METHOD_COUNT;
         symbol->propertyCount = 0;
         symbol->methodCount = 0;
-        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * symbol->propertyCapacity);
-        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * symbol->methodCapacity);
+        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
+        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
+
+        symbol->parentNameID = nullptr;
 
         return symbol;
     }
@@ -105,8 +107,8 @@ namespace Cryo
         symbol->methodCapacity = MAX_METHOD_COUNT;
         symbol->propertyCount = 0;
         symbol->methodCount = 0;
-        symbol->properties = nullptr;
-        symbol->methods = nullptr;
+        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
+        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
 
         symbol->parentNameID = nullptr;
 
@@ -144,7 +146,7 @@ namespace Cryo
         MethodNode *method = methodNode->data.method;
         MethodSymbol *symbol = new MethodSymbol();
 
-        symbol->name = method->name;
+        symbol->name = (const char *)strdup(method->name);
         symbol->returnType = method->functionType;
         symbol->node = methodNode;
         symbol->visibility = method->visibility;

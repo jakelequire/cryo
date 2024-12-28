@@ -30,7 +30,7 @@ namespace Cryo
 {
     Logger *SymbolTableDebugger::logger = new Logger(Logger::DEBUG);
     const char *SEPARATOR = "───────────────────────────────────────────────────────────────────";
-    const char *CHILD_SEPARATOR = "------------------------------";
+    const char *CHILD_SEPARATOR = ">>===--------------";
 
     void SymbolTableDebugger::logScopeBlock(ScopeBlock *block)
     {
@@ -135,36 +135,47 @@ namespace Cryo
                           symbol->isStatic ? "true" : "false",
                           symbol->isGeneric ? "true" : "false");
 
+        //
+        // Struct type symbol
+        //
         if (symbol->typeOf == STRUCT_TYPE)
         {
             logger->debugNode("Properties: %d | Methods: %d",
                               symbol->propertyCount,
                               symbol->methodCount);
             // Log the properties
-            // int propCount = symbol->propertyCount;
-            // for (int i = 0; i < propCount; i++)
-            // {
-            //     PropertySymbol *propSymbol = symbol->properties[i]->property;
-            //     if (!propSymbol)
-            //     {
-            //         logger->debugNode("NULL PROPERTY");
-            //     }
-            //
-            //     // logPropertySymbolChild(propSymbol);
-            // }
-            // int methodCount = symbol->methodCount;
-            // for (int i = 0; i < methodCount; i++)
-            // {
-            //     MethodSymbol *methodSymbol = symbol->methods[i]->method;
-            //     if (!methodSymbol)
-            //     {
-            //         logger->debugNode("NULL METHOD");
-            //     }
-            //
-            //     // logMethodSymbolChild(methodSymbol);
-            // }
+            int propCount = symbol->propertyCount;
+            if (propCount > 0)
+            {
+                logger->debugNode(CHILD_SEPARATOR);
+            }
+            for (int i = 0; i < propCount; i++)
+            {
+                PropertySymbol *propSymbol = symbol->properties[i]->property;
+                if (!propSymbol)
+                {
+                    logger->debugNode("NULL PROPERTY");
+                }
+
+                logPropertySymbolChild(propSymbol);
+            }
+            // Log the methods
+            int methodCount = symbol->methodCount;
+            for (int i = 0; i < methodCount; i++)
+            {
+                MethodSymbol *methodSymbol = symbol->methods[i]->method;
+                if (!methodSymbol)
+                {
+                    logger->debugNode("NULL METHOD");
+                }
+
+                logMethodSymbolChild(methodSymbol);
+            }
         }
 
+        //
+        // Class type symbol
+        //
         if (symbol->typeOf == CLASS_TYPE)
         {
             logger->debugNode("Properties: %d | Methods: %d",
@@ -220,18 +231,32 @@ namespace Cryo
 
         // log the properties
         int propCount = symbol->propertyCount;
-        // for (int i = 0; i < propCount; i++)
-        // {
-        //     PropertySymbol *propSymbol = symbol->properties[i]->property;
-        //     if (!propSymbol)
-        //     {
-        //         logger->debugNode("NULL PROPERTY");
-        //     }
-        //
-        //     logPropertySymbolChild(propSymbol);
-        // }
+        if (propCount > 0)
+        {
+            logger->debugNode(CHILD_SEPARATOR);
+        }
+        for (int i = 0; i < propCount; i++)
+        {
+            PropertySymbol *propSymbol = symbol->properties[i]->property;
+            if (!propSymbol)
+            {
+                logger->debugNode("NULL PROPERTY");
+            }
 
-        logger->debugNode(SEPARATOR);
+            logPropertySymbolChild(propSymbol);
+        }
+        // log the methods
+        int methodCount = symbol->methodCount;
+        for (int i = 0; i < methodCount; i++)
+        {
+            MethodSymbol *methodSymbol = symbol->methods[i]->method;
+            if (!methodSymbol)
+            {
+                logger->debugNode("NULL METHOD");
+            }
+
+            logMethodSymbolChild(methodSymbol);
+        }
     }
 
     // Only difference between this function and `logPropertySymbol` is not having the same

@@ -1,0 +1,30 @@
+namespace Testing;
+
+struct Int {
+    value: int;
+
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> string {
+        return intToString(this.value);
+    }
+
+    fooMethod() -> void {
+        printStr("Foo method called");
+        return;
+    }
+}
+
+function main(argc: int, argv: string[]) -> int {
+    printStr("-------- Main Function --------");
+
+    printStr("Hello, World!");
+
+    const testInt: Int = 42;
+    printInt(testInt.value);
+    printStr(testInt.toString());
+
+    return 0;
+}

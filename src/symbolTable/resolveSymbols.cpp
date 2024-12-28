@@ -356,25 +356,31 @@ namespace Cryo
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
 
+        std::cout << "Finding Method Symbol: " << methodName << " in Class/Struct: " << className << std::endl;
+
         // Look for the method symbol in the current table
         for (int i = 0; i < symbolCount; i++)
         {
             if (symbols[i]->symbolType == TYPE_SYMBOL)
             {
                 TypeSymbol *typeSymbol = symbols[i]->type;
+                std::cout << "Checking Type Symbol: " << typeSymbol->name << " for Method: " << methodName << std::endl;
                 if (strcmp(typeSymbol->name, className) == 0)
                 {
+                    std::cout << "Class/Struct Symbol Found!!: " << className << std::endl;
+                    int methodCount = typeSymbol->methodCount;
+                    std::cout << "Method Count: " << methodCount << std::endl;
                     // Check the methods
-                    for (int j = 0; j < typeSymbol->methodCount; j++)
+                    for (int j = 0; j < methodCount; j++)
                     {
+                        std::cout << "Checking Method At Index: " << j << std::endl;
+                        Symbol *currentSymbol = typeSymbol->methods[j];
+                        logSymbol(currentSymbol);
                         MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
                         if (strcmp(methodSymbol->name, methodName) == 0)
                         {
+                            std::cout << "Method Symbol Resolved!" << std::endl;
                             return typeSymbol->methods[j];
-                        }
-                        else
-                        {
-                            continue;
                         }
                     }
                 }

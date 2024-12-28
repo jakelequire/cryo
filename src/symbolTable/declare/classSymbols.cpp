@@ -19,7 +19,6 @@
 namespace Cryo
 {
     // C Facing Function to work with classes
-
     void GlobalSymbolTable::initClassDeclaration(const char *className)
     {
         std::cout << "Creating Class Definition for: " << className << std::endl;
@@ -51,7 +50,7 @@ namespace Cryo
             std::cout << "Failed to create property symbol" << std::endl;
             return;
         }
-        updateClassSymbolProperties(classSymbol, propertySymbol, classSymbol->type->propertyCount + 1);
+        updateClassSymbolProperties(classSymbol, propertySymbol, classSymbol->type->propertyCount);
 
         // Increment the property count
         classSymbol->type->propertyCount++;
@@ -68,7 +67,7 @@ namespace Cryo
         }
 
         MethodSymbol *methodSymbol = createMethodSymbol(method);
-        updateClassSymbolMethods(classSymbol, methodSymbol, classSymbol->type->methodCount + 1);
+        updateClassSymbolMethods(classSymbol, methodSymbol, classSymbol->type->methodCount);
 
         // Increment the method count
         classSymbol->type->methodCount++;

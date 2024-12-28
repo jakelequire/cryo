@@ -29,7 +29,7 @@ DataType *createStructDefinition(const char *structName)
         return NULL;
     }
 
-    structDef->name = strdup(structName);
+    structDef->name = structName;
     structDef->size = 0;
     structDef->propertyCount = 0;
     structDef->methodCount = 0;

@@ -157,3 +157,24 @@ __EXTERN_C__ char **__c_fs_listDir(const char *path)
         return nullptr;
     }
 }
+
+// =======================================================
+// DEBUGGING FUNCTIONS
+
+__EXTERN_C__ char *__c_DBG_IDGen_HashID(char *name)
+{
+    printf("Name: %s\n", name);
+    uint64_t hash = 0;
+    size_t len = strlen(name);
+    for (size_t i = 0; i < len; ++i)
+    {
+        hash = (hash << 5) + hash + name[i]; // hash * 33 + seed[i]
+    }
+    hash = hash & 0xFFFFFFFFFFFFFFFF; // Ensure it's 64-bit
+
+    // Convert hash to string
+    char *hashStr = (char *)std::malloc(17); // 16 digits + null terminator
+    sprintf(hashStr, "%016lX", hash);
+
+    return hashStr;
+}

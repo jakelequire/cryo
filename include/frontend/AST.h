@@ -867,7 +867,7 @@ extern "C"
      */
     // Struct definitions
     ASTNode *createStructNode(
-        char *structName,
+        const char *structName,
         ASTNode **properties,
         int propertyCount,
         ASTNode *constructor,

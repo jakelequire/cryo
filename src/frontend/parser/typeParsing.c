@@ -33,14 +33,15 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         return NULL;
     }
 
-    char *structName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    char *_structName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    const char *structName = (const char *)_structName;
     logMessage("INFO", __LINE__, "Parser", "Struct name: %s", structName);
 
     const char *parentNamespaceNameID = getNamespaceScopeID(context);
     InitStructDeclaration(globalTable, structName, parentNamespaceNameID); // GlobalSymbolTable
 
     // Setting the context to the struct name
-    setThisContext(context, (const char *)structName, NODE_STRUCT_DECLARATION, typeTable);
+    setThisContext(context, structName, NODE_STRUCT_DECLARATION, typeTable);
 
     getNextToken(lexer, arena, state, typeTable);
 
@@ -403,15 +404,20 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
         DataType *varType = accessorObj->data.varDecl->type;
         if (varType->container->baseType == CLASS_TYPE)
         {
+            logMessage("INFO", __LINE__, "Parser", "Found class type.");
+            logDataType(varType);
             const char *className = varType->container->custom.name;
             logMessage("INFO", __LINE__, "Parser", "Class name: %s", strdup(className));
             strcpy(instanceTypeName, className);
         }
         else if (varType->container->baseType == STRUCT_TYPE)
         {
+            logMessage("INFO", __LINE__, "Parser", "Found struct type.");
+            logDataType(varType);
             const char *structName = varType->container->custom.name;
-            logMessage("INFO", __LINE__, "Parser", "Struct name: %s", strdup(structName));
-            strcpy(instanceTypeName, structName);
+            const char *__structName = getDataTypeName(varType);
+            logMessage("INFO", __LINE__, "Parser", "Struct name: %s", __structName);
+            strcpy(instanceTypeName, __structName);
         }
         else
         {
@@ -436,6 +442,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
         parsingError("Failed to find instance symbol.", "parseMethodCall", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
+    logMessage("INFO", __LINE__, "Parser", "Found instance symbol.");
     ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
     DataType *returnType = GetDataTypeFromSymbol(globalTable, sym);
     VALIDATE_TYPE(returnType);

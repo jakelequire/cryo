@@ -69,7 +69,7 @@ namespace Cryo
         }
 
         PropertySymbol *propertySymbol = createPropertySymbol(property);
-        updateStructSymbolProperties(structSymbol, propertySymbol, structSymbol->type->propertyCount + 1);
+        updateStructSymbolProperties(structSymbol, propertySymbol, structSymbol->type->propertyCount);
 
         // Increment the property count
         structSymbol->type->propertyCount++;
@@ -86,27 +86,26 @@ namespace Cryo
         }
 
         MethodSymbol *methodSymbol = createMethodSymbol(method);
-        updateStructSymbolMethods(structSymbol, methodSymbol, structSymbol->type->methodCount + 1);
+        updateStructSymbolMethods(structSymbol, methodSymbol, structSymbol->type->methodCount);
 
-        // Increment the method count
         structSymbol->type->methodCount++;
         return;
     }
 
     Symbol *GlobalSymbolTable::getStructSymbol(const char *structName)
     {
-        // Find the class in the symbol table from the hash
+        // Find the Struct in the symbol table from the hash
         const char *structHashName = IDGen::generate64BitHashID(structName);
-        std::cout << "Generated Hash for Class Name: " << structHashName << std::endl;
+        std::cout << "Generated Hash for Struct Name: " << structHashName << std::endl;
 
         Symbol *structSymbol = queryCurrentTable(structHashName, structName, TYPE_SYMBOL);
         if (structSymbol)
         {
-            std::cout << "Class Symbol Found!" << std::endl;
+            std::cout << "Struct Symbol Found!" << std::endl;
             return structSymbol;
         }
 
-        std::cout << "Class Symbol not found" << std::endl;
+        std::cout << "Struct Symbol not found" << std::endl;
         return nullptr;
     }
 
@@ -127,13 +126,16 @@ namespace Cryo
         {
             if (table->symbols[i] == structSymbol)
             {
-                std::cout << "Method Added to Class Symbol" << std::endl;
+                std::cout << "Method Added to Struct Symbol" << std::endl;
                 table->symbols[i]->type->methods[methodCount] = methodSymbol;
                 return;
             }
         }
 
-        std::cout << "Method Failed to Add to Class Symbol" << std::endl;
+        // Increment the method count
+        structSymbol->type->methodCount++;
+
+        std::cout << "Method Failed to Add to Struct Symbol" << std::endl;
         return;
     }
 
@@ -154,13 +156,13 @@ namespace Cryo
         {
             if (table->symbols[i] == structSymbol)
             {
-                std::cout << "Property Added to Class Symbol" << std::endl;
+                std::cout << "Property Added to Struct Symbol" << std::endl;
                 table->symbols[i]->type->properties[propertyCount] = propertySymbol;
                 return;
             }
         }
 
-        std::cout << "Property Failed to Add to Class Symbol" << std::endl;
+        std::cout << "Property Failed to Add to Struct Symbol" << std::endl;
         return;
     }
 
@@ -168,12 +170,12 @@ namespace Cryo
     {
         if (!structNode || structNode == nullptr)
         {
-            std::cout << "Error: Class Node is null" << std::endl;
+            std::cout << "Error: Struct Node is null" << std::endl;
             return;
         }
         if (!structName || structName == nullptr)
         {
-            std::cout << "Error: Class Symbol is null" << std::endl;
+            std::cout << "Error: Struct Symbol is null" << std::endl;
             return;
         }
 
@@ -187,14 +189,14 @@ namespace Cryo
         Symbol *classSymbol = getStructSymbol(structName);
         if (!classSymbol)
         {
-            std::cout << "Error: Class Symbol not found" << std::endl;
+            std::cout << "Error: Struct Symbol not found" << std::endl;
             return;
         }
 
-        // Add the node to the class symbol
+        // Add the node to the Struct symbol
         classSymbol->type->node = structNode;
 
-        // Update the class symbol in the table
+        // Update the Struct symbol in the table
         updateStructSymbol(classSymbol, table);
         return;
     }
@@ -217,7 +219,35 @@ namespace Cryo
                 return;
             }
         }
-        std::cout << "Error: Unable to update class symbol in the table." << std::endl;
+        std::cout << "Error: Unable to update Struct symbol in the table." << std::endl;
+    }
+
+    bool GlobalSymbolTable::doesStructSymbolExist(const char *name, SymbolTable *table)
+    {
+        if (!name || name == nullptr)
+        {
+            std::cout << "doesStructSymbolExist: Name is null" << std::endl;
+            return false;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "doesStructSymbolExist: Symbol Table is null" << std::endl;
+            return false;
+        }
+
+        for (size_t i = 0; i < table->count; i++)
+        {
+            if (table->symbols[i]->symbolType == TYPE_SYMBOL)
+            {
+                TypeSymbol *typeSymbol = table->symbols[i]->type;
+                if (strcmp(typeSymbol->name, name) == 0)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 } // namespace Cryo

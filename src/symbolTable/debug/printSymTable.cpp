@@ -87,4 +87,16 @@ namespace Cryo
                   << std::endl;
     }
 
+    void GlobalSymbolTable::logSymbol(Symbol *symbol)
+    {
+        if (!symbol)
+        {
+            std::cerr << "Error: Symbol is null" << std::endl;
+        }
+
+        debugger->logSymbol(symbol);
+
+        return;
+    }
+
 } // namespace Cryo

@@ -147,16 +147,7 @@ namespace Cryo
         case NODE_STRUCT_DECLARATION:
         {
             std::cout << "ASTNodeToSymbol: Processing Struct Declaration Node" << std::endl;
-            const char *structName = node->data.structNode->name;
-            const char *scopeID = currentScope->id;
-            TypeSymbol *structSymbol = createTypeSymbol(structName,
-                                                        node,
-                                                        node->data.structNode->type,
-                                                        STRUCT_TYPE,
-                                                        false,
-                                                        false,
-                                                        scopeID);
-            return createSymbol(TYPE_SYMBOL, structSymbol);
+            break;
         }
 
         case NODE_PROPERTY:
@@ -201,7 +192,7 @@ namespace Cryo
             std::cout << "ASTNodeToSymbol: Processing External Symbol Node" << std::endl;
             break;
         }
-        
+
         case NODE_NAMESPACE:
         case NODE_INDEX_EXPR:
         case NODE_VAR_REASSIGN:

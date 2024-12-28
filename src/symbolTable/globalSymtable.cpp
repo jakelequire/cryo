@@ -167,6 +167,63 @@ namespace Cryo
         }
     }
 
+    void GlobalSymbolTable::addSingleSymbolToTable(Symbol *symbol, SymbolTable *table)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cout << "addSingleSymbolToTable: Symbol is null" << std::endl;
+            return;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "addSingleSymbolToTable: Symbol Table is null" << std::endl;
+            return;
+        }
+
+        // Check if the symbol exists in the table
+        if (doesSymbolExist(symbol, table))
+        {
+            std::cout << "addSingleSymbolToTable: Symbol already exists in table" << std::endl;
+            return;
+        }
+
+        table->symbols[table->count] = symbol;
+        table->count++;
+
+        const char *symbolName = getSymbolName(symbol);
+        std::cout << "GST: Symbol Added: " << symbolName << std::endl;
+
+        return;
+    }
+
+    void GlobalSymbolTable::addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table)
+    {
+        if (!symbols || symbols == nullptr)
+        {
+            std::cout << "addSymbolsToSymbolTable: Symbols are null" << std::endl;
+            return;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "addSymbolsToSymbolTable: Symbol Table is null" << std::endl;
+            return;
+        }
+
+        if (table->count + 1 >= table->capacity)
+        {
+            table->capacity *= 2;
+            table->symbols = (Symbol **)realloc(table->symbols, sizeof(Symbol *) * table->capacity);
+        }
+
+        for (size_t i = 0; i < table->count; i++)
+        {
+            table->symbols[table->count] = symbols[i];
+            table->count++;
+        }
+
+        return;
+    }
+
     void GlobalSymbolTable::completeDependencyTable()
     {
         if (currentDependencyTable)
@@ -206,9 +263,9 @@ namespace Cryo
         const char *paramName = node->data.param->name;
 
         VariableSymbol *paramSymbol = createVariableSymbol(paramName,
-                                                          node->data.param->type,
-                                                          node,
-                                                          functionScopeID);
+                                                           node->data.param->type,
+                                                           node,
+                                                           functionScopeID);
         Symbol *symbol = createSymbol(VARIABLE_SYMBOL, paramSymbol);
         addSingleSymbolToTable(symbol, getCurrentSymbolTable());
     }
@@ -486,6 +543,54 @@ namespace Cryo
         }
 
         return nullptr;
+    }
+
+    // ========================================================================
+
+    bool GlobalSymbolTable::doesSymbolExist(Symbol *symbol, SymbolTable *table)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cout << "doesSymbolExist: Symbol is null" << std::endl;
+            return false;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cout << "doesSymbolExist: Symbol Table is null" << std::endl;
+            return false;
+        }
+
+        for (size_t i = 0; i < table->count; i++)
+        {
+            if (table->symbols[i] == symbol)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    const char *GlobalSymbolTable::getSymbolName(Symbol *symbol)
+    {
+        TypeOfSymbol symbolType = symbol->symbolType;
+        switch (symbolType)
+        {
+        case VARIABLE_SYMBOL:
+            return symbol->variable->name;
+        case FUNCTION_SYMBOL:
+            return symbol->function->name;
+        case EXTERN_SYMBOL:
+            return symbol->externSymbol->name;
+        case TYPE_SYMBOL:
+            return symbol->type->name;
+        case PROPERTY_SYMBOL:
+            return symbol->property->name;
+        case METHOD_SYMBOL:
+            return symbol->method->name;
+        default:
+            return "<unknown_symbol_type>";
+        }
     }
 
 } // namespace Cryo

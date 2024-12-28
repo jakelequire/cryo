@@ -94,9 +94,11 @@ struct TypeSymbol
     bool isStatic;
     bool isGeneric;
     ASTNode *node;
+
     Symbol **properties;
     int propertyCount;
     int propertyCapacity;
+
     Symbol **methods;
     int methodCount;
     int methodCapacity;
