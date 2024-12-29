@@ -67,7 +67,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
         int count = 0;
-        ASTNode *field = parseStructField(lexer, table, context, arena, state, typeTable, globalTable);
+        ASTNode *field = parseStructField(structName, lexer, table, context, arena, state, typeTable, globalTable);
         if (field)
         {
             CryoNodeType fieldType = field->metaData->type;
@@ -98,7 +98,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
                 methodCount++;
                 addASTNodeSymbol(table, field, arena);
                 addMethodToThisContext(context, field, typeTable);
-                AddMethodToStruct(globalTable, structName, field); // GlobalSymbolTable
                 count++;
 
                 // Go to the next field
@@ -144,7 +143,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
             lexer->nextToken.type == TOKEN_LPAREN &&
             lexer->currentToken.type != TOKEN_KW_CONSTRUCTOR)
         {
-            ASTNode *method = parseMethodDeclaration(false, lexer, table, context, arena, state, typeTable, globalTable);
+            ASTNode *method = parseMethodDeclaration(false, structName, lexer, table, context, arena, state, typeTable, globalTable);
             if (method)
             {
                 methods[methodCount] = method;
@@ -220,7 +219,7 @@ bool parsePropertyForDefaultFlag(ASTNode *propertyNode)
 }
 
 // <parseStructField>
-ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseStructField(const char *parentName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing struct field...");
 
@@ -243,7 +242,7 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     if (nextToken == TOKEN_LPAREN && currentToken != TOKEN_KW_CONSTRUCTOR)
     {
         logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
-        return parseMethodDeclaration(false, lexer, table, context, arena, state, typeTable, globalTable);
+        return parseMethodDeclaration(false, parentName, lexer, table, context, arena, state, typeTable, globalTable);
     }
 
     printf("Default Count: %d\n", defaultCount);
@@ -263,7 +262,6 @@ ASTNode *parseStructField(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseStructField", table, arena, state, typeTable, context);
 
-    const char *parentName = context->thisContext->nodeName;
     // Find the parent node in the symbol table
     CryoNodeType parentNodeType = context->thisContext->nodeType;
 
@@ -300,7 +298,7 @@ ASTNode *parseConstructor(Lexer *lexer, CryoSymbolTable *table, ParsingContext *
     return constructorNode;
 }
 
-ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
@@ -333,7 +331,6 @@ ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *ta
     // Create the method body
     ASTNode *methodBody = parseBlock(lexer, table, context, arena, state, typeTable, globalTable);
     // Create the method node
-    const char *parentName = context->thisContext->nodeName;
     ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, parentName, isStatic,
                                            arena, state, typeTable, lexer);
 
@@ -353,6 +350,8 @@ ASTNode *parseMethodDeclaration(bool isStatic, Lexer *lexer, CryoSymbolTable *ta
 
     // Remove the static identifier from the context
     addStaticIdentifierToContext(context, false);
+
+    AddMethodToStruct(globalTable, parentName, methodNode); // GlobalSymbolTable
 
     return methodNode;
 }

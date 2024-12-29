@@ -134,7 +134,7 @@ function typeofTesting() -> void {
     const foo: string = "Hello"; 
     const bar: int = 1234;
     const baz: boolean = true;
-    // const qux: Int = 1234;
+    const qux: Int = 1234;
 
     printStr("Type of foo: ");
     printStr(typeof(foo));

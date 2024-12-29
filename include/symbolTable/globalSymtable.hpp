@@ -301,43 +301,45 @@ namespace Cryo
         // Table State Management
         //===================================================================
 
-        bool getIsPrimaryTable(void);
-        bool getIsDependencyTable(void);
-        void setIsPrimaryTable(bool isPrimary);
-        void setIsDependencyTable(bool isDependency);
+        bool getIsPrimaryTable(void);                  // [C API]
+        bool getIsDependencyTable(void);               // [C API]
+        void setIsPrimaryTable(bool isPrimary);        // [C API]
+        void setIsDependencyTable(bool isDependency);  // [C API]
+        void tableFinished(void);                      // [C API]
+        void initNamespace(const char *namespaceName); // [C API]
         void resetCurrentDepsTable(void);
         void setCurrentDependencyTable(SymbolTable *table);
         void setPrimaryTable(SymbolTable *table);
-        void tableFinished(void);
-        void initNamespace(const char *namespaceName);
 
         //===================================================================
         // Symbol Table Operations
         //===================================================================
 
-        void createPrimaryTable(const char *namespaceName);
-        void initDependencyTable(const char *namespaceName);
-        void addNodeToTable(ASTNode *node);
+        void createPrimaryTable(const char *namespaceName);                                              // [C API]
+        void initDependencyTable(const char *namespaceName);                                             // [C API]
+        void addNodeToTable(ASTNode *node);                                                              // [C API]
+        void addVariableToSymbolTable(ASTNode *node, const char *scopeID);                               // [C API]
+        void addParamToSymbolTable(ASTNode *node, const char *functionScopeID);                          // [C API]
+        SymbolTable *getCurrentSymbolTable(void);                                                        // [C API]
+        Symbol *getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType); // [C API]
+
         void completeDependencyTable(void);
-        void addVariableToSymbolTable(ASTNode *node, const char *scopeID);
-        void addParamToSymbolTable(ASTNode *node, const char *functionScopeID);
         void addGlobalFunctionToTable(FunctionSymbol *function);
         void addExternFunctionToTable(ExternSymbol *function);
 
-        SymbolTable *getCurrentSymbolTable(void);
         Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
         Symbol *querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table);
-        Symbol *getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType);
 
         //===================================================================
         // Scope Management
         //===================================================================
 
+        void enterScope(const char *name);        // [C API]
+        void exitScope(void);                     // [C API]
+        const char *getScopeID(const char *name); // [C API]
+
         const char *getScopeID(void) { return scopeId; }
         size_t getScopeDepth(void) { return scopeDepth; }
-        void enterScope(const char *name);
-        void exitScope(void);
-        const char *getScopeID(const char *name);
         void setScopeID(const char *id) { scopeId = id; }
         void initNamepsaceScope(const char *namespaceName);
 
@@ -345,30 +347,19 @@ namespace Cryo
         // Symbol Resolution
         //===================================================================
 
-        /// @brief Get a variable symbol with the given name and scope ID.
-        VariableSymbol *getFrontendVariableSymbol(const char *name, const char *scopeID);
-        /// @brief Get a method symbol with the given name, class name, and scope ID. (frontend)
+        VariableSymbol *getFrontendVariableSymbol(const char *name, const char *scopeID);                   // [C API]
+        FunctionSymbol *resolveScopedFunctionCall(const char *scopeID, const char *functionName);           // [C API]
+        SymbolTable *findSymbolTable(const char *scopeID);                                                  // [C API]
+        DataType *getDataTypeFromSymbol(Symbol *symbol);                                                    // [C API]
+        ASTNode *getASTNodeFromSymbol(Symbol *symbol);                                                      // [C API]
+        Symbol *findMethodSymbol(const char *methodName, const char *className, TypeofDataType typeOfNode); // [C API]
+        Symbol *findSymbol(const char *symbolName, const char *scopeID);                                    // [C API]
+
         MethodSymbol *getFrontendMethodSymbol(const char *methodName, const char *className, const char *scopeID);
-        /// @brief Resolves a function symbol with the given name, scope ID, and symbol type. (frontend)
         Symbol *resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType);
-        /// @brief Resolve an external symbol by the given name (Can be a function or variable). (frontend)
         Symbol *resolveExternSymbol(const char *symbolName);
-        /// @brief Resolve a function symbol in a scoped context (namespace, class, etc). (frontend)
-        FunctionSymbol *resolveScopedFunctionCall(const char *scopeID, const char *functionName);
-        /// @brief Finds a symbol table by the namespace scope ID. (frontend)
-        SymbolTable *findSymbolTable(const char *scopeID);
-        /// @brief Find a function symbol in all possible tables. (frontend)
         Symbol *seekFunctionSymbolInAllTables(const char *symbolName);
-        /// @brief Find a method symbol in all possible tables. (frontend)
         Symbol *seekMethodSymbolInAllTables(const char *methodName, const char *className, TypeofDataType typeOfNode);
-        /// @brief Get the `DataType` from a `Symbol`. (frontend)
-        DataType *getDataTypeFromSymbol(Symbol *symbol);
-        /// @brief Find a symbol that matches the name without needing the `TypeOfSymbol`. (frontend)
-        Symbol *findSymbol(const char *symbolName, const char *scopeID);
-        /// @brief Convert a `Symbol` to an `ASTNode`.
-        ASTNode *getASTNodeFromSymbol(Symbol *symbol);
-        /// @brief Find a method symbol by the method name, class name, and type of node. (frontend)
-        Symbol *findMethodSymbol(const char *methodName, const char *className, TypeofDataType typeOfNode);
 
         //===================================================================
         // Class Declaration Management
@@ -380,7 +371,7 @@ namespace Cryo
 
         void printGlobalTable(GlobalSymbolTable *table);
         void logSymbol(Symbol *symbol);
-        void mergeDBChunks(void);
+        void mergeDBChunks(void); // [C API]
 
     private:
         TABLE_STATE tableState = TABLE_UNINITIALIZED;
@@ -439,34 +430,34 @@ namespace Cryo
         // Class Symbol Management
         //===================================================================
 
-        void initClassDeclaration(const char *className);
-        void addPropertyToClass(const char *className, ASTNode *property);
-        void addMethodToClass(const char *className, ASTNode *method);
+        void initClassDeclaration(const char *className);                         // [C API]
+        void addPropertyToClass(const char *className, ASTNode *property);        // [C API]
+        void addMethodToClass(const char *className, ASTNode *method);            // [C API]
+        void completeClassDeclaration(ASTNode *classNode, const char *className); // [C API]
         Symbol *createClassDeclarationSymbol(const char *className);
         void updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount);
         void updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount);
         Symbol *getClassSymbol(const char *className);
         void addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table);
         void updateClassSymbol(Symbol *classSymbol, SymbolTable *table);
-        void completeClassDeclaration(ASTNode *classNode, const char *className);
 
         //===================================================================
         // Struct Symbol Management
         //===================================================================
 
-        void initStructDeclaration(const char *structName, const char *parentNameID);
+        void initStructDeclaration(const char *structName, const char *parentNameID); // [C API]
+        void addPropertyToStruct(const char *structName, ASTNode *property);          // [C API]
+        void addMethodToStruct(const char *className, ASTNode *method);               // [C API]
+        void completeStructDeclaration(ASTNode *structNode, const char *structName);  // [C API]
+
         Symbol *createStructDeclarationSymbol(const char *structName, const char *parentNameID);
         Symbol *getStructSymbol(const char *structName);
-        void addPropertyToStruct(const char *structName, ASTNode *property);
-        void addMethodToStruct(const char *className, ASTNode *method);
 
         void updateStructSymbolMethods(Symbol *structSymbol, MethodSymbol *method, size_t methodCount);
         void updateStructSymbolProperties(Symbol *structSymbol, PropertySymbol *property, size_t propertyCount);
 
         void addStructDeclarationToTable(Symbol *structSymbol, SymbolTable *table);
         void updateStructSymbol(Symbol *structSymbol, SymbolTable *table);
-
-        void completeStructDeclaration(ASTNode *structNode, const char *structName);
     };
 
     // ========================================================================================== //

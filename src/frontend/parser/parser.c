@@ -1326,7 +1326,6 @@ ASTNode *parseFunctionCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     {
         logMessage("ERROR", __LINE__, "Parser",
                    "Function not found: %s", functionName);
-        printGlobalSymbolTable(globalTable);
         parsingError("Function not found.", "parseFunctionCall", table, arena, state,
                      lexer, lexer->source, typeTable, globalTable);
         return NULL;

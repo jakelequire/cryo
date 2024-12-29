@@ -172,7 +172,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN)
                 {
                     logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
-                    ASTNode *methodNode = parseMethodDeclaration(isStatic, lexer, table, context, arena, state, typeTable, globalTable);
+                    ASTNode *methodNode = parseMethodDeclaration(isStatic, className, lexer, table, context, arena, state, typeTable, globalTable);
                     if (!methodNode)
                     {
                         logMessage("ERROR", __LINE__, "Parser", "Failed to parse method declaration.");
