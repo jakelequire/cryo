@@ -508,15 +508,40 @@ ASTNode *parseScopeCall(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     printf("Function Name: %s\n", functionName);
 
-    Symbol *sym = FindSymbol(globalTable, functionName, getCurrentScopeID(context));
-    if (!sym)
+    TypeOfSymbol symType = GetScopeSymbolTypeFromName(globalTable, scopeName);
+    const char *symTypeStr = TypeOfSymbolToString(globalTable, symType);
+    printf("Symbol Type: %s\n", symTypeStr);
+
+    TypeofDataType typeOfDataType = GetTypeOfDataTypeFromName(globalTable, scopeName);
+    const char *typeOfDataTypeStr = TypeofDataTypeToString(typeOfDataType);
+    printf("Type Of Data Type: %s\n", typeOfDataTypeStr);
+
+    Symbol *sym = NULL;
+    switch (symType)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Symbol not found in global table: %s", functionName);
+    case TYPE_SYMBOL:
+    {
+        sym = FindMethodSymbol(globalTable, functionName, scopeName, typeOfDataType);
+        break;
+    }
+    case FUNCTION_SYMBOL:
+    {
+        // sym = FindFunctionSymbol(globalTable, functionName, scopeName);
+        sym = NULL;
+        break;
+    }
+    default:
+    {
         parsingError("Symbol not found", "parseScopeCall", table, arena, state, lexer, lexer->source, typeTable, globalTable);
     }
-    ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
+    }
 
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", table, arena, state, typeTable, context);
+    if (sym == NULL)
+    {
+        parsingError("Symbol not found", "parseScopeCall", table, arena, state, lexer, lexer->source, typeTable, globalTable);
+    }
+
+    ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
 
     CryoNodeType nodeType = symbolNode->metaData->type;
     printf("Node Type: %s\n", CryoNodeTypeToString(nodeType));

@@ -70,7 +70,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
     classNode->data.classNode->type->container->custom.name = strdup(className);
     classNode->data.classNode->type->container->primitive = PRIM_CUSTOM;
 
-    CompleteClassDeclaration(globalTable, classNode, className); // Complete the class declaration in the symbol table
+    CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
 
     // Add to the symbol table
     addASTNodeSymbol(table, classNode, arena);
@@ -331,9 +331,6 @@ void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityTyp
     default:
         logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
     }
-
-    const char *className = classNode->data.classNode->name;
-    AddMethodToClass(globalTable, className, methodNode); // Update Global Symbol Table
 
     logMessage("INFO", __LINE__, "Parser", "Method added to class.");
     return;

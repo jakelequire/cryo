@@ -17,14 +17,38 @@ struct Int {
     }
 }
 
+class TestingClass {
+    public value: int;
+
+    constructor() {}
+
+
+    public static methodOne() -> void {
+        const testInt: Int = 42;
+        printInt(testInt.value);
+        return;
+    }
+
+    public static methodTwo() -> void {
+        const testInt: Int = 69;
+        printInt(testInt.value);
+        return;
+    }
+
+    public static methodThree() -> void {
+        printInt(testInt.value); // This should throw an error
+        return;
+    }
+    
+}
+
 function main(argc: int, argv: string[]) -> int {
     printStr("-------- Main Function --------");
 
     printStr("Hello, World!");
 
-    const testInt: Int = 42;
-    printInt(testInt.value);
-    printStr(testInt.toString());
+    TestingClass::methodOne();
+    TestingClass::methodTwo();
 
     return 0;
 }

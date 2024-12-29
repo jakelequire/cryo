@@ -35,6 +35,9 @@ namespace Cryo
             return;
         }
 
+        const char *functionScopeID = IDGen::generate64BitHashID(functionName);
+        this->pushNewScopePair(functionName, functionScopeID);
+
         DataType **paramTypes = (DataType **)malloc(sizeof(DataType *) * paramCount);
         int i = 0;
         for (i = 0; i < paramCount; i++)

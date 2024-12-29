@@ -64,6 +64,224 @@ namespace Cryo
         db->createScopedDB();
     }
 
+    void GlobalSymbolTable::pushNewScopePair(const char *name, const char *id)
+    {
+        // Make a new pair
+        std::pair<std::string, std::string> pair = std::make_pair(name, id);
+        // Make sure the pair is not already in the vector
+        if (std::find(scopeLookup.begin(), scopeLookup.end(), pair) != scopeLookup.end())
+        {
+            return;
+        }
+        // Add the pair to the vector
+        scopeLookup.push_back(pair);
+    }
+
+    const char *GlobalSymbolTable::getScopeIDFromName(const char *name)
+    {
+        for (size_t i = 0; i < scopeLookup.size(); i++)
+        {
+            if (scopeLookup[i].first == name)
+            {
+                return scopeLookup[i].second.c_str();
+            }
+        }
+        return nullptr;
+    }
+
+    const char *GlobalSymbolTable::getScopeIDFromID(const char *id)
+    {
+        for (size_t i = 0; i < scopeLookup.size(); i++)
+        {
+            if (scopeLookup[i].second == id)
+            {
+                return scopeLookup[i].first.c_str();
+            }
+        }
+        return nullptr;
+    }
+
+    // Looks through all symbol tables to find the name that matches the symbol and returns it's symbol type
+    TypeOfSymbol GlobalSymbolTable::getScopeSymbolTypeFromName(const char *symbolName)
+    {
+        if (!symbolName || symbolName == nullptr)
+        {
+            return UNKNOWN_SYMBOL;
+        }
+
+        std::cout << "<!> Searching for Symbol: " << symbolName << " <!>" << std::endl;
+
+        // Check the primary table
+        if (symbolTable)
+        {
+            Symbol **symbols = symbolTable->symbols;
+            int i = 0;
+            for (i = 0; i < symbolTable->count; i++)
+            {
+                Symbol *symbol = symbols[i];
+                switch (symbol->symbolType)
+                {
+                case FUNCTION_SYMBOL:
+                {
+                    FunctionSymbol *funcSymbol = symbol->function;
+                    std::cout << "Checking Function Symbol: " << funcSymbol->name << " | Against: " << symbolName << std::endl;
+                    if (strcmp(funcSymbol->name, symbolName) == 0)
+                    {
+                        return FUNCTION_SYMBOL;
+                    }
+                    break;
+                }
+                case TYPE_SYMBOL:
+                {
+                    TypeSymbol *typeSymbol = symbol->type;
+                    std::cout << "Checking Type Symbol: " << typeSymbol->name << " | Against: " << symbolName << std::endl;
+                    if (strcmp(typeSymbol->name, symbolName) == 0)
+                    {
+                        return TYPE_SYMBOL;
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+                }
+            }
+        }
+
+        // Check the dependency tables
+        int depCount = dependencyTableVector.size();
+        for (int i = 0; i < depCount; i++)
+        {
+            SymbolTable *depTable = dependencyTableVector[i];
+            Symbol **symbols = depTable->symbols;
+            int j = 0;
+            for (j = 0; j < depTable->count; j++)
+            {
+                Symbol *symbol = symbols[j];
+                switch (symbol->symbolType)
+                {
+                case FUNCTION_SYMBOL:
+                {
+                    FunctionSymbol *funcSymbol = symbol->function;
+                    if (strcmp(funcSymbol->name, symbolName) == 0)
+                    {
+                        return FUNCTION_SYMBOL;
+                    }
+                    break;
+                }
+                case TYPE_SYMBOL:
+                {
+                    TypeSymbol *typeSymbol = symbol->type;
+                    if (strcmp(typeSymbol->name, symbolName) == 0)
+                    {
+                        return TYPE_SYMBOL;
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+                }
+            }
+        }
+
+        return UNKNOWN_SYMBOL;
+    }
+
+    TypeofDataType GlobalSymbolTable::getTypeOfDataTypeFromName(const char *symbolName)
+    {
+        if (!symbolName || symbolName == nullptr)
+        {
+            std::cerr << "Error: Failed to get type of data type from name, symbol name is null!" << std::endl;
+            return UNKNOWN_TYPE;
+        }
+
+        std::cout << "<!> Searching for Data Type: " << symbolName << " <!>" << std::endl;
+
+        // Check the primary table
+        if (symbolTable)
+        {
+            Symbol **symbols = symbolTable->symbols;
+            int i = 0;
+            for (i = 0; i < symbolTable->count; i++)
+            {
+                Symbol *symbol = symbols[i];
+                switch (symbol->symbolType)
+                {
+                case TYPE_SYMBOL:
+                {
+                    TypeSymbol *typeSymbol = symbol->type;
+                    if (strcmp(typeSymbol->name, symbolName) == 0)
+                    {
+                        return typeSymbol->typeOf;
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+                }
+            }
+        }
+
+        // Check the dependency tables
+        int depCount = dependencyTableVector.size();
+        for (int i = 0; i < depCount; i++)
+        {
+            SymbolTable *depTable = dependencyTableVector[i];
+            Symbol **symbols = depTable->symbols;
+            int j = 0;
+            for (j = 0; j < depTable->count; j++)
+            {
+                Symbol *symbol = symbols[j];
+                switch (symbol->symbolType)
+                {
+                case TYPE_SYMBOL:
+                {
+                    TypeSymbol *typeSymbol = symbol->type;
+                    if (strcmp(typeSymbol->name, symbolName) == 0)
+                    {
+                        return typeSymbol->typeOf;
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+                }
+            }
+        }
+
+        return UNKNOWN_TYPE;
+    }
+
+    const char *GlobalSymbolTable::typeOfSymbolToString(TypeOfSymbol symbolType)
+    {
+        switch (symbolType)
+        {
+        case VARIABLE_SYMBOL:
+            return "VARIABLE_SYMBOL";
+        case FUNCTION_SYMBOL:
+            return "FUNCTION_SYMBOL";
+        case EXTERN_SYMBOL:
+            return "EXTERN_SYMBOL";
+        case TYPE_SYMBOL:
+            return "TYPE_SYMBOL";
+        case PROPERTY_SYMBOL:
+            return "PROPERTY_SYMBOL";
+        case METHOD_SYMBOL:
+            return "METHOD_SYMBOL";
+        case UNKNOWN_SYMBOL:
+            return "UNKNOWN_SYMBOL";
+        default:
+            return "DEFAULTED_SYMBOL";
+        }
+    }
+
     // ========================================================================
 
     void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
@@ -120,6 +338,8 @@ namespace Cryo
 
         const char *scopeID = IDGen::generate64BitHashID(namespaceName);
         setScopeID(scopeID);
+
+        this->pushNewScopePair(namespaceName, scopeID);
     }
 
     void GlobalSymbolTable::addNodeToTable(ASTNode *node)
@@ -252,7 +472,7 @@ namespace Cryo
         addSingleSymbolToTable(symbol, getCurrentSymbolTable());
     }
 
-        SymbolTable *GlobalSymbolTable::getCurrentSymbolTable(void)
+    SymbolTable *GlobalSymbolTable::getCurrentSymbolTable(void)
     {
         if (tableContext.isPrimary)
         {

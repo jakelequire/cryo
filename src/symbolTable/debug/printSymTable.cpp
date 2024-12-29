@@ -94,7 +94,11 @@ namespace Cryo
             std::cerr << "Error: Symbol is null" << std::endl;
         }
 
+        std::cout << "\n";
+        std::cout << "+-------------------------<Single Symbol Log>-------------------------+" << std::endl;
         debugger->logSymbol(symbol);
+        std::cout << "+---------------------------------------------------------------------+" << std::endl;
+        std::cout << "\n";
 
         return;
     }

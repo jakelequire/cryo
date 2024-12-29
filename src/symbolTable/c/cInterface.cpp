@@ -132,6 +132,33 @@ extern "C"
         return nullptr;
     }
 
+    TypeOfSymbol CryoGlobalSymbolTable_GetScopeSymbolTypeFromName(CryoGlobalSymbolTable *symTable, const char *symbolName)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getScopeSymbolTypeFromName(symbolName);
+        }
+        return UNKNOWN_SYMBOL;
+    }
+
+    TypeofDataType getTypeOfDataTypeFromName(CryoGlobalSymbolTable *symTable, const char *symbolName)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getTypeOfDataTypeFromName(symbolName);
+        }
+        return UNKNOWN_TYPE;
+    }
+
+    const char *CryoGlobalSymbolTable_TypeOfSymbolToString(CryoGlobalSymbolTable *symTable, TypeOfSymbol symbolType)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->typeOfSymbolToString(symbolType);
+        }
+        return nullptr;
+    }
+
     // --------------------------------------------------------------
     // Scope Functions
 

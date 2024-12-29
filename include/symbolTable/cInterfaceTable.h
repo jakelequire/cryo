@@ -96,6 +96,11 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define GetCurrentSymbolTable(symTable) \
     CryoGlobalSymbolTable_GetCurrentSymbolTable(symTable)
 
+#define GetScopeSymbolTypeFromName(symTable, symbolName) \
+    CryoGlobalSymbolTable_GetScopeSymbolTypeFromName(symTable, symbolName)
+#define GetTypeOfDataTypeFromName(symTable, symbolName) \
+    getTypeOfDataTypeFromName(symTable, symbolName)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)
@@ -115,12 +120,16 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_FindSymbol(symTable, name, scopeID)
 #define GetASTNodeFromSymbol(symTable, symbol) \
     CryoGlobalSymbolTable_GetASTNodeFromSymbol(symTable, symbol)
+#define FindMethodSymbol(symTable, methodName, className, typeOfNode) \
+    CryoGlobalSymbolTable_FindMethodSymbol(symTable, methodName, className, typeOfNode)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
     CryoGlobalSymbolTable_PrintGlobalTable(symTable)
 #define MergeDBChunks(symTable) \
     CryoGlobalSymbolTable_MergeDBChunks(symTable)
+#define TypeOfSymbolToString(symTable, symbolType) \
+    CryoGlobalSymbolTable_TypeOfSymbolToString(symTable, symbolType)
 
 // Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
@@ -153,5 +162,7 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 // Symbol Resolution Functions
 #define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
     CryoGlobalSymbolTable_GetFrontendSymbol(symTable, name, scopeID, symbolType)
+
+// ====================================================================================================
 
 #endif // C_INTERFACE_TABLE_H

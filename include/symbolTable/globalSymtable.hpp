@@ -63,6 +63,9 @@ extern "C"
     void CryoGlobalSymbolTable_AddVariableToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *scopeID);
     void CryoGlobalSymbolTable_AddParamToSymbolTable(CryoGlobalSymbolTable *symTable, ASTNode *node, const char *functionScopeID);
 
+    TypeOfSymbol CryoGlobalSymbolTable_GetScopeSymbolTypeFromName(CryoGlobalSymbolTable *symTable, const char *symbolName);
+    TypeofDataType getTypeOfDataTypeFromName(CryoGlobalSymbolTable *symTable, const char *symbolName);
+
     SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable);
 
     // Scope Functions ---------------------------------------
@@ -78,6 +81,8 @@ extern "C"
     // Debug Functions ---------------------------------------
 
     void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable);
+    const char *CryoGlobalSymbolTable_TypeOfSymbolToString(CryoGlobalSymbolTable *symTable, TypeOfSymbol symbolType);
+    void CryoGlobalSymbolTable_LogSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol);
 
     // Declaration Functions  ---------------------------------------
 
@@ -135,6 +140,11 @@ extern "C"
 #define GetCurrentSymbolTable(symTable) \
     CryoGlobalSymbolTable_GetCurrentSymbolTable(symTable)
 
+#define GetScopeSymbolTypeFromName(symTable, symbolName) \
+    CryoGlobalSymbolTable_GetScopeSymbolTypeFromName(symTable, symbolName)
+#define GetTypeOfDataTypeFromName(symTable, symbolName) \
+    getTypeOfDataTypeFromName(symTable, symbolName)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)
@@ -162,6 +172,10 @@ extern "C"
     CryoGlobalSymbolTable_PrintGlobalTable(symTable)
 #define MergeDBChunks(symTable) \
     CryoGlobalSymbolTable_MergeDBChunks(symTable)
+#define TypeOfSymbolToString(symTable, symbolType) \
+    CryoGlobalSymbolTable_TypeOfSymbolToString(symTable, symbolType)
+#define LogSymbol(symTable, symbol) \
+    CryoGlobalSymbolTable_LogSymbol(symTable, symbol)
 
 // Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
@@ -363,6 +377,10 @@ namespace Cryo
         Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
         Symbol *querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table);
         SymbolTable *getPrimaryTable(void) { return symbolTable; }
+        TypeOfSymbol getScopeSymbolTypeFromName(const char *symbolName);
+        TypeofDataType getTypeOfDataTypeFromName(const char *symbolName);
+
+        const char *typeOfSymbolToString(TypeOfSymbol symbolType);
 
         //===================================================================
         // Scope Management
@@ -376,6 +394,10 @@ namespace Cryo
         size_t getScopeDepth(void) { return scopeDepth; }
         void setScopeID(const char *id) { scopeId = id; }
         void initNamepsaceScope(const char *namespaceName);
+
+        void pushNewScopePair(const char *name, const char *id);
+        const char *getScopeIDFromName(const char *name);
+        const char *getScopeIDFromID(const char *id);
 
         //===================================================================
         // Symbol Resolution
@@ -411,6 +433,7 @@ namespace Cryo
         TABLE_STATE tableState = TABLE_UNINITIALIZED;
         std::unique_ptr<SymbolTableDB> db = std::make_unique<SymbolTableDB>(debugInfo.rootDir);
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
+        std::vector<std::pair<std::string, std::string>> scopeLookup;
 
         //===================================================================
         // Private Helper Functions
@@ -612,6 +635,15 @@ namespace Cryo
         }
     }
 
+    inline TypeOfSymbol CryoGlobalSymbolTable_GetScopeSymbolTypeFromName(CryoGlobalSymbolTable *symTable, const char *symbolName)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getScopeSymbolTypeFromName(symbolName);
+        }
+        return UNKNOWN_SYMBOL;
+    }
+
     // Scope Functions ---------------------------------------
 
     inline void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
@@ -693,6 +725,23 @@ namespace Cryo
         if (symTable)
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->mergeDBChunks();
+        }
+    }
+
+    inline const char *CryoGlobalSymbolTable_TypeOfSymbolToString(CryoGlobalSymbolTable *symTable, TypeOfSymbol symbolType)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->typeOfSymbolToString(symbolType);
+        }
+        return nullptr;
+    }
+
+    inline void CryoGlobalSymbolTable_LogSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->logSymbol(symbol);
         }
     }
 
