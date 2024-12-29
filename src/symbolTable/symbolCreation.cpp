@@ -57,6 +57,20 @@ namespace Cryo
         return symbol;
     }
 
+    FunctionSymbol *GlobalSymbolTable::createIncompleteFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount)
+    {
+        FunctionSymbol *symbol = new FunctionSymbol();
+        symbol->name = name;
+        symbol->returnType = returnType;
+        symbol->paramTypes = paramTypes;
+        symbol->paramCount = paramCount;
+        symbol->visibility = VISIBILITY_PUBLIC;
+        symbol->node = nullptr;
+        symbol->functionScopeId = IDGen::generate64BitHashID(name);
+        symbol->parentScopeID = parentScopeID;
+        return symbol;
+    }
+
     ExternSymbol *GlobalSymbolTable::createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, const char *scopeId)
     {
         ExternSymbol *symbol = new ExternSymbol();
@@ -206,7 +220,7 @@ namespace Cryo
         TypesTable *table = new TypesTable();
         table->namespaceName = namespaceName;
         table->count = 0;
-        table->capacity = 0;
+        table->capacity = MAX_TYPE_SYMBOLS;
         table->scopeDepth = 0;
         table->scopeId = IDGen::generate64BitHashID(namespaceName);
         table->currentScope = nullptr;

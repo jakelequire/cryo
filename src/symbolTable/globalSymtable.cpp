@@ -252,25 +252,7 @@ namespace Cryo
         addSingleSymbolToTable(symbol, getCurrentSymbolTable());
     }
 
-    void GlobalSymbolTable::addParamToSymbolTable(ASTNode *node, const char *functionScopeID)
-    {
-        if (!node || node == nullptr)
-        {
-            std::cout << "addParamToSymbolTable: Node is null" << std::endl;
-            return;
-        }
-
-        const char *paramName = node->data.param->name;
-
-        VariableSymbol *paramSymbol = createVariableSymbol(paramName,
-                                                           node->data.param->type,
-                                                           node,
-                                                           functionScopeID);
-        Symbol *symbol = createSymbol(VARIABLE_SYMBOL, paramSymbol);
-        addSingleSymbolToTable(symbol, getCurrentSymbolTable());
-    }
-
-    SymbolTable *GlobalSymbolTable::getCurrentSymbolTable(void)
+        SymbolTable *GlobalSymbolTable::getCurrentSymbolTable(void)
     {
         if (tableContext.isPrimary)
         {
@@ -543,6 +525,35 @@ namespace Cryo
         }
 
         return nullptr;
+    }
+
+    TypesTable *GlobalSymbolTable::initTypeTable(const char *namespaceName)
+    {
+        TypesTable *typeTable = createTypeTable(namespaceName);
+        if (typeTable)
+        {
+            return typeTable;
+        }
+
+        typeTable->types = (DataType **)malloc(sizeof(DataType *) * typeTable->capacity);
+
+        std::cerr << "initTypeTable: Failed to create Type Table" << std::endl;
+        return nullptr;
+    }
+
+    Symbol *GlobalSymbolTable::wrapSubSymbol(TypeOfSymbol symbolType, void *symbol)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cerr << "wrapSubSymbol: Symbol is null" << std::endl;
+            return nullptr;
+        }
+
+        Symbol *subSymbol = createSymbol(symbolType, symbol);
+        if (subSymbol)
+        {
+            return subSymbol;
+        }
     }
 
     // ========================================================================

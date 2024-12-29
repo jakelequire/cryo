@@ -1166,6 +1166,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Function name: %s", functionName);
 
+    const char *functionScopeID = Generate64BitHashID(functionName);
     const char *namespaceScopeID = getNamespaceScopeID(context);
     setCurrentFunction(context, functionName, namespaceScopeID); // Context Manager
 
@@ -1200,6 +1201,9 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
     }
 
     logMessage("INFO", __LINE__, "Parser", "Function Return Type: %s", DataTypeToString(returnType));
+
+    // Initialize the function symbol
+    InitFunctionDeclaration(globalTable, functionName, namespaceScopeID, params, paramCount, returnType); // Global Symbol Table
 
     // Ensure the next token is `{` for the function block
     if (lexer->currentToken.type != TOKEN_LBRACE)
@@ -1239,6 +1243,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingC
 
     addASTNodeSymbol(table, functionNode, arena);
 
+    CompleteFunctionDeclaration(globalTable, functionNode, functionName, namespaceScopeID); // Global Symbol Table
+
     resetCurrentFunction(context); // Context Manager
 
     return functionNode;
@@ -1256,7 +1262,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
         parsingError("Expected an identifier.", "parseExternFunctionDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
     }
-
+    const char *namespaceScopeID = getNamespaceScopeID(context);
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Function name: %s", functionName);
 
@@ -1289,6 +1295,8 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, CryoSymbolTable *table, Pa
     ASTNode *externFunc = createExternFuncNode(functionName, params, returnType, arena, state, typeTable, lexer);
 
     addASTNodeSymbol(table, externFunc, arena);
+
+    AddExternFunctionToTable(globalTable, externFunc, namespaceScopeID);
 
     return externFunc;
 }

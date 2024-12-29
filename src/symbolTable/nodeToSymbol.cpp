@@ -76,23 +76,8 @@ namespace Cryo
         case NODE_FUNCTION_DECLARATION:
         {
             std::cout << "ASTNodeToSymbol: Processing Function Declaration Node" << std::endl;
-            const char *functionName = node->data.functionDecl->name;
-            const char *scopeID = Generate64BitHashID(functionName);
-            std::cout << "Function Name: " << functionName << std::endl;
-            DataType *returnType = node->data.functionDecl->functionType;
-            DataType **paramTypes = node->data.functionDecl->paramTypes;
-            ASTNode **paramNodes = node->data.functionDecl->params;
-            size_t paramCount = node->data.functionDecl->paramCount;
-            CryoVisibilityType visibility = node->data.functionDecl->visibility;
-            const char *parentScopeID = node->data.functionDecl->parentScopeID;
-            FunctionSymbol *functionSymbol = createFunctionSymbol(functionName,
-                                                                  parentScopeID,
-                                                                  returnType,
-                                                                  paramTypes,
-                                                                  paramCount,
-                                                                  visibility,
-                                                                  node);
-            return createSymbol(FUNCTION_SYMBOL, functionSymbol);
+
+            break;
         }
 
         case NODE_VAR_DECLARATION:
@@ -130,18 +115,7 @@ namespace Cryo
         case NODE_EXTERN_FUNCTION:
         {
             std::cout << "ASTNodeToSymbol: Processing Extern Function Node" << std::endl;
-            const char *externName = node->data.externFunction->name;
-            const char *scopeID = currentScope->id;
-            ExternSymbol *externSymbol = createExternSymbol(externName,
-                                                            node->data.externFunction->type,
-                                                            nullptr,
-                                                            node->data.externFunction->paramCount,
-                                                            node->metaData->type,
-                                                            VISIBILITY_PUBLIC,
-                                                            scopeID);
-            addExternFunctionToTable(externSymbol);
-
-            return createSymbol(EXTERN_SYMBOL, externSymbol);
+            break;
         }
 
         case NODE_STRUCT_DECLARATION:
