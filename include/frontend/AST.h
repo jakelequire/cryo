@@ -362,7 +362,7 @@ typedef struct MethodCallNode
 
 typedef struct StructNode
 {
-    char *name;
+    const char *name;
     ASTNode **properties;
     ASTNode **methods;
     ASTNode *constructor;
