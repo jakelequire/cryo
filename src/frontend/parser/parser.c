@@ -416,7 +416,8 @@ ASTNode *parseStatement(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         return NULL;
 
     case TOKEN_KW_USING:
-        return parseUsingKeyword(lexer, table, context, arena, state, typeTable, globalTable);
+        parseUsingKeyword(lexer, table, context, arena, state, typeTable, globalTable);
+        return NULL;
 
     case TOKEN_KW_THIS:
         logMessage("INFO", __LINE__, "Parser", "Parsing `this` context...");

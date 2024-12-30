@@ -3,19 +3,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-/*
-<TYPE> [LINE|Primary_Module:FILE:FUNCTION] | [Message]
-
-File Structure:
-__FILE__ = /path/to/file.c
-getFileName(__FILE__) = file (This is the submodule name)
-
-The Ideal logger function would look like this:
-
-logMessage(GET_LOGGER_META_INFO, "INFO", "Parser", "Parsing struct instance...");
-output: <INFO> [Parser:log.c:LINE:main] | Parsing struct instance...
-*/
-
 #define FILE_NAME_LENGTH 18
 #define MODULE_NAME_LENGTH 15
 #define FUNC_NAME_LENGTH 12

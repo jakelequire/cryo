@@ -40,6 +40,7 @@
 #define INITIAL_STATEMENT_CAPACITY 512
 #define INITIAL_PARAM_CAPACITY 16
 #define MAX_ARGUMENTS 255
+#define MAX_USING_MODULES 16
 
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
@@ -316,6 +317,7 @@ ASTNode *parseTypeofIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingCont
 // # `Using` Keyword Parsing
 // # =========================================================================== #
 
-ASTNode *parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount);
 
 #endif // PARSER_H

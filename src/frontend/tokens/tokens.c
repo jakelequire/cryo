@@ -192,6 +192,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "NULL_LITERAL";
     case NODE_TYPEOF:
         return "TYPEOF";
+    case NODE_USING:
+        return "USING";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

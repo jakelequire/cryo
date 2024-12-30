@@ -541,6 +541,18 @@ typedef struct TypeofNode
     ASTNode *expression;
 } TypeofNode;
 
+typedef struct UsingNode
+{
+    // There will always be a constant primary module.
+    const char *primaryModule;
+    // There can be an array of secondary modules to go lower in the hierarchy.
+    const char **secondaryModules;
+    int secondaryModuleCount;
+    int secondaryModuleCapacity;
+
+    const char *filePath;
+} UsingNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -632,6 +644,8 @@ typedef struct ASTNode
         NullNode *nullNode;
         // For Typeof Expressions
         TypeofNode *typeofNode;
+        // For Using Statements
+        UsingNode *usingNode;
     } data;
 } ASTNode;
 
@@ -1027,6 +1041,12 @@ extern "C"
         Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
     /**
+     * Import / Using Nodes
+     */
+    ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules[],
+                             int secondaryModuleCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
+    /**
      * String Utility Functions
      */
 
@@ -1086,6 +1106,7 @@ ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, Compiler
 ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state);
 NullNode *createNullNodeContainer(Arena *arena, CompilerState *state);
 TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state);
+UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

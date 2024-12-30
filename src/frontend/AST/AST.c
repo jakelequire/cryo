@@ -1075,3 +1075,20 @@ ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *stat
 
     return node;
 }
+
+ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules[],
+                         int secondaryModuleCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+{
+    ASTNode *node = createASTNode(NODE_USING, arena, state, typeTable, lexer);
+    if (!node)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Failed to create using node");
+        return NULL;
+    }
+
+    node->data.usingNode->primaryModule = strdup(primaryModule);
+    node->data.usingNode->secondaryModules = secondaryModules;
+    node->data.usingNode->secondaryModuleCount = secondaryModuleCount;
+
+    return node;
+}

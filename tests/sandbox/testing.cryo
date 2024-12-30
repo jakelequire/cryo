@@ -1,5 +1,7 @@
 namespace Testing;
 
+using Std::Types;
+
 struct Int {
     value: int;
 
@@ -36,18 +38,16 @@ class TestingClass {
     }
 
     public static methodThree() -> void {
-        printInt(testInt.value); // This should throw an error
         return;
     }
 }
 
 function main(argc: int, argv: string[]) -> int {
-    printStr("-------- Main Function --------");
-
-    printStr("Hello, World!");
+    printStr("---------- Main Function ----------");
 
     TestingClass::methodOne();
     TestingClass::methodTwo();
+    TestingClass::methodThree();
 
     return 0;
 }

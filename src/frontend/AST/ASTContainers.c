@@ -1470,3 +1470,22 @@ TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state)
 
     return node;
 }
+
+UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state)
+{
+    UsingNode *node = (UsingNode *)ARENA_ALLOC(arena, sizeof(UsingNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate UsingNode node.");
+        return NULL;
+    }
+
+    node->primaryModule = (char *)calloc(1, sizeof(char));
+    node->secondaryModuleCount = 0;
+    node->secondaryModuleCapacity = MAX_USING_MODULES;
+    node->secondaryModules = (char **)calloc(1, sizeof(char *) * MAX_USING_MODULES);
+
+    node->filePath = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
