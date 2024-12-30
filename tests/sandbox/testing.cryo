@@ -39,7 +39,6 @@ class TestingClass {
         printInt(testInt.value); // This should throw an error
         return;
     }
-    
 }
 
 function main(argc: int, argv: string[]) -> int {

@@ -1849,8 +1849,14 @@ ASTNode *parseArguments(Lexer *lexer, CryoSymbolTable *table, ParsingContext *co
         Symbol *sym = GetFrontendSymbol(globalTable, argName, curScopeID, VARIABLE_SYMBOL);
         if (sym)
         {
-            logMessage("INFO", __LINE__, "Parser", "Symbol found in global table.");
+            logMessage("INFO", __LINE__, "Parser", "Symbol found in global table: %s", argName);
             argType = sym->variable->type;
+        }
+        else
+        {
+            logMessage("ERROR", __LINE__, "Parser", "Symbol not found in global table.");
+            parsingError("Symbol not found in global table.", "parseArguments", table, arena, state, lexer, lexer->source, typeTable, globalTable);
+            return NULL;
         }
     }
     else

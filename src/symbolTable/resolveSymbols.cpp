@@ -39,6 +39,8 @@ namespace Cryo
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
 
+        std::cout << "Searching for variable symbol: " << name << " | in scope: " << scopeID << std::endl;
+
         for (int i = 0; i < symbolCount; i++)
         {
             if (symbols[i]->symbolType == VARIABLE_SYMBOL)
@@ -137,6 +139,8 @@ namespace Cryo
 
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
+
+        std::cout << "Querying for symbol: " << symbolName << " | in scope: " << scopeID << std::endl;
 
         for (int i = 0; i < symbolCount; i++)
         {
@@ -247,6 +251,9 @@ namespace Cryo
 
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
+
+        this->printScopeLookup();
+        std::cout << "Finding Symbol: " << symbolName << " in Scope: " << scopeID << std::endl;
 
         for (int i = 0; i < symbolCount; i++)
         {

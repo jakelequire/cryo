@@ -65,6 +65,23 @@ void setCurrentFunction(ParsingContext *context, const char *functionName, const
     return;
 }
 
+void setCurrentMethod(ParsingContext *context, const char *methodName, const char *className)
+{
+    clearScopeContext(context);
+    context->functionName = methodName;
+    createMethodScope(context, methodName, className);
+    return;
+}
+
+void resetCurrentMethod(ParsingContext *context)
+{
+    if (context->scopeContext)
+    {
+        ScopeParsingContext *parent = context->scopeContext->parent;
+        context->scopeContext = parent;
+    }
+}
+
 void resetCurrentFunction(ParsingContext *context)
 {
     clearScopeContext(context);
@@ -277,7 +294,11 @@ void createMethodScope(ParsingContext *context, const char *methodName, const ch
         false,
         NODE_METHOD);
 
+    ScopeParsingContext *parent = createClassScopeContext(className, context->scopeLevel - 1, false);
+
+    scopeContext->parent = parent;
     context->scopeContext = scopeContext;
+
     return;
 }
 

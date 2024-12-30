@@ -428,6 +428,15 @@ namespace Cryo
         void printGlobalTable(GlobalSymbolTable *table);
         void logSymbol(Symbol *symbol);
         void mergeDBChunks(void); // [C API]
+        void printScopeLookup(void)
+        {
+            std::cout << "\n";
+            for (auto &pair : scopeLookup)
+            {
+                std::cout << "Scope: " << pair.first << " ID: " << pair.second << std::endl;
+            }
+            std::cout << "\n";
+        }
 
     private:
         TABLE_STATE tableState = TABLE_UNINITIALIZED;

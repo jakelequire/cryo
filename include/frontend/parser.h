@@ -224,7 +224,9 @@ void addTokenToContext(ParsingContext *context, Token token);
 void addStaticIdentifierToContext(ParsingContext *context, bool value);
 
 void setCurrentFunction(ParsingContext *context, const char *functionName, const char *namespaceScopeID);
+void setCurrentMethod(ParsingContext *context, const char *methodName, const char *className);
 void resetCurrentFunction(ParsingContext *context);
+void resetCurrentMethod(ParsingContext *context);
 const char *getCurrentScopeID(ParsingContext *context);
 const char *getNamespaceScopeID(ParsingContext *context);
 

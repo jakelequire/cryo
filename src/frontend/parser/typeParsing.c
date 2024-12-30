@@ -313,6 +313,9 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     char *methodName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage("INFO", __LINE__, "Parser", "Method name: %s", methodName);
 
+    const char *methodID = Generate64BitHashID(methodName);
+    setCurrentMethod(context, methodName, parentName); // ParsingContext
+
     getNextToken(lexer, arena, state, typeTable);
 
     ASTNode **params = parseParameterList(lexer, table, context, arena, methodName, state, typeTable, globalTable);
@@ -352,6 +355,8 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     addStaticIdentifierToContext(context, false);
 
     AddMethodToStruct(globalTable, parentName, methodNode); // GlobalSymbolTable
+
+    resetCurrentMethod(context); // ParsingContext
 
     return methodNode;
 }

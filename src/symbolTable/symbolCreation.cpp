@@ -169,6 +169,10 @@ namespace Cryo
         symbol->paramCount = method->paramCount;
         symbol->paramTypes = nullptr;
 
+        const char *methodName = method->name;
+        const char *methodID = IDGen::generate64BitHashID(methodName);
+        pushNewScopePair(methodName, methodID);
+
         return symbol;
     }
 
