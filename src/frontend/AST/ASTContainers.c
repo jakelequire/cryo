@@ -1480,10 +1480,10 @@ UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->primaryModule = (char *)calloc(1, sizeof(char));
+    node->primaryModule = (const char *)calloc(1, sizeof(char));
     node->secondaryModuleCount = 0;
     node->secondaryModuleCapacity = MAX_USING_MODULES;
-    node->secondaryModules = (char **)calloc(1, sizeof(char *) * MAX_USING_MODULES);
+    node->secondaryModules = (const char **)calloc(1, sizeof(char *) * MAX_USING_MODULES);
 
     node->filePath = (char *)calloc(1, sizeof(char));
 

@@ -68,6 +68,8 @@ extern "C"
 
     SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable);
 
+    void CryoGlobalSymbolTable_HandleRootNodeImport(CryoGlobalSymbolTable *symTable, ASTNode *node);
+
     // Scope Functions ---------------------------------------
 
     void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name);
@@ -83,6 +85,7 @@ extern "C"
     void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable);
     const char *CryoGlobalSymbolTable_TypeOfSymbolToString(CryoGlobalSymbolTable *symTable, TypeOfSymbol symbolType);
     void CryoGlobalSymbolTable_LogSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol);
+    const char *CryoGlobalSymbolTable_GetDependencyDirStr(CryoGlobalSymbolTable *symTable);
 
     // Declaration Functions  ---------------------------------------
 
@@ -145,6 +148,9 @@ extern "C"
 #define GetTypeOfDataTypeFromName(symTable, symbolName) \
     getTypeOfDataTypeFromName(symTable, symbolName)
 
+#define HandleRootNodeImport(symTable, node) \
+    CryoGlobalSymbolTable_HandleRootNodeImport(symTable, node)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)
@@ -176,6 +182,8 @@ extern "C"
     CryoGlobalSymbolTable_TypeOfSymbolToString(symTable, symbolType)
 #define LogSymbol(symTable, symbol) \
     CryoGlobalSymbolTable_LogSymbol(symTable, symbol)
+#define GetDependencyDirStr(symTable) \
+    CryoGlobalSymbolTable_GetDependencyDirStr(symTable)
 
 // Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
@@ -334,11 +342,12 @@ namespace Cryo
         size_t dependencyCount = 0;                    // Number of dependencies (C interface)
         size_t dependencyCapacity = MAX_DEPENDENCIES;  // Maximum number of dependencies
 
-        std::vector<SymbolTable *> dependencyTableVector; // Vector of dependency tables (C++ interface)
-        std::vector<FunctionSymbol *> globalFunctions;    // Vector of global functions
-        std::vector<ExternSymbol *> externFunctions;      // Vector of external functions
+        std::vector<SymbolTable *> dependencyTableVector;        // Vector of dependency tables (C++ interface)    [Unimplemented]
+        std::vector<FunctionSymbol *> globalFunctions;           // Vector of global functions                     [Unimplemented]
+        std::vector<ExternSymbol *> externFunctions;             // Vector of external functions                   [Unimplemented]
+        std::unordered_map<std::string, SymbolTable *> queryMap; // Map of namespace tables                        [Unimplemented]
 
-        std::unordered_map<std::string, SymbolTable *> queryMap; // Map of namespace tables
+        std::vector<Symbol *> mergedSymbols; // Vector of all symbols merged from the symbol tables
 
         ScopeBlock *currentScope = nullptr; // Current scope block
         const char *scopeId = "null";       // Current scope ID
@@ -359,6 +368,23 @@ namespace Cryo
         void setPrimaryTable(SymbolTable *table);
 
         //===================================================================
+        // Symbol Merging / Management
+        //===================================================================
+
+        void mergeAllSymbols(void);
+        std::vector<Symbol *> mergePrimaryTable(void);
+        std::vector<Symbol *> mergeAllDependencyTables(void);
+
+        //===================================================================
+        // Imports / Exports
+        //===================================================================
+
+        void handleRootNodeImport(ASTNode *node); // [C API]
+
+        SymbolTable *createNewImportTable(const char *namespaceName);
+        void loopRootNode(ASTNode *node, SymbolTable *table, char *currentScopeID);
+
+        //===================================================================
         // Symbol Table Operations
         //===================================================================
 
@@ -370,9 +396,11 @@ namespace Cryo
         SymbolTable *getCurrentSymbolTable(void);                                                        // [C API]
         Symbol *getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType); // [C API]
 
+        void addSymbolToTable(Symbol *symbol, SymbolTable *table);
         void completeDependencyTable(void);
         void addGlobalFunctionToTable(FunctionSymbol *function);
         void addExternFunctionToTable(ExternSymbol *function);
+        void addNewDependencyTable(const char *namespaceName, SymbolTable *table);
 
         Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
         Symbol *querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table);
@@ -422,12 +450,14 @@ namespace Cryo
         //===================================================================
 
         //===================================================================
-        // Debug Operations
+        // Debug Operations / Utilities
         //===================================================================
 
-        void printGlobalTable(GlobalSymbolTable *table);
+        void printGlobalTable(GlobalSymbolTable *table); // [C API]
+        void mergeDBChunks(void);                        // [C API]
+        const char *getDependencyDirStr(void);           // [C API]
+
         void logSymbol(Symbol *symbol);
-        void mergeDBChunks(void); // [C API]
         void printScopeLookup(void)
         {
             std::cout << "\n";
@@ -653,6 +683,14 @@ namespace Cryo
         return UNKNOWN_SYMBOL;
     }
 
+    inline void CryoGlobalSymbolTable_HandleRootNodeImport(CryoGlobalSymbolTable *symTable, ASTNode *node)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->handleRootNodeImport(node);
+        }
+    }
+
     // Scope Functions ---------------------------------------
 
     inline void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
@@ -752,6 +790,15 @@ namespace Cryo
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->logSymbol(symbol);
         }
+    }
+
+    inline const char *CryoGlobalSymbolTable_GetDependencyDirStr(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getDependencyDirStr();
+        }
+        return nullptr;
     }
 
     // Declaration Functions (Classes) ---------------------------------------

@@ -2,23 +2,6 @@ namespace Testing;
 
 using Std::Types;
 
-struct Int {
-    value: int;
-
-    constructor(val: int) {
-        this.value = val;
-    }
-
-    toString() -> string {
-        return intToString(this.value);
-    }
-
-    fooMethod() -> void {
-        printStr("Foo method called");
-        return;
-    }
-}
-
 class TestingClass {
     public value: int;
 
@@ -42,12 +25,21 @@ class TestingClass {
     }
 }
 
+function testUsingKw() -> void {
+    const testInt: Int = 42;
+    printInt(testInt.value);
+
+    return;
+}
+
 function main(argc: int, argv: string[]) -> int {
     printStr("---------- Main Function ----------");
 
     TestingClass::methodOne();
     TestingClass::methodTwo();
     TestingClass::methodThree();
+
+    testUsingKw();
 
     return 0;
 }

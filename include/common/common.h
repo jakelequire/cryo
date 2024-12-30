@@ -87,6 +87,7 @@ typedef struct CompilerState
     int lineNumber;
     int columnNumber;
     bool isActiveBuild;
+    bool isModuleFile;
     CompilerSettings *settings;
     int errorCount;
     CompilerError **errors;

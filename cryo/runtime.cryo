@@ -35,31 +35,3 @@ function getCryoNullValue() -> any {
     printStr("Returning null value");
     return null;
 }
-
-// =============================================== //
-// ============== Type Definitions =============== //
-// =============================================== //
-
-struct Error {
-    message: string;
-}
-
-struct String {
-    value: string;
-
-    constructor(val: string) {
-        this.value = val;
-    }
-}
-
-class FooClass
-{
-    public fooProp: string;
-
-    constructor() {}
-
-    public static barMethod() -> void {
-        printStr("Bar method called");
-        return;
-    }
-}

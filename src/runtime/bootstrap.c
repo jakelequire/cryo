@@ -129,27 +129,6 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, Cr
     return;
 }
 
-Bootstrapper *initBootstrapper(const char *filePath)
-{
-    Bootstrapper *bootstrapper = (Bootstrapper *)malloc(sizeof(Bootstrapper));
-
-    // Init the bootstrapper state
-    bootstrapper->status = BOOTSTRAP_IDLE;
-
-    // Initialize the Arena
-    bootstrapper->arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the symbol table
-    bootstrapper->table = createSymbolTable(bootstrapper->arena);
-
-    bootstrapper->typeTable = initTypeTable();
-
-    // Set the program node to null, we will parse it later.
-    bootstrapper->programNode = NULL;
-
-    return bootstrapper;
-}
-
 ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, CryoGlobalSymbolTable *globalTable)
 {
     logMessage("INFO", __LINE__, "Bootstrap", "@compileForRuntimeNode Reading file: %s", filePath);
@@ -205,4 +184,25 @@ void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status)
 {
     bootstrapper->status = status;
+}
+
+Bootstrapper *initBootstrapper(const char *filePath)
+{
+    Bootstrapper *bootstrapper = (Bootstrapper *)malloc(sizeof(Bootstrapper));
+
+    // Init the bootstrapper state
+    bootstrapper->status = BOOTSTRAP_IDLE;
+
+    // Initialize the Arena
+    bootstrapper->arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the symbol table
+    bootstrapper->table = createSymbolTable(bootstrapper->arena);
+
+    bootstrapper->typeTable = initTypeTable();
+
+    // Set the program node to null, we will parse it later.
+    bootstrapper->programNode = NULL;
+
+    return bootstrapper;
 }

@@ -25,9 +25,11 @@ ParsingContext *createParsingContext(void)
     context->functionName = (char *)malloc(sizeof(char) * 128);
     context->currentNamespace = (char *)malloc(sizeof(char) * 128);
     context->namespaceScopeID = (char *)malloc(sizeof(char) * 128);
-    context->isParsingIfCondition = false;
     context->scopeLevel = 0;
     context->lastTokenCount = 0;
+
+    context->isParsingIfCondition = false;
+    context->isParsingModuleFile = false;
 
     return context;
 }
@@ -127,6 +129,11 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTa
         context->thisContext->methods[index] = methodNode;
         context->thisContext->methodCount++;
     }
+}
+
+void setModuleFileParsingFlag(ParsingContext *context, bool value)
+{
+    context->isParsingModuleFile = value;
 }
 
 ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable)

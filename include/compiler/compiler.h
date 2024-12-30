@@ -49,12 +49,18 @@ extern "C"
 }
 #endif
 
+// Compiler Functions
 int cryoCompiler(const char *filePath, CompilerSettings *settings);
 ASTNode *compileForProgramNode(const char *filePath);
 int compileImportFile(const char *filePath, CompilerSettings *settings);
 
+// Source Text Compiler
 int sourceTextCompiler(char *filePath, CompilerSettings *settings);
 const char *handleTextBuffer(char *source);
+
+// Module Compiler
+ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+void processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath);
 
 // C++ Accessable Functions
 #ifdef __cplusplus

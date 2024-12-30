@@ -92,7 +92,6 @@ typedef struct ThisContext
  */
 typedef struct ParsingContext
 {
-    bool isParsingIfCondition;
     int scopeLevel;
     const char *currentNamespace;
     const char *namespaceScopeID;
@@ -104,7 +103,12 @@ typedef struct ParsingContext
     Token lastTokens[16];
     int lastTokenCount;
 
+    // The current scope context
     ScopeParsingContext *scopeContext;
+
+    // Context Flags
+    bool isParsingModuleFile;
+    bool isParsingIfCondition;
 } ParsingContext;
 
 /* =========================================================== */
@@ -231,6 +235,8 @@ void resetCurrentMethod(ParsingContext *context);
 const char *getCurrentScopeID(ParsingContext *context);
 const char *getNamespaceScopeID(ParsingContext *context);
 
+void setModuleFileParsingFlag(ParsingContext *context, bool value);
+
 // Scope Parsing Context Functions
 
 ScopeParsingContext *createScopeParsingContext(const char *name, int level, bool isStatic, CryoNodeType nodeType);
@@ -317,7 +323,39 @@ ASTNode *parseTypeofIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingCont
 // # `Using` Keyword Parsing
 // # =========================================================================== #
 
+#define MAX_MODULE_CHAIN 16
+
 void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
-void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount);
+void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state);
+const char **getFilesInModuleDir(const char *modulePath);
+const char *findRegularFile(const char **moduleFiles, size_t moduleCount, const char *fileName);
+const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const char *moduleName);
+ASTNode *compileModuleFileDefinitions(const char *modulePath, CryoGlobalSymbolTable *globalTable, CompilerState *state);
+int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+void importSpecificNamespaces(const char *primaryModule, const char *namespaces[], size_t namespaceCount,
+                              CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+static void cleanupModuleChain(char **names, size_t length);
+static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain, size_t *chainLength,
+                             CryoSymbolTable *table, ParsingContext *context, Arena *arena,
+                             CompilerState *state, TypeTable *typeTable);
+static void parseTypeList(Lexer *lexer, const char *lastModule, CryoSymbolTable *table,
+                          ParsingContext *context, Arena *arena, CompilerState *state,
+                          TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+
+bool nonCryoFileCheck(const char *fullPath);
+// Structures
+struct ModuleChainEntry
+{
+    char *name;
+    size_t length;
+};
+
+struct TypeEntry
+{
+    char *name;
+    size_t length;
+};
 
 #endif // PARSER_H

@@ -30,10 +30,12 @@ CompilerState *initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *ta
     state->fileName = fileName;
     state->lineNumber = 0;
     state->columnNumber = 0;
-    state->isActiveBuild = false;
     state->errorCount = 0;
     state->settings = (CompilerSettings *)malloc(sizeof(CompilerSettings));
     state->errors = (CompilerError **)malloc(sizeof(CompilerError *));
+
+    state->isActiveBuild = false;
+    state->isModuleFile = false;
 
     logMessage("INFO", __LINE__, "CompilerState", "Compiler state initialized");
     return state;

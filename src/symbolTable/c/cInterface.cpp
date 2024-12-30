@@ -159,6 +159,14 @@ extern "C"
         return nullptr;
     }
 
+    void CryoGlobalSymbolTable_HandleRootNodeImport(CryoGlobalSymbolTable *symTable, ASTNode *node)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->handleRootNodeImport(node);
+        }
+    }
+
     // --------------------------------------------------------------
     // Scope Functions
 
@@ -208,6 +216,15 @@ extern "C"
         {
             reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->mergeDBChunks();
         }
+    }
+
+    const char *CryoGlobalSymbolTable_GetDependencyDirStr(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getDependencyDirStr();
+        }
+        return nullptr;
     }
 
     // --------------------------------------------------------------

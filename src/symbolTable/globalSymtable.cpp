@@ -63,6 +63,24 @@ namespace Cryo
     {
         db->createScopedDB();
     }
+    const char *GlobalSymbolTable::getDependencyDirStr(void)
+    {
+        return debugInfo.dependencyDir.c_str();
+    }
+    void GlobalSymbolTable::addSymbolToTable(Symbol *symbol, SymbolTable *table)
+    {
+        if (!symbol || symbol == nullptr)
+        {
+            std::cerr << "Error: Failed to add symbol to table, symbol is null!" << std::endl;
+            return;
+        }
+        if (!table || table == nullptr)
+        {
+            std::cerr << "Error: Failed to add symbol to table, table is null!" << std::endl;
+            return;
+        }
+        addSingleSymbolToTable(symbol, table);
+    }
 
     void GlobalSymbolTable::pushNewScopePair(const char *name, const char *id)
     {
@@ -322,6 +340,32 @@ namespace Cryo
         }
 
         return;
+    }
+
+    void GlobalSymbolTable::addNewDependencyTable(const char *namespaceName, SymbolTable *table)
+    {
+        if (!table || table == nullptr)
+        {
+            return;
+        }
+
+        if (dependencyCount == 0)
+        {
+            setIsDependencyTable(table);
+            setCurrentDependencyTable(table);
+            dependencyTableVector.push_back(table);
+            dependencyCount++;
+            initNamepsaceScope(namespaceName);
+            return;
+        }
+        else
+        {
+            dependencyTableVector.push_back(table);
+            dependencyCount++;
+            setCurrentDependencyTable(table);
+            initNamepsaceScope(namespaceName);
+            return;
+        }
     }
 
     void GlobalSymbolTable::initNamespace(const char *namespaceName)

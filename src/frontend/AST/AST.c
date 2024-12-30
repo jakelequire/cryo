@@ -38,8 +38,6 @@ ASTNode *appendASTNodeDefs(ASTNode *root, CryoSymbolTable *table, TypeTable *typ
     return root;
 }
 
-// -------------------------------------------------------------------
-
 ASTNode *copyASTNode(ASTNode *node)
 {
     if (!node)
@@ -56,6 +54,29 @@ ASTNode *copyASTNode(ASTNode *node)
 
     return copy;
 }
+
+const char *getNamespaceNameFromRootNode(ASTNode *root)
+{
+    if (!root)
+    {
+        logMessage("ERROR", __LINE__, "AST", "Root node is NULL");
+        return NULL;
+    }
+
+    // This node is assumed to be the program node.
+    // We will have to loop through the program node to find the namespace node.
+    ASTNode *currentNode = root;
+    while (currentNode->metaData->type != NODE_NAMESPACE)
+    {
+        currentNode = currentNode->data.program->statements[0];
+    }
+    const char *name = currentNode->data.cryoNamespace->name;
+    printf("Namespace Name: %s\n", name);
+
+    return name;
+}
+
+// ======================================================================
 
 ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {

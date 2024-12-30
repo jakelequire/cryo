@@ -679,6 +679,8 @@ extern "C"
         ASTNode *child,
         Arena *arena, CompilerState *state, TypeTable *typeTable);
 
+    const char *getNamespaceNameFromRootNode(ASTNode *root);
+
     /**
      * Program Structure Nodes
      * Nodes representing high-level program structure

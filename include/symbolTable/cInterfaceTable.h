@@ -101,6 +101,9 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define GetTypeOfDataTypeFromName(symTable, symbolName) \
     getTypeOfDataTypeFromName(symTable, symbolName)
 
+#define HandleRootNodeImport(symTable, node) \
+    CryoGlobalSymbolTable_HandleRootNodeImport(symTable, node)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)

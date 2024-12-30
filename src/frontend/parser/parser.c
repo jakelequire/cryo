@@ -41,8 +41,11 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
         printf("\n");
     }
 
+    bool isModuleFile = state->isModuleFile;
+
     // Initialize the parsing context
     ParsingContext *context = createParsingContext();
+    context->isParsingModuleFile = isModuleFile;
 
     // Create the program node
     ASTNode *program = createProgramNode(arena, state, typeTable, lexer);
