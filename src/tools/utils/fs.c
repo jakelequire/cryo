@@ -88,7 +88,7 @@ bool fileExists(const char *path)
     }
     else
     {
-        logMessage("WARN", __LINE__, "FS", "File does not exist");
+        logMessage(LMI, "WARN", "FS", "File does not exist");
     }
     return false;
 #endif
@@ -102,7 +102,7 @@ bool fileExists(const char *path)
     }
     else
     {
-        logMessage("WARN", __LINE__, "FS", "File does not exist");
+        logMessage(LMI, "WARN", "FS", "File does not exist");
     }
 
     fclose(file);
@@ -139,11 +139,11 @@ void createDir(const char *path)
 {
     if (!dirExists(path))
     {
-        logMessage("INFO", __LINE__, "FS", "Directory doesn't exist, creating...");
+        logMessage(LMI, "INFO", "FS", "Directory doesn't exist, creating...");
         int status = mkdir(path, 0777);
         if (status == -1)
         {
-            logMessage("ERROR", __LINE__, "FS", "Failed to create directory");
+            logMessage(LMI, "ERROR", "FS", "Failed to create directory");
             DEBUG_BREAKPOINT;
         }
     }
@@ -161,7 +161,7 @@ void removeFile(const char *filePath)
         int status = remove(filePath);
         if (status == -1)
         {
-            logMessage("ERROR", __LINE__, "FS", "Failed to remove file");
+            logMessage(LMI, "ERROR", "FS", "Failed to remove file");
             DEBUG_BREAKPOINT;
         }
     }
@@ -177,7 +177,7 @@ const char *getSTDFilePath(const char *subModule)
     const char *cryoPath = getenv("CRYO_PATH");
     if (!cryoPath)
     {
-        logMessage("ERROR", __LINE__, "TypeDefs", "CRYO_PATH environment variable not set.");
+        logMessage(LMI, "ERROR", "TypeDefs", "CRYO_PATH environment variable not set.");
         DEBUG_BREAKPOINT;
         return NULL;
     }
@@ -206,7 +206,7 @@ const char *getCurRootDir(void)
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) == NULL)
     {
-        logMessage("ERROR", __LINE__, "FS", "Failed to get current working directory");
+        logMessage(LMI, "ERROR", "FS", "Failed to get current working directory");
         CONDITION_FAILED;
     }
 
@@ -222,7 +222,7 @@ const char *getCryoSrcLocation(void)
     {
         if (dirExists(srcLocations->rootDir))
         {
-            logMessage("INFO", __LINE__, "FS", "Found Cryo source location");
+            logMessage(LMI, "INFO", "FS", "Found Cryo source location");
             return srcLocations->rootDir;
         }
         i++;
@@ -239,7 +239,7 @@ char *getCRuntimePath(void)
     char *srcPath = (char *)getCryoSrcLocation();
     if (!srcPath)
     {
-        logMessage("ERROR", __LINE__, "FS", "Failed to find Cryo source location");
+        logMessage(LMI, "ERROR", "FS", "Failed to find Cryo source location");
         DEBUG_BREAKPOINT;
         return NULL;
     }
@@ -259,7 +259,7 @@ const char *appendStrings(const char *str1, const char *str2)
     char *result = (char *)malloc(strlen(str1) + strlen(str2) + 1);
     if (!result)
     {
-        logMessage("ERROR", __LINE__, "FS", "Failed to allocate memory for string concatenation");
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
         return NULL;
     }
 

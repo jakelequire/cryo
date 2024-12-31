@@ -238,7 +238,7 @@ void skipWhitespace(Lexer *lexer, CompilerState *state)
                 }
                 if (isAtEnd(lexer, state))
                 {
-                    logMessage("ERROR", __LINE__, "Lexer", "Unterminated block comment.");
+                    logMessage(LMI, "ERROR", "Lexer", "Unterminated block comment.");
                     return;
                 }
                 advance(lexer, state);
@@ -271,25 +271,25 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
 
     if (isAtEnd(lexer, state))
     {
-        logMessage("INFO", __LINE__, "Lexer", "Creating EOF token");
+        logMessage(LMI, "INFO", "Lexer", "Creating EOF token");
         *token = makeToken(lexer, TOKEN_EOF, state);
         return *token;
     }
 
     char c = advance(lexer, state);
-    // logMessage("INFO", __LINE__, "Lexer", "Current character: %c", c);
+    // logMessage(LMI, "INFO", "Lexer", "Current character: %c", c);
 
     if (isAlpha(c))
     {
         *token = checkKeyword(lexer, state);
-        // logMessage("INFO", __LINE__, "Lexer", "Keyword token created");
+        // logMessage(LMI, "INFO", "Lexer", "Keyword token created");
         return *token;
     }
 
     if (isDigit(c))
     {
         *token = number(lexer, state, false);
-        // logMessage("INFO", __LINE__, "Lexer", "Number token created");
+        // logMessage(LMI, "INFO", "Lexer", "Number token created");
         return *token;
     }
 
@@ -299,7 +299,7 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
         if (isDigit(peek(lexer, state)))
         {
             *token = number(lexer, state, true);
-            // logMessage("INFO", __LINE__, "Lexer", "Negative number token created");
+            // logMessage(LMI, "INFO", "Lexer", "Negative number token created");
             return *token;
         }
         // For arrow operator
@@ -307,14 +307,14 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
         {
             advance(lexer, state);
             *token = makeToken(lexer, TOKEN_RESULT_ARROW, state);
-            // logMessage("INFO", __LINE__, "Lexer", "Result arrow token created");
+            // logMessage(LMI, "INFO", "Lexer", "Result arrow token created");
             return *token;
         }
         // For minus operator
         else
         {
             *token = makeToken(lexer, TOKEN_MINUS, state);
-            // logMessage("INFO", __LINE__, "Lexer", "Minus token created");
+            // logMessage(LMI, "INFO", "Lexer", "Minus token created");
             return *token;
         }
     }
@@ -322,25 +322,25 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
     if (c == '"')
     {
         *token = string(lexer, state);
-        // logMessage("INFO", __LINE__, "Lexer", "String token created");
+        // logMessage(LMI, "INFO", "Lexer", "String token created");
         return *token;
     }
 
     if (c == '&')
     {
         *token = makeToken(lexer, TOKEN_AMPERSAND, state);
-        // logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
+        // logMessage(LMI, "INFO", "Lexer", "Ampersand token created");
         return *token;
     }
     Token symToken = symbolChar(lexer, c, state);
     if (symToken.type != TOKEN_UNKNOWN)
     {
         *token = symToken;
-        // logMessage("INFO", __LINE__, "Lexer", "Symbol token created");
+        // logMessage(LMI, "INFO", "Lexer", "Symbol token created");
         return *token;
     }
 
-    logMessage("ERROR", __LINE__, "Lexer", "Unexpected character: %c", c);
+    logMessage(LMI, "ERROR", "Lexer", "Unexpected character: %c", c);
     return identifier(lexer, state);
 }
 // </nextToken>
@@ -413,7 +413,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
     token.line = lexer->line;
     token.column = lexer->column;
 
-    // logMessage("INFO", __LINE__, "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
+    // logMessage(LMI, "INFO", "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
     return token;
 }
 // </makeToken>
@@ -744,7 +744,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
     {
         if (peekNext(lexer, state) == ']')
         {
-            logMessage("INFO", __LINE__, "Lexer", "Parsing array type...");
+            logMessage(LMI, "INFO", "Lexer", "Parsing array type...");
             advance(lexer, state);
             // append the `[]` to the data type
             char *arrayType = (char *)malloc(strlen(dataType) + 2);
@@ -756,7 +756,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
         }
         if (isDigit(peekNext(lexer, state)))
         {
-            logMessage("INFO", __LINE__, "Lexer", "Parsing array index...");
+            logMessage(LMI, "INFO", "Lexer", "Parsing array index...");
             while (isDigit(peek(lexer, state)))
             {
                 advance(lexer, state);

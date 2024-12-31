@@ -155,7 +155,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
         // Get the name of the type:
         char *typeName = strdup(baseTypeStr);
         // Look up the type in the type table
-        logMessage("INFO", __LINE__, "DataTypes", "Looking up custom type '%s' in type table", typeName);
+        logMessage(LMI, "INFO", "DataTypes", "Looking up custom type '%s' in type table", typeName);
         printTypeTable(typeTable);
         TypeContainer *customType = lookupType(typeTable, typeName)->container;
         if (!customType)
@@ -190,7 +190,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
     // Handle array types
     if (isArray)
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Creating array type for '%s'", baseTypeStr);
+        logMessage(LMI, "INFO", "DataTypes", "Creating array type for '%s'", baseTypeStr);
         TypeContainer *arrayContainer = createArrayType(container, 1);
         free(container); // Free the base container since createArrayType makes a copy
         container = arrayContainer;
@@ -229,12 +229,12 @@ DataType *lookupType(TypeTable *table, const char *name)
         if (type->container->custom.name &&
             strcmp(type->container->custom.name, name) == 0)
         {
-            logMessage("INFO", __LINE__, "DataTypes", "Found type '%s' in type table", name);
+            logMessage(LMI, "INFO", "DataTypes", "Found type '%s' in type table", name);
             return type;
         }
     }
 
-    logMessage("INFO", __LINE__, "DataTypes", "Type '%s' not found in type table", name);
+    logMessage(LMI, "INFO", "DataTypes", "Type '%s' not found in type table", name);
     return NULL;
 }
 
@@ -250,7 +250,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
     }
 
     // Check if the type already exists
-    logMessage("INFO", __LINE__, "DataTypes", "Looking up type '%s' in type table", name);
+    logMessage(LMI, "INFO", "DataTypes", "Looking up type '%s' in type table", name);
     DataType *existingType = lookupType(table, name);
     if (existingType)
     {
@@ -260,7 +260,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
         return;
     }
 
-    logMessage("INFO", __LINE__, "DataTypes", "Adding type '%s' to type table", name);
+    logMessage(LMI, "INFO", "DataTypes", "Adding type '%s' to type table", name);
     // Add the type to the table
     if (table->count >= table->capacity)
     {
@@ -273,9 +273,9 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
         }
     }
 
-    logMessage("INFO", __LINE__, "DataTypes", "Adding type '%s' to type table, count: %d", name, table->count);
+    logMessage(LMI, "INFO", "DataTypes", "Adding type '%s' to type table, count: %d", name, table->count);
     table->types[table->count++] = type;
-    logMessage("INFO", __LINE__, "DataTypes", "Added type '%s' to type table", name);
+    logMessage(LMI, "INFO", "DataTypes", "Added type '%s' to type table", name);
 }
 
 ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable)
@@ -287,7 +287,7 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName, Ty
         CONDITION_FAILED;
     }
 
-    logMessage("INFO", __LINE__, "DataTypes", "Finding property '%s' in struct '%s'", propertyName, structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Finding property '%s' in struct '%s'", propertyName, structType->name);
 
     for (int i = 0; i < structType->propertyCount; i++)
     {
@@ -345,28 +345,28 @@ DataType *DataTypeFromNode(ASTNode *node)
     switch (nodeType)
     {
     case NODE_LITERAL_EXPR:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from literal expression");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from literal expression");
         return node->data.literal->type;
     case NODE_VAR_NAME:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var name");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from var name");
         return node->data.varName->type;
     case NODE_STRUCT_DECLARATION:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from struct declaration");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from struct declaration");
         return node->data.structNode->type;
     case NODE_FUNCTION_DECLARATION:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from function declaration");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from function declaration");
         return node->data.functionDecl->type;
     case NODE_PROPERTY:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from property");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from property");
         return node->data.property->type;
     case NODE_PARAM:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from param");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from param");
         return node->data.param->type;
     case NODE_VAR_DECLARATION:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var declaration");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from var declaration");
         return node->data.varDecl->type;
     case NODE_CLASS:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from class");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from class");
         return node->data.classNode->type;
     default:
     {
@@ -429,11 +429,11 @@ DataType **getTypeArrayFromASTNode(ASTNode **node, int size)
         if (!node[i])
         {
             char *nodeType = CryoNodeTypeToString(node[i]->metaData->type);
-            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop! Node type: %s", nodeType);
+            logMessage(LMI, "INFO", "DataTypes", "Node is NULL, breaking loop! Node type: %s", nodeType);
             break;
         }
         types[i] = DataTypeFromNode(node[i]);
-        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node: %s", DataTypeToString(types[i]));
+        logMessage(LMI, "INFO", "DataTypes", "Got data type from AST node: %s", DataTypeToString(types[i]));
     }
 
     return types;
@@ -458,11 +458,11 @@ DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount)
     {
         if (!params[i])
         {
-            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop!");
+            logMessage(LMI, "INFO", "DataTypes", "Node is NULL, breaking loop!");
             break;
         }
         types[i] = params[i]->type;
-        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node: %s", DataTypeToString(types[i]));
+        logMessage(LMI, "INFO", "DataTypes", "Got data type from AST node: %s", DataTypeToString(types[i]));
     }
 
     return types;
@@ -485,22 +485,22 @@ DataType **getDataTypeArrayFromASTNode(ASTNode *node)
     {
     case NODE_PARAM_LIST:
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from param list");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type array from param list");
         return getTypeFromParamList(node->data.paramList->params, node->data.paramList->paramCount);
     }
     case NODE_METHOD:
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from method");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type array from method");
         return getTypeArrayFromASTNode(node->data.method->params, node->data.method->paramCount);
     }
     case NODE_FUNCTION_CALL:
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from function call");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type array from function call");
         return getTypeArrayFromASTNode(node->data.functionCall->args, node->data.functionCall->argCount);
     }
     case NODE_ARRAY_LITERAL:
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type array from array declaration");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type array from array declaration");
         return getTypeArrayFromASTNode(node->data.array->elements, node->data.array->elementCount);
     }
     default:
@@ -525,35 +525,35 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
     switch (node->metaData->type)
     {
     case NODE_LITERAL_EXPR:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from literal expression");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from literal expression");
         return node->data.literal->type;
     case NODE_VAR_NAME:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var name");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from var name");
         return node->data.varName->type;
     case NODE_STRUCT_DECLARATION:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from struct declaration");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from struct declaration");
         return node->data.structNode->type;
     case NODE_FUNCTION_DECLARATION:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from function declaration");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from function declaration");
         return node->data.functionDecl->type;
     case NODE_PROPERTY:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from property");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from property");
         return node->data.property->type;
     case NODE_PARAM:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from param");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from param");
         return node->data.param->type;
     case NODE_VAR_DECLARATION:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from var declaration");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from var declaration");
         return node->data.varDecl->type;
     case NODE_METHOD:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from method");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from method");
         return node->data.method->type;
     case NODE_FUNCTION_CALL:
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from function call");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from function call");
         return node->data.functionCall->returnType;
     case NODE_PROPERTY_ACCESS:
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Getting data type from property access");
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from property access");
         // Get the object type
         DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object);
         if (!objectType)
@@ -592,7 +592,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
         }
     }
     default:
-        logMessage("ERROR", __LINE__, "DataTypes", "Failed to get data type from AST node, received node type: %s",
+        logMessage(LMI, "ERROR", "DataTypes", "Failed to get data type from AST node, received node type: %s",
                    CryoNodeTypeToString(node->metaData->type));
         CONDITION_FAILED;
     }
@@ -795,13 +795,13 @@ DataType **getParamTypeArray(ASTNode **node)
         printf("Viewing Node Type: %s\n", CryoNodeTypeToString(node[i]->metaData->type));
         if (!node[i])
         {
-            logMessage("INFO", __LINE__, "DataTypes", "Node is NULL, breaking loop");
+            logMessage(LMI, "INFO", "DataTypes", "Node is NULL, breaking loop");
             break;
         }
         types[i] = node[i]->data.param->type;
-        logMessage("INFO", __LINE__, "DataTypes", "Got data type from AST node");
+        logMessage(LMI, "INFO", "DataTypes", "Got data type from AST node");
     }
 
-    logMessage("INFO", __LINE__, "DataTypes", "Returning param type array");
+    logMessage(LMI, "INFO", "DataTypes", "Returning param type array");
     return types;
 }

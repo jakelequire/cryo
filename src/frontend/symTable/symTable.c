@@ -163,7 +163,7 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
     CryoSymbol *symbolNode = createCryoSymbol(table, node, arena);
     if (!symbolNode)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Failed to create symbol node");
+        logMessage(LMI, "ERROR", "SymTable", "Failed to create symbol node");
         return;
     }
 
@@ -173,13 +173,13 @@ void addASTNodeSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
         table->symbols = (CryoSymbol **)realloc(table->symbols, table->capacity * sizeof(CryoSymbol *));
         if (!table->symbols)
         {
-            logMessage("ERROR", __LINE__, "SymTable", "Failed to reallocate memory for symbol table");
+            logMessage(LMI, "ERROR", "SymTable", "Failed to reallocate memory for symbol table");
             return;
         }
     }
 
     table->symbols[table->count++] = symbolNode;
-    logMessage("INFO", __LINE__, "SymTable", "Symbol added: %s", strdup(symbolNode->name));
+    logMessage(LMI, "INFO", "SymTable", "Symbol added: %s", strdup(symbolNode->name));
 }
 // </addASTNodeSymbol>
 
@@ -188,7 +188,7 @@ bool isSymbolInTable(CryoSymbolTable *table, char *name)
 {
     if (!name)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Name is null in isSymbolInTable");
+        logMessage(LMI, "ERROR", "SymTable", "Name is null in isSymbolInTable");
         return false;
     }
 
@@ -208,14 +208,14 @@ void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
 {
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Node is null in updateExistingSymbol");
+        logMessage(LMI, "ERROR", "SymTable", "Node is null in updateExistingSymbol");
         return;
     }
 
     char *name = getNameOfNode(node);
     if (!name || strlen(name) == 0)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Name is null in updateExistingSymbol");
+        logMessage(LMI, "ERROR", "SymTable", "Name is null in updateExistingSymbol");
         return;
     }
 
@@ -223,7 +223,7 @@ void updateExistingSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena)
     {
         if (strcmp(table->symbols[i]->name, name) == 0)
         {
-            logMessage("INFO", __LINE__, "SymTable", "Updating existing symbol: %s", name);
+            logMessage(LMI, "INFO", "SymTable", "Updating existing symbol: %s", name);
             table->symbols[i] = createCryoSymbol(table, node, arena);
             return;
         }
@@ -236,14 +236,14 @@ void addDefinitionToSymbolTable(CryoSymbolTable *table, ASTNode *node, Arena *ar
 {
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Node is null in addDefinitionToSymbolTable");
+        logMessage(LMI, "ERROR", "SymTable", "Node is null in addDefinitionToSymbolTable");
         return;
     }
 
     char *name = getNameOfNode(node);
     if (!name || strlen(name) == 0)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Name is null in addDefinitionToSymbolTable");
+        logMessage(LMI, "ERROR", "SymTable", "Name is null in addDefinitionToSymbolTable");
         return;
     }
 
@@ -263,7 +263,7 @@ char *getNameOfNode(ASTNode *node)
 {
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Node is null in getNameOfNode");
+        logMessage(LMI, "ERROR", "SymTable", "Node is null in getNameOfNode");
         return NULL;
     }
 
@@ -305,7 +305,7 @@ char *getNameOfNode(ASTNode *node)
         return strdup(node->data.classNode->name);
 
     default:
-        logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %s", CryoNodeTypeToString(node->metaData->type));
+        logMessage(LMI, "ERROR", "SymTable", "Unsupported node type %s", CryoNodeTypeToString(node->metaData->type));
         return NULL;
     }
     return NULL;
@@ -317,14 +317,14 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
 {
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Node is null in createCryoSymbol");
+        logMessage(LMI, "ERROR", "SymTable", "Node is null in createCryoSymbol");
         return NULL;
     }
 
     CryoSymbol *symbolNode = (CryoSymbol *)ARENA_ALLOC(arena, sizeof(CryoSymbol));
     if (!symbolNode)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Failed to allocate memory for symbolNode");
+        logMessage(LMI, "ERROR", "SymTable", "Failed to allocate memory for symbolNode");
         return NULL;
     }
 
@@ -517,7 +517,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
     }
 
     default:
-        logMessage("ERROR", __LINE__, "SymTable", "Unsupported node type %d", node->metaData->type);
+        logMessage(LMI, "ERROR", "SymTable", "Unsupported node type %d", node->metaData->type);
         return NULL;
     }
 
@@ -570,11 +570,11 @@ void importAstTreeDefs(ASTNode *root, CryoSymbolTable *table, Arena *arena, Comp
 {
     if (!root)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Root is null in importAstTree");
+        logMessage(LMI, "ERROR", "SymTable", "Root is null in importAstTree");
         return;
     }
 
-    logMessage("INFO", __LINE__, "SymTable", "Importing AST tree definitions...");
+    logMessage(LMI, "INFO", "SymTable", "Importing AST tree definitions...");
     printAST(root, 0, arena);
 
     for (int i = 0; i < root->data.program->statementCount; i++)
@@ -584,7 +584,7 @@ void importAstTreeDefs(ASTNode *root, CryoSymbolTable *table, Arena *arena, Comp
         }
         else
         {
-            logMessage("INFO", __LINE__, "SymTable", "Adding import statement to symbol table");
+            logMessage(LMI, "INFO", "SymTable", "Adding import statement to symbol table");
             addASTNodeSymbol(table, root->data.program->statements[i], arena);
         }
     }
@@ -607,13 +607,13 @@ void importRuntimeDefinitionsToSymTable(CryoSymbolTable *table, ASTNode *runtime
         {
             addClassMethodsToTable(node, table, arena);
 
-            logMessage("INFO", __LINE__, "SymTable", "Adding runtime class definition to symbol table %s%s%s%s",
+            logMessage(LMI, "INFO", "SymTable", "Adding runtime class definition to symbol table %s%s%s%s",
                        BOLD, GREEN, node->data.classNode->name, COLOR_RESET);
 
             continue;
         }
         addASTNodeSymbol(table, node, arena);
-        logMessage("INFO", __LINE__, "SymTable", "Adding runtime definition to symbol table %s%s%s%s",
+        logMessage(LMI, "INFO", "SymTable", "Adding runtime definition to symbol table %s%s%s%s",
                    BOLD, GREEN, CryoNodeTypeToString(node->metaData->type), COLOR_RESET);
     }
 }
@@ -622,7 +622,7 @@ void addClassMethodsToTable(ASTNode *classNode, CryoSymbolTable *table, Arena *a
 {
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "SymTable", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "SymTable", "Expected class declaration node.");
         return;
     }
 
@@ -660,7 +660,7 @@ CryoSymbol *resolveModuleSymbol(const char *moduleName, const char *symbolName, 
     }
 
     printSymbolTable(table);
-    logMessage("ERROR", __LINE__, "SymTable", "Failed to resolve module symbol %s%s%s%s in module %s%s%s%s",
+    logMessage(LMI, "ERROR", "SymTable", "Failed to resolve module symbol %s%s%s%s in module %s%s%s%s",
                BOLD, RED, symbolName, COLOR_RESET, BOLD, RED, moduleName, COLOR_RESET);
     return NULL;
 }

@@ -72,14 +72,14 @@ char *getRuntimeObjFile(void)
 // compile the runtime into the program.
 void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapping runtime definitions...");
+    logMessage(LMI, "INFO", "Bootstrap", "Bootstrapping runtime definitions...");
 
     setDependencyTableStatus(globalTable, true);
 
     char *runtimePath = getRuntimeSrcFile();
     Bootstrapper *bootstrap = initBootstrapper(runtimePath);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapper initialized");
+    logMessage(LMI, "INFO", "Bootstrap", "Bootstrapper initialized");
 
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_IN_PROGRESS);
@@ -94,23 +94,23 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, Cr
         return;
     }
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime node compiled successfully");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime node compiled successfully");
 
     importRuntimeDefinitionsToSymTable(table, runtimeNode, bootstrap->arena);
 
     printSymbolTable(table);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions added to symbol table");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions added to symbol table");
 
     // Add the runtime definitions to the type table
     importTypesFromRootNode(typeTable, runtimeNode);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions added to type table");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions added to type table");
 
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_SUCCESS);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions bootstrapped successfully");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions bootstrapped successfully");
 
     // Signal the completion of the dependency table
     TableFinished(globalTable);
@@ -124,14 +124,14 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, Cr
     // Free the bootstrap state
     free(bootstrap);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapper freed");
+    logMessage(LMI, "INFO", "Bootstrap", "Bootstrapper freed");
 
     return;
 }
 
 ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Bootstrap", "@compileForRuntimeNode Reading file: %s", filePath);
+    logMessage(LMI, "INFO", "Bootstrap", "@compileForRuntimeNode Reading file: %s", filePath);
     // This needs to create a whole separate compiler state & arena for each program node
     // This is because the program node is the root of the AST and needs to be compiled separately
     char *source = readFile(filePath);
@@ -146,11 +146,11 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, Cr
     CompilerState *state = initCompilerState(bootstrap->arena, &lexer, bootstrap->table, filePath);
     bootstrap->state = state;
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Compiler state initialized");
+    logMessage(LMI, "INFO", "Bootstrap", "Compiler state initialized");
 
     initLexer(&lexer, source, filePath, state);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Lexer initialized");
+    logMessage(LMI, "INFO", "Bootstrap", "Lexer initialized");
 
     // Parse the source code
     ASTNode *programNode = parseProgram(&lexer, bootstrap->table, bootstrap->arena, state, bootstrap->typeTable, globalTable);
@@ -161,14 +161,14 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, Cr
         return NULL;
     }
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Program node parsed successfully");
+    logMessage(LMI, "INFO", "Bootstrap", "Program node parsed successfully");
 
     return programNode;
 }
 
 void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
 {
-    logMessage("INFO", __LINE__, "Bootstrap", "Compiling runtime object file...");
+    logMessage(LMI, "INFO", "Bootstrap", "Compiling runtime object file...");
 
     // Generate code
     int result = generateCodeWrapper(runtimeNode, state, NULL);

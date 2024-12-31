@@ -175,6 +175,6 @@ void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTab
 {
     // printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",
     //        CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start);
-    logMessage("DEBUG", __LINE__, "Parser", "Current Token: %s, Lexeme: %.*s",
+    logMessage(LMI, "INFO", "Parser", "Current Token: %s, Lexeme: %.*s",
                CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start);
 }

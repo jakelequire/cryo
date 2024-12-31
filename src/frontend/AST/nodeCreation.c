@@ -21,14 +21,14 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST node");
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST node");
         return NULL;
     }
 
     node->metaData = createMetaDataContainer(arena, state);
     if (!node->metaData)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST node metadata");
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST node metadata");
         return NULL;
     }
 
@@ -168,11 +168,11 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
         node->data.usingNode = createUsingNodeContainer(arena, state);
         break;
     default:
-        logMessage("ERROR", __LINE__, "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
+        logMessage(LMI, "ERROR", "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
         return NULL;
     }
 
-    logMessage("INFO", __LINE__, "AST", "Created AST node of type: %s", CryoNodeTypeToString(type));
+    logMessage(LMI, "INFO", "AST", "Created AST node of type: %s", CryoNodeTypeToString(type));
     return node;
 }
 
@@ -181,7 +181,7 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
 {
     if (!parent || !child)
     {
-        logMessage("ERROR", __LINE__, "AST", "Parent or child node is NULL");
+        logMessage(LMI, "ERROR", "AST", "Parent or child node is NULL");
         return;
     }
 
@@ -206,7 +206,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, C
 {
     if (blockNode->metaData->type != NODE_BLOCK && blockNode->metaData->type != NODE_FUNCTION_BLOCK)
     {
-        logMessage("ERROR", __LINE__, "AST", "Invalid block node");
+        logMessage(LMI, "ERROR", "AST", "Invalid block node");
         return;
     }
 
@@ -219,20 +219,20 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, C
         block->statements = (ASTNode **)realloc(block->statements, sizeof(ASTNode *) * block->statementCapacity);
         if (!block->statements)
         {
-            logMessage("ERROR", __LINE__, "AST", "Failed to reallocate memory for block statements");
+            logMessage(LMI, "ERROR", "AST", "Failed to reallocate memory for block statements");
             return;
         }
-        logMessage("INFO", __LINE__, "AST", "Block statement memory reallocated");
+        logMessage(LMI, "INFO", "AST", "Block statement memory reallocated");
     }
     else
     {
-        logMessage("INFO", __LINE__, "AST", "Block statement memory is sufficient");
+        logMessage(LMI, "INFO", "AST", "Block statement memory is sufficient");
     }
 
     // THIS IS THROWING :)
     block->statements[block->statementCount++] = statement;
     // Debugging final state
-    logMessage("INFO", __LINE__, "AST", "Final state: stmtCount = %d, stmtCapacity = %d", block->statementCount);
+    logMessage(LMI, "INFO", "AST", "Final state: stmtCount = %d, stmtCapacity = %d", block->statementCount);
 }
 // </addStatementToBlock>
 
@@ -240,14 +240,14 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
 {
     if (!functionBlock || !statement || !functionBlock->metaData || functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
     {
-        logMessage("ERROR", __LINE__, "AST", "Invalid function block node");
+        logMessage(LMI, "ERROR", "AST", "Invalid function block node");
         return;
     }
 
     CryoFunctionBlock *block = functionBlock->data.functionBlock;
     if (!block)
     {
-        logMessage("ERROR", __LINE__, "AST", "Function block data is NULL");
+        logMessage(LMI, "ERROR", "AST", "Function block data is NULL");
         return;
     }
 
@@ -259,7 +259,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
         block->statements = (ASTNode **)ARENA_ALLOC(arena, sizeof(ASTNode *) * block->statementCapacity);
         if (!block->statements)
         {
-            logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for function block statements");
+            logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for function block statements");
             return;
         }
     }
@@ -270,7 +270,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
         ASTNode **newStatements = (ASTNode **)realloc(block->statements, sizeof(ASTNode *) * newCapacity);
         if (!newStatements)
         {
-            logMessage("ERROR", __LINE__, "AST", "Failed to reallocate memory for function block statements");
+            logMessage(LMI, "ERROR", "AST", "Failed to reallocate memory for function block statements");
             return;
         }
         block->statements = newStatements;
@@ -281,7 +281,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
     block->statements[block->statementCount++] = statement;
 
     // Debug output
-    logMessage("INFO", __LINE__, "AST", "Debug: block=%p, statementCount=%d, statementCapacity=%d",
+    logMessage(LMI, "INFO", "AST", "Debug: block=%p, statementCount=%d, statementCapacity=%d",
                (void *)block, block->statementCount, block->statementCapacity);
 
     addChildNode(functionBlock, statement, arena, state);
@@ -292,13 +292,13 @@ void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, Com
 {
     if (!program || !function)
     {
-        logMessage("ERROR", __LINE__, "AST", "Program or function node is NULL");
+        logMessage(LMI, "ERROR", "AST", "Program or function node is NULL");
         return;
     }
 
     if (program->metaData->type != NODE_PROGRAM)
     {
-        logMessage("ERROR", __LINE__, "AST", "Invalid program node");
+        logMessage(LMI, "ERROR", "AST", "Invalid program node");
         return;
     }
 
@@ -310,7 +310,7 @@ void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, Com
         prog->statements = (ASTNode **)realloc(prog->statements, sizeof(ASTNode *) * prog->statementCapacity);
         if (!prog->statements)
         {
-            logMessage("ERROR", __LINE__, "AST", "Failed to reallocate memory for program statements");
+            logMessage(LMI, "ERROR", "AST", "Failed to reallocate memory for program statements");
             return;
         }
     }

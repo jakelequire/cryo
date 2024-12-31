@@ -21,7 +21,7 @@ Arena *createArena(size_t size, size_t alignment)
     Arena *arena = (Arena *)malloc(sizeof(Arena));
     if (!arena)
     {
-        logMessage("ERROR", __LINE__, "Arena", "Failed to allocate memory for arena");
+        logMessage(LMI, "ERROR", "Arena", "Failed to allocate memory for arena");
         return NULL;
     }
     initArena(arena, size, alignment);
@@ -34,7 +34,7 @@ void initMemoryPool(MemoryPool *pool, size_t block_size, size_t num_blocks)
     pool->num_blocks = num_blocks;
     pool->free_list = NULL;
 
-    logMessage("INFO", __LINE__, "MemoryPool", "Memory pool initialized");
+    logMessage(LMI, "INFO", "MemoryPool", "Memory pool initialized");
 
     // Allocate memory for the pool
     char *memory = (char *)malloc(block_size * num_blocks);
@@ -52,13 +52,13 @@ void *poolAlloc(MemoryPool *pool)
 {
     if (pool->free_list == NULL)
     {
-        logMessage("ERROR", __LINE__, "MemoryPool", "Pool is empty");
+        logMessage(LMI, "ERROR", "MemoryPool", "Pool is empty");
         return NULL; // Pool is empty
     }
     PoolBlock *block = pool->free_list;
     pool->free_list = block->next;
 
-    logMessage("INFO", __LINE__, "MemoryPool", "Block allocated");
+    logMessage(LMI, "INFO", "MemoryPool", "Block allocated");
 
     return block;
 }
@@ -69,45 +69,45 @@ void poolFree(MemoryPool *pool, void *ptr)
     block->next = pool->free_list;
     pool->free_list = block;
 
-    logMessage("INFO", __LINE__, "MemoryPool", "Block freed");
+    logMessage(LMI, "INFO", "MemoryPool", "Block freed");
 }
 
 void initArena(Arena *arena, size_t size, size_t alignment)
 {
-    logMessage("INFO", __LINE__, "Arena", "Initializing arena");
+    logMessage(LMI, "INFO", "Arena", "Initializing arena");
 
     arena->base = aligned_alloc(alignment, size);
     if (!arena->base)
     {
-        logMessage("ERROR", __LINE__, "Arena", "Failed to allocate memory for arena");
+        logMessage(LMI, "ERROR", "Arena", "Failed to allocate memory for arena");
         return;
     }
 
-    logMessage("INFO", __LINE__, "Arena", "Arena initialized");
+    logMessage(LMI, "INFO", "Arena", "Arena initialized");
     arena->size = size;
     arena->offset = 0;
     arena->alignment = alignment;
     arena->next = NULL;
     arena->free_list = NULL;
     arena->total_allocations = 0;
-    logMessage("INFO", __LINE__, "Arena", "Arena initialization complete");
+    logMessage(LMI, "INFO", "Arena", "Arena initialization complete");
 
     initMemoryPool(&arena->small_pool, 16, 1024);
     initMemoryPool(&arena->medium_pool, 32, 512);
     initMemoryPool(&arena->large_pool, 64, 256);
 
-    logMessage("INFO", __LINE__, "Arena", "Memory pools initialized");
+    logMessage(LMI, "INFO", "Arena", "Memory pools initialized");
 }
 
 void *debugArenaAlloc(Arena *arena, size_t size, const char *file, int line)
 {
-    logMessage("INFO", __LINE__, "Arena", "Allocating memory with debug information");
+    logMessage(LMI, "INFO", "Arena", "Allocating memory with debug information");
     size_t total_size = size + sizeof(AllocationHeader);
     void *raw_memory = arenaAllocAligned(arena, total_size, arena->alignment, __FILE__, __LINE__);
-    logMessage("INFO", __LINE__, "Arena", "Memory allocated");
+    logMessage(LMI, "INFO", "Arena", "Memory allocated");
     if (!raw_memory)
     {
-        logMessage("ERROR", __LINE__, "Arena", "Failed to allocate memory");
+        logMessage(LMI, "ERROR", "Arena", "Failed to allocate memory");
         return NULL;
     }
 
@@ -118,30 +118,30 @@ void *debugArenaAlloc(Arena *arena, size_t size, const char *file, int line)
     strncpy(header->file, file, sizeof(header->file) - 1);
     header->file[sizeof(header->file) - 1] = '\0'; // Ensure null-termination
 
-    logMessage("INFO", __LINE__, "Arena", "Debug information added to memory allocation");
+    logMessage(LMI, "INFO", "Arena", "Debug information added to memory allocation");
 
     return (char *)raw_memory + sizeof(AllocationHeader);
 }
 
 void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char *file, int line)
 {
-    // logMessage("INFO", __LINE__, "Arena", "Allocating memory with alignment");
+    // logMessage(LMI, "INFO", "Arena", "Allocating memory with alignment");
     size_t offset = arena->offset;
-    // logMessage("INFO", __LINE__, "Arena", "Getting current offset: %zu", offset);
+    // logMessage(LMI, "INFO", "Arena", "Getting current offset: %zu", offset);
     size_t aligned_offset = (offset + (alignment - 1)) & ~(alignment - 1);
-    // logMessage("INFO", __LINE__, "Arena", "Calculating aligned offset: %zu", aligned_offset);
+    // logMessage(LMI, "INFO", "Arena", "Calculating aligned offset: %zu", aligned_offset);
     size_t new_offset = aligned_offset + size;
-    // logMessage("INFO", __LINE__, "Arena", "Calculating new offset: %zu", new_offset);
+    // logMessage(LMI, "INFO", "Arena", "Calculating new offset: %zu", new_offset);
 
     if (new_offset > arena->size)
     {
-        logMessage("ERROR", __LINE__, "Arena", "Arena out of memory");
-        logMessage("INFO", __LINE__, "Arena", "Attempting to grow arena");
+        logMessage(LMI, "ERROR", "Arena", "Arena out of memory");
+        logMessage(LMI, "INFO", "Arena", "Attempting to grow arena");
         // Attempt to grow the arena
         void *result = growArena(arena, size);
         assert(result != NULL);
 
-        logMessage("INFO", __LINE__, "Arena", "Growing arena successful");
+        logMessage(LMI, "INFO", "Arena", "Growing arena successful");
         return result;
     }
 
@@ -149,13 +149,13 @@ void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char 
     arena->offset = new_offset;
     arena->total_allocations++;
 
-    // logMessage("INFO", __LINE__, "Arena", "Memory allocated with alignment");
+    // logMessage(LMI, "INFO", "Arena", "Memory allocated with alignment");
     return result;
 }
 
 void *growArena(Arena *arena, size_t size)
 {
-    logMessage("INFO", __LINE__, "Arena", "Growing arena");
+    logMessage(LMI, "INFO", "Arena", "Growing arena");
     Arena *current = arena;
     while (current->next)
     {
@@ -163,11 +163,11 @@ void *growArena(Arena *arena, size_t size)
     }
 
     size_t new_size = current->size * 2;
-    logMessage("INFO", __LINE__, "Arena", "Creating new arena with size %zu", new_size);
+    logMessage(LMI, "INFO", "Arena", "Creating new arena with size %zu", new_size);
     Arena *new_arena = createArena(new_size, current->alignment);
     if (!new_arena)
     {
-        logMessage("ERROR", __LINE__, "Arena", "Failed to create new arena");
+        logMessage(LMI, "ERROR", "Arena", "Failed to create new arena");
         return NULL;
     }
 
@@ -175,26 +175,26 @@ void *growArena(Arena *arena, size_t size)
     void *alloc = arenaAllocAligned(new_arena, size, current->alignment, __FILE__, __LINE__);
     assert(alloc != NULL);
 
-    logMessage("INFO", __LINE__, "Arena", "Arena grown successfully");
+    logMessage(LMI, "INFO", "Arena", "Arena grown successfully");
     return alloc;
 }
 
 void *pushSize(Arena *arena, size_t size)
 {
-    logMessage("INFO", __LINE__, "Arena", "Pushing size");
+    logMessage(LMI, "INFO", "Arena", "Pushing size");
     size_t alignment = arena->alignment;
     size_t offset = arena->offset;
     size_t new_offset = (offset + size + (alignment - 1)) & ~(alignment - 1);
     if (new_offset > arena->size)
     {
-        logMessage("ERROR", __LINE__, "Arena", "Arena out of memory");
+        logMessage(LMI, "ERROR", "Arena", "Arena out of memory");
         return NULL;
     }
     void *result = (char *)arena->base + offset;
     arena->offset = new_offset;
     arena->total_allocations++;
 
-    logMessage("INFO", __LINE__, "Arena", "Size pushed");
+    logMessage(LMI, "INFO", "Arena", "Size pushed");
     return result;
 }
 
@@ -208,14 +208,14 @@ void resetArena(Arena *arena)
 
 void clearArena(Arena *arena)
 {
-    logMessage("INFO", __LINE__, "Arena", "Clearing arena");
+    logMessage(LMI, "INFO", "Arena", "Clearing arena");
     resetArena(arena);
-    logMessage("INFO", __LINE__, "Arena", "Arena cleared");
+    logMessage(LMI, "INFO", "Arena", "Arena cleared");
 }
 
 void freeArena(Arena *arena)
 {
-    logMessage("INFO", __LINE__, "Arena", "Freeing arena");
+    logMessage(LMI, "INFO", "Arena", "Freeing arena");
     Arena *current = arena;
     while (current)
     {
@@ -223,15 +223,15 @@ void freeArena(Arena *arena)
         free(current->base);
         if (current != arena)
         {
-            logMessage("INFO", __LINE__, "Arena", "Freeing arena");
+            logMessage(LMI, "INFO", "Arena", "Freeing arena");
             free(current);
         }
 
-        logMessage("INFO", __LINE__, "Arena", "Arena freed");
+        logMessage(LMI, "INFO", "Arena", "Arena freed");
         current = next;
     }
 
-    logMessage("INFO", __LINE__, "Arena", "Arena chain freed");
+    logMessage(LMI, "INFO", "Arena", "Arena chain freed");
 }
 
 void arenaDebugPrint(Arena *arena)
@@ -269,19 +269,19 @@ void arenaDebugPrint(Arena *arena)
         // Additional checks and logging
         if ((char *)header < (char *)arena->base || (char *)header >= (char *)arena->base + arena->size)
         {
-            logMessage("ERROR", __LINE__, "Arena", "Invalid header detected");
+            logMessage(LMI, "ERROR", "Arena", "Invalid header detected");
             break;
         }
 
         // Check if the header fields are valid
         if (header->size > arena->size || header->padding > arena->size)
         {
-            logMessage("ERROR", __LINE__, "Arena", "Invalid header fields detected");
+            logMessage(LMI, "ERROR", "Arena", "Invalid header fields detected");
             break;
         }
 
-        logMessage("DEBUG", __LINE__, "Arena", "Printing allocation information...");
-        logMessage("DEBUG", __LINE__, "Arena", "Size: %zu, Padding: %zu, Line: %d, File: %s",
+        logMessage(LMI, "DEBUG", "Arena", "Printing allocation information...");
+        logMessage(LMI, "DEBUG", "Arena", "Size: %zu, Padding: %zu, Line: %d, File: %s",
                    header->size, header->padding, header->line, header->file);
 
         current += sizeof(AllocationHeader) + header->size + header->padding;

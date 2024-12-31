@@ -889,7 +889,7 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
     ;
     node->newVarNode = NULL;
 
-    logMessage("INFO", __LINE__, "Containers", "Created VariableReassignmentNode");
+    logMessage(LMI, "INFO", "Containers", "Created VariableReassignmentNode");
 
     return node;
 }

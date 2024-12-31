@@ -29,7 +29,7 @@ ASTNode *appendASTNodeDefs(ASTNode *root, CryoSymbolTable *table, TypeTable *typ
 {
     if (!root)
     {
-        logMessage("ERROR", __LINE__, "AST", "Root node is NULL");
+        logMessage(LMI, "ERROR", "AST", "Root node is NULL");
         return NULL;
     }
 
@@ -46,7 +46,7 @@ ASTNode *copyASTNode(ASTNode *node)
     ASTNode *copy = (ASTNode *)malloc(sizeof(ASTNode));
     if (!copy)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for AST node copy");
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST node copy");
         return NULL;
     }
 
@@ -59,7 +59,7 @@ const char *getNamespaceNameFromRootNode(ASTNode *root)
 {
     if (!root)
     {
-        logMessage("ERROR", __LINE__, "AST", "Root node is NULL");
+        logMessage(LMI, "ERROR", "AST", "Root node is NULL");
         return NULL;
     }
 
@@ -86,7 +86,7 @@ ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, Typ
     assert(name != NULL);
     node->data.cryoNamespace->name = strdup(name);
 
-    logMessage("INFO", __LINE__, "AST", "Created namespace node with name: %s", strdup(name));
+    logMessage(LMI, "INFO", "AST", "Created namespace node with name: %s", strdup(name));
 
     return node;
 }
@@ -114,7 +114,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTa
         return NULL;
     }
 
-    logMessage("DEBUG", __LINE__, "AST", "Created literal expression node with value: %d", value);
+    logMessage(LMI, "DEBUG", "AST", "Created literal expression node with value: %d", value);
     int intCpy = value;
     node->data.literal->type = createPrimitiveIntType();
     node->data.literal->value.intValue = value;
@@ -123,7 +123,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTa
     sprintf(buffer, "%d", intCpy);
     node->data.literal->value.stringValue = buffer;
 
-    logMessage("DEBUG", __LINE__, "AST", "Literal expression node created with value: %d", value);
+    logMessage(LMI, "DEBUG", "AST", "Literal expression node created with value: %d", value);
     return node;
 }
 
@@ -137,32 +137,32 @@ ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerSt
     node->data.expression = (CryoExpressionNode *)ARENA_ALLOC(arena, sizeof(CryoExpressionNode));
     if (!node->data.expression)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to allocate memory for expression statement node");
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for expression statement node");
         return NULL;
     }
 
-    logMessage("DEBUG", __LINE__, "AST", "Creating expression statement node");
+    logMessage(LMI, "DEBUG", "AST", "Creating expression statement node");
 
     node->data.expression->nodeType = expression->metaData->type;
 
     if (expression->metaData->type == NODE_VAR_NAME)
     {
-        logMessage("DEBUG", __LINE__, "AST", "Expression is a variable name");
+        logMessage(LMI, "DEBUG", "AST", "Expression is a variable name");
         node->data.expression->data.varNameNode = expression->data.varName;
     }
     else if (expression->metaData->type == NODE_LITERAL_EXPR)
     {
-        logMessage("DEBUG", __LINE__, "AST", "Expression is a literal");
+        logMessage(LMI, "DEBUG", "AST", "Expression is a literal");
         node->data.expression->data.literalNode = expression->data.literal;
     }
     else
     {
         // Handle other types of expressions if needed
-        logMessage("ERROR", __LINE__, "AST", "Unsupported expression type");
+        logMessage(LMI, "ERROR", "AST", "Unsupported expression type");
         return NULL;
     }
 
-    logMessage("DEBUG", __LINE__, "AST", "Expression statement node created");
+    logMessage(LMI, "DEBUG", "AST", "Expression statement node created");
     return node;
 }
 
@@ -179,7 +179,7 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Ar
         return NULL;
     }
 
-    logMessage("DEBUG", __LINE__, "AST", "Created binary expression node with operator: %s", CryoOperatorTypeToString(op));
+    logMessage(LMI, "DEBUG", "AST", "Created binary expression node with operator: %s", CryoOperatorTypeToString(op));
 
     node->data.bin_op->left = left;
     node->data.bin_op->right = right;
@@ -209,7 +209,7 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Typ
     {
         return NULL;
     }
-    logMessage("INFO", __LINE__, "AST", "Created integer literal node with value: %d", value);
+    logMessage(LMI, "INFO", "AST", "Created integer literal node with value: %d", value);
 
     node->data.literal->value.intValue = value;
     node->data.literal->type = createPrimitiveIntType();
@@ -223,7 +223,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
     if (!node)
         return NULL;
 
-    logMessage("INFO", __LINE__, "AST", "Created float literal node with value: %f", value);
+    logMessage(LMI, "INFO", "AST", "Created float literal node with value: %f", value);
 
     node->data.literal->type = createPrimitiveFloatType();
     node->data.literal->value.floatValue = value;
@@ -236,7 +236,7 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
     if (!node)
         return NULL;
 
-    logMessage("INFO", __LINE__, "AST", "Created string literal node with value: %s", value);
+    logMessage(LMI, "INFO", "AST", "Created string literal node with value: %s", value);
 
     // Trim the `"` characters from the string
     char *trimmedString = strdup(value + 1);
@@ -310,7 +310,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
     if (!node)
         return NULL;
 
-    logMessage("INFO", __LINE__, "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
+    logMessage(LMI, "INFO", "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
 
     node->data.literal->type = createPrimitiveBooleanType(value);
     node->data.literal->value.booleanValue = value;
@@ -324,7 +324,7 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
     if (!node)
         return NULL;
 
-    logMessage("INFO", __LINE__, "AST", "Created identifier node with name: %s", name);
+    logMessage(LMI, "INFO", "AST", "Created identifier node with name: %s", name);
     char *varName = strdup(name);
     // Testing new symbol table.
     // Replacing the old `findSymbol` from the old symbol table seems to be working fine so far.
@@ -333,7 +333,7 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
     VariableSymbol *varSym = GetFrontendVariableSymbol(globalTable, varName, currentScopeID);
     if (varSym)
     {
-        logMessage("INFO", __LINE__, "AST", "Found symbol in global symbol table: %s", varSym->name);
+        logMessage(LMI, "INFO", "AST", "Found symbol in global symbol table: %s", varSym->name);
         node->data.varName->varName = strdup(varSym->name);
         node->data.varName->isRef = true;
         node->data.varName->type = varSym->type;
@@ -341,7 +341,7 @@ ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *aren
     else
     {
         // Unsure if I want to keep this, but it's a good fallback for now.
-        logMessage("INFO", __LINE__, "AST", "Symbol not found in global symbol table: %s", varName);
+        logMessage(LMI, "INFO", "AST", "Symbol not found in global symbol table: %s", varName);
         node->data.varName->varName = strdup(varName);
         node->data.varName->isRef = true;
         node->data.varName->type = createUnknownType();
@@ -430,13 +430,13 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create variable declaration node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create variable declaration node");
         return NULL;
     }
 
     if (!node->data.varDecl)
     {
-        logMessage("ERROR", __LINE__, "AST", "Variable declaration node data is NULL");
+        logMessage(LMI, "ERROR", "AST", "Variable declaration node data is NULL");
         return NULL;
     }
 
@@ -453,7 +453,7 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
     node->data.varDecl->isIterator = isIterator;
     node->data.varDecl->initializer = initializer;
 
-    logMessage("INFO", __LINE__, "AST", "Created variable declaration node for %s", var_name);
+    logMessage(LMI, "INFO", "AST", "Created variable declaration node for %s", var_name);
     return node;
 }
 
@@ -592,7 +592,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
     ASTNode *node = createASTNode(nodeType, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create args node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create args node");
         return NULL;
     }
 
@@ -619,7 +619,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
         case PRIM_VOID:
             break;
         default:
-            logMessage("ERROR", __LINE__, "AST", "Unknown data type: %s", DataTypeToString(type));
+            logMessage(LMI, "ERROR", "AST", "Unknown data type: %s", DataTypeToString(type));
             CONDITION_FAILED;
         }
         break;
@@ -645,7 +645,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
         break;
     }
     default:
-        logMessage("ERROR", __LINE__, "AST", "Unknown node type: %s", CryoNodeTypeToString(nodeType));
+        logMessage(LMI, "ERROR", "AST", "Unknown node type: %s", CryoNodeTypeToString(nodeType));
         CONDITION_FAILED;
     }
 
@@ -681,7 +681,7 @@ ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *el
     ASTNode *node = createIfBlock(condition, then_branch, else_branch, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create if statement node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create if statement node");
         return NULL;
     }
     return node;
@@ -692,7 +692,7 @@ ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *i
     ASTNode *node = createForBlock(initializer, condition, increment, body, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create for statement node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create for statement node");
         return NULL;
     }
     return node;
@@ -703,7 +703,7 @@ ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, C
     ASTNode *node = createWhileBlock(condition, body, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create while statement node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create while statement node");
         return NULL;
     }
     return node;
@@ -715,7 +715,7 @@ ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, TypeTable *t
     ASTNode *node = createASTNode(NODE_ARRAY_LITERAL, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create array literal node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create array literal node");
         return NULL;
     }
     return node;
@@ -727,7 +727,7 @@ ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index,
     ASTNode *node = createASTNode(NODE_INDEX_EXPR, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create index expression node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create index expression node");
         return NULL;
     }
 
@@ -743,7 +743,7 @@ ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode 
     ASTNode *node = createASTNode(NODE_VAR_REASSIGN, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create variable reassignment node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create variable reassignment node");
         return NULL;
     }
 
@@ -759,7 +759,7 @@ ASTNode *createFieldNode(const char *fieldName, DataType *type, const char *pare
     ASTNode *node = createASTNode(NODE_PROPERTY, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create field node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create field node");
         return NULL;
     }
 
@@ -779,7 +779,7 @@ ASTNode *createStructNode(const char *structName, ASTNode **properties, int prop
     ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create struct node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create struct node");
         return NULL;
     }
 
@@ -801,7 +801,7 @@ ASTNode *createStructConstructor(char *structName, ASTNode **fields, int argCoun
     ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create struct constructor node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create struct constructor node");
         return NULL;
     }
 
@@ -818,7 +818,7 @@ ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char
     ASTNode *node = createASTNode(NODE_SCOPED_FUNCTION_CALL, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create scoped function call node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create scoped function call node");
         return NULL;
     }
 
@@ -832,7 +832,7 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
     ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create property access node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create property access node");
         return NULL;
     }
 
@@ -847,7 +847,7 @@ ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable
     ASTNode *node = createASTNode(NODE_THIS, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create 'this' node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create 'this' node");
         return NULL;
     }
 
@@ -859,7 +859,7 @@ ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, A
     ASTNode *node = createASTNode(NODE_PROPERTY_REASSIGN, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create property reassignment node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create property reassignment node");
         return NULL;
     }
 
@@ -875,7 +875,7 @@ ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields
     ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create constructor node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create constructor node");
         return NULL;
     }
 
@@ -893,7 +893,7 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
     ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create struct property access node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create struct property access node");
         return NULL;
     }
 
@@ -912,7 +912,7 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
     ASTNode *node = createASTNode(NODE_METHOD, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create method node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create method node");
         return NULL;
     }
 
@@ -935,7 +935,7 @@ ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataTy
     ASTNode *node = createASTNode(NODE_METHOD_CALL, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create method call node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create method call node");
         return NULL;
     }
 
@@ -959,7 +959,7 @@ ASTNode *createGenericDeclNode(DataType *type, const char *name, GenericType **p
     ASTNode *node = createASTNode(NODE_GENERIC_DECL, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create method call node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create method call node");
         return NULL;
     }
 
@@ -979,7 +979,7 @@ ASTNode *createGenericInstNode(const char *baseName, DataType **typeArguments, i
     ASTNode *node = createASTNode(NODE_GENERIC_INST, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create method call node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create method call node");
         return NULL;
     }
 
@@ -997,7 +997,7 @@ ASTNode *createClassDeclarationNode(const char *className,
     ASTNode *node = createASTNode(NODE_CLASS, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create class declaration node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create class declaration node");
         return NULL;
     }
 
@@ -1013,7 +1013,7 @@ ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **
     ASTNode *node = createASTNode(NODE_CLASS_CONSTRUCTOR, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create class constructor node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create class constructor node");
         return NULL;
     }
 
@@ -1033,7 +1033,7 @@ ASTNode *createObject(const char *objectName, DataType *objectType, bool isNew,
     ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create object node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create object node");
         return NULL;
     }
 
@@ -1054,7 +1054,7 @@ ASTNode *createObjectWithGenerics(const char *objectName, DataType *objectType, 
     ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create object node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create object node");
         return NULL;
     }
 
@@ -1076,7 +1076,7 @@ ASTNode *createNullNode(Arena *arena, CompilerState *state, TypeTable *typeTable
     ASTNode *node = createASTNode(NODE_NULL_LITERAL, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create null node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create null node");
         return NULL;
     }
 
@@ -1088,7 +1088,7 @@ ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *stat
     ASTNode *node = createASTNode(NODE_TYPEOF, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create typeof node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create typeof node");
         return NULL;
     }
 
@@ -1103,7 +1103,7 @@ ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules
     ASTNode *node = createASTNode(NODE_USING, arena, state, typeTable, lexer);
     if (!node)
     {
-        logMessage("ERROR", __LINE__, "AST", "Failed to create using node");
+        logMessage(LMI, "ERROR", "AST", "Failed to create using node");
         return NULL;
     }
 

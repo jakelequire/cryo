@@ -20,7 +20,7 @@
 
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Compiler", "Compiling module file: %s", filePath);
+    logMessage(LMI, "INFO", "Compiler", "Compiling module file: %s", filePath);
 
     char *source = readFile(filePath);
     if (!source)
@@ -49,14 +49,14 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
         return NULL;
     }
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Program node parsed successfully");
+    logMessage(LMI, "INFO", "Compiler", "Program node parsed successfully");
 
     return programNode;
 }
 
 void processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath)
 {
-    logMessage("INFO", __LINE__, "Compiler", "Processing node to IR object...");
+    logMessage(LMI, "INFO", "Compiler", "Processing node to IR object...");
 
     // Generate code
     int result = preprocessRuntimeIR(node, state, outputPath);

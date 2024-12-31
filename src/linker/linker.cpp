@@ -28,7 +28,7 @@ extern "C"
         }
         catch (...)
         {
-            logMessage("ERROR", __LINE__, "CryoLinker", "Failed to create linker");
+            logMessage(LMI, "ERROR", "CryoLinker", "Failed to create linker");
             return nullptr;
         }
     }
@@ -37,7 +37,7 @@ extern "C"
     {
         if (linker)
         {
-            logMessage("INFO", __LINE__, "CryoLinker", "Destroying linker");
+            logMessage(LMI, "INFO", "CryoLinker", "Destroying linker");
             delete reinterpret_cast<Cryo::Linker *>(linker);
         }
     }
@@ -164,7 +164,7 @@ namespace Cryo
     {
         if (!srcModule)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Source module is null");
+            logMessage(LMI, "ERROR", "Linker", "Source module is null");
             CONDITION_FAILED;
         }
 
@@ -190,7 +190,7 @@ namespace Cryo
     {
         if (!root)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Root module is null");
+            logMessage(LMI, "ERROR", "Linker", "Root module is null");
             CONDITION_FAILED;
         }
 
@@ -247,7 +247,7 @@ namespace Cryo
         std::unique_ptr<llvm::Module> module = llvm::parseIRFile(inputFile, err, rootModule->getContext());
         if (!module)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Failed to parse IR file");
+            logMessage(LMI, "ERROR", "Compilation", "Failed to parse IR file");
             CONDITION_FAILED;
         }
 
@@ -256,8 +256,8 @@ namespace Cryo
         llvm::raw_string_ostream verifyStream(verifyStr);
         if (llvm::verifyModule(*module, &verifyStream))
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Compilation",
-                                    "Module verification failed: " + verifyStream.str());
+            logMessage(LMI, "ERROR", "Compilation",
+                       "Module verification failed: %s", verifyStream.str().c_str());
             return nullptr;
         }
 
@@ -268,13 +268,13 @@ namespace Cryo
     {
         if (!root)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Root module is null");
+            logMessage(LMI, "ERROR", "Linker", "Root module is null");
             return;
         }
 
         if (dependencies.empty())
         {
-            DevDebugger::logMessage("WARNING", __LINE__, "Linker", "No dependencies to link");
+            logMessage(LMI, "WARN", "Linker", "No dependencies to link");
             rootModule = root;
             return;
         }
@@ -289,15 +289,15 @@ namespace Cryo
         {
             if (!depModule)
             {
-                DevDebugger::logMessage("WARNING", __LINE__, "Linker", "Skipping null dependency module");
+                logMessage(LMI, "WARN", "Linker", "Skipping null dependency module");
                 continue;
             }
 
             // Check if contexts match
             if (!contextMatch(root, depModule))
             {
-                DevDebugger::logMessage("WARNING", __LINE__, "Linker",
-                                        "Module context mismatch - attempting to clone module");
+                logMessage(LMI, "WARN", "Linker",
+                           "Module context mismatch - attempting to clone module");
                 contextMismatchMerge(root, depModule);
 
                 // Continue to next module
@@ -309,8 +309,8 @@ namespace Cryo
                 std::unique_ptr<llvm::Module> depModulePtr(depModule);
                 if (llvm::Linker::linkModules(*root, std::move(depModulePtr), linkerFlags))
                 {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Linker",
-                                            "Failed to link module: " + depModule->getName().str());
+                    logMessage(LMI, "ERROR", "Linker",
+                               "Failed to link module: %s", depModule->getName().str().c_str());
                 }
             }
         }
@@ -327,7 +327,7 @@ namespace Cryo
     // and merge the source modules into it and make the context match.
     void Linker::contextMismatchMerge(llvm::Module *dest, llvm::Module *src)
     {
-        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Merging modules with context mismatch");
+        logMessage(LMI, "INFO", "Linker", "Merging modules with context mismatch");
 
         // Create a value mapping for cloning
         llvm::ValueToValueMapTy VMap;
@@ -336,27 +336,27 @@ namespace Cryo
         std::unique_ptr<llvm::Module> newModule = llvm::CloneModule(*src, VMap);
         if (!newModule)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Failed to clone module");
+            logMessage(LMI, "ERROR", "Linker", "Failed to clone module");
             CONDITION_FAILED;
         }
 
-        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Module cloned, linking to destination");
+        logMessage(LMI, "INFO", "Linker", "Module cloned, linking to destination");
         // Link the cloned module
         std::string errorMsg;
         llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
         if (llvm::Linker::linkModules(*dest, std::move(newModule), linkerFlags))
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Linker", "Failed to link cloned module");
+            logMessage(LMI, "ERROR", "Linker", "Failed to link cloned module");
             CONDITION_FAILED;
         }
 
-        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Module linked, hoisting declarations");
+        logMessage(LMI, "INFO", "Linker", "Module linked, hoisting declarations");
 
         // Hoist declarations
         hoistDeclarations(dest);
 
         // Store the linked result
-        DevDebugger::logMessage("INFO", __LINE__, "Linker", "Module context mismatch merge complete");
+        logMessage(LMI, "INFO", "Linker", "Module context mismatch merge complete");
 
         return;
     }

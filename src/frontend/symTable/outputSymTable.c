@@ -28,7 +28,7 @@ SymTableOutput *createSymTableOutput(const char *fileName, const char *filePath,
 
 void outputSymTable(CryoSymbolTable *table, CompilerSettings *settings)
 {
-    logMessage("INFO", __LINE__, "SymTableOut", "Outputting symbol table to file");
+    logMessage(LMI, "INFO", "SymTableOut", "Outputting symbol table to file");
     // The file name of the compiled file
     const char *compiledFile = settings->inputFile;
     // The root dir where the command was run
@@ -53,7 +53,7 @@ void outputSymTable(CryoSymbolTable *table, CompilerSettings *settings)
     free(buffer);
     free(output);
 
-    logMessage("INFO", __LINE__, "SymTableOut", "Symbol table output complete");
+    logMessage(LMI, "INFO", "SymTableOut", "Symbol table output complete");
 
     return;
 }
@@ -66,7 +66,7 @@ void createSymTableOutputFile(const char *buffer, SymTableOutput *symTableOutput
 
     if (!dirExists(outFilePath))
     {
-        logMessage("WARN", __LINE__, "SymTableOut", "Output directory does not exist");
+        logMessage(LMI, "WARN", "SymTableOut", "Output directory does not exist");
         printf("Directory does not exist: %s\n", strdup(outFilePath));
         createDir(outFilePath);
     }
@@ -77,7 +77,7 @@ void createSymTableOutputFile(const char *buffer, SymTableOutput *symTableOutput
     char *filePath = (char *)malloc(strlen(outFilePath) + strlen(fullFilePath) + 1);
     sprintf(filePath, "%s%s", outFilePath, fullFilePath);
 
-    logMessage("INFO", __LINE__, "SymTableOut", "Writing symbol table to file: %s", filePath);
+    logMessage(LMI, "INFO", "SymTableOut", "Writing symbol table to file: %s", filePath);
 
     // Remove the previous output file
     removePrevSymTableOutput(filePath);
@@ -86,20 +86,20 @@ void createSymTableOutputFile(const char *buffer, SymTableOutput *symTableOutput
     FILE *file = fopen(filePath, "w");
     if (!file)
     {
-        logMessage("ERROR", __LINE__, "SymTableOut", "Failed to open file for writing");
+        logMessage(LMI, "ERROR", "SymTableOut", "Failed to open file for writing");
         return;
     }
 
     // Write the buffer to the file
     fprintf(file, "%s", buffer);
 
-    logMessage("INFO", __LINE__, "SymTableOut", "Symbol table written to file");
+    logMessage(LMI, "INFO", "SymTableOut", "Symbol table written to file");
 
     // Close the file
     int closeStatus = fclose(file);
     if (closeStatus != 0)
     {
-        logMessage("ERROR", __LINE__, "SymTableOut", "Failed to close file");
+        logMessage(LMI, "ERROR", "SymTableOut", "Failed to close file");
         return;
     }
 
@@ -112,7 +112,7 @@ char *symTableOutBuffer(CryoSymbolTable *table)
     char *buffer = (char *)malloc(sizeof(char) * SIZE_OF_BUFFER);
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "SymTableOut", "Failed to allocate memory for buffer");
+        logMessage(LMI, "ERROR", "SymTableOut", "Failed to allocate memory for buffer");
         return NULL;
     }
 
@@ -170,7 +170,7 @@ void removePrevSymTableOutput(const char *filePath)
     }
     else
     {
-        logMessage("WARN", __LINE__, "SymTableOut", "No previous output file to remove");
+        logMessage(LMI, "WARN", "SymTableOut", "No previous output file to remove");
         return;
     }
 }

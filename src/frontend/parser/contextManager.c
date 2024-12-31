@@ -342,7 +342,7 @@ void logThisContext(ParsingContext *context)
     }
     else
     {
-        logMessage("INFO", __LINE__, "Parser", "No this context set.");
+        logMessage(LMI, "INFO", "Parser", "No this context set.");
     }
 }
 

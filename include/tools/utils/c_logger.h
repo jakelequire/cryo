@@ -23,16 +23,25 @@
 
 #include "tools/macros/consoleColors.h"
 
-///
-/// @brief          Replaces the printf function with a custom logMessage function that logs the message to the console.
-/// @param type     The type of message to log (ERROR, WARNING, INFO, DEBUG)
-/// @param line     The line number where the message was logged (use `__LINE__`)
-/// @param module   The module where the message was logged
-/// @param message  The message to log
-/// @param          ... The arguments to log
-///
-void logMessage(const char *type, int line, const char *module, const char *message, ...);
+/// @brief LMI - Logger Meta Info
+/// @details This macro is used to get the line, file, and function name of the
+///          caller of the logMessage function.
+#define LMI \
+    __LINE__, __FILE__, __func__, getParentDirOfFile(__FILE__)
 
+// 
+void logMessage(
+    int line,
+    const char *file,
+    const char *func,
+    const char *parentDir,
+    const char *type,
+    const char *module,
+    const char *message, ...);
+
+const char *getParentDirOfFile(const char *file);
+char *stringShortener(const char *string, int length, int addDots);
+char *getFileName(const char *file);
 const char *typeBufferFormatter(const char *type);
 
 #endif // C_LOGGER_H

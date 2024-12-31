@@ -37,7 +37,7 @@ CompilerState *initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *ta
     state->isActiveBuild = false;
     state->isModuleFile = false;
 
-    logMessage("INFO", __LINE__, "CompilerState", "Compiler state initialized");
+    logMessage(LMI, "INFO", "CompilerState", "Compiler state initialized");
     return state;
 }
 
@@ -121,7 +121,7 @@ void errorReport(CompilerState state)
 {
     if (state.errorCount == 0)
     {
-        logMessage("INFO", __LINE__, "CompilerState", "No errors found.");
+        logMessage(LMI, "INFO", "CompilerState", "No errors found.");
         return;
     }
 

@@ -25,14 +25,14 @@ void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *con
                        Arena *arena, CompilerState *state, TypeTable *typeTable,
                        CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Parsing using keyword...");
+    logMessage(LMI, "INFO", "Parser", "Parsing using keyword...");
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
             "parseUsingKeyword", table, arena, state, typeTable, context);
 
     // Get primary module name
     Token primaryModuleToken = lexer->currentToken;
     char *primaryModule = strndup(primaryModuleToken.start, primaryModuleToken.length);
-    logMessage("INFO", __LINE__, "Parser", "Primary module: %s", primaryModule);
+    logMessage(LMI, "INFO", "Parser", "Primary module: %s", primaryModule);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
             "parseUsingKeyword", table, arena, state, typeTable, context);
@@ -101,7 +101,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
 
         if (*chainLength >= MAX_MODULE_CHAIN)
         {
-            logMessage("ERROR", __LINE__, "Parser", "Module chain exceeds maximum length");
+            logMessage(LMI, "ERROR", "Parser", "Module chain exceeds maximum length");
             cleanupModuleChain((char **)moduleChain, *chainLength);
             return;
         }
@@ -123,7 +123,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
             snprintf(errorMsg, sizeof(errorMsg),
                      "Expected `::` or `;` after identifier, got %s",
                      CryoTokenToString(lexer->currentToken.type));
-            logMessage("ERROR", __LINE__, "Parser", errorMsg);
+            logMessage(LMI, "ERROR", "Parser", errorMsg);
             break;
         }
 
@@ -136,7 +136,7 @@ static void parseTypeList(Lexer *lexer, const char *lastModule, CryoSymbolTable 
                           ParsingContext *context, Arena *arena, CompilerState *state,
                           TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Parsing specific types within braces...");
+    logMessage(LMI, "INFO", "Parser", "Parsing specific types within braces...");
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` after `::`.",
             "parseTypeList", table, arena, state, typeTable, context);
 
@@ -154,7 +154,7 @@ static void parseTypeList(Lexer *lexer, const char *lastModule, CryoSymbolTable 
 
         if (typeCount >= MAX_MODULE_CHAIN)
         {
-            logMessage("ERROR", __LINE__, "Parser", "Type list exceeds maximum length");
+            logMessage(LMI, "ERROR", "Parser", "Type list exceeds maximum length");
             cleanupModuleChain((char **)typeNames, typeCount);
             break;
         }
@@ -197,7 +197,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
     if (strcmp(primaryModule, "Std") != 0)
     {
         // Safeguard for now until we have more modules.
-        logMessage("ERROR", __LINE__, "Parser", "Primary module must be `Std`.");
+        logMessage(LMI, "ERROR", "Parser", "Primary module must be `Std`.");
         return;
     }
 
@@ -209,7 +209,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
     const char *primaryModulePath = getSTDLibraryModulePath(rootLevelModule, state);
     if (primaryModulePath == NULL)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Invalid primary module path.");
+        logMessage(LMI, "ERROR", "Parser", "Invalid primary module path.");
         return;
     }
     printf("Primary Module Path To Find Module File: %s\n", primaryModulePath);
@@ -218,7 +218,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
     const char **moduleFiles = getFilesInModuleDir(primaryModulePath);
     if (moduleFiles == NULL)
     {
-        logMessage("ERROR", __LINE__, "Parser", "getSTDLibPath: No module files found in directory: %s", primaryModulePath);
+        logMessage(LMI, "ERROR", "Parser", "getSTDLibPath: No module files found in directory: %s", primaryModulePath);
     }
 
     int modCount = 0;
@@ -230,7 +230,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
     const char *moduleFile = findModuleFile(moduleFiles, modCount, rootLevelModule);
     if (moduleFile == NULL)
     {
-        logMessage("ERROR", __LINE__, "Parser", "getSTDLibPath: Module file not found in directory: %s", primaryModulePath);
+        logMessage(LMI, "ERROR", "Parser", "getSTDLibPath: Module file not found in directory: %s", primaryModulePath);
     }
 
     // DEBUG -------------------------------------
@@ -251,7 +251,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
     int result = compileAndImportModuleToCurrentScope(moduleFile, state, globalTable);
     if (result != 0)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Failed to compile and import module file definitions.");
+        logMessage(LMI, "ERROR", "Parser", "Failed to compile and import module file definitions.");
         return;
     }
 
@@ -280,7 +280,7 @@ const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state
     if (!isValidDir)
     {
 
-        logMessage("ERROR", __LINE__, "Parser", "getSTDLibPath: Invalid module path: %s", modulePathStr);
+        logMessage(LMI, "ERROR", "Parser", "getSTDLibPath: Invalid module path: %s", modulePathStr);
         free(modulePath);
         return NULL;
     }
@@ -375,7 +375,7 @@ const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const c
         {
             if (!fileExists(currentFilePath))
             {
-                logMessage("ERROR", __LINE__, "Parser", "findModuleFile: Invalid module file path: %s", currentFile);
+                logMessage(LMI, "ERROR", "Parser", "findModuleFile: Invalid module file path: %s", currentFile);
                 continue;
             }
             printf("findModuleFile: Found Module File: %s\n", currentFile);
@@ -397,7 +397,7 @@ const char *findRegularFile(const char **moduleFiles, size_t moduleCount, const 
         {
             if (!fileExists(currentFilePath))
             {
-                logMessage("ERROR", __LINE__, "Parser", "findRegularFile: Invalid file path: %s", currentFile);
+                logMessage(LMI, "ERROR", "Parser", "findRegularFile: Invalid file path: %s", currentFile);
                 continue;
             }
             return currentFilePath;
@@ -420,14 +420,14 @@ int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *
 {
     // Compile the module file definitions
     // This will be used to import the module into the current scope.
-    logMessage("INFO", __LINE__, "Parser", "Compiling module file definitions...");
+    logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");
 
     const char *dependencyDir = GetDependencyDirStr(globalTable);
 
     ASTNode *programNode = compileModuleFileToProgramNode(modulePath, dependencyDir, state, globalTable);
     if (programNode == NULL)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Failed to compile module file definitions.");
+        logMessage(LMI, "ERROR", "Parser", "Failed to compile module file definitions.");
         return 1;
     }
 
@@ -441,7 +441,7 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
     const char *rootTypeDir = getSTDLibraryModulePath(primaryModule, state);
     if (rootTypeDir == NULL)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Invalid primary module path.");
+        logMessage(LMI, "ERROR", "Parser", "Invalid primary module path.");
         return;
     }
     printf("DEBUG: Root Type Dir: %s\n", rootTypeDir);
@@ -450,7 +450,7 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
     const char **moduleFiles = getFilesInModuleDir(rootTypeDir);
     if (moduleFiles == NULL)
     {
-        logMessage("ERROR", __LINE__, "Parser", "No module files found in directory: %s", rootTypeDir);
+        logMessage(LMI, "ERROR", "Parser", "No module files found in directory: %s", rootTypeDir);
         return;
     }
 
@@ -498,7 +498,7 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
 
         if (!found)
         {
-            logMessage("ERROR", __LINE__, "Parser",
+            logMessage(LMI, "ERROR", "Parser",
                        "Module file not found in directory for namespace %s: %s",
                        currentNamespace, rootTypeDir);
         }
@@ -516,11 +516,11 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
     {
         if (modulesToCompile[i])
         {
-            logMessage("INFO", __LINE__, "Parser", "Compiling module: %s", modulesToCompile[i]);
+            logMessage(LMI, "INFO", "Parser", "Compiling module: %s", modulesToCompile[i]);
             int result = compileAndImportModuleToCurrentScope(modulesToCompile[i], state, globalTable);
             if (result != 0)
             {
-                logMessage("ERROR", __LINE__, "Parser",
+                logMessage(LMI, "ERROR", "Parser",
                            "Failed to compile module: %s", modulesToCompile[i]);
             }
             free((void *)modulesToCompile[i]);
@@ -537,14 +537,14 @@ ASTNode *compileModuleFileDefinitions(const char *modulePath, CryoGlobalSymbolTa
 {
     // Compile the module file definitions
     // This will be used to import the module into the current scope.
-    logMessage("INFO", __LINE__, "Parser", "Compiling module file definitions...");
+    logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");
 
     const char *dependencyDir = GetDependencyDirStr(globalTable);
 
     ASTNode *programNode = compileModuleFileToProgramNode(modulePath, dependencyDir, state, globalTable);
     if (programNode == NULL)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Failed to compile module file definitions.");
+        logMessage(LMI, "ERROR", "Parser", "Failed to compile module file definitions.");
         return NULL;
     }
 

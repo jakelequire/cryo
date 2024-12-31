@@ -487,7 +487,8 @@ extern "C"
 #define VALIDATE_TYPE(type)                                         \
     if (!isValidType(type))                                         \
     {                                                               \
-        logMessage("ERROR", __LINE__, "TypeTable", "Invalid type"); \
+        logMessage(LMI, "ERROR", "TypeTable", "Invalid type: %s",   \
+                   DataTypeToString(type));                         \
         CONDITION_FAILED;                                           \
     }
 

@@ -92,26 +92,26 @@ DataType *createDataTypeFromStructNode(
     ASTNode **methods, int methodCount,
     CompilerState *state, TypeTable *typeTable)
 {
-    logMessage("INFO", __LINE__, "DataTypes", "Creating data type from struct node: %s", structNode->data.structNode->name);
+    logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structNode->data.structNode->name);
     StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to create struct type from node.\n");
         CONDITION_FAILED;
     }
-    logMessage("INFO", __LINE__, "DataTypes", "Created struct type from node: %s", structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Created struct type from node: %s", structType->name);
 
     addPropertiesToStruct(properties, propCount, structType);
-    logMessage("INFO", __LINE__, "DataTypes", "Added properties to struct: %s", structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Added properties to struct: %s", structType->name);
 
     addMethodsToStruct(methods, methodCount, structType);
-    logMessage("INFO", __LINE__, "DataTypes", "Added methods to struct: %s", structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Added methods to struct: %s", structType->name);
 
-    logMessage("INFO", __LINE__, "DataTypes", "Creating data type from struct node: %s", structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structType->name);
     const char *typeName = structType->name;
-    logMessage("INFO", __LINE__, "DataTypes", "Type name: %s", typeName);
+    logMessage(LMI, "INFO", "DataTypes", "Type name: %s", typeName);
     TypeContainer *structContainer = createStructType(typeName, structType);
-    logMessage("INFO", __LINE__, "DataTypes", "Created struct type: %s", structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Created struct type: %s", structType->name);
 
     DataType *dataType = wrapTypeContainer(structContainer);
     dataType->container->baseType = STRUCT_TYPE;
@@ -124,13 +124,13 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
 {
     if (!properties || propCount <= 0)
     {
-        logMessage("INFO", __LINE__, "DataTypes", "No properties to add to struct: %s", structType->name);
+        logMessage(LMI, "INFO", "DataTypes", "No properties to add to struct: %s", structType->name);
         return;
     }
     if (structType->propertyCount + propCount >= structType->propertyCapacity)
     {
         // Grow properties array
-        logMessage("INFO", __LINE__, "DataTypes", "Growing properties array for struct: %s", structType->name);
+        logMessage(LMI, "INFO", "DataTypes", "Growing properties array for struct: %s", structType->name);
         int newCapacity = structType->propertyCapacity * 2;
         ASTNode **newProperties = (ASTNode **)realloc(structType->properties, newCapacity * sizeof(ASTNode *));
         if (!newProperties)
@@ -138,7 +138,7 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
 
         structType->properties = newProperties;
         structType->propertyCapacity = newCapacity;
-        logMessage("INFO", __LINE__, "DataTypes", "Grew properties array for struct: %s", structType->name);
+        logMessage(LMI, "INFO", "DataTypes", "Grew properties array for struct: %s", structType->name);
     }
 
     // Add properties to struct
@@ -146,11 +146,11 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
     logASTNode(properties[0]);
     for (int i = 0; i < propCount; i++)
     {
-        logMessage("INFO", __LINE__, "DataTypes", "Added property to struct: %s", properties[i]->data.property->name);
+        logMessage(LMI, "INFO", "DataTypes", "Added property to struct: %s", properties[i]->data.property->name);
         structType->properties[structType->propertyCount++] = properties[i];
     }
 
-    logMessage("INFO", __LINE__, "DataTypes", "Added properties to struct: %s", structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Added properties to struct: %s", structType->name);
 
     return;
 }

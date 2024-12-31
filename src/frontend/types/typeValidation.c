@@ -34,19 +34,19 @@ bool isValidType(DataType *type)
 {
     if (!type)
     {
-        logMessage("ERROR", __LINE__, "TypeTable", "Type is null");
+        logMessage(LMI, "ERROR", "TypeTable", "Type is null");
         return false;
     }
 
     if (!type->container)
     {
-        logMessage("ERROR", __LINE__, "TypeTable", "Type container is null");
+        logMessage(LMI, "ERROR", "TypeTable", "Type container is null");
         return false;
     }
 
     if (type->container->baseType == UNKNOWN_TYPE)
     {
-        logMessage("ERROR", __LINE__, "TypeTable", "Base Type is unknown");
+        logMessage(LMI, "ERROR", "TypeTable", "Base Type is unknown");
         return false;
     }
 
@@ -54,16 +54,16 @@ bool isValidType(DataType *type)
     {
         if (type->container->primitive == PRIM_UNKNOWN)
         {
-            logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is unknown");
+            logMessage(LMI, "ERROR", "TypeTable", "Primitive Type is unknown");
             return false;
         }
         if (type->container->primitive == PRIM_NULL)
         {
-            logMessage("ERROR", __LINE__, "TypeTable", "Primitive Type is null");
+            logMessage(LMI, "ERROR", "TypeTable", "Primitive Type is null");
             return false;
         }
 
-        logMessage("INFO", __LINE__, "TypeTable", "Primitive Type is valid: %s", DataTypeToString(type));
+        logMessage(LMI, "INFO", "TypeTable", "Primitive Type is valid: %s", DataTypeToString(type));
         return true;
     }
 
@@ -71,23 +71,23 @@ bool isValidType(DataType *type)
     {
         if (!type->container->custom.structDef)
         {
-            logMessage("ERROR", __LINE__, "TypeTable", "Struct Type is inaccesible");
+            logMessage(LMI, "ERROR", "TypeTable", "Struct Type is inaccesible");
             return false;
         }
         if (strcmp(type->container->custom.structDef->name, "<UNKNOWN>") == 0)
         {
-            logMessage("ERROR", __LINE__, "TypeTable", "Struct Type is unknown");
+            logMessage(LMI, "ERROR", "TypeTable", "Struct Type is unknown");
             return false;
         }
 
-        logMessage("INFO", __LINE__, "TypeTable", "Struct Type is valid: %s", DataTypeToString(type));
+        logMessage(LMI, "INFO", "TypeTable", "Struct Type is valid: %s", DataTypeToString(type));
         return true;
     }
 
     if (type->container->baseType == FUNCTION_TYPE)
         return type->container->custom.funcDef != NULL;
 
-    logMessage("INFO", __LINE__, "TypeTable", "Type is valid: %s", DataTypeToString(type));
+    logMessage(LMI, "INFO", "TypeTable", "Type is valid: %s", DataTypeToString(type));
 
     return true;
 }
@@ -127,7 +127,7 @@ bool isStringDataType(DataType *type)
 {
     if (!type)
     {
-        logMessage("ERROR", __LINE__, "TypeTable", "Type is null");
+        logMessage(LMI, "ERROR", "TypeTable", "Type is null");
         return false;
     }
 
@@ -135,10 +135,10 @@ bool isStringDataType(DataType *type)
         type->container->primitive == PRIM_STRING &&
         type->container->isArray == false)
     {
-        logMessage("INFO", __LINE__, "TypeTable", "Type is a string type");
+        logMessage(LMI, "INFO", "TypeTable", "Type is a string type");
         return true;
     }
 
-    logMessage("INFO", __LINE__, "TypeTable", "Type is not a string type");
+    logMessage(LMI, "INFO", "TypeTable", "Type is not a string type");
     return false;
 }

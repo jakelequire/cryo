@@ -5,9 +5,9 @@
 
 #define FILE_NAME_LENGTH 18
 #define MODULE_NAME_LENGTH 15
-#define FUNC_NAME_LENGTH 12
-#define META_INFO_LENGTH 40
-#define META_INFO_PADDING 40
+#define FUNC_NAME_LENGTH 15
+#define META_INFO_LENGTH 58
+#define META_INFO_PADDING 58
 
 char *stringShortener(const char *string, int length, int addDots)
 {
@@ -60,7 +60,39 @@ const char *getParentDirOfFile(const char *file)
     return parentDir;
 }
 
-#define GET_LOGGER_META_INFO \
+const char *typeBufferFormatter(const char *type)
+{
+    const char *buffer = (const char *)malloc(sizeof(char) * 1024);
+
+    if (strcmp(type, "INFO") == 0)
+    {
+        sprintf((char *)buffer, "%s%s%s", GREEN, type, COLOR_RESET);
+    }
+    else if (strcmp(type, "ERROR") == 0)
+    {
+        sprintf((char *)buffer, "%s%s%s", RED, type, COLOR_RESET);
+    }
+    else if (strcmp(type, "WARN") == 0)
+    {
+        sprintf((char *)buffer, "%s%s%s", YELLOW, type, COLOR_RESET);
+    }
+    else if (strcmp(type, "DEBUG") == 0)
+    {
+        sprintf((char *)buffer, "%s%s%s", CYAN, type, COLOR_RESET);
+    }
+    else if (strcmp(type, "CRITICAL") == 0)
+    {
+        sprintf((char *)buffer, "%s%s%s", LIGHT_RED, type, COLOR_RESET);
+    }
+    else
+    {
+        sprintf((char *)buffer, "%s%s%s", WHITE, type, COLOR_RESET);
+    }
+
+    return buffer;
+}
+
+#define LMI \
     __LINE__, __FILE__, __func__, getParentDirOfFile(__FILE__)
 
 void logMessage(
@@ -74,7 +106,7 @@ void logMessage(
 {
     char *shortFile = stringShortener(getFileName(file), FILE_NAME_LENGTH, 0);
     char *shortModule = stringShortener(module, MODULE_NAME_LENGTH, 0);
-    char *shortFunc = stringShortener(func, FUNC_NAME_LENGTH, 1);
+    char *shortFunc = stringShortener(func, FUNC_NAME_LENGTH, 0);
 
     if (!shortFile || !shortModule || !shortFunc)
     {
@@ -86,7 +118,13 @@ void logMessage(
     }
 
     char metaInfo[META_INFO_LENGTH];
-    snprintf(metaInfo, META_INFO_LENGTH, "<%s> [%d|%s:%s:%s", type, line, shortModule, shortFile, shortFunc);
+    const char *typeFormatBuffer = typeBufferFormatter(type);
+    char *numberFormatBuffer = (char *)malloc(10);
+    // Number format should be light cyan
+    sprintf(numberFormatBuffer, "%s%d%s", LIGHT_CYAN, line, COLOR_RESET);
+
+    snprintf(metaInfo, META_INFO_LENGTH, "<%s> [%s|%s:%s:%s",
+             typeFormatBuffer, numberFormatBuffer, shortModule, shortFile, shortFunc);
 
     va_list args;
     va_start(args, message);
