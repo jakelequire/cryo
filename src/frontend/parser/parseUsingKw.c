@@ -43,6 +43,7 @@ void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *con
     struct ModuleChainEntry moduleChain[MAX_MODULE_CHAIN];
     size_t chainLength = 0;
     parseModuleChain(lexer, moduleChain, &chainLength, table, context, arena, state, typeTable);
+    logMessage(LMI, "INFO", "Parser", "Module chain parsed successfully.");
 
     // Handle type list if present
     if (lexer->currentToken.type == TOKEN_LBRACE)
@@ -67,7 +68,8 @@ void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *con
         importUsingModule(primaryModule, moduleChainStr, chainLength, state, globalTable);
     }
 
-    free(primaryModule);
+    logMessage(LMI, "INFO", "Parser", "Finished parsing using keyword.");
+    return;
 }
 
 // Helper function implementations
@@ -83,6 +85,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
                              CryoSymbolTable *table, ParsingContext *context, Arena *arena,
                              CompilerState *state, TypeTable *typeTable)
 {
+    const char *namespaces[] = {0};
     while (true)
     {
         Token current = lexer->currentToken;
@@ -98,6 +101,9 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
         moduleChain[*chainLength].name = strndup(current.start, current.length);
         moduleChain[*chainLength].length = current.length;
         (*chainLength)++;
+
+        // Add to the namespace list
+        namespaces[*chainLength] = moduleChain[*chainLength].name;
 
         if (*chainLength >= MAX_MODULE_CHAIN)
         {
@@ -129,6 +135,19 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
 
         consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected `::` after identifier.",
                 "parseModuleChain", table, arena, state, typeTable, context);
+    }
+
+    // DEBUG -------------------------------------
+    printf("DEBUG: Module Chain Length: %zu\n", *chainLength);
+    printf("DEBUG: Module Chain: \n");
+    for (size_t i = 0; i < *chainLength; i++)
+    {
+        printf("%s", moduleChain[i].name);
+        if (i < *chainLength - 1)
+        {
+            printf(",");
+        }
+        printf("\n");
     }
 }
 
@@ -254,6 +273,8 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
         logMessage(LMI, "ERROR", "Parser", "Failed to compile and import module file definitions.");
         return;
     }
+
+    logMessage(LMI, "INFO", "Parser", "Module imported successfully.");
 
     DEBUG_BREAKPOINT;
 }
@@ -431,7 +452,11 @@ int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *
         return 1;
     }
 
-    DEBUG_BREAKPOINT;
+    logMessage(LMI, "INFO", "Parser", "Parsing Complete, importing module file definitions...");
+
+    HandleRootNodeImport(globalTable, programNode);
+
+    return 0;
 }
 
 void importSpecificNamespaces(const char *primaryModule, const char *namespaces[], size_t namespaceCount,
@@ -464,6 +489,8 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
     // Allocate array for modules to compile
     const char **modulesToCompile = (const char **)malloc(sizeof(char *) * namespaceCount);
     memset(modulesToCompile, 0, sizeof(char *) * namespaceCount);
+
+    logMessage(LMI, "INFO", "Parser", "Importing specific namespaces...");
 
     // Match each namespace to its corresponding .cryo file
     for (size_t i = 0; i < namespaceCount; i++)
@@ -523,12 +550,9 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
                 logMessage(LMI, "ERROR", "Parser",
                            "Failed to compile module: %s", modulesToCompile[i]);
             }
-            free((void *)modulesToCompile[i]);
         }
     }
-    free(modulesToCompile);
-
-    DEBUG_BREAKPOINT;
+    return;
 }
 
 // =================================================================================================

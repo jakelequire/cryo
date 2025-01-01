@@ -347,11 +347,15 @@ namespace Cryo
         std::vector<ExternSymbol *> externFunctions;             // Vector of external functions                   [Unimplemented]
         std::unordered_map<std::string, SymbolTable *> queryMap; // Map of namespace tables                        [Unimplemented]
 
+        std::vector<std::string> importedModulePaths; // Vector of imported module file paths
+
         std::vector<Symbol *> mergedSymbols; // Vector of all symbols merged from the symbol tables
 
         ScopeBlock *currentScope = nullptr; // Current scope block
         const char *scopeId = "null";       // Current scope ID
         size_t scopeDepth = 0;              // Current scope depth
+
+        bool isImporting = false; // Flag for importing a module
 
         //===================================================================
         // Table State Management

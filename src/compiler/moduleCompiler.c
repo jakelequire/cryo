@@ -49,7 +49,7 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
         return NULL;
     }
 
-    logMessage(LMI, "INFO", "Compiler", "Program node parsed successfully");
+    logMessage(LMI, "INFO", "Compiler", "MODULE COMPILER: Program node parsed successfully");
 
     return programNode;
 }

@@ -41,11 +41,27 @@ namespace Cryo
             return;
         }
 
-        loopRootNode(node, table, (char *)namespaceName);
+        // loopRootNode(node, table, (char *)namespaceName);
 
-        debugger->logSymbolTable(table);
+        // std::cout << "\n\n IMPORT TABLE: " << namespaceName << std::endl;
+        // debugger->logSymbolTable(table);
+        // std::cout << "\n\n";
 
-        DEBUG_BREAKPOINT;
+        SymbolTable *curTable = getCurrentSymbolTable();
+        if (!curTable || curTable == nullptr)
+        {
+            std::cerr << "handleRootNodeImport: Current table is null" << std::endl;
+            return;
+        }
+
+        std::cout << "CURRENT TABLE: " << curTable->namespaceName << std::endl;
+        debugger->logSymbolTable(curTable);
+
+        completeDependencyTable();
+
+        std::cout << "<!> Completed Root Node Import" << std::endl;
+
+        return;
     }
 
     SymbolTable *GlobalSymbolTable::createNewImportTable(const char *namespaceName)
@@ -104,8 +120,8 @@ namespace Cryo
                 return;
             }
             Symbol *symbol = wrapSubSymbol(VARIABLE_SYMBOL, variable);
-
             addSymbolToTable(symbol, table);
+            table->count++;
             break;
         }
         case NODE_FUNCTION_DECLARATION:
@@ -126,6 +142,7 @@ namespace Cryo
             }
             Symbol *symbol = wrapSubSymbol(FUNCTION_SYMBOL, function);
             addSymbolToTable(symbol, table);
+            table->count++;
 
             currentScopeID = (char *)function->functionScopeId;
 
@@ -157,10 +174,80 @@ namespace Cryo
             }
             Symbol *symbol = wrapSubSymbol(EXTERN_SYMBOL, externSymbol);
             addSymbolToTable(symbol, table);
+            table->count++;
+            break;
+        }
+        case NODE_STRUCT_DECLARATION:
+        {
+            // Add the struct to the table
+            TypeSymbol *typeSymbol = createTypeSymbol(
+                node->data.structNode->name,
+                node,
+                node->data.structNode->type,
+                STRUCT_TYPE,
+                false,
+                false,
+                currentScopeID);
+            if (!typeSymbol)
+            {
+                std::cerr << "loopRootNode: Failed to create struct symbol" << std::endl;
+                return;
+            }
+            Symbol *symbol = wrapSubSymbol(TYPE_SYMBOL, typeSymbol);
+            addSymbolToTable(symbol, table);
+            table->count++;
+
+            // Add the properties to the table
+            for (size_t i = 0; i < node->data.structNode->propertyCount; i++)
+            {
+                PropertySymbol *property = createPropertySymbol(node->data.structNode->properties[i]);
+                if (!property)
+                {
+                    std::cerr << "loopRootNode: Failed to create property symbol" << std::endl;
+                    return;
+                }
+                Symbol *propSymbol = wrapSubSymbol(PROPERTY_SYMBOL, property);
+                addSymbolToTable(propSymbol, table);
+                table->count++;
+            }
+
+            // Add the methods to the table
+            for (size_t i = 0; i < node->data.structNode->methodCount; i++)
+            {
+                MethodSymbol *method = createMethodSymbol(node->data.structNode->methods[i]);
+                if (!method)
+                {
+                    std::cerr << "loopRootNode: Failed to create method symbol" << std::endl;
+                    return;
+                }
+                Symbol *methodSymbol = wrapSubSymbol(METHOD_SYMBOL, method);
+                addSymbolToTable(methodSymbol, table);
+                table->count++;
+            }
+
             break;
         }
         case NODE_CLASS:
         {
+            // Add the class to the table
+            TypeSymbol *typeSymbol = createTypeSymbol(
+                node->data.classNode->name,
+                node,
+                node->data.classNode->type,
+                CLASS_TYPE,
+                false,
+                false,
+                currentScopeID);
+            if (!typeSymbol)
+            {
+                std::cerr << "loopRootNode: Failed to create class symbol" << std::endl;
+                return;
+            }
+            Symbol *symbol = wrapSubSymbol(TYPE_SYMBOL, typeSymbol);
+            addSymbolToTable(symbol, table);
+            table->count++;
+
+            break;
         }
 
         default:

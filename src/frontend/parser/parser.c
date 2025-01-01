@@ -331,12 +331,6 @@ int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *st
 // <addStatementToProgram>
 void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode *statement, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    char *curModule = getCurrentNamespace(table);
-    if (!curModule)
-    {
-        logMessage(LMI, "ERROR", "Parser", "Failed to get current module");
-        exit(EXIT_FAILURE);
-    }
     logMessage(LMI, "INFO", "Parser", "Adding statement to program...");
     if (!programNode || programNode->metaData->type != NODE_PROGRAM)
     {
@@ -352,8 +346,8 @@ void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode
 
     CryoProgram *program = programNode->data.program;
 
-    logMessage(LMI, "INFO", "Parser", "(%s) Before adding statement: statementCount = %zu, statementCapacity = %zu",
-               curModule, program->statementCount, program->statementCapacity);
+    logMessage(LMI, "INFO", "Parser", "Before adding statement: statementCount = %zu, statementCapacity = %zu",
+               program->statementCount, program->statementCapacity);
 
     if (program->statementCount >= program->statementCapacity)
     {
@@ -369,8 +363,8 @@ void addStatementToProgram(ASTNode *programNode, CryoSymbolTable *table, ASTNode
 
     program->statements[program->statementCount++] = statement;
 
-    logMessage(LMI, "INFO", "Parser", "(%s) After adding statement: statementCount = %zu, statementCapacity = %zu",
-               curModule, program->statementCount, program->statementCapacity);
+    logMessage(LMI, "INFO", "Parser", "After adding statement: statementCount = %zu, statementCapacity = %zu",
+               program->statementCount, program->statementCapacity);
 }
 // </addStatementToProgram>
 

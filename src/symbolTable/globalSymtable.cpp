@@ -493,6 +493,7 @@ namespace Cryo
         if (currentDependencyTable)
         {
             // Clear the current dependency table, add to the dependency table vector
+            dependencyTableVector.push_back(currentDependencyTable);
             currentDependencyTable = nullptr;
             return;
         }

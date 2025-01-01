@@ -29,7 +29,7 @@
 #define LMI \
     __LINE__, __FILE__, __func__, getParentDirOfFile(__FILE__)
 
-// 
+//
 void logMessage(
     int line,
     const char *file,

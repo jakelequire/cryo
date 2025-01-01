@@ -387,6 +387,10 @@ namespace Cryo
                 logSymbol(table->symbols[i]);
             }
         }
+        if (table->count == 0)
+        {
+            logger->debugNode("\n <!> No symbols in table <!>");
+        }
         logger->debugNode(SEPARATOR);
     }
 
