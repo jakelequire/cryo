@@ -552,6 +552,10 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
             }
         }
     }
+
+    logMessage(LMI, "INFO", "Parser", "Finished importing specific namespaces.");
+
+    DEBUG_BREAKPOINT;
     return;
 }
 
