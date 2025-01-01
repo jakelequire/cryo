@@ -68,6 +68,8 @@ bool skipComment(Lexer *lexer, CompilerState *state);
 char peekNextUnconsumedLexerToken(Lexer *lexer, CompilerState *state);
 char currentChar(Lexer *lexer, CompilerState *state);
 
+const char *getCurrentFileLocationFromLexer(Lexer *lexer);
+
 /* @Lexer_Functions */
 Token nextToken(Lexer *lexer, Token *token, CompilerState *state);
 Token get_next_token(Lexer *lexer, CompilerState *state);

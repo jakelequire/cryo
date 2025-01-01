@@ -72,6 +72,7 @@ function error {
     exit 1
 }
 
+# Cleanup function
 function cleanup {
     echo ""
     echo ""
@@ -81,6 +82,15 @@ function cleanup {
     if [ -f "$FILE_NAME.ll" ]; then
         # Remove the file
         rm $FILE_NAME.ll
+    fi
+}
+
+# Cleanup Function to call GDB with the same executable and the core dump on a crash or signal
+function cleanup {
+    # Check if the core dump file exists
+    if [ -f "core" ]; then
+        # Run GDB with the executable and the core dump file
+        gdb $BUILD_DIR/$FILE_NAME core -ex "bt" -ex "quit"
     fi
 }
 

@@ -35,6 +35,20 @@ extern "C"
         }
     }
 
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping)
+    {
+        try
+        {
+            auto symTable = new Cryo::GlobalSymbolTable(forReaping);
+            return reinterpret_cast<CryoGlobalSymbolTable *>(symTable);
+        }
+        catch (...)
+        {
+            fprintf(stderr, "Failed to create GlobalSymbolTable\n");
+            return nullptr;
+        }
+    }
+
     void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable)
     {
         if (symTable)
@@ -77,6 +91,14 @@ extern "C"
         if (symTable)
         {
             reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->initNamespace(namespaceName);
+        }
+    }
+
+    void CryoGlobalSymbolTable_CompleteFrontend(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->completeFrontend();
         }
     }
 

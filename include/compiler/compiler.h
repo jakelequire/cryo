@@ -36,6 +36,7 @@ typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
 typedef struct Bootstrapper Bootstrapper;
+typedef struct SymbolTable SymbolTable;
 
 // C++ headers
 #ifdef __cplusplus
@@ -60,6 +61,7 @@ const char *handleTextBuffer(char *source);
 
 // Module Compiler
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state);
 void processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath);
 
 // C++ Accessable Functions

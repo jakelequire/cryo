@@ -29,6 +29,8 @@ void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *con
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
             "parseUsingKeyword", table, arena, state, typeTable, context);
 
+    setPrimaryTableStatus(globalTable, false);
+
     // Get primary module name
     Token primaryModuleToken = lexer->currentToken;
     char *primaryModule = strndup(primaryModuleToken.start, primaryModuleToken.length);
@@ -68,7 +70,10 @@ void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *con
         importUsingModule(primaryModule, moduleChainStr, chainLength, state, globalTable);
     }
 
+    setPrimaryTableStatus(globalTable, true);
+
     logMessage(LMI, "INFO", "Parser", "Finished parsing using keyword.");
+    DEBUG_BREAKPOINT;
     return;
 }
 
@@ -454,7 +459,7 @@ int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *
 
     logMessage(LMI, "INFO", "Parser", "Parsing Complete, importing module file definitions...");
 
-    HandleRootNodeImport(globalTable, programNode);
+    // HandleRootNodeImport(globalTable, programNode);
 
     return 0;
 }
@@ -554,6 +559,17 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
     }
 
     logMessage(LMI, "INFO", "Parser", "Finished importing specific namespaces.");
+
+    printf("\n<!> DEBUG: All Symbol Tables: \n\n");
+    printGlobalSymbolTable(globalTable);
+    printf("\n\n");
+
+    // DEBUG: print the modules to compile
+    for (size_t i = 0; i < namespaceCount; i++)
+    {
+        printf("DEBUG: Module To Compile: %s\n",
+               modulesToCompile[i] ? modulesToCompile[i] : "(null)");
+    }
 
     DEBUG_BREAKPOINT;
     return;

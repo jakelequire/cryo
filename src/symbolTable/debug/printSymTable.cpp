@@ -22,7 +22,7 @@ namespace Cryo
     {
         std::cout << "\n"
                   << std::endl;
-        std::cout << "\n============ Global Symbol Table State ============\n"
+        std::cout << "\n>>>============ Global Symbol Table State ============<<<\n"
                   << std::endl;
 
         // Print Debug Info
@@ -81,7 +81,7 @@ namespace Cryo
             std::cout << "    └── [Empty]" << std::endl;
         }
 
-        std::cout << "\n============ End Global Symbol Table State ============\n"
+        std::cout << "\n>>>============ End Global Symbol Table State ============<<<\n"
                   << std::endl;
         std::cout << "\n"
                   << std::endl;

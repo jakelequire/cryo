@@ -109,11 +109,12 @@ extern "C"
         TOKEN_KW_CONTINUE,     // `continue`
         TOKEN_KW_RETURN,       // `return`
         TOKEN_KW_FN,           // `function`
+        TOKEN_KW_MODULE,       // `module`
+        TOKEN_KW_DECLARE,      // `declare`
         TOKEN_KW_CONST,        // `const`
         TOKEN_KW_PUBLIC,       // `public`
         TOKEN_KW_PRIVATE,      // `private`
         TOKEN_KW_STRUCT,       // `struct`
-        TOKEN_KW_DECLARE,      // `declare`
         TOKEN_KW_ENUM,         // `enum`
         TOKEN_KW_TRAIT,        // `trait`
         TOKEN_KW_AS,           // `as`

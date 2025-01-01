@@ -52,12 +52,17 @@ void createDir(const char *path);
 void removeFile(const char *filePath);
 const char *getSTDFilePath(const char *subModule);
 const char *trimFilePath(const char *filePath);
+char *getFileNameFromPathNoExt(const char *filePath);
+char *getFileNameFromPath(const char *filePath);
 
 const char *getCurRootDir(void);
 const char *getCryoSrcLocation(void);
 char *getCRuntimePath(void);
 
 const char *appendStrings(const char *str1, const char *str2);
+const char *appendExtensionToFileName(const char *fileName, const char *extension);
+const char *appendPathToFileName(const char *path, const char *fileName, bool endingSlash);
+const char *removeFileFromPath(const char *path);
 
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL

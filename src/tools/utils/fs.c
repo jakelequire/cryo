@@ -199,6 +199,97 @@ const char *trimFilePath(const char *filePath)
 }
 // </trimFilePath>
 
+// <getFileNameFromPathNoExt>
+/// @brief Extracts the filename from a file path without the extension
+/// i.e. `/path/to/file.txt` -> `file`
+char *getFileNameFromPathNoExt(const char *filePath)
+{
+    if (!filePath)
+    {
+        return NULL;
+    }
+
+    // Find last occurrence of forward or backward slash
+    const char *lastForwardSlash = strrchr(filePath, '/');
+    const char *lastBackSlash = strrchr(filePath, '\\');
+    const char *fileName = lastForwardSlash > lastBackSlash ? lastForwardSlash : lastBackSlash;
+
+    // If no slash found, use the entire path as filename
+    if (!fileName)
+    {
+        fileName = filePath;
+    }
+    else
+    {
+        // Move past the slash
+        fileName++;
+    }
+
+    // Find the last dot for extension
+    const char *lastDot = strrchr(fileName, '.');
+
+    // Calculate length (either to dot or end of string)
+    size_t nameLength = lastDot ? (size_t)(lastDot - fileName) : strlen(fileName);
+
+    // Allocate memory (+1 for null terminator)
+    char *fileNameNoExt = (char *)malloc(nameLength + 1);
+    if (!fileNameNoExt)
+    {
+        return NULL;
+    }
+
+    // Copy the filename without extension
+    strncpy(fileNameNoExt, fileName, nameLength);
+    fileNameNoExt[nameLength] = '\0';
+
+    return fileNameNoExt;
+}
+// </getFileNameFromPathNoExt>
+
+// <getFileNameFromPath>
+/// @brief Extracts the filename from a file path
+/// i.e. `/path/to/file.txt` -> `file.txt`
+char *getFileNameFromPath(const char *filePath)
+{
+    if (!filePath)
+    {
+        return NULL;
+    }
+
+    // Find last occurrence of forward or backward slash
+    const char *lastForwardSlash = strrchr(filePath, '/');
+    const char *lastBackSlash = strrchr(filePath, '\\');
+    const char *fileName = lastForwardSlash > lastBackSlash ? lastForwardSlash : lastBackSlash;
+
+    // If no slash found, use the entire path as filename
+    if (!fileName)
+    {
+        fileName = filePath;
+    }
+    else
+    {
+        // Move past the slash
+        fileName++;
+    }
+
+    // Calculate length of filename including extension
+    size_t nameLength = strlen(fileName);
+
+    // Allocate memory (+1 for null terminator)
+    char *fileNameCopy = (char *)malloc(nameLength + 1);
+    if (!fileNameCopy)
+    {
+        return NULL;
+    }
+
+    // Copy the complete filename
+    strncpy(fileNameCopy, fileName, nameLength);
+    fileNameCopy[nameLength] = '\0';
+
+    return fileNameCopy;
+}
+// <getFileNameFromPath>
+
 // <getCurRootDir>
 const char *getCurRootDir(void)
 {
@@ -265,6 +356,67 @@ const char *appendStrings(const char *str1, const char *str2)
 
     strcpy(result, str1);
     strcat(result, str2);
+
+    return result;
+}
+
+const char *appendExtensionToFileName(const char *fileName, const char *extension)
+{
+    char *result = (char *)malloc(strlen(fileName) + strlen(extension) + 1);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strcpy(result, fileName);
+    strcat(result, extension);
+
+    return result;
+}
+
+/// @brief Appends a path to a file name.
+/// @param path
+/// @param fileName
+/// @param endingSlash True if the path should end with a slash, false otherwise
+/// @return
+const char *appendPathToFileName(const char *path, const char *fileName, bool endingSlash)
+{
+    char *result = (char *)malloc(strlen(path) + strlen(fileName) + 2);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strcpy(result, path);
+    if (endingSlash)
+    {
+        strcat(result, "/");
+    }
+    strcat(result, fileName);
+
+    return result;
+}
+
+const char *removeFileFromPath(const char *path)
+{
+    const char *lastSlash = strrchr(path, '/');
+    if (!lastSlash)
+    {
+        return path;
+    }
+
+    size_t length = (size_t)(lastSlash - path);
+    char *result = (char *)malloc(length + 1);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strncpy(result, path, length);
+    result[length] = '\0';
 
     return result;
 }

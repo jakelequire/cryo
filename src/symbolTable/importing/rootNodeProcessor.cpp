@@ -41,12 +41,6 @@ namespace Cryo
             return;
         }
 
-        // loopRootNode(node, table, (char *)namespaceName);
-
-        // std::cout << "\n\n IMPORT TABLE: " << namespaceName << std::endl;
-        // debugger->logSymbolTable(table);
-        // std::cout << "\n\n";
-
         SymbolTable *curTable = getCurrentSymbolTable();
         if (!curTable || curTable == nullptr)
         {

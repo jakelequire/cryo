@@ -40,19 +40,18 @@ extern "C"
 
     // C API -------------------------------------------------------
     CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping);
     void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
 
     // Class State Functions ---------------------------------------
 
     bool CryoGlobalSymbolTable_GetIsPrimaryTable(CryoGlobalSymbolTable *symTable);
     bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable);
-
     void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary);
     void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency);
-
     void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable);
-
     void CryoGlobalSymbolTable_InitNamespace(CryoGlobalSymbolTable *symTable, const char *namespaceName);
+    void CryoGlobalSymbolTable_CompleteFrontend(CryoGlobalSymbolTable *symTable);
 
     // Symbol Table Functions ---------------------------------------
 
@@ -127,6 +126,8 @@ extern "C"
     CryoGlobalSymbolTable_TableFinished(symTable)
 #define InitNamespace(symTable, namespaceName) \
     CryoGlobalSymbolTable_InitNamespace(symTable, namespaceName)
+#define CompleteFrontend(symTable) \
+    CryoGlobalSymbolTable_CompleteFrontend(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \
@@ -321,6 +322,16 @@ namespace Cryo
             tableState = TABLE_INITIALIZED;
             this->typeTable = initTypeTable("global");
         };
+        // This constructor is used for reaping the symbol table to a higher level symbol table manager.
+        GlobalSymbolTable(bool isForReaping, ScopeType scopeType = GLOBAL_SCOPE)
+        {
+            debugInfo = getDebugInfo();
+            tableContext = setDefaultContext();
+            currentScopeType = scopeType;
+            tableState = TABLE_INITIALIZED;
+            this->typeTable = initTypeTable("global");
+            this->isForReaping = isForReaping;
+        }
         ~GlobalSymbolTable();
 
         friend class SymbolTableDebugger;
@@ -355,7 +366,11 @@ namespace Cryo
         const char *scopeId = "null";       // Current scope ID
         size_t scopeDepth = 0;              // Current scope depth
 
-        bool isImporting = false; // Flag for importing a module
+        bool isFrontendComplete = false; // Flag for frontend completion
+        bool isImporting = false;        // Flag for importing a module
+        bool isForReaping = false;       // Flag for reaping the symbol table to a higher level symbol table manager.
+
+        SymbolTable *reapedTable = nullptr; // Reaped symbol table
 
         //===================================================================
         // Table State Management
@@ -367,6 +382,7 @@ namespace Cryo
         void setIsDependencyTable(bool isDependency);  // [C API]
         void tableFinished(void);                      // [C API]
         void initNamespace(const char *namespaceName); // [C API]
+        void completeFrontend(void);                   // [C API]
         void resetCurrentDepsTable(void);
         void setCurrentDependencyTable(SymbolTable *table);
         void setPrimaryTable(SymbolTable *table);
@@ -375,9 +391,11 @@ namespace Cryo
         // Symbol Merging / Management
         //===================================================================
 
-        void mergeAllSymbols(void);
+        SymbolTable *mergeAllSymbols(void);
         std::vector<Symbol *> mergePrimaryTable(void);
         std::vector<Symbol *> mergeAllDependencyTables(void);
+        std::vector<Symbol *> mergeTwoTables(SymbolTable *table1, SymbolTable *table2);
+        SymbolTable *createNewSymbolTableFromSymbols(std::vector<Symbol *> symbols);
 
         //===================================================================
         // Imports / Exports
@@ -591,6 +609,11 @@ namespace Cryo
         return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable());
     }
 
+    inline CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping)
+    {
+        return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable(forReaping));
+    }
+
     inline void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable)
     {
         if (symTable)
@@ -625,6 +648,11 @@ namespace Cryo
     inline void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable)
     {
         reinterpret_cast<GlobalSymbolTable *>(symTable)->tableFinished();
+    }
+
+    inline void CryoGlobalSymbolTable_CompleteFrontend(CryoGlobalSymbolTable *symTable)
+    {
+        reinterpret_cast<GlobalSymbolTable *>(symTable)->completeFrontend();
     }
 
     // Symbol Table Functions ---------------------------------------

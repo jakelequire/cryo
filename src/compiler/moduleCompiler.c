@@ -15,7 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
-#include "symbolTable/globalSymtable.hpp"
+#include "symbolTable/cInterfaceTable.h"
 #include "compiler/compiler.h"
 
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
@@ -50,8 +50,48 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     }
 
     logMessage(LMI, "INFO", "Compiler", "MODULE COMPILER: Program node parsed successfully");
+    logMessage(LMI, "INFO", "Compiler", "MODULE COMPILER: File path: %s", filePath);
+    logMessage(LMI, "INFO", "Compiler", "MODULE COMPILER: Output path: %s", outputPath);
+
+    char *rawFileName = getFileNameFromPathNoExt(filePath);
+    const char *IRFileName = appendExtensionToFileName(rawFileName, ".ll");
+    const char *completeFilePath = appendPathToFileName(outputPath, IRFileName, true);
+
+    logMessage(LMI, "INFO", "Compiler", "MODULE COMPILER: complete file path: %s", completeFilePath);
+    logMessage(LMI, "INFO", "Compiler", "MODULE COMPILER: Generating IR code...");
+
+    // Generate the IR code
+    processNodeToIRObject(programNode, state, completeFilePath);
 
     return programNode;
+}
+
+SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state)
+{
+    logMessage(LMI, "INFO", "Compiler", "Compiling to reap symbols...");
+
+    char *source = readFile(filePath);
+    if (!source)
+    {
+        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        CONDITION_FAILED;
+    }
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the symbol table
+    CryoSymbolTable *table = createSymbolTable(arena);
+
+    // Initialize the type table
+    TypeTable *typeTable = initTypeTable();
+
+    // Initialize the lexer
+    Lexer lexer;
+    initLexer(&lexer, source, filePath, state);
+
+    // Initialize the global symbol table (for reaping)
+    CryoGlobalSymbolTable *globalTable = CryoGlobalSymbolTable_Create_Reaping(true);
 }
 
 void processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath)

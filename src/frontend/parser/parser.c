@@ -94,6 +94,7 @@ ASTNode *parseProgram(Lexer *lexer, CryoSymbolTable *table, Arena *arena, Compil
         logMessage(LMI, "INFO", "Parser", "Next token after statement: %s", CryoTokenToString(lexer->currentToken.type));
     }
 
+    CompleteFrontend(globalTable);
     return program;
 }
 // </parseProgram>
@@ -966,7 +967,8 @@ ASTNode *parsePublicDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
         return parseVarDeclaration(lexer, table, context, arena, state, typeTable, globalTable);
     case TOKEN_KW_FN:
         return parseFunctionDeclaration(lexer, table, context, VISIBILITY_PUBLIC, arena, state, typeTable, globalTable);
-
+    case TOKEN_KW_MODULE:
+        return parseModuleDeclaration(VISIBILITY_PUBLIC, lexer, table, context, arena, state, typeTable, globalTable);
     default:
         parsingError("Expected a declaration.", "parsePublicDeclaration", table, arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;

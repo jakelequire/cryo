@@ -41,6 +41,7 @@
 #define INITIAL_PARAM_CAPACITY 16
 #define MAX_ARGUMENTS 255
 #define MAX_USING_MODULES 16
+#define MAX_FILES 1024
 
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
@@ -357,5 +358,15 @@ struct TypeEntry
     char *name;
     size_t length;
 };
+
+// # =========================================================================== #
+// # `module` Keyword Parsing
+// # =========================================================================== #
+
+ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
+                                Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+int handleModuleParsing(const char *fileArray[], int fileCount, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+const char **getDirFileList(const char *dir);
+bool isValidCryoFile(const char *fileName);
 
 #endif // PARSER_H

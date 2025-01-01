@@ -386,6 +386,16 @@ namespace Cryo
         this->pushNewScopePair(namespaceName, scopeID);
     }
 
+    void GlobalSymbolTable::completeFrontend(void)
+    {
+        if (isForReaping)
+        {
+            SymbolTable *fullTable = mergeAllSymbols();
+            std::cout << "<!> DEBUG: Merged Full Table <!>" << std::endl;
+            debugger->logSymbolTable(fullTable);
+        }
+    }
+
     void GlobalSymbolTable::addNodeToTable(ASTNode *node)
     {
         if (!node || node == nullptr)

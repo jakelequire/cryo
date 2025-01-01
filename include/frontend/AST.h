@@ -553,6 +553,16 @@ typedef struct UsingNode
     const char *filePath;
 } UsingNode;
 
+// This node will not be used in the IR generation phase.
+// It is only used for the AST generation phase.
+typedef struct ModuleNode
+{
+    const char *moduleName;
+    const char *modulePath;
+    const char *moduleDir;
+    const char *moduleFile;
+} ModuleNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {

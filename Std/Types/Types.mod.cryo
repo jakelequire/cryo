@@ -1,4 +1,5 @@
 namespace Types;
 
-using Std::Types::{String};
+public module String;
+public module Int;
 

@@ -41,6 +41,7 @@ typedef struct ScopeBlock ScopeBlock;
 
 // C API -------------------------------------------------------
 CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
+CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping);
 void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
 
 // Class State Functions ---------------------------------------
@@ -50,6 +51,10 @@ bool CryoGlobalSymbolTable_GetIsDependencyTable(CryoGlobalSymbolTable *symTable)
 
 void CryoGlobalSymbolTable_SetPrimaryTableStatus(CryoGlobalSymbolTable *symTable, bool isPrimary);
 void CryoGlobalSymbolTable_SetDependencyTableStatus(CryoGlobalSymbolTable *symTable, bool isDependency);
+
+void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable);
+void CryoGlobalSymbolTable_InitNamespace(CryoGlobalSymbolTable *symTable, const char *namespaceName);
+void CryoGlobalSymbolTable_CompleteFrontend(CryoGlobalSymbolTable *symTable);
 
 // Symbol Table Functions ---------------------------------------
 
@@ -80,6 +85,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_TableFinished(symTable)
 #define InitNamespace(symTable, namespaceName) \
     CryoGlobalSymbolTable_InitNamespace(symTable, namespaceName)
+#define CompleteFrontend(symTable) \
+    CryoGlobalSymbolTable_CompleteFrontend(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \

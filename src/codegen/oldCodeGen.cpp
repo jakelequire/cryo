@@ -44,6 +44,7 @@ int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *
 {
     std::cout << ">===------------- CPP Runtime Generation -------------===<\n"
               << std::endl;
+    std::cout << "Output Path: " << outputPath << std::endl;
 
     std::cout << "Starting Runtime IR Generation" << std::endl;
     Cryo::CryoCompiler compiler;
@@ -137,6 +138,8 @@ namespace Cryo
         compileCode.compileIRFile();
 
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
+        std::cout << "====================================================================================================" << std::endl;
+        std::cout << "\n\n";
         return;
     }
 
@@ -286,6 +289,11 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Class");
             compiler.getClasses().handleClassDeclaration(root);
+            break;
+        }
+        case NODE_USING:
+        {
+            // Skip the using statement
             break;
         }
         default:

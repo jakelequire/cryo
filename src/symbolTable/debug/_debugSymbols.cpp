@@ -30,6 +30,7 @@ namespace Cryo
 {
     Logger *SymbolTableDebugger::logger = new Logger(Logger::DEBUG);
     const char *SEPARATOR = "───────────────────────────────────────────────────────────────────";
+    const char *HEAVY_SEPARATOR = BOLD WHITE "===================================================================" COLOR_RESET;
     const char *CHILD_SEPARATOR = ">>===--------------";
 
     void SymbolTableDebugger::logScopeBlock(ScopeBlock *block)
@@ -49,7 +50,7 @@ namespace Cryo
                           block->depth,
                           block->parent ? block->parent->name : "none");
         logger->debugNode("Child Count: %zu", block->childCount);
-        logger->debugNode(SEPARATOR);
+        logger->debugNode(HEAVY_SEPARATOR);
     }
 
     void SymbolTableDebugger::logVariableSymbol(VariableSymbol *symbol)
@@ -65,7 +66,7 @@ namespace Cryo
         const char *falseStr = BOLD RED "false" COLOR_RESET;
         const char *paramStr = isParam ? trueStr : falseStr;
 
-        logger->debugNode("%s | %s: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": %s",
                           getColoredSymbolType(VARIABLE_SYMBOL).c_str(),
                           symbol->name,
                           symbol->type ? DataTypeToString(symbol->type) : "unknown");
@@ -102,7 +103,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("%s | %s: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": %s",
                           getColoredSymbolType(EXTERN_SYMBOL).c_str(),
                           symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
@@ -126,7 +127,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("%s | %s TypeOf: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ":" BOLD MAGENTA " %s" COLOR_RESET,
                           getColoredSymbolType(TYPE_SYMBOL).c_str(),
                           symbol->name,
                           TypeofDataTypeToString(symbol->typeOf));
@@ -217,7 +218,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("%s | %s TypeOf: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ":" BOLD MAGENTA " %s" COLOR_RESET,
                           getColoredSymbolType(TYPE_SYMBOL).c_str(),
                           symbol->name,
                           TypeofDataTypeToString(symbol->typeOf));
@@ -269,7 +270,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("%s | %s Type: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": Type: %s",
                           getColoredSymbolType(PROPERTY_SYMBOL).c_str(),
                           symbol->name,
                           symbol->type ? DataTypeToString(symbol->type) : "unknown");
@@ -288,7 +289,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("%s | %s ReturnType: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": ReturnType: %s",
                           getColoredSymbolType(METHOD_SYMBOL).c_str(),
                           symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
@@ -318,7 +319,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("%s | %s Type: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": Type: %s",
                           getColoredSymbolType(PROPERTY_SYMBOL).c_str(),
                           symbol->name,
                           symbol->type ? DataTypeToString(symbol->type) : "unknown");
@@ -326,7 +327,7 @@ namespace Cryo
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",
                           symbol->hasDefaultExpr ? "true" : "false");
-        logger->debugNode(SEPARATOR);
+        logger->debugNode(HEAVY_SEPARATOR);
     }
 
     void SymbolTableDebugger::logMethodSymbol(MethodSymbol *symbol)
@@ -337,7 +338,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("%s | %s ReturnType: %s",
+        logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": ReturnType: %s",
                           getColoredSymbolType(METHOD_SYMBOL).c_str(),
                           symbol->name,
                           symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
@@ -356,7 +357,7 @@ namespace Cryo
                                   symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
             }
         }
-        logger->debugNode(SEPARATOR);
+        logger->debugNode(HEAVY_SEPARATOR);
     }
 
     void SymbolTableDebugger::logSymbolTable(SymbolTable *table)
@@ -367,7 +368,7 @@ namespace Cryo
             return;
         }
 
-        logger->debugNode("SymbolTable | Namespace: %s Count: %zu",
+        logger->debugNode("SymbolTable | " BOLD "Namespace: " BLUE "%s" COLOR_RESET " Count: %zu",
                           table->namespaceName ? table->namespaceName : "global",
                           table->count);
         logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
@@ -380,7 +381,8 @@ namespace Cryo
 
         if (table->count > 0)
         {
-            logger->debugNode("\nSymbols:\n");
+            logger->debugNode(HEAVY_SEPARATOR);
+            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
             logger->debugNode(SEPARATOR);
             for (size_t i = 0; i < table->count; i++)
             {
@@ -389,9 +391,13 @@ namespace Cryo
         }
         if (table->count == 0)
         {
-            logger->debugNode("\n <!> No symbols in table <!>");
+            logger->debugNode(HEAVY_SEPARATOR);
+            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
+            logger->debugNode(SEPARATOR);
+            logger->debugNode("\n " BOLD RED "[!] No symbols in table" COLOR_RESET);
         }
-        logger->debugNode(SEPARATOR);
+        printf("\n");
+        logger->debugNode(HEAVY_SEPARATOR);
     }
 
     void SymbolTableDebugger::logTypeTable(TypesTable *table)

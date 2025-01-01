@@ -489,6 +489,10 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_CONSTRUCTOR";
     case TOKEN_KW_THIS:
         return "TOKEN_KW_THIS";
+    case TOKEN_KW_USING:
+        return "TOKEN_KW_USING";
+    case TOKEN_KW_MODULE:
+        return "TOKEN_KW_MODULE";
 
     case TOKEN_BANG:
         return "TOKEN_BANG";

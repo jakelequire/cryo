@@ -59,6 +59,8 @@ KeywordToken keywords[] = {
     {"using", TOKEN_KW_USING},
     {"extends", TOKEN_KW_EXTENDS},
     {"typeof", TOKEN_KW_TYPEOF},
+    {"module", TOKEN_KW_MODULE},
+    {"declare", TOKEN_KW_DECLARE},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
@@ -114,6 +116,11 @@ Lexer *freezeLexer(Lexer *lexer)
     frozenLexer->hasPeeked = lexer->hasPeeked;
     frozenLexer->fileName = lexer->fileName;
     return frozenLexer;
+}
+
+const char *getCurrentFileLocationFromLexer(Lexer *lexer)
+{
+    return lexer->fileName;
 }
 
 // <getLPos>

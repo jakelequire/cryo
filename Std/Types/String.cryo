@@ -3,7 +3,6 @@ namespace String;
 
 struct String {
     val: string;
-    length: int;
 
     constructor(value: string) {
         this.val = value;
