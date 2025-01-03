@@ -116,9 +116,19 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
         logMessage(LMI, "ERROR", "Compiler", "Failed to reap symbols");
         CONDITION_FAILED;
     }
+    TypesTable *reapedTypes = GetReapedTypeTable(globalSymbolTable);
+    if (!reapedTypes)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to reap types");
+        CONDITION_FAILED;
+    }
 
     SymbolTable *copiedTable = (SymbolTable *)malloc(sizeof(SymbolTable));
     memcpy(copiedTable, reapedSymbols, sizeof(SymbolTable));
+    TypesTable *copiedTypes = (TypesTable *)malloc(sizeof(TypesTable));
+    memcpy(copiedTypes, reapedTypes, sizeof(TypesTable));
+
+    ImportReapedTypesTable(globalTable, copiedTypes);
 
     logMessage(LMI, "INFO", "Compiler", "Symbols reaped successfully");
     PrintSymbolTable(globalSymbolTable, reapedSymbols);

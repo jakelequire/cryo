@@ -1,8 +1,6 @@
 namespace Testing;
 
-
 using Std::Types;
-
 
 class TestingClass {
     public value: int;
@@ -11,13 +9,13 @@ class TestingClass {
 
 
     public static methodOne() -> void {
-        const testInt: Int = 42;
+        const testInt: int = 42;
         printInt(testInt.value);
         return;
     }
 
     public static methodTwo() -> void {
-        const testInt: Int = 69;
+        const testInt: int = 69;
         printInt(testInt.value);
         return;
     }

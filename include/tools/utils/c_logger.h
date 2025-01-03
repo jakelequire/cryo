@@ -27,14 +27,13 @@
 /// @details This macro is used to get the line, file, and function name of the
 ///          caller of the logMessage function.
 #define LMI \
-    __LINE__, __FILE__, __func__, getParentDirOfFile(__FILE__)
+    __LINE__, __FILE__, __func__
 
 //
 void logMessage(
     int line,
     const char *file,
     const char *func,
-    const char *parentDir,
     const char *type,
     const char *module,
     const char *message, ...);

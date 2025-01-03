@@ -26,6 +26,7 @@ namespace Cryo
         if (structSymbol)
         {
             addSymbolToCurrentTable(structSymbol);
+            initTypeDefinition(structSymbol);
             return;
         }
         else
@@ -198,6 +199,7 @@ namespace Cryo
 
         // Update the Struct symbol in the table
         updateStructSymbol(classSymbol, table);
+
         return;
     }
 

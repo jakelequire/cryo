@@ -154,6 +154,28 @@ namespace Cryo
         }
     }
 
+    void GlobalSymbolTable::pushTypeSymbols(TypesTable *importedTypesTable)
+    {
+        if (!importedTypesTable || importedTypesTable == nullptr)
+        {
+            std::cerr << "Error: Failed to push type symbols, imported types table is null!" << std::endl;
+            return;
+        }
+
+        // Get the type symbols from the imported types table
+        TypeSymbol **typeSymbols = importedTypesTable->typeSymbols;
+        size_t typeCount = importedTypesTable->count;
+
+        // Push the type symbols to the global symbol table
+        for (size_t i = 0; i < typeCount; i++)
+        {
+            TypeSymbol *typeSymbol = typeSymbols[i];
+            addTypeToTable(typeSymbol);
+        }
+
+        return;
+    }
+
     void GlobalSymbolTable::pushNewScopePair(const char *name, const char *id)
     {
         // Make a new pair
@@ -383,6 +405,21 @@ namespace Cryo
         pushNewDependencyTable(table);
 
         std::cout << "Imported Reaped Table" << std::endl;
+        return;
+    }
+
+    void GlobalSymbolTable::importReapedTypesTable(TypesTable *reapedTable)
+    {
+        if (!reapedTable || reapedTable == nullptr)
+        {
+            std::cerr << "Error: Failed to import reaped types table, table is null!" << std::endl;
+            return;
+        }
+
+        pushTypeSymbols(reapedTable);
+
+        std::cout << "Imported Reaped Types Table" << std::endl;
+        return;
     }
 
     SymbolTable *GlobalSymbolTable::getSpecificSymbolTable(const char *name)
@@ -419,8 +456,6 @@ namespace Cryo
             std::cerr << "Error: Failed to import runtime symbols, table is not runtime!" << std::endl;
             return;
         }
-
-        
     }
 
     // ========================================================================
@@ -702,242 +737,14 @@ namespace Cryo
         }
     }
 
-    Symbol *GlobalSymbolTable::queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType)
-    {
-        if (!scopeID || scopeID == nullptr)
-        {
-            return nullptr;
-        }
-
-        if (!name || name == nullptr)
-        {
-            return nullptr;
-        }
-
-        SymbolTable *table = getCurrentSymbolTable();
-        if (!table)
-        {
-            return nullptr;
-        }
-
-        // DEBUG
-        std::cout << "DEBUG: Querying Table" << std::endl;
-        SymbolTableDebugger::logSymbolTable(table);
-
-        int symbolCount = table->count;
-        Symbol **symbols = table->symbols;
-
-        for (int i = 0; i < symbolCount; i++)
-        {
-            if (symbols[i]->symbolType == symbolType)
-            {
-                Symbol *symbol = symbols[i];
-                switch (symbolType)
-                {
-                case VARIABLE_SYMBOL:
-                {
-                    VariableSymbol *varSymbol = symbol->variable;
-                    if (strcmp(varSymbol->name, name) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case FUNCTION_SYMBOL:
-                {
-                    FunctionSymbol *funcSymbol = symbol->function;
-                    if (strcmp(funcSymbol->name, name) == 0 && strcmp(funcSymbol->functionScopeId, scopeID) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case EXTERN_SYMBOL:
-                {
-                    ExternSymbol *externSymbol = symbol->externSymbol;
-                    if (strcmp(externSymbol->name, name) == 0 && strcmp(externSymbol->scopeId, scopeID) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case TYPE_SYMBOL:
-                {
-                    std::cout << "Querying Type Symbol" << std::endl;
-                    TypeSymbol *typeSymbol = symbol->type;
-                    if (strcmp(typeSymbol->name, name) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
-                    {
-                        std::cout << "Type Symbol Resolved! " << typeSymbol->name << std::endl;
-                        return symbol;
-                    }
-                    else
-                    {
-                        std::cout << "Type Symbol not found: " << name << std::endl;
-                        continue;
-                    }
-                }
-                case PROPERTY_SYMBOL:
-                {
-                    PropertySymbol *propSymbol = symbol->property;
-                    if (strcmp(propSymbol->name, name) == 0 && strcmp(propSymbol->scopeId, scopeID) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case METHOD_SYMBOL:
-                {
-                    MethodSymbol *methodSymbol = symbol->method;
-                    if (strcmp(methodSymbol->name, name) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                default:
-                    break;
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-
-        return nullptr;
-    }
-
-    Symbol *GlobalSymbolTable::querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table)
-    {
-        if (!symbolName || symbolName == nullptr)
-        {
-            return nullptr;
-        }
-
-        if (!table || table == nullptr)
-        {
-            return nullptr;
-        }
-
-        int symbolCount = table->count;
-        Symbol **symbols = table->symbols;
-
-        for (int i = 0; i < symbolCount; i++)
-        {
-            if (symbols[i]->symbolType == symbolType)
-            {
-                Symbol *symbol = symbols[i];
-                switch (symbolType)
-                {
-                case VARIABLE_SYMBOL:
-                {
-                    VariableSymbol *varSymbol = symbol->variable;
-                    if (strcmp(varSymbol->name, symbolName) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case FUNCTION_SYMBOL:
-                {
-                    FunctionSymbol *funcSymbol = symbol->function;
-                    if (strcmp(funcSymbol->name, symbolName) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case EXTERN_SYMBOL:
-                {
-                    ExternSymbol *externSymbol = symbol->externSymbol;
-                    if (strcmp(externSymbol->name, symbolName) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case TYPE_SYMBOL:
-                {
-                    TypeSymbol *typeSymbol = symbol->type;
-                    if (strcmp(typeSymbol->name, symbolName) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case PROPERTY_SYMBOL:
-                {
-                    PropertySymbol *propSymbol = symbol->property;
-                    if (strcmp(propSymbol->name, symbolName) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                case METHOD_SYMBOL:
-                {
-                    MethodSymbol *methodSymbol = symbol->method;
-                    if (strcmp(methodSymbol->name, symbolName) == 0)
-                    {
-                        return symbol;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                default:
-                    break;
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-
-        return nullptr;
-    }
-
     TypesTable *GlobalSymbolTable::initTypeTable(const char *namespaceName)
     {
         TypesTable *typeTable = createTypeTable(namespaceName);
         if (typeTable)
         {
+            std::cout << "initTypeTable: Type Table Created" << std::endl;
             return typeTable;
         }
-
-        typeTable->types = (DataType **)malloc(sizeof(DataType *) * typeTable->capacity);
 
         std::cerr << "initTypeTable: Failed to create Type Table" << std::endl;
         return nullptr;

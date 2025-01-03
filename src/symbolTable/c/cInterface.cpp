@@ -206,6 +206,23 @@ extern "C"
         }
     }
 
+    TypesTable *CryoGlobalSymbolTable_GetReapedTypesTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getReapedTypesTable();
+        }
+        return nullptr;
+    }
+
+    void CryoGlobalSymbolTable_ImportReapedTypesTable(CryoGlobalSymbolTable *symTable, TypesTable *reapedTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->importReapedTypesTable(reapedTable);
+        }
+    }
+
     void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable)
     {
         if (symTable)

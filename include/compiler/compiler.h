@@ -37,6 +37,7 @@ typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
 typedef struct Bootstrapper Bootstrapper;
 typedef struct SymbolTable SymbolTable;
+typedef struct TypesTable TypesTable;
 
 // C++ headers
 #ifdef __cplusplus

@@ -23,6 +23,7 @@ extern "C"
 #endif
 
 #include "symbolTable/symdefs.h"
+#include "tools/utils/c_logger.h"
 
     typedef struct ASTNode ASTNode;
     typedef struct DataType DataType;
@@ -69,7 +70,8 @@ extern "C"
 
     void CryoGlobalSymbolTable_HandleRootNodeImport(CryoGlobalSymbolTable *symTable, ASTNode *node);
     void CryoGlobalSymbolTable_ImportReapedTable(CryoGlobalSymbolTable *symTable, SymbolTable *reapedTable);
-
+    TypesTable *CryoGlobalSymbolTable_GetReapedTypesTable(CryoGlobalSymbolTable *symTable);
+    void CryoGlobalSymbolTable_ImportReapedTypesTable(CryoGlobalSymbolTable *symTable, TypesTable *reapedTable);
     SymbolTable *CryoGlobalSymbolTable_GetSpecificSymbolTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
     void CryoGlobalSymbolTable_ImportRuntimeSymbols(CryoGlobalSymbolTable *symTable, SymbolTable *runtimeTable);
 
@@ -161,8 +163,12 @@ extern "C"
 
 #define GetReapedTable(symTable) \
     CryoGlobalSymbolTable_GetReapedTable(symTable)
+#define GetReapedTypeTable(symTable) \
+    CryoGlobalSymbolTable_GetReapedTypesTable(symTable)
 #define ImportReapedTable(symTable, reapedTable) \
     CryoGlobalSymbolTable_ImportReapedTable(symTable, reapedTable)
+#define ImportReapedTypesTable(symTable, reapedTable) \
+    CryoGlobalSymbolTable_ImportReapedTypesTable(symTable, reapedTable)
 
 #define GetSpecificSymbolTable(symTable, namespaceName) \
     CryoGlobalSymbolTable_GetSpecificSymbolTable(symTable, namespaceName)
@@ -266,6 +272,7 @@ extern "C"
 #include "tools/utils/env.h" // getCryoRootPath()
 #include "tools/cxx/IDGen.hpp"
 #include "symbolTable/symTableDB.hpp"
+#include "tools/utils/c_logger.h"
 
 typedef struct ASTNode ASTNode;
 typedef struct DataType DataType;
@@ -414,34 +421,6 @@ namespace Cryo
         void setPrimaryTable(SymbolTable *table);
 
         //===================================================================
-        // Symbol Merging / Management
-        //===================================================================
-
-        SymbolTable *mergeAllSymbols(void);
-        std::vector<Symbol *> mergePrimaryTable(void);
-        std::vector<Symbol *> mergeAllDependencyTables(void);
-        std::vector<Symbol *> mergeTwoTables(SymbolTable *table1, SymbolTable *table2);
-        std::vector<Symbol *> mergeTwoSymbolVectors(std::vector<Symbol *> symbols1, std::vector<Symbol *> symbols2);
-        SymbolTable *createNewSymbolTableFromSymbols(std::vector<Symbol *> symbols);
-        SymbolTable *getReapedTable(void)
-        {
-            if (!isForReaping)
-            {
-                std::cerr << "Error: Attempting to get reaped table when not in reaping mode!" << std::endl;
-            }
-            return reapedTable;
-        }
-
-        //===================================================================
-        // Imports / Exports
-        //===================================================================
-
-        void handleRootNodeImport(ASTNode *node); // [C API]
-
-        SymbolTable *createNewImportTable(const char *namespaceName);
-        void loopRootNode(ASTNode *node, SymbolTable *table, char *currentScopeID);
-
-        //===================================================================
         // Symbol Table Operations
         //===================================================================
 
@@ -459,6 +438,7 @@ namespace Cryo
         void addExternFunctionToTable(ExternSymbol *function);
         void addNewDependencyTable(const char *namespaceName, SymbolTable *table);
         void pushNewDependencyTable(SymbolTable *table);
+        void pushTypeSymbols(TypesTable *importedTypesTable);
 
         Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
         Symbol *querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table);
@@ -466,9 +446,59 @@ namespace Cryo
         TypeOfSymbol getScopeSymbolTypeFromName(const char *symbolName);
         TypeofDataType getTypeOfDataTypeFromName(const char *symbolName);
 
-        const char *typeOfSymbolToString(TypeOfSymbol symbolType);
         SymbolTable *getSpecificSymbolTable(const char *name);
         void importRuntimeSymbols(SymbolTable *table);
+
+        //===================================================================
+        // Types Table / Type Management
+        //===================================================================
+
+        DataType *resolveDataType(const char *name);
+
+        int addDataTypeSymbol(Symbol *symbol);
+        void parseSymbolTableForTypes(SymbolTable *symbolTable);
+        bool doesTypeExist(const char *name);
+        void addTypeToTable(TypeSymbol *typeSymbol);
+
+        void initTypeDefinition(Symbol *typeSymbol);
+        void completeTypeDefinition(Symbol *typeSymbol, const char *typeName);
+
+        //===================================================================
+        // Symbol Merging / Management
+        //===================================================================
+
+        SymbolTable *mergeAllSymbols(void);
+        std::vector<Symbol *> mergePrimaryTable(void);
+        std::vector<Symbol *> mergeAllDependencyTables(void);
+        std::vector<Symbol *> mergeTwoTables(SymbolTable *table1, SymbolTable *table2);
+        std::vector<Symbol *> mergeTwoSymbolVectors(std::vector<Symbol *> symbols1, std::vector<Symbol *> symbols2);
+        SymbolTable *createNewSymbolTableFromSymbols(std::vector<Symbol *> symbols);
+        void importReapedTypesTable(TypesTable *reapedTable);
+        SymbolTable *getReapedTable(void) // [C API]
+        {
+            if (!isForReaping)
+            {
+                std::cerr << "Error: Attempting to get reaped table when not in reaping mode!" << std::endl;
+            }
+            return reapedTable;
+        }
+        TypesTable *getReapedTypesTable(void)
+        {
+            if (!isForReaping)
+            {
+                std::cerr << "Error: Attempting to get reaped type table when not in reaping mode!" << std::endl;
+            }
+            return typeTable;
+        }
+
+        //===================================================================
+        // Imports / Exports
+        //===================================================================
+
+        void handleRootNodeImport(ASTNode *node); // [C API]
+
+        SymbolTable *createNewImportTable(const char *namespaceName);
+        void loopRootNode(ASTNode *node, SymbolTable *table, char *currentScopeID);
 
         //===================================================================
         // Scope Management
@@ -506,10 +536,6 @@ namespace Cryo
         Symbol *seekMethodSymbolInAllTables(const char *methodName, const char *className, TypeofDataType typeOfNode);
 
         //===================================================================
-        // Class Declaration Management
-        //===================================================================
-
-        //===================================================================
         // Debug Operations / Utilities
         //===================================================================
 
@@ -517,6 +543,7 @@ namespace Cryo
         void mergeDBChunks(void);                        // [C API]
         const char *getDependencyDirStr(void);           // [C API]
 
+        const char *typeOfSymbolToString(TypeOfSymbol symbolType);
         void logSymbol(Symbol *symbol);
         void printScopeLookup(void)
         {
@@ -777,6 +804,23 @@ namespace Cryo
         if (symTable)
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->importReapedTable(reapedTable);
+        }
+    }
+
+    inline TypesTable *CryoGlobalSymbolTable_GetReapedTypesTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getReapedTypesTable();
+        }
+        return nullptr;
+    }
+
+    inline void CryoGlobalSymbolTable_ImportReapedTypesTable(CryoGlobalSymbolTable *symTable, TypesTable *reapedTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->importReapedTypesTable(reapedTable);
         }
     }
 

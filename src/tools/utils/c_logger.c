@@ -116,7 +116,6 @@ void logMessage(
     int line,
     const char *file,
     const char *func,
-    const char *parentDir,
     const char *type,
     const char *module,
     const char *message, ...)

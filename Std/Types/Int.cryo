@@ -1,5 +1,8 @@
 namespace Int;
 
+extern function intToString(val: int) -> string;
+extern function printStr(str: string) -> void;
+
 struct Int {
     value: int;
 

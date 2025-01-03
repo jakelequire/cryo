@@ -407,21 +407,33 @@ namespace Cryo
             logger->debugNode("NULL type table");
             return;
         }
+        logger->debugNode(HEAVY_SEPARATOR);
 
-        logger->debugNode("TypeTable | Namespace: %s Count: %zu",
+        logger->debugNode("TypesTable | " BOLD "Namespace: " CYAN "%s" COLOR_RESET " Count: %zu",
                           table->namespaceName ? table->namespaceName : "global",
                           table->count);
         logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
 
         if (table->count > 0)
         {
-            logger->debugNode("\nTypes:");
+            logger->debugNode(HEAVY_SEPARATOR);
+            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbol Types:" COLOR_RESET);
+            logger->debugNode(SEPARATOR);
             for (size_t i = 0; i < table->count; i++)
             {
-                logger->debugNode("  Type %zu: %s", i, DataTypeToString(table->types[i]));
+                logTypeSymbol(table->typeSymbols[i]);
             }
         }
-        logger->debugNode(SEPARATOR);
+        if (table->count == 0)
+        {
+            logger->debugNode(HEAVY_SEPARATOR);
+            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbol Types:" COLOR_RESET);
+            logger->debugNode(SEPARATOR);
+            logger->debugNode("\n " BOLD RED "[!] No Types in TypesTable" COLOR_RESET);
+        }
+
+        printf("\n");
+        logger->debugNode(HEAVY_SEPARATOR);
     }
 
     void SymbolTableDebugger::logSymbol(Symbol *symbol)

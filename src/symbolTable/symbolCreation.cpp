@@ -228,7 +228,8 @@ namespace Cryo
         table->scopeDepth = 0;
         table->scopeId = IDGen::generate64BitHashID(namespaceName);
         table->currentScope = nullptr;
-        table->types = nullptr;
+        table->types = (DataType **)malloc(sizeof(DataType *) * MAX_TYPE_SYMBOLS);
+        table->typeSymbols = (TypeSymbol **)malloc(sizeof(TypeSymbol *) * MAX_TYPE_SYMBOLS);
         return table;
     }
 

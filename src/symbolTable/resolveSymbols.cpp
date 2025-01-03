@@ -623,4 +623,237 @@ namespace Cryo
         return nullptr;
     }
 
+    Symbol *GlobalSymbolTable::queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType)
+    {
+        if (!scopeID || scopeID == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!name || name == nullptr)
+        {
+            return nullptr;
+        }
+
+        SymbolTable *table = getCurrentSymbolTable();
+        if (!table)
+        {
+            return nullptr;
+        }
+
+        // DEBUG
+        std::cout << "DEBUG: Querying Table" << std::endl;
+        SymbolTableDebugger::logSymbolTable(table);
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            if (symbols[i]->symbolType == symbolType)
+            {
+                Symbol *symbol = symbols[i];
+                switch (symbolType)
+                {
+                case VARIABLE_SYMBOL:
+                {
+                    VariableSymbol *varSymbol = symbol->variable;
+                    if (strcmp(varSymbol->name, name) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case FUNCTION_SYMBOL:
+                {
+                    FunctionSymbol *funcSymbol = symbol->function;
+                    if (strcmp(funcSymbol->name, name) == 0 && strcmp(funcSymbol->functionScopeId, scopeID) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case EXTERN_SYMBOL:
+                {
+                    ExternSymbol *externSymbol = symbol->externSymbol;
+                    if (strcmp(externSymbol->name, name) == 0 && strcmp(externSymbol->scopeId, scopeID) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case TYPE_SYMBOL:
+                {
+                    std::cout << "Querying Type Symbol" << std::endl;
+                    TypeSymbol *typeSymbol = symbol->type;
+                    if (strcmp(typeSymbol->name, name) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
+                    {
+                        std::cout << "Type Symbol Resolved! " << typeSymbol->name << std::endl;
+                        return symbol;
+                    }
+                    else
+                    {
+                        std::cout << "Type Symbol not found: " << name << std::endl;
+                        continue;
+                    }
+                }
+                case PROPERTY_SYMBOL:
+                {
+                    PropertySymbol *propSymbol = symbol->property;
+                    if (strcmp(propSymbol->name, name) == 0 && strcmp(propSymbol->scopeId, scopeID) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case METHOD_SYMBOL:
+                {
+                    MethodSymbol *methodSymbol = symbol->method;
+                    if (strcmp(methodSymbol->name, name) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                default:
+                    break;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        return nullptr;
+    }
+
+    Symbol *GlobalSymbolTable::querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table)
+    {
+        if (!symbolName || symbolName == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (!table || table == nullptr)
+        {
+            return nullptr;
+        }
+
+        int symbolCount = table->count;
+        Symbol **symbols = table->symbols;
+
+        for (int i = 0; i < symbolCount; i++)
+        {
+            if (symbols[i]->symbolType == symbolType)
+            {
+                Symbol *symbol = symbols[i];
+                switch (symbolType)
+                {
+                case VARIABLE_SYMBOL:
+                {
+                    VariableSymbol *varSymbol = symbol->variable;
+                    if (strcmp(varSymbol->name, symbolName) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case FUNCTION_SYMBOL:
+                {
+                    FunctionSymbol *funcSymbol = symbol->function;
+                    if (strcmp(funcSymbol->name, symbolName) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case EXTERN_SYMBOL:
+                {
+                    ExternSymbol *externSymbol = symbol->externSymbol;
+                    if (strcmp(externSymbol->name, symbolName) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case TYPE_SYMBOL:
+                {
+                    TypeSymbol *typeSymbol = symbol->type;
+                    if (strcmp(typeSymbol->name, symbolName) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case PROPERTY_SYMBOL:
+                {
+                    PropertySymbol *propSymbol = symbol->property;
+                    if (strcmp(propSymbol->name, symbolName) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                case METHOD_SYMBOL:
+                {
+                    MethodSymbol *methodSymbol = symbol->method;
+                    if (strcmp(methodSymbol->name, symbolName) == 0)
+                    {
+                        return symbol;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                default:
+                    break;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        return nullptr;
+    }
+
+
+    DataType *GlobalSymbolTable::resolveDataType(const char *name)
+    {
+
+    }
+
 } // namespace Cryo

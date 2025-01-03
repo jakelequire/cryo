@@ -26,6 +26,7 @@ namespace Cryo
         if (classSymbol)
         {
             addSymbolToCurrentTable(classSymbol);
+            initTypeDefinition(classSymbol);
             return;
         }
         else
@@ -81,6 +82,7 @@ namespace Cryo
         TypeSymbol *typeSymbol = createIncompleteTypeSymbol(className, CLASS_TYPE);
         Symbol *classSymbol = new Symbol();
         classSymbol->symbolType = TYPE_SYMBOL;
+        classSymbol->type->name = className;
         classSymbol->type = typeSymbol;
         classSymbol->type->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
         classSymbol->type->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
@@ -196,6 +198,9 @@ namespace Cryo
 
         // Update the class symbol in the table
         updateClassSymbol(classSymbol, table);
+
+        // Add the class declaration to the Types Table
+        addDataTypeSymbol(classSymbol);
 
         return;
     }
