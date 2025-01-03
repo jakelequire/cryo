@@ -189,6 +189,40 @@ extern "C"
         }
     }
 
+    SymbolTable *CryoGlobalSymbolTable_GetReapedTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getReapedTable();
+        }
+        return nullptr;
+    }
+
+    void CryoGlobalSymbolTable_ImportReapedTable(CryoGlobalSymbolTable *symTable, SymbolTable *reapedTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->importReapedTable(reapedTable);
+        }
+    }
+
+    void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->cleanupAndDestroy();
+        }
+    }
+
+    SymbolTable *CryoGlobalSymbolTable_GetSpecificSymbolTable(CryoGlobalSymbolTable *symTable, const char *namespaceName)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getSpecificSymbolTable(namespaceName);
+        }
+        return nullptr;
+    }
+
     // --------------------------------------------------------------
     // Scope Functions
 
@@ -247,6 +281,14 @@ extern "C"
             return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getDependencyDirStr();
         }
         return nullptr;
+    }
+
+    void CryoGlobalSymbolTable_PrintSymbolTable(CryoGlobalSymbolTable *symTable, SymbolTable *symbolTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->logSymbolTable(symbolTable);
+        }
     }
 
     // --------------------------------------------------------------

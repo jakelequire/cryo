@@ -656,6 +656,8 @@ typedef struct ASTNode
         TypeofNode *typeofNode;
         // For Using Statements
         UsingNode *usingNode;
+        // For Module Declarations
+        ModuleNode *moduleNode;
     } data;
 } ASTNode;
 
@@ -1058,6 +1060,9 @@ extern "C"
     ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules[],
                              int secondaryModuleCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
+    ASTNode *createModuleNode(const char *moduleName,
+                              Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
     /**
      * String Utility Functions
      */
@@ -1119,6 +1124,7 @@ ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state);
 NullNode *createNullNodeContainer(Arena *arena, CompilerState *state);
 TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state);
 UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state);
+ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

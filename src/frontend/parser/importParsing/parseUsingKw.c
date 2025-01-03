@@ -21,9 +21,9 @@
 // Syntax: `using <module>::<?scope/fn>::<?scope/fn>;`
 // Eventually, you will be able to import specific functions or scopes from a module.
 // Like this: `using Std::Types::{Int, Float};`
-void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context,
-                       Arena *arena, CompilerState *state, TypeTable *typeTable,
-                       CryoGlobalSymbolTable *globalTable)
+ASTNode *parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context,
+                           Arena *arena, CompilerState *state, TypeTable *typeTable,
+                           CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Parser", "Parsing using keyword...");
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
@@ -55,9 +55,6 @@ void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *con
                       state, typeTable, globalTable);
     }
 
-    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
-            "parseUsingKeyword", table, arena, state, typeTable, context);
-
     // Import the module chain
     const char *moduleChainStr[MAX_MODULE_CHAIN];
     for (size_t i = 0; i < chainLength; i++)
@@ -71,10 +68,14 @@ void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *con
     }
 
     setPrimaryTableStatus(globalTable, true);
+    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
+            "parseUsingKeyword", table, arena, state, typeTable, context);
 
     logMessage(LMI, "INFO", "Parser", "Finished parsing using keyword.");
-    DEBUG_BREAKPOINT;
-    return;
+
+    ASTNode *usingNode = createUsingNode(primaryModule, moduleChainStr, chainLength, arena, state, typeTable, lexer);
+
+    return usingNode;
 }
 
 // Helper function implementations
@@ -280,8 +281,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
     }
 
     logMessage(LMI, "INFO", "Parser", "Module imported successfully.");
-
-    DEBUG_BREAKPOINT;
+    return;
 }
 
 const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state)

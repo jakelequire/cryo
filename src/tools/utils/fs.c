@@ -420,3 +420,26 @@ const char *removeFileFromPath(const char *path)
 
     return result;
 }
+
+const char *changeFileExtension(const char *fileName, const char *newExtension)
+{
+    const char *lastDot = strrchr(fileName, '.');
+    if (!lastDot)
+    {
+        return fileName;
+    }
+
+    size_t length = (size_t)(lastDot - fileName);
+    char *result = (char *)malloc(length + strlen(newExtension) + 1);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strncpy(result, fileName, length);
+    result[length] = '\0';
+    strcat(result, newExtension);
+
+    return result;
+}

@@ -81,26 +81,32 @@ const char *typeBufferFormatter(const char *type)
     if (strcmp(type, "INFO") == 0)
     {
         snprintf(buffer, 1024, "%s%s%s", GREEN, type, COLOR_RESET);
+        return buffer;
     }
     else if (strcmp(type, "ERROR") == 0)
     {
         snprintf(buffer, 1024, "%s%s%s", RED, type, COLOR_RESET);
+        return buffer;
     }
     else if (strcmp(type, "WARN") == 0)
     {
         snprintf(buffer, 1024, "%s%s%s", YELLOW, type, COLOR_RESET);
+        return buffer;
     }
     else if (strcmp(type, "DEBUG") == 0)
     {
         snprintf(buffer, 1024, "%s%s%s", CYAN, type, COLOR_RESET);
+        return buffer;
     }
     else if (strcmp(type, "CRITICAL") == 0)
     {
         snprintf(buffer, 1024, "%s%s%s", LIGHT_RED, type, COLOR_RESET);
+        return buffer;
     }
     else
     {
         snprintf(buffer, 1024, "%s%s%s", WHITE, type, COLOR_RESET);
+        return buffer;
     }
 
     return buffer;

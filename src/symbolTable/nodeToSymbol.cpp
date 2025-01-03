@@ -200,6 +200,8 @@ namespace Cryo
         case NODE_IMPORT_STATEMENT:
         case NODE_EXPRESSION_STATEMENT:
         case NODE_ASSIGN:
+        case NODE_MODULE:
+        case NODE_USING:
         {
             // Skip Node.
             const char *nodeString = CryoNodeTypeToString(nodeType);

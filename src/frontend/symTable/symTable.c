@@ -19,10 +19,10 @@
 // <createSymbolTable>
 CryoSymbolTable *createSymbolTable(Arena *arena)
 {
-    CryoSymbolTable *table = (CryoSymbolTable *)ARENA_ALLOC(arena, sizeof(CryoSymbolTable));
+    CryoSymbolTable *table = (CryoSymbolTable *)malloc(sizeof(CryoSymbolTable));
     table->count = 0;
     table->capacity = 512;
-    table->symbols = (CryoSymbol **)ARENA_ALLOC(arena, table->capacity * sizeof(CryoSymbol *));
+    table->symbols = (CryoSymbol **)malloc(table->capacity * sizeof(CryoSymbol *));
     table->scopeDepth = 0;
     return table;
 }
@@ -321,7 +321,7 @@ CryoSymbol *createCryoSymbol(CryoSymbolTable *table, ASTNode *node, Arena *arena
         return NULL;
     }
 
-    CryoSymbol *symbolNode = (CryoSymbol *)ARENA_ALLOC(arena, sizeof(CryoSymbol));
+    CryoSymbol *symbolNode = (CryoSymbol *)malloc(sizeof(CryoSymbol));
     if (!symbolNode)
     {
         logMessage(LMI, "ERROR", "SymTable", "Failed to allocate memory for symbolNode");

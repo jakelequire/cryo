@@ -1489,3 +1489,20 @@ UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state)
 
     return node;
 }
+
+ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state)
+{
+    ModuleNode *node = (ModuleNode *)ARENA_ALLOC(arena, sizeof(ModuleNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ModuleNode node.");
+        return NULL;
+    }
+
+    node->moduleName = (char *)calloc(1, sizeof(char));
+    node->moduleDir = (char *)calloc(1, sizeof(char));
+    node->modulePath = (char *)calloc(1, sizeof(char));
+    node->moduleFile = (char *)calloc(1, sizeof(char));
+
+    return node;
+}

@@ -66,7 +66,7 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     return programNode;
 }
 
-SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state)
+SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state, Arena *arena, CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Compiler", "Compiling to reap symbols...");
 
@@ -77,21 +77,55 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
         CONDITION_FAILED;
     }
 
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+    logMessage(LMI, "INFO", "Compiler", "File Read. File Path: %s", filePath);
 
     // Initialize the symbol table
     CryoSymbolTable *table = createSymbolTable(arena);
+    logMessage(LMI, "INFO", "Compiler", "Symbol Table Initialized");
 
     // Initialize the type table
     TypeTable *typeTable = initTypeTable();
+    logMessage(LMI, "INFO", "Compiler", "Type Table Initialized");
 
     // Initialize the lexer
     Lexer lexer;
     initLexer(&lexer, source, filePath, state);
+    logMessage(LMI, "INFO", "Compiler", "Lexer Initialized");
 
     // Initialize the global symbol table (for reaping)
-    CryoGlobalSymbolTable *globalTable = CryoGlobalSymbolTable_Create_Reaping(true);
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create_Reaping(true);
+    if (!globalSymbolTable)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to create global symbol table");
+        CONDITION_FAILED;
+    }
+    logMessage(LMI, "INFO", "Compiler", "Global Symbol Table Initialized");
+
+    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, globalSymbolTable);
+    if (programNode == NULL)
+    {
+        fprintf(stderr, "Error: Failed to parse program node\n");
+        CONDITION_FAILED;
+    }
+
+    logMessage(LMI, "INFO", "Compiler", "Program node parsed successfully");
+
+    SymbolTable *reapedSymbols = GetReapedTable(globalSymbolTable);
+    if (!reapedSymbols)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to reap symbols");
+        CONDITION_FAILED;
+    }
+
+    SymbolTable *copiedTable = (SymbolTable *)malloc(sizeof(SymbolTable));
+    memcpy(copiedTable, reapedSymbols, sizeof(SymbolTable));
+
+    logMessage(LMI, "INFO", "Compiler", "Symbols reaped successfully");
+    PrintSymbolTable(globalSymbolTable, reapedSymbols);
+
+    CleanupAndDestroySymbolTable(globalSymbolTable);
+
+    return copiedTable;
 }
 
 void processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath)

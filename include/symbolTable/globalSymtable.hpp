@@ -64,10 +64,16 @@ extern "C"
 
     TypeOfSymbol CryoGlobalSymbolTable_GetScopeSymbolTypeFromName(CryoGlobalSymbolTable *symTable, const char *symbolName);
     TypeofDataType getTypeOfDataTypeFromName(CryoGlobalSymbolTable *symTable, const char *symbolName);
-
     SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable);
+    SymbolTable *CryoGlobalSymbolTable_GetReapedTable(CryoGlobalSymbolTable *symTable);
 
     void CryoGlobalSymbolTable_HandleRootNodeImport(CryoGlobalSymbolTable *symTable, ASTNode *node);
+    void CryoGlobalSymbolTable_ImportReapedTable(CryoGlobalSymbolTable *symTable, SymbolTable *reapedTable);
+
+    SymbolTable *CryoGlobalSymbolTable_GetSpecificSymbolTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
+    void CryoGlobalSymbolTable_ImportRuntimeSymbols(CryoGlobalSymbolTable *symTable, SymbolTable *runtimeTable);
+
+    void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable);
 
     // Scope Functions ---------------------------------------
 
@@ -85,6 +91,7 @@ extern "C"
     const char *CryoGlobalSymbolTable_TypeOfSymbolToString(CryoGlobalSymbolTable *symTable, TypeOfSymbol symbolType);
     void CryoGlobalSymbolTable_LogSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol);
     const char *CryoGlobalSymbolTable_GetDependencyDirStr(CryoGlobalSymbolTable *symTable);
+    void CryoGlobalSymbolTable_PrintSymbolTable(CryoGlobalSymbolTable *symTable, SymbolTable *table);
 
     // Declaration Functions  ---------------------------------------
 
@@ -152,6 +159,17 @@ extern "C"
 #define HandleRootNodeImport(symTable, node) \
     CryoGlobalSymbolTable_HandleRootNodeImport(symTable, node)
 
+#define GetReapedTable(symTable) \
+    CryoGlobalSymbolTable_GetReapedTable(symTable)
+#define ImportReapedTable(symTable, reapedTable) \
+    CryoGlobalSymbolTable_ImportReapedTable(symTable, reapedTable)
+
+#define GetSpecificSymbolTable(symTable, namespaceName) \
+    CryoGlobalSymbolTable_GetSpecificSymbolTable(symTable, namespaceName)
+
+#define CleanupAndDestroySymbolTable(symTable) \
+    CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)
@@ -185,6 +203,8 @@ extern "C"
     CryoGlobalSymbolTable_LogSymbol(symTable, symbol)
 #define GetDependencyDirStr(symTable) \
     CryoGlobalSymbolTable_GetDependencyDirStr(symTable)
+#define PrintSymbolTable(symTable, symbolTable) \
+    CryoGlobalSymbolTable_PrintSymbolTable(symTable, symbolTable)
 
 // Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
@@ -321,16 +341,20 @@ namespace Cryo
             currentScopeType = scopeType;
             tableState = TABLE_INITIALIZED;
             this->typeTable = initTypeTable("global");
+            this->dependencyTables = (SymbolTable **)malloc(sizeof(SymbolTable *) * MAX_DEPENDENCIES);
         };
         // This constructor is used for reaping the symbol table to a higher level symbol table manager.
         GlobalSymbolTable(bool isForReaping, ScopeType scopeType = GLOBAL_SCOPE)
         {
+            std::cout << "Global Symbol Table Initialized for Reaping" << std::endl;
             debugInfo = getDebugInfo();
             tableContext = setDefaultContext();
             currentScopeType = scopeType;
             tableState = TABLE_INITIALIZED;
             this->typeTable = initTypeTable("global");
             this->isForReaping = isForReaping;
+            this->tableContext.isPrimary = true;
+            this->dependencyTables = (SymbolTable **)malloc(sizeof(SymbolTable *) * MAX_DEPENDENCIES);
         }
         ~GlobalSymbolTable();
 
@@ -353,18 +377,18 @@ namespace Cryo
         size_t dependencyCount = 0;                    // Number of dependencies (C interface)
         size_t dependencyCapacity = MAX_DEPENDENCIES;  // Maximum number of dependencies
 
-        std::vector<SymbolTable *> dependencyTableVector;        // Vector of dependency tables (C++ interface)    [Unimplemented]
+        std::vector<SymbolTable *> dependencyTableVector;        // Vector of dependency tables (C++ interface)
         std::vector<FunctionSymbol *> globalFunctions;           // Vector of global functions                     [Unimplemented]
         std::vector<ExternSymbol *> externFunctions;             // Vector of external functions                   [Unimplemented]
         std::unordered_map<std::string, SymbolTable *> queryMap; // Map of namespace tables                        [Unimplemented]
 
         std::vector<std::string> importedModulePaths; // Vector of imported module file paths
 
-        std::vector<Symbol *> mergedSymbols; // Vector of all symbols merged from the symbol tables
-
         ScopeBlock *currentScope = nullptr; // Current scope block
         const char *scopeId = "null";       // Current scope ID
         size_t scopeDepth = 0;              // Current scope depth
+
+        const char *currentNamespace = "null"; // Current namespace
 
         bool isFrontendComplete = false; // Flag for frontend completion
         bool isImporting = false;        // Flag for importing a module
@@ -383,6 +407,8 @@ namespace Cryo
         void tableFinished(void);                      // [C API]
         void initNamespace(const char *namespaceName); // [C API]
         void completeFrontend(void);                   // [C API]
+        void importReapedTable(SymbolTable *table);    // [C API]
+        void cleanupAndDestroy(void);                  // [C API]
         void resetCurrentDepsTable(void);
         void setCurrentDependencyTable(SymbolTable *table);
         void setPrimaryTable(SymbolTable *table);
@@ -395,7 +421,16 @@ namespace Cryo
         std::vector<Symbol *> mergePrimaryTable(void);
         std::vector<Symbol *> mergeAllDependencyTables(void);
         std::vector<Symbol *> mergeTwoTables(SymbolTable *table1, SymbolTable *table2);
+        std::vector<Symbol *> mergeTwoSymbolVectors(std::vector<Symbol *> symbols1, std::vector<Symbol *> symbols2);
         SymbolTable *createNewSymbolTableFromSymbols(std::vector<Symbol *> symbols);
+        SymbolTable *getReapedTable(void)
+        {
+            if (!isForReaping)
+            {
+                std::cerr << "Error: Attempting to get reaped table when not in reaping mode!" << std::endl;
+            }
+            return reapedTable;
+        }
 
         //===================================================================
         // Imports / Exports
@@ -423,6 +458,7 @@ namespace Cryo
         void addGlobalFunctionToTable(FunctionSymbol *function);
         void addExternFunctionToTable(ExternSymbol *function);
         void addNewDependencyTable(const char *namespaceName, SymbolTable *table);
+        void pushNewDependencyTable(SymbolTable *table);
 
         Symbol *queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType);
         Symbol *querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table);
@@ -431,6 +467,8 @@ namespace Cryo
         TypeofDataType getTypeOfDataTypeFromName(const char *symbolName);
 
         const char *typeOfSymbolToString(TypeOfSymbol symbolType);
+        SymbolTable *getSpecificSymbolTable(const char *name);
+        void importRuntimeSymbols(SymbolTable *table);
 
         //===================================================================
         // Scope Management
@@ -490,9 +528,11 @@ namespace Cryo
             std::cout << "\n";
         }
 
+        void logSymbolTable(SymbolTable *table) { debugger->logSymbolTable(table); }
+
     private:
         TABLE_STATE tableState = TABLE_UNINITIALIZED;
-        std::unique_ptr<SymbolTableDB> db = std::make_unique<SymbolTableDB>(debugInfo.rootDir);
+        // std::unique_ptr<SymbolTableDB> db = std::make_unique<SymbolTableDB>(debugInfo.rootDir);
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
         std::vector<std::pair<std::string, std::string>> scopeLookup;
 
@@ -723,6 +763,40 @@ namespace Cryo
         }
     }
 
+    inline SymbolTable *CryoGlobalSymbolTable_GetReapedTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getReapedTable();
+        }
+        return nullptr;
+    }
+
+    inline void CryoGlobalSymbolTable_ImportReapedTable(CryoGlobalSymbolTable *symTable, SymbolTable *reapedTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->importReapedTable(reapedTable);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->cleanupAndDestroy();
+        }
+    }
+
+    inline SymbolTable *CryoGlobalSymbolTable_GetSpecificSymbolTable(CryoGlobalSymbolTable *symTable, const char *namespaceName)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getSpecificSymbolTable(namespaceName);
+        }
+        return nullptr;
+    }
+
     // Scope Functions ---------------------------------------
 
     inline void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name)
@@ -831,6 +905,14 @@ namespace Cryo
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->getDependencyDirStr();
         }
         return nullptr;
+    }
+
+    inline void CryoGlobalSymbolTable_PrintSymbolTable(CryoGlobalSymbolTable *symTable, SymbolTable *symbolTable)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->logSymbolTable(symbolTable);
+        }
     }
 
     // Declaration Functions (Classes) ---------------------------------------

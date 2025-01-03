@@ -18,6 +18,40 @@
 
 namespace Cryo
 {
+    void GlobalSymbolTable::cleanupAndDestroy(void)
+    {
+        if (symbolTable)
+        {
+            std::cout << "Deleting primary table" << std::endl;
+            delete symbolTable;
+        }
+        if (currentDependencyTable)
+        {
+            std::cout << "Deleting current dependency table" << std::endl;
+            delete currentDependencyTable;
+        }
+        if (reapedTable)
+        {
+            std::cout << "Deleting reaped table" << std::endl;
+            delete reapedTable;
+        }
+        for (size_t i = 0; i < dependencyTableVector.size(); i++)
+        {
+            std::cout << "Deleting dependency table: " << i << std::endl;
+            delete dependencyTableVector[i];
+        }
+        for (size_t i = 0; i < globalFunctions.size(); i++)
+        {
+            std::cout << "Deleting global function: " << i << std::endl;
+            delete globalFunctions[i];
+        }
+        for (size_t i = 0; i < externFunctions.size(); i++)
+        {
+            std::cout << "Deleting extern function: " << i << std::endl;
+            delete externFunctions[i];
+        }
+    }
+
     bool GlobalSymbolTable::getIsPrimaryTable(void)
     {
         return tableContext.isPrimary;
@@ -61,7 +95,14 @@ namespace Cryo
     }
     void GlobalSymbolTable::mergeDBChunks(void)
     {
-        db->createScopedDB();
+        if (isForReaping)
+        {
+            return;
+        }
+        else
+        {
+            // db->createScopedDB();
+        }
     }
     const char *GlobalSymbolTable::getDependencyDirStr(void)
     {
@@ -80,6 +121,37 @@ namespace Cryo
             return;
         }
         addSingleSymbolToTable(symbol, table);
+    }
+
+    void GlobalSymbolTable::pushNewDependencyTable(SymbolTable *table)
+    {
+        if (!table || table == nullptr)
+        {
+            std::cerr << "Error: Failed to push new dependency table, table is null!" << std::endl;
+            return;
+        }
+
+        // We should check if the table is already in the vector and pointer array
+        if (std::find(dependencyTableVector.begin(), dependencyTableVector.end(), table) != dependencyTableVector.end())
+        {
+            std::cout << "Dependency Table already exists in vector" << std::endl;
+            return;
+        }
+
+        dependencyTableVector.push_back(table);
+
+        if (dependencyCount == 0)
+        {
+            dependencyTables[0] = table;
+            dependencyCount++;
+            return;
+        }
+        else
+        {
+            dependencyTables[dependencyCount] = table;
+            dependencyCount++;
+            return;
+        }
     }
 
     void GlobalSymbolTable::pushNewScopePair(const char *name, const char *id)
@@ -300,6 +372,57 @@ namespace Cryo
         }
     }
 
+    void GlobalSymbolTable::importReapedTable(SymbolTable *table)
+    {
+        if (!table || table == nullptr)
+        {
+            std::cerr << "Error: Failed to import reaped table, table is null!" << std::endl;
+            return;
+        }
+
+        pushNewDependencyTable(table);
+
+        std::cout << "Imported Reaped Table" << std::endl;
+    }
+
+    SymbolTable *GlobalSymbolTable::getSpecificSymbolTable(const char *name)
+    {
+        if (!name || name == nullptr)
+        {
+            std::cerr << "Error: Failed to get specific symbol table, name is null!" << std::endl;
+            return nullptr;
+        }
+
+        for (size_t i = 0; i < dependencyTableVector.size(); i++)
+        {
+            SymbolTable *table = dependencyTableVector[i];
+            if (table->namespaceName == name)
+            {
+                std::cout << "Found Specific Table: " << name << std::endl;
+                return table;
+            }
+        }
+
+        std::cerr << "Error: Failed to get specific symbol table, table not found!" << std::endl;
+        return nullptr;
+    }
+
+    void GlobalSymbolTable::importRuntimeSymbols(SymbolTable *table)
+    {
+        if (!table || table == nullptr)
+        {
+            std::cerr << "Error: Failed to import runtime symbols, table is null!" << std::endl;
+            return;
+        }
+        if (table->namespaceName != "runtime")
+        {
+            std::cerr << "Error: Failed to import runtime symbols, table is not runtime!" << std::endl;
+            return;
+        }
+
+        
+    }
+
     // ========================================================================
 
     void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
@@ -383,6 +506,8 @@ namespace Cryo
         const char *scopeID = IDGen::generate64BitHashID(namespaceName);
         setScopeID(scopeID);
 
+        this->currentNamespace = namespaceName;
+
         this->pushNewScopePair(namespaceName, scopeID);
     }
 
@@ -390,9 +515,10 @@ namespace Cryo
     {
         if (isForReaping)
         {
+            completeDependencyTable();
+            std::cout << "Dependency Table Pointer Array Count: " << dependencyCount << std::endl;
             SymbolTable *fullTable = mergeAllSymbols();
             std::cout << "<!> DEBUG: Merged Full Table <!>" << std::endl;
-            debugger->logSymbolTable(fullTable);
         }
     }
 
@@ -505,6 +631,7 @@ namespace Cryo
             // Clear the current dependency table, add to the dependency table vector
             dependencyTableVector.push_back(currentDependencyTable);
             currentDependencyTable = nullptr;
+            dependencyCount++;
             return;
         }
     }
@@ -547,14 +674,14 @@ namespace Cryo
         {
             if (symbolTable)
             {
-                db->appendSerializedTable(symbolTable);
+                // db->appendSerializedTable(symbolTable);
             }
         }
         else if (tableContext.isDependency)
         {
             if (currentDependencyTable && dependencyCount == 1)
             {
-                db->serializeSymbolTable(currentDependencyTable);
+                // db->serializeSymbolTable(currentDependencyTable);
             }
         }
         else

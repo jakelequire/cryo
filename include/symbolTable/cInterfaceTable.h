@@ -111,6 +111,19 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define HandleRootNodeImport(symTable, node) \
     CryoGlobalSymbolTable_HandleRootNodeImport(symTable, node)
 
+#define GetReapedTable(symTable) \
+    CryoGlobalSymbolTable_GetReapedTable(symTable)
+#define ImportReapedTable(symTable, reapedTable) \
+    CryoGlobalSymbolTable_ImportReapedTable(symTable, reapedTable)
+
+#define GetSpecificSymbolTable(symTable, namespaceName) \
+    CryoGlobalSymbolTable_GetSpecificSymbolTable(symTable, namespaceName)
+#define ImportRuntimeSymbols(symTable, runtimeTable) \
+    CryoGlobalSymbolTable_ImportRuntimeSymbols(symTable, runtimeTable)
+
+#define CleanupAndDestroySymbolTable(symTable) \
+    CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)
+
 // Scope Functions
 #define EnterScope(symTable, name) \
     CryoGlobalSymbolTable_EnterScope(symTable, name)

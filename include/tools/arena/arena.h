@@ -33,7 +33,7 @@
 #include "tools/macros/debugMacros.h"
 #include "tools/macros/printMacros.h"
 
-#define ARENA_SIZE 1024 * 512
+#define ARENA_SIZE 1024 * 1024
 #define ALIGNMENT 16
 
 #define PRINT_WIDTH 80

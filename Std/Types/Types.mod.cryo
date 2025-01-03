@@ -1,5 +1,5 @@
 namespace Types;
 
-public module String;
 public module Int;
+// public module Int;
 

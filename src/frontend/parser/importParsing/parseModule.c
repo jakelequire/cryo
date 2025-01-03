@@ -34,6 +34,9 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     char *moduleName = strndup(moduleNameToken.start, moduleNameToken.length);
     logMessage(LMI, "INFO", "Parser", "Module name: %s", moduleName);
 
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected module name.",
+            "parseModuleDeclaration", table, arena, state, typeTable, context);
+
     const char *getCurrentFileLocation = getCurrentFileLocationFromLexer(lexer);
     logMessage(LMI, "INFO", "Parser", "Current file location: %s", getCurrentFileLocation);
 
@@ -53,8 +56,10 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     // Null terminate the file array
     fileArray[fileCount] = NULL;
 
+    const char *moduleFilePath = getModuleFile(fileArray, moduleName);
+    logMessage(LMI, "INFO", "Parser", "Module file path: %s", moduleFilePath);
     // Handle the module parsing
-    int moduleParsingResult = handleModuleParsing(fileArray, fileCount, state, globalTable);
+    int moduleParsingResult = handleModuleParsing(moduleFilePath, state, globalTable, arena);
     if (moduleParsingResult == 0)
     {
         logMessage(LMI, "INFO", "Parser", "Module parsing successful.");
@@ -62,24 +67,66 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     else
     {
         logMessage(LMI, "ERROR", "Parser", "Module parsing failed.");
+        CONDITION_FAILED;
     }
 
-    DEBUG_BREAKPOINT;
+    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after module declaration.",
+            "parseModuleDeclaration", table, arena, state, typeTable, context);
+
+    // Create the module node
+    ASTNode *moduleNode = createModuleNode(moduleName, arena, state, typeTable, lexer);
+    if (!moduleNode)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to create module node.");
+        CONDITION_FAILED;
+    }
+
+    return moduleNode;
 }
 
-int handleModuleParsing(const char *fileArray[], int fileCount, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlobalSymbolTable *globalTable, Arena *arena)
 {
     logMessage(LMI, "INFO", "Parser", "Handling module parsing...");
 
-    for (int i = 0; i < fileCount; i++)
+    logMessage(LMI, "INFO", "Parser", "File path: %s", moduleSrcPath);
+    const char *fileName = getFileNameFromPath(moduleSrcPath);
+    const char *rootDir = state->settings->rootDir;
+    const char *outputFileName = changeFileExtension(fileName, ".ll");
+    const char *moduleDir = appendPathToFileName(rootDir, "build/out/deps", true);
+    const char *outputPath = appendPathToFileName(moduleDir, outputFileName, true);
+
+    logMessage(LMI, "INFO", "Parser", "Output path: %s", outputPath);
+
+    SymbolTable *moduleSymbolTable = compileToReapSymbols(moduleSrcPath, outputPath, state, arena, globalTable);
+    if (moduleSymbolTable == NULL)
     {
-        const char *filePath = fileArray[i];
-        logMessage(LMI, "INFO", "Parser", "File path: %s", filePath);
-        DEBUG_BREAKPOINT;
-        SymbolTable *moduleSymbolTable = compileToReapSymbols(filePath, "", state);
+        logMessage(LMI, "ERROR", "Parser", "Failed to compile module file: %s", moduleSrcPath);
+        return 1;
     }
 
-    DEBUG_BREAKPOINT;
+    logMessage(LMI, "INFO", "Parser", "Module file compiled successfully.");
+
+    // Import the module symbols into the global symbol table
+    ImportReapedTable(globalTable, moduleSymbolTable);
+
+    printf("\n\n\n\n------------------------------------------------------");
+    printGlobalSymbolTable(globalTable);
+    printf("\n\n");
+
+    return 0;
+}
+
+const char *getModuleFile(const char **dirList, const char *moduleName)
+{
+    for (int i = 0; i < sizeof(dirList); i++)
+    {
+        const char *fileName = dirList[i];
+        if (strstr(fileName, moduleName) != NULL)
+        {
+            return fileName;
+        }
+    }
+    return NULL;
 }
 
 const char **getDirFileList(const char *dir)
@@ -102,7 +149,8 @@ const char **getDirFileList(const char *dir)
                     continue;
                 }
                 const char *fileName = ep->d_name;
-                fileList[fileCount] = fileName;
+                const char *fullFilePath = appendPathToFileName(dir, fileName, true);
+                fileList[fileCount] = fullFilePath;
                 fileCount++;
             }
         }

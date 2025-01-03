@@ -63,6 +63,7 @@ const char *appendStrings(const char *str1, const char *str2);
 const char *appendExtensionToFileName(const char *fileName, const char *extension);
 const char *appendPathToFileName(const char *path, const char *fileName, bool endingSlash);
 const char *removeFileFromPath(const char *path);
+const char *changeFileExtension(const char *fileName, const char *newExtension);
 
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL

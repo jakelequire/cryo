@@ -20,11 +20,21 @@ namespace Cryo
 {
     SymbolTable *GlobalSymbolTable::mergeAllSymbols(void)
     {
+        std::cout << "MERGING ALL SYMBOLS" << std::endl;
         std::vector<Symbol *> primarySymbols = mergePrimaryTable();
         std::vector<Symbol *> dependencySymbols = mergeAllDependencyTables();
-        std::vector<Symbol *> allSymbols = mergeTwoTables(createNewSymbolTableFromSymbols(primarySymbols),
-                                                          createNewSymbolTableFromSymbols(dependencySymbols));
-        return createNewSymbolTableFromSymbols(allSymbols);
+        std::vector<Symbol *> allSymbols = mergeTwoSymbolVectors(primarySymbols, dependencySymbols);
+        size_t symbolCount = allSymbols.size();
+        std::cout << "Symbol Count: " << symbolCount << std::endl;
+        SymbolTable *table = createNewSymbolTableFromSymbols(allSymbols);
+
+        if (isForReaping)
+        {
+            reapedTable = table;
+            reapedTable->count = symbolCount;
+        }
+
+        return table;
     }
 
     std::vector<Symbol *> GlobalSymbolTable::mergePrimaryTable(void)
@@ -32,6 +42,7 @@ namespace Cryo
         SymbolTable *table = getPrimaryTable();
         if (!table)
         {
+            std::cout << "Primary Table is null" << std::endl;
             return std::vector<Symbol *>();
         }
         int count = table->count;
@@ -46,15 +57,34 @@ namespace Cryo
 
     std::vector<Symbol *> GlobalSymbolTable::mergeAllDependencyTables(void)
     {
+        std::cout << "Merging All Dependency Tables" << std::endl;
         std::vector<Symbol *> mergedSymbols;
+
         for (auto &table : dependencyTableVector)
         {
             int count = table->count;
+            std::cout << "Merging Dependency Table: " << table->namespaceName << std::endl;
+            std::cout << "Table Count: " << count << std::endl;
             Symbol **symbols = table->symbols;
             for (int i = 0; i < count; i++)
             {
+                std::cout << "Merging symbol: " << symbols[i]->symbolType << std::endl;
                 mergedSymbols.push_back(symbols[i]);
             }
+        }
+        return mergedSymbols;
+    }
+
+    std::vector<Symbol *> GlobalSymbolTable::mergeTwoSymbolVectors(std::vector<Symbol *> symbols1, std::vector<Symbol *> symbols2)
+    {
+        std::vector<Symbol *> mergedSymbols;
+        for (auto &symbol : symbols1)
+        {
+            mergedSymbols.push_back(symbol);
+        }
+        for (auto &symbol : symbols2)
+        {
+            mergedSymbols.push_back(symbol);
         }
         return mergedSymbols;
     }
@@ -83,7 +113,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::createNewSymbolTableFromSymbols(std::vector<Symbol *> symbols)
     {
-        const char *namespaceName = "Global";
+        const char *namespaceName = this->currentNamespace;
         SymbolTable *table = createSymbolTable(namespaceName);
         for (auto &symbol : symbols)
         {

@@ -135,13 +135,9 @@ void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char 
 
     if (new_offset > arena->size)
     {
-        logMessage(LMI, "ERROR", "Arena", "Arena out of memory");
-        logMessage(LMI, "INFO", "Arena", "Attempting to grow arena");
         // Attempt to grow the arena
         void *result = growArena(arena, size);
         assert(result != NULL);
-
-        logMessage(LMI, "INFO", "Arena", "Growing arena successful");
         return result;
     }
 
@@ -149,13 +145,12 @@ void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char 
     arena->offset = new_offset;
     arena->total_allocations++;
 
-    // logMessage(LMI, "INFO", "Arena", "Memory allocated with alignment");
+    logMessage(LMI, "INFO", "Arena", "Memory allocated with alignment");
     return result;
 }
 
 void *growArena(Arena *arena, size_t size)
 {
-    logMessage(LMI, "INFO", "Arena", "Growing arena");
     Arena *current = arena;
     while (current->next)
     {
@@ -163,11 +158,9 @@ void *growArena(Arena *arena, size_t size)
     }
 
     size_t new_size = current->size * 2;
-    logMessage(LMI, "INFO", "Arena", "Creating new arena with size %zu", new_size);
     Arena *new_arena = createArena(new_size, current->alignment);
     if (!new_arena)
     {
-        logMessage(LMI, "ERROR", "Arena", "Failed to create new arena");
         return NULL;
     }
 
@@ -175,7 +168,6 @@ void *growArena(Arena *arena, size_t size)
     void *alloc = arenaAllocAligned(new_arena, size, current->alignment, __FILE__, __LINE__);
     assert(alloc != NULL);
 
-    logMessage(LMI, "INFO", "Arena", "Arena grown successfully");
     return alloc;
 }
 

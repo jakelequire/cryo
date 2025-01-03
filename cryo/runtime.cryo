@@ -1,4 +1,4 @@
-namespace Std;
+namespace Runtime;
 
 extern function __c_printInt(i: int) -> void;
 extern function __c_printStr(s: string) -> void;

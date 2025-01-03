@@ -326,7 +326,7 @@ ASTNode *parseTypeofIdentifier(Lexer *lexer, CryoSymbolTable *table, ParsingCont
 
 #define MAX_MODULE_CHAIN 16
 
-void parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+ASTNode *parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state);
 const char **getFilesInModuleDir(const char *modulePath);
@@ -365,7 +365,9 @@ struct TypeEntry
 
 ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
                                 Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
-int handleModuleParsing(const char *fileArray[], int fileCount, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlobalSymbolTable *globalTable, Arena *arena);
+
+const char *getModuleFile(const char **dirList, const char *moduleName);
 const char **getDirFileList(const char *dir);
 bool isValidCryoFile(const char *fileName);
 

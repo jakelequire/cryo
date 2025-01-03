@@ -1113,3 +1113,17 @@ ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules
 
     return node;
 }
+
+ASTNode *createModuleNode(const char *moduleName, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+{
+    ASTNode *node = createASTNode(NODE_MODULE, arena, state, typeTable, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create module node");
+        return NULL;
+    }
+
+    node->data.moduleNode->moduleName = strdup(moduleName);
+
+    return node;
+}

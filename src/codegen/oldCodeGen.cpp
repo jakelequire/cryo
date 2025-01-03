@@ -296,6 +296,11 @@ namespace Cryo
             // Skip the using statement
             break;
         }
+        case NODE_MODULE:
+        {
+            // Skip the module statement
+            break;
+        }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown Node Type");
             std::cout << "Received: " << CryoNodeTypeToString(root->metaData->type) << std::endl;
