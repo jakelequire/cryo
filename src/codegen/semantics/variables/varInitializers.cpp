@@ -381,7 +381,7 @@ namespace Cryo
     {
         IRSymTable &symTable = compiler.getSymTable();
         OldTypes &types = compiler.getTypes();
-        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Literal Expression Variable");
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Literal Expression Variable: " + varName);
 
         std::string namespaceName = compiler.getContext().currentNamespace;
         llvm::Value *llvmValue = nullptr;
@@ -410,6 +410,7 @@ namespace Cryo
 
             symTable.updateVariableNode(namespaceName, varName, ptrValue, ty);
             symTable.addStoreInstToVar(namespaceName, varName, storeInst);
+            symTable.addDataTypeToVar(namespaceName, varName, dataType);
 
             return ptrValue;
         }

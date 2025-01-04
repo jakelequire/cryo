@@ -7,7 +7,6 @@ class TestingClass {
 
     constructor() {}
 
-
     public static methodOne() -> void {
         const testInt: int = 42;
         printInt(testInt);
@@ -15,8 +14,8 @@ class TestingClass {
     }
 
     public static methodTwo() -> void {
-        const testInt: int = 69;
-        printInt(testInt);
+        const testIntTwo: int = 69;
+        printInt(testIntTwo);
         return;
     }
 
@@ -26,8 +25,8 @@ class TestingClass {
 }
 
 function testUsingKw() -> void {
-    const testInt: Int = 42;
-    printInt(testInt.value);
+    const testIntThree: Int = 42;
+    printInt(testIntThree.value);
 
     return;
 }
@@ -40,6 +39,8 @@ function main(argc: int, argv: string[]) -> int {
     TestingClass::methodThree();
 
     testUsingKw();
+
+    printStr("Testing Complete");
 
     return 0;
 }

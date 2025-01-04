@@ -130,6 +130,13 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     ImportReapedTypesTable(globalTable, copiedTypes);
 
+    int resultObj = processNodeToIRObject(programNode, state, outputPath);
+    if (resultObj != 0)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to process node to IR object");
+        CONDITION_FAILED;
+    }
+
     logMessage(LMI, "INFO", "Compiler", "Symbols reaped successfully");
     PrintSymbolTable(globalSymbolTable, reapedSymbols);
 
@@ -138,7 +145,7 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     return copiedTable;
 }
 
-void processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath)
+int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath)
 {
     logMessage(LMI, "INFO", "Compiler", "Processing node to IR object...");
 
@@ -147,8 +154,8 @@ void processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outp
     if (result != 0)
     {
         CONDITION_FAILED;
-        return;
+        return result;
     }
 
-    return;
+    return 0;
 }

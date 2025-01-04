@@ -187,18 +187,23 @@ namespace Cryo
             return;
         }
 
-        Symbol *classSymbol = getStructSymbol(structName);
-        if (!classSymbol)
+        Symbol *structSymbol = getStructSymbol(structName);
+        if (!structSymbol)
         {
             std::cout << "Error: Struct Symbol not found" << std::endl;
             return;
         }
 
         // Add the node to the Struct symbol
-        classSymbol->type->node = structNode;
+        structSymbol->type->node = structNode;
+        structSymbol->type->type = structNode->data.structNode->type;
 
         // Update the Struct symbol in the table
-        updateStructSymbol(classSymbol, table);
+        updateStructSymbol(structSymbol, table);
+
+        completeTypeDefinition(structSymbol, structName);
+
+        std::cout << "Struct Declaration Completed" << std::endl;
 
         return;
     }

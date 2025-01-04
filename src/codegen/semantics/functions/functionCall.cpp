@@ -491,7 +491,6 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable not found");
             CONDITION_FAILED;
         }
-
         DataType *varDataType = var->dataType;
         if (!varDataType)
         {

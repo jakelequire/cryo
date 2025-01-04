@@ -131,6 +131,8 @@ namespace Cryo
                           getColoredSymbolType(TYPE_SYMBOL).c_str(),
                           symbol->name,
                           TypeofDataTypeToString(symbol->typeOf));
+        const char *dataTypeStr = symbol->type ? DataTypeToString(symbol->type) : "unknown";
+        logger->debugNode("DataType: %s", dataTypeStr);
         logger->debugNode("ID: %s | Static: %s Generic: %s",
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",
@@ -218,10 +220,13 @@ namespace Cryo
             return;
         }
 
+        const char *dataTypeStr = symbol->type ? DataTypeToString(symbol->type) : "unknown";
+
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ":" BOLD MAGENTA " %s" COLOR_RESET,
                           getColoredSymbolType(TYPE_SYMBOL).c_str(),
                           symbol->name,
                           TypeofDataTypeToString(symbol->typeOf));
+        logger->debugNode("DataType: %s", dataTypeStr);
         logger->debugNode("ID: %s | Static: %s Generic: %s",
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",

@@ -24,6 +24,8 @@
 #include <stdbool.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <limits.h>
+#include <errno.h>
 
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/c_logger.h"

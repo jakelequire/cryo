@@ -188,6 +188,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, CryoSymbolTable *table, ParsingCon
     structDef->methodCount = methodCount;
     structDef->ctorParamCount = ctorArgCount;
     structDef->ctorParams = ctorArgs;
+    structNode->data.structNode->type = structDataType;
 
     logMessage(LMI, "INFO", "Parser::TypeParsing", "Created struct data type:");
 

@@ -70,12 +70,13 @@ ASTNode *parseClassDeclaration(bool isStatic,
     classNode->data.classNode->type->container->custom.name = strdup(className);
     classNode->data.classNode->type->container->primitive = PRIM_CUSTOM;
 
-    CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
-
     // Add to the symbol table
     addASTNodeSymbol(table, classNode, arena);
     // Add to the TypeTable
     addTypeToTypeTable(typeTable, className, classType);
+
+    CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
+
     // Clear the context
     clearThisContext(context, typeTable);
     // Clear Scope

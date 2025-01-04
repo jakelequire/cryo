@@ -198,12 +198,15 @@ namespace Cryo
 
         // Add the node to the class symbol
         classSymbol->type->node = classNode;
+        classSymbol->type->type = classNode->data.classNode->type;
 
         // Update the class symbol in the table
         updateClassSymbol(classSymbol, table);
 
         // Add the class declaration to the Types Table
         addDataTypeSymbol(classSymbol);
+
+        completeTypeDefinition(classSymbol, className);
 
         return;
     }

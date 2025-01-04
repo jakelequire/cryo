@@ -287,6 +287,7 @@ namespace Cryo
         char *varName = varNode->name;
         std::cout << "Variable Name: " << varName << std::endl;
         DataType *type = varNode->type;
+        std::cout << "Variable Type: " << DataTypeToString(type) << std::endl;
         ASTNode *initializer = varNode->initializer;
 
         llvm::Type *llvmType = nullptr;
@@ -439,6 +440,7 @@ namespace Cryo
 
         // Check if it already exists
         std::cout << "Variable Name: " << varName << std::endl;
+        
         llvmValue = compiler.getContext().namedValues[varName];
         if (llvmValue)
         {
@@ -657,6 +659,7 @@ namespace Cryo
             ASTNode *initializer = varNode->initializer;
             std::string varName = std::string(varNode->name);
             std::cout << "Variable Name: " << varName << std::endl;
+            std::cout << "Variable Type: " << DataTypeToString(varType) << std::endl;
 
             llvm::Value *llvmValue = nullptr;
             llvmValue = compiler.getContext().namedValues[varName];

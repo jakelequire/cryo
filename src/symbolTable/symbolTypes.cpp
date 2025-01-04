@@ -40,8 +40,8 @@ namespace Cryo
         size_t count = typeTable->count;
         for (size_t i = 0; i < count; i++)
         {
-            DataType *dataType = typeTable->types[i];
             const char *typeName = typeTable->typeSymbols[i]->name;
+            DataType *dataType = typeTable->typeSymbols[i]->type;
             if (!dataType || dataType == nullptr)
             {
                 continue;
@@ -214,6 +214,33 @@ namespace Cryo
     // After the type def is complete. We need to update the type symbol in the table with the new typeSymbol
     void GlobalSymbolTable::completeTypeDefinition(Symbol *typeSymbol, const char *typeName)
     {
+        if (!typeSymbol || typeSymbol == nullptr)
+        {
+            std::cerr << "completeTypeDefinition: Type Symbol is null" << std::endl;
+            return;
+        }
+        if (typeSymbol->symbolType != TYPE_SYMBOL)
+        {
+            std::cerr << "completeTypeDefinition: Symbol is not a Type Symbol" << std::endl;
+            return;
+        }
+
+        size_t count = typeTable->count;
+        for (size_t i = 0; i < count; i++)
+        {
+            TypeSymbol *type = typeTable->typeSymbols[i];
+            if (!type || type == nullptr)
+            {
+                continue;
+            }
+            if (strcmp(type->name, typeName) == 0)
+            {
+                typeTable->typeSymbols[i] = typeSymbol->type;
+                std::cout << "Type Definition Completed: " << typeName << std::endl;
+                return;
+            }
+        }
+        return;
     }
 
 } // namespace Cryo

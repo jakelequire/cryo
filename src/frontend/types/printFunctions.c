@@ -216,11 +216,11 @@ char *DataTypeToString(DataType *dataType)
         break;
 
     case STRUCT_TYPE:
-        sprintf(typeString, LIGHT_CYAN BOLD "Struct: %s" COLOR_RESET, dataType->container->custom.structDef->name);
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.structDef->name);
         break;
 
     case CLASS_TYPE:
-        sprintf(typeString, LIGHT_CYAN BOLD "Class: %s" COLOR_RESET, dataType->container->custom.classDef->name);
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.classDef->name);
         break;
 
     case FUNCTION_TYPE:

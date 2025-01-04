@@ -411,7 +411,7 @@ namespace Cryo
         // Update the variable in the SymTable
         symNode.variableNode[varName] = varNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Variable Node Updated" << std::endl;
+        std::cout << "[IRSymTable] Variable Node Updated For: " << varName << std::endl;
         return;
     }
 
