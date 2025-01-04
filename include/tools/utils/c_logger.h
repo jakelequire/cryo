@@ -22,6 +22,10 @@
 #include <stdlib.h>
 
 #include "tools/macros/consoleColors.h"
+#include "tools/utils/fs.h"
+
+typedef struct CompilerSettings CompilerSettings;
+extern void logCompilerSettings(CompilerSettings *settings);
 
 /// @brief LMI - Logger Meta Info
 /// @details This macro is used to get the line, file, and function name of the
@@ -42,5 +46,7 @@ const char *getParentDirOfFile(const char *file);
 char *stringShortener(const char *string, int length, int addDots);
 char *getFileName(const char *file);
 const char *typeBufferFormatter(const char *type);
+
+void initCompilerSettings(CompilerSettings *settings);
 
 #endif // C_LOGGER_H

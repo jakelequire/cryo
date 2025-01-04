@@ -47,8 +47,8 @@ extern "C"
 
 char *readFile(const char *path);
 bool fileExists(const char *path);
-bool dirExists(const char *path);
-void createDir(const char *path);
+int dirExists(const char *path);
+int createDir(const char *path);
 void removeFile(const char *filePath);
 const char *getSTDFilePath(const char *subModule);
 const char *trimFilePath(const char *filePath);

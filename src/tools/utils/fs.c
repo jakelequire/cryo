@@ -16,6 +16,8 @@
  ********************************************************************************/
 #include "tools/utils/fs.h"
 
+#define PATH_MAX 4096
+
 // This is being hard coded for now, but will be replaced with a config file later
 CryoSrcLocations srcLocations[] = {
     {"/workspaces/cryo/"},
@@ -112,43 +114,78 @@ bool fileExists(const char *path)
 
 // <dirExists>
 // @brief Checks if a directory exists at the given path
-bool dirExists(const char *path)
+int dirExists(const char *path)
 {
-    // Make sure the string isn't empty
-    if (path == NULL)
+    if (path == NULL || strlen(path) >= PATH_MAX)
     {
-        return false;
+        return -1;
     }
 
-    // Open the file
-    DIR *dir = opendir(path);
-    if (dir)
+    struct stat st;
+    if (stat(path, &st) == 0)
     {
-        closedir(dir);
-        return true;
+        return S_ISDIR(st.st_mode) ? 1 : 0;
     }
 
-    closedir(dir);
-    return false;
+    return (errno == ENOENT) ? 0 : -1;
 }
 // </dirExists>
 
 // <createDir>
 /// @brief Creates a directory at the given path
-void createDir(const char *path)
+int createDir(const char *path)
 {
-    if (!dirExists(path))
+    if (path == NULL)
     {
-        logMessage(LMI, "INFO", "FS", "Directory doesn't exist, creating...");
-        int status = mkdir(path, 0777);
-        if (status == -1)
+        return -1;
+    }
+
+    // Create a modifiable copy of the path
+    char temp[PATH_MAX];
+    strncpy(temp, path, PATH_MAX - 1);
+    temp[PATH_MAX - 1] = '\0';
+
+    // Convert forward slashes to system separator if needed
+    for (char *p = temp; *p; p++)
+    {
+        if (*p == '/')
         {
-            logMessage(LMI, "ERROR", "FS", "Failed to create directory");
-            DEBUG_BREAKPOINT;
+            *p = '/'; // Or use PATH_SEPARATOR if defined
         }
     }
 
-    return;
+    // Create each directory in the path
+    for (char *p = temp + 1; *p; p++)
+    {
+        if (*p == '/')
+        {
+            *p = '\0'; // Temporarily terminate the string
+
+            // Try to create the directory
+            if (mkdir(temp, 0700) != 0)
+            {
+                // Ignore if directory already exists
+                if (errno != EEXIST)
+                {
+                    return -1;
+                }
+            }
+
+            *p = '/'; // Restore the slash
+        }
+    }
+
+    // Create the final directory
+    if (mkdir(temp, 0700) != 0)
+    {
+        // Ignore if directory already exists
+        if (errno != EEXIST)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
 }
 // </createDir>
 

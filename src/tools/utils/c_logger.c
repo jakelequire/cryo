@@ -15,6 +15,9 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/c_logger.h"
+#include <malloc.h>
+#include <stdarg.h>
+#include <stdbool.h>
 
 #define FILE_NAME_LENGTH 18
 #define MODULE_NAME_LENGTH 15
@@ -22,6 +25,123 @@
 #define META_INFO_LENGTH 50
 #define META_INFO_PADDING 50
 #define TYPE_BUFFER_PADDING 10
+
+CompilerSettings *compilerSettings;
+
+typedef struct EnabledLogs
+{
+    bool all;
+    bool none;
+    bool info;
+    bool error;
+    bool warn;
+    bool debug;
+} EnabledLogs;
+
+typedef struct LoggerMessage
+{
+    int line;
+    const char *file;
+    const char *func;
+    const char *type;
+    const char *module;
+    const char *message;
+} LoggerMessage;
+
+LoggerMessage *createLoggerMessage(int line, const char *file, const char *func, const char *type, const char *module, const char *message)
+{
+    LoggerMessage *loggerMessage = (LoggerMessage *)malloc(sizeof(LoggerMessage));
+    if (!loggerMessage)
+    {
+        return NULL;
+    }
+
+    loggerMessage->line = line;
+    loggerMessage->file = file;
+    loggerMessage->func = func;
+    loggerMessage->type = type;
+    loggerMessage->module = module;
+    loggerMessage->message = message;
+
+    return loggerMessage;
+}
+
+void outputNewLogBuffer(int line,
+                        const char *file,
+                        const char *func,
+                        const char *type,
+                        const char *module,
+                        const char *message, ...)
+{
+    if (!compilerSettings)
+    {
+        fprintf(stderr, "Compiler settings not found\n");
+        return;
+    }
+    // const char *rootDir = compilerSettings->rootDir;
+    // const char *logDir = "build/debug/logs";
+    // const char *fullLogPath = appendPathToFileName(rootDir, logDir, true);
+    // const char *logFileName = "compiler.log";
+    // const char *logFilePath = appendPathToFileName(fullLogPath, logFileName, true);
+
+    // if (!dirExists(fullLogPath))
+    // {
+    //     createDir(fullLogPath);
+    // }
+    //
+    // FILE *logFile = fopen(logFilePath, "a");
+    // if (!logFile)
+    // {
+    //     fprintf(stderr, "Failed to open log file: %s (errno: %d: %s)\n",
+    //             logFilePath, errno, strerror(errno));
+    //     return;
+    // }
+    //
+    // char *shortFile = stringShortener(getFileName(file), FILE_NAME_LENGTH, 0);
+    // char *shortModule = stringShortener(module, MODULE_NAME_LENGTH, 0);
+    // char *shortFunc = stringShortener(func, FUNC_NAME_LENGTH, 0);
+    //
+    // if (!shortFile || !shortModule || !shortFunc)
+    // {
+    //     fprintf(stderr, "Memory allocation failed\n");
+    //     fclose(logFile);
+    //     free(shortFile);
+    //     free(shortModule);
+    //     free(shortFunc);
+    //     return;
+    // }
+    //
+    // char metaInfo[META_INFO_LENGTH];
+    // char *numberFormatBuffer = (char *)malloc(10);
+    // sprintf(numberFormatBuffer, "%d", line);
+    //
+    // snprintf(metaInfo, META_INFO_LENGTH, "<%-3s|%s:%s:%s",
+    //          "", numberFormatBuffer, shortModule, shortFile, shortFunc);
+    //
+    // // Format the message with variable arguments
+    // char formattedMessage[4096]; // Choose an appropriate size
+    // va_list args;
+    // va_start(args, message);
+    // vsnprintf(formattedMessage, sizeof(formattedMessage), message, args);
+    // va_end(args);
+    //
+    // // Write to file
+    // fprintf(logFile, "%-*s | %s\n", META_INFO_PADDING, metaInfo, formattedMessage);
+    //
+    // free(shortFile);
+    // free(shortModule);
+    // free(shortFunc);
+    // free(numberFormatBuffer);
+    //
+    // fclose(logFile);
+}
+
+void initCompilerSettings(CompilerSettings *settings)
+{
+    compilerSettings = settings;
+    printf("Found compiler settings\n");
+    logCompilerSettings(compilerSettings);
+}
 
 char *stringShortener(const char *string, int length, int addDots)
 {
@@ -120,6 +240,7 @@ void logMessage(
     const char *module,
     const char *message, ...)
 {
+
     char *shortFile = stringShortener(getFileName(file), FILE_NAME_LENGTH, 0);
     char *shortModule = stringShortener(module, MODULE_NAME_LENGTH, 0);
     char *shortFunc = stringShortener(func, FUNC_NAME_LENGTH, 0);
@@ -148,6 +269,10 @@ void logMessage(
     vprintf(message, args);
     printf("\n");
     va_end(args);
+
+    // va_start(args, message);
+    // outputNewLogBuffer(line, file, func, type, module, message, args);
+    // va_end(args);
 
     free(shortFile);
     free(shortModule);

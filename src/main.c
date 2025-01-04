@@ -22,6 +22,7 @@
 #include "tools/utils/compileTimer.h"
 #include "tools/utils/buildStats.h"
 #include "tools/utils/env.h"
+#include "tools/utils/c_logger.h"
 
 int main(int argc, char *argv[])
 {
@@ -44,6 +45,7 @@ int main(int argc, char *argv[])
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
     logCompilerSettings(&settings);
+    initCompilerSettings(&settings);
 
     // Initialize the build stats
     BuildStats *buildStats = createBuildStats();

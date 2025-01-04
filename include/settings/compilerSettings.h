@@ -51,7 +51,7 @@ typedef enum BuildType
 
 typedef enum
 {
-    OPT_AST_DUMP = 1000, // Start after ASCII range to avoid conflicts
+    OPT_AST_DUMP = 1000,
     OPT_IR_DUMP,
 } LongOnlyOptions;
 
