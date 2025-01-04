@@ -207,7 +207,7 @@ bool isOperator(CryoTokenType type)
 DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Parser", "Getting data type...");
-    DataType *type = parseDataType(typeStr, typeTable);
+    DataType *type = parseDataType(typeStr, typeTable, globalTable);
     if (!type)
     {
         parsingError("Unknown data type", "getCryoDataType", NULL, arena, state, lexer, lexer->source, typeTable, globalTable);
@@ -223,6 +223,7 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *tabl
 {
     logMessage(LMI, "INFO", "Parser", "Parsing type...");
     DataType *type = NULL;
+    const char *typeTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
 
     switch (lexer->currentToken.type)
     {
@@ -234,8 +235,8 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *tabl
         break;
 
     case TOKEN_IDENTIFIER:
-        // This is a custom type such as a struct or enum (TODO: Implement)
-        type = getCryoDataType(strndup(lexer->currentToken.start, lexer->currentToken.length), arena, state, lexer, typeTable, globalTable);
+        // type = getCryoDataType(typeTokenStr, arena, state, lexer, typeTable, globalTable);
+        type = ResolveDataType(globalTable, typeTokenStr);
         break;
 
     default:
@@ -2902,8 +2903,44 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
             return NULL;
         }
     }
-
     DEBUG_BREAKPOINT;
+    // TODO: Implement class property access
+
+    // if (typeOfNode->container->baseType == CLASS_TYPE)
+    // {
+    //     logMessage(LMI, "INFO", "Parser", "Type of node is a class.");
+    //     VALIDATE_TYPE(typeOfNode);
+    //
+    //     ClassType *classType = typeOfNode->container->custom.classDef;
+    //     logClassType(classType);
+    //     const char *className = typeOfNode->container->custom.classDef->name;
+    //     Token nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable);
+    //     Token currentToken = lexer->currentToken;
+    //
+    //     if (currentToken.type == TOKEN_LPAREN)
+    //     {
+    //         logMessage(LMI, "INFO", "Parser", "Parsing method call...");
+    //         ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, table, context, arena, state, typeTable, globalTable);
+    //         return methodCallNode;
+    //     }
+    //
+    //     logMessage(LMI, "INFO", "Parser", "Class name: %s", className);
+    //     logMessage(LMI, "INFO", "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
+    //
+    //     ASTNode *property = findClassProperty(classType, (const char *)propName, typeTable);
+    //     if (property)
+    //     {
+    //         logMessage(LMI, "INFO", "Parser", "Property found in class, name: %s", propName);
+    //         return createClassPropertyAccessNode(object, property, (const char *)propName, typeOfNode, arena, state, typeTable, lexer);
+    //     }
+    //     else
+    //     {
+    //         printTypeTable(typeTable);
+    //         printf("Property Attempted: %s\n", propName);
+    //         parsingError("Property not found in class.", "parseDotNotationWithType", table, arena, state, lexer, lexer->source, typeTable, globalTable);
+    //         return NULL;
+    //     }
+    // }
 }
 
 ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)

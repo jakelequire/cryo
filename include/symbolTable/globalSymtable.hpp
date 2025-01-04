@@ -75,6 +75,8 @@ extern "C"
     SymbolTable *CryoGlobalSymbolTable_GetSpecificSymbolTable(CryoGlobalSymbolTable *symTable, const char *namespaceName);
     void CryoGlobalSymbolTable_ImportRuntimeSymbols(CryoGlobalSymbolTable *symTable, SymbolTable *runtimeTable);
 
+    DataType *CryoGlobalSymbolTable_ResolveDataType(CryoGlobalSymbolTable *symTable, const char *name);
+
     void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable);
 
     // Scope Functions ---------------------------------------
@@ -172,6 +174,9 @@ extern "C"
 
 #define GetSpecificSymbolTable(symTable, namespaceName) \
     CryoGlobalSymbolTable_GetSpecificSymbolTable(symTable, namespaceName)
+
+#define ResolveDataType(symTable, name) \
+    CryoGlobalSymbolTable_ResolveDataType(symTable, name)
 
 #define CleanupAndDestroySymbolTable(symTable) \
     CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)
@@ -911,6 +916,15 @@ namespace Cryo
         if (symTable)
         {
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->findMethodSymbol(methodName, className, typeOfNode);
+        }
+        return nullptr;
+    }
+
+    inline DataType *CryoGlobalSymbolTable_ResolveDataType(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->resolveDataType(name);
         }
         return nullptr;
     }

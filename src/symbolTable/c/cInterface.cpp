@@ -240,6 +240,15 @@ extern "C"
         return nullptr;
     }
 
+    DataType *CryoGlobalSymbolTable_ResolveDataType(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->resolveDataType(name);
+        }
+        return nullptr;
+    }
+
     // --------------------------------------------------------------
     // Scope Functions
 

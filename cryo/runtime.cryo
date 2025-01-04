@@ -30,8 +30,3 @@ function outOfBoundsError() -> void {
     printStr("Array index out of bounds error");
     return;
 }
-
-function getCryoNullValue() -> any {
-    printStr("Returning null value");
-    return null;
-}

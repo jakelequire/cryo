@@ -10,13 +10,13 @@ class TestingClass {
 
     public static methodOne() -> void {
         const testInt: int = 42;
-        printInt(testInt.value);
+        printInt(testInt);
         return;
     }
 
     public static methodTwo() -> void {
         const testInt: int = 69;
-        printInt(testInt.value);
+        printInt(testInt);
         return;
     }
 

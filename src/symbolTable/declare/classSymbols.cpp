@@ -25,8 +25,11 @@ namespace Cryo
         Symbol *classSymbol = createClassDeclarationSymbol(className);
         if (classSymbol)
         {
+            std::cout << "Class Declaration Symbol Created" << std::endl;
             addSymbolToCurrentTable(classSymbol);
+            std::cout << "Class Declaration Symbol Added to Table" << std::endl;
             initTypeDefinition(classSymbol);
+            std::cout << "Class Declaration Type Definition Initialized" << std::endl;
             return;
         }
         else
@@ -82,8 +85,8 @@ namespace Cryo
         TypeSymbol *typeSymbol = createIncompleteTypeSymbol(className, CLASS_TYPE);
         Symbol *classSymbol = new Symbol();
         classSymbol->symbolType = TYPE_SYMBOL;
-        classSymbol->type->name = className;
         classSymbol->type = typeSymbol;
+        classSymbol->type->name = className;
         classSymbol->type->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
         classSymbol->type->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
         classSymbol->type->propertyCapacity = MAX_PROPERTY_COUNT;

@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/dataTypes.h"
 
 TypeTable *initTypeTable(void)
@@ -65,7 +66,7 @@ TypeContainer *createTypeContainer(void)
     return container;
 }
 
-DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
+DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     printf("Parsing data type: %s\n", typeStr);
 
@@ -151,40 +152,24 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable)
     }
     else
     {
-        // This is where we handle custom types.
-        // Get the name of the type:
-        char *typeName = strdup(baseTypeStr);
-        // Look up the type in the type table
-        logMessage(LMI, "INFO", "DataTypes", "Looking up custom type '%s' in type table", typeName);
-        printTypeTable(typeTable);
-        TypeContainer *customType = lookupType(typeTable, typeName)->container;
-        if (!customType)
-        {
-            fprintf(stderr, "[TypeTable] Error: Custom type '%s' not found in type table.\n", typeName);
-            free(container);
-            free(baseTypeStr);
-            free(typeName);
-            CONDITION_FAILED;
-        }
+        char *copiedTypeStr = strdup(baseTypeStr);
+        char *typeStr = (char *)malloc(sizeof(char) * 512);
+        strcpy(typeStr, copiedTypeStr);
+        logMessage(LMI, "INFO", "DataTypes", "Resolving custom type '%s'", strdup(typeStr));
 
-        // Set the custom type
-        container->baseType = customType->baseType;
-        if (container->baseType == STRUCT_TYPE)
+        const char *cosntTypeStr = typeStr;
+        // Check if the type is a custom type
+        DataType *resolvedType = ResolveDataType(globalTable, cosntTypeStr);
+        if (!resolvedType)
         {
-            container->custom.structDef = customType->custom.structDef;
-        }
-        else if (container->baseType == FUNCTION_TYPE)
-        {
-            container->custom.funcDef = customType->custom.funcDef;
-        }
-        else
-        {
-            fprintf(stderr, "[TypeTable] Error: Invalid custom type '%s' in type table.\n", typeName);
+            fprintf(stderr, "[DataTypes] Error: Failed to resolve data type '%s'\n", baseTypeStr);
             free(container);
             free(baseTypeStr);
-            free(typeName);
             CONDITION_FAILED;
         }
+        free(typeStr);
+
+        return resolvedType;
     }
 
     // Handle array types

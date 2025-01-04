@@ -60,6 +60,8 @@ typedef struct PublicMembers PublicMembers;
 typedef struct PrivateMembers PrivateMembers;
 typedef struct ProtectedMembers ProtectedMembers;
 
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
+
 typedef enum PrimitiveDataType
 {
     PRIM_INT,  // `int` (32-bit default)
@@ -291,7 +293,7 @@ extern "C"
     TypeTable *initTypeTable(void);
     TypeContainer *createTypeContainer(void);
 
-    DataType *parseDataType(const char *typeStr, TypeTable *typeTable);
+    DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
     DataType *wrapTypeContainer(TypeContainer *container);
 
     DataType *lookupType(TypeTable *table, const char *name);
@@ -484,12 +486,12 @@ extern "C"
 
     // # =============================================================================================== #
 
-#define VALIDATE_TYPE(type)                                         \
-    if (!isValidType(type))                                         \
-    {                                                               \
-        logMessage(LMI, "ERROR", "TypeTable", "Invalid type: %s",   \
-                   DataTypeToString(type));                         \
-        CONDITION_FAILED;                                           \
+#define VALIDATE_TYPE(type)                                       \
+    if (!isValidType(type))                                       \
+    {                                                             \
+        logMessage(LMI, "ERROR", "TypeTable", "Invalid type: %s", \
+                   DataTypeToString(type));                       \
+        CONDITION_FAILED;                                         \
     }
 
 #ifdef __cplusplus

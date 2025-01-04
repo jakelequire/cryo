@@ -851,9 +851,5 @@ namespace Cryo
     }
 
 
-    DataType *GlobalSymbolTable::resolveDataType(const char *name)
-    {
-
-    }
 
 } // namespace Cryo

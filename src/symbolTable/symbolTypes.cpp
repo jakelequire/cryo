@@ -18,6 +18,47 @@
 
 namespace Cryo
 {
+    DataType *GlobalSymbolTable::resolveDataType(const char *name)
+    {
+        char *typeName = strdup(name);
+        std::cout << "Type Name Copied: " << std::string(typeName) << std::endl;
+
+        if (!typeName || typeName == nullptr)
+        {
+            std::cerr << "Error: Failed to resolve data type, name is null!" << std::endl;
+            return nullptr;
+        }
+
+        TypesTable *typesTable = typesTable;
+        if (!typesTable || typesTable == nullptr)
+        {
+            std::cerr << "Error: Failed to resolve data type, types table is null!" << std::endl;
+            return nullptr;
+        }
+
+        size_t count = typesTable->count;
+        for (size_t i = 0; i < count; i++)
+        {
+            DataType *dataType = typesTable->types[i];
+            const char *typeName = typeTable->typeSymbols[i]->name;
+            if (!dataType || dataType == nullptr)
+            {
+                continue;
+            }
+            if (strcmp(typeName, typeName) == 0)
+            {
+                std::cout << "Resolved Data Type: " << typeName << std::endl;
+                return dataType;
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        return nullptr;
+    }
+
     void GlobalSymbolTable::parseSymbolTableForTypes(SymbolTable *symbolTable)
     {
         if (!symbolTable || symbolTable == nullptr)
