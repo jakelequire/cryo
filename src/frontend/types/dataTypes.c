@@ -152,14 +152,10 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSym
     }
     else
     {
-        char *copiedTypeStr = strdup(baseTypeStr);
-        char *typeStr = (char *)malloc(sizeof(char) * 512);
-        strcpy(typeStr, copiedTypeStr);
-        logMessage(LMI, "INFO", "DataTypes", "Resolving custom type '%s'", strdup(typeStr));
+        logMessage(LMI, "INFO", "DataTypes", "Resolving custom type '%s'", typeStr);
 
-        const char *cosntTypeStr = typeStr;
-        // Check if the type is a custom type
-        DataType *resolvedType = ResolveDataType(globalTable, cosntTypeStr);
+        // No need for all the string copying - just pass typeStr directly
+        DataType *resolvedType = ResolveDataType(globalTable, baseTypeStr);
         if (!resolvedType)
         {
             fprintf(stderr, "[DataTypes] Error: Failed to resolve data type '%s'\n", baseTypeStr);
@@ -167,7 +163,6 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSym
             free(baseTypeStr);
             CONDITION_FAILED;
         }
-        free(typeStr);
 
         return resolvedType;
     }

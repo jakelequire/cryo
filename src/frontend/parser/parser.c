@@ -206,7 +206,7 @@ bool isOperator(CryoTokenType type)
 // <getCryoDataType>
 DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage(LMI, "INFO", "Parser", "Getting data type...");
+    logMessage(LMI, "INFO", "Parser", "Getting data type for: %s", typeStr);
     DataType *type = parseDataType(typeStr, typeTable, globalTable);
     if (!type)
     {
@@ -231,7 +231,7 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, CryoSymbolTable *tabl
     case TOKEN_KW_INT:
     case TOKEN_KW_STRING:
     case TOKEN_KW_BOOL:
-        type = getCryoDataType(strndup(lexer->currentToken.start, lexer->currentToken.length), arena, state, lexer, typeTable, globalTable);
+        type = getCryoDataType(typeTokenStr, arena, state, lexer, typeTable, globalTable);
         break;
 
     case TOKEN_IDENTIFIER:

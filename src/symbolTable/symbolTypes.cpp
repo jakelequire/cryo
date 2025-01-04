@@ -20,32 +20,33 @@ namespace Cryo
 {
     DataType *GlobalSymbolTable::resolveDataType(const char *name)
     {
-        char *typeName = strdup(name);
-        std::cout << "Type Name Copied: " << std::string(typeName) << std::endl;
+        // No need for strdup here - std::string will make its own copy
+        std::string cxxTypeNameStr(name); // Direct construction from const char*
 
-        if (!typeName || typeName == nullptr)
+        std::cout << "Type Name Copied: " << cxxTypeNameStr << std::endl;
+
+        if (cxxTypeNameStr.empty())
         {
-            std::cerr << "Error: Failed to resolve data type, name is null!" << std::endl;
+            std::cerr << "Error: Failed to resolve data type, name is empty!" << std::endl;
             return nullptr;
         }
 
-        TypesTable *typesTable = typesTable;
-        if (!typesTable || typesTable == nullptr)
+        if (!typeTable || typeTable == nullptr)
         {
             std::cerr << "Error: Failed to resolve data type, types table is null!" << std::endl;
             return nullptr;
         }
 
-        size_t count = typesTable->count;
+        size_t count = typeTable->count;
         for (size_t i = 0; i < count; i++)
         {
-            DataType *dataType = typesTable->types[i];
+            DataType *dataType = typeTable->types[i];
             const char *typeName = typeTable->typeSymbols[i]->name;
             if (!dataType || dataType == nullptr)
             {
                 continue;
             }
-            if (strcmp(typeName, typeName) == 0)
+            if (strcmp(typeName, cxxTypeNameStr.c_str()) == 0)
             {
                 std::cout << "Resolved Data Type: " << typeName << std::endl;
                 return dataType;
