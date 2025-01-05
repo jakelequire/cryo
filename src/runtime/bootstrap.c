@@ -98,8 +98,6 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, Cr
 
     importRuntimeDefinitionsToSymTable(table, runtimeNode, bootstrap->arena);
 
-    printSymbolTable(table);
-
     logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions added to symbol table");
 
     // Add the runtime definitions to the type table
