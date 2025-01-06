@@ -2,9 +2,9 @@ namespace String;
 
 
 struct String {
-    val: string;
+    value: string;
 
-    constructor(value: string) {
-        this.val = value;
+    constructor(val: string) {
+        this.value = val;
     }
 }

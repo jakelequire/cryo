@@ -7,6 +7,7 @@ extern function __c_intToString(num: int) -> string;
 extern function __c_strLen(s: string) -> int;
 
 
+
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);
     return;

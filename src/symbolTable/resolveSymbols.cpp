@@ -365,44 +365,38 @@ namespace Cryo
 
         std::cout << "Finding Method Symbol: " << methodName << " in Class/Struct: " << className << std::endl;
 
-        // Look for the method symbol in the current table
-        for (int i = 0; i < symbolCount; i++)
+        size_t typeCount = typeTable->count;
+        if (typeCount == 0)
         {
-            if (symbols[i]->symbolType == TYPE_SYMBOL)
-            {
-                TypeSymbol *typeSymbol = symbols[i]->type;
-                std::cout << "Checking Type Symbol: " << typeSymbol->name << " for Method: " << methodName << std::endl;
-                if (strcmp(typeSymbol->name, className) == 0)
-                {
-                    std::cout << "Class/Struct Symbol Found!!: " << className << std::endl;
-                    int methodCount = typeSymbol->methodCount;
-                    std::cout << "Method Count: " << methodCount << std::endl;
-                    // Check the methods
-                    for (int j = 0; j < methodCount; j++)
-                    {
-                        std::cout << "Checking Method At Index: " << j << std::endl;
-                        Symbol *currentSymbol = typeSymbol->methods[j];
-                        logSymbol(currentSymbol);
-                        MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
-                        if (strcmp(methodSymbol->name, methodName) == 0)
-                        {
-                            std::cout << "Method Symbol Resolved!" << std::endl;
-                            return typeSymbol->methods[j];
-                        }
-                    }
-                }
-                else
-                {
-                    continue;
-                }
-            }
+            std::cerr << "Error: Failed to find method symbol, type table is empty!" << std::endl;
+            return nullptr;
         }
 
-        // Check the dependency tables
-        Symbol *fallbackSymbol = seekMethodSymbolInAllTables(methodName, className, typeOfNode);
-        if (fallbackSymbol != nullptr)
+        for (int i = 0; i < typeCount; i++)
         {
-            return fallbackSymbol;
+            TypeSymbol *typeSymbol = typeTable->typeSymbols[i];
+            if (strcmp(typeSymbol->name, className) == 0)
+            {
+                std::cout << "Class/Struct Symbol Found!" << std::endl;
+                int methodCount = typeSymbol->methodCount;
+                for (int j = 0; j < methodCount; j++)
+                {
+                    MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
+                    if (strcmp(methodSymbol->name, methodName) == 0)
+                    {
+                        std::cout << "Method Symbol Resolved!" << std::endl;
+                        return typeSymbol->methods[j];
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+            else
+            {
+                continue;
+            }
         }
 
         std::cerr << "Error: Failed to find method symbol, symbol not found!" << std::endl;
@@ -849,7 +843,5 @@ namespace Cryo
 
         return nullptr;
     }
-
-
 
 } // namespace Cryo

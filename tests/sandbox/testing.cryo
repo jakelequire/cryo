@@ -1,6 +1,5 @@
 namespace Testing;
 
-using Std::Types;
 
 class TestingClass {
     public value: int;
@@ -25,9 +24,16 @@ class TestingClass {
 }
 
 function testUsingKw() -> void {
-    const testIntThree: Int = 42;
+    const testIntThree: Int = 18;
     printInt(testIntThree.value);
 
+    return;
+}
+
+function testUsingKwTwo() -> void {
+    const testStr: String = "Hello, World!";
+    printStr(testStr.value);
+    
     return;
 }
 
