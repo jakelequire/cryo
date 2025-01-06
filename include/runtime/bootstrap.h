@@ -25,12 +25,10 @@
 #include "frontend/AST.h"
 #include "frontend/lexer.h"
 #include "frontend/parser.h"
-#include "frontend/symTable.h"
 #include "frontend/dataTypes.h"
 
 #include "tools/utils/fs.h"
 
-typedef struct CryoSymbolTable CryoSymbolTable;
 typedef struct TypeTable TypeTable;
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
@@ -63,7 +61,6 @@ enum BootstrapStatus
 typedef struct Bootstrapper
 {
     Arena *arena;
-    CryoSymbolTable *table;
     TypeTable *typeTable;
     Lexer *lexer;
     CompilerState *state;
@@ -71,7 +68,7 @@ typedef struct Bootstrapper
     enum BootstrapStatus status;
 } Bootstrapper;
 
-void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 Bootstrapper *initBootstrapper(const char *filePath);
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 

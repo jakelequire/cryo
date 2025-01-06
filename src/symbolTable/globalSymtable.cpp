@@ -60,6 +60,7 @@ namespace Cryo
     {
         return tableContext.isDependency;
     }
+
     void GlobalSymbolTable::setIsPrimaryTable(bool isPrimary)
     {
         tableContext.isPrimary = isPrimary;
@@ -107,6 +108,10 @@ namespace Cryo
     const char *GlobalSymbolTable::getDependencyDirStr(void)
     {
         return debugInfo.dependencyDir.c_str();
+    }
+    const char *GlobalSymbolTable::getNamespace(void)
+    {
+        return this->currentNamespace;
     }
     void GlobalSymbolTable::addSymbolToTable(Symbol *symbol, SymbolTable *table)
     {

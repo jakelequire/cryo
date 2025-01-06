@@ -21,7 +21,6 @@
 void parsingError(
     char *message,
     char *functionName,
-    CryoSymbolTable *table,
     Arena *arena,
     CompilerState *state,
     Lexer *lexer,
@@ -32,11 +31,7 @@ void parsingError(
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
 
-    char *curModule = getCurrentNamespace(table);
-    if (!curModule)
-    {
-        curModule = "Unnamed";
-    }
+    const char *curModule = "Unknown";
 
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);

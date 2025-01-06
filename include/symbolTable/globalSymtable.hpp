@@ -124,6 +124,8 @@ extern "C"
     ASTNode *CryoGlobalSymbolTable_GetASTNodeFromSymbol(CryoGlobalSymbolTable *symTable, Symbol *symbol);
     Symbol *CryoGlobalSymbolTable_FindMethodSymbol(CryoGlobalSymbolTable *symTable, const char *methodName, const char *className, TypeofDataType typeOfNode);
 
+    const char *CryoGlobalSymbolTable_GetNamespace(CryoGlobalSymbolTable *symTable);
+
 // Class State Functions
 #define isPrimaryTable(symTable) \
     CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
@@ -248,6 +250,9 @@ extern "C"
 // Symbol Resolution Functions
 #define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
     CryoGlobalSymbolTable_GetFrontendSymbol(symTable, name, scopeID, symbolType)
+
+#define GetNamespace(symTable) \
+    CryoGlobalSymbolTable_GetNamespace(symTable)
 
 #ifdef __cplusplus
 } // C API
@@ -453,6 +458,7 @@ namespace Cryo
 
         SymbolTable *getSpecificSymbolTable(const char *name);
         void importRuntimeSymbols(SymbolTable *table);
+        const char *getNamespace(void);
 
         //===================================================================
         // Types Table / Type Management
@@ -1074,6 +1080,15 @@ namespace Cryo
         if (symTable)
         {
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->getFrontendSymbol(name, scopeID, symbolType);
+        }
+        return nullptr;
+    }
+
+    inline const char *CryoGlobalSymbolTable_GetNamespace(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getNamespace();
         }
         return nullptr;
     }

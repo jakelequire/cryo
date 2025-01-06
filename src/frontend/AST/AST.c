@@ -25,7 +25,7 @@ ASTNode *programNode = NULL;
 
 // This function takes in a preprocessed AST Node which contains the definitions of the program
 // this is apart of the bootstrap process, and will be used to generate the runtime code.
-ASTNode *appendASTNodeDefs(ASTNode *root, CryoSymbolTable *table, TypeTable *typeTable, Arena *arena)
+ASTNode *appendASTNodeDefs(ASTNode *root, TypeTable *typeTable, Arena *arena)
 {
     if (!root)
     {
@@ -318,7 +318,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
     return node;
 }
 
-ASTNode *createIdentifierNode(char *name, CryoSymbolTable *symTable, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
+ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
     ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, typeTable, lexer);
     if (!node)

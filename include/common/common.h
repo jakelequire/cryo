@@ -22,18 +22,17 @@
 #include "frontend/AST.h"
 #include "frontend/lexer.h"
 #include "frontend/parser.h"
-#include "frontend/symTable.h"
 #include "tools/utils/utility.h"
 #include "tools/arena/arena.h"
 #include "tools/utils/fs.h"
 #include "settings/compilerSettings.h"
 
-typedef struct CryoSymbolTable CryoSymbolTable;
 typedef struct CompilerSettings CompilerSettings;
 typedef struct Lexer Lexer;
 typedef struct Token Token;
 typedef struct Arena Arena;
 typedef struct ASTNode ASTNode;
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 typedef struct CompiledFile
 {
@@ -83,14 +82,17 @@ typedef struct CompilerState
     struct CryoSymbolTable *table;
     struct ASTNode *programNode;
     struct ASTNode *currentNode;
+    CompilerSettings *settings;
+    CompilerError **errors;
+    CryoGlobalSymbolTable *globalTable;
+
     const char *fileName;
     int lineNumber;
     int columnNumber;
     bool isActiveBuild;
     bool isModuleFile;
-    CompilerSettings *settings;
     int errorCount;
-    CompilerError **errors;
+
     // Functions for debugging
     void (*errorReport)(struct CompilerState);
     void (*logCompilerError)(CompilerError *);
@@ -103,9 +105,10 @@ typedef struct CompilerState
 #define NEW_COMPILER_ERROR(state, type, message, detail) \
     createError(CAPTURE_INTERNAL_DEBUG, state, type, message, detail, GET_SOURCE_INFO)
 
-CompilerState *initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName);
+CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileName);
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state);
 void updateCompilerColumnNumber(Lexer *lexer, CompilerState *state);
+void setGlobalSymbolTable(CompilerState *state, CryoGlobalSymbolTable *table);
 CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode);
 
 InternalDebug captureInternalDebug(const char *functionName, const char *fileName, int lineNumber);

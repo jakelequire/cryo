@@ -186,6 +186,9 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
     CryoGlobalSymbolTable_GetFrontendSymbol(symTable, name, scopeID, symbolType)
 
+#define GetNamespace(symTable) \
+    CryoGlobalSymbolTable_GetNamespace(symTable)
+
 // ====================================================================================================
 
 #endif // C_INTERFACE_TABLE_H

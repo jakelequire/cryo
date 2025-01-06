@@ -70,7 +70,7 @@ char *getRuntimeObjFile(void)
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
 // compile the runtime into the program.
-void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Bootstrap", "Bootstrapping runtime definitions...");
 
@@ -95,10 +95,6 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable, Cr
     }
 
     logMessage(LMI, "INFO", "Bootstrap", "Runtime node compiled successfully");
-
-    importRuntimeDefinitionsToSymTable(table, runtimeNode, bootstrap->arena);
-
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions added to symbol table");
 
     // Add the runtime definitions to the type table
     importTypesFromRootNode(typeTable, runtimeNode);
@@ -141,7 +137,7 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, Cr
 
     // Initialize the lexer
     Lexer lexer;
-    CompilerState *state = initCompilerState(bootstrap->arena, &lexer, bootstrap->table, filePath);
+    CompilerState *state = initCompilerState(bootstrap->arena, &lexer, filePath);
     bootstrap->state = state;
 
     logMessage(LMI, "INFO", "Bootstrap", "Compiler state initialized");
@@ -151,7 +147,7 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, Cr
     logMessage(LMI, "INFO", "Bootstrap", "Lexer initialized");
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, bootstrap->table, bootstrap->arena, state, bootstrap->typeTable, globalTable);
+    ASTNode *programNode = parseProgram(&lexer, bootstrap->arena, state, bootstrap->typeTable, globalTable);
 
     if (programNode == NULL)
     {
@@ -193,9 +189,6 @@ Bootstrapper *initBootstrapper(const char *filePath)
 
     // Initialize the Arena
     bootstrapper->arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the symbol table
-    bootstrapper->table = createSymbolTable(bootstrapper->arena);
 
     bootstrapper->typeTable = initTypeTable();
 

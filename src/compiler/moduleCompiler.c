@@ -32,9 +32,6 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
     // Initialize the type table
     TypeTable *typeTable = initTypeTable();
 
@@ -42,7 +39,7 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     Lexer lexer;
     initLexer(&lexer, source, filePath, state);
 
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, globalTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, globalTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
@@ -79,10 +76,6 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     logMessage(LMI, "INFO", "Compiler", "File Read. File Path: %s", filePath);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-    logMessage(LMI, "INFO", "Compiler", "Symbol Table Initialized");
-
     // Initialize the type table
     TypeTable *typeTable = initTypeTable();
     logMessage(LMI, "INFO", "Compiler", "Type Table Initialized");
@@ -101,7 +94,9 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     }
     logMessage(LMI, "INFO", "Compiler", "Global Symbol Table Initialized");
 
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, globalSymbolTable);
+    setGlobalSymbolTable(state, globalSymbolTable);
+
+    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, globalSymbolTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
@@ -141,6 +136,8 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     PrintSymbolTable(globalSymbolTable, reapedSymbols);
 
     CleanupAndDestroySymbolTable(globalSymbolTable);
+
+    setGlobalSymbolTable(state, globalTable);
 
     return copiedTable;
 }

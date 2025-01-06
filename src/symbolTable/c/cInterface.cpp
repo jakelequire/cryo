@@ -471,4 +471,13 @@ extern "C"
         return nullptr;
     }
 
+    const char *CryoGlobalSymbolTable_GetNamespace(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getNamespace();
+        }
+        return nullptr;
+    }
+
 } // C API ----------------------------------------------------------

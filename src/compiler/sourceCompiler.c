@@ -58,14 +58,11 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
     // Initialize the type table
     TypeTable *typeTable = initTypeTable();
 
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(table, typeTable, globalSymbolTable);
+    boostrapRuntimeDefinitions(typeTable, globalSymbolTable);
     CryoLinker_LogState(linker);
 
     printGlobalSymbolTable(globalSymbolTable);
@@ -75,12 +72,12 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
 
     // Initialize the lexer
     Lexer lex;
-    CompilerState *state = initCompilerState(arena, &lex, table, fileName);
+    CompilerState *state = initCompilerState(arena, &lex, fileName);
     initLexer(&lex, source, fileName, state);
     state->settings = settings;
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, table, arena, state, typeTable, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lex, arena, state, typeTable, globalSymbolTable);
 
     if (programNode == NULL)
     {
@@ -97,7 +94,6 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     memcpy(programCopy, programNode, sizeof(ASTNode));
 
     // Outputs the SymTable into a file in the build directory.
-    outputSymTable(table, settings);
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
     // logASTNodeDebugView(programCopy);

@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/AST.h"
 
 ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
@@ -32,7 +33,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
         return NULL;
     }
 
-    char *moduleName = getCurrentNamespace(state->table);
+    const char *moduleName = GetNamespace(state->globalTable);
     if (moduleName)
     {
         node->metaData->moduleName = strdup(moduleName);

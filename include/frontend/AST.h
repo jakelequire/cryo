@@ -27,7 +27,6 @@
 
 #include "frontend/tokens.h"
 #include "frontend/lexer.h"
-#include "frontend/symTable.h"
 #include "tools/arena/arena.h"
 #include "tools/utils/c_logger.h"
 #include "tools/macros/consoleColors.h"
@@ -37,6 +36,9 @@
 typedef struct DataType DataType;
 typedef struct GenericType GenericType;
 typedef struct ParsingContext ParsingContext;
+typedef struct TypeTable TypeTable;
+typedef struct ASTNode ASTNode;
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 #define INITIAL_CAPACITY 8
 #define PROGRAM_CAPACITY 512
@@ -796,7 +798,6 @@ extern "C"
 
     ASTNode *createIdentifierNode(
         char *name,
-        CryoSymbolTable *symTable,
         Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context,
         CryoGlobalSymbolTable *globalTable);
 

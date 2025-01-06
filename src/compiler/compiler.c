@@ -65,14 +65,11 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
     // Initialize the type table
     TypeTable *typeTable = initTypeTable();
 
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(table, typeTable, globalSymbolTable);
+    boostrapRuntimeDefinitions(typeTable, globalSymbolTable);
     CryoLinker_LogState(linker);
 
     printGlobalSymbolTable(globalSymbolTable);
@@ -82,12 +79,13 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     // Initialize the lexer
     Lexer lex;
-    CompilerState *state = initCompilerState(arena, &lex, table, fileName);
+    CompilerState *state = initCompilerState(arena, &lex, fileName);
+    setGlobalSymbolTable(state, globalSymbolTable);
     initLexer(&lex, source, fileName, state);
     state->settings = settings;
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, table, arena, state, typeTable, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lex, arena, state, typeTable, globalSymbolTable);
 
     if (programNode == NULL)
     {
@@ -104,12 +102,9 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     memcpy(programCopy, programNode, sizeof(ASTNode));
 
     // Outputs the SymTable into a file in the build directory.
-    // outputSymTable(table, settings);
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
     // logASTNodeDebugView(programCopy);
-
-    // printSymbolTable(table);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);
@@ -144,19 +139,16 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
     TypeTable *typeTable = initTypeTable();
 
     // Initialize the lexer
     Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
+    CompilerState *state = initCompilerState(arena, &lexer, filePath);
     state->settings = settings;
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, NULL);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, NULL);
 
     if (programNode == NULL)
     {
@@ -193,27 +185,22 @@ ASTNode *compileForProgramNode(const char *filePath)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
     TypeTable *typeTable = initTypeTable();
 
     // Initialize the lexer
     Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
+    CompilerState *state = initCompilerState(arena, &lexer, filePath);
     state->settings = &settings;
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable, NULL);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, NULL);
 
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
         return NULL;
     }
-
-    printSymbolTable(table);
 
     return programNode;
 }

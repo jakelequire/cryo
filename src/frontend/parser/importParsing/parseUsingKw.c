@@ -21,13 +21,13 @@
 // Syntax: `using <module>::<?scope/fn>::<?scope/fn>;`
 // Eventually, you will be able to import specific functions or scopes from a module.
 // Like this: `using Std::Types::{Int, Float};`
-ASTNode *parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext *context,
+ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
                            Arena *arena, CompilerState *state, TypeTable *typeTable,
                            CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Parser", "Parsing using keyword...");
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
-            "parseUsingKeyword", table, arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, typeTable, context);
 
     setPrimaryTableStatus(globalTable, false);
 
@@ -37,21 +37,21 @@ ASTNode *parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
     logMessage(LMI, "INFO", "Parser", "Primary module: %s", primaryModule);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
-            "parseUsingKeyword", table, arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, typeTable, context);
     consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected `::` after primary module.",
-            "parseUsingKeyword", table, arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, typeTable, context);
 
     // Parse module chain
     struct ModuleChainEntry moduleChain[MAX_MODULE_CHAIN];
     size_t chainLength = 0;
-    parseModuleChain(lexer, moduleChain, &chainLength, table, context, arena, state, typeTable);
+    parseModuleChain(lexer, moduleChain, &chainLength, context, arena, state, typeTable);
     logMessage(LMI, "INFO", "Parser", "Module chain parsed successfully.");
 
     // Handle type list if present
     if (lexer->currentToken.type == TOKEN_LBRACE)
     {
         const char *lastModule = moduleChain[chainLength - 1].name;
-        parseTypeList(lexer, lastModule, table, context, arena,
+        parseTypeList(lexer, lastModule, context, arena,
                       state, typeTable, globalTable);
     }
 
@@ -69,7 +69,7 @@ ASTNode *parseUsingKeyword(Lexer *lexer, CryoSymbolTable *table, ParsingContext 
 
     setPrimaryTableStatus(globalTable, true);
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
-            "parseUsingKeyword", table, arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, typeTable, context);
 
     logMessage(LMI, "INFO", "Parser", "Finished parsing using keyword.");
 
@@ -88,7 +88,7 @@ static void cleanupModuleChain(char **names, size_t length)
 }
 
 static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain, size_t *chainLength,
-                             CryoSymbolTable *table, ParsingContext *context, Arena *arena,
+                             ParsingContext *context, Arena *arena,
                              CompilerState *state, TypeTable *typeTable)
 {
     const char *namespaces[] = {0};
@@ -120,7 +120,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
 
         // Must be an identifier followed by either :: or ; or {
         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
-                "parseModuleChain", table, arena, state, typeTable, context);
+                "parseModuleChain", arena, state, typeTable, context);
 
         // After an identifier, we should either see :: or end of chain
         if (lexer->currentToken.type == TOKEN_LBRACE ||
@@ -140,7 +140,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
         }
 
         consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected `::` after identifier.",
-                "parseModuleChain", table, arena, state, typeTable, context);
+                "parseModuleChain", arena, state, typeTable, context);
     }
 
     // DEBUG -------------------------------------
@@ -157,13 +157,13 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
     }
 }
 
-static void parseTypeList(Lexer *lexer, const char *lastModule, CryoSymbolTable *table,
+static void parseTypeList(Lexer *lexer, const char *lastModule,
                           ParsingContext *context, Arena *arena, CompilerState *state,
                           TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Parser", "Parsing specific types within braces...");
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` after `::`.",
-            "parseTypeList", table, arena, state, typeTable, context);
+            "parseTypeList", arena, state, typeTable, context);
 
     struct TypeEntry typeNames[MAX_MODULE_CHAIN];
     size_t typeCount = 0;
@@ -185,7 +185,7 @@ static void parseTypeList(Lexer *lexer, const char *lastModule, CryoSymbolTable 
         }
 
         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected type identifier.",
-                "parseTypeList", table, arena, state, typeTable, context);
+                "parseTypeList", arena, state, typeTable, context);
 
         if (lexer->currentToken.type == TOKEN_RBRACE)
         {
@@ -193,11 +193,11 @@ static void parseTypeList(Lexer *lexer, const char *lastModule, CryoSymbolTable 
         }
 
         consume(__LINE__, lexer, TOKEN_COMMA, "Expected `,` after type identifier.",
-                "parseTypeList", table, arena, state, typeTable, context);
+                "parseTypeList", arena, state, typeTable, context);
     } while (true);
 
     consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` after type list.",
-            "parseTypeList", table, arena, state, typeTable, context);
+            "parseTypeList", arena, state, typeTable, context);
 
     // Convert to array for import
     const char *typeArray[MAX_MODULE_CHAIN];
