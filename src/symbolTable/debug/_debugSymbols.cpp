@@ -275,10 +275,14 @@ namespace Cryo
             return;
         }
 
+        const char *symbolTypeStr = getColoredSymbolType(PROPERTY_SYMBOL).c_str();
+        const char *nameStr = symbol->name ? symbol->name : "<anonymous>";
+        const char *typeStr = symbol->type ? DataTypeToString(symbol->type) : "unknown";
+
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": Type: %s",
-                          getColoredSymbolType(PROPERTY_SYMBOL).c_str(),
-                          symbol->name,
-                          symbol->type ? DataTypeToString(symbol->type) : "unknown");
+                          symbolTypeStr,
+                          nameStr,
+                          typeStr);
         logger->debugNode("ID: %s | Static: %s HasDefault: %s",
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",
