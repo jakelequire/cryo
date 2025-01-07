@@ -36,7 +36,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     const char *moduleName = GetNamespace(state->globalTable);
     if (moduleName)
     {
-        node->metaData->moduleName = strdup(moduleName);
+        node->metaData->moduleName = (char *)moduleName;
     }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);

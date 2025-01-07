@@ -1,0 +1,94 @@
+namespace IOInterface;
+
+using Std::Types;
+
+extern function __c_write(fd: int, buf: string, count: int) -> int;
+
+// These are the lowest level function that are being used by the higher level functions.
+// The functions here are ones that are directly from C.
+// Todo:
+// - `symlink` - Create a symbolic link.
+// - `readlink` - Read a symbolic link.
+// - `chmod` - Change file permissions.
+// - `chown` - Change file owner.
+// - `utime` - Change file access and modification times.
+// - `access` - Check file access permissions.
+// - `dup` - Duplicate a file descriptor.
+// - `dup2` - Duplicate a file descriptor.
+// - `pipe` - Create a pipe.
+// - `mkfifo` - Make a FIFO special file.
+// - `umask` - Set file mode creation mask.
+// - `getpid` - Get process ID.
+// - `getppid` - Get parent process ID.
+
+class FileOps {
+    constructor() {}
+
+    public static write(fd: int, buf: string, count: int) -> int {
+        return __c_write(fd, buf, count);
+    }
+
+    // public static read(fd: int, buf: string, count: int) -> int {
+    //     return 0;
+    // }
+
+    // public static open(path: string, flags: int, mode: int) -> int {
+    //     return 0;
+    // }
+
+    // public static close(fd: int) -> int {
+    //     return 0;
+    // }
+
+    // public static lseek(fd: int, offset: int, whence: int) -> int {
+    //     return 0;
+    // }
+
+    // public static unlink(path: string) -> int {
+    //     return 0;
+    // }
+
+    // public static fstat(fd: int, buf: string) -> int {
+    //     return 0;
+    // }
+
+    // public static stat(path: string, buf: string) -> int {
+    //     return 0;
+    // }
+
+    // public static mkdir(path: string, mode: int) -> int {
+    //     return 0;
+    // }
+
+    // public static rmdir(path: string) -> int {
+    //     return 0;
+    // }
+
+    // public static opendir(path: string) -> int {
+    //     return 0;
+    // }
+
+    // public static readdir(dirp: int, entry: string) -> int {
+    //     return 0;
+    // }
+
+    // public static closedir(dirp: int) -> int {
+    //     return 0;
+    // }
+
+    // public static chdir(path: string) -> int {
+    //     return 0;
+    // }
+
+    // public static getcwd(buf: string, size: int) -> string {
+    //     return "";
+    // }
+
+    // public static rename(oldpath: string, newpath: string) -> int {
+    //     return 0;
+    // }
+
+    // public static link(oldpath: string, newpath: string) -> int {
+    //     return 0;
+    // }
+}

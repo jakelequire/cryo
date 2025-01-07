@@ -25,11 +25,11 @@ namespace Cryo
         CryoContext &cryoContext = compiler.getContext();
         CompilerSettings *settings = compiler.getCompilerSettings();
 
-        Linker *linker = compiler.getLinker();
+        // Linker *linker = compiler.getLinker();
 
         // Hoist the declarations from the linker
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Hoisting Declarations");
-        linker->hoistDeclarations(compiler.getContext().module.get());
+        // linker->hoistDeclarations(compiler.getContext().module.get());
 
         if (llvm::verifyModule(*cryoContext.module, nullptr))
         {

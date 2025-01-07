@@ -1,27 +1,7 @@
 namespace Testing;
 
-
-class TestingClass {
-    public value: int;
-
-    constructor() {}
-
-    public static methodOne() -> void {
-        const testInt: int = 42;
-        printInt(testInt);
-        return;
-    }
-
-    public static methodTwo() -> void {
-        const testIntTwo: int = 69;
-        printInt(testIntTwo);
-        return;
-    }
-
-    public static methodThree() -> void {
-        return;
-    }
-}
+using Std::Types;
+using Std::IO;
 
 function testUsingKw() -> void {
     const testIntThree: Int = 18;
@@ -40,13 +20,10 @@ function testUsingKwTwo() -> void {
 function main(argc: int, argv: string[]) -> int {
     printStr("---------- Main Function ----------");
 
-    TestingClass::methodOne();
-    TestingClass::methodTwo();
-    TestingClass::methodThree();
-
     testUsingKw();
 
     printStr("Testing Complete");
 
     return 0;
 }
+

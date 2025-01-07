@@ -2,119 +2,17 @@
 
 ╔═══════════════════════════════ AST Tree ═══════════════════════════════╗[0m
 
-<Program : [Main]> { ./tests/sandbox/main.cryo }
+<Program : [Testing]> { ./tests/sandbox/testing.cryo }
 
-<Class> [FooBaz] <0:0>
-   <Constructor> <0:0>
-      <Block> <0:0>
-   Public:
-      <Property> [anotherFooProp] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
-      <Property> [anotherFooPropTwo] { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
-      <Method> [anotherFooMethod]:  [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
-         <Block> <0:0>
-            <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-            <ReturnStatement> <0:0>
-   Private:
-   Protected:
-
-<FunctionDecl> [stringTesting]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+<FunctionDecl> [testUsingKw]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
    <FunctionBlock> <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [testString] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0> Value: Hello 
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [testStringTwo] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0> Value: World
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [testStringThree] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [testStringFour] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [testStringFive] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [testStringSix] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <ReturnStatement> <0:0>
-
-<FunctionDecl> [arrayTesting]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
-   <FunctionBlock> <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [fooArr] { Type: [96m[1m[96m[1mint[0m[][0m } <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+      <VarDecl> [testIntThree] { Type: [96m[1mInt[0m } <0:0> Value: 18
       <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
       <ReturnStatement> <0:0>
 
-<FunctionDecl> [structTesting]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+<FunctionDecl> [testUsingKwTwo]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
    <FunctionBlock> <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [intTest] { Type: [96m[1mInt[0m } <0:0> Value: 1234
-      <VarDecl> [intTestTwo] { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [strVal] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <MethodCall> [fooMethod]: [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <ReturnStatement> <0:0>
-
-<FunctionDecl> [binOpTest]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
-   <FunctionBlock> <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [addTest] { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [subTest] { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [mulTest] { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [divTest] { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [modTest] { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <ReturnStatement> <0:0>
-
-<FunctionDecl> [runtimeClassTesting]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
-   <FunctionBlock> <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [filePathStr] { Type: [96m[1mString[0m } <0:0> Value: /home/phock/Programming/apps/cryo/testing.txt
-      <VarDecl> [mode] { Type: [96m[1mString[0m } <0:0> Value: r
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <ReturnStatement> <0:0>
-
-<FunctionDecl> [typeofTesting]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
-   <FunctionBlock> <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [foo] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0> Value: Hello
-      <VarDecl> [bar] { Type: [96m[1m[96m[1mint[0m[0m } <0:0> Value: 1234
-      <VarDecl> [baz] { Type: [96m[1m[96m[1mboolean[0m[0m } <0:0> Value: true
-      <VarDecl> [qux] { Type: [96m[1mInt[0m } <0:0> Value: 1234
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-
-<FunctionDecl> [anyTypeTesting]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
-   <FunctionBlock> <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <ReturnStatement> <0:0>
-
-<FunctionDecl> [forLoopTesting]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
-   <FunctionBlock> <0:0>
+      <VarDecl> [testStr] { Type: [96m[1mString[0m } <0:0> Value: Hello, World!
       <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
       <ReturnStatement> <0:0>
 
@@ -123,20 +21,10 @@
    <Param> { Type: [96m[1m[96m[1mstring[0m[][0m } <0:0>
    <FunctionBlock> <0:0>
       <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+      <FunctionCall> [testUsingKw] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
       <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <VarDecl> [argOne] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
-      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [stringTesting] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [structTesting] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [binOpTest] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [arrayTesting] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [runtimeClassTesting] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [typeofTesting] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
-      <FunctionCall> [sys_exit] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
       <ReturnStatement> <0:0>
-         <IntLiteral> [1691748608] <0:0>
+         <IntLiteral> [951989792] <0:0>
 
 [32m╚════════════════════════════════════════════════════════════════════════╝
 

@@ -1,7 +1,6 @@
 namespace Int;
 
 extern function intToString(val: int) -> string;
-extern function printStr(str: string) -> void;
 
 struct Int {
     value: int;
@@ -12,10 +11,5 @@ struct Int {
 
     toString() -> string {
         return intToString(this.value);
-    }
-
-    fooMethod() -> void {
-        printStr("Foo method called");
-        return;
     }
 }
