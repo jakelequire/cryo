@@ -129,6 +129,9 @@ extern "C"
 
     const char *CryoGlobalSymbolTable_GetNamespace(CryoGlobalSymbolTable *symTable);
 
+    // Misc Functions ---------------------------------------
+    ASTNode **CryoGlobalSymbolTable_MergeAllSymbolsToASTArray(CryoGlobalSymbolTable *symTable);
+
 // Class State Functions
 #define isPrimaryTable(symTable) \
     CryoGlobalSymbolTable_GetIsPrimaryTable(symTable)
@@ -261,6 +264,10 @@ extern "C"
 
 #define GetNamespace(symTable) \
     CryoGlobalSymbolTable_GetNamespace(symTable)
+
+// Misc Functions
+#define MergeAllSymbolsToASTArray(symTable) \
+    CryoGlobalSymbolTable_MergeAllSymbolsToASTArray(symTable)
 
 #ifdef __cplusplus
 } // C API
@@ -553,10 +560,16 @@ namespace Cryo
         Symbol *resolveExternSymbol(const char *symbolName);
         Symbol *seekFunctionSymbolInAllTables(const char *symbolName);
         Symbol *seekMethodSymbolInAllTables(const char *methodName, const char *className, TypeofDataType typeOfNode);
-        
+
         ASTNode *findClassProperty(const char *propertyName, const char *className);
         ASTNode *findClassMethod(const char *methodName, const char *className);
-        
+
+        //===================================================================
+        // Misc Operations
+        //===================================================================
+
+        ASTNode **mergeAllSymbolsToASTArray(void); // [C API]
+
         //===================================================================
         // Debug Operations / Utilities
         //===================================================================
@@ -1118,6 +1131,17 @@ namespace Cryo
         if (symTable)
         {
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->getNamespace();
+        }
+        return nullptr;
+    }
+
+    // Misc Functions ---------------------------------------
+
+    inline ASTNode **CryoGlobalSymbolTable_MergeAllSymbolsToASTArray(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->mergeAllSymbolsToASTArray();
         }
         return nullptr;
     }

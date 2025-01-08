@@ -52,6 +52,7 @@ static const struct option long_options[] = {
     // Long-only options (no short equivalent)
     {"ast-dump", no_argument, 0, OPT_AST_DUMP},
     {"ir-dump", no_argument, 0, OPT_IR_DUMP},
+    {"lsp-symbols", no_argument, 0, OPT_LSP_SYMBOLS},
     {0, 0, 0, 0} // Required terminator
 };
 
@@ -79,7 +80,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     int c;
     int option_index = 0;
     char *optstring = "f:s:o:avd:L:h";
-    while ((c = getopt_long(argc, argv, "f:s:o:avd:L:h", long_options, &option_index)) != -1)
+    while ((c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1)
     {
         switch (c)
         {
@@ -144,6 +145,22 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             {
                 printf("IR dump enabled\n");
             }
+            break;
+
+        case OPT_LSP_SYMBOLS:
+            settings->isLSP = true;
+            if (settings->verbose)
+            {
+                printf("LSP Symbols enabled\n");
+            }
+            if (optind >= argc)
+            {
+                fprintf(stderr, "Error: No input file specified for LSP symbols\n");
+                printUsage(argv[0]);
+                exit(1);
+            }
+            printf("File Path: %s\n", argv[optind]);
+            settings->lspOutputPath = argv[optind];
             break;
 
         case 'h':
@@ -279,6 +296,7 @@ CompilerSettings createCompilerSettings(void)
     settings.totalFiles = 0;
     settings.astDump = false;
     settings.irDump = false;
+    settings.isLSP = false;
     return settings;
 }
 

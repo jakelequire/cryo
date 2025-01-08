@@ -64,6 +64,9 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
 SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state, Arena *arena, CryoGlobalSymbolTable *globalTable);
 int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath);
 
+// LSP Compiler
+int lspCompiler(const char *filePath, CompilerSettings *settings);
+
 // C++ Accessable Functions
 #ifdef __cplusplus
 extern "C"

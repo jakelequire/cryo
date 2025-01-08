@@ -22,12 +22,26 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 {
     START_COMPILATION_MESSAGE;
 
+    // ========================================
+    // Handle Flags
+
     bool isSource = settings->isSource;
     if (isSource)
     {
         char *sourceText = settings->sourceText;
         return sourceTextCompiler(sourceText, settings);
     }
+
+    bool isLSP = settings->isLSP;
+    if (isLSP)
+    {
+        const char *inputFilePath = settings->inputFile;
+        fprintf(stdout, "File Path: %s\n", inputFilePath);
+        return lspCompiler(inputFilePath, settings);
+    }
+
+    // ========================================
+    // Compile the file (default behavior)
 
     const char *source = readFile(filePath);
     if (!source)
@@ -86,9 +100,9 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     // Initialize the parser
     ASTNode *programNode = parseProgram(&lex, arena, state, typeTable, globalSymbolTable);
-
     if (programNode == NULL)
     {
+        fprintf(stderr, "Error: Failed to parse program node\n");
         CONDITION_FAILED;
         return 1;
     }
@@ -110,6 +124,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     int result = generateCodeWrapper(programNode, state, linker);
     if (result != 0)
     {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");
         CONDITION_FAILED;
         return 1;
     }

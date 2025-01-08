@@ -53,6 +53,7 @@ typedef enum
 {
     OPT_AST_DUMP = 1000,
     OPT_IR_DUMP,
+    OPT_LSP_SYMBOLS
 } LongOnlyOptions;
 
 typedef struct CompilerSettings
@@ -61,9 +62,8 @@ typedef struct CompilerSettings
     const char *customOutputPath;
     const char *inputFile;
     const char *inputFilePath;
+    const char *lspOutputPath; // {WORKSPACE}/build/lsp
     char *sourceText;
-    bool activeBuild;
-    bool isSource;
     bool verbose;
     DebugLevel debugLevel;
     /**
@@ -81,6 +81,9 @@ typedef struct CompilerSettings
     // Flags
     bool astDump;
     bool irDump;
+    bool isSource;
+    bool activeBuild;
+    bool isLSP;
 
     // Version
     const char *version;

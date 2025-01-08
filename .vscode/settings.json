@@ -272,7 +272,10 @@
     "std_function.h": "c",
     "signal.h": "c",
     "features.h": "c",
-    "wordsize.h": "c"
+    "wordsize.h": "c",
+    "lspsymbols.h": "c",
+    "socket.h": "c",
+    "cryo-path.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

@@ -23,6 +23,7 @@
 #include "tools/utils/buildStats.h"
 #include "tools/utils/env.h"
 #include "tools/utils/c_logger.h"
+#include "tools/utils/cryo-path.h"
 
 int main(int argc, char *argv[])
 {
@@ -62,6 +63,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error: File not found: %s\n", filePath);
         return 1;
     }
+
+    // Output the `cryo-path` binary
+    const char *rootPath = strdup(settings.rootDir);
+    initCompilerPathExe(rootPath);
 
     // Compile the file
     int compilerResult = cryoCompiler(filePath, &settings);

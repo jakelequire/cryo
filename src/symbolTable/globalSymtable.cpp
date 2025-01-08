@@ -449,6 +449,27 @@ namespace Cryo
         }
     }
 
+    ASTNode **GlobalSymbolTable::mergeAllSymbolsToASTArray()
+    {
+        std::vector<Symbol *> primarySymbols = mergePrimaryTable();
+        std::vector<Symbol *> dependencySymbols = mergeAllDependencyTables();
+
+        std::vector<Symbol *> mergedSymbols = mergeTwoSymbolVectors(primarySymbols, dependencySymbols);
+
+        SymbolTable *mergedTable = createNewSymbolTableFromSymbols(mergedSymbols);
+
+        ASTNode **astArray = new ASTNode *[mergedTable->count];
+
+        for (size_t i = 0; i < mergedTable->count; i++)
+        {
+            Symbol *symbol = mergedTable->symbols[i];
+            ASTNode *node = getASTNodeFromSymbol(symbol);
+            astArray[i] = node;
+        }
+
+        return astArray;
+    }
+
     // ========================================================================
 
     void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
