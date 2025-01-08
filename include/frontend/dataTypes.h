@@ -213,6 +213,7 @@ typedef struct ClassType
 {
     const char *name;
     ASTNode *constructor;
+    ASTNode *classNode;
     int propertyCount;
     int propertyCapacity;
     int methodCount;
@@ -318,6 +319,9 @@ extern "C"
 
     DataType *findClassType(ASTNode *node, TypeTable *typeTable);
     DataType *findClassTypeFromName(const char *name, TypeTable *typeTable);
+
+    ASTNode **getAllClassMethods(ASTNode *classNode);
+    ASTNode **getAllClassPropsFromDataType(DataType *classType);
 
     // # =========================================================================== #
     // # Primitive Type Functions

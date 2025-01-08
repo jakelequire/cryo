@@ -26,5 +26,6 @@
 #include <cstring>
 #include <fstream>
 #include <dirent.h>
+#include <fcntl.h>
 
 #define __EXTERN_C__ extern "C"

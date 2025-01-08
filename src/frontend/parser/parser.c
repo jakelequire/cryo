@@ -987,7 +987,8 @@ ASTNode *parsePrivateDeclaration(Lexer *lexer, ParsingContext *context, Arena *a
         return parseVarDeclaration(lexer, context, arena, state, typeTable, globalTable);
     case TOKEN_KW_FN:
         return parseFunctionDeclaration(lexer, context, VISIBILITY_PRIVATE, arena, state, typeTable, globalTable);
-
+    case TOKEN_KW_MODULE:
+        return parseModuleDeclaration(VISIBILITY_PRIVATE, lexer, context, arena, state, typeTable, globalTable);
     default:
         parsingError("Expected a declaration.", "parsePrivateDeclaration", arena, state, lexer, lexer->source, typeTable, globalTable);
         return NULL;
@@ -2862,44 +2863,47 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
             return NULL;
         }
     }
-    DEBUG_BREAKPOINT;
-    // TODO: Implement class property access
+    // Return the property access node for *CLASS TYPES*.
+    else if (typeOfNode->container->baseType == CLASS_TYPE)
+    {
+        logMessage(LMI, "INFO", "Parser", "Type of node is a class.");
+        VALIDATE_TYPE(typeOfNode);
 
-    // if (typeOfNode->container->baseType == CLASS_TYPE)
-    // {
-    //     logMessage(LMI, "INFO", "Parser", "Type of node is a class.");
-    //     VALIDATE_TYPE(typeOfNode);
-    //
-    //     ClassType *classType = typeOfNode->container->custom.classDef;
-    //     logClassType(classType);
-    //     const char *className = typeOfNode->container->custom.classDef->name;
-    //     Token nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable);
-    //     Token currentToken = lexer->currentToken;
-    //
-    //     if (currentToken.type == TOKEN_LPAREN)
-    //     {
-    //         logMessage(LMI, "INFO", "Parser", "Parsing method call...");
-    //         ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer,context, arena, state, typeTable, globalTable);
-    //         return methodCallNode;
-    //     }
-    //
-    //     logMessage(LMI, "INFO", "Parser", "Class name: %s", className);
-    //     logMessage(LMI, "INFO", "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
-    //
-    //     ASTNode *property = findClassProperty(classType, (const char *)propName, typeTable);
-    //     if (property)
-    //     {
-    //         logMessage(LMI, "INFO", "Parser", "Property found in class, name: %s", propName);
-    //         return createClassPropertyAccessNode(object, property, (const char *)propName, typeOfNode, arena, state, typeTable, lexer);
-    //     }
-    //     else
-    //     {
-    //         printTypeTable(typeTable);
-    //         printf("Property Attempted: %s\n", propName);
-    //         parsingError("Property not found in class.", "parseDotNotationWithType",arena, state, lexer, lexer->source, typeTable, globalTable);
-    //         return NULL;
-    //     }
-    // }
+        ClassType *classType = typeOfNode->container->custom.classDef;
+        logDataType(typeOfNode);
+        const char *className = typeOfNode->container->custom.classDef->name;
+        Token nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable);
+        Token currentToken = lexer->currentToken;
+
+        if (currentToken.type == TOKEN_LPAREN)
+        {
+            logMessage(LMI, "INFO", "Parser", "Parsing method call...");
+            ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, context, arena, state, typeTable, globalTable);
+            return methodCallNode;
+        }
+
+        logMessage(LMI, "INFO", "Parser", "Class name: %s", className);
+        logMessage(LMI, "INFO", "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
+
+        ASTNode *property = GetClassProperty(globalTable, (const char *)propName, className);
+        if (property)
+        {
+            logMessage(LMI, "INFO", "Parser", "Property found in class, name: %s", propName);
+            return createClassPropertyAccessNode(object, property, (const char *)propName, typeOfNode, arena, state, typeTable, lexer);
+        }
+        else
+        {
+            printTypeTable(typeTable);
+            printf("Property Attempted: %s\n", propName);
+            parsingError("Property not found in class.", "parseDotNotationWithType", arena, state, lexer, lexer->source, typeTable, globalTable);
+            return NULL;
+        }
+    }
+    else
+    {
+        parsingError("Expected a struct or class type.", "parseDotNotationWithType", arena, state, lexer, lexer->source, typeTable, globalTable);
+        return NULL;
+    }
 }
 
 ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
@@ -2972,7 +2976,7 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
 
     logMessage(LMI, "INFO", "Parser", "Type name: %s", typeName);
 
-    DataType *type = lookupType(typeTable, typeName);
+    DataType *type = ResolveDataType(globalTable, typeName);
     if (!type)
     {
         logMessage(LMI, "ERROR", "Parser", "Type not found.");

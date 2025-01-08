@@ -146,6 +146,11 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define FindMethodSymbol(symTable, methodName, className, typeOfNode) \
     CryoGlobalSymbolTable_FindMethodSymbol(symTable, methodName, className, typeOfNode)
 
+#define GetClassProperty(symTable, propertyName, className) \
+    CryoGlobalSymbolTable_FindClassProperty(symTable, propertyName, className)
+#define GetClassMethod(symTable, methodName, className) \
+    CryoGlobalSymbolTable_FindClassMethod(symTable, methodName, className)
+
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
     CryoGlobalSymbolTable_PrintGlobalTable(symTable)

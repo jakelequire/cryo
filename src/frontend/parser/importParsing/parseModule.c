@@ -59,6 +59,7 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     const char *moduleFilePath = getModuleFile(fileArray, moduleName);
     logMessage(LMI, "INFO", "Parser", "Module file path: %s", moduleFilePath);
     // Handle the module parsing
+
     int moduleParsingResult = handleModuleParsing(moduleFilePath, state, globalTable, arena);
     if (moduleParsingResult == 0)
     {

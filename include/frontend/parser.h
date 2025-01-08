@@ -310,6 +310,8 @@ static void ensureCapacity(ASTNode **array, int *capacity, int count, int increm
 ASTNode *parseMethodScopeResolution(const char *scopeName,
                                     Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 
+ASTNode *createClassPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propName, DataType *typeOfNode,
+                                       Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 // New Keyword Parsing
 ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 

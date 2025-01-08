@@ -54,6 +54,7 @@ namespace Cryo
 
         // Add class type to the symbol table and context
         compiler.getSymTable().addClass(className, classType, classNode, classDataType);
+        compiler.getContext().addClassToInstance(className, classType);
 
         // Add to the `NamedGlobal` map
         compiler.getContext().module->getOrInsertGlobal(classTypeName, classType);

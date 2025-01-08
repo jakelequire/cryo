@@ -35,21 +35,7 @@ namespace Cryo
             std::cout << "Deleting reaped table" << std::endl;
             delete reapedTable;
         }
-        for (size_t i = 0; i < dependencyTableVector.size(); i++)
-        {
-            std::cout << "Deleting dependency table: " << i << std::endl;
-            delete dependencyTableVector[i];
-        }
-        for (size_t i = 0; i < globalFunctions.size(); i++)
-        {
-            std::cout << "Deleting global function: " << i << std::endl;
-            delete globalFunctions[i];
-        }
-        for (size_t i = 0; i < externFunctions.size(); i++)
-        {
-            std::cout << "Deleting extern function: " << i << std::endl;
-            delete externFunctions[i];
-        }
+        dependencyTableVector.clear();
     }
 
     bool GlobalSymbolTable::getIsPrimaryTable(void)

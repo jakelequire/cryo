@@ -358,12 +358,15 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
 {
     logMessage(LMI, "INFO", "Parser", "Parsing method call...");
 
-    ASTNode **params = parseParameterList(lexer, context, arena, methodName, state, typeTable, globalTable);
-    int paramCount = 0;
-    while (params[paramCount] != NULL)
+    ASTNode *argList = parseArgumentList(lexer, context, arena, state, typeTable, globalTable);
+    if (!argList)
     {
-        paramCount++;
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse argument list.");
+        parsingError("Failed to parse argument list.", "parseMethodCall", arena, state, lexer, lexer->source, typeTable, globalTable);
+        CONDITION_FAILED;
     }
+    int paramCount = argList->data.argList->argCount;
+    ASTNode **params = argList->data.argList->args;
 
     logMessage(LMI, "INFO", "Parser", "Method name: %s", methodName);
     logMessage(LMI, "INFO", "Parser", "Param count: %d", paramCount);

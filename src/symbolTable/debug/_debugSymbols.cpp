@@ -298,25 +298,35 @@ namespace Cryo
             return;
         }
 
+        const char *symbolTypeStr = getColoredSymbolType(METHOD_SYMBOL).c_str();
+        const char *nameStr = symbol->name ? symbol->name : "<anonymous>";
+        const char *returnTypeStr = symbol->returnType ? DataTypeToString(symbol->returnType) : "void";
+
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": ReturnType: %s",
-                          getColoredSymbolType(METHOD_SYMBOL).c_str(),
-                          symbol->name,
-                          symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
-        logger->debugNode("ID: %s | Static: %s Visibility: %d",
-                          symbol->scopeId,
-                          symbol->isStatic ? "true" : "false",
-                          symbol->visibility);
-        logger->debugNode("Parameters: %zu", symbol->paramCount);
+                          symbolTypeStr,
+                          nameStr,
+                          returnTypeStr);
+
+        const char *scopeIdStr = symbol->scopeId ? symbol->scopeId : "<anonymous>";
+        const char *staticStr = symbol->isStatic ? "true" : "false";
+        const char *visibilityStr = symbol->visibility ? "true" : "false";
+        logger->debugNode("ID: %s | Static: %s Visibility: %s",
+                          scopeIdStr,
+                          staticStr,
+                          visibilityStr);
+
+        size_t paramCount = symbol->paramCount;
+        logger->debugNode("Parameters: %zu", paramCount);
 
         // Only log parameters if they exist
-        if (symbol->paramCount > 0)
-        {
-            for (size_t i = 0; i < symbol->paramCount; i++)
-            {
-                logger->debugNode("  Param %zu: %s", i,
-                                  symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
-            }
-        }
+        // if (symbol->paramCount > 0)
+        // {
+        //     for (size_t i = 0; i < symbol->paramCount; i++)
+        //     {
+        //         const char *paramTypeStr = symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown";
+        //         logger->debugNode("  Param %zu: %s", i, paramTypeStr);
+        //     }
+        // }
         logger->debugNode(CHILD_SEPARATOR);
     }
 

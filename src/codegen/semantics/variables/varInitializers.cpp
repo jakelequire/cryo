@@ -1005,4 +1005,44 @@ namespace Cryo
 
         return initializer;
     }
+
+    llvm::Value *Variables::createObjectInstanceVariable(ObjectNode *objectNode, std::string varName, DataType *varType)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Object Instance Variable");
+
+        std::string namespaceName = compiler.getContext().currentNamespace;
+        DataType *objectType = objectNode->objType;
+        std::string dataTypeName = getDataTypeName(objectType);
+        std::cout << "Data Type Name: " << dataTypeName << std::endl;
+        llvm::Value *objectPtr = compiler.getObjects().createObjectInstance(objectNode, varName);
+        if (!objectPtr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Object instance not created");
+            CONDITION_FAILED;
+        }
+        llvm::Type *objectTypeIR = compiler.getTypes().getType(objectType, 0);
+        if (!objectTypeIR)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Object type not found");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Object Instance Created");
+
+        // Register in symbol table
+        compiler.getContext().namedValues[varName] = objectPtr;
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating Symbol Table with Object Instance");
+        compiler.getSymTable().updateVariableNode(
+            namespaceName,
+            varName,
+            objectPtr,
+            objectTypeIR);
+
+        compiler.getSymTable().addDataTypeToVar(namespaceName, varName, varType);
+
+        DevDebugger::logMessage("INFO", __LINE__, "Variables", "Symbol Table Updated with Object Instance");
+
+        return objectPtr;
+    }
+
 } // namespace Cryo

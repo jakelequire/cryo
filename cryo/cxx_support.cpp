@@ -159,22 +159,68 @@ __EXTERN_C__ char **__c_fs_listDir(const char *path)
 }
 
 // =======================================================
-// DEBUGGING FUNCTIONS
+// Low Level Operations
 
-__EXTERN_C__ char *__c_DBG_IDGen_HashID(char *name)
+__EXTERN_C__ int __c_write(int fd, const void *buf, size_t count)
 {
-    printf("Name: %s\n", name);
-    uint64_t hash = 0;
-    size_t len = strlen(name);
-    for (size_t i = 0; i < len; ++i)
-    {
-        hash = (hash << 5) + hash + name[i]; // hash * 33 + seed[i]
-    }
-    hash = hash & 0xFFFFFFFFFFFFFFFF; // Ensure it's 64-bit
-
-    // Convert hash to string
-    char *hashStr = (char *)std::malloc(17); // 16 digits + null terminator
-    sprintf(hashStr, "%016lX", hash);
-
-    return hashStr;
+    return write(fd, buf, count);
 }
+
+/*
+extern function __c_read(fd: int, buf: string, count: int) -> int;
+extern function __c_open(path: string, flags: int, mode: int) -> int;
+extern function __c_close(fd: int) -> int;
+extern function __c_lseek(fd: int, offset: int, whence: int) -> int;
+extern function __c_unlink(path: string) -> int;
+extern function __c_fstat(fd: int, buf: string) -> int;
+extern function __c_stat(path: string, buf: string) -> int;
+extern function __c_mkdir(path: string, mode: int) -> int;
+extern function __c_rmdir(path: string) -> int;
+extern function __c_opendir(path: string) -> int;
+*/
+
+__EXTERN_C__ int __c_read(int fd, void *buf, size_t count)
+{
+    return read(fd, buf, count);
+}
+
+__EXTERN_C__ int __c_open(const char *path, int flags, int mode)
+{
+    return open(path, flags, mode);
+}
+
+__EXTERN_C__ int __c_close(int fd)
+{
+    return close(fd);
+}
+
+__EXTERN_C__ int __c_lseek(int fd, int offset, int whence)
+{
+    return lseek(fd, offset, whence);
+}
+
+__EXTERN_C__ int __c_unlink(const char *path)
+{
+    return unlink(path);
+}
+
+__EXTERN_C__ int __c_fstat(int fd, struct stat *buf)
+{
+    return fstat(fd, buf);
+}
+
+__EXTERN_C__ int __c_stat(const char *path, struct stat *buf)
+{
+    return stat(path, buf);
+}
+
+__EXTERN_C__ int __c_mkdir(const char *path, int mode)
+{
+    return mkdir(path, mode);
+}
+
+__EXTERN_C__ int __c_rmdir(const char *path)
+{
+    return rmdir(path);
+}
+

@@ -3,27 +3,16 @@ namespace Testing;
 using Std::Types;
 using Std::IO;
 
-function testUsingKw() -> void {
-    const testIntThree: Int = 18;
-    printInt(testIntThree.value);
-
-    return;
-}
-
-function testUsingKwTwo() -> void {
-    const testStr: String = "Hello, World!";
-    printStr(testStr.value);
-    
-    return;
+function testUsingKW() -> void {
+    const fileOps: IO = new IO();
+    printStr("FileOps instance created");
+    fileOps.write(1, "Hi!", 13);
 }
 
 function main(argc: int, argv: string[]) -> int {
     printStr("---------- Main Function ----------");
 
-    testUsingKw();
-
-    printStr("Testing Complete");
+    testUsingKW();
 
     return 0;
 }
-

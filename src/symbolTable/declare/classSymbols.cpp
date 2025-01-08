@@ -211,6 +211,52 @@ namespace Cryo
         return;
     }
 
+    ASTNode *GlobalSymbolTable::findClassProperty(const char *propertyName, const char *className)
+    {
+        std::cout << "Finding Property: " << propertyName << " in Class: " << className << std::endl;
+        Symbol *classSymbol = getClassSymbol(className);
+        if (!classSymbol)
+        {
+            std::cout << "Error: Class Symbol not found" << std::endl;
+            return nullptr;
+        }
+
+        for (int i = 0; i < classSymbol->type->propertyCount; i++)
+        {
+            if (classSymbol->type->properties[i]->type->name == propertyName)
+            {
+                std::cout << "Property Found!" << std::endl;
+                return classSymbol->type->properties[i]->type->node;
+            }
+        }
+
+        std::cerr << "Property not found" << std::endl;
+        return nullptr;
+    }
+
+    ASTNode *GlobalSymbolTable::findClassMethod(const char *methodName, const char *className)
+    {
+        std::cout << "Finding Method: " << methodName << " in Class: " << className << std::endl;
+        Symbol *classSymbol = getClassSymbol(className);
+        if (!classSymbol)
+        {
+            std::cout << "Error: Class Symbol not found" << std::endl;
+            return nullptr;
+        }
+
+        for (int i = 0; i < classSymbol->type->methodCount; i++)
+        {
+            if (classSymbol->type->methods[i]->type->name == methodName)
+            {
+                std::cout << "Method Found!" << std::endl;
+                return classSymbol->type->methods[i]->type->node;
+            }
+        }
+
+        std::cerr << "Method not found" << std::endl;
+        return nullptr;
+    }
+
     // -------------------------------------------------------
     // Updates Symbol Table with the Class Declaration
 

@@ -66,6 +66,7 @@
 #include "common/common.h"
 #include "tools/macros/printMacros.h"
 #include "linker/linker.hpp"
+#include "symbolTable/globalSymtable.hpp"
 
 namespace Cryo
 {
@@ -90,6 +91,7 @@ namespace Cryo
     class WhileStatements;
     class ErrorHandler;
     class Classes;
+    class Objects;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -125,7 +127,8 @@ namespace Cryo
         std::unique_ptr<std::vector<llvm::Module *>> modules;
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
-        std::unordered_map<std::string, llvm::StructType *> structTypes;
+        std::unordered_map<std::string, llvm::StructType *> structTypes = {};
+        std::unordered_map<std::string, llvm::StructType *> classTypes = {};
 
         std::unordered_map<std::string, DataType *> structDataTypes;
         std::unordered_map<std::string, DataType *> classDataTypes;
@@ -196,6 +199,21 @@ namespace Cryo
             structTypes[name] = structType;
         }
 
+        llvm::StructType *getStruct(std::string name)
+        {
+            return structTypes[name];
+        }
+
+        void addClassToInstance(std::string name, llvm::StructType *classType)
+        {
+            classTypes[name] = classType;
+        }
+
+        llvm::StructType *getClass(std::string name)
+        {
+            return classTypes[name];
+        }
+
         void addStructDataType(std::string name, DataType *dataType)
         {
             structDataTypes[name] = dataType;
@@ -204,11 +222,6 @@ namespace Cryo
         void addClassDataType(std::string name, DataType *dataType)
         {
             classDataTypes[name] = dataType;
-        }
-
-        llvm::StructType *getStruct(std::string name)
-        {
-            return structTypes[name];
         }
 
     private:
@@ -244,6 +257,7 @@ namespace Cryo
         WhileStatements &getWhileStatements() { return *whileStatements; }
         ErrorHandler &getErrorHandler() { return *errorHandler; }
         Classes &getClasses() { return *classes; }
+        Objects &getObjects() { return *objects; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
         Linker *getLinker() { return linker.get(); }
@@ -315,6 +329,7 @@ namespace Cryo
         std::unique_ptr<ErrorHandler> errorHandler;
         std::unique_ptr<Linker> linker;
         std::unique_ptr<Classes> classes;
+        std::unique_ptr<Objects> objects;
     };
 
     /**
@@ -515,6 +530,8 @@ namespace Cryo
          */
         std::string trimStrQuotes(std::string str);
 
+        llvm::Type *getClassType(DataType *type);
+
         /**
          * @brief Converts a DataType * that is a struct to an LLVM struct type.
          */
@@ -595,6 +612,7 @@ namespace Cryo
         llvm::Value *createVarWithBinOpInitilizer(ASTNode *node, std::string varName);
         llvm::Value *createMethodCallVariable(MethodCallNode *node, std::string varName, DataType *varType);
         llvm::Value *createPropertyAccessVariable(PropertyAccessNode *propAccessNode, std::string varName, DataType *varType);
+        llvm::Value *createObjectInstanceVariable(ObjectNode *objectNode, std::string varName, DataType *varType);
 
         CryoCompiler &compiler;
     };
@@ -935,6 +953,28 @@ namespace Cryo
         CryoCompiler &compiler;
     };
 
+    class Objects
+    {
+    public:
+        Objects(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Handles object declarations in the AST.
+         */
+        void handleObjectDeclaration(ASTNode *node);
+
+        llvm::Value *createObjectInstance(ASTNode *node);
+        llvm::Value *createObjectInstance(ObjectNode *objectNode, std::string varName);
+
+        llvm::Value *createObjectMethodCall(ASTNode *node);
+        llvm::Value *createObjectPropertyCall(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
     // -----------------------------------------------------------------------------------------------
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
@@ -953,6 +993,7 @@ namespace Cryo
           whileStatements(std::make_unique<WhileStatements>(*this)),
           errorHandler(std::make_unique<ErrorHandler>(*this)),
           classes(std::make_unique<Classes>(*this)),
+          objects(std::make_unique<Objects>(*this)),
           symTable(std::make_unique<IRSymTable>())
     {
         context.initializeContext();

@@ -31,7 +31,7 @@ void parsingError(
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
 
-    const char *curModule = "Unknown";
+    const char *curModule = GetNamespace(globalTable);
 
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);

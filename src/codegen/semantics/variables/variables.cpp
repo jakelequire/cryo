@@ -514,6 +514,14 @@ namespace Cryo
             DataType *varType = varDecl->type;
             return createPropertyAccessVariable(propertyAccess, varName, varType);
         }
+        case NODE_OBJECT_INST:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable initializer is an ObjectInstanceNode.");
+            ObjectNode *objectNode = initializer->data.objectNode;
+            std::string varName = std::string(varDecl->name);
+            DataType *varType = varDecl->type;
+            return createObjectInstanceVariable(objectNode, varName, varType);
+        }
         default:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is of unknown type");

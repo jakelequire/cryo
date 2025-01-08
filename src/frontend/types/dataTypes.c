@@ -785,3 +785,112 @@ DataType **getParamTypeArray(ASTNode **node)
     logMessage(LMI, "INFO", "DataTypes", "Returning param type array");
     return types;
 }
+
+ASTNode **getAllClassMethods(ASTNode *classNode)
+{
+    if (!classNode)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid class node.\n");
+        CONDITION_FAILED;
+    }
+
+    if (classNode->metaData->type != NODE_CLASS)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid class node type.\n");
+        CONDITION_FAILED;
+    }
+
+    int memberCount = classNode->data.classNode->methodCount;
+    logMessage(LMI, "INFO", "DataTypes", "Getting class members, count: %d", memberCount);
+    ASTNode **members = (ASTNode **)malloc(sizeof(ASTNode *) * memberCount);
+    if (!members)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for class members.\n");
+        CONDITION_FAILED;
+    }
+
+    PrivateMembers *privateMembers = classNode->data.classNode->privateMembers;
+    PublicMembers *publicMembers = classNode->data.classNode->publicMembers;
+    ProtectedMembers *protectedMembers = classNode->data.classNode->protectedMembers;
+
+    int privateCount = 0;
+    while (privateMembers->methods[privateCount] != NULL)
+    {
+        members[privateCount] = privateMembers->methods[privateCount];
+        privateCount++;
+    }
+
+    int publicCount = 0;
+    while (publicMembers->methods[publicCount] != NULL)
+    {
+        members[privateCount + publicCount] = publicMembers->methods[publicCount];
+        publicCount++;
+    }
+
+    int protectedCount = 0;
+    while (protectedMembers->methods[protectedCount] != NULL)
+    {
+        members[privateCount + publicCount + protectedCount] = protectedMembers->methods[protectedCount];
+        protectedCount++;
+    }
+
+    logMessage(LMI, "INFO", "DataTypes", "Returning class members");
+    return members;
+}
+
+ASTNode **getAllClassPropsFromDataType(DataType *classType)
+{
+    if (!classType)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid class type.\n");
+        CONDITION_FAILED;
+    }
+
+    if (classType->container->baseType != CLASS_TYPE)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid class type.\n");
+        CONDITION_FAILED;
+    }
+
+    ASTNode *classNode = classType->container->custom.classDef->classNode;
+    if (!classNode)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to get class node from class type.\n");
+        CONDITION_FAILED;
+    }
+
+    int memberCount = classNode->data.classNode->propertyCount;
+    PrivateMembers *privateMembers = classNode->data.classNode->privateMembers;
+    PublicMembers *publicMembers = classNode->data.classNode->publicMembers;
+    ProtectedMembers *protectedMembers = classNode->data.classNode->protectedMembers;
+
+    ASTNode **members = (ASTNode **)malloc(sizeof(ASTNode *) * memberCount);
+    if (!members)
+    {
+        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for class members.\n");
+        CONDITION_FAILED;
+    }
+
+    int privateCount = 0;
+    while (privateMembers->properties[privateCount] != NULL)
+    {
+        members[privateCount] = privateMembers->properties[privateCount];
+        privateCount++;
+    }
+
+    int publicCount = 0;
+    while (publicMembers->properties[publicCount] != NULL)
+    {
+        members[privateCount + publicCount] = publicMembers->properties[publicCount];
+        publicCount++;
+    }
+
+    int protectedCount = 0;
+    while (protectedMembers->properties[protectedCount] != NULL)
+    {
+        members[privateCount + publicCount + protectedCount] = protectedMembers->properties[protectedCount];
+        protectedCount++;
+    }
+
+    return members;
+}

@@ -89,6 +89,9 @@ extern "C"
 
     VariableSymbol *CryoGlobalSymbolTable_GetFrontendVariableSymbol(CryoGlobalSymbolTable *symTable, const char *name, const char *scopeID);
 
+    ASTNode *CryoGlobalSymbolTable_FindClassProperty(CryoGlobalSymbolTable *symTable, const char *propertyName, const char *className);
+    ASTNode *CryoGlobalSymbolTable_FindClassMethod(CryoGlobalSymbolTable *symTable, const char *methodName, const char *className);
+
     // Debug Functions ---------------------------------------
 
     void CryoGlobalSymbolTable_MergeDBChunks(CryoGlobalSymbolTable *symTable);
@@ -204,6 +207,11 @@ extern "C"
     CryoGlobalSymbolTable_GetASTNodeFromSymbol(symTable, symbol)
 #define FindMethodSymbol(symTable, methodName, className, typeOfNode) \
     CryoGlobalSymbolTable_FindMethodSymbol(symTable, methodName, className, typeOfNode)
+
+#define GetClassProperty(symTable, propertyName, className) \
+    CryoGlobalSymbolTable_FindClassProperty(symTable, propertyName, className)
+#define GetClassMethod(symTable, methodName, className) \
+    CryoGlobalSymbolTable_FindClassMethod(symTable, methodName, className)
 
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
@@ -545,7 +553,10 @@ namespace Cryo
         Symbol *resolveExternSymbol(const char *symbolName);
         Symbol *seekFunctionSymbolInAllTables(const char *symbolName);
         Symbol *seekMethodSymbolInAllTables(const char *methodName, const char *className, TypeofDataType typeOfNode);
-
+        
+        ASTNode *findClassProperty(const char *propertyName, const char *className);
+        ASTNode *findClassMethod(const char *methodName, const char *className);
+        
         //===================================================================
         // Debug Operations / Utilities
         //===================================================================
@@ -931,6 +942,24 @@ namespace Cryo
         if (symTable)
         {
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->resolveDataType(name);
+        }
+        return nullptr;
+    }
+
+    inline ASTNode *CryoGlobalSymbolTable_FindClassProperty(CryoGlobalSymbolTable *symTable, const char *propertyName, const char *className)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->findClassProperty(propertyName, className);
+        }
+        return nullptr;
+    }
+
+    inline ASTNode *CryoGlobalSymbolTable_FindClassMethod(CryoGlobalSymbolTable *symTable, const char *methodName, const char *className)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->findClassMethod(methodName, className);
         }
         return nullptr;
     }

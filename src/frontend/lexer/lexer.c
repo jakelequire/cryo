@@ -118,6 +118,17 @@ Lexer *freezeLexer(Lexer *lexer)
     return frozenLexer;
 }
 
+bool isModuleFile(Lexer *lexer)
+{
+    // Check if the file is a module file ({FILENAME}.mod.cryo)
+    const char *needle = ".mod.cryo";
+    if (strstr(lexer->fileName, needle) != NULL)
+    {
+        return true;
+    }
+    return false;
+}
+
 const char *getCurrentFileLocationFromLexer(Lexer *lexer)
 {
     return lexer->fileName;

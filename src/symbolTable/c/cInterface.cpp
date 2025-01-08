@@ -480,4 +480,22 @@ extern "C"
         return nullptr;
     }
 
+    ASTNode *CryoGlobalSymbolTable_FindClassProperty(CryoGlobalSymbolTable *symTable, const char *propertyName, const char *className)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->findClassProperty(propertyName, className);
+        }
+        return nullptr;
+    }
+
+    ASTNode *CryoGlobalSymbolTable_FindClassMethod(CryoGlobalSymbolTable *symTable, const char *methodName, const char *className)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->findClassMethod(methodName, className);
+        }
+        return nullptr;
+    }
+
 } // C API ----------------------------------------------------------
