@@ -68,8 +68,7 @@ TypeContainer *createTypeContainer(void)
 
 DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    printf("Parsing data type: %s\n", typeStr);
-
+    logMessage(LMI, "INFO", "DataTypes", "Parsing data type '%s'", typeStr);
     // Check if `[]` is at the end of the type string
     size_t len = strlen(typeStr);
     bool isArray = (len >= 2 && typeStr[len - 2] == '[' && typeStr[len - 1] == ']');
@@ -234,7 +233,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
     DataType *existingType = lookupType(table, name);
     if (existingType)
     {
-        fprintf(stderr, "[TypeTable] Error: Type '%s' already exists in the type table\n", name);
+        logMessage(LMI, "INFO", "DataTypes", "Type '%s' already exists in type table", name);
         // Update the existing type
         updateTypeInTypeTable(table, name, type);
         return;
@@ -705,13 +704,11 @@ void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
         {
             const char *name = node->data.structNode->name;
             DataType *type = node->data.structNode->type;
-            addTypeToTypeTable(typeTable, name, type);
         }
         if (node->metaData->type == NODE_CLASS)
         {
             const char *name = node->data.classNode->name;
             DataType *type = node->data.classNode->type;
-            addTypeToTypeTable(typeTable, name, type);
         }
     }
 }

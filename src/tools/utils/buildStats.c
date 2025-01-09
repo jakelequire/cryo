@@ -15,6 +15,30 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/buildStats.h"
+#include "tools/logger/logger_config.h"
+
+// Helper macro for padding calculation
+#define PRINT_PADDED(label, value, format)                                              \
+    do                                                                                  \
+    {                                                                                   \
+        char temp[256];                                                                 \
+        snprintf(temp, sizeof(temp), format, value);                                    \
+        int padding = CONTENT_WIDTH - strlen(label) - strlen(temp);                     \
+        printf(GREEN "║ " YELLOW "%s" COLOR_RESET "%s%*s" GREEN "     ║\n" COLOR_RESET, \
+               label, temp, padding, "");                                               \
+    } while (0)
+
+// Helper macro without using colors
+#define PRINT_PADDED_UNFORMATTED(label, value, format)              \
+    do                                                              \
+    {                                                               \
+        char temp[256];                                             \
+        snprintf(temp, sizeof(temp), format, value);                \
+        int padding = CONTENT_WIDTH - strlen(label) - strlen(temp); \
+        if (padding < 0)                                            \
+            padding = 0;                                            \
+        printf("║ %s%s%*s     ║\n", label, temp, padding, "");      \
+    } while (0)
 
 BuildStats *createBuildStats()
 {
@@ -26,39 +50,6 @@ BuildStats *createBuildStats()
     }
     return stats;
 }
-
-/*
-typedef struct
-{
-    double elapsed;            // Total elapsed time
-    long peak_memory;          // Peak memory usage in bytes
-    char build_type[32];       // Debug/Release/etc
-    int cpu_cores_used;        // Number of CPU cores used
-    double cpu_usage;          // CPU usage percentage
-    char timestamp[64];        // Build timestamp
-    long files_compiled;       // Number of files compiled
-    char compiler_version[32]; // Compiler version used
-} BuildStats;
-
-typedef struct CompilerSettings
-{
-    const char *rootDir;
-    const char *customOutputPath;
-    const char *inputFile;
-    const char *inputFilePath;
-    bool activeBuild;
-    bool isSource;
-    bool verbose;
-    EnabledLogs enabledLogs;
-    DebugLevel debugLevel;
-    BuildType buildType;
-    CompiledFile **compiledFiles;
-    int totalFiles;
-
-    // Version
-    const char *version;
-} CompilerSettings;
-*/
 
 void *addCompilerSettings(BuildStats *stats, CompilerSettings *settings)
 {
@@ -147,6 +138,68 @@ void formatSize(long bytes, char *buffer)
 
 void printBuildStats(BuildStats *stats)
 {
+    DEBUG_PRINT_FILTER({
+        char memory_str[32];
+        formatSize(stats->peak_memory, memory_str);
+
+        // Convert seconds to minutes and seconds if elapsed time > 60 seconds
+        int minutes = (int)stats->elapsed / 60;
+        float seconds = stats->elapsed - (minutes * 60);
+
+        // Define box width and calculate padding
+        const int BOX_WIDTH = 45; // Reduced width for cleaner look
+        const int CONTENT_WIDTH = BOX_WIDTH - 2;
+
+        printf("\n");
+        // Top border with title
+        printf(GREEN "╔═════════════════ BUILD SUMMARY ═════════════════╗\n" COLOR_RESET);
+
+        // Timestamp
+        PRINT_PADDED("Build completed at: ", stats->timestamp, "%s");
+
+        // Build type
+        PRINT_PADDED("Build type: ", stats->build_type, "%s");
+
+        // Compiler version
+        PRINT_PADDED("Compiler Version: ", stats->compiler_version, "%s");
+
+        // Metrics section
+        printf(GREEN "╠════════════════════ METRICS ════════════════════╣\n" COLOR_RESET);
+
+        // Build time
+        char time_str[64];
+        snprintf(time_str, sizeof(time_str), "%.3f seconds", seconds);
+        PRINT_PADDED("Build time: ", time_str, "%s");
+
+        // Memory usage
+        PRINT_PADDED("Peak memory: ", memory_str, "%s");
+
+        // CPU usage
+        char cpu_str[64];
+        snprintf(cpu_str, sizeof(cpu_str), "%d (%.1f%% utilization)",
+                 stats->cpu_cores_used, stats->cpu_usage);
+        PRINT_PADDED("CPU cores: ", cpu_str, "%s");
+
+        // Files compiled
+        char files_str[32];
+        snprintf(files_str, sizeof(files_str), "%ld", stats->files_compiled);
+        PRINT_PADDED("Files compiled: ", files_str, "%s");
+
+        printf(GREEN "╚═════════════════════════════════════════════════╝\n" COLOR_RESET);
+        printf("\n");
+        return;
+    });
+    {
+        // Same as above but without colors if debug is disabled
+        printBuiltStatsUnformatted(stats);
+        return;
+    }
+}
+#undef PRINT_PADDED
+
+// Same as above but without colors
+void printBuiltStatsUnformatted(BuildStats *stats)
+{
     char memory_str[32];
     formatSize(stats->peak_memory, memory_str);
 
@@ -160,52 +213,43 @@ void printBuildStats(BuildStats *stats)
 
     printf("\n");
     // Top border with title
-    printf(GREEN "╔═════════════════ BUILD SUMMARY ═════════════════╗\n" COLOR_RESET);
-
-// Helper macro for padding calculation
-#define PRINT_PADDED(label, value, format)                                              \
-    do                                                                                  \
-    {                                                                                   \
-        char temp[256];                                                                 \
-        snprintf(temp, sizeof(temp), format, value);                                    \
-        int padding = CONTENT_WIDTH - strlen(label) - strlen(temp);                     \
-        printf(GREEN "║ " YELLOW "%s" COLOR_RESET "%s%*s" GREEN "     ║\n" COLOR_RESET, \
-               label, temp, padding, "");                                               \
-    } while (0)
+    printf("╔═════════════════ BUILD SUMMARY ═════════════════╗\n");
 
     // Timestamp
-    PRINT_PADDED("Build completed at: ", stats->timestamp, "%s");
+    PRINT_PADDED_UNFORMATTED("Build completed at: ", stats->timestamp, "%s");
 
     // Build type
-    PRINT_PADDED("Build type: ", stats->build_type, "%s");
+    PRINT_PADDED_UNFORMATTED("Build type: ", stats->build_type, "%s");
 
     // Compiler version
-    PRINT_PADDED("Compiler Version: ", stats->compiler_version, "%s");
+    PRINT_PADDED_UNFORMATTED("Compiler Version: ", stats->compiler_version, "%s");
 
     // Metrics section
-    printf(GREEN "╠════════════════════ METRICS ════════════════════╣\n" COLOR_RESET);
+    printf("╠════════════════════ METRICS ════════════════════╣\n");
 
     // Build time
     char time_str[64];
     snprintf(time_str, sizeof(time_str), "%.3f seconds", seconds);
-    PRINT_PADDED("Build time: ", time_str, "%s");
+
+    PRINT_PADDED_UNFORMATTED("Build time: ", time_str, "%s");
 
     // Memory usage
-    PRINT_PADDED("Peak memory: ", memory_str, "%s");
+    PRINT_PADDED_UNFORMATTED("Peak memory: ", memory_str, "%s");
 
     // CPU usage
     char cpu_str[64];
     snprintf(cpu_str, sizeof(cpu_str), "%d (%.1f%% utilization)",
              stats->cpu_cores_used, stats->cpu_usage);
-    PRINT_PADDED("CPU cores: ", cpu_str, "%s");
+
+    PRINT_PADDED_UNFORMATTED("CPU cores: ", cpu_str, "%s");
 
     // Files compiled
     char files_str[32];
     snprintf(files_str, sizeof(files_str), "%ld", stats->files_compiled);
-    PRINT_PADDED("Files compiled: ", files_str, "%s");
 
-    printf(GREEN "╚═════════════════════════════════════════════════╝\n" COLOR_RESET);
+    PRINT_PADDED_UNFORMATTED("Files compiled: ", files_str, "%s");
+
+    printf("╚═════════════════════════════════════════════════╝\n");
     printf("\n");
-
-#undef PRINT_PADDED
 }
+#undef PRINT_PADDED_UNFORMATTED

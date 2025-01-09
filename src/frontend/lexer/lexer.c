@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/lexer.h"
+#include "tools/logger/logger_config.h"
 
 // #################################//
 //        Keyword Dictionary.       //
@@ -77,7 +78,7 @@ DataTypeToken dataTypes[] = {
 // <initLexer>
 void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerState *state)
 {
-    printf("Starting Lexer Initialization...\n");
+    logMessage(LMI, "INFO", "Lexer", "Initializing lexer...");
     lexer->start = source;
     lexer->current = source;
     lexer->end = source + strlen(source);
@@ -88,10 +89,12 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
     lexer->nextToken = peekNextToken(lexer, state);
     lexer->source = source;
 
-    printf("{lexer} -------------- <Input Source Code> --------------\n\n");
-    printf("\n{lexer} File Name: %s\n", fileName);
-    printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
-    printf("\n{lexer} -------------------- <END> ----------------------\n\n");
+    DEBUG_PRINT_FILTER({
+        printf("{lexer} -------------- <Input Source Code> --------------\n\n");
+        printf("\n{lexer} File Name: %s\n", fileName);
+        printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
+        printf("\n{lexer} -------------------- <END> ----------------------\n\n");
+    });
 }
 // </initLexer>
 
@@ -179,7 +182,7 @@ char peekNext(Lexer *lexer, CompilerState *state)
     if (isAtEnd(lexer, state))
         return '\0';
     char c = *lexer->current;
-    printf("[Lexer] <!> Peeked next character: %c\n", c);
+    logMessage(LMI, "INFO", "Lexer", "Peeking next character: %c", c);
     return c;
 }
 // </peekNext>
@@ -295,19 +298,16 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
     }
 
     char c = advance(lexer, state);
-    // logMessage(LMI, "INFO", "Lexer", "Current character: %c", c);
 
     if (isAlpha(c))
     {
         *token = checkKeyword(lexer, state);
-        // logMessage(LMI, "INFO", "Lexer", "Keyword token created");
         return *token;
     }
 
     if (isDigit(c))
     {
         *token = number(lexer, state, false);
-        // logMessage(LMI, "INFO", "Lexer", "Number token created");
         return *token;
     }
 
@@ -317,7 +317,6 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
         if (isDigit(peek(lexer, state)))
         {
             *token = number(lexer, state, true);
-            // logMessage(LMI, "INFO", "Lexer", "Negative number token created");
             return *token;
         }
         // For arrow operator
@@ -325,14 +324,12 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
         {
             advance(lexer, state);
             *token = makeToken(lexer, TOKEN_RESULT_ARROW, state);
-            // logMessage(LMI, "INFO", "Lexer", "Result arrow token created");
             return *token;
         }
         // For minus operator
         else
         {
             *token = makeToken(lexer, TOKEN_MINUS, state);
-            // logMessage(LMI, "INFO", "Lexer", "Minus token created");
             return *token;
         }
     }
@@ -340,21 +337,18 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
     if (c == '"')
     {
         *token = string(lexer, state);
-        // logMessage(LMI, "INFO", "Lexer", "String token created");
         return *token;
     }
 
     if (c == '&')
     {
         *token = makeToken(lexer, TOKEN_AMPERSAND, state);
-        // logMessage(LMI, "INFO", "Lexer", "Ampersand token created");
         return *token;
     }
     Token symToken = symbolChar(lexer, c, state);
     if (symToken.type != TOKEN_UNKNOWN)
     {
         *token = symToken;
-        // logMessage(LMI, "INFO", "Lexer", "Symbol token created");
         return *token;
     }
 

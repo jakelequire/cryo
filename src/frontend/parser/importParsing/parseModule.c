@@ -110,9 +110,7 @@ int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlo
     // Import the module symbols into the global symbol table
     ImportReapedTable(globalTable, moduleSymbolTable);
 
-    printf("\n\n\n\n------------------------------------------------------");
     printGlobalSymbolTable(globalTable);
-    printf("\n\n");
 
     return 0;
 }

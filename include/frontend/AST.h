@@ -38,6 +38,7 @@ typedef struct GenericType GenericType;
 typedef struct ParsingContext ParsingContext;
 typedef struct TypeTable TypeTable;
 typedef struct ASTNode ASTNode;
+typedef struct CompilerSettings CompilerSettings;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 #define INITIAL_CAPACITY 8

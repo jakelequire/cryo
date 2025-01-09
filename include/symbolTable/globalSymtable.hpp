@@ -219,8 +219,6 @@ extern "C"
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
     CryoGlobalSymbolTable_PrintGlobalTable(symTable)
-#define MergeDBChunks(symTable) \
-    CryoGlobalSymbolTable_MergeDBChunks(symTable)
 #define TypeOfSymbolToString(symTable, symbolType) \
     CryoGlobalSymbolTable_TypeOfSymbolToString(symTable, symbolType)
 #define LogSymbol(symTable, symbol) \
@@ -296,7 +294,6 @@ extern "C"
 #include "symbolTable/debugSymbols.hpp"
 #include "tools/utils/env.h" // getCryoRootPath()
 #include "tools/cxx/IDGen.hpp"
-#include "symbolTable/symTableDB.hpp"
 #include "tools/utils/c_logger.h"
 
 typedef struct ASTNode ASTNode;
@@ -378,7 +375,6 @@ namespace Cryo
         // This constructor is used for reaping the symbol table to a higher level symbol table manager.
         GlobalSymbolTable(bool isForReaping, ScopeType scopeType = GLOBAL_SCOPE)
         {
-            std::cout << "Global Symbol Table Initialized for Reaping" << std::endl;
             debugInfo = getDebugInfo();
             tableContext = setDefaultContext();
             currentScopeType = scopeType;
@@ -582,19 +578,16 @@ namespace Cryo
         void logSymbol(Symbol *symbol);
         void printScopeLookup(void)
         {
-            std::cout << "\n";
             for (auto &pair : scopeLookup)
             {
-                std::cout << "Scope: " << pair.first << " ID: " << pair.second << std::endl;
+                // std::cout << "Scope: " << pair.first << " ID: " << pair.second << std::endl;
             }
-            std::cout << "\n";
         }
 
         void logSymbolTable(SymbolTable *table) { debugger->logSymbolTable(table); }
 
     private:
         TABLE_STATE tableState = TABLE_UNINITIALIZED;
-        // std::unique_ptr<SymbolTableDB> db = std::make_unique<SymbolTableDB>(debugInfo.rootDir);
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
         std::vector<std::pair<std::string, std::string>> scopeLookup;
 

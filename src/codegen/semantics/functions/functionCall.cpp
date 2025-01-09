@@ -56,15 +56,7 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Processing Argument " + std::to_string(i + 1) + " of " + std::to_string(argCount));
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argNodeType = argNode->metaData->type;
-
-            std::cout << "===----------------------===" << std::endl;
-            std::cout << "Argument #: " << i + 1 << std::endl;
-            std::cout << "Function Name: " << functionName << std::endl;
-            std::cout << "Argument Node Type: " << CryoNodeTypeToString(argNodeType) << std::endl;
-            std::cout << "===----------------------===" << std::endl;
-
             std::string funcName = std::string(functionName);
-            std::cout << "\n\nFunction Name: " << funcName << "\n";
 
             // Callee's name:
             llvm::Function *calleeF = compiler.getContext().module->getFunction(funcName);
@@ -77,7 +69,6 @@ namespace Cryo
             // Get the argument type values
             llvm::FunctionType *calleeFT = calleeF->getFunctionType();
             llvm::Type *expectedType = calleeFT->getParamType(i);
-            std::cout << "Argument Type: " << std::endl;
 
             // Get the current callee function return type
             llvm::Type *returnType = calleeF->getReturnType();
@@ -312,7 +303,6 @@ namespace Cryo
         logVerboseDataType(structDataType);
 
         int propertyCount = structDataType->container->custom.structDef->propertyCount;
-        std::cout << "Property Count: " << propertyCount << std::endl;
 
         // Find the property index
         int propertyIndex = -1;
@@ -500,7 +490,6 @@ namespace Cryo
 
         bool isStructType = varDataType->container->baseType == STRUCT_TYPE;
 
-        std::cout << "@createVarNameCall Variable Name: " << varName << std::endl;
         llvm::Value *varValue = var->LLVMValue;
         if (!varValue)
         {
@@ -724,7 +713,6 @@ namespace Cryo
                 // Get the string content from the literal node
                 std::string strContent = literalNode->value.stringValue;
                 const std::string &strContentRef = strContent;
-                std::cout << "String Content: " << strContentRef << std::endl;
 
                 // Get or create the global string constant
                 llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(strContentRef);

@@ -17,6 +17,7 @@
 #include "linker/linker.hpp"
 #include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
+#include "tools/logger/logger_config.h"
 
 int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
 {
@@ -85,10 +86,6 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
         return 1;
     }
     TableFinished(globalSymbolTable); // Finish the global symbol table
-    MergeDBChunks(globalSymbolTable); // Merge the DB chunks
-
-    // Debug print the global symbol table
-    // CryoGlobalSymbolTable_PrintGlobalTable(globalSymbolTable);
 
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
@@ -96,9 +93,6 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     // Outputs the SymTable into a file in the build directory.
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
-    // logASTNodeDebugView(programCopy);
-
-    // printSymbolTable(table);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);
@@ -108,10 +102,8 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
         return 1;
     }
 
-    // Before returning, add cleanup
-    // CryoLinker_Destroy(linker); <- This was causing a problem at the end of compilation, unsure why
 
-    END_COMPILATION_MESSAGE;
+    DEBUG_PRINT_FILTER({END_COMPILATION_MESSAGE;});
 
     printGlobalSymbolTable(globalSymbolTable);
     logASTNodeDebugView(programCopy);

@@ -62,7 +62,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
 
     // Add the struct name to the type table
     DataType *structDefinition = createStructDefinition(structName);
-    addTypeToTypeTable(typeTable, structName, structDefinition);
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
@@ -193,9 +192,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
 
     CompleteStructDeclaration(globalTable, structNode, structName);
 
-    // Add the struct type to the type table
-    addTypeToTypeTable(typeTable, structName, structDataType);
-
     // Clear the `this` context after parsing the struct
     clearThisContext(context, typeTable);
 
@@ -239,8 +235,6 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
         logMessage(LMI, "INFO", "Parser", "Parsing method declaration...");
         return parseMethodDeclaration(false, parentName, lexer, context, arena, state, typeTable, globalTable);
     }
-
-    printf("Default Count: %d\n", defaultCount);
 
     const char *fieldName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Field name: %s", fieldName);
@@ -554,9 +548,6 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
     DataType *genericType = wrapTypeContainer(container);
     ASTNode *genericDeclNode = createGenericDeclNode(genericType, typeName, genericParams, genericParamCount, NULL, false,
                                                      arena, state, typeTable, lexer);
-
-    // Add to type table
-    addTypeToTypeTable(typeTable, typeName, genericType);
 
     return genericDeclNode;
 }

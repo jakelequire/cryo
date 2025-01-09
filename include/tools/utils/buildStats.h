@@ -30,6 +30,8 @@ typedef struct
 } BuildStats;
 
 void printBuildStats(BuildStats *stats);
+void printBuiltStatsUnformatted(BuildStats *stats);
+
 BuildStats *createBuildStats();
 void *getSystemInfo(BuildStats *stats);
 void *addCompilerSettings(BuildStats *stats, CompilerSettings *settings);

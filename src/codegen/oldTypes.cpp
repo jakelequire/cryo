@@ -209,8 +209,6 @@ namespace Cryo
 
         default:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
-            std::cout << "Received Primitive: " << PrimitiveDataTypeToString(type->container->primitive) << std::endl;
-            std::cout << "Received: " << DataTypeToString(type) << std::endl;
             CONDITION_FAILED;
         }
     }
@@ -276,8 +274,6 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting function return type");
         logDataType(returnType);
-        std::cout << "Primitive: " << PrimitiveDataTypeToString(returnType->container->primitive) << std::endl;
-        std::cout << "Typeof DataType: " << TypeofDataTypeToString(returnType->container->baseType) << std::endl;
 
         TypeofDataType baseType = returnType->container->baseType;
         if (baseType == STRUCT_TYPE)

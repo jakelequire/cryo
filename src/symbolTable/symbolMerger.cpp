@@ -14,7 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -28,6 +30,7 @@ namespace Cryo
 
         if (isForReaping)
         {
+            logMessage(LMI, "INFO", "Symbol Table", "Reaping primary table", "Symbol Count", std::to_string(symbolCount).c_str());
             reapedTable = table;
             reapedTable->count = symbolCount;
         }
@@ -40,7 +43,7 @@ namespace Cryo
         SymbolTable *table = getPrimaryTable();
         if (!table)
         {
-            std::cout << "Primary Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to merge primary table", "Primary Table", "NULL");
             return std::vector<Symbol *>();
         }
         int count = table->count;
@@ -55,7 +58,6 @@ namespace Cryo
 
     std::vector<Symbol *> GlobalSymbolTable::mergeAllDependencyTables(void)
     {
-        std::cout << "Merging All Dependency Tables" << std::endl;
         std::vector<Symbol *> mergedSymbols;
 
         for (auto &table : dependencyTableVector)

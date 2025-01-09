@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
 #include "runtime/bootstrap.h"
+#include "tools/logger/logger_config.h"
 
 char *runtimePaths[] = {
     "/home/phock/Programming/apps/cryo/cryo/runtime.cryo",
@@ -40,9 +41,12 @@ char *getRuntimeSrcFile(void)
 
     sprintf(runtimeBuffer, "%scryo/runtime.cryo", envRoot);
 
-    printf("\n");
-    printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
+        return runtimeBuffer;
+    });
+
+    printf("Runtime Found Environment: %s\n", runtimeBuffer);
 
     return runtimeBuffer;
 }
@@ -60,9 +64,12 @@ char *getRuntimeObjFile(void)
 
     sprintf(runtimeBuffer, "%sbuild/out/deps/runtime.ll", envRoot);
 
-    printf("\n");
-    printf(LIGHT_GREEN BOLD "Runtime Object Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        printf(LIGHT_GREEN BOLD "Runtime Object Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
+        return runtimeBuffer;
+    });
+
+    printf("Runtime Object Found Environment: %s\n", runtimeBuffer);
 
     return runtimeBuffer;
 }

@@ -78,7 +78,6 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Getting left value");
                 std::string varName = leftNode->data.varName->varName;
-                std::cout << "<!> (left) Variable Name: " << varName << std::endl;
 
                 STVariable *symTableVar = symTable.getVariable(namespaceName, varName);
                 if (!symTableVar)

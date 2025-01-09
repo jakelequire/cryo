@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
+#include "tools/logger/logger_config.h"
 
 // The `using` keyword is used to import a STD Library module only.
 // Syntax: `using <module>::<?scope/fn>::<?scope/fn>;`
@@ -144,17 +145,19 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
     }
 
     // DEBUG -------------------------------------
-    printf("DEBUG: Module Chain Length: %zu\n", *chainLength);
-    printf("DEBUG: Module Chain: \n");
-    for (size_t i = 0; i < *chainLength; i++)
-    {
-        printf("%s", moduleChain[i].name);
-        if (i < *chainLength - 1)
+    DEBUG_PRINT_FILTER({
+        printf("DEBUG: Module Chain Length: %zu\n", *chainLength);
+        printf("DEBUG: Module Chain: \n");
+        for (size_t i = 0; i < *chainLength; i++)
         {
-            printf(",");
+            printf("%s", moduleChain[i].name);
+            if (i < *chainLength - 1)
+            {
+                printf(",");
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
+    });
 }
 
 static void parseTypeList(Lexer *lexer, const char *lastModule,
@@ -237,7 +240,6 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
         logMessage(LMI, "ERROR", "Parser", "Invalid primary module path.");
         return;
     }
-    printf("Primary Module Path To Find Module File: %s\n", primaryModulePath);
 
     // Check if the module file exists
     const char **moduleFiles = getFilesInModuleDir(primaryModulePath);
@@ -259,17 +261,19 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
     }
 
     // DEBUG -------------------------------------
-    printf("DEBUG: Module Count: %zu\n", moduleCount);
-    printf("DEBUG: Primary Module: %s\n", primaryModule);
-    printf("DEBUG: Module Chain: ");
-    for (size_t i = 0; i < moduleCount; i++)
-    {
-        printf("%s", moduleChain[i]);
-        if (i < moduleCount - 1)
+    DEBUG_PRINT_FILTER({
+        printf("DEBUG: Module Count: %zu\n", moduleCount);
+        printf("DEBUG: Primary Module: %s\n", primaryModule);
+        printf("DEBUG: Module Chain: ");
+        for (size_t i = 0; i < moduleCount; i++)
         {
-            printf(",");
+            printf("%s", moduleChain[i]);
+            if (i < moduleCount - 1)
+            {
+                printf(",");
+            }
         }
-    }
+    });
     // DEBUG -------------------------------------
 
     // Compile the module file definitions
@@ -290,9 +294,10 @@ const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state
     // This will be used to import the module into the current scope.
     // Root Directory: {CRYO_ROOT}/std/
     const char *rootDir = state->settings->rootDir;
-    printf("getSTDLibPath: Root Directory: %s\n", rootDir);
-    printf("getSTDLibPath: Module Name: %s\n", moduleName);
-
+    DEBUG_PRINT_FILTER({
+        printf("getSTDLibPath: Root Directory: %s\n", rootDir);
+        printf("getSTDLibPath: Module Name: %s\n", moduleName);
+    });
     char *modulePath = (char *)malloc(strlen(rootDir) + strlen(moduleName) + 7);
     strcpy(modulePath, rootDir);
     strcat(modulePath, "/Std/");
@@ -300,7 +305,7 @@ const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state
     strcat(modulePath, "/");
 
     const char *modulePathStr = (const char *)modulePath;
-    printf("getSTDLibPath: Module Path: %s\n", modulePathStr);
+    logMessage(LMI, "INFO", "Parser", "getSTDLibPath: Module path: %s", modulePathStr);
 
     bool isValidDir = dirExists(modulePathStr);
     if (!isValidDir)
@@ -311,8 +316,7 @@ const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state
         return NULL;
     }
 
-    printf("getSTDLibPath: Module Path: %s\n", modulePathStr);
-
+    logMessage(LMI, "INFO", "Parser", "getSTDLibPath: Module path is valid.");
     return modulePathStr;
 }
 
@@ -333,7 +337,9 @@ const char **getFilesInModuleDir(const char *modulePath)
             {
                 continue;
             }
-            printf("getFilesInModuleDir: Found File: %s\n", ent->d_name);
+            DEBUG_PRINT_FILTER({
+                printf("getFilesInModuleDir: Found File: %s\n", ent->d_name);
+            });
             fileCount++;
         }
 
@@ -354,7 +360,7 @@ const char **getFilesInModuleDir(const char *modulePath)
             strcpy(filePath, modulePath);
             strcat(filePath, ent->d_name);
             moduleFiles[i] = (const char *)filePath;
-            printf("[DEBUG] getFilesInModuleDir: File Path: %s\n", moduleFiles[i]);
+            logMessage(LMI, "INFO", "Parser", "File Path: %s", moduleFiles[i]);
             i++;
         }
 
@@ -388,15 +394,15 @@ const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const c
     strcat(needle, ".mod.cryo");
     const char *needleStr = (const char *)needle;
 
-    printf("findModuleFile: File To Find: %s\n", needleStr);
-    printf("Module Count: %zu\n", moduleCount);
+    logMessage(LMI, "INFO", "Parser", "findModuleFile: Searching for module file: %s", needleStr);
+    logMessage(LMI, "INFO", "Parser", "findModuleFile: Module Count: %zu", moduleCount);
 
     for (size_t i = 0; i < moduleCount; i++)
     {
         const char *currentFilePath = moduleFiles[i];
         const char *currentFile = trimFilePath(currentFilePath);
-        printf("Checking File: %s Against: %s\n", currentFile, needleStr);
 
+        logMessage(LMI, "INFO", "Parser", "findModuleFile: Current File: %s", currentFile);
         if (strstr(currentFile, needleStr) != NULL)
         {
             if (!fileExists(currentFilePath))
@@ -404,8 +410,7 @@ const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const c
                 logMessage(LMI, "ERROR", "Parser", "findModuleFile: Invalid module file path: %s", currentFile);
                 continue;
             }
-            printf("findModuleFile: Found Module File: %s\n", currentFile);
-            printf("findModuleFile: Returning String: %s\n", currentFilePath);
+            logMessage(LMI, "INFO", "Parser", "findModuleFile: Module file found: %s", currentFile);
             return currentFilePath;
         }
     }

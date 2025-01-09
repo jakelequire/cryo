@@ -14,7 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -25,13 +27,13 @@ namespace Cryo
     {
         if (!functionName || functionName == nullptr)
         {
-            std::cout << "initFunctionDeclaration: Function Name is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Function Name is null");
             return;
         }
 
         if (!parentScopeID || parentScopeID == nullptr)
         {
-            std::cout << "initFunctionDeclaration: Parent Scope ID is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Parent Scope ID is null");
             return;
         }
 
@@ -59,19 +61,19 @@ namespace Cryo
     {
         if (!functionNode || functionNode == nullptr)
         {
-            std::cout << "completeFunctionDeclaration: Function Node is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Function Node is null");
             return;
         }
 
         if (!scopeID || scopeID == nullptr)
         {
-            std::cout << "completeFunctionDeclaration: Scope ID is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Scope ID is null");
             return;
         }
 
         if (!parentScopeID || parentScopeID == nullptr)
         {
-            std::cout << "completeFunctionDeclaration: Parent Scope ID is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Parent Scope ID is null");
             return;
         }
 
@@ -83,7 +85,7 @@ namespace Cryo
         Symbol *symbol = resolveFunctionSymbol(functionName, parentScopeID, FUNCTION_SYMBOL);
         if (!symbol)
         {
-            std::cout << "completeFunctionDeclaration: Function Symbol not found" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Function Symbol not found");
             return;
         }
 
@@ -100,7 +102,7 @@ namespace Cryo
     {
         if (!externNode || externNode == nullptr)
         {
-            std::cout << "addExternFunctionToTable: Extern Node is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Extern Node is null");
             return;
         }
 
@@ -150,13 +152,13 @@ namespace Cryo
             symbol = querySpecifiedTable(symbolName, FUNCTION_SYMBOL, depTable);
             if (symbol != nullptr)
             {
-                std::cout << "Function Symbol Resolved in Dependency Table!" << std::endl;
+                logMessage(LMI, "INFO", "SymbolTable", "Function Symbol Resolved in Dependency Table!");
                 return symbol;
             }
             symbol = querySpecifiedTable(symbolName, EXTERN_SYMBOL, depTable);
             if (symbol != nullptr)
             {
-                std::cout << "Extern Function Symbol Resolved in Dependency Table!" << std::endl;
+                logMessage(LMI, "INFO", "SymbolTable", "Extern Function Symbol Resolved in Dependency Table!");
                 return symbol;
             }
             else
@@ -170,13 +172,13 @@ namespace Cryo
         symbol = querySpecifiedTable(symbolName, FUNCTION_SYMBOL, primaryTable);
         if (symbol != nullptr)
         {
-            std::cout << "Function Symbol Resolved in Primary Table!" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Function Symbol Resolved in Primary Table!");
             return symbol;
         }
         symbol = querySpecifiedTable(symbolName, EXTERN_SYMBOL, primaryTable);
         if (symbol != nullptr)
         {
-            std::cout << "Extern Function Symbol Resolved in Primary Table!" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Extern Function Symbol Resolved in Primary Table!");
             return symbol;
         }
 
@@ -225,10 +227,10 @@ namespace Cryo
                 Symbol *symbol = symbols[i];
                 FunctionSymbol *funcSymbol = symbol->function;
                 const char *funcParentScopeID = funcSymbol->parentScopeID;
-                std::cout << "Checking Function Symbol: " << funcSymbol->name << std::endl;
+                logMessage(LMI, "INFO", "SymbolTable", "Checking Function Symbol: %s | Against: %s", funcSymbol->name, symbolName);
                 if (strcmp(funcSymbol->name, symbolName) == 0 && strcmp(funcParentScopeID, currentNamespaceScopeID) == 0)
                 {
-                    std::cout << "Function Symbol Resolved!" << std::endl;
+                    logMessage(LMI, "INFO", "SymbolTable", "Function Symbol Resolved in Current Namespace!");
                     return symbol;
                 }
                 else
@@ -242,15 +244,14 @@ namespace Cryo
             }
         }
 
-        std::cout << "Checking all tables for function symbol: " << symbolName << std::endl;
-
+        logMessage(LMI, "INFO", "SymbolTable", "Function Symbol not found in current namespace, checking parent namespace");
         Symbol *fallbackSymbol = seekFunctionSymbolInAllTables(symbolName);
         if (fallbackSymbol != nullptr)
         {
             return fallbackSymbol;
         }
 
-        std::cout << "<!> Function Symbol not found: " << symbolName << " <!>" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to resolve function symbol!");
         return nullptr;
     }
 
@@ -269,7 +270,7 @@ namespace Cryo
         SymbolTable *table = findSymbolTable(scopeID);
         if (!table)
         {
-            std::cerr << "Error: Failed to resolve scoped function call, table not found!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to find symbol table for scope ID");
             return nullptr;
         }
 
@@ -304,7 +305,7 @@ namespace Cryo
     {
         if (!node || node == nullptr)
         {
-            std::cout << "addParamToSymbolTable: Node is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Node is null");
             return;
         }
 

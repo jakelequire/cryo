@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
 
@@ -24,7 +25,7 @@ namespace Cryo
         // No need for strdup here - std::string will make its own copy
         std::string cxxTypeNameStr(name); // Direct construction from const char*
 
-        std::cout << "Type Name Copied: " << cxxTypeNameStr << std::endl;
+        logMessage(LMI, "INFO", "Symbol Table", "Resolving Data Type", "Type Name", name);
 
         if (cxxTypeNameStr.empty())
         {
@@ -49,7 +50,7 @@ namespace Cryo
             }
             if (strcmp(typeName, cxxTypeNameStr.c_str()) == 0)
             {
-                std::cout << "Resolved Data Type: " << typeName << std::endl;
+                logMessage(LMI, "INFO", "Symbol Table", "Resolved Data Type", "Type Name", typeName);
                 return dataType;
             }
             else
@@ -65,7 +66,7 @@ namespace Cryo
     {
         if (!symbolTable || symbolTable == nullptr)
         {
-            std::cerr << "parseSymbolTableForTypes: Symbol Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Symbol Table is null");
             return;
         }
 
@@ -93,22 +94,22 @@ namespace Cryo
     {
         if (!symbol || symbol == nullptr)
         {
-            std::cerr << "addDataTypeSymbol: Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Symbol is null");
             return -1;
         }
         TypeOfSymbol symbolType = symbol->symbolType;
         if (symbolType != TYPE_SYMBOL)
         {
-            std::cerr << "addDataTypeSymbol: Symbol is not a Type Symbol" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Symbol is not a Type Symbol");
             const char *symbolTypeStr = typeOfSymbolToString(symbolType);
-            std::cerr << "addDataTypeSymbol: Symbol Type: " << symbolTypeStr << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Symbol Type", symbolTypeStr);
             return -1;
         }
         TypeSymbol *typeSymbol = symbol->type;
         addTypeToTable(typeSymbol);
 
         const char *typeName = typeSymbol->name;
-        std::cout << "Type Added to Type Table: " << typeName << std::endl;
+        logMessage(LMI, "INFO", "Symbol Table", "Added Type Symbol to Table", "Type Name", typeName);
 
         return 0;
     }
@@ -120,12 +121,12 @@ namespace Cryo
         });
         if (!typeTable || typeTable == nullptr)
         {
-            std::cerr << "doesTypeExist: Type Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Table is null");
             return false;
         }
         if (!name || name == nullptr)
         {
-            std::cerr << "doesTypeExist: Name is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Name is null");
             return false;
         }
 
@@ -135,13 +136,13 @@ namespace Cryo
             TypeSymbol *typeSymbol = typeTable->typeSymbols[i];
             if (!typeSymbol || typeSymbol == nullptr)
             {
-                std::cerr << "doesTypeExist: Type Symbol is null" << std::endl;
+                logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");
                 continue;
             }
             const char *typeName = typeTable->typeSymbols[i]->name;
             if (strcmp(typeName, name) == 0)
             {
-                std::cout << "Type Exists in Type Table: " << name << std::endl;
+                logMessage(LMI, "INFO", "Symbol Table", "Type Exists in Table", "Type Name", typeName);
                 return true;
             }
         }
@@ -153,23 +154,21 @@ namespace Cryo
     {
         if (!typeSymbol || typeSymbol == nullptr)
         {
-            std::cerr << "addTypeToTable: Type Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");
             return;
         }
 
         const char *typeName = typeSymbol->name;
         if (doesTypeExist(typeName))
         {
-            std::cerr << "addTypeToTable: Type already exists in table" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type already exists in table", "Type Name", typeName);
             return;
         }
 
         typeTable->typeSymbols[typeTable->count] = typeSymbol;
         typeTable->count++;
 
-        DEBUG_PRINT_FILTER({
-            std::cout << "Type Added to Type Table: " << typeName << std::endl;
-        });
+        logMessage(LMI, "INFO", "Symbol Table", "Added Type to Table", "Type Name", typeName);
         return;
     }
 
@@ -179,12 +178,12 @@ namespace Cryo
     {
         if (!typeSymbol || typeSymbol == nullptr)
         {
-            std::cerr << "initTypeDefinition: Type Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");
             return;
         }
         if (typeSymbol->symbolType != TYPE_SYMBOL)
         {
-            std::cerr << "initTypeDefinition: Symbol is not a Type Symbol" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Symbol is not a Type Symbol");
             return;
         }
 
@@ -192,13 +191,13 @@ namespace Cryo
         const char *typeName = type->name;
         if (!typeName || typeName == nullptr)
         {
-            std::cerr << "initTypeDefinition: Type Name is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Name is null");
             return;
         }
 
         if (doesTypeExist(typeName))
         {
-            std::cerr << "initTypeDefinition: Type already exists in table" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type already exists in table", "Type Name", typeName);
             return;
         }
         size_t tableCount = typeTable->count;
@@ -213,12 +212,12 @@ namespace Cryo
     {
         if (!typeSymbol || typeSymbol == nullptr)
         {
-            std::cerr << "completeTypeDefinition: Type Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");
             return;
         }
         if (typeSymbol->symbolType != TYPE_SYMBOL)
         {
-            std::cerr << "completeTypeDefinition: Symbol is not a Type Symbol" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Symbol is not a Type Symbol");
             return;
         }
 

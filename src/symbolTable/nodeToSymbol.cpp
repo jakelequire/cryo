@@ -136,19 +136,16 @@ namespace Cryo
 
         case NODE_CLASS:
         {
-            std::cout << "ASTNodeToSymbol: Processing Class Node" << std::endl;
             break;
         }
 
         case NODE_ENUM:
         {
-            std::cout << "ASTNodeToSymbol: Processing Enum Node" << std::endl;
             break;
         }
 
         case NODE_EXTERNAL_SYMBOL:
         {
-            std::cout << "ASTNodeToSymbol: Processing External Symbol Node" << std::endl;
             break;
         }
 

@@ -180,7 +180,6 @@ namespace Cryo
             // Get the filename from the CompilerState
             std::string moduleName = "CryoModuleDefaulted";
             module = std::make_unique<llvm::Module>(moduleName, context);
-            std::cout << "[CPP.h] Module Initialized" << std::endl;
         }
 
         void setModuleIdentifier(std::string name)
@@ -343,11 +342,7 @@ namespace Cryo
          * @brief Constructs a CodeGen object and initializes the code generation process.
          * @param context The context to be used during code generation.
          */
-        CodeGen(CryoCompiler &compiler) : compiler(compiler)
-        {
-            std::cout << "[CPP.h] CodeGen constructor start" << std::endl;
-            std::cout << "[CPP.h] CodeGen Initialized" << std::endl;
-        }
+        CodeGen(CryoCompiler &compiler) : compiler(compiler) {}
 
         /**
          * @brief Destructs the CodeGen object and cleans up the code generation process.

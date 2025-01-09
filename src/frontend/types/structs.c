@@ -66,8 +66,6 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
         return NULL;
     }
 
-    printf("Creating struct type from node: %s\n", structNode->data.structNode->name);
-
     structType->name = strdup(structNode->data.structNode->name);
     structType->size = 0;
     structType->propertyCount = 0;
@@ -81,8 +79,6 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
     structType->ctorParamCapacity = structNode->data.structNode->ctorArgCapacity;
     // structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs);
     structType->ctorParams = NULL;
-
-    printf("Struct Created, name: %s\n", structType->name);
 
     return structType;
 }
@@ -142,7 +138,6 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
     }
 
     // Add properties to struct
-    printf("Property Count: %d\n", propCount);
     logASTNode(properties[0]);
     for (int i = 0; i < propCount; i++)
     {

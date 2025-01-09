@@ -18,12 +18,13 @@
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/LSP/LSPSymbols.h"
 #include "compiler/compiler.h"
+#include "tools/logger/logger_config.h"
 
 int lspCompiler(const char *filePath, CompilerSettings *settings)
 {
-    START_COMPILATION_MESSAGE;
+    DEBUG_PRINT_FILTER({ START_COMPILATION_MESSAGE; });
 
-    printf("================= << LSP Compiler >> =================\n");
+    DEBUG_PRINT_FILTER({ printf("================= << LSP Compiler >> =================\n"); });
 
     const char *source = readFile(filePath);
     if (!source)

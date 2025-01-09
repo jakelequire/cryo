@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
 
@@ -23,17 +24,17 @@ namespace Cryo
     {
         if (symbolTable)
         {
-            std::cout << "Deleting primary table" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Deleting primary symbol table");
             delete symbolTable;
         }
         if (currentDependencyTable)
         {
-            std::cout << "Deleting current dependency table" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Deleting current dependency table");
             delete currentDependencyTable;
         }
         if (reapedTable)
         {
-            std::cout << "Deleting reaped table" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Deleting reaped table");
             delete reapedTable;
         }
         dependencyTableVector.clear();
@@ -104,12 +105,12 @@ namespace Cryo
     {
         if (!symbol || symbol == nullptr)
         {
-            std::cerr << "Error: Failed to add symbol to table, symbol is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to add symbol to table, symbol is null");
             return;
         }
         if (!table || table == nullptr)
         {
-            std::cerr << "Error: Failed to add symbol to table, table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to add symbol to table, table is null");
             return;
         }
         addSingleSymbolToTable(symbol, table);
@@ -119,14 +120,14 @@ namespace Cryo
     {
         if (!table || table == nullptr)
         {
-            std::cerr << "Error: Failed to push new dependency table, table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to push new dependency table, table is null");
             return;
         }
 
         // We should check if the table is already in the vector and pointer array
         if (std::find(dependencyTableVector.begin(), dependencyTableVector.end(), table) != dependencyTableVector.end())
         {
-            std::cout << "Dependency Table already exists in vector" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to push new dependency table, table is already in the vector");
             return;
         }
 
@@ -150,7 +151,7 @@ namespace Cryo
     {
         if (!importedTypesTable || importedTypesTable == nullptr)
         {
-            std::cerr << "Error: Failed to push type symbols, imported types table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to push type symbols, imported types table is null");
             return;
         }
 
@@ -210,10 +211,11 @@ namespace Cryo
     {
         if (!symbolName || symbolName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to get scope symbol type from name, symbol name is null!");
             return UNKNOWN_SYMBOL;
         }
 
-        std::cout << "<!> Searching for Symbol: " << symbolName << " <!>" << std::endl;
+        logMessage(LMI, "INFO", "SymbolTable", "Checking for symbol: %s", symbolName);
 
         // Check the primary table
         if (symbolTable)
@@ -228,7 +230,7 @@ namespace Cryo
                 case FUNCTION_SYMBOL:
                 {
                     FunctionSymbol *funcSymbol = symbol->function;
-                    std::cout << "Checking Function Symbol: " << funcSymbol->name << " | Against: " << symbolName << std::endl;
+                    logMessage(LMI, "INFO", "SymbolTable", "Checking Function Symbol: %s | Against: %s", funcSymbol->name, symbolName);
                     if (strcmp(funcSymbol->name, symbolName) == 0)
                     {
                         return FUNCTION_SYMBOL;
@@ -238,7 +240,7 @@ namespace Cryo
                 case TYPE_SYMBOL:
                 {
                     TypeSymbol *typeSymbol = symbol->type;
-                    std::cout << "Checking Type Symbol: " << typeSymbol->name << " | Against: " << symbolName << std::endl;
+                    logMessage(LMI, "INFO", "SymbolTable", "Checking Type Symbol: %s | Against: %s", typeSymbol->name, symbolName);
                     if (strcmp(typeSymbol->name, symbolName) == 0)
                     {
                         return TYPE_SYMBOL;
@@ -298,7 +300,7 @@ namespace Cryo
     {
         if (!symbolName || symbolName == nullptr)
         {
-            std::cerr << "Error: Failed to get type of data type from name, symbol name is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to get type of data type from name, symbol name is null!");
             return UNKNOWN_TYPE;
         }
 
@@ -388,7 +390,7 @@ namespace Cryo
     {
         if (!table || table == nullptr)
         {
-            std::cerr << "Error: Failed to import reaped table, table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to import reaped table, table is null");
             return;
         }
 
@@ -400,7 +402,7 @@ namespace Cryo
     {
         if (!reapedTable || reapedTable == nullptr)
         {
-            std::cerr << "Error: Failed to import reaped types table, table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to import reaped types table, table is null");
             return;
         }
 
@@ -412,7 +414,7 @@ namespace Cryo
     {
         if (!name || name == nullptr)
         {
-            std::cerr << "Error: Failed to get specific symbol table, name is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to get specific symbol table, name is null");
             return nullptr;
         }
 
@@ -421,7 +423,7 @@ namespace Cryo
             SymbolTable *table = dependencyTableVector[i];
             if (table->namespaceName == name)
             {
-                std::cout << "Found Specific Table: " << name << std::endl;
+                logMessage(LMI, "INFO", "SymbolTable", "Found specific symbol table: %s", name);
                 return table;
             }
         }
@@ -432,12 +434,12 @@ namespace Cryo
     {
         if (!table || table == nullptr)
         {
-            std::cerr << "Error: Failed to import runtime symbols, table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to import runtime symbols, table is null");
             return;
         }
         if (table->namespaceName != "runtime")
         {
-            std::cerr << "Error: Failed to import runtime symbols, table is not runtime!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to import runtime symbols, table is not runtime");
             return;
         }
     }
@@ -607,19 +609,19 @@ namespace Cryo
     {
         if (!symbol || symbol == nullptr)
         {
-            std::cout << "addSingleSymbolToTable: Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
             return;
         }
         if (!table || table == nullptr)
         {
-            std::cout << "addSingleSymbolToTable: Symbol Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return;
         }
 
         // Check if the symbol exists in the table
         if (doesSymbolExist(symbol, table))
         {
-            std::cout << "addSingleSymbolToTable: Symbol already exists in table" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol already exists in table");
             return;
         }
 
@@ -628,9 +630,7 @@ namespace Cryo
 
         const char *symbolName = getSymbolName(symbol);
 
-        DEBUG_PRINT_FILTER({
-            std::cout << "GST: Symbol Added: " << symbolName << std::endl;
-        });
+        logMessage(LMI, "INFO", "SymbolTable", "Added symbol to table: %s", symbolName);
 
         return;
     }
@@ -639,12 +639,12 @@ namespace Cryo
     {
         if (!symbols || symbols == nullptr)
         {
-            std::cout << "addSymbolsToSymbolTable: Symbols are null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbols are null");
             return;
         }
         if (!table || table == nullptr)
         {
-            std::cout << "addSymbolsToSymbolTable: Symbol Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return;
         }
 
@@ -679,7 +679,7 @@ namespace Cryo
     {
         if (!node || node == nullptr)
         {
-            std::cout << "addVariableToSymbolTable: Node is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Node is null");
             return;
         }
 
@@ -746,11 +746,11 @@ namespace Cryo
         TypesTable *typeTable = createTypeTable(namespaceName);
         if (typeTable)
         {
-            std::cout << "initTypeTable: Type Table Created" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Created Type Table");
             return typeTable;
         }
 
-        std::cerr << "initTypeTable: Failed to create Type Table" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create Type Table");
         return nullptr;
     }
 
@@ -758,7 +758,7 @@ namespace Cryo
     {
         if (!symbol || symbol == nullptr)
         {
-            std::cerr << "wrapSubSymbol: Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
             return nullptr;
         }
 
@@ -775,12 +775,12 @@ namespace Cryo
     {
         if (!symbol || symbol == nullptr)
         {
-            std::cout << "doesSymbolExist: Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
             return false;
         }
         if (!table || table == nullptr)
         {
-            std::cout << "doesSymbolExist: Symbol Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return false;
         }
 

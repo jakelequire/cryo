@@ -45,7 +45,6 @@ extern "C"
 
 namespace Cryo
 {
-
     class SymbolTableDebugger
     {
     public:

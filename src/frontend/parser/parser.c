@@ -30,15 +30,11 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, TypeTabl
     bool isDependencyTable = isDependencyTable(globalTable);
     if (isPrimaryTable)
     {
-        printf("\n");
         logMessage(LMI, "INFO", "Parser", "%s%sPrimary Table Parsing%s", BOLD, GREEN, COLOR_RESET);
-        printf("\n");
     }
     if (isDependencyTable)
     {
-        printf("\n");
         logMessage(LMI, "INFO", "Parser", "%s%sDependency Table Parsing%s", BOLD, YELLOW, COLOR_RESET);
-        printf("\n");
     }
 
     bool isModuleFile = state->isModuleFile;
@@ -126,8 +122,6 @@ void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, co
 // <getNextToken>
 void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    // printf("[Parser] @getNextToken | Current Token before: Type=%d, Start=%.*s, Length=%d\n", lexer->currentToken.type, lexer->currentToken.length, lexer->currentToken.start, lexer->currentToken.length);
-    // logMessage(LMI, "INFO", "Parser", "Current Token before: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start, lexer->currentToken.length);
     if (isAtEnd(lexer, state))
     {
         lexer->currentToken.type = TOKEN_EOF;
@@ -140,7 +134,6 @@ void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *t
     Token *nextToken = (Token *)malloc(sizeof(Token));
     *nextToken = get_next_token(lexer, state);
     lexer->currentToken = *nextToken;
-    // logMessage(LMI, "INFO", "Parser", "Current Token after: Type=%s, Start=%.*s, Length=%d", CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start, lexer->currentToken.length);
 }
 // </getNextToken>
 
@@ -291,7 +284,7 @@ TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, Arena 
 // <getOperatorPrecedence>
 int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    printf("[Parser] @getOperatorPrecedence | Operator: %s\n", CryoOperatorToString(type));
+    logMessage(LMI, "INFO", "Parser", "Getting operator precedence...");
     switch (type)
     {
     case OPERATOR_ADD:
@@ -433,7 +426,6 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         }
         if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_DOUBLE_COLON)
         {
-            printf("Scope Call Token String: %.*s\n", lexer->currentToken.length, lexer->currentToken.start);
             logMessage(LMI, "INFO", "Parser", "Parsing scope call...");
             return parseScopeCall(lexer, context, arena, state, typeTable, globalTable);
         }
@@ -495,22 +487,22 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     logMessage(LMI, "INFO", "Parser", "Parsing scope call...");
 
     char *scopeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    printf("Scope Name: %s\n", scopeName);
+    logMessage(LMI, "INFO", "Parser", "Scope Name: %s", scopeName);
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", arena, state, typeTable, context);
 
     // Consume the double colon
     consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected a double colon", "parseScopeCall", arena, state, typeTable, context);
 
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    printf("Function Name: %s\n", functionName);
+    logMessage(LMI, "INFO", "Parser", "Function Name: %s", functionName);
 
     TypeOfSymbol symType = GetScopeSymbolTypeFromName(globalTable, scopeName);
     const char *symTypeStr = TypeOfSymbolToString(globalTable, symType);
-    printf("Symbol Type: %s\n", symTypeStr);
+    logMessage(LMI, "INFO", "Parser", "Symbol Type: %s", symTypeStr);
 
     TypeofDataType typeOfDataType = GetTypeOfDataTypeFromName(globalTable, scopeName);
     const char *typeOfDataTypeStr = TypeofDataTypeToString(typeOfDataType);
-    printf("Type Of Data Type: %s\n", typeOfDataTypeStr);
+    logMessage(LMI, "INFO", "Parser", "Type of Data Type: %s", typeOfDataTypeStr);
 
     Symbol *sym = NULL;
     switch (symType)
@@ -540,7 +532,7 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
 
     CryoNodeType nodeType = symbolNode->metaData->type;
-    printf("Node Type: %s\n", CryoNodeTypeToString(nodeType));
+    logMessage(LMI, "INFO", "Parser", "Node Type: %s", CryoNodeTypeToString(nodeType));
     ASTNode *node = NULL;
     switch (nodeType)
     {
@@ -665,7 +657,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
 
     ASTNode *node = NULL;
     CryoTokenType prevToken = context->lastTokens[0].type;
-    printf("\n@parsePrimaryExpression Previous Token: %s\n\n", CryoTokenToString(prevToken));
+    logMessage(LMI, "INFO", "Parser", "Previous Token: %s", CryoTokenToString(prevToken));
 
     switch (lexer->currentToken.type)
     {
@@ -681,7 +673,6 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
     {
         logMessage(LMI, "INFO", "Parser", "Parsing string literal");
         const char *str = (const char *)strndup(lexer->currentToken.start, lexer->currentToken.length);
-        printf("String: %s\n", str);
         node = createStringLiteralNode(str, arena, state, typeTable, lexer);
         getNextToken(lexer, arena, state, typeTable);
         return node;
@@ -761,9 +752,6 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena 
     CryoTokenType prevToken = context->lastTokens[0].type;
     char *curToken = strndup(lexer->currentToken.start, lexer->currentToken.length);
     CryoTokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
-    printf("\n@parseIdentifierExpression Previous Token: %s\n ", CryoTokenToString(prevToken));
-    printf("\n@parseIdentifierExpression Current Token: %s\n\n", curToken);
-    printf("\n@parseIdentifierExpression Next Token: %s\n\n", CryoTokenToString(nextToken));
 
     if (nextToken == TOKEN_KW_NEW)
     {
@@ -876,11 +864,9 @@ ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPre
             break;
         }
 
-        printf("Operator: %s\n", CryoTokenToString(opToken));
         CryoOperatorType _op = CryoTokenToOperator(opToken);
-        printf("Operator: %s\n", CryoOperatorToString(_op));
         int precedence = getOperatorPrecedence(_op, arena, state, typeTable);
-        printf("Precedence: %d\n", precedence);
+        logMessage(LMI, "INFO", "Parser", "Operator: %s, Precedence: %d", CryoOperatorToString(_op), precedence);
 
         if (precedence < minPrecedence)
         {
@@ -936,7 +922,6 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
     {
         logMessage(LMI, "INFO", "Parser", "Parsing increment or decrement expression...");
         char *cur_token = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        printf("<UNARY> Current Token: %s\n", cur_token);
         opToken = lexer->currentToken.type;
 
         getNextToken(lexer, arena, state, typeTable);
@@ -1155,7 +1140,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, false, arena, state, typeTable, lexer);
     if (initializer->metaData->type == NODE_INDEX_EXPR)
     {
-        printf("\n\n\n");
         logMessage(LMI, "INFO", "Parser", "Index expression detected.");
         varDeclNode->data.varDecl->indexExpr = initializer->data.indexExpr;
         varDeclNode->data.varDecl->hasIndexExpr = true;
@@ -1203,7 +1187,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     DataType **paramTypes = (DataType **)malloc(sizeof(DataType *) * 64);
     for (int i = 0; params[i] != NULL; i++)
     {
-        printf("Parameter at index %d\n", i);
+        logMessage(LMI, "INFO", "Parser", "Parameter type: %s", DataTypeToString(params[i]->data.param->type));
         paramTypes[i] = params[i]->data.param->type;
         paramCount++;
     }
@@ -1364,13 +1348,13 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     int _paramCount = 0;
     if (typeofSymbol == FUNCTION_SYMBOL)
     {
-        printf("Function Symbol\n");
+        logMessage(LMI, "INFO", "Parser", "Function Symbol");
         functionNode = funcSymbol->function->node;
         _paramCount = funcSymbol->function->paramCount;
     }
     else if (typeofSymbol == EXTERN_SYMBOL)
     {
-        printf("Extern Symbol\n");
+        logMessage(LMI, "INFO", "Parser", "Extern Symbol");
         functionNode = funcSymbol->externSymbol->node;
         _paramCount = funcSymbol->externSymbol->paramCount;
     }
@@ -1394,12 +1378,11 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     DataType **expectedTypes = (DataType **)ARENA_ALLOC(arena, 8 * sizeof(DataType *));
 
     // Parse arguments
-    printf("Parsing arguments...\n");
     switch (typeofSymbol)
     {
     case EXTERN_SYMBOL:
     {
-        printf("Arguments for extern function...\n");
+        logMessage(LMI, "INFO", "Parser", "Arguments for extern function...");
         ASTNode *externFuncNode = functionNode;
         logASTNode(externFuncNode);
         ASTNode **params = externFuncNode->data.externFunction->params;
@@ -1413,7 +1396,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     }
     case FUNCTION_SYMBOL:
     {
-        printf("Arguments for function...\n");
+        logMessage(LMI, "INFO", "Parser", "Arguments for function...");
         ASTNode *funcDeclNode = functionNode;
         logASTNode(funcDeclNode);
         ASTNode **params = funcDeclNode->data.functionDecl->params;
@@ -1457,8 +1440,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
         {
 
             CryoTokenType token = lexer->currentToken.type;
-            printf("\n\n Current Token in view: %s\n", CryoTokenToString(token));
-
+            logMessage(LMI, "INFO", "Parser", "Current Token Type: %s", CryoTokenToString(token));
             switch (token)
             {
             case TOKEN_INT_LITERAL:
@@ -1642,7 +1624,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
     if (lexer->currentToken.type != TOKEN_SEMICOLON)
     {
         expression = parseExpression(lexer, context, arena, state, typeTable, globalTable);
-        printf("[Parser] Parsed return expression\n");
+        logMessage(LMI, "INFO", "Parser", "Return expression: %s", CryoNodeTypeToString(expression->metaData->type));
     }
 
     if (expression)
@@ -1651,17 +1633,17 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
         if (expression->metaData->type == NODE_LITERAL_EXPR)
         {
             returnType = expression->data.literal->type;
-            printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
         }
         if (expression->metaData->type == NODE_BINARY_EXPR)
         {
             returnType = createPrimitiveIntType();
-            printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
         }
         if (expression->metaData->type == NODE_FUNCTION_CALL)
         {
             returnType = expression->data.functionCall->returnType;
-            printf("[Parser] Return expression data type: %s\n", DataTypeToString(returnType));
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
         }
     }
     else
@@ -2383,13 +2365,13 @@ ASTNode *parseIfCondition(Lexer *lexer, ParsingContext *context, Arena *arena, C
 {
     logMessage(LMI, "INFO", "Parser", "Parsing if condition...");
     char *cur_token = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    printf("\n\n[Parser] Current token: %s\n\n", cur_token);
+    logMessage(LMI, "INFO", "Parser", "Current token: %s", cur_token);
 
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start if condition.", "parseIfCondition", arena, state, typeTable, context);
 
     char *cur_token_cpy = strndup(lexer->currentToken.start, lexer->currentToken.length);
 
-    printf("\n\n[Parser] Current token: %s\n\n", cur_token_cpy);
+    logMessage(LMI, "INFO", "Parser", "Current token: %s", cur_token_cpy);
     ASTNode *condition = parseExpression(lexer, context, arena, state, typeTable, globalTable);
 
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end if condition.", "parseIfCondition", arena, state, typeTable, context);
@@ -2549,7 +2531,7 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseArrayIndexing", arena, state, typeTable, context);
     consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array indexing.", "parseArrayIndexing", arena, state, typeTable, context);
 
-    printf("[Parser] Array name: %s\n", arrCpyName);
+    logMessage(LMI, "INFO", "Parser", "Array name: %s", arrCpyName);
     ASTNode *arrNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
 
     // Find the array in the symbol table
@@ -2569,7 +2551,6 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
 
     ASTNode *index = parseExpression(lexer, context, arena, state, typeTable, globalTable);
     consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array indexing.", "parseArrayIndexing", arena, state, typeTable, context);
-    printf("[Parser] Array name: %s\n", strdup(arrCpyName));
     return createIndexExprNode(strdup(arrCpyName), arrNode, index, arena, state, typeTable, lexer);
 }
 // </parseArrayIndexing>
@@ -2630,10 +2611,10 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
     }
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseAssignment", arena, state, typeTable, context);
-    printf("\n\nFinished parsing assignment\n");
+    logMessage(LMI, "INFO", "Parser", "Creating assignment node...");
 
     ASTNode *assignment = createVarReassignment(strdup(varNameCpy), oldValue, newValue, arena, state, typeTable, lexer);
-    printf("\n\nAssignment Node Type %s\n", CryoNodeTypeToString(assignment->metaData->type));
+    logMessage(LMI, "INFO", "Parser", "Assignment node created.");
     return assignment;
 }
 
@@ -2694,9 +2675,7 @@ ASTNode *parseLHSIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena,
         return NULL;
     }
 
-    printf("\n\n\n\nType of data type:");
     printFormattedType(typeOfNode);
-    printf("\n\n\n\n");
 
     DEBUG_BREAKPOINT;
 }
@@ -2752,12 +2731,12 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
                 PropertyNode *property = properties[i]->data.property;
                 if (strcmp(property->name, propName) == 0)
                 {
-                    printf("Property found & Correct: %s\n", propName);
+                    logMessage(LMI, "INFO", "Parser", "Property found in struct.");
                     return createPropertyAccessNode(properties[i], thisContext->nodeName, arena, state, typeTable, lexer);
                 }
                 else
                 {
-                    printf("Property not found: %s\n", propName);
+                    logMessage(LMI, "ERROR", "Parser", "Property not found in struct.");
                 }
             }
 
@@ -2774,7 +2753,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
     {
         // Get the identifier name
         char *identifierName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        printf("Identifier name: %s\n", identifierName);
+        logMessage(LMI, "INFO", "Parser", "Identifier name: %s", identifierName);
         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseIdentifierDotNotation", arena, state, typeTable, context);
 
         Symbol *sym = FindSymbol(globalTable, identifierName, getCurrentScopeID(context));
@@ -2792,9 +2771,6 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
 
         VALIDATE_TYPE(typeOfNode);
         VALIDATE_TYPE(typeFromSymbol);
-
-        printf("\n\n\nType of data type:\n");
-        // logVerboseDataType(typeOfNode);
 
         if (lexer->currentToken.type == TOKEN_DOT)
         {
@@ -2858,7 +2834,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         else
         {
 
-            printf("Property Attempted: %s\n", propName);
+            logMessage(LMI, "ERROR", "Parser", "Property Attempted: %s", propName);
             parsingError("Property not found in struct.", "parseDotNotationWithType", arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }
@@ -2893,8 +2869,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         }
         else
         {
-
-            printf("Property Attempted: %s\n", propName);
+            logMessage(LMI, "ERROR", "Parser", "Property Attempted: %s", propName);
             parsingError("Property not found in class.", "parseDotNotationWithType", arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
         }

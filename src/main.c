@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     char *parent = getCompilerRootPath(argv[0]);
     if (parent)
     {
-        printf("Parent directory: %s\n", parent);
+        logMessage(LMI, "INFO", "MAIN", "Parent directory: %s", parent);
     }
 
     // Initialize environment variables

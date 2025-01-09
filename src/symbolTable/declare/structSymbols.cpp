@@ -14,7 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -30,7 +32,7 @@ namespace Cryo
         }
         else
         {
-            std::cout << "Failed to create struct declaration symbol" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to create struct declaration symbol");
             return;
         }
     }
@@ -64,7 +66,7 @@ namespace Cryo
         Symbol *structSymbol = getStructSymbol(structName);
         if (!structSymbol)
         {
-            std::cout << "Failed to find struct symbol for adding property" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to find struct symbol for adding property");
             return;
         }
 
@@ -81,7 +83,7 @@ namespace Cryo
         Symbol *structSymbol = getStructSymbol(structName);
         if (!structSymbol)
         {
-            std::cout << "Failed to find struct symbol for adding method" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to find struct symbol for adding method");
             return;
         }
 
@@ -100,11 +102,11 @@ namespace Cryo
         Symbol *structSymbol = queryCurrentTable(structHashName, structName, TYPE_SYMBOL);
         if (structSymbol)
         {
-            std::cout << "Struct Symbol Found!" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Found Struct Symbol");
             return structSymbol;
         }
 
-        std::cout << "Struct Symbol not found" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to find Struct Symbol");
         return nullptr;
     }
 
@@ -115,7 +117,7 @@ namespace Cryo
 
         if (methodCount >= methodCap)
         {
-            std::cout << "Expanding method capacity" << std::endl;
+            logMessage(LMI, "INFO", "SymbolTable", "Expanding method capacity");
             structSymbol->type->methods = (Symbol **)realloc(structSymbol->type->methods, methodCap * 2 * sizeof(Symbol *));
             structSymbol->type->methodCapacity = methodCap * 2;
         }
@@ -133,7 +135,7 @@ namespace Cryo
         // Increment the method count
         structSymbol->type->methodCount++;
 
-        std::cout << "Method Failed to Add to Struct Symbol" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Method Failed to Add to Struct Symbol");
         return;
     }
 
@@ -159,7 +161,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "Property Failed to Add to Struct Symbol" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Property Failed to Add to Struct Symbol");
         return;
     }
 
@@ -167,26 +169,26 @@ namespace Cryo
     {
         if (!structNode || structNode == nullptr)
         {
-            std::cout << "Error: Struct Node is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Struct Node is null");
             return;
         }
         if (!structName || structName == nullptr)
         {
-            std::cout << "Error: Struct Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Struct Name is null");
             return;
         }
 
         SymbolTable *table = getCurrentSymbolTable();
         if (!table)
         {
-            std::cout << "Error: Symbol Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return;
         }
 
         Symbol *structSymbol = getStructSymbol(structName);
         if (!structSymbol)
         {
-            std::cout << "Error: Struct Symbol not found" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Struct Symbol is null");
             return;
         }
 
@@ -196,11 +198,9 @@ namespace Cryo
 
         // Update the Struct symbol in the table
         updateStructSymbol(structSymbol, table);
-
         completeTypeDefinition(structSymbol, structName);
 
-        std::cout << "Struct Declaration Completed" << std::endl;
-
+        logMessage(LMI, "INFO", "SymbolTable", "Completed Struct Declaration");
         return;
     }
 
@@ -229,12 +229,12 @@ namespace Cryo
     {
         if (!name || name == nullptr)
         {
-            std::cout << "doesStructSymbolExist: Name is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Struct Name is null");
             return false;
         }
         if (!table || table == nullptr)
         {
-            std::cout << "doesStructSymbolExist: Symbol Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return false;
         }
 

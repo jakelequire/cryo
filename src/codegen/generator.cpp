@@ -48,7 +48,6 @@ namespace Cryo
             ASTNode *statement = node->data.program->statements[i];
             if (statement->metaData->type != NODE_IMPORT_STATEMENT)
             {
-                std::cout << "Processing Statement " << i + 1 << " of " << node->data.program->statementCount << std::endl;
                 parseTree(statement);
             }
         }
@@ -178,7 +177,6 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
             int intValue = literalNode->value.intValue;
-            std::cout << "\n\nLiteral Int Value:" << node->data.literal->value.intValue << std::endl;
             llvm::Type *ty = compiler.getTypes().getType(dataType, 0);
             llvmConstant = llvm::ConstantInt::get(ty, intValue);
             std::cout << "\n";

@@ -15,11 +15,14 @@
  *                                                                              *
  ********************************************************************************/
 #include "codegen/oldCodeGen.hpp"
+#include "tools/logger/logger_config.h"
 
 int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker cLinker)
 {
-    std::cout << ">===------------- CPP Code Generation -------------===<\n"
-              << std::endl;
+    DEBUG_PRINT_FILTER({
+        std::cout << ">===------------- CPP Code Generation -------------===<\n"
+                  << std::endl;
+    });
 
     Cryo::CryoCompiler compiler;
     compiler.setCompilerState(state);
@@ -27,7 +30,6 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker cLinker)
     compiler.isPreprocessing = false;
 
     std::string moduleName = state->fileName;
-    std::cout << "Module Name: " << moduleName << std::endl;
     compiler.setModuleIdentifier(moduleName);
 
     // Convert C opaque pointer back to C++ type
@@ -42,29 +44,22 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker cLinker)
 
 int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath)
 {
-    std::cout << ">===------------- CPP Runtime Generation -------------===<\n"
-              << std::endl;
-    std::cout << "Output Path: " << outputPath << std::endl;
-
-    std::cout << "Starting Runtime IR Generation" << std::endl;
-    Cryo::CryoCompiler compiler;
-    std::cout << "Compiler Initialized" << std::endl;
-
-    compiler.setCompilerState(state);
-    std::cout << "Compiler State set" << std::endl;
-
-    compiler.setCompilerSettings(state->settings);
-    std::cout << "Compiler Settings set" << std::endl;
+    DEBUG_PRINT_FILTER({
+        std::cout << ">===------------- CPP Runtime Generation -------------===<\n"
+                  << std::endl;
+        std::cout << "Output Path: " << outputPath << std::endl;
+    });
 
     std::string moduleName = "runtime";
+    Cryo::CryoCompiler compiler;
+
+    compiler.setCompilerState(state);
+    compiler.setCompilerSettings(state->settings);
     compiler.setModuleIdentifier(moduleName);
 
-    std::cout << "Module Identifier set | " << moduleName << std::endl;
     // Set the output path for the runtime
     compiler.setCustomOutputPath(outputPath);
-
-    std::cout << "Custom Output Path set | " << outputPath << std::endl;
-
+    // Compile Runtime Node
     compiler.compile(runtimeNode);
 
     return 0;
@@ -79,8 +74,6 @@ namespace Cryo
      */
     void CodeGen::executeCodeGeneration(ASTNode *root)
     {
-        std::cout << "[CPP] Executing Code Generation" << std::endl;
-
         CryoCompiler &compiler = this->compiler;
         assert(root != nullptr);
 
@@ -138,8 +131,6 @@ namespace Cryo
         compileCode.compileIRFile();
 
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
-        std::cout << "====================================================================================================" << std::endl;
-        std::cout << "\n\n";
         return;
     }
 
@@ -228,11 +219,8 @@ namespace Cryo
         case NODE_NAMESPACE:
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Namespace");
-            // set the module name
             std::string moduleName = std::string(root->data.cryoNamespace->name);
-            std::cout << "Module Name: " << moduleName << std::endl;
             compiler.getContext().module->setModuleIdentifier(moduleName);
-            // Set the namespace name
             break;
         }
         case NODE_BLOCK:
@@ -340,7 +328,6 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Return Statement");
             DataType *dataType = node->data.returnStatement->type;
-            std::cout << "Data Type: " << DataTypeToString(dataType) << std::endl;
 
             llvmValue = functions.createReturnNode(node);
             if (!llvmValue)
@@ -564,8 +551,6 @@ namespace Cryo
                 break;
             }
         }
-        std::cout << "Namespace: " << namespaceName << std::endl;
-
         return namespaceName;
     }
 
@@ -583,7 +568,6 @@ namespace Cryo
         {
             llvm::Value *argValue = &*args;
             std::string argName = argValue->getName().str();
-            std::cout << "Arg Name: " << argName << std::endl;
         }
 
         llvm::Function::iterator block = currentFunction->begin();
@@ -598,7 +582,6 @@ namespace Cryo
             {
                 llvm::Instruction *instruction = &*inst;
                 std::string instName = instruction->getName().str();
-                std::cout << "Inst Name: " << instName << std::endl;
             }
         }
 

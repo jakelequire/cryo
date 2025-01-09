@@ -283,5 +283,6 @@
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",
-  "editor.selectionClipboard": false
+  "editor.selectionClipboard": false,
+  "search.useIgnoreFiles": false
 }

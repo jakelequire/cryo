@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/fs.h"
+#include "tools/logger/logger_config.h"
 
 #define PATH_MAX 4096
 
@@ -28,11 +29,11 @@ CryoSrcLocations srcLocations[] = {
 /// @brief Takes in a file path and reads the contents of the file into a buffer
 char *readFile(const char *path)
 {
-    printf("[FS] Reading file: %s\n", path);
+    logMessage(LMI, "INFO", "FS", "Reading file: %s", path);
     FILE *file = fopen(path, "rb"); // Open the file in binary mode to avoid transformations
     if (file == NULL)
     {
-        perror("{FS} Could not open file");
+        fprintf(stderr, "{FS} Failed to open file: %s\n", path);
         return NULL;
     }
 
@@ -43,7 +44,7 @@ char *readFile(const char *path)
 
     if (length == 0)
     {
-        perror("{FS} File is empty");
+        fprintf(stderr, "{FS} File is empty: %s\n", path);
         fclose(file);
         return NULL;
     }
@@ -51,7 +52,7 @@ char *readFile(const char *path)
     char *buffer = (char *)malloc(length + 1);
     if (buffer == NULL)
     {
-        perror("{FS} Not enough memory to read file");
+        fprintf(stderr, "{FS} Failed to allocate memory for file: %s\n", path);
         fclose(file);
         return NULL;
     }
@@ -59,7 +60,7 @@ char *readFile(const char *path)
     size_t bytesRead = fread(buffer, 1, length, file);
     if (bytesRead < length)
     {
-        perror("{FS} Failed to read the full file");
+        fprintf(stderr, "{FS} Failed to read file: %s\n", path);
         free(buffer);
         fclose(file);
         return NULL;
@@ -221,7 +222,7 @@ const char *getSTDFilePath(const char *subModule)
 
     // The std library path will be $CRYO_PATH/cryo/std/{subModule}.cryo
     char *stdPath = (char *)malloc(strlen(cryoPath) + 16 + strlen(subModule) + 6);
-    sprintf(stdPath, "%s/cryo/std/%s.cryo", cryoPath, subModule);
+    logMessage(LMI, "INFO", "TypeDefs", "Found Cryo path: %s", cryoPath);
 
     return stdPath;
 }

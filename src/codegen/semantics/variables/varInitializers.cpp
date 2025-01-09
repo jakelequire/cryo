@@ -437,7 +437,6 @@ namespace Cryo
             // Get the string content from the literal node
             std::string strContent = literalNode->value.stringValue;
             const std::string &strContentRef = strContent;
-            std::cout << "String Content: " << strContentRef << std::endl;
 
             // Get or create the global string constant
             llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(strContentRef);
@@ -510,11 +509,8 @@ namespace Cryo
         OldTypes &types = compiler.getTypes();
         std::string namespaceName = compiler.getContext().currentNamespace;
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Variable Name Initializer");
-        std::cout << "Variable Name: " << varName << std::endl;
-        std::cout << "Referenced Variable Name: " << refVarName << std::endl;
 
         DataType *nodeDataType = varNameNode->type;
-        std::cout << "Node Type: " << DataTypeToString(nodeDataType) << std::endl;
 
         // Create the variable alloca
         llvm::Value *llvmValue = nullptr;
@@ -724,8 +720,6 @@ namespace Cryo
         llvm::Constant *llvmConstant = nullptr;
 
         std::string arrayName = std::string(indexExprNode->name);
-        std::cout << "Array Name: " << arrayName << std::endl;
-        std::cout << "Variable Name: " << varName << std::endl;
         ASTNode *indexNode = indexExprNode->index;
         DevDebugger::logNode(indexNode);
         STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, arrayName);
@@ -808,8 +802,6 @@ namespace Cryo
         OldTypes &types = compiler.getTypes();
 
         std::string arrayName = std::string(indexExprNode->name);
-        std::cout << "Array Name: " << arrayName << std::endl;
-        std::cout << "Variable Name: " << varName << std::endl;
         ASTNode *indexNode = indexExprNode->index;
 
         STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, arrayName);
@@ -977,7 +969,6 @@ namespace Cryo
         std::string namespaceName = compiler.getContext().currentNamespace;
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Variable with Binary Operation Initializer");
 
-        std::cout << "Variable Name: " << varName << std::endl;
         llvm::Value *initValue = binOps.handleComplexBinOp(node);
         if (!initValue)
         {
@@ -1013,7 +1004,6 @@ namespace Cryo
         std::string namespaceName = compiler.getContext().currentNamespace;
         DataType *objectType = objectNode->objType;
         std::string dataTypeName = getDataTypeName(objectType);
-        std::cout << "Data Type Name: " << dataTypeName << std::endl;
         llvm::Value *objectPtr = compiler.getObjects().createObjectInstance(objectNode, varName);
         if (!objectPtr)
         {

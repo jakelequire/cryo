@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "tools/cxx/IDGen.hpp"
 #include "frontend/parser.h"
+#include "tools/logger/logger_config.h"
 
 ParsingContext *createParsingContext(void)
 {
@@ -322,58 +323,66 @@ void clearScopeContext(ParsingContext *context)
 
 void logThisContext(ParsingContext *context)
 {
-    if (context->thisContext)
-    {
-        ThisContext *thisContext = context->thisContext;
-        printf(BOLD MAGENTA "\n┌───────────────── This Context ─────────────────┐\n" COLOR_RESET);
-        printf("This Context: %s\n", thisContext->nodeName);
-        printf("Node Type: %s\n", CryoNodeTypeToString(thisContext->nodeType));
-        printf("Properties:\n");
-        for (int i = 0; i < thisContext->propertyCount; i++)
+    DEBUG_PRINT_FILTER({
+        if (context->thisContext)
         {
-            logASTNodeDebugView(thisContext->properties[i]);
+            ThisContext *thisContext = context->thisContext;
+            printf(BOLD MAGENTA "\n┌───────────────── This Context ─────────────────┐\n" COLOR_RESET);
+            printf("This Context: %s\n", thisContext->nodeName);
+            printf("Node Type: %s\n", CryoNodeTypeToString(thisContext->nodeType));
+            printf("Properties:\n");
+            for (int i = 0; i < thisContext->propertyCount; i++)
+            {
+                logASTNodeDebugView(thisContext->properties[i]);
+            }
+            printf("Methods: \n");
+            for (int i = 0; i < thisContext->methodCount; i++)
+            {
+                logASTNodeDebugView(thisContext->methods[i]);
+            }
+            printf(BOLD MAGENTA "└────────────────────────────────────────────────┘\n" COLOR_RESET);
         }
-        printf("Methods: \n");
-        for (int i = 0; i < thisContext->methodCount; i++)
+        else
         {
-            logASTNodeDebugView(thisContext->methods[i]);
+            logMessage(LMI, "INFO", "Parser", "No this context set.");
         }
-        printf(BOLD MAGENTA "└────────────────────────────────────────────────┘\n" COLOR_RESET);
-    }
-    else
-    {
-        logMessage(LMI, "INFO", "Parser", "No this context set.");
-    }
+    });
 }
 
 void logTokenArray(ParsingContext *context)
 {
-    printf(BOLD YELLOW "\n┌────────────────────────── Last Tokens ──────────────────────────┐\n" COLOR_RESET);
-    for (int i = 0; i < 16; i++)
-    {
-        Token token = context->lastTokens[i];
-        printf(" %-3d %s\n", i, TokenToString(token));
-    }
-    printf(BOLD YELLOW "└─────────────────────────────────────────────────────────────────┘\n" COLOR_RESET);
+    DEBUG_PRINT_FILTER({
+        printf(BOLD YELLOW "\n┌────────────────────────── Last Tokens ──────────────────────────┐\n" COLOR_RESET);
+        for (int i = 0; i < 16; i++)
+        {
+            Token token = context->lastTokens[i];
+            printf(" %-3d %s\n", i, TokenToString(token));
+        }
+        printf(BOLD YELLOW "└─────────────────────────────────────────────────────────────────┘\n" COLOR_RESET);
+    });
 }
 
 void logParsingContext(ParsingContext *context)
 {
-    printf(BOLD CYAN "\n╔══════════════════════════════ Parsing Context ══════════════════════════════╗\n" COLOR_RESET);
-    logThisContext(context);
-    //  logTokenArray(context);
-    printf(BOLD CYAN "╚═════════════════════════════════════════════════════════════════════════════╝\n" COLOR_RESET);
+    DEBUG_PRINT_FILTER({
+        printf(BOLD CYAN "\n╔══════════════════════════════ Parsing Context ══════════════════════════════╗\n" COLOR_RESET);
+        logThisContext(context);
+        //  logTokenArray(context);
+        printf(BOLD CYAN "╚═════════════════════════════════════════════════════════════════════════════╝\n" COLOR_RESET);
+    });
 }
 
 void logScopeInformation(ParsingContext *context)
 {
-    printf(BOLD GREEN "\n┌───────────────── Scope Information ─────────────────┐\n" COLOR_RESET);
-    printf("Scope ID: %s\n", context->scopeContext->scopeID);
-    printf("Scope Name: %s\n", context->scopeContext->name);
-    printf("Scope Level: %d\n", context->scopeContext->level);
-    printf("Scope Type: %s\n", CryoNodeTypeToString(context->scopeContext->nodeType));
-    printf("Scope Static: %s\n", context->scopeContext->isStatic ? "true" : "false");
-    printf(BOLD GREEN "└────────────────────────────────────────────────────┘\n" COLOR_RESET);
+    DEBUG_PRINT_FILTER({
+        printf(BOLD GREEN "\n┌───────────────── Scope Information ─────────────────┐\n" COLOR_RESET);
+        printf("Scope ID: %s\n", context->scopeContext->scopeID);
+        printf("Scope Name: %s\n", context->scopeContext->name);
+        printf("Scope Level: %d\n", context->scopeContext->level);
+        printf("Scope Type: %s\n", CryoNodeTypeToString(context->scopeContext->nodeType));
+        printf("Scope Static: %s\n", context->scopeContext->isStatic ? "true" : "false");
+        printf(BOLD GREEN "└────────────────────────────────────────────────────┘\n" COLOR_RESET);
+    });
 }
 
 const char *getScopeID(const char *name)

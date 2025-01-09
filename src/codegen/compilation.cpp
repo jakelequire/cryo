@@ -42,8 +42,8 @@ namespace Cryo
                 highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
 
                 LLVM_MODULE_FAILED_MESSAGE_END;
+                LLVM_MODULE_ERROR_START;
             });
-            LLVM_MODULE_ERROR_START;
             // Get the error itself without the module showing up
             std::string errorMessage = getErrorMessage();
             if (!errorMessage.empty())
@@ -51,8 +51,10 @@ namespace Cryo
                 llvm::errs() << errorMessage;
                 std::cout << "\n\n";
             }
-            LLVM_MODULE_ERROR_END;
-            std::cout << "\n\n";
+            DEBUG_PRINT_FILTER({
+                LLVM_MODULE_ERROR_END;
+                std::cout << "\n\n";
+            });
 
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
 
@@ -71,7 +73,6 @@ namespace Cryo
             return;
         }
 
-        std::cout << "\n Getting the output path\n";
         const char *unsafe_filePath = strdup(settings->inputFile);
         std::string outputFilePath(unsafe_filePath);
         std::filesystem::path cwd = std::filesystem::current_path();
@@ -162,14 +163,14 @@ namespace Cryo
             return;
         }
 
-        LLVM_MODULE_COMPLETE_START;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
         LoadStoreWhitespaceAnnotator LSWA;
 
         // Use the custom annotator when printing
         compiler.getContext().module->print(dest, &LSWA);
-        compiler.getContext().module->print(llvm::outs(), &LSWA);
+        DEBUG_PRINT_FILTER({ compiler.getContext().module->print(llvm::outs(), &LSWA); });
 
-        LLVM_MODULE_COMPLETE_END;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_END; });
 
         dest.close();
 
@@ -202,14 +203,14 @@ namespace Cryo
             return;
         }
 
-        LLVM_MODULE_COMPLETE_START;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
         LoadStoreWhitespaceAnnotator LSWA;
 
         // Use the custom annotator when printing
         compiler.getContext().module->print(dest, &LSWA);
-        compiler.getContext().module->print(llvm::outs(), &LSWA);
+        DEBUG_PRINT_FILTER({ compiler.getContext().module->print(llvm::outs(), &LSWA); });
 
-        LLVM_MODULE_COMPLETE_END;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_END; });
 
         dest.close();
 
@@ -235,13 +236,13 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Code CodeGen Complete");
 
-        LLVM_MODULE_COMPLETE_START;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
         LoadStoreWhitespaceAnnotator LSWA;
 
         // Use the custom annotator when printing
         cryoContext.module->print(dest, &LSWA);
-        cryoContext.module->print(llvm::outs(), &LSWA);
-        LLVM_MODULE_COMPLETE_END;
+        DEBUG_PRINT_FILTER({ cryoContext.module->print(llvm::outs(), &LSWA); });
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_END; });
 
         dest.close();
 
@@ -278,8 +279,10 @@ namespace Cryo
         }
         else
         {
-            std::cout << "\n>===------- LLVM IR Code -------===<\n"
-                      << std::endl;
+            DEBUG_PRINT_FILTER({
+                std::cout << "\n>===------- LLVM IR Code -------===<\n"
+                          << std::endl;
+            });
 
             compiler.getContext().getModules()->back()->print(dest, nullptr);
 
@@ -288,10 +291,12 @@ namespace Cryo
 
             // Use the custom annotator when printing
             compiler.getModule().print(dest, &LSWA);
-            compiler.getModule().print(llvm::outs(), &LSWA);
+            DEBUG_PRINT_FILTER({ compiler.getModule().print(llvm::outs(), &LSWA); });
 
-            std::cout << "\n>===------- End IR Code ------===<\n"
-                      << std::endl;
+            DEBUG_PRINT_FILTER({
+                std::cout << "\n>===------- End IR Code ------===<\n"
+                          << std::endl;
+            });
 
             dest.flush();
             dest.close();

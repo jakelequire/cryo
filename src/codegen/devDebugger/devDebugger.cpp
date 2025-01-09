@@ -198,7 +198,6 @@ namespace Cryo
             for (int i = 0; i < node->data.program->statementCount; ++i)
             {
                 ss.str("");
-                ss << "Processing statement " << i + 1 << " of " << node->data.program->statementCount;
                 logMessage("INFO", __LINE__, "Debugger", ss.str());
                 lintTree(node->data.program->statements[i]);
             }

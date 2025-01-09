@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/cryo-path.h"
+#include "tools/logger/logger_config.h"
 
 typedef struct CompilerSignature
 {
@@ -25,7 +26,7 @@ typedef struct CompilerSignature
 
 void initCompilerPathExe(const char *rootPath)
 {
-    printf("\n\n STARTING CRYO PATH INITIALIZATION\n\n");
+    DEBUG_PRINT_FILTER({ printf("\n\n STARTING CRYO PATH INITIALIZATION\n\n"); });
     // RootPath + /bin/compiler
     char *compilerPath = (char *)malloc(sizeof(char) * 1024);
     sprintf(compilerPath, "%s/bin/compiler", rootPath);

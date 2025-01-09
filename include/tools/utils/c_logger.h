@@ -25,7 +25,6 @@
 #include "tools/utils/fs.h"
 
 typedef struct CompilerSettings CompilerSettings;
-extern void logCompilerSettings(CompilerSettings *settings);
 
 /// @brief LMI - Logger Meta Info
 /// @details This macro is used to get the line, file, and function name of the

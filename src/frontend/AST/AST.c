@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/AST.h"
+#include "tools/logger/logger_config.h"
 
 /* ====================================================================== */
 // @Global_Variables
@@ -245,7 +246,9 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
     // Handle any formatting characters
     trimmedString = handleStringFormatting(strdup(trimmedString));
 
-    printf("Manipulated string: %s\n", strdup(trimmedString));
+    DEBUG_PRINT_FILTER({
+        printf("Manipulated string: %s\n", strdup(trimmedString));
+    });
     int length = getStringLength(trimmedString);
     node->data.literal->type = createPrimitiveStringType(length);
     node->data.literal->value.stringValue = strdup(trimmedString);
@@ -439,8 +442,6 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
         logMessage(LMI, "ERROR", "AST", "Variable declaration node data is NULL");
         return NULL;
     }
-
-    printf("\n\nData Type in Var Decl: %s\n\n", DataTypeToString(dataType));
 
     node->data.varDecl->type = dataType;
     node->data.varDecl->name = strdup(var_name);

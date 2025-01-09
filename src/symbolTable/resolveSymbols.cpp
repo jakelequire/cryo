@@ -14,7 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -47,6 +49,7 @@ namespace Cryo
                 VariableSymbol *varSymbol = symbol->variable;
                 if (strcmp(varSymbol->name, name) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Variable Symbol found");
                     return varSymbol;
                 }
                 else
@@ -60,7 +63,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "<!> Variable Symbol not found <!>" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Variable Symbol not found");
         return nullptr;
     }
 
@@ -68,22 +71,26 @@ namespace Cryo
     {
         if (!methodName || methodName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Method Name is null");
             return nullptr;
         }
 
         if (!className || className == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Class Name is null");
             return nullptr;
         }
 
         if (!scopeID || scopeID == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Scope ID is null");
             return nullptr;
         }
 
         SymbolTable *table = getCurrentSymbolTable();
         if (!table)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return nullptr;
         }
 
@@ -98,6 +105,7 @@ namespace Cryo
                 MethodSymbol *methodSymbol = symbol->method;
                 if (strcmp(methodSymbol->name, methodName) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Method Symbol found");
                     return methodSymbol;
                 }
                 else
@@ -111,7 +119,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "<!> Method Symbol not found <!>" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Method Symbol not found");
         return nullptr;
     }
 
@@ -119,11 +127,13 @@ namespace Cryo
     {
         if (!symbolName || symbolName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
             return nullptr;
         }
 
         if (!scopeID || scopeID == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Scope ID is null");
             return nullptr;
         }
 
@@ -146,6 +156,7 @@ namespace Cryo
                 VariableSymbol *varSymbol = symbol->variable;
                 if (strcmp(varSymbol->name, symbolName) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Variable Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -159,6 +170,7 @@ namespace Cryo
                 Symbol *resolvedSymbol = resolveFunctionSymbol(symbolName, scopeID, symbolType);
                 if (resolvedSymbol)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Function Symbol found: %s", symbolName);
                     return resolvedSymbol;
                 }
                 else
@@ -173,6 +185,7 @@ namespace Cryo
                 Symbol *resolvedSymbol = resolveExternSymbol(symbolName);
                 if (resolvedSymbol)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Extern Symbol found: %s", symbolName);
                     return resolvedSymbol;
                 }
                 else
@@ -185,6 +198,7 @@ namespace Cryo
                 TypeSymbol *typeSymbol = symbol->type;
                 if (strcmp(typeSymbol->name, symbolName) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Type Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -197,6 +211,7 @@ namespace Cryo
                 PropertySymbol *propSymbol = symbol->property;
                 if (strcmp(propSymbol->name, symbolName) == 0 && strcmp(propSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Property Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -209,6 +224,7 @@ namespace Cryo
                 MethodSymbol *methodSymbol = symbol->method;
                 if (strcmp(methodSymbol->name, symbolName) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Method Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -217,7 +233,7 @@ namespace Cryo
                 }
             }
             default:
-                std::cerr << "Symbol Type not recognized!" << std::endl;
+                logMessage(LMI, "ERROR", "SymbolTable", "Symbol Type not recognized");
                 return nullptr;
             }
         }
@@ -227,19 +243,19 @@ namespace Cryo
     {
         if (!symbolName || symbolName == nullptr)
         {
-            std::cerr << "Error: Failed to find symbol, symbol name is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
             return nullptr;
         }
         if (!scopeID || scopeID == nullptr)
         {
-            std::cerr << "Error: Failed to find symbol, scope ID is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Scope ID is null");
             return nullptr;
         }
 
         SymbolTable *table = getCurrentSymbolTable();
         if (!table)
         {
-            std::cerr << "Error: Failed to find symbol, table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return nullptr;
         }
 
@@ -258,6 +274,7 @@ namespace Cryo
                 VariableSymbol *varSymbol = symbol->variable;
                 if (strcmp(varSymbol->name, symbolName) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Variable Symbol found");
                     return symbol;
                 }
                 else
@@ -270,6 +287,7 @@ namespace Cryo
                 FunctionSymbol *funcSymbol = symbol->function;
                 if (strcmp(funcSymbol->name, symbolName) == 0 && strcmp(funcSymbol->parentScopeID, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Function Symbol found");
                     return symbol;
                 }
                 else
@@ -282,6 +300,7 @@ namespace Cryo
                 ExternSymbol *externSymbol = symbol->externSymbol;
                 if (strcmp(externSymbol->name, symbolName) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Extern Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -294,6 +313,7 @@ namespace Cryo
                 TypeSymbol *typeSymbol = symbol->type;
                 if (strcmp(typeSymbol->name, symbolName) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Type Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -306,6 +326,7 @@ namespace Cryo
                 PropertySymbol *propSymbol = symbol->property;
                 if (strcmp(propSymbol->name, symbolName) == 0 && strcmp(propSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Property Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -318,6 +339,7 @@ namespace Cryo
                 MethodSymbol *methodSymbol = symbol->method;
                 if (strcmp(methodSymbol->name, symbolName) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
                 {
+                    logMessage(LMI, "INFO", "SymbolTable", "Method Symbol found: %s", symbolName);
                     return symbol;
                 }
                 else
@@ -326,12 +348,12 @@ namespace Cryo
                 }
             }
             default:
-                std::cerr << "Error: Failed to find symbol, symbol type not recognized!" << std::endl;
+                logMessage(LMI, "ERROR", "SymbolTable", "Symbol Type not recognized");
                 return nullptr;
             }
         }
 
-        std::cerr << "Error: Failed to find symbol, symbol not found!" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Symbol not found: %s", symbolName);
         return nullptr;
     }
 
@@ -339,17 +361,20 @@ namespace Cryo
     {
         if (!methodName || methodName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Method Name is null");
             return nullptr;
         }
 
         if (!className || className == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Class Name is null");
             return nullptr;
         }
 
         SymbolTable *table = getCurrentSymbolTable();
         if (!table)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return nullptr;
         }
 
@@ -359,7 +384,7 @@ namespace Cryo
         size_t typeCount = typeTable->count;
         if (typeCount == 0)
         {
-            std::cerr << "Error: Failed to find method symbol, type table is empty!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Type Table is empty");
             return nullptr;
         }
 
@@ -374,6 +399,7 @@ namespace Cryo
                     MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
                     if (strcmp(methodSymbol->name, methodName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Method Symbol found: %s", methodName);
                         return typeSymbol->methods[j];
                     }
                     else
@@ -388,7 +414,7 @@ namespace Cryo
             }
         }
 
-        std::cerr << "Error: Failed to find method symbol, symbol not found!" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Method Symbol not found: %s", methodName);
         return nullptr;
     }
 
@@ -396,11 +422,13 @@ namespace Cryo
     {
         if (!methodName || methodName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Method Name is null");
             return nullptr;
         }
 
         if (!className || className == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Class Name is null");
             return nullptr;
         }
 
@@ -420,6 +448,7 @@ namespace Cryo
                     MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
                     if (strcmp(methodSymbol->name, methodName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Method Symbol found: %s", methodName);
                         return typeSymbol->methods[j];
                     }
                     else
@@ -434,7 +463,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "<!> Method Symbol not found in any table: " << methodName << " <!>" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Method Symbol not found: %s", methodName);
         return nullptr;
     }
 
@@ -445,6 +474,7 @@ namespace Cryo
 
         if (!symbolName || symbolName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
             return nullptr;
         }
 
@@ -454,6 +484,7 @@ namespace Cryo
             ExternSymbol *externSymbol = externFunctions[i];
             if (strcmp(externSymbol->name, symbolName) == 0)
             {
+                logMessage(LMI, "INFO", "SymbolTable", "Extern Symbol found: %s", symbolName);
                 return createSymbol(EXTERN_SYMBOL, externSymbol);
             }
             else
@@ -462,7 +493,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "<!> Extern Symbol not found: " << symbolName << " <!>" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Extern Symbol not found: %s", symbolName);
         return nullptr;
     }
 
@@ -470,21 +501,20 @@ namespace Cryo
     {
         if (!scopeID || scopeID == nullptr)
         {
-            std::cerr << "Error: Failed to find symbol table, scope ID is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Scope ID is null");
             return nullptr;
         }
 
         SymbolTable *table = getCurrentSymbolTable();
         if (!table)
         {
-            std::cerr << "Error: Failed to find symbol table, current table is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return nullptr;
         }
 
-        std::cout << "Checking for Symbol Table: " << scopeID << std::endl;
-
         if (strcmp(table->scopeId, scopeID) == 0)
         {
+            logMessage(LMI, "INFO", "SymbolTable", "Symbol Table found");
             return table;
         }
 
@@ -495,6 +525,7 @@ namespace Cryo
             SymbolTable *depTable = dependencyTableVector[i];
             if (strcmp(depTable->scopeId, scopeID) == 0)
             {
+                logMessage(LMI, "INFO", "SymbolTable", "Dependency Table found");
                 return depTable;
             }
             else
@@ -503,7 +534,7 @@ namespace Cryo
             }
         }
 
-        std::cerr << "Error: Failed to find symbol table!" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table not found");
         return nullptr;
     }
 
@@ -511,7 +542,7 @@ namespace Cryo
     {
         if (!symbol || symbol == nullptr)
         {
-            std::cerr << "Error: Failed to get data type from symbol, symbol is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
             return nullptr;
         }
 
@@ -543,11 +574,11 @@ namespace Cryo
             return methodSymbol->returnType;
         }
         default:
-            std::cerr << "Error: Failed to get data type from symbol, symbol type not recognized!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Type not recognized");
             return nullptr;
         }
 
-        std::cerr << "Error: Failed to get data type from symbol, symbol type not recognized!" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Symbol Type not recognized");
         return nullptr;
     }
 
@@ -555,7 +586,7 @@ namespace Cryo
     {
         if (!symbol || symbol == nullptr)
         {
-            std::cerr << "Error: Failed to get AST node from symbol, symbol is null!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
             return nullptr;
         }
 
@@ -587,11 +618,11 @@ namespace Cryo
             return methodSymbol->node;
         }
         default:
-            std::cerr << "Error: Failed to get AST node from symbol, symbol type not recognized!" << std::endl;
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Type not recognized");
             return nullptr;
         }
 
-        std::cerr << "Error: Failed to get AST node from symbol, symbol type not recognized!" << std::endl;
+        logMessage(LMI, "ERROR", "SymbolTable", "Symbol Type not recognized");
         return nullptr;
     }
 
@@ -599,17 +630,20 @@ namespace Cryo
     {
         if (!scopeID || scopeID == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Scope ID is null");
             return nullptr;
         }
 
         if (!name || name == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
             return nullptr;
         }
 
         SymbolTable *table = getCurrentSymbolTable();
         if (!table)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return nullptr;
         }
 
@@ -630,6 +664,7 @@ namespace Cryo
                     VariableSymbol *varSymbol = symbol->variable;
                     if (strcmp(varSymbol->name, name) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Variable Symbol found: %s", name);
                         return symbol;
                     }
                     else
@@ -642,6 +677,7 @@ namespace Cryo
                     FunctionSymbol *funcSymbol = symbol->function;
                     if (strcmp(funcSymbol->name, name) == 0 && strcmp(funcSymbol->functionScopeId, scopeID) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Function Symbol found: %s", name);
                         return symbol;
                     }
                     else
@@ -654,6 +690,7 @@ namespace Cryo
                     ExternSymbol *externSymbol = symbol->externSymbol;
                     if (strcmp(externSymbol->name, name) == 0 && strcmp(externSymbol->scopeId, scopeID) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Extern Symbol found: %s", name);
                         return symbol;
                     }
                     else
@@ -666,6 +703,7 @@ namespace Cryo
                     TypeSymbol *typeSymbol = symbol->type;
                     if (strcmp(typeSymbol->name, name) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Type Symbol found: %s", name);
                         return symbol;
                     }
                     else
@@ -678,6 +716,7 @@ namespace Cryo
                     PropertySymbol *propSymbol = symbol->property;
                     if (strcmp(propSymbol->name, name) == 0 && strcmp(propSymbol->scopeId, scopeID) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Property Symbol found: %s", name);
                         return symbol;
                     }
                     else
@@ -690,6 +729,7 @@ namespace Cryo
                     MethodSymbol *methodSymbol = symbol->method;
                     if (strcmp(methodSymbol->name, name) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Method Symbol found: %s", name);
                         return symbol;
                     }
                     else
@@ -714,11 +754,13 @@ namespace Cryo
     {
         if (!symbolName || symbolName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
             return nullptr;
         }
 
         if (!table || table == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Table is null");
             return nullptr;
         }
 
@@ -737,6 +779,7 @@ namespace Cryo
                     VariableSymbol *varSymbol = symbol->variable;
                     if (strcmp(varSymbol->name, symbolName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Variable Symbol found");
                         return symbol;
                     }
                     else
@@ -749,6 +792,7 @@ namespace Cryo
                     FunctionSymbol *funcSymbol = symbol->function;
                     if (strcmp(funcSymbol->name, symbolName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Function Symbol found");
                         return symbol;
                     }
                     else
@@ -761,6 +805,7 @@ namespace Cryo
                     ExternSymbol *externSymbol = symbol->externSymbol;
                     if (strcmp(externSymbol->name, symbolName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Extern Symbol found");
                         return symbol;
                     }
                     else
@@ -773,6 +818,7 @@ namespace Cryo
                     TypeSymbol *typeSymbol = symbol->type;
                     if (strcmp(typeSymbol->name, symbolName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Type Symbol found");
                         return symbol;
                     }
                     else
@@ -785,6 +831,7 @@ namespace Cryo
                     PropertySymbol *propSymbol = symbol->property;
                     if (strcmp(propSymbol->name, symbolName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Property Symbol found");
                         return symbol;
                     }
                     else
@@ -797,6 +844,7 @@ namespace Cryo
                     MethodSymbol *methodSymbol = symbol->method;
                     if (strcmp(methodSymbol->name, symbolName) == 0)
                     {
+                        logMessage(LMI, "INFO", "SymbolTable", "Method Symbol found");
                         return symbol;
                     }
                     else

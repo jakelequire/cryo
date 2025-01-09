@@ -14,27 +14,26 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
     // C Facing Function to work with classes
     void GlobalSymbolTable::initClassDeclaration(const char *className)
     {
-        std::cout << "Creating Class Definition for: " << className << std::endl;
         Symbol *classSymbol = createClassDeclarationSymbol(className);
         if (classSymbol)
         {
-            std::cout << "Class Declaration Symbol Created" << std::endl;
             addSymbolToCurrentTable(classSymbol);
-            std::cout << "Class Declaration Symbol Added to Table" << std::endl;
             initTypeDefinition(classSymbol);
-            std::cout << "Class Declaration Type Definition Initialized" << std::endl;
+            logMessage(LMI, "INFO", "Symbol Table", "Initialized Class Declaration", "Class Name", className);
             return;
         }
         else
         {
-            std::cout << "Failed to create class declaration symbol" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to Initialize Class Declaration", "Class Name", className);
             return;
         }
     }
@@ -44,14 +43,14 @@ namespace Cryo
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
-            std::cout << "Failed to find class symbol for adding property" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to find class symbol for adding property", "Class Name", className);
             return;
         }
 
         PropertySymbol *propertySymbol = createPropertySymbol(property);
         if (!propertySymbol)
         {
-            std::cout << "Failed to create property symbol" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to create property symbol", "Class Name", className);
             return;
         }
         updateClassSymbolProperties(classSymbol, propertySymbol, classSymbol->type->propertyCount);
@@ -66,7 +65,7 @@ namespace Cryo
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
-            std::cout << "Failed to find class symbol for adding method" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to find class symbol for adding method", "Class Name", className);
             return;
         }
 
@@ -105,7 +104,7 @@ namespace Cryo
 
         if (methodCount >= methodCap)
         {
-            std::cout << "Expanding method capacity" << std::endl;
+            logMessage(LMI, "INFO", "Symbol Table", "Expanding method capacity", "Class Name", classSymbol->type->name);
             classSymbol->type->methods = (Symbol **)realloc(classSymbol->type->methods, methodCap * 2 * sizeof(Symbol *));
             classSymbol->type->methodCapacity = methodCap * 2;
         }
@@ -120,7 +119,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "Method Failed to Add to Class Symbol" << std::endl;
+        logMessage(LMI, "ERROR", "Symbol Table", "Method Failed to Add to Class Symbol", "Class Name", classSymbol->type->name);
         return;
     }
 
@@ -131,7 +130,7 @@ namespace Cryo
 
         if (propertyCount >= propCapacity)
         {
-            std::cout << "Expanding property capacity" << std::endl;
+            logMessage(LMI, "INFO", "Symbol Table", "Expanding property capacity", "Class Name", classSymbol->type->name);
             classSymbol->type->properties = (Symbol **)realloc(classSymbol->type->properties, propCapacity * 2 * sizeof(Symbol *));
             classSymbol->type->propertyCapacity = propCapacity * 2;
         }
@@ -146,7 +145,7 @@ namespace Cryo
             }
         }
 
-        std::cout << "Property Failed to Add to Class Symbol" << std::endl;
+        logMessage(LMI, "ERROR", "Symbol Table", "Property Failed to Add to Class Symbol", "Class Name", classSymbol->type->name);
         return;
     }
 
@@ -161,7 +160,7 @@ namespace Cryo
             return classSymbol;
         }
 
-        std::cout << "Class Symbol not found" << std::endl;
+        logMessage(LMI, "ERROR", "Symbol Table", "Class Symbol not found", "Class Name", className);
         return nullptr;
     }
 
@@ -169,26 +168,26 @@ namespace Cryo
     {
         if (!classNode || classNode == nullptr)
         {
-            std::cout << "Error: Class Node is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Class Node is null");
             return;
         }
         if (!className || className == nullptr)
         {
-            std::cout << "Error: Class Symbol is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Class Name is null");
             return;
         }
 
         SymbolTable *table = getCurrentSymbolTable();
         if (!table)
         {
-            std::cout << "Error: Symbol Table is null" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Symbol Table is null");
             return;
         }
 
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
-            std::cout << "Error: Class Symbol not found" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Class Symbol not found", "Class Name", className);
             return;
         }
 
@@ -212,7 +211,7 @@ namespace Cryo
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
-            std::cout << "Error: Class Symbol not found" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Class Symbol not found", "Class Name", className);
             return nullptr;
         }
 
@@ -224,7 +223,7 @@ namespace Cryo
             }
         }
 
-        std::cerr << "Property not found" << std::endl;
+        logMessage(LMI, "ERROR", "Symbol Table", "Property not found", "Property Name", propertyName);
         return nullptr;
     }
 
@@ -233,7 +232,7 @@ namespace Cryo
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
-            std::cout << "Error: Class Symbol not found" << std::endl;
+            logMessage(LMI, "ERROR", "Symbol Table", "Class Symbol not found", "Class Name", className);
             return nullptr;
         }
 
@@ -245,7 +244,7 @@ namespace Cryo
             }
         }
 
-        std::cerr << "Method not found" << std::endl;
+        logMessage(LMI, "ERROR", "Symbol Table", "Method not found", "Method Name", methodName);
         return nullptr;
     }
 
@@ -267,7 +266,7 @@ namespace Cryo
                 return;
             }
         }
-        std::cout << "Error: Unable to update class symbol in the table." << std::endl;
+        logMessage(LMI, "ERROR", "Symbol Table", "Failed to update class symbol in table");
     }
 
 } // namespace Cryo

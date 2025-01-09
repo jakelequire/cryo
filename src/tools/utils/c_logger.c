@@ -21,6 +21,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+extern void logCompilerSettings(CompilerSettings *settings);
+
 #define ARE_LOGS_ENABLED false
 
 #define FILE_NAME_LENGTH 18

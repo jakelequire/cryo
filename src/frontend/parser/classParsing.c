@@ -71,9 +71,6 @@ ASTNode *parseClassDeclaration(bool isStatic,
     classNode->data.classNode->type->container->primitive = PRIM_CUSTOM;
     classNode->data.classNode->type->container->custom.classDef->classNode = classNode;
 
-    // Add to the TypeTable
-    addTypeToTypeTable(typeTable, className, classType);
-
     CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
 
     // Clear the context
