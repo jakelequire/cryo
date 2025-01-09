@@ -35,8 +35,14 @@ DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS  $(NO_WARNINGS)
 C_STANDARD =    -std=c23
 CXX_STANDARD =  -std=c++17
 
-NUM_CORES =     $(shell nproc --all)
-MULTI_CORE =    -j$(1)
+# Determine number of CPU cores
+ifeq ($(OS), Windows_NT)
+    NUM_CORES = $(NUMBER_OF_PROCESSORS)
+else
+    NUM_CORES = $(shell nproc)
+endif
+
+NUM_JOBS = $(shell expr $(NUM_CORES) + 1)
 
 # OS-specific settings for compilers
 ifeq ($(OS), Windows_NT)
@@ -82,7 +88,7 @@ ifeq ($(OS), Windows_NT)
     BIN_SUFFIX =    .exe
 else
     # Linux settings
-    CC =            $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION) $(MULTI_CORE)
+    CC =            $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CXX =           $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CFLAGS =        $(LINUX_INCLUDES) $(LLVM_CFLAGS) -fexceptions
     CXXFLAGS =      $(LINUX_INCLUDES) $(LLVM_CXXFLAGS) -fexceptions
@@ -141,15 +147,19 @@ CPP_OBJS := $(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.o,$(CPP_SRCS))
 # Combine all object files
 ALL_OBJS := $(C_OBJS) $(CPP_OBJS)
 
+# Add these directory rules
+$(BIN_DIR) $(OBJ_DIR):
+	@mkdir -p $@
+
 # ---------------------------------------------
 # Compile C source files
-$(OBJ_DIR)%.o: $(SRC_DIR)%.c
+$(OBJ_DIR)%.o: $(SRC_DIR)%.c | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 # ---------------------------------------------
 # Compile C++ source files
-$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -158,9 +168,9 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
 # >>=======--------------------------------------------------=======<< #
 
 # Main target
-$(MAIN_BIN): $(ALL_OBJS)
+$(MAIN_BIN): build-cli build-lsp-monitor $(ALL_OBJS)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(ALL_OBJS) -o $@ $(LDFLAGS)
 
 # Build the CLI library
 build-cli:
@@ -173,7 +183,13 @@ build-lsp-monitor:
 # >>=======                     Commands                     =======<< #
 # >>=======--------------------------------------------------=======<< #
 
-all: build-cli build-lsp-monitor $(MAIN_BIN)
+.PHONY: all
+all: 
+	@echo "Building with $(NUM_JOBS) parallel jobs"
+	$(MAKE) -j$(NUM_JOBS) build
+
+.PHONY: build
+build: $(MAIN_BIN)
 
 libs:
 	$(LIB_INIT) 
@@ -190,3 +206,4 @@ clean:
 	python3 ./scripts/clean.py
 
 .PHONY: debug clean all 
+.NOTPARALLEL: clean clean-% libs
