@@ -26,6 +26,10 @@ function buildAndMoveLib {
             echo "Renaming the $LIB_NAME binary to cryo"
             mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/cryo"
         fi
+        if [ "$LIB_NAME" == "lsp-monitor" ]; then
+            echo "Renaming the $LIB_NAME binary to lspmonitor"
+            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/lspmonitor"
+        fi
     else
         echo "No binaries found to move for $LIB_NAME"
         echo "Attempted path: $LIB_ROOT/bin/$LIB_NAME"
@@ -59,5 +63,6 @@ for lib in "$@"; do
         buildAndMoveLib "./libs/$lib"
     else
         echo "Library $lib does not exist"
+        echo "Attempted path: ./libs/$lib"
     fi
 done

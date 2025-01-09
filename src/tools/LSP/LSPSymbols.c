@@ -25,6 +25,13 @@ void runLSPSymbols(ASTNode *programNode)
     // Process AST and collect symbols
     processNode(programNode);
 
+    // Print symbols
+    for (int i = 0; i < symbolCount; i++)
+    {
+        LSPSymbol *symbol = symbolTable[i];
+        logMessage(LMI, "INFO", "LSPSymbols", "Symbol: %s", symbol->name);
+    }
+
     // Start server and send symbols
     startLSPServer();
 }
@@ -53,67 +60,69 @@ LSPSymbol *createLSPSymbol(void)
 // Start LSP server and send symbols
 void startLSPServer(void)
 {
-    // Start LSP server and send symbols
     logMessage(LMI, "INFO", "LSPSymbols", "Starting LSP server...");
     int server_fd, client_fd;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
 
-    // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        logMessage(LMI, "ERROR", "LSPSymbols", "Socket creation failed");
-        return;
+    // Socket creation and setup (your existing code)...
+
+    while (1)
+    { // Keep the server running
+        // Accept incoming connections
+        if ((client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+        {
+            logMessage(LMI, "ERROR", "LSPSymbols", "accept failed");
+            continue; // Continue listening for next connection
+        }
+
+        // Send initial symbols batch
+        for (int i = 0; i < symbolCount; i++)
+        {
+            LSPSymbol *symbol = symbolTable[i];
+            char *symbolStr = formatSymbol(symbol);
+            send(client_fd, symbolStr, strlen(symbolStr), 0);
+            send(client_fd, "\n", 1, 0); // Add newline delimiter
+            free(symbolStr);
+        }
+
+        // Keep connection open for updates
+        char buffer[1024];
+        while (1)
+        {
+            int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+            if (bytes_read <= 0)
+            {
+                break; // Connection closed or error
+            }
+            buffer[bytes_read] = '\0';
+
+            // Handle incoming messages (e.g., requests for symbol updates)
+            if (strstr(buffer, "update_symbols") != NULL)
+            {
+                // Resend symbols if requested
+                for (int i = 0; i < symbolCount; i++)
+                {
+                    LSPSymbol *symbol = symbolTable[i];
+                    char *symbolStr = formatSymbol(symbol);
+                    send(client_fd, symbolStr, strlen(symbolStr), 0);
+                    send(client_fd, "\n", 1, 0);
+                    free(symbolStr);
+                }
+            }
+
+            // Break if there is an error
+            if (bytes_read < 0)
+            {
+                break;
+            }
+        }
+
+        close(client_fd); // Close this client connection
     }
 
-    // Forcefully attaching socket to the port 4389
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
-    {
-        logMessage(LMI, "ERROR", "LSPSymbols", "setsockopt failed");
-        return;
-    }
-
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(LSP_PORT);
-
-    // Forcefully attaching socket to the port 4389
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
-    {
-        logMessage(LMI, "ERROR", "LSPSymbols", "bind failed");
-        return;
-    }
-
-    // Start listening for connections
-    if (listen(server_fd, 3) < 0)
-    {
-        logMessage(LMI, "ERROR", "LSPSymbols", "listen failed");
-        return;
-    }
-
-    logMessage(LMI, "INFO", "LSPSymbols", "Server listening on port %d", LSP_PORT);
-    printf("\n\n>>======== LSP Server Listening on port %d ========<<\n", LSP_PORT);
-
-    // Accept incoming connections
-    if ((client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
-    {
-        logMessage(LMI, "ERROR", "LSPSymbols", "accept failed");
-        return;
-    }
-
-    // Send symbols to client
-    for (int i = 0; i < symbolCount; i++)
-    {
-        LSPSymbol *symbol = symbolTable[i];
-        char *symbolStr = formatSymbol(symbol);
-        send(client_fd, symbolStr, strlen(symbolStr), 0);
-        free(symbolStr);
-    }
-
-    // Close connection
-    close(client_fd);
-    close(server_fd);
+    close(server_fd); // This will only happen if the while(1) is broken
 }
 
 // Format symbol as JSON string
