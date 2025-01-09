@@ -25,12 +25,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include "frontend/AST.h"
 #include "frontend/dataTypes.h"
 #include "tools/utils/c_logger.h"
 
-#define LSP_PORT 4389
+#define LSP_PORT 9000
+#define DEBUG_PORT 9001
 #define MAX_SYMBOLS 1024
 
 typedef struct LSPSymbol

@@ -1,0 +1,29 @@
+[32m
+
+╔═══════════════════════════════ AST Tree ═══════════════════════════════╗[0m
+
+<Program : [Classes]> { /home/phock/Programming/apps/cryo/tests/sandbox/classes.cryo }
+
+<Class> [IO] <0:0>
+   <Constructor> <0:0>
+      <Block> <0:0>
+   Public:
+      <Property> [exampleProp] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
+      <Method> [print]:  [96m[1m([0m[96m[1m[96m[1mstring[0m[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+         <Block> <0:0>
+            <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+            <ReturnStatement> <0:0>
+   Private:
+   Protected:
+
+<FunctionDecl> [main]: [96m[1m([0m[96m[1m[96m[1mint[0m[0m, [96m[1m[96m[1mstring[0m[][0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
+   <Param> { Type: [96m[1m[96m[1mstring[0m[][0m } <0:0>
+   <FunctionBlock> <0:0>
+      <VarDecl> [fooStr] { Type: [96m[1m[96m[1mstring[0m[0m } <0:0> Value: Classes Test
+      <MethodCall> [print]: [96m[1m([0m[96m[1m[96m[1mstring[0m[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+      <ReturnStatement> <0:0>
+
+[32m╚════════════════════════════════════════════════════════════════════════╝
+
+[0m
