@@ -15,9 +15,13 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/c_logger.h"
+#include "tools/logger/logger_config.h"
+#include "settings/compilerSettings.h"
 #include <malloc.h>
 #include <stdarg.h>
 #include <stdbool.h>
+
+#define ARE_LOGS_ENABLED false
 
 #define FILE_NAME_LENGTH 18
 #define MODULE_NAME_LENGTH 15
@@ -27,16 +31,6 @@
 #define TYPE_BUFFER_PADDING 10
 
 CompilerSettings *compilerSettings;
-
-typedef struct EnabledLogs
-{
-    bool all;
-    bool none;
-    bool info;
-    bool error;
-    bool warn;
-    bool debug;
-} EnabledLogs;
 
 typedef struct LoggerMessage
 {
@@ -136,11 +130,16 @@ void outputNewLogBuffer(int line,
     // fclose(logFile);
 }
 
-void initCompilerSettings(CompilerSettings *settings)
+void initLoggerCompilerSettings(CompilerSettings *settings)
 {
     compilerSettings = settings;
     printf("Found compiler settings\n");
     logCompilerSettings(compilerSettings);
+
+    if (settings->enableLogs)
+        ENABLE_LOGS();
+    else
+        DISABLE_LOGS();
 }
 
 char *stringShortener(const char *string, int length, int addDots)
@@ -240,7 +239,10 @@ void logMessage(
     const char *module,
     const char *message, ...)
 {
-
+    if (!IS_LOG_ENABLED(type))
+    {
+        return;
+    }
     char *shortFile = stringShortener(getFileName(file), FILE_NAME_LENGTH, 0);
     char *shortModule = stringShortener(module, MODULE_NAME_LENGTH, 0);
     char *shortFunc = stringShortener(func, FUNC_NAME_LENGTH, 0);
@@ -279,5 +281,3 @@ void logMessage(
     free(shortFunc);
     free(numberFormatBuffer);
 }
-
-// logMessage(LMI, "INFO", "Parser", "Parsing struct instance...");

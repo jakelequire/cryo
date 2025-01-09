@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "settings/compilerSettings.h"
+#include "tools/logger/logger_config.h"
 int DEBUG_LEVEL = 0;
 
 #define MAX_SOURCE_BUFFER 1024 * 1024 // 1MB
@@ -35,6 +36,9 @@ void printUsage(const char *programName)
     printf("Advanced options:\n");
     printf("      --ast-dump         Dump AST to stdout\n");
     printf("      --ir-dump          Dump IR to stdout (UNIMPLEMENTED)\n");
+    printf("      --lsp-symbols      Compile and connect to LSP server\n");
+    printf("      --enable-logs      Enable logs\n");
+    printf("      --disable-logs     Disable logs\n");
     printf("\n");
 }
 
@@ -53,6 +57,11 @@ static const struct option long_options[] = {
     {"ast-dump", no_argument, 0, OPT_AST_DUMP},
     {"ir-dump", no_argument, 0, OPT_IR_DUMP},
     {"lsp-symbols", no_argument, 0, OPT_LSP_SYMBOLS},
+    // Enable Logs: --enable-logs
+    {"enable-logs", no_argument, 0, OPT_ENABLE_LOGS},
+    // Disable Logs: --disable-logs
+    {"disable-logs", no_argument, 0, OPT_DISABLE_LOGS},
+
     {0, 0, 0, 0} // Required terminator
 };
 
@@ -70,10 +79,6 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->customOutputPath = NULL;
     settings->debugLevel = DEBUG_NONE;
     settings->buildType = BUILD_DEV;
-
-    printf("Parsing Command Line Arguments\n");
-    printf("Argc: %i\n", argc);
-    printf("Argv: %s\n", argv[0]);
 
     const char *inputFilePath = (const char *)malloc(sizeof(char) * 256);
 
@@ -127,6 +132,15 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             settings->debugLevel = getDebugLevel(atoi(optarg));
             break;
 
+        case 'h':
+            printUsage(argv[0]);
+            exit(0);
+            break;
+        case '?':
+            printUsage(argv[0]);
+            exit(1);
+            break;
+
         // Long-only options
         case OPT_AST_DUMP:
             settings->astDump = true;
@@ -159,18 +173,17 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
                 printUsage(argv[0]);
                 exit(1);
             }
-            printf("File Path: %s\n", argv[optind]);
             settings->lspOutputPath = argv[optind];
             break;
 
-        case 'h':
-            printUsage(argv[0]);
-            exit(0);
+        case OPT_ENABLE_LOGS:
+            settings->enableLogs = true;
             break;
-        case '?':
-            printUsage(argv[0]);
-            exit(1);
+
+        case OPT_DISABLE_LOGS:
+            settings->enableLogs = false;
             break;
+
         default:
             printUsage(argv[0]);
             exit(1);
@@ -207,18 +220,20 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
 
 void logCompilerSettings(CompilerSettings *settings)
 {
-    printf("\n");
-    printf("# ============ Compiler Settings ============ #\n");
-    printf("  Root Directory: %s\n", settings->rootDir);
-    printf("  Input File: %s\n", settings->inputFile);
-    printf("  File Path: %s\n", settings->inputFilePath);
-    printf("  Active Build: %s\n", settings->activeBuild ? "true" : "false");
-    printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
-    printf("  Verbose: %s\n", settings->verbose ? "true" : "false");
-    printf("  Custom Output Path: %s\n", settings->customOutputPath);
-    printf("  Source Text: %s\n", settings->isSource ? "true" : "false");
-    printf("# =========================================== #\n");
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        printf("\n");
+        printf("# ============ Compiler Settings ============ #\n");
+        printf("  Root Directory: %s\n", settings->rootDir);
+        printf("  Input File: %s\n", settings->inputFile);
+        printf("  File Path: %s\n", settings->inputFilePath);
+        printf("  Active Build: %s\n", settings->activeBuild ? "true" : "false");
+        printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
+        printf("  Verbose: %s\n", settings->verbose ? "true" : "false");
+        printf("  Custom Output Path: %s\n", settings->customOutputPath);
+        printf("  Source Text: %s\n", settings->isSource ? "true" : "false");
+        printf("# =========================================== #\n");
+        printf("\n");
+    });
 }
 
 const char *DebugLevelToString(DebugLevel level)

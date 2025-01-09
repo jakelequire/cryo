@@ -1,0 +1,53 @@
+[32m
+
+╔═══════════════════════════════ AST Tree ═══════════════════════════════╗[0m
+
+<Program : [Runtime]> { /home/phock/Programming/apps/cryo/cryo/runtime.cryo }
+
+<ExternFunction> [__c_printInt] →   [96m[1m[96m[1mvoid[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
+
+<ExternFunction> [__c_printStr] →   [96m[1m[96m[1mvoid[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
+
+<ExternFunction> [__c_sys_exit] →   [96m[1m[96m[1mvoid[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
+
+<ExternFunction> [__c_intToString] →   [96m[1m[96m[1mstring[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
+
+<ExternFunction> [__c_strLen] →   [96m[1m[96m[1mint[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
+
+<FunctionDecl> [sys_exit]: [96m[1m([0m[96m[1m[96m[1mint[0m[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
+   <FunctionBlock> <0:0>
+      <FunctionCall> [__c_sys_exit] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+      <ReturnStatement> <0:0>
+
+<FunctionDecl> [printInt]: [96m[1m([0m[96m[1m[96m[1mint[0m[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
+   <FunctionBlock> <0:0>
+      <FunctionCall> [__c_printInt] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+      <ReturnStatement> <0:0>
+
+<FunctionDecl> [printStr]: [96m[1m([0m[96m[1m[96m[1mstring[0m[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mstring[0m[0m } <0:0>
+   <FunctionBlock> <0:0>
+      <FunctionCall> [__c_printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+      <ReturnStatement> <0:0>
+
+<FunctionDecl> [intToString]: [96m[1m([0m[96m[1m[96m[1mint[0m[0m[96m[1m) → [0m[96m[1m[96m[1mstring[0m[0m[0m <0:0>
+   <Param> { Type: [96m[1m[96m[1mint[0m[0m } <0:0>
+   <FunctionBlock> <0:0>
+      <ReturnStatement> <0:0>
+         <FunctionCall> [__c_intToString] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+
+<FunctionDecl> [outOfBoundsError]: [96m[1m([0m[96m[1mvoid[0m[96m[1m) → [0m[96m[1m[96m[1mvoid[0m[0m[0m <0:0>
+   <FunctionBlock> <0:0>
+      <FunctionCall> [printStr] →  [96m[1m[96m[1mvoid[0m[0m <0:0>
+      <ReturnStatement> <0:0>
+
+[32m╚════════════════════════════════════════════════════════════════════════╝
+
+[0m

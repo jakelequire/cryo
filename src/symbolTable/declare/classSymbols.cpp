@@ -115,7 +115,6 @@ namespace Cryo
         {
             if (table->symbols[i] == classSymbol)
             {
-                std::cout << "Method Added to Class Symbol" << std::endl;
                 table->symbols[i]->type->methods[methodCount] = methodSymbol;
                 return;
             }
@@ -142,7 +141,6 @@ namespace Cryo
         {
             if (table->symbols[i] == classSymbol)
             {
-                std::cout << "Property Added to Class Symbol" << std::endl;
                 table->symbols[i]->type->properties[propertyCount] = propertySymbol;
                 return;
             }
@@ -156,12 +154,10 @@ namespace Cryo
     {
         // Find the class in the symbol table from the hash
         const char *classNameHash = IDGen::generate64BitHashID(className);
-        std::cout << "Generated Hash for Class Name: " << classNameHash << std::endl;
 
         Symbol *classSymbol = queryCurrentTable(classNameHash, className, TYPE_SYMBOL);
         if (classSymbol)
         {
-            std::cout << "Class Symbol Found!" << std::endl;
             return classSymbol;
         }
 
@@ -213,7 +209,6 @@ namespace Cryo
 
     ASTNode *GlobalSymbolTable::findClassProperty(const char *propertyName, const char *className)
     {
-        std::cout << "Finding Property: " << propertyName << " in Class: " << className << std::endl;
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
@@ -225,7 +220,6 @@ namespace Cryo
         {
             if (classSymbol->type->properties[i]->type->name == propertyName)
             {
-                std::cout << "Property Found!" << std::endl;
                 return classSymbol->type->properties[i]->type->node;
             }
         }
@@ -236,7 +230,6 @@ namespace Cryo
 
     ASTNode *GlobalSymbolTable::findClassMethod(const char *methodName, const char *className)
     {
-        std::cout << "Finding Method: " << methodName << " in Class: " << className << std::endl;
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
@@ -248,7 +241,6 @@ namespace Cryo
         {
             if (classSymbol->type->methods[i]->type->name == methodName)
             {
-                std::cout << "Method Found!" << std::endl;
                 return classSymbol->type->methods[i]->type->node;
             }
         }

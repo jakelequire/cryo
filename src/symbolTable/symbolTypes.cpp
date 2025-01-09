@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -114,7 +115,9 @@ namespace Cryo
 
     bool GlobalSymbolTable::doesTypeExist(const char *name)
     {
-        std::cout << "Checking if Type Exists: " << name << std::endl;
+        DEBUG_PRINT_FILTER({
+            std::cout << "Checking if Type Exists: " << name << std::endl;
+        });
         if (!typeTable || typeTable == nullptr)
         {
             std::cerr << "doesTypeExist: Type Table is null" << std::endl;
@@ -126,9 +129,7 @@ namespace Cryo
             return false;
         }
 
-        std::cout << "<!> Looking for Type: " << name << std::endl;
         size_t count = typeTable->count;
-        std::cout << "Type Table Count: " << count << std::endl;
         for (size_t i = 0; i < count; i++)
         {
             TypeSymbol *typeSymbol = typeTable->typeSymbols[i];
@@ -138,7 +139,6 @@ namespace Cryo
                 continue;
             }
             const char *typeName = typeTable->typeSymbols[i]->name;
-            std::cout << "Checking Type: " << typeName << std::endl;
             if (strcmp(typeName, name) == 0)
             {
                 std::cout << "Type Exists in Type Table: " << name << std::endl;
@@ -167,7 +167,9 @@ namespace Cryo
         typeTable->typeSymbols[typeTable->count] = typeSymbol;
         typeTable->count++;
 
-        std::cout << "Type Added to Type Table: " << typeName << std::endl;
+        DEBUG_PRINT_FILTER({
+            std::cout << "Type Added to Type Table: " << typeName << std::endl;
+        });
         return;
     }
 
@@ -175,7 +177,6 @@ namespace Cryo
 
     void GlobalSymbolTable::initTypeDefinition(Symbol *typeSymbol)
     {
-        std::cout << "Initializing Type Definition" << std::endl;
         if (!typeSymbol || typeSymbol == nullptr)
         {
             std::cerr << "initTypeDefinition: Type Symbol is null" << std::endl;
@@ -189,7 +190,6 @@ namespace Cryo
 
         TypeSymbol *type = typeSymbol->type;
         const char *typeName = type->name;
-        std::cout << "Creating Type Definition for: " << typeName << std::endl;
         if (!typeName || typeName == nullptr)
         {
             std::cerr << "initTypeDefinition: Type Name is null" << std::endl;
@@ -201,13 +201,10 @@ namespace Cryo
             std::cerr << "initTypeDefinition: Type already exists in table" << std::endl;
             return;
         }
-        std::cout << "Type DOES NOT EXIST. Adding Type to Table" << std::endl;
         size_t tableCount = typeTable->count;
-        std::cout << "Type Table Count: " << tableCount << std::endl;
         typeTable->typeSymbols[tableCount] = type;
         typeTable->count++;
 
-        std::cout << "Type Added to Type Table: " << typeName << std::endl;
         return;
     }
 
@@ -236,7 +233,6 @@ namespace Cryo
             if (strcmp(type->name, typeName) == 0)
             {
                 typeTable->typeSymbols[i] = typeSymbol->type;
-                std::cout << "Type Definition Completed: " << typeName << std::endl;
                 return;
             }
         }

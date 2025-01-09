@@ -39,8 +39,6 @@ namespace Cryo
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
 
-        std::cout << "Searching for variable symbol: " << name << " | in scope: " << scopeID << std::endl;
-
         for (int i = 0; i < symbolCount; i++)
         {
             if (symbols[i]->symbolType == VARIABLE_SYMBOL)
@@ -49,7 +47,6 @@ namespace Cryo
                 VariableSymbol *varSymbol = symbol->variable;
                 if (strcmp(varSymbol->name, name) == 0 && strcmp(varSymbol->scopeId, scopeID) == 0)
                 {
-                    std::cout << "Variable Symbol Resolved!" << std::endl;
                     return varSymbol;
                 }
                 else
@@ -101,7 +98,6 @@ namespace Cryo
                 MethodSymbol *methodSymbol = symbol->method;
                 if (strcmp(methodSymbol->name, methodName) == 0 && strcmp(methodSymbol->scopeId, scopeID) == 0)
                 {
-                    std::cout << "Method Symbol Resolved!" << std::endl;
                     return methodSymbol;
                 }
                 else
@@ -139,8 +135,6 @@ namespace Cryo
 
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
-
-        std::cout << "Querying for symbol: " << symbolName << " | in scope: " << scopeID << std::endl;
 
         for (int i = 0; i < symbolCount; i++)
         {
@@ -253,7 +247,6 @@ namespace Cryo
         Symbol **symbols = table->symbols;
 
         this->printScopeLookup();
-        std::cout << "Finding Symbol: " << symbolName << " in Scope: " << scopeID << std::endl;
 
         for (int i = 0; i < symbolCount; i++)
         {
@@ -363,8 +356,6 @@ namespace Cryo
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
 
-        std::cout << "Finding Method Symbol: " << methodName << " in Class/Struct: " << className << std::endl;
-
         size_t typeCount = typeTable->count;
         if (typeCount == 0)
         {
@@ -377,14 +368,12 @@ namespace Cryo
             TypeSymbol *typeSymbol = typeTable->typeSymbols[i];
             if (strcmp(typeSymbol->name, className) == 0)
             {
-                std::cout << "Class/Struct Symbol Found!" << std::endl;
                 int methodCount = typeSymbol->methodCount;
                 for (int j = 0; j < methodCount; j++)
                 {
                     MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
                     if (strcmp(methodSymbol->name, methodName) == 0)
                     {
-                        std::cout << "Method Symbol Resolved!" << std::endl;
                         return typeSymbol->methods[j];
                     }
                     else
@@ -416,7 +405,6 @@ namespace Cryo
         }
 
         Symbol *symbol = nullptr;
-        std::cout << "Seeking Method Symbol: " << methodName << " in Class: " << className << std::endl;
 
         // Check the dependency tables
         int depCount = dependencyTableVector.size();
@@ -426,14 +414,12 @@ namespace Cryo
             symbol = querySpecifiedTable(methodName, TYPE_SYMBOL, depTable);
             if (symbol != nullptr)
             {
-                std::cout << "Type Symbol Found in Dependency Table! Checking Methods..." << std::endl;
                 TypeSymbol *typeSymbol = symbol->type;
                 for (int j = 0; j < typeSymbol->methodCount; j++)
                 {
                     MethodSymbol *methodSymbol = typeSymbol->methods[j]->method;
                     if (strcmp(methodSymbol->name, methodName) == 0)
                     {
-                        std::cout << "Method Symbol Resolved in Dependency Table!" << std::endl;
                         return typeSymbol->methods[j];
                     }
                     else
@@ -468,12 +454,10 @@ namespace Cryo
             ExternSymbol *externSymbol = externFunctions[i];
             if (strcmp(externSymbol->name, symbolName) == 0)
             {
-                std::cout << "Extern Symbol Resolved!" << std::endl;
                 return createSymbol(EXTERN_SYMBOL, externSymbol);
             }
             else
             {
-                std::cout << "Checked Extern Symbol: " << externSymbol->name << " Expected: " << symbolName << std::endl;
                 continue;
             }
         }
@@ -501,26 +485,20 @@ namespace Cryo
 
         if (strcmp(table->scopeId, scopeID) == 0)
         {
-            std::cout << "Found Current Table!" << std::endl;
             return table;
         }
-
-        std::cout << "Checking Dependency Tables..." << std::endl;
 
         // If it is not the current table, check the dependency tables
         int depCount = dependencyTableVector.size();
         for (int i = 0; i < depCount; i++)
         {
-            std::cout << "Checking Dependency Table: " << i << std::endl;
             SymbolTable *depTable = dependencyTableVector[i];
             if (strcmp(depTable->scopeId, scopeID) == 0)
             {
-                std::cout << "Found Dependency Table!" << std::endl;
                 return depTable;
             }
             else
             {
-                std::cout << "Dependency Table: " << i << " not found! Expected: " << scopeID << " Found: " << depTable->scopeId << std::endl;
                 continue;
             }
         }
@@ -635,8 +613,6 @@ namespace Cryo
             return nullptr;
         }
 
-        // DEBUG
-        std::cout << "DEBUG: Querying Table" << std::endl;
         SymbolTableDebugger::logSymbolTable(table);
 
         int symbolCount = table->count;
@@ -687,16 +663,13 @@ namespace Cryo
                 }
                 case TYPE_SYMBOL:
                 {
-                    std::cout << "Querying Type Symbol" << std::endl;
                     TypeSymbol *typeSymbol = symbol->type;
                     if (strcmp(typeSymbol->name, name) == 0 && strcmp(typeSymbol->scopeId, scopeID) == 0)
                     {
-                        std::cout << "Type Symbol Resolved! " << typeSymbol->name << std::endl;
                         return symbol;
                     }
                     else
                     {
-                        std::cout << "Type Symbol not found: " << name << std::endl;
                         continue;
                     }
                 }

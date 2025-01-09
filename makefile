@@ -35,6 +35,9 @@ DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS  $(NO_WARNINGS)
 C_STANDARD =    -std=c23
 CXX_STANDARD =  -std=c++17
 
+NUM_CORES =     $(shell nproc --all)
+MULTI_CORE =    -j$(1)
+
 # OS-specific settings for compilers
 ifeq ($(OS), Windows_NT)
 # Windows settings
@@ -79,7 +82,7 @@ ifeq ($(OS), Windows_NT)
     BIN_SUFFIX =    .exe
 else
     # Linux settings
-    CC =            $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
+    CC =            $(C_COMPILER) $(C_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION) $(MULTI_CORE)
     CXX =           $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CFLAGS =        $(LINUX_INCLUDES) $(LLVM_CFLAGS) -fexceptions
     CXXFLAGS =      $(LINUX_INCLUDES) $(LLVM_CXXFLAGS) -fexceptions

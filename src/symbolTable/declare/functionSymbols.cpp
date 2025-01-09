@@ -180,7 +180,6 @@ namespace Cryo
             return symbol;
         }
 
-        std::cout << "<!> Function Symbol not found in any table: " << symbolName << " <!>" << std::endl;
         return nullptr;
     }
 
@@ -200,7 +199,6 @@ namespace Cryo
         Symbol *externSymbol = resolveExternSymbol(symbolName);
         if (externSymbol != nullptr)
         {
-            std::cout << "Extern Symbol Resolved!" << std::endl;
             return externSymbol;
         }
 
@@ -219,8 +217,6 @@ namespace Cryo
         // {NamespaceID}::{FunctionName}
         // The namespace ID is the scope ID of the namespace
         // This is the key to resolving the function symbol
-
-        std::cout << "Resolving Function Symbol: " << symbolName << " in Scope: " << currentNamespaceScopeID << std::endl;
 
         for (int i = 0; i < symbolCount; i++)
         {
@@ -280,8 +276,6 @@ namespace Cryo
         int symbolCount = table->count;
         Symbol **symbols = table->symbols;
 
-        std::cout << "Resolving Scoped Function Symbol: " << functionName << " in Scope: " << scopeID << std::endl;
-
         for (int i = 0; i < symbolCount; i++)
         {
             if (symbols[i]->symbolType == FUNCTION_SYMBOL)
@@ -290,7 +284,6 @@ namespace Cryo
                 FunctionSymbol *funcSymbol = symbol->function;
                 if (strcmp(funcSymbol->name, functionName) == 0 && strcmp(funcSymbol->parentScopeID, scopeID) == 0)
                 {
-                    std::cout << "Scoped Function Symbol Resolved!" << std::endl;
                     return funcSymbol;
                 }
                 else

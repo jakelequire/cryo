@@ -106,6 +106,7 @@ function usage {
     echo "  -o, --output        The output file"
     echo "  --ast-dump          Dump the AST"
     echo "  -h, --help          Display this help and exit"
+    echo " "
     exit 1
 }
 
@@ -164,15 +165,6 @@ while [[ "$#" -gt 0 ]]; do
                 error "Argument for $1 is missing or invalid"
             fi
             ;;
-        -L|--enable-logs)
-            if [[ -n "$2" && "$2" != -* ]]; then
-                ENABLE_LOGS=$2
-                compiler_args+=("-L" "$ENABLE_LOGS")
-                shift 2
-            else
-                error "Argument for $1 is missing or invalid"
-            fi
-            ;;
         -o|--output)
             if [[ -n "$2" && "$2" != -* ]]; then
                 OUTPUT_FILE=$2
@@ -184,6 +176,14 @@ while [[ "$#" -gt 0 ]]; do
             ;;
         --ast-dump)
             compiler_args+=("--ast-dump")
+            shift
+            ;;
+        --enable-logs)
+            compiler_args+=("--enable-logs")
+            shift
+            ;;
+        --disable-logs)
+            compiler_args+=("--disable-logs")
             shift
             ;;
         -h|--help)

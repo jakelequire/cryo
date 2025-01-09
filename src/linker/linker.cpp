@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
+#include "tools/logger/logger_config.h"
 
 extern "C"
 {
@@ -135,14 +136,16 @@ namespace Cryo
 
     void Linker::logState() const
     {
-        std::cout << "\n";
-        std::cout << "==================================================================================" << "\n";
-        std::cout << "Linker State:\n"
-                  << "  Build Source Directory: " << buildSrcDir << "\n"
-                  << "  Dependency Directory: " << dependencyDir << "\n"
-                  << "  Dependency Count: " << dependencyCount << "\n";
-        std::cout << "==================================================================================" << "\n";
-        std::cout << "\n";
+        DEBUG_PRINT_FILTER({
+            std::cout << "\n";
+            std::cout << "==================================================================================" << "\n";
+            std::cout << "Linker State:\n"
+                      << "  Build Source Directory: " << buildSrcDir << "\n"
+                      << "  Dependency Directory: " << dependencyDir << "\n"
+                      << "  Dependency Count: " << dependencyCount << "\n";
+            std::cout << "==================================================================================" << "\n";
+            std::cout << "\n";
+        });
     }
 
     // # ========================================================================== #
@@ -202,27 +205,33 @@ namespace Cryo
         std::filesystem::path dir(dependencyDir);
         if (!std::filesystem::exists(dir))
         {
-            std::cout << "Dependency directory does not exist" << std::endl;
+            std::cerr << "Dependency directory does not exist: " << dependencyDir << std::endl;
             CONDITION_FAILED;
         }
 
         std::vector<std::string> dependenciePaths;
+        DEBUG_PRINT_FILTER({
+            std::cout << "\n";
+            std::cout << "\033[1m" << "\033[92m";
+            std::cout << "+======================== Dependency Paths ========================+" << "\n";
+            std::cout << "\033[0m";
+        });
 
-        std::cout << "\n";
-        std::cout << "\033[1m" << "\033[92m";
-        std::cout << "+======================== Dependency Paths ========================+" << "\n";
-        std::cout << "\033[0m";
         for (const auto &entry : std::filesystem::directory_iterator(dir))
         {
-            std::cout << "\n";
-            std::cout << entry.path() << "\n";
+            DEBUG_PRINT_FILTER({
+                std::cout << "\n";
+                std::cout << entry.path() << "\n";
+            });
             dependenciePaths.push_back(entry.path());
         }
-        std::cout << "\n";
-        std::cout << "\033[1m" << "\033[92m";
-        std::cout << "+==================================================================+" << "\n";
-        std::cout << "\033[0m";
-        std::cout << "\n";
+        DEBUG_PRINT_FILTER({
+            std::cout << "\n";
+            std::cout << "\033[1m" << "\033[92m";
+            std::cout << "+==================================================================+" << "\n";
+            std::cout << "\033[0m";
+            std::cout << "\n";
+        });
 
         return dependenciePaths;
     }

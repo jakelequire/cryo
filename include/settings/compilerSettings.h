@@ -53,7 +53,9 @@ typedef enum
 {
     OPT_AST_DUMP = 1000,
     OPT_IR_DUMP,
-    OPT_LSP_SYMBOLS
+    OPT_LSP_SYMBOLS,
+    OPT_ENABLE_LOGS,
+    OPT_DISABLE_LOGS
 } LongOnlyOptions;
 
 typedef struct CompilerSettings
@@ -84,6 +86,7 @@ typedef struct CompilerSettings
     bool isSource;
     bool activeBuild;
     bool isLSP;
+    bool enableLogs;
 
     // Version
     const char *version;

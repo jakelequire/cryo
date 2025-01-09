@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/debugSymbols.hpp"
+#include "tools/logger/logger_config.h"
 
 /*
 New format to implement later for logging:
@@ -381,78 +382,82 @@ namespace Cryo
 
     void SymbolTableDebugger::logSymbolTable(SymbolTable *table)
     {
-        if (!table)
-        {
-            logger->debugNode("NULL symbol table");
-            return;
-        }
-
-        logger->debugNode("SymbolTable | " BOLD "Namespace: " BLUE "%s" COLOR_RESET " Count: %zu",
-                          table->namespaceName ? table->namespaceName : "global",
-                          table->count);
-        logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
-
-        if (table->currentScope)
-        {
-            logger->debugNode("\nCurrent Scope:");
-            logScopeBlock(table->currentScope);
-        }
-
-        if (table->count > 0)
-        {
-            logger->debugNode(HEAVY_SEPARATOR);
-            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
-            logger->debugNode(SEPARATOR);
-            for (size_t i = 0; i < table->count; i++)
+        DEBUG_PRINT_FILTER({
+            if (!table)
             {
-                logSymbol(table->symbols[i]);
+                logger->debugNode("NULL symbol table");
+                return;
             }
-        }
-        if (table->count == 0)
-        {
+
+            logger->debugNode("SymbolTable | " BOLD "Namespace: " BLUE "%s" COLOR_RESET " Count: %zu",
+                              table->namespaceName ? table->namespaceName : "global",
+                              table->count);
+            logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
+
+            if (table->currentScope)
+            {
+                logger->debugNode("\nCurrent Scope:");
+                logScopeBlock(table->currentScope);
+            }
+
+            if (table->count > 0)
+            {
+                logger->debugNode(HEAVY_SEPARATOR);
+                logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
+                logger->debugNode(SEPARATOR);
+                for (size_t i = 0; i < table->count; i++)
+                {
+                    logSymbol(table->symbols[i]);
+                }
+            }
+            if (table->count == 0)
+            {
+                logger->debugNode(HEAVY_SEPARATOR);
+                logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
+                logger->debugNode(SEPARATOR);
+                logger->debugNode("\n " BOLD RED "[!] No symbols in table" COLOR_RESET);
+            }
+            printf("\n");
             logger->debugNode(HEAVY_SEPARATOR);
-            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
-            logger->debugNode(SEPARATOR);
-            logger->debugNode("\n " BOLD RED "[!] No symbols in table" COLOR_RESET);
-        }
-        printf("\n");
-        logger->debugNode(HEAVY_SEPARATOR);
+        });
     }
 
     void SymbolTableDebugger::logTypeTable(TypesTable *table)
     {
-        if (!table)
-        {
-            logger->debugNode("NULL type table");
-            return;
-        }
-        logger->debugNode(HEAVY_SEPARATOR);
-
-        logger->debugNode("TypesTable | " BOLD "Namespace: " CYAN "%s" COLOR_RESET " Count: %zu",
-                          table->namespaceName ? table->namespaceName : "global",
-                          table->count);
-        logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
-
-        if (table->count > 0)
-        {
-            logger->debugNode(HEAVY_SEPARATOR);
-            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbol Types:" COLOR_RESET);
-            logger->debugNode(SEPARATOR);
-            for (size_t i = 0; i < table->count; i++)
+        DEBUG_PRINT_FILTER({
+            if (!table)
             {
-                logTypeSymbol(table->typeSymbols[i]);
+                logger->debugNode("NULL type table");
+                return;
             }
-        }
-        if (table->count == 0)
-        {
             logger->debugNode(HEAVY_SEPARATOR);
-            logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbol Types:" COLOR_RESET);
-            logger->debugNode(SEPARATOR);
-            logger->debugNode("\n " BOLD RED "[!] No Types in TypesTable" COLOR_RESET);
-        }
 
-        printf("\n");
-        logger->debugNode(HEAVY_SEPARATOR);
+            logger->debugNode("TypesTable | " BOLD "Namespace: " CYAN "%s" COLOR_RESET " Count: %zu",
+                              table->namespaceName ? table->namespaceName : "global",
+                              table->count);
+            logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
+
+            if (table->count > 0)
+            {
+                logger->debugNode(HEAVY_SEPARATOR);
+                logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbol Types:" COLOR_RESET);
+                logger->debugNode(SEPARATOR);
+                for (size_t i = 0; i < table->count; i++)
+                {
+                    logTypeSymbol(table->typeSymbols[i]);
+                }
+            }
+            if (table->count == 0)
+            {
+                logger->debugNode(HEAVY_SEPARATOR);
+                logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbol Types:" COLOR_RESET);
+                logger->debugNode(SEPARATOR);
+                logger->debugNode("\n " BOLD RED "[!] No Types in TypesTable" COLOR_RESET);
+            }
+
+            printf("\n");
+            logger->debugNode(HEAVY_SEPARATOR);
+        });
     }
 
     void SymbolTableDebugger::logSymbol(Symbol *symbol)

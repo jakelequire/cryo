@@ -15,16 +15,19 @@
  *                                                                              *
  ********************************************************************************/
 #include "codegen/devDebugger/devDebugger.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
     void DevDebugger::logMessage(const char *type, int line, const std::string &category, const std::string &message)
     {
-        std::cout << "[" << type << std::setw(6) << "] "
-                  << "\t@" << std::setw(4) << line
-                  << "\t{ " << std::setw(12) << std::left << category << "}"
-                  << "\t" << message
-                  << std::endl;
+        DEBUG_PRINT_FILTER({
+            std::cout << "[" << type << std::setw(6) << "] "
+                      << "\t@" << std::setw(4) << line
+                      << "\t{ " << std::setw(12) << std::left << category << "}"
+                      << "\t" << message
+                      << std::endl;
+        });
     }
 
     /**
@@ -33,19 +36,21 @@ namespace Cryo
      */
     void DevDebugger::logNode(ASTNode *node)
     {
-        VALIDATE_ASTNODE(node);
+        DEBUG_PRINT_FILTER({
+            VALIDATE_ASTNODE(node);
 
-        if (!node)
-        {
-            std::cerr << "Node is null." << std::endl;
+            if (!node)
+            {
+                std::cerr << "Node is null." << std::endl;
+                return;
+            }
+
+            // Migrated to new AST Debugging Logging in the C-side of the compiler.
+            // (See: src/frontend/AST/debugASTOutput.c)
+            logASTNode(node);
+
             return;
-        }
-
-        // Migrated to new AST Debugging Logging in the C-side of the compiler.
-        // (See: src/frontend/AST/debugASTOutput.c)
-        logASTNode(node);
-
-        return;
+        });
     }
 
     /**
@@ -976,178 +981,190 @@ namespace Cryo
 
     void DevDebugger::logLLVMValue(llvm::Value *valueNode)
     {
-        if (valueNode == nullptr)
-        {
-            logMessage("ERROR", __LINE__, "Debugger", "LLVM Value is null");
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (valueNode == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "LLVM Value is null");
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Value Node>-----------===<<" << std::endl;
-        std::string valueStr;
-        llvm::raw_string_ostream rso(valueStr);
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Value Node>-----------===<<" << std::endl;
+            std::string valueStr;
+            llvm::raw_string_ostream rso(valueStr);
 
-        // This prints out the line of IR that was generated
-        valueNode->print(rso);
-        std::cout << "Inst:" << "" << rso.str() << std::endl;
+            // This prints out the line of IR that was generated
+            valueNode->print(rso);
+            std::cout << "Inst:" << "" << rso.str() << std::endl;
 
-        // Print out the type of the value
-        std::string tyName = LLVMTypeIDToString(valueNode->getType());
-        std::cout << "Type: " << tyName << std::endl;
+            // Print out the type of the value
+            std::string tyName = LLVMTypeIDToString(valueNode->getType());
+            std::cout << "Type: " << tyName << std::endl;
 
-        // Print out the name of the value
-        std::string valName = valueNode->getName().str();
-        std::cout << "Name: " << valName << std::endl;
+            // Print out the name of the value
+            std::string valName = valueNode->getName().str();
+            std::cout << "Name: " << valName << std::endl;
 
-        // Print out the address of the value
-        std::cout << "Address: " << valueNode << std::endl;
+            // Print out the address of the value
+            std::cout << "Address: " << valueNode << std::endl;
 
-        std::cout << ">>===--------------------------------------===<<" << std::endl;
-        std::cout << "\n";
+            std::cout << ">>===--------------------------------------===<<" << std::endl;
+            std::cout << "\n";
+        });
     }
 
     void DevDebugger::logLLVMStruct(llvm::StructType *structTy)
     {
-        logMessage("INFO", __LINE__, "Debugger", "Logging LLVM Struct Type");
+        DEBUG_PRINT_FILTER({
+            logMessage("INFO", __LINE__, "Debugger", "Logging LLVM Struct Type");
 
-        if (structTy == nullptr)
-        {
-            logMessage("ERROR", __LINE__, "Debugger", "LLVM Struct Type is null");
-            return;
-        }
+            if (structTy == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "LLVM Struct Type is null");
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Struct Type Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Struct Type Node>-----------===<<" << std::endl;
 
-        // Print out the name of the struct
-        std::string structName = structTy->getName().str();
-        std::cout << "Name: " << structName << std::endl;
+            // Print out the name of the struct
+            std::string structName = structTy->getName().str();
+            std::cout << "Name: " << structName << std::endl;
 
-        // Print out the instruction of the struct
-        std::string structInst;
-        llvm::raw_string_ostream rso(structInst);
-        structTy->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the struct
+            std::string structInst;
+            llvm::raw_string_ostream rso(structInst);
+            structTy->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the struct
-        std::cout << "Address: " << structTy << std::endl;
-        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+            // Print out the address of the struct
+            std::cout << "Address: " << structTy << std::endl;
+            std::cout << ">>===-------------------------------------------===<<" << std::endl;
+        });
     }
 
     void DevDebugger::logLLVMType(llvm::Type *type)
     {
-        if (type == nullptr)
-        {
-            logMessage("ERROR", __LINE__, "Debugger", "LLVM Type is null");
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (type == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "LLVM Type is null");
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Type Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Type Node>-----------===<<" << std::endl;
 
-        // Print out the name of the type
-        std::string typeName = LLVMTypeIDToString(type);
-        std::cout << "Name: " << typeName << std::endl;
+            // Print out the name of the type
+            std::string typeName = LLVMTypeIDToString(type);
+            std::cout << "Name: " << typeName << std::endl;
 
-        // Print out the instruction of the type
-        std::string typeInst;
-        llvm::raw_string_ostream rso(typeInst);
-        type->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the type
+            std::string typeInst;
+            llvm::raw_string_ostream rso(typeInst);
+            type->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the type
-        std::cout << "Address: " << type << std::endl;
-        std::cout << ">>===--------------------------------------===<<" << std::endl;
+            // Print out the address of the type
+            std::cout << "Address: " << type << std::endl;
+            std::cout << ">>===--------------------------------------===<<" << std::endl;
+        });
     }
 
     void DevDebugger::logLLVMInst(llvm::Instruction *inst)
     {
-        if (inst == nullptr)
-        {
-            logMessage("ERROR", __LINE__, "Debugger", "LLVM Instruction is null");
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (inst == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "LLVM Instruction is null");
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Instruction Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Instruction Node>-----------===<<" << std::endl;
 
-        // Print out the name of the instruction
-        std::string instName = inst->getName().str();
-        std::cout << "Name: " << instName << std::endl;
+            // Print out the name of the instruction
+            std::string instName = inst->getName().str();
+            std::cout << "Name: " << instName << std::endl;
 
-        // Print out the instruction of the instruction
-        std::string instInst;
-        llvm::raw_string_ostream rso(instInst);
-        inst->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the instruction
+            std::string instInst;
+            llvm::raw_string_ostream rso(instInst);
+            inst->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the instruction
-        std::cout << "Address: " << inst << std::endl;
-        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+            // Print out the address of the instruction
+            std::cout << "Address: " << inst << std::endl;
+            std::cout << ">>===-------------------------------------------===<<" << std::endl;
+        });
     }
 
     void DevDebugger::logLLVMFunction(llvm::Function *func)
     {
-        if (func == nullptr)
-        {
-            logMessage("ERROR", __LINE__, "Debugger", "LLVM Function is null");
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (func == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "LLVM Function is null");
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Function Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Function Node>-----------===<<" << std::endl;
 
-        // Print out the name of the function
-        std::string funcName = func->getName().str();
-        std::cout << "Name: " << funcName << std::endl;
+            // Print out the name of the function
+            std::string funcName = func->getName().str();
+            std::cout << "Name: " << funcName << std::endl;
 
-        // Print out the instruction of the function
-        std::string funcInst;
-        llvm::raw_string_ostream rso(funcInst);
-        func->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the function
+            std::string funcInst;
+            llvm::raw_string_ostream rso(funcInst);
+            func->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the function
-        std::cout << "Address: " << func << std::endl;
-        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+            // Print out the address of the function
+            std::cout << "Address: " << func << std::endl;
+            std::cout << ">>===-------------------------------------------===<<" << std::endl;
+        });
     }
 
     void DevDebugger::logLLVMBlock(llvm::BasicBlock *block)
     {
-        if (block == nullptr)
-        {
-            logMessage("ERROR", __LINE__, "Debugger", "LLVM Basic Block is null");
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (block == nullptr)
+            {
+                logMessage("ERROR", __LINE__, "Debugger", "LLVM Basic Block is null");
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Basic Block Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Basic Block Node>-----------===<<" << std::endl;
 
-        // Print out the name of the block
-        std::string blockName = block->getName().str();
-        std::cout << "Name: " << blockName << std::endl;
+            // Print out the name of the block
+            std::string blockName = block->getName().str();
+            std::cout << "Name: " << blockName << std::endl;
 
-        // Check for a parent function (if any)
-        llvm::Function *parentFunc = block->getParent();
-        if (parentFunc != nullptr)
-        {
-            std::string parentFuncName = parentFunc->getName().str();
-            std::cout << "Parent Function: " << parentFuncName << std::endl;
-        }
-        else
-        {
-            std::cout << "Parent Function: " << "<None>" << std::endl;
-        }
+            // Check for a parent function (if any)
+            llvm::Function *parentFunc = block->getParent();
+            if (parentFunc != nullptr)
+            {
+                std::string parentFuncName = parentFunc->getName().str();
+                std::cout << "Parent Function: " << parentFuncName << std::endl;
+            }
+            else
+            {
+                std::cout << "Parent Function: " << "<None>" << std::endl;
+            }
 
-        // Print out the instruction of the block
-        std::string blockInst;
-        llvm::raw_string_ostream rso(blockInst);
-        block->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the block
+            std::string blockInst;
+            llvm::raw_string_ostream rso(blockInst);
+            block->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the block
-        std::cout << "Address: " << block << std::endl;
-        std::cout << ">>===---------------------------------------------===<<" << std::endl;
+            // Print out the address of the block
+            std::cout << "Address: " << block << std::endl;
+            std::cout << ">>===---------------------------------------------===<<" << std::endl;
+        });
     }
 
     // -----------------------------------------------------------------------------------------------

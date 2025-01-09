@@ -66,7 +66,7 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, TypeTabl
             // traverseAST(statement, table);
             addStatementToProgram(program, statement, arena, state, typeTable, globalTable);
             logMessage(LMI, "INFO", "Parser", "Statement parsed successfully");
-            printTypeTable(typeTable);
+
             if (statement->metaData->type == NODE_NAMESPACE)
             {
                 const char *namespaceName = statement->data.cryoNamespace->name;
@@ -2857,7 +2857,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         }
         else
         {
-            printTypeTable(typeTable);
+
             printf("Property Attempted: %s\n", propName);
             parsingError("Property not found in struct.", "parseDotNotationWithType", arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;
@@ -2893,7 +2893,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         }
         else
         {
-            printTypeTable(typeTable);
+
             printf("Property Attempted: %s\n", propName);
             parsingError("Property not found in class.", "parseDotNotationWithType", arena, state, lexer, lexer->source, typeTable, globalTable);
             return NULL;

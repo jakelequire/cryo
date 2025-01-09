@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "codegen/utility/highlighter.hpp"
 #include "codegen/oldCodeGen.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -33,13 +34,15 @@ namespace Cryo
 
         if (llvm::verifyModule(*cryoContext.module, nullptr))
         {
-            LLVM_MODULE_FAILED_MESSAGE_START;
+            DEBUG_PRINT_FILTER({
+                LLVM_MODULE_FAILED_MESSAGE_START;
 
-            LLVMIRHighlighter highlighter;
-            llvm::formatted_raw_ostream formatted_errs(llvm::errs());
-            highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
+                LLVMIRHighlighter highlighter;
+                llvm::formatted_raw_ostream formatted_errs(llvm::errs());
+                highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
 
-            LLVM_MODULE_FAILED_MESSAGE_END;
+                LLVM_MODULE_FAILED_MESSAGE_END;
+            });
             LLVM_MODULE_ERROR_START;
             // Get the error itself without the module showing up
             std::string errorMessage = getErrorMessage();
@@ -83,11 +86,13 @@ namespace Cryo
         std::string outputFileIR = trimmedFileExt + ".ll";
         std::string outputFileDir = outputPath + outputFileIR;
 
-        std::cout << "\n\n\n Output Path: " << outputPath << "\n";
-        std::cout << "Trimmed File: " << trimmedOutputFile << "\n";
-        std::cout << "Trimmed File Ext: " << trimmedFileExt << "\n";
-        std::cout << "Output File IR: " << outputFileIR << "\n";
-        std::cout << "Output File Dir: " << outputFileDir << "\n\n\n";
+        DEBUG_PRINT_FILTER({
+            std::cout << "\n\n\n Output Path: " << outputPath << "\n";
+            std::cout << "Trimmed File: " << trimmedOutputFile << "\n";
+            std::cout << "Trimmed File Ext: " << trimmedFileExt << "\n";
+            std::cout << "Output File IR: " << outputFileIR << "\n";
+            std::cout << "Output File Dir: " << outputFileDir << "\n\n\n";
+        });
         if (settings->customOutputPath)
         {
             // outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
@@ -101,7 +106,6 @@ namespace Cryo
             return;
         }
 
-        std::cout << "\n\n\n <!> <!> <!> \nFINAL OUTPUT PATH: " << outputPath << "\n\n\n";
         // Ensure the output directory exists
         bool didMkDir = std::filesystem::create_directories(outputPath);
         if (!didMkDir)
@@ -113,7 +117,6 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Output directory created");
         }
 
-        std::cout << "Creating output file at path: " << outputFileDir << std::endl;
         std::error_code EC;
         llvm::raw_fd_ostream dest(outputFileDir, EC, llvm::sys::fs::OF_None);
         if (EC)
@@ -121,18 +124,21 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
             return;
         }
-        LLVM_MODULE_COMPLETE_START;
-        LoadStoreWhitespaceAnnotator LSWA;
 
-        LLVMIRHighlighter highlighter;
-        // We need to print the highlighted version to the console
-        // and the raw version to the file
-        cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
-        dest.close();
+        DEBUG_PRINT_FILTER({
+            LLVM_MODULE_COMPLETE_START;
+            LoadStoreWhitespaceAnnotator LSWA;
 
-        llvm::formatted_raw_ostream formatted_out(llvm::outs());
-        highlighter.printWithHighlighting(cryoContext.module.get(), formatted_out);
-        LLVM_MODULE_COMPLETE_END;
+            LLVMIRHighlighter highlighter;
+            // We need to print the highlighted version to the console
+            // and the raw version to the file
+            cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
+            dest.close();
+
+            llvm::formatted_raw_ostream formatted_out(llvm::outs());
+            highlighter.printWithHighlighting(cryoContext.module.get(), formatted_out);
+            LLVM_MODULE_COMPLETE_END;
+        });
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
         return;

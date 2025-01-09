@@ -14,39 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef C_LOGGER_H
-#define C_LOGGER_H
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
+#ifndef CRYO_LANGUAGE_SERVER_HPP
+#define CRYO_LANGUAGE_SERVER_HPP
 
-#include "tools/macros/consoleColors.h"
-#include "tools/utils/fs.h"
-
-typedef struct CompilerSettings CompilerSettings;
-extern void logCompilerSettings(CompilerSettings *settings);
-
-/// @brief LMI - Logger Meta Info
-/// @details This macro is used to get the line, file, and function name of the
-///          caller of the logMessage function.
-#define LMI \
-    __LINE__, __FILE__, __func__
-
-//
-void logMessage(
-    int line,
-    const char *file,
-    const char *func,
-    const char *type,
-    const char *module,
-    const char *message, ...);
-
-const char *getParentDirOfFile(const char *file);
-char *stringShortener(const char *string, int length, int addDots);
-char *getFileName(const char *file);
-const char *typeBufferFormatter(const char *type);
-
-void initLoggerCompilerSettings(CompilerSettings *settings);
-
-#endif // C_LOGGER_H
+#endif // CRYO_LANGUAGE_SERVER_HPP

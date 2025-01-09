@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -301,8 +302,6 @@ namespace Cryo
             return UNKNOWN_TYPE;
         }
 
-        std::cout << "<!> Searching for Data Type: " << symbolName << " <!>" << std::endl;
-
         // Check the primary table
         if (symbolTable)
         {
@@ -394,8 +393,6 @@ namespace Cryo
         }
 
         pushNewDependencyTable(table);
-
-        std::cout << "Imported Reaped Table" << std::endl;
         return;
     }
 
@@ -408,8 +405,6 @@ namespace Cryo
         }
 
         pushTypeSymbols(reapedTable);
-
-        std::cout << "Imported Reaped Types Table" << std::endl;
         return;
     }
 
@@ -430,8 +425,6 @@ namespace Cryo
                 return table;
             }
         }
-
-        std::cerr << "Error: Failed to get specific symbol table, table not found!" << std::endl;
         return nullptr;
     }
 
@@ -563,9 +556,7 @@ namespace Cryo
         if (isForReaping)
         {
             completeDependencyTable();
-            std::cout << "Dependency Table Pointer Array Count: " << dependencyCount << std::endl;
             SymbolTable *fullTable = mergeAllSymbols();
-            std::cout << "<!> DEBUG: Merged Full Table <!>" << std::endl;
         }
     }
 
@@ -579,7 +570,6 @@ namespace Cryo
         // Check wether we are in the primary table or a dependency table
         if (tableContext.isPrimary)
         {
-            std::cout << "Adding to Primary Table" << std::endl;
             // Add to primary table
             if (symbolTable && symbolTable != nullptr)
             {
@@ -597,7 +587,6 @@ namespace Cryo
         // Check wether we are in the dependency table
         else if (tableContext.isDependency)
         {
-            std::cout << "Adding to Dependency Table" << std::endl;
             // Add to dependency table
             if (currentDependencyTable && currentDependencyTable != nullptr)
             {
@@ -638,7 +627,10 @@ namespace Cryo
         table->count++;
 
         const char *symbolName = getSymbolName(symbol);
-        std::cout << "GST: Symbol Added: " << symbolName << std::endl;
+
+        DEBUG_PRINT_FILTER({
+            std::cout << "GST: Symbol Added: " << symbolName << std::endl;
+        });
 
         return;
     }

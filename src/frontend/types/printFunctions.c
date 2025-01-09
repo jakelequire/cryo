@@ -15,30 +15,33 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "tools/logger/logger_config.h"
 
 void printTypeTable(TypeTable *table)
 {
-    printf("\n");
-    printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
-    printf("  Type Table: %p\n", (void *)table);
-    printf("  Type Count: %d\n", table->count);
-    printf("  Type Capacity: %d\n", table->capacity);
-    printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
+    DEBUG_PRINT_FILTER({
+        printf("\n");
+        printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
+        printf("  Type Table: %p\n", (void *)table);
+        printf("  Type Count: %d\n", table->count);
+        printf("  Type Capacity: %d\n", table->capacity);
+        printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
 
-    for (int i = 0; i < table->count; i++)
-    {
-        DataType *type = table->types[i];
-        printFormattedType(type);
-    }
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-    printf("\n");
-    if (table->count == 0)
-    {
-        printf("  No types in the type table.\n");
+        for (int i = 0; i < table->count; i++)
+        {
+            DataType *type = table->types[i];
+            printFormattedType(type);
+        }
+        printf("   ────────────────────────────────────────────────────────────\n");
         printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
         printf("\n");
-    }
+        if (table->count == 0)
+        {
+            printf("  No types in the type table.\n");
+            printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
+            printf("\n");
+        }
+    });
 }
 
 char *TypeofDataTypeToString(TypeofDataType type)
@@ -384,129 +387,141 @@ char *VerboseFunctionTypeToString(FunctionType *type)
 
 void logDataType(DataType *type)
 {
-    if (!type)
-        return;
+    DEBUG_PRINT_FILTER({
+        if (!type)
+            return;
 
-    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-    printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
-    printTypeContainer(type->container);
-    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-    printf(COLOR_RESET);
+        printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+        printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
+        printTypeContainer(type->container);
+        printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+        printf(COLOR_RESET);
+    });
 }
 
 void logVerboseDataType(DataType *type)
 {
-    if (!type)
-        return;
+    DEBUG_PRINT_FILTER({
+        if (!type)
+            return;
 
-    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-    printf(BOLD GREEN "   (v)DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
-    printVerboseTypeContainer(type->container);
-    printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-    printf(COLOR_RESET);
+        printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+        printf(BOLD GREEN "   (v)DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
+        printVerboseTypeContainer(type->container);
+        printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
+        printf(COLOR_RESET);
+    });
 }
 
 void logStructType(StructType *type)
 {
-    if (!type)
-    {
+    DEBUG_PRINT_FILTER({
+        if (!type)
+        {
+            printf("   ────────────────────────────────────────────────────────────\n");
+            printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | <NULL>\n");
+            return;
+        }
+
         printf("   ────────────────────────────────────────────────────────────\n");
-        printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | <NULL>\n");
-        return;
-    }
+        printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n",
+               type->size, type->propertyCount, type->methodCount);
 
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n",
-           type->size, type->propertyCount, type->methodCount);
+        printf("   Name: %s | HDV: %s | Has Constructor: %s\n",
+               type->name, type->hasDefaultValue ? "true" : "false",
+               type->hasConstructor ? "true" : "false");
 
-    printf("   Name: %s | HDV: %s | Has Constructor: %s\n",
-           type->name, type->hasDefaultValue ? "true" : "false",
-           type->hasConstructor ? "true" : "false");
-
-    printf(COLOR_RESET);
+        printf(COLOR_RESET);
+    });
 }
 
 void printFormattedStructType(StructType *type)
 {
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
-    printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
+    DEBUG_PRINT_FILTER({
+        printf("   ────────────────────────────────────────────────────────────\n");
+        printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
+        printf("   Name: %s | HDV: %s | Has Constructor: %s\n", type->name, type->hasDefaultValue ? "true" : "false", type->hasConstructor ? "true" : "false");
 
-    if (type->propertyCount > 0)
-    {
-        printf("   Properties:\n");
-        for (int i = 0; i < type->propertyCount; i++)
+        if (type->propertyCount > 0)
         {
-            ASTNode *property = type->properties[i];
-            printf("     %s: %s\n", property->data.property->name, DataTypeToString(property->data.property->type));
-        }
-    }
-
-    if (type->methodCount > 0)
-    {
-        printf("   Methods:\n");
-        for (int i = 0; i < type->methodCount; i++)
-        {
-            ASTNode *method = type->methods[i];
-            printf("     %s →  %s\n", method->data.method->name, DataTypeToString(method->data.method->type));
-            if (method->data.method->paramCount > 0)
+            printf("   Properties:\n");
+            for (int i = 0; i < type->propertyCount; i++)
             {
-                for (int j = 0; j < method->data.method->paramCount; j++)
+                ASTNode *property = type->properties[i];
+                printf("     %s: %s\n", property->data.property->name, DataTypeToString(property->data.property->type));
+            }
+        }
+
+        if (type->methodCount > 0)
+        {
+            printf("   Methods:\n");
+            for (int i = 0; i < type->methodCount; i++)
+            {
+                ASTNode *method = type->methods[i];
+                printf("     %s →  %s\n", method->data.method->name, DataTypeToString(method->data.method->type));
+                if (method->data.method->paramCount > 0)
                 {
-                    ASTNode *param = method->data.method->params[j];
-                    printf("       %s: %s\n", param->data.param->name, DataTypeToString(param->data.param->type));
+                    for (int j = 0; j < method->data.method->paramCount; j++)
+                    {
+                        ASTNode *param = method->data.method->params[j];
+                        printf("       %s: %s\n", param->data.param->name, DataTypeToString(param->data.param->type));
+                    }
                 }
             }
         }
-    }
 
-    printf(COLOR_RESET);
+        printf(COLOR_RESET);
+    });
 }
 
 void printFormattedPrimitiveType(PrimitiveDataType type)
 {
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s\n", PrimitiveDataTypeToString(type));
-    printf(COLOR_RESET);
+    DEBUG_PRINT_FILTER({
+        printf("   ────────────────────────────────────────────────────────────\n");
+        printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s\n", PrimitiveDataTypeToString(type));
+        printf(COLOR_RESET);
+    });
 }
 
 void printFormattedType(DataType *type)
 {
-    if (!type)
-        return;
+    DEBUG_PRINT_FILTER({
+        if (!type)
+            return;
 
-    switch (type->container->baseType)
-    {
-    case PRIMITIVE_TYPE:
-        if (type->container->isArray)
+        switch (type->container->baseType)
         {
-            printf("   ────────────────────────────────────────────────────────────\n");
-            printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s[%d]\n", PrimitiveDataTypeToString(type->container->primitive), type->container->arrayDimensions);
+        case PRIMITIVE_TYPE:
+            if (type->container->isArray)
+            {
+                printf("   ────────────────────────────────────────────────────────────\n");
+                printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s[%d]\n", PrimitiveDataTypeToString(type->container->primitive), type->container->arrayDimensions);
+            }
+            else
+            {
+                printFormattedPrimitiveType(type->container->primitive);
+            }
+            break;
+
+        case STRUCT_TYPE:
+            printFormattedStructType(type->container->custom.structDef);
+            break;
+
+        case CLASS_TYPE:
+            printClassType(type->container->custom.classDef);
+            break;
+
+        case FUNCTION_TYPE:
+            printFunctionType(type->container->custom.funcDef);
+
+        default:
+            printf("  ────────────────────────────────────────────────────────────\n");
+            printf(BOLD GREEN "  UNKNOWN_TYPE" COLOR_RESET "\n");
+            break;
         }
-        else
-        {
-            printFormattedPrimitiveType(type->container->primitive);
-        }
-        break;
 
-    case STRUCT_TYPE:
-        printFormattedStructType(type->container->custom.structDef);
-        break;
-
-    case CLASS_TYPE:
-        printClassType(type->container->custom.classDef);
-        break;
-
-    case FUNCTION_TYPE:
-        printFunctionType(type->container->custom.funcDef);
-
-    default:
-        printf("  ────────────────────────────────────────────────────────────\n");
-        printf(BOLD GREEN "  UNKNOWN_TYPE" COLOR_RESET "\n");
-        break;
-    }
-
-    printf(COLOR_RESET);
+        printf(COLOR_RESET);
+    });
 }
 
 void printTypeContainer(TypeContainer *type)
@@ -547,40 +562,42 @@ void printTypeContainer(TypeContainer *type)
 
 void printVerboseTypeContainer(TypeContainer *type)
 {
-    if (!type)
-    {
-        printf("   ────────────────────────────────────────────────────────────\n");
-        printf(BOLD GREEN "   TYPE_CONTAINER" COLOR_RESET " | <NULL>\n");
-        return;
-    }
+    DEBUG_PRINT_FILTER({
+        if (!type)
+        {
+            printf("   ────────────────────────────────────────────────────────────\n");
+            printf(BOLD GREEN "   TYPE_CONTAINER" COLOR_RESET " | <NULL>\n");
+            return;
+        }
 
-    printf("Type: %s", TypeofDataTypeToString(type->baseType));
+        printf("Type: %s", TypeofDataTypeToString(type->baseType));
 
-    if (type->isArray)
-    {
-        printf("[%d]", type->arrayDimensions);
-    }
+        if (type->isArray)
+        {
+            printf("[%d]", type->arrayDimensions);
+        }
 
-    switch (type->baseType)
-    {
-    case PRIMITIVE_TYPE:
-        printf(" (%s)", PrimitiveDataTypeToString(type->primitive));
-        break;
+        switch (type->baseType)
+        {
+        case PRIMITIVE_TYPE:
+            printf(" (%s)", PrimitiveDataTypeToString(type->primitive));
+            break;
 
-    case STRUCT_TYPE:
-        printf(" (%s)", VerboseStructTypeToString(type->custom.structDef));
-        break;
-    case CLASS_TYPE:
-        printf(" (%s)", VerboseClassTypeToString(type->custom.classDef));
-        break;
-    case FUNCTION_TYPE:
-        printf(" (%s)", VerboseFunctionTypeToString(type->custom.funcDef));
-        break;
-    default:
-        printf(" <UNKNOWN>");
-        break;
-    }
-    printf("\n");
+        case STRUCT_TYPE:
+            printf(" (%s)", VerboseStructTypeToString(type->custom.structDef));
+            break;
+        case CLASS_TYPE:
+            printf(" (%s)", VerboseClassTypeToString(type->custom.classDef));
+            break;
+        case FUNCTION_TYPE:
+            printf(" (%s)", VerboseFunctionTypeToString(type->custom.funcDef));
+            break;
+        default:
+            printf(" <UNKNOWN>");
+            break;
+        }
+        printf("\n");
+    });
 }
 
 #define PRINT_MEMBERS_FN(TYPE)                                                                     \
@@ -602,27 +619,29 @@ void printVerboseTypeContainer(TypeContainer *type)
     }
 void printClassType(ClassType *type)
 {
-    if (!type)
-    {
+    DEBUG_PRINT_FILTER({
+        if (!type)
+        {
+            printf("   ────────────────────────────────────────────────────────────\n");
+            printf(BOLD GREEN "   CLASS_TYPE" COLOR_RESET " | <NULL>\n");
+            return;
+        }
+
         printf("   ────────────────────────────────────────────────────────────\n");
-        printf(BOLD GREEN "   CLASS_TYPE" COLOR_RESET " | <NULL>\n");
-        return;
-    }
+        printf(BOLD GREEN "   CLASS_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n",
+               sizeof(ClassType), type->propertyCount, type->methodCount);
 
-    printf("   ────────────────────────────────────────────────────────────\n");
-    printf(BOLD GREEN "   CLASS_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n",
-           sizeof(ClassType), type->propertyCount, type->methodCount);
+        printf("   Name: %s | Static: %s | Has Constructor: %s\n",
+               type->name, type->isStatic ? "true" : "false",
+               type->hasConstructor ? "true" : "false");
 
-    printf("   Name: %s | Static: %s | Has Constructor: %s\n",
-           type->name, type->isStatic ? "true" : "false",
-           type->hasConstructor ? "true" : "false");
+        // Use the macro to print members for each access level
+        PRINT_MEMBERS_FN(public);
+        PRINT_MEMBERS_FN(private);
+        PRINT_MEMBERS_FN(protected);
 
-    // Use the macro to print members for each access level
-    PRINT_MEMBERS_FN(public);
-    PRINT_MEMBERS_FN(private);
-    PRINT_MEMBERS_FN(protected);
-
-    printf(COLOR_RESET);
+        printf(COLOR_RESET);
+    });
 }
 #undef PRINT_MEMBERS_FN
 

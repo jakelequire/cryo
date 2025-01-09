@@ -35,19 +35,16 @@ namespace Cryo
         {
         case NODE_PROGRAM:
         {
-            std::cout << "ASTNodeToSymbol: Processing Program Node" << std::endl;
             break;
         }
 
         case NODE_BLOCK:
         {
-            std::cout << "ASTNodeToSymbol: Processing Block Node" << std::endl;
             break;
         }
 
         case NODE_FUNCTION_BLOCK:
         {
-            std::cout << "ASTNodeToSymbol: Processing Block Node" << std::endl;
             int blockCount = node->data.functionBlock->statementCount;
             ASTNode **block = node->data.functionBlock->statements;
             for (int i = 0; i < blockCount; i++)
@@ -63,26 +60,22 @@ namespace Cryo
 
         case NODE_ARG_LIST:
         {
-            std::cout << "ASTNodeToSymbol: Processing Argument List Node" << std::endl;
             break;
         }
 
         case NODE_PARAM_LIST:
         {
-            std::cout << "ASTNodeToSymbol: Processing Parameter List Node" << std::endl;
             break;
         }
 
         case NODE_FUNCTION_DECLARATION:
         {
-            std::cout << "ASTNodeToSymbol: Processing Function Declaration Node" << std::endl;
 
             break;
         }
 
         case NODE_VAR_DECLARATION:
         {
-            std::cout << "ASTNodeToSymbol: Processing Variable Declaration Node" << std::endl;
             VariableSymbol *variableSymbol = createVariableSymbol(node->data.varDecl->name,
                                                                   node->data.varDecl->type,
                                                                   node,
@@ -92,7 +85,6 @@ namespace Cryo
 
         case NODE_PARAM:
         {
-            std::cout << "ASTNodeToSymbol: Processing Parameter Node" << std::endl;
             VariableSymbol *variableSymbol = createVariableSymbol(node->data.param->name,
                                                                   node->data.param->type,
                                                                   node,
@@ -102,43 +94,36 @@ namespace Cryo
 
         case NODE_TYPE:
         {
-            std::cout << "ASTNodeToSymbol: Processing Type Node" << std::endl;
             break;
         }
 
         case NODE_EXTERN_STATEMENT:
         {
-            std::cout << "ASTNodeToSymbol: Processing Extern Statement Node" << std::endl;
             break;
         }
 
         case NODE_EXTERN_FUNCTION:
         {
-            std::cout << "ASTNodeToSymbol: Processing Extern Function Node" << std::endl;
             break;
         }
 
         case NODE_STRUCT_DECLARATION:
         {
-            std::cout << "ASTNodeToSymbol: Processing Struct Declaration Node" << std::endl;
             break;
         }
 
         case NODE_PROPERTY:
         {
-            std::cout << "ASTNodeToSymbol: Processing Property Node" << std::endl;
             break;
         }
 
         case NODE_CUSTOM_TYPE:
         {
-            std::cout << "ASTNodeToSymbol: Processing Custom Type Node" << std::endl;
             break;
         }
 
         case NODE_METHOD:
         {
-            std::cout << "ASTNodeToSymbol: Processing Method Node" << std::endl;
             const char *methodName = node->data.method->name;
             DataType *returnType = node->data.method->functionType;
             size_t paramCount = node->data.method->paramCount;
@@ -205,7 +190,6 @@ namespace Cryo
         {
             // Skip Node.
             const char *nodeString = CryoNodeTypeToString(nodeType);
-            std::cout << "ASTNodeToSymbol: Skipping Node: " << nodeString << std::endl;
             return nullptr;
         }
         case NODE_UNKNOWN:

@@ -24,9 +24,13 @@
 #include "tools/utils/env.h"
 #include "tools/utils/c_logger.h"
 #include "tools/utils/cryo-path.h"
+#include "tools/logger/logger_config.h"
 
 int main(int argc, char *argv[])
 {
+    // Initialize the logging system
+    INIT_LOGS();
+
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);
     if (parent)
@@ -45,8 +49,8 @@ int main(int argc, char *argv[])
 
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
+    initLoggerCompilerSettings(&settings); // Initialize the compiler settings for the logger
     logCompilerSettings(&settings);
-    initCompilerSettings(&settings);
 
     // Initialize the build stats
     BuildStats *buildStats = createBuildStats();
@@ -81,6 +85,8 @@ int main(int argc, char *argv[])
     getSystemInfo(buildStats);
     addElapsedTime(buildStats, elapsed);
     printBuildStats(buildStats);
+
+    CLEANUP_LOGS();
 
     exit(EXIT_SUCCESS);
 }

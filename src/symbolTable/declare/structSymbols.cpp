@@ -21,7 +21,6 @@ namespace Cryo
 
     void GlobalSymbolTable::initStructDeclaration(const char *structName, const char *parentNameID)
     {
-        std::cout << "Creating Struct Definition for: " << structName << std::endl;
         Symbol *structSymbol = createStructDeclarationSymbol(structName, parentNameID);
         if (structSymbol)
         {
@@ -97,7 +96,6 @@ namespace Cryo
     {
         // Find the Struct in the symbol table from the hash
         const char *structHashName = IDGen::generate64BitHashID(structName);
-        std::cout << "Generated Hash for Struct Name: " << structHashName << std::endl;
 
         Symbol *structSymbol = queryCurrentTable(structHashName, structName, TYPE_SYMBOL);
         if (structSymbol)
@@ -127,7 +125,6 @@ namespace Cryo
         {
             if (table->symbols[i] == structSymbol)
             {
-                std::cout << "Method Added to Struct Symbol" << std::endl;
                 table->symbols[i]->type->methods[methodCount] = methodSymbol;
                 return;
             }
@@ -157,7 +154,6 @@ namespace Cryo
         {
             if (table->symbols[i] == structSymbol)
             {
-                std::cout << "Property Added to Struct Symbol" << std::endl;
                 table->symbols[i]->type->properties[propertyCount] = propertySymbol;
                 return;
             }

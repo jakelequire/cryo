@@ -14,39 +14,48 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef C_LOGGER_H
-#define C_LOGGER_H
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include "tools/logger/logger_config.h"
 #include <stdlib.h>
 
-#include "tools/macros/consoleColors.h"
-#include "tools/utils/fs.h"
+// Define the global variable
+EnabledLogs *g_enabledLogs = NULL;
 
-typedef struct CompilerSettings CompilerSettings;
-extern void logCompilerSettings(CompilerSettings *settings);
+EnabledLogs *createDefaultEnabledLogs(bool setting)
+{
+    EnabledLogs *enabledLogs = (EnabledLogs *)malloc(sizeof(EnabledLogs));
+    if (!enabledLogs)
+    {
+        return NULL;
+    }
 
-/// @brief LMI - Logger Meta Info
-/// @details This macro is used to get the line, file, and function name of the
-///          caller of the logMessage function.
-#define LMI \
-    __LINE__, __FILE__, __func__
+    enabledLogs->lexer = setting;
+    enabledLogs->parser = setting;
+    enabledLogs->ast = setting;
+    enabledLogs->symbolTable = setting;
+    enabledLogs->types = setting;
+    enabledLogs->linker = setting;
+    enabledLogs->codegen = setting;
+    enabledLogs->settings = setting;
+    enabledLogs->arena = setting;
+    enabledLogs->bootstrap = setting;
+    enabledLogs->state = setting;
+    enabledLogs->all = setting;
 
-//
-void logMessage(
-    int line,
-    const char *file,
-    const char *func,
-    const char *type,
-    const char *module,
-    const char *message, ...);
+    return enabledLogs;
+}
 
-const char *getParentDirOfFile(const char *file);
-char *stringShortener(const char *string, int length, int addDots);
-char *getFileName(const char *file);
-const char *typeBufferFormatter(const char *type);
-
-void initLoggerCompilerSettings(CompilerSettings *settings);
-
-#endif // C_LOGGER_H
+void updateEnabledLogs(EnabledLogs *logs, bool setting)
+{
+    logs->lexer = setting;
+    logs->parser = setting;
+    logs->ast = setting;
+    logs->symbolTable = setting;
+    logs->types = setting;
+    logs->linker = setting;
+    logs->codegen = setting;
+    logs->settings = setting;
+    logs->arena = setting;
+    logs->bootstrap = setting;
+    logs->state = setting;
+    logs->all = setting;
+}
