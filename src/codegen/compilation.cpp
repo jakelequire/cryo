@@ -126,16 +126,14 @@ namespace Cryo
             return;
         }
 
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
+
+        LoadStoreWhitespaceAnnotator LSWA;
+        cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
+        dest.close();
+        
         DEBUG_PRINT_FILTER({
-            LLVM_MODULE_COMPLETE_START;
-            LoadStoreWhitespaceAnnotator LSWA;
-
             LLVMIRHighlighter highlighter;
-            // We need to print the highlighted version to the console
-            // and the raw version to the file
-            cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
-            dest.close();
-
             llvm::formatted_raw_ostream formatted_out(llvm::outs());
             highlighter.printWithHighlighting(cryoContext.module.get(), formatted_out);
             LLVM_MODULE_COMPLETE_END;

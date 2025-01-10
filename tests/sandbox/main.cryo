@@ -160,6 +160,7 @@ function forLoopTesting() -> void {
     return;
 }
 
+
 function main(argc: int, argv: string[]) -> int {
     printStr("-------- Main Function --------");
     printStr("Arg count: ");

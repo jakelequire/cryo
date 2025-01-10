@@ -126,6 +126,8 @@ __EXTERN_C__ int __c_fs_writeFile(const char *path, const char *data, const char
 
     fwrite(data, 1, strlen(data), file);
     fclose(file);
+
+    return 0;
 }
 
 __EXTERN_C__ char **__c_fs_listDir(const char *path)
@@ -156,6 +158,8 @@ __EXTERN_C__ char **__c_fs_listDir(const char *path)
         perror("");
         return nullptr;
     }
+
+    return array;
 }
 
 // =======================================================
@@ -165,19 +169,6 @@ __EXTERN_C__ int __c_write(int fd, const void *buf, size_t count)
 {
     return write(fd, buf, count);
 }
-
-/*
-extern function __c_read(fd: int, buf: string, count: int) -> int;
-extern function __c_open(path: string, flags: int, mode: int) -> int;
-extern function __c_close(fd: int) -> int;
-extern function __c_lseek(fd: int, offset: int, whence: int) -> int;
-extern function __c_unlink(path: string) -> int;
-extern function __c_fstat(fd: int, buf: string) -> int;
-extern function __c_stat(path: string, buf: string) -> int;
-extern function __c_mkdir(path: string, mode: int) -> int;
-extern function __c_rmdir(path: string) -> int;
-extern function __c_opendir(path: string) -> int;
-*/
 
 __EXTERN_C__ int __c_read(int fd, void *buf, size_t count)
 {
@@ -223,4 +214,3 @@ __EXTERN_C__ int __c_rmdir(const char *path)
 {
     return rmdir(path);
 }
-

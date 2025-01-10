@@ -241,45 +241,42 @@ void logMessage(
     const char *module,
     const char *message, ...)
 {
-    if (!IS_LOG_ENABLED(type))
-    {
-        return;
-    }
-    char *shortFile = stringShortener(getFileName(file), FILE_NAME_LENGTH, 0);
-    char *shortModule = stringShortener(module, MODULE_NAME_LENGTH, 0);
-    char *shortFunc = stringShortener(func, FUNC_NAME_LENGTH, 0);
+    DEBUG_PRINT_FILTER({
+        char *shortFile = stringShortener(getFileName(file), FILE_NAME_LENGTH, 0);
+        char *shortModule = stringShortener(module, MODULE_NAME_LENGTH, 0);
+        char *shortFunc = stringShortener(func, FUNC_NAME_LENGTH, 0);
 
-    if (!shortFile || !shortModule || !shortFunc)
-    {
-        fprintf(stderr, "Memory allocation failed\n");
+        if (!shortFile || !shortModule || !shortFunc)
+        {
+            fprintf(stderr, "Memory allocation failed\n");
+            free(shortFile);
+            free(shortModule);
+            free(shortFunc);
+            return;
+        }
+
+        char metaInfo[META_INFO_LENGTH];
+        const char *typeFormatBuffer = typeBufferFormatter(type);
+        char *numberFormatBuffer = (char *)malloc(10);
+        // Number format should be light cyan
+        sprintf(numberFormatBuffer, "%s%d%s", LIGHT_CYAN, line, COLOR_RESET);
+
+        snprintf(metaInfo, META_INFO_LENGTH, "<%s>%-3s|%s:%s:%s",
+                 typeFormatBuffer, "", numberFormatBuffer, shortModule, shortFile, shortFunc);
+        va_list args;
+        va_start(args, message);
+        printf("%-*s | ", META_INFO_PADDING, metaInfo);
+        vprintf(message, args);
+        printf("\n");
+        va_end(args);
+
+        // va_start(args, message);
+        // outputNewLogBuffer(line, file, func, type, module, message, args);
+        // va_end(args);
+
         free(shortFile);
         free(shortModule);
         free(shortFunc);
-        return;
-    }
-
-    char metaInfo[META_INFO_LENGTH];
-    const char *typeFormatBuffer = typeBufferFormatter(type);
-    char *numberFormatBuffer = (char *)malloc(10);
-    // Number format should be light cyan
-    sprintf(numberFormatBuffer, "%s%d%s", LIGHT_CYAN, line, COLOR_RESET);
-
-    snprintf(metaInfo, META_INFO_LENGTH, "<%s>%-3s|%s:%s:%s",
-             typeFormatBuffer, "", numberFormatBuffer, shortModule, shortFile, shortFunc);
-
-    va_list args;
-    va_start(args, message);
-    printf("%-*s | ", META_INFO_PADDING, metaInfo);
-    vprintf(message, args);
-    printf("\n");
-    va_end(args);
-
-    // va_start(args, message);
-    // outputNewLogBuffer(line, file, func, type, module, message, args);
-    // va_end(args);
-
-    free(shortFile);
-    free(shortModule);
-    free(shortFunc);
-    free(numberFormatBuffer);
+        free(numberFormatBuffer);
+    });
 }
