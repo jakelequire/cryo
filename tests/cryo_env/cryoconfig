@@ -1,0 +1,16 @@
+# Cryo Project Settings
+
+[project_settings]
+project_name: "MyProject"
+project_version: "0.1.0"
+project_author: "John Doe"
+project_description: "A Cryo project"
+
+[build_settings]
+build_dir: "build"
+
+[run_settings]
+run_dir: "build"
+run_executable: "MyProject"
+
+[dependencies]

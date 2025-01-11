@@ -16,7 +16,113 @@
  ********************************************************************************/
 #include "../include/commands.h"
 
-void exe_CLI_init(void)
+const char *mainFileBuffer = "namespace Main;\n"
+                             "\n"
+                             "function main(argc: int, argv: string[]): int {\n"
+                             "    printStr(\"Hello, World!\");\n"
+                             "    return 0;\n"
+                             "}\n";
+
+const char *projectSettingsBuffer = "# Cryo Project Settings\n"
+                                    "[project]\n"
+                                    "project_name: \"MyProject\"\n"
+                                    "project_version: \"0.1.0\"\n"
+                                    "project_author: \"John Doe\"\n"
+                                    "project_description: \"A Cryo project\"\n";
+
+void exe_CLI_init(InitOptions *options)
 {
-    printf("Under Construction\n");
+    const char *cwd = options->cwd;
+
+    printf("Initializing Cryo Project in directory: %s\n", cwd);
+
+    // Initialize the project directory structure
+    int dirResult = initDirStructure(cwd);
+    if (dirResult != 0)
+    {
+        fprintf(stderr, "Error: Failed to initialize project directory structure\n");
+        return;
+    }
+
+    // Initialize the project settings
+    int settingsResult = initProjectSettings(cwd);
+    if (settingsResult != 0)
+    {
+        fprintf(stderr, "Error: Failed to initialize project settings\n");
+        return;
+    }
+
+    // Initialize the main file
+    int mainResult = initMainFile(cwd);
+    if (mainResult != 0)
+    {
+        fprintf(stderr, "Error: Failed to initialize main file\n");
+        return;
+    }
+
+    printf("Project initialized successfully\n");
+}
+
+int initDirStructure(const char *cwd)
+{
+    // Create the project directory structure
+    char *src_dir = concatStrings((char *)cwd, "/src");
+
+    // Create the directories
+    mkdir(src_dir, 0777);
+
+    // Cleanup
+    free(src_dir);
+
+    return 0;
+}
+
+int initMainFile(const char *cwd)
+{
+    // Create the main file
+    char *main_file = concatStrings((char *)cwd, "/src/main.cryo");
+
+    // Open the file
+    FILE *file = fopen(main_file, "w");
+    if (!file)
+    {
+        fprintf(stderr, "Error: Failed to create main file\n");
+        return 1;
+    }
+
+    // Write the main file buffer to the file
+    fwrite(mainFileBuffer, 1, strlen(mainFileBuffer), file);
+
+    // Close the file
+    fclose(file);
+
+    // Cleanup
+    free(main_file);
+
+    return 0;
+}
+
+int initProjectSettings(const char *cwd)
+{
+    // Create the project settings file
+    char *settings_file = concatStrings((char *)cwd, "/cryoconfig");
+
+    // Open the file
+    FILE *file = fopen(settings_file, "w");
+    if (!file)
+    {
+        fprintf(stderr, "Error: Failed to create project settings file\n");
+        return 1;
+    }
+
+    // Write the project settings buffer to the file
+    fwrite(projectSettingsBuffer, 1, strlen(projectSettingsBuffer), file);
+
+    // Close the file
+    fclose(file);
+
+    // Cleanup
+    free(settings_file);
+
+    return 0;
 }

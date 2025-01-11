@@ -49,6 +49,8 @@ void handleArgs(int argc, char *argv[])
         exe_CLI_help();
     }
 
+    const char *cwd = getcwd(NULL, 0);
+
     for (int i = 1; i < argc; i++)
     {
         enum CLI_ARGS arg = get_CLI_arg(argv[i]);
@@ -64,7 +66,7 @@ void handleArgs(int argc, char *argv[])
             exe_CLI_build(parse_build_options(argc, argv, i + 1));
             return;
         case CLI_INIT:
-            exe_CLI_init();
+            exe_CLI_init(parse_init_options(argc, argv, i + 1, cwd));
             break;
         case CLI_UNKNOWN:
             exe_CLI_help();
@@ -126,6 +128,28 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
     {
         free(options);
         return NULL;
+    }
+
+    return options;
+}
+
+// Parse init command options.
+// The `cwd` option is where the command was executed from.
+// For now, there are no additional options for the init command.
+// e.g `cryo init` will initialize a project in the current directory.
+InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0)
+{
+    InitOptions *options = (InitOptions *)malloc(sizeof(InitOptions));
+    if (!options)
+        return NULL;
+
+    // Initialize defaults
+    options->cwd = argv0;
+
+    // Parse init command options
+    for (int i = start_index; i < argc; i++)
+    {
+        // No additional options for the init command at this time
     }
 
     return options;

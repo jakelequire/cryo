@@ -45,6 +45,26 @@ bool stringCompare(char *str1, char *str2)
     return strcmp(str1, str2) == 0;
 }
 
+bool runSystemCommand(const char *command)
+{
+    int result = system(command);
+    return result == 0;
+}
+
+char *getCompilerExePath(void)
+{
+    char *bin_path = getCompilerBinPath();
+    if (bin_path == NULL)
+    {
+        return NULL;
+    }
+
+    char *compiler_path = concatStrings(bin_path, "compiler");
+    free(bin_path);
+
+    return compiler_path;
+}
+
 char *getCompilerBinPath(void)
 {
     const char *command = "cryo-path";
@@ -91,6 +111,9 @@ char *getCompilerBinPath(void)
         return NULL;
     }
 
+    // Debug the output
+    printf("Command output: %s\n", path);
+
     // Close the pipe
     int close_result = pclose(fp);
     if (close_result == -1)
@@ -103,6 +126,7 @@ char *getCompilerBinPath(void)
     // Check if command executed successfully
     if (WEXITSTATUS(close_result) != 0)
     {
+        fprintf(stderr, "ERROR: Command Failed!\n");
         fprintf(stderr, "Command returned non-zero exit status: %d\n", WEXITSTATUS(close_result));
         free(path);
         return NULL;

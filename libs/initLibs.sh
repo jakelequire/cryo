@@ -19,6 +19,8 @@ TEAL='\033[0;36m'
 BOLD='\033[1m'
 COLOR_RESET='\033[0m'
 
+BAR=">>====---------------------------====<<"
+
 INIT_LIBS_SIG="$TEAL$BOLD[INIT_LIBS]$COLOR_RESET"
 
 # Function to build and move binaries for each library

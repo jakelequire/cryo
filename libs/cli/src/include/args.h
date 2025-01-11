@@ -32,6 +32,11 @@ typedef struct BuildOptions
     bool has_output;   // whether -o was specified
 } BuildOptions;
 
+typedef struct InitOptions
+{
+    const char *cwd;
+} InitOptions;
+
 enum CLI_ARGS
 {
     CLI_HELP,
@@ -46,5 +51,6 @@ void handleArgs(int argc, char *argv[]);
 enum CLI_ARGS get_CLI_arg(char *arg);
 
 BuildOptions *parse_build_options(int argc, char *argv[], int start_index);
+InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0);
 
 #endif // CLI_ARGS_H

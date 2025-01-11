@@ -14,22 +14,44 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef UTILS_H
-#define UTILS_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <stdbool.h>
+#include "include/compiler.h"
 
-char *trimLastDir(char *path);
-char *getAbsolutePath(char *path);
-char *concatStrings(char *str1, char *str2);
-bool stringCompare(char *str1, char *str2);
-bool runSystemCommand(const char *command);
+int cryo_compile(char *args[], int argCount)
+{
+    printf("\n");
+    printf("Starting Cryo Compiler...\n");
+    const char *compiler_path = getCompilerExePath();
+    if (!compiler_path)
+    {
+        printf("Error: Unable to locate the compiler binary\n");
+        return 1;
+    }
+    printf("Compiler path: %s\n", compiler_path);
+    printf("Arguments: \n");
+    for (int i = 0; i < argCount; i++)
+    {
+        printf("%s\n", args[i]);
+    }
 
-char *getCompilerExePath(void);
-char *getCompilerBinPath(void);
+    // Prepare the command
+    char *command = concatStrings((char *)compiler_path, " ");
+    for (int i = 0; i < argCount; i++)
+    {
+        command = concatStrings(command, args[i]);
+        command = concatStrings(command, " ");
+    }
 
-#endif // UTILS_H
+    printf("\nCommand: %s\n", command);
+
+    // Execute the command
+    if (runSystemCommand(command))
+    {
+        printf("Compilation successful\n");
+    }
+    else
+    {
+        printf("Compilation failed\n");
+    }
+
+    return 0;
+}

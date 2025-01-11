@@ -35,7 +35,12 @@ static void handle_single_file_build(const char *input_file, const char *output_
     {
         printf("Output will be written to: %s\n", output_file);
     }
-    // TODO: Implement single file build logic
+
+    // Temporary
+    char *args[] = {"-f", (char *)input_file};
+    cryo_compile(args, 2);
+
+    return;
 }
 
 void exe_CLI_build(BuildOptions *options)

@@ -14,22 +14,15 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef COMPILER_H
+#define COMPILER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <stdbool.h>
 
-char *trimLastDir(char *path);
-char *getAbsolutePath(char *path);
-char *concatStrings(char *str1, char *str2);
-bool stringCompare(char *str1, char *str2);
-bool runSystemCommand(const char *command);
+#include "utils.h"
 
-char *getCompilerExePath(void);
-char *getCompilerBinPath(void);
+int cryo_compile(char *args[], int argCount);
 
-#endif // UTILS_H
+#endif // COMPILER_H

@@ -29,13 +29,16 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 #include <errno.h>
 
 #include "utils.h"
 #include "consoleColors.h"
 #include "args.h"
+#include "compiler.h"
 
 typedef struct BuildOptions BuildOptions;
+typedef struct InitOptions InitOptions;
 
 // =============================================================================
 // Help Command (./commands/help.c)
@@ -72,7 +75,10 @@ void exe_CLI_build(BuildOptions *options);
 // =============================================================================
 // Init Command (./commands/init.c)
 
-void exe_CLI_init(void);
+void exe_CLI_init(InitOptions *options);
+int initDirStructure(const char *cwd);
+int initMainFile(const char *cwd);
+int initProjectSettings(const char *cwd);
 
 // =============================================================================
 // Version Command (./commands/version.c)
