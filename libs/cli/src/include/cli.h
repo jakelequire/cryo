@@ -14,10 +14,24 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "./include/cli.h"
+#ifndef CRYO_CLI_H
+#define CRYO_CLI_H
 
-int main(int argc, char *argv[])
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+#include "utils.h"
+#include "args.h"
+
+typedef struct DirectoryInfo
 {
-    handleArgs(argc, argv);
-    return 0;
-}
+    const char *cryo_abs_dir; // The root project directory
+    const char *bin_dir;      // The bin directory where the CLI binary is located
+} DirectoryInfo;
+
+#endif // CRYO_CLI_H

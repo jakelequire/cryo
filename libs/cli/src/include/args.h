@@ -14,53 +14,26 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef COMMANDS_H
-#define COMMANDS_H
-
+#ifndef CLI_ARGS_H
+#define CLI_ARGS_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <unistd.h>
 #include <stdbool.h>
-#include <termios.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <errno.h>
 
-#include "../utils.h"
-#include "../consoleColors.h"
+#include "commands.h"
 
-int handleCommandArguments(int argc, char *argv[]);
-
-// =============================================================================
-// Help Command (./commands/help.c)
-
-void exe_CLI_help(void);
-
-// =============================================================================
-// Env Command (./commands/env.c)
-
-typedef struct CryoEnvironment
+enum CLI_ARGS
 {
-    char *codeBuffer;
-    size_t bufferSize;
-    size_t bufferPos;
-    char *completedBuffer;
-    int running;       // New flag to control the main loop
-    int lastWasEscape; // New field to track escape sequences
-} CryoEnvironment;
+    CLI_HELP,
+    CLI_VERSION,
+    CLI_BUILD,
+    CLI_INIT,
+    CLI_UNKNOWN
+};
 
-int exe_env_cmd(void);
-static CryoEnvironment *init_environment(void);
-static int handle_escape_sequence(CryoEnvironment *env);
-static int ensure_buffer_capacity(CryoEnvironment *env, size_t needed_size);
-static void disable_raw_mode(void);
-static int enable_raw_mode(void);
-static int setup_signals(void);
-static int check_quit_command(const char *buffer);
+void handleArgs(int argc, char *argv[]);
 
-#endif // COMMANDS_H
+enum CLI_ARGS get_CLI_arg(char *arg);
+
+#endif // CLI_ARGS_H

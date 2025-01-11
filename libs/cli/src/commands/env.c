@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "commands.h"
+#include "../include/commands.h"
 
 #define INITIAL_BUFFER_SIZE 1024
 #define BUFFER_GROWTH_FACTOR 2

@@ -67,6 +67,11 @@ foo.o
 note.md
 note.txt
 
-# Ignore the target directory under ./libs/cncMerger
-/libs/cncMerger/target/
-/libs/cncMerger/target/*
+# Ignore Lib Binaries
+/libs/cli/bin/*
+/libs/cli/bin/
+/libs/cryo_path/bin/*
+/libs/cryo_path/bin/
+/libs/lsp-monitor/bin/*
+/libs/lsp-monitor/bin/
+

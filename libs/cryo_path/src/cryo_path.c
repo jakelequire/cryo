@@ -14,10 +14,47 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "./include/cli.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdbool.h>
 
-int main(int argc, char *argv[])
+char *appendDir(const char *dir, const char *addedPath, bool needsSlash)
 {
-    handleArgs(argc, argv);
+    // Append the new directory to the path
+    char *newDir = (char *)malloc(1024);
+    if (newDir)
+    {
+        strcpy(newDir, dir);
+        if (needsSlash)
+        {
+            strcat(newDir, "/");
+        }
+        strcat(newDir, addedPath);
+        return newDir;
+    }
+
+    return NULL;
+}
+
+char *getCurrentDir(void)
+{
+    char *buffer = (char *)malloc(1024);
+    if (buffer)
+    {
+        return getcwd(buffer, 1024);
+    }
+    return NULL;
+}
+
+int main()
+{
+    const char *dir = getCurrentDir();
+    const char *bin_dir = appendDir(dir, "bin/", true);
+    fprintf(stdout, "%s\n", bin_dir);
+
+    (void)free((void *)dir);
+    (void)free((void *)bin_dir);
     return 0;
 }

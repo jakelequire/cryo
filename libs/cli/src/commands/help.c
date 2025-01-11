@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "commands.h"
+#include "../include/commands.h"
 
 void exe_CLI_help(void)
 {

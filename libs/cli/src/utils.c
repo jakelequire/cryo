@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "utils.h"
+#include "./include/utils.h"
 
 char *trimLastDir(char *path)
 {

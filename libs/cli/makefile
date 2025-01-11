@@ -42,8 +42,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang
-	CXX_COMPILER = clang++
+	C_COMPILER = clang-18
+	CXX_COMPILER = clang++-18
 endif
 
 # >>=======--------------------------------------------------=======<< #
@@ -51,9 +51,9 @@ endif
 # >>=======--------------------------------------------------=======<< #
 
 # Include paths
-LINUX_INCLUDES = 
+LINUX_INCLUDES = -I./includes
 
-WIN_INCLUDES =
+WIN_INCLUDES = -I./includes
 
 # >>=======--------------------------------------------------=======<< #
 # >>=======       OS-specific settings for compilers         =======<< #
@@ -150,6 +150,7 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
 $(MAIN_BIN): $(ALL_OBJS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	@cp $@ $(BIN_DIR)cryo$(BIN_SUFFIX)
     
 # >>=======--------------------------------------------------=======<< #
 # >>=======                     Commands                     =======<< #

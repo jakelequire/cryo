@@ -14,10 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "./include/cli.h"
+#include "../include/commands.h"
 
-int main(int argc, char *argv[])
+void exe_CLI_build(void)
 {
-    handleArgs(argc, argv);
-    return 0;
+    printf("Under Construction\n");
 }

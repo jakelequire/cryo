@@ -279,7 +279,9 @@
     "inet.h": "c",
     "select.h": "c",
     "in.h": "c",
-    "logger_config.h": "c"
+    "logger_config.h": "c",
+    "args.h": "c",
+    "ioctl.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

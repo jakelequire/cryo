@@ -14,17 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_PATH_H
-#define CRYO_PATH_H
+#include "../include/commands.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <sys/types.h>
-
-void initCompilerPathExe(const char *rootPath);
-void createCryoPathBinary(const char *binpath);
-
-#endif // CRYO_PATH_H
+void exe_CLI_init(void)
+{
+    printf("Under Construction\n");
+}

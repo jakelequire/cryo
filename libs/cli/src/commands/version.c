@@ -14,10 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "./include/cli.h"
+#include "../include/commands.h"
 
-int main(int argc, char *argv[])
+void exe_CLI_version(void)
 {
-    handleArgs(argc, argv);
-    return 0;
+    printf("Cryo Compiler v0.1.0\n");
 }

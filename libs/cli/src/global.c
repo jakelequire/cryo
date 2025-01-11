@@ -14,27 +14,4 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "commands.h"
-
-int handleCommandArguments(int argc, char *argv[])
-{
-    if (argc == 1)
-    {
-        exe_CLI_help();
-        return 0;
-    }
-
-    if (strcmp(argv[1], "help") == 0)
-    {
-        exe_CLI_help();
-        return 0;
-    }
-
-    if (strcmp(argv[1], "env") == 0)
-    {
-        exe_env_cmd();
-        return 0;
-    }
-
-    return 0;
-}
+#include "include/global.h"
