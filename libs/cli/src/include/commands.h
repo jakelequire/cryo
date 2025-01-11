@@ -33,6 +33,9 @@
 
 #include "utils.h"
 #include "consoleColors.h"
+#include "args.h"
+
+typedef struct BuildOptions BuildOptions;
 
 // =============================================================================
 // Help Command (./commands/help.c)
@@ -64,7 +67,7 @@ static int check_quit_command(const char *buffer);
 // =============================================================================
 // Build Command (./commands/build.c)
 
-void exe_CLI_build(void);
+void exe_CLI_build(BuildOptions *options);
 
 // =============================================================================
 // Init Command (./commands/init.c)

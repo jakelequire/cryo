@@ -16,11 +16,6 @@
  ********************************************************************************/
 #include "include/args.h"
 
-bool stringCompare(char *str1, char *str2)
-{
-    return strcmp(str1, str2) == 0;
-}
-
 enum CLI_ARGS get_CLI_arg(char *arg)
 {
     if (stringCompare(arg, "--help") || stringCompare(arg, "-h"))
@@ -65,14 +60,9 @@ void handleArgs(int argc, char *argv[])
         case CLI_VERSION:
             exe_CLI_version();
             break;
-        // The build command.
-        // TODO: Need a way to have sub-commands for the build command.
-        // - cryo build                             // Build from a project directory
-        // - cryo build -s <file>                   // Build a single file
-        // - cryo build -s <file> -o <output>       // Build a single file and output to a specific location
         case CLI_BUILD:
-            exe_CLI_build();
-            break;
+            exe_CLI_build(parse_build_options(argc, argv, i + 1));
+            return;
         case CLI_INIT:
             exe_CLI_init();
             break;
@@ -84,4 +74,59 @@ void handleArgs(int argc, char *argv[])
             break;
         }
     }
+}
+
+BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
+{
+    BuildOptions *options = (BuildOptions *)malloc(sizeof(BuildOptions));
+    if (!options)
+        return NULL;
+
+    // Initialize defaults
+    options->single_file = false;
+    options->input_file = NULL;
+    options->output_file = NULL;
+    options->has_output = false;
+
+    // Parse build command options
+    for (int i = start_index; i < argc; i++)
+    {
+        // Check for single file build
+        if (stringCompare(argv[i], "-f"))
+        {
+            options->single_file = true;
+            if (i + 1 < argc)
+            {
+                options->input_file = argv[++i];
+            }
+            else
+            {
+                free(options);
+                return NULL; // Missing input file
+            }
+        }
+        // Check for output file
+        else if (stringCompare(argv[i], "-o"))
+        {
+            if (i + 1 < argc)
+            {
+                options->output_file = argv[++i];
+                options->has_output = true;
+            }
+            else
+            {
+                free(options);
+                return NULL; // Missing output file
+            }
+        }
+    }
+
+    // Validate options
+    if (options->single_file && !options->input_file)
+    {
+        free(options);
+        return NULL;
+    }
+
+    return options;
 }

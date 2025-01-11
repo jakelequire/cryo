@@ -276,12 +276,12 @@ echo " "
 echo "I hope you enjoy using this passion project of mine."
 echo "This is not a full-fledged programming language, but it's a start!"
 echo "You can find documentation and examples on the GitHub repository."
+echo " "
 echo -e "$TEAL$BOLD https://github.com/jakelequire/cryo $COLOR_RESET"
 echo " "
 echo "Please feel free to reach out to me if you have any questions or feedback!"
 echo " "
-echo "Happy Coding with Cryo! 🚀"
+echo "Happy Coding with Cryo! ❄️"
 echo " "
-
 # ================================================================================
 # End of Script

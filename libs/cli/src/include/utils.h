@@ -21,9 +21,12 @@
 #include <string.h>
 #include <dirent.h>
 #include <libgen.h>
+#include <stdbool.h>
 
 char *trimLastDir(char *path);
 char *getAbsolutePath(char *path);
 char *concatStrings(char *str1, char *str2);
+bool stringCompare(char *str1, char *str2);
+char *getCompilerBinPath(void);
 
 #endif // UTILS_H

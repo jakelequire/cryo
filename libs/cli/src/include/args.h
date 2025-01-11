@@ -22,6 +22,15 @@
 #include <stdbool.h>
 
 #include "commands.h"
+#include "utils.h"
+
+typedef struct BuildOptions
+{
+    bool single_file;  // -s flag
+    char *input_file;  // input file path
+    char *output_file; // -o flag output path
+    bool has_output;   // whether -o was specified
+} BuildOptions;
 
 enum CLI_ARGS
 {
@@ -35,5 +44,7 @@ enum CLI_ARGS
 void handleArgs(int argc, char *argv[]);
 
 enum CLI_ARGS get_CLI_arg(char *arg);
+
+BuildOptions *parse_build_options(int argc, char *argv[], int start_index);
 
 #endif // CLI_ARGS_H
