@@ -13,28 +13,45 @@ trap EXIT
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 TEAL='\033[0;36m'
+PURPLE='\033[0;35m'
+BLUE='\033[0;34m'
 YELLOW='\033[0;33m'
+GREY='\033[0;37m'
 BOLD='\033[1m'
+ITALIC='\033[3m'
+UNDERLINE='\033[4m'
 COLOR_RESET='\033[0m'
 
-echo " "
-echo "              Cryo Programming Language Installer"
+echo -e "$TEAL"
+echo "               ██████╗██████╗ ██╗   ██╗ ██████╗ "
+echo "              ██╔════╝██╔══██╗╚██╗ ██╔╝██╔═══██╗"
+echo "              ██║     ██████╔╝ ╚████╔╝ ██║   ██║"
+echo "              ██║     ██╔══██╗  ╚██╔╝  ██║   ██║"
+echo "              ╚██████╗██║  ██║   ██║   ╚██████╔╝"
+echo "               ╚═════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ "
+echo -e "$COLOR_RESET"
+echo -e "$TEAL$BOLD              Cryo Programming Language Installer $COLOR_RESET"
 echo " "
 echo "This script will install the Cryo Programming Language on your system."
-echo "It will install the following components:"
+echo "It will install/compile the following components:"
 echo " "
-echo "1. Cryo CLI"
-echo "2. Cryo Language Server Protocol Monitor"
-echo "3. Cryo Compiler"
+echo -e "$BLUE$BOLD  1. Cryo CLI$COLOR_RESET"
+echo -e "$BLUE$BOLD  2. Cryo Compiler$COLOR_RESET"
+echo -e "$BLUE$BOLD  3. cryo-path$COLOR_RESET"
+echo -e "$BLUE$BOLD  4. LSP Debug Server$COLOR_RESET"
 echo " "
 echo "In the installation process, the Cryo Compiler will be built from the source code."
 echo "After the compilation, it will also link the Cryo CLI to the global path."
 echo " "
 echo "This script will also install the following dependencies if they are not already installed:"
 echo " "
-echo "1. LLVM 18"
-echo "2. Clang 18"
-echo "3. Make"
+echo -e "$GREEN$BOLD  1. LLVM 18$COLOR_RESET"
+echo -e "$GREEN$BOLD  2. Clang 18$COLOR_RESET"
+echo -e "$GREEN$BOLD  3. Make$COLOR_RESET"
+echo " "
+echo -e "Please note, this script will only work on $YELLOW$BOLD$UNDERLINE*Debian-based systems*$COLOR_RESET. It has been developed"
+echo "and tested on Ubuntu. If you are using a different system, I cannot guarantee that this"
+echo "script will work for you."
 echo " "
 
 # Check if script is run with sudo
@@ -80,7 +97,13 @@ function installLLVM {
     echo " "
     echo -e "$TEAL $BOLD Installing LLVM... $COLOR_RESET"
     echo " "
-    apt-get install llvm-18
+    # Download the LLVM installation script
+    wget https://apt.llvm.org/llvm.sh
+    chmod +x llvm.sh
+    # Install LLVM
+    sudo ./llvm.sh 18
+    # Cleanup the installation script
+    rm llvm.sh
 }
 
 # ================================================================================
@@ -89,7 +112,7 @@ function installLLVM {
 # Check if the user has clang installed and it's above version 18
 function checkClang {
     echo " "
-    echo -e "$TEAL $BOLD Checking for Clang... $COLOR_RESET"
+    echo -e "$GREY Checking for Clang... $COLOR_RESET"
     echo " "
     # Check if clang is installed
     if ! command -v clang-18 &> /dev/null; then
@@ -119,16 +142,22 @@ function checkClang {
 # Check if the user has LLVM installed and it's above version 18
 function checkLLVM {
     echo " "
-    echo -e "$TEAL $BOLD Checking for LLVM... $COLOR_RESET"
+    echo -e "$GREY Checking for LLVM... $COLOR_RESET"
     echo " "
     # Check if llvm is installed
     if ! command -v llvm-config-18 &> /dev/null; then
         echo -e "$RED $BOLD LLVM is not installed! $COLOR_RESET"
         echo -e "$RED $BOLD Please install LLVM before proceeding with the installation. $COLOR_RESET"
-        exit 1
+        # Ask the user if they want to install LLVM
+        read -p "Do you want to install LLVM? (Y/n): " choice
+        if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
+            echo -e "$RED $BOLD Installation cancelled! $COLOR_RESET"
+            exit 1
+        fi
+        installLLVM
     fi
     # Get the llvm version
-    llvm_version=$(llvm-config-18 --version | grep -oP '[0-9]+')
+    llvm_version=$(llvm-config-18 --version | awk '{print $1}' | cut -d'.' -f1)
     # Check if the llvm version is above 18
     if [ $llvm_version -lt 18 ]; then
         echo -e "$RED $BOLD LLVM version is below 18! $COLOR_RESET"
@@ -149,7 +178,7 @@ function checkLLVM {
 # Check if the user has make installed
 function checkMake {
     echo " "
-    echo -e "$TEAL $BOLD Checking for Make... $COLOR_RESET"
+    echo -e "$GREY Checking for Make... $COLOR_RESET"
     echo " "
     # Check if make is installed
     if ! command -v make &> /dev/null; then
@@ -169,14 +198,16 @@ checkMake || errorHandler "Make is not installed"
 # Build the Cryo Project 
 
 echo " "
-echo -e "$TEAL $BOLD Building the Cryo Project... $COLOR_RESET"
+echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+echo " "
+echo -e "$GREY$BOLD Building the Cryo Project... $COLOR_RESET"
 echo " "
 sleep 1
 
 # Build the Cryo Compiler
 function buildProject {
     echo " "
-    echo -e "$GREEN $BOLD Building the Cryo Compiler... $COLOR_RESET"
+    echo -e "$GREEN$BOLD Building the Cryo Compiler... $COLOR_RESET"
     echo " "
     make all || echo -e "$RED $BOLD Failed to build the Cryo Compiler $COLOR_RESET"
 }
@@ -218,6 +249,13 @@ else
     errorHandler "The global setup script does not exist"
 fi
 
+
+# Pause Execution, let the user read the output and press any key to continue
+echo " "
+echo -e "$TEAL $BOLD"
+read -n 1 -s -r -p "Press any key to continue..."
+echo -e "$COLOR_RESET"
+
 # ================================================================================
 # Installation Complete
 
@@ -234,7 +272,12 @@ echo " "
 echo "cryo --help"
 echo " "
 echo "This will display the help menu for the Cryo CLI."
+echo " "
 echo "I hope you enjoy using this passion project of mine."
+echo "This is not a full-fledged programming language, but it's a start!"
+echo "You can find documentation and examples on the GitHub repository."
+echo -e "$TEAL$BOLD https://github.com/jakelequire/cryo $COLOR_RESET"
+echo " "
 echo "Please feel free to reach out to me if you have any questions or feedback!"
 echo " "
 echo "Happy Coding with Cryo! 🚀"
