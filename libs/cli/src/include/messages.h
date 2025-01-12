@@ -14,23 +14,25 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef UTILS_H
-#define UTILS_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <stdbool.h>
-#include <unistd.h>
+#ifndef MESSAGES_H
+#define MESSAGES_H
 
-char *trimLastDir(char *path);
-char *getAbsolutePath(char *path);
-char *concatStrings(char *str1, char *str2);
-bool stringCompare(char *str1, char *str2);
-bool runSystemCommand(const char *command);
+// ====================================================================================================
+// init.c Messages
+// ====================================================================================================
 
-char *getCompilerExePath(void);
-char *getCompilerBinPath(void);
+#define MAIN_FILE_BUFFER "namespace Main;\n"                                   \
+                         "\n"                                                  \
+                         "function main(argc: int, argv: string[]) -> int {\n" \
+                         "    printStr(\"Hello, World!\");\n"                  \
+                         "    return 0;\n"                                     \
+                         "}\n"
 
-#endif // UTILS_H
+#define PROJECT_SETTINGS_BUFFER "# Cryo Project Settings\n"      \
+                                "[project]\n"                    \
+                                "project_name: \"MyProject\"\n"  \
+                                "project_version: \"0.1.0\"\n"   \
+                                "project_author: \"John Doe\"\n" \
+                                "project_description: \"A Cryo project\"\n"
+
+#endif // MESSAGES_H

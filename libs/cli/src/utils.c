@@ -65,7 +65,7 @@ char *getCompilerExePath(void)
     return compiler_path;
 }
 
-char *getCompilerBinPath(void)
+char *getPathFromCryoPath(void)
 {
     const char *command = "cryo-path";
     FILE *fp;
@@ -141,4 +141,50 @@ char *getCompilerBinPath(void)
     }
 
     return path;
+}
+
+// This function will see if the `CRYO_COMPILER` environment variable is set
+char *getPathFromEnvVar(void)
+{
+    const char *env_var = getenv("CRYO_COMPILER");
+    if (env_var == NULL)
+    {
+        fprintf(stderr, "CRYO_COMPILER environment variable not set\n");
+        return NULL;
+    }
+
+    return strdup(env_var);
+}
+
+char *getCompilerBinPath(void)
+{
+    // Try getting path from cryo-path binary first
+    char *path = getPathFromCryoPath();
+    if (path != NULL)
+    {
+        return path;
+    }
+
+    // Try getting path from CRYO_COMPILER environment variable
+    path = getPathFromEnvVar();
+    if (path != NULL)
+    {
+        return path;
+    }
+
+    // Fallback paths to check
+    const char *fallback_paths[] = {
+        "/usr/local/bin/cryo/bin/",
+        "/usr/bin/cryo/bin/",
+        getenv("HOME") ? strcat(getenv("HOME"), "/cryo/bin/") : NULL};
+
+    for (size_t i = 0; i < sizeof(fallback_paths) / sizeof(fallback_paths[0]); i++)
+    {
+        if (fallback_paths[i] && access(fallback_paths[i], F_OK) == 0)
+        {
+            return strdup(fallback_paths[i]);
+        }
+    }
+
+    return NULL;
 }

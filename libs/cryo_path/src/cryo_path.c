@@ -19,42 +19,59 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <limits.h>
+#if defined(__linux__)
+#include <linux/limits.h>
+#endif
 
-char *appendDir(const char *dir, const char *addedPath, bool needsSlash)
+char *getExecutablePath(void)
 {
-    // Append the new directory to the path
-    char *newDir = (char *)malloc(1024);
-    if (newDir)
+    char *buffer = (char *)malloc(PATH_MAX);
+    if (!buffer)
+        return NULL;
+
+    ssize_t len;
+
+#if defined(__linux__)
+    len = readlink("/proc/self/exe", buffer, PATH_MAX - 1);
+#elif defined(__APPLE__)
+    uint32_t size = PATH_MAX;
+    if (_NSGetExecutablePath(buffer, &size) != 0)
     {
-        strcpy(newDir, dir);
-        if (needsSlash)
-        {
-            strcat(newDir, "/");
-        }
-        strcat(newDir, addedPath);
-        return newDir;
+        free(buffer);
+        return NULL;
+    }
+    len = strlen(buffer);
+#else
+#error "Unsupported platform"
+#endif
+
+    if (len == -1)
+    {
+        free(buffer);
+        return NULL;
     }
 
-    return NULL;
-}
+    buffer[len] = '\0';
 
-char *getCurrentDir(void)
-{
-    char *buffer = (char *)malloc(1024);
-    if (buffer)
+    // Remove the executable name to get the directory
+    char *last_slash = strrchr(buffer, '/');
+    if (last_slash != NULL)
     {
-        return getcwd(buffer, 1024);
+        *(last_slash + 1) = '\0';
     }
-    return NULL;
+
+    return buffer;
 }
 
 int main()
 {
-    const char *dir = getCurrentDir();
-    const char *bin_dir = appendDir(dir, "bin/", true);
-    fprintf(stdout, "%s\n", bin_dir);
-
-    (void)free((void *)dir);
-    (void)free((void *)bin_dir);
-    return 0;
+    char *bin_dir = getExecutablePath();
+    if (bin_dir)
+    {
+        fprintf(stdout, "%s\n", bin_dir);
+        free(bin_dir);
+        return 0;
+    }
+    return 1;
 }

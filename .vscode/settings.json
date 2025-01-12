@@ -281,10 +281,32 @@
     "in.h": "c",
     "logger_config.h": "c",
     "args.h": "c",
-    "ioctl.h": "c"
+    "ioctl.h": "c",
+    "messages.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",
   "editor.selectionClipboard": false,
-  "search.useIgnoreFiles": false
+  "search.useIgnoreFiles": false,
+  "auto-close-tag.activationOnLanguage": [
+    "xml",
+    "php",
+    "blade",
+    "ejs",
+    "jinja",
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "plaintext",
+    "markdown",
+    "vue",
+    "liquid",
+    "erb",
+    "lang-cfml",
+    "cfml",
+    "HTML (EEx)",
+    "HTML (Eex)",
+    "plist"
+  ]
 }

@@ -16,20 +16,6 @@
  ********************************************************************************/
 #include "../include/commands.h"
 
-const char *mainFileBuffer = "namespace Main;\n"
-                             "\n"
-                             "function main(argc: int, argv: string[]): int {\n"
-                             "    printStr(\"Hello, World!\");\n"
-                             "    return 0;\n"
-                             "}\n";
-
-const char *projectSettingsBuffer = "# Cryo Project Settings\n"
-                                    "[project]\n"
-                                    "project_name: \"MyProject\"\n"
-                                    "project_version: \"0.1.0\"\n"
-                                    "project_author: \"John Doe\"\n"
-                                    "project_description: \"A Cryo project\"\n";
-
 void exe_CLI_init(InitOptions *options)
 {
     const char *cwd = options->cwd;
@@ -91,7 +77,7 @@ int initMainFile(const char *cwd)
     }
 
     // Write the main file buffer to the file
-    fwrite(mainFileBuffer, 1, strlen(mainFileBuffer), file);
+    fwrite(MAIN_FILE_BUFFER, 1, strlen(MAIN_FILE_BUFFER), file);
 
     // Close the file
     fclose(file);
@@ -116,7 +102,7 @@ int initProjectSettings(const char *cwd)
     }
 
     // Write the project settings buffer to the file
-    fwrite(projectSettingsBuffer, 1, strlen(projectSettingsBuffer), file);
+    fwrite(PROJECT_SETTINGS_BUFFER, 1, strlen(PROJECT_SETTINGS_BUFFER), file);
 
     // Close the file
     fclose(file);

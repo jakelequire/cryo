@@ -36,6 +36,7 @@
 #include "consoleColors.h"
 #include "args.h"
 #include "compiler.h"
+#include "messages.h"
 
 typedef struct BuildOptions BuildOptions;
 typedef struct InitOptions InitOptions;
