@@ -50,4 +50,7 @@ char *getCryoRootPath(void);
 /// @public Get the CRYO_COMPILER environment variable
 char *getCryoCompilerPath(void);
 
+/// @public Get the current working directory
+char *getCWD(void);
+
 #endif // CRYO_ENV_H

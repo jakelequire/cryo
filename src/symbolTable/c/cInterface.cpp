@@ -21,11 +21,11 @@
 
 extern "C"
 {
-    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create()
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(const char *buildDir)
     {
         try
         {
-            auto symTable = new Cryo::GlobalSymbolTable();
+            auto symTable = new Cryo::GlobalSymbolTable(buildDir);
             return reinterpret_cast<CryoGlobalSymbolTable *>(symTable);
         }
         catch (...)
@@ -35,7 +35,7 @@ extern "C"
         }
     }
 
-    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping)
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping, const char *buildDir)
     {
         try
         {
@@ -245,6 +245,15 @@ extern "C"
         if (symTable)
         {
             return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->resolveDataType(name);
+        }
+        return nullptr;
+    }
+
+    const char *CryoGlobalSymbolTable_GetBuildDir(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getBuildDir();
         }
         return nullptr;
     }

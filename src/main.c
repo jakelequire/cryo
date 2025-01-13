@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
     initLoggerCompilerSettings(&settings); // Initialize the compiler settings for the logger
+    updateEnabledLogs(g_enabledLogs, settings.enableLogs);
     if (settings.isSingleFile)
     {
         printf("Initializing as single file...\n");
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
         printf("Initializing as project...\n");
         INIT_PROJECT_CONFIG(settings.rootDir, &settings);
     }
-
+    printf("Compiler settings initialized\n");
     logCompilerSettings(&settings);
 
     // Initialize the build stats

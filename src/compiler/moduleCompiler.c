@@ -85,8 +85,9 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     initLexer(&lexer, source, filePath, state);
     logMessage(LMI, "INFO", "Compiler", "Lexer Initialized");
 
+    const char *globalBuildDir = GetBuildDir(globalTable);
     // Initialize the global symbol table (for reaping)
-    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create_Reaping(true);
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create_Reaping(true, globalBuildDir);
     if (!globalSymbolTable)
     {
         logMessage(LMI, "ERROR", "Compiler", "Failed to create global symbol table");

@@ -51,11 +51,11 @@ typedef enum BuildType
 
 typedef enum
 {
-    OPT_AST_DUMP = 1000,
-    OPT_IR_DUMP,
-    OPT_LSP_SYMBOLS,
-    OPT_ENABLE_LOGS,
-    OPT_DISABLE_LOGS
+    OPT_AST_DUMP = 1000, // `--ast-dump`
+    OPT_IR_DUMP,         // `--ir-dump`
+    OPT_LSP_SYMBOLS,     // `--lsp-symbols`
+    OPT_ENABLE_LOGS,     // `--enable-logs`
+    OPT_DISABLE_LOGS     // `--disable-logs`
 } LongOnlyOptions;
 
 typedef struct ProjectSettings
@@ -82,6 +82,7 @@ typedef struct CompilerSettings
     const char *inputFilePath;
     const char *lspOutputPath; // {WORKSPACE}/build/lsp
     const char *runtimePath;
+    const char *buildDir;
     char *sourceText;
     bool verbose;
     DebugLevel debugLevel;

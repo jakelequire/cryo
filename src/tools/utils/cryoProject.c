@@ -20,26 +20,41 @@
 
 void checkForCryoProject(const char *path, CompilerSettings *settings)
 {
-    if (!doesConfigExist(path))
+    if (!settings->isSingleFile)
     {
-        fprintf(stderr, "Error: No Cryo project found in directory\n");
+
+        if (!doesConfigExist(path))
+        {
+            fprintf(stderr, "Error: No Cryo project found in directory\n");
+            return;
+        }
+
+        char *config = getConfigString(path);
+        if (!config)
+        {
+            fprintf(stderr, "Error: Failed to read cryoconfig file\n");
+            return;
+        }
+
+        // Parse the config string
+        printf("Config:\n%s\n", config);
+        char *cwd = getcwd(NULL, 0);
+        printf("CWD: %s\n", cwd);
+
+        settings->projectDir = cwd;
+        settings->isProject = true;
+
+        printf("Config finished\n");
         return;
     }
-
-    char *config = getConfigString(path);
-    if (!config)
+    else
     {
-        fprintf(stderr, "Error: Failed to read cryoconfig file\n");
+        printf("Single file mode\n");
+        settings->isProject = false;
+        settings->projectDir = NULL;
+
         return;
     }
-
-    // Parse the config string
-    printf("Config:\n%s\n", config);
-    char *cwd = getcwd(NULL, 0);
-    printf("CWD: %s\n", cwd);
-
-    settings->projectDir = cwd;
-    settings->isProject = true;
 }
 
 bool doesConfigExist(const char *path)

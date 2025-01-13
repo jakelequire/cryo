@@ -37,11 +37,11 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
         fprintf(stderr, "Error: Root directory not set\n");
         return 1;
     }
-    const char *buildDir = appendStrings(rootDirectory, "/build");
+    const char *buildDir = settings->buildDir;
 
     // **New global symbol table**
     // Initialize the new Symbol Table
-    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create();
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);
     if (!globalSymbolTable)
     {
         fprintf(stderr, "Error: Failed to create global symbol table\n");

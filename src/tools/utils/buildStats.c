@@ -60,8 +60,10 @@ void *addCompilerSettings(BuildStats *stats, CompilerSettings *settings)
     int compiledFiles = settings->totalFiles;
     stats->files_compiled = compiledFiles;
 
-    const char *compilerVersion = settings->version;
-    strcpy(stats->compiler_version, compilerVersion);
+    printf("Build type: %s\n", buildType);
+
+    const char *compilerVersion = COMPILER_VERSION;
+    printf("Compiler version: %s\n", compilerVersion);
 
     return stats;
 }

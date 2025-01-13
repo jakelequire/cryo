@@ -81,8 +81,9 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->buildType = BUILD_DEV;
     settings->compilerRootPath = getCompilerRootPath();
     settings->isProject = false;
+    settings->version = COMPILER_VERSION;
 
-    const char *runtimePath = appendStrings(settings->compilerRootPath, "/Std/Runtime/");
+    const char *runtimePath = appendStrings(getCompilerRootPath(), "/Std/Runtime/");
     printf("Runtime Path: %s\n", runtimePath);
     settings->runtimePath = runtimePath;
 
@@ -221,20 +222,35 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         printUsage(argv[0]);
         exit(1);
     }
+
+    if (settings->isSingleFile)
+    {
+        settings->projectDir = NULL;
+        const char *inputFile = removeFileFromPath(settings->inputFilePath);
+        const char *buildDir = appendStrings(inputFile, "/build");
+        settings->buildDir = buildDir;
+        printf("Initialized build directory: %s\n", buildDir);
+    }
+    else
+    {
+        settings->projectDir = settings->rootDir;
+    }
 }
+
 // ==============================
 // Utility Functions
 
 void logCompilerSettings(CompilerSettings *settings)
 {
+    const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
+    const char *falseFlag = BOLD RED "false" COLOR_RESET;
+    printf("Printing compiler settings...\n");
     DEBUG_PRINT_FILTER({
-        const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
-        const char *falseFlag = BOLD RED "false" COLOR_RESET;
-
         printf("\n");
         printf("# ============ Compiler Settings ============ #\n");
         printf("  Root Directory: %s\n", settings->rootDir);
         printf("  Project Directory: %s\n", settings->projectDir);
+        printf("  Build Directory: %s\n", settings->buildDir);
         printf("  Runtime Path: %s\n", settings->runtimePath);
         printf("  Compiler Root Path: %s\n", settings->compilerRootPath);
         printf("  Input File: %s\n", settings->inputFile);
@@ -317,8 +333,12 @@ CompiledFile createCompiledFile(void)
 CompilerSettings createCompilerSettings(void)
 {
     CompilerSettings settings;
-    settings.projectDir = (char *)malloc(sizeof(char) * 256);
-    settings.runtimePath = (char *)malloc(sizeof(char) * 256);
+    settings.projectDir = (char *)malloc(sizeof(char) * 1024);
+    settings.runtimePath = (char *)malloc(sizeof(char) * 1024);
+    settings.inputFile = (char *)malloc(sizeof(char) * 1024);
+    settings.inputFilePath = (char *)malloc(sizeof(char) * 1024);
+    settings.lspOutputPath = (char *)malloc(sizeof(char) * 1024);
+    settings.buildDir = (char *)malloc(sizeof(char) * 1024);
     settings.rootDir = getcwd(NULL, 0);
     settings.customOutputPath = NULL;
     settings.activeBuild = false;

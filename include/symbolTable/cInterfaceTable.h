@@ -40,8 +40,8 @@ typedef struct MethodSymbol MethodSymbol;
 typedef struct ScopeBlock ScopeBlock;
 
 // C API -------------------------------------------------------
-CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
-CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping);
+CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(const char *buildDir);
+CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping, const char *buildDir);
 void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
 
 // Class State Functions ---------------------------------------
@@ -66,6 +66,8 @@ void CryoGlobalSymbolTable_AddVariableToSymbolTable(CryoGlobalSymbolTable *symTa
 
 SymbolTable *CryoGlobalSymbolTable_GetCurrentSymbolTable(CryoGlobalSymbolTable *symTable);
 
+const char *CryoGlobalSymbolTable_GetBuildDir(CryoGlobalSymbolTable *symTable);
+
 // Scope Functions ---------------------------------------
 
 void CryoGlobalSymbolTable_EnterScope(CryoGlobalSymbolTable *symTable, const char *name);
@@ -87,6 +89,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_InitNamespace(symTable, namespaceName)
 #define CompleteFrontend(symTable) \
     CryoGlobalSymbolTable_CompleteFrontend(symTable)
+#define GetBuildDir(symTable) \
+    CryoGlobalSymbolTable_GetBuildDir(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \

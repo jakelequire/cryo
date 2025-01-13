@@ -40,8 +40,8 @@ extern "C"
     typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
     // C API -------------------------------------------------------
-    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(void);
-    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping);
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(const char *buildDir);
+    CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping, const char *buildDir);
     void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable);
 
     // Class State Functions ---------------------------------------
@@ -78,6 +78,8 @@ extern "C"
     DataType *CryoGlobalSymbolTable_ResolveDataType(CryoGlobalSymbolTable *symTable, const char *name);
 
     void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable);
+
+    const char *CryoGlobalSymbolTable_GetBuildDir(CryoGlobalSymbolTable *symTable);
 
     // Scope Functions ---------------------------------------
 
@@ -147,6 +149,8 @@ extern "C"
     CryoGlobalSymbolTable_InitNamespace(symTable, namespaceName)
 #define CompleteFrontend(symTable) \
     CryoGlobalSymbolTable_CompleteFrontend(symTable)
+#define GetBuildDir(symTable) \
+    CryoGlobalSymbolTable_GetBuildDir(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \
@@ -363,9 +367,9 @@ namespace Cryo
         };
 
         // Constructor & Destructor
-        GlobalSymbolTable(ScopeType scopeType = GLOBAL_SCOPE)
+        GlobalSymbolTable(const char *buildDir = nullptr, ScopeType scopeType = GLOBAL_SCOPE)
         {
-            debugInfo = getDebugInfo();
+            debugInfo = getDebugInfo(buildDir);
             tableContext = setDefaultContext();
             currentScopeType = scopeType;
             tableState = TABLE_INITIALIZED;
@@ -373,9 +377,9 @@ namespace Cryo
             this->dependencyTables = (SymbolTable **)malloc(sizeof(SymbolTable *) * MAX_DEPENDENCIES);
         };
         // This constructor is used for reaping the symbol table to a higher level symbol table manager.
-        GlobalSymbolTable(bool isForReaping, ScopeType scopeType = GLOBAL_SCOPE)
+        GlobalSymbolTable(bool isForReaping, const char *buildDir = nullptr, ScopeType scopeType = GLOBAL_SCOPE)
         {
-            debugInfo = getDebugInfo();
+            debugInfo = getDebugInfo(buildDir);
             tableContext = setDefaultContext();
             currentScopeType = scopeType;
             tableState = TABLE_INITIALIZED;
@@ -584,7 +588,16 @@ namespace Cryo
             }
         }
 
+        const char *removeLastDirectoryFromPath(const char *path)
+        {
+            std::string pathStr = path;
+            std::string::size_type pos = pathStr.find_last_of("/\\");
+            return pathStr.substr(0, pos).c_str();
+        }
+
         void logSymbolTable(SymbolTable *table) { debugger->logSymbolTable(table); }
+
+        const char *getBuildDir(void) { return debugInfo.buildDir.c_str(); }
 
     private:
         TABLE_STATE tableState = TABLE_UNINITIALIZED;
@@ -594,15 +607,16 @@ namespace Cryo
         //===================================================================
         // Private Helper Functions
         //===================================================================
-        DebugInfo getDebugInfo(void)
-        {
-            std::string rootDir = getCryoRootPath();
-            std::string buildDir = rootDir + "build";
-            std::string dependencyDir = buildDir + "/out/deps";
-            std::string DBdir = buildDir + "/db";
-            std::string debugDir = buildDir + "/debug";
 
-            DebugInfo info = {buildDir, dependencyDir, debugDir, DBdir, rootDir};
+        DebugInfo getDebugInfo(const char *buildDir)
+        {
+            std::string buildDirectory = buildDir;
+            std::string rootDir = this->removeLastDirectoryFromPath(buildDir);
+            std::string dependencyDir = buildDirectory + "/out/deps";
+            std::string DBdir = buildDirectory + "/db";
+            std::string debugDir = buildDirectory + "/debug";
+
+            DebugInfo info = {buildDirectory, dependencyDir, debugDir, DBdir, rootDir};
             return info;
         }
         TableContext setDefaultContext(void) { return {false, false}; }
@@ -699,14 +713,14 @@ namespace Cryo
 
     // -------------------------------------------------------
     // C API Implementation
-    inline CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create()
+    inline CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create(const char *buildDir)
     {
-        return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable());
+        return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable(buildDir));
     }
 
-    inline CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping)
+    inline CryoGlobalSymbolTable *CryoGlobalSymbolTable_Create_Reaping(bool forReaping, const char *buildDir)
     {
-        return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable(forReaping));
+        return reinterpret_cast<CryoGlobalSymbolTable *>(new GlobalSymbolTable(forReaping, buildDir));
     }
 
     inline void CryoGlobalSymbolTable_PrintGlobalTable(CryoGlobalSymbolTable *symTable)
@@ -865,6 +879,15 @@ namespace Cryo
         if (symTable)
         {
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->getSpecificSymbolTable(namespaceName);
+        }
+        return nullptr;
+    }
+
+    inline const char *CryoGlobalSymbolTable_GetBuildDIr(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->getBuildDir();
         }
         return nullptr;
     }

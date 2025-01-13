@@ -253,6 +253,17 @@ char *getCryoRootPath(void)
     return strdup(cryoRoot);
 }
 
+char *getCWD(void)
+{
+    char *cwd = getcwd(NULL, 0);
+    if (!cwd)
+    {
+        perror("Failed to get current working directory");
+        return NULL;
+    }
+    return cwd;
+}
+
 char *getCryoCompilerPath(void)
 {
     char *compilerPath = getenv("CRYO_COMPILER");

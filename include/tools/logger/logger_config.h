@@ -43,7 +43,7 @@ EnabledLogs *createDefaultEnabledLogs(bool setting);
 void updateEnabledLogs(EnabledLogs *logs, bool setting);
 
 // Macros
-#define ARE_LOGS_ENABLED false
+#define ARE_LOGS_ENABLED true
 
 #define DEBUG_PRINT_ENABLED() (g_enabledLogs && g_enabledLogs->all)
 

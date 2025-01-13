@@ -23,8 +23,6 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 {
     DEBUG_PRINT_FILTER({ START_COMPILATION_MESSAGE; });
 
-    char *buildDir = (char *)malloc(1024);
-
     // ========================================
     // Handle Flags
 
@@ -44,14 +42,11 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
 
     bool isSingleFile = settings->isSingleFile;
-    if (isSingleFile)
-    {
-        const char *rootDir = settings->rootDir;
-        buildDir = (char *)appendStrings(rootDir, "/build");
-    }
 
     // ========================================
     // Compile the file (default behavior)
+
+    printf("\nStarting compilation...\n");
 
     const char *source = readFile(filePath);
     if (!source)
@@ -63,19 +58,17 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     const char *fileDirectory = settings->inputFilePath;
     const char *rootDirectory = settings->compilerRootPath;
+    const char *buildDir = settings->buildDir;
     if (!rootDirectory)
     {
         fprintf(stderr, "Error: Root directory not set\n");
         return 1;
     }
-    if (!isSingleFile)
-    {
-        buildDir = (char *)appendStrings(rootDirectory, "/build");
-    }
 
+    logMessage(LMI, "INFO", "Compiler", "Build directory: %s", buildDir);
     // **New global symbol table**
     // Initialize the new Symbol Table
-    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create();
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);
     if (!globalSymbolTable)
     {
         fprintf(stderr, "Error: Failed to create global symbol table\n");
