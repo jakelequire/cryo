@@ -40,11 +40,15 @@
 
 typedef struct BuildOptions BuildOptions;
 typedef struct InitOptions InitOptions;
+typedef struct HelpOptions HelpOptions;
 
 // =============================================================================
 // Help Command (./commands/help.c)
 
 void exe_CLI_help(void);
+void exe_CLI_help_options(HelpOptions *options);
+
+void helpcmd_build(void);
 
 // =============================================================================
 // Env Command (./commands/env.c)

@@ -14,52 +14,22 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CLI_ARGS_H
-#define CLI_ARGS_H
+#ifndef CRYO_PROJECT_H
+#define CRYO_PROJECT_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
-#include "commands.h"
-#include "utils.h"
+#include "settings/compilerSettings.h"
 
-#define __CLI_VERSION__ "0.0.1"
+#define INIT_PROJECT_CONFIG(rootDir, settings) \
+    checkForCryoProject(rootDir, settings);
 
-enum CLI_ARGS
-{
-    CLI_HELP,
-    CLI_VERSION,
-    CLI_BUILD,
-    CLI_INIT,
-    CLI_UNKNOWN
-};
+void checkForCryoProject(const char *path, CompilerSettings *settings);
+bool doesConfigExist(const char *path);
+char *getConfigString(const char *path);
 
-typedef struct HelpOptions
-{
-    enum CLI_ARGS command;
-} HelpOptions;
-
-typedef struct BuildOptions
-{
-    bool single_file;  // -s flag
-    char *input_file;  // input file path
-    char *output_file; // -o flag output path
-    bool has_output;   // whether -o was specified
-    bool is_dev;       // -d flag or --dev
-} BuildOptions;
-
-typedef struct InitOptions
-{
-    const char *cwd;
-} InitOptions;
-
-void handleArgs(int argc, char *argv[]);
-
-enum CLI_ARGS get_CLI_arg(char *arg);
-
-BuildOptions *parse_build_options(int argc, char *argv[], int start_index);
-InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0);
-HelpOptions *parse_help_options(int argc, char *argv[], int start_index);
-
-#endif // CLI_ARGS_H
+#endif // CRYO_PROJECT_H

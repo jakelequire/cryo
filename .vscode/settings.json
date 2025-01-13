@@ -282,7 +282,8 @@
     "logger_config.h": "c",
     "args.h": "c",
     "ioctl.h": "c",
-    "messages.h": "c"
+    "messages.h": "c",
+    "cryoproject.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

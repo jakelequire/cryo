@@ -23,6 +23,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 {
     DEBUG_PRINT_FILTER({ START_COMPILATION_MESSAGE; });
 
+    char *buildDir = (char *)malloc(1024);
+
     // ========================================
     // Handle Flags
 
@@ -41,6 +43,13 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return lspCompiler(inputFilePath, settings);
     }
 
+    bool isSingleFile = settings->isSingleFile;
+    if (isSingleFile)
+    {
+        const char *rootDir = settings->rootDir;
+        buildDir = (char *)appendStrings(rootDir, "/build");
+    }
+
     // ========================================
     // Compile the file (default behavior)
 
@@ -52,13 +61,17 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
     const char *fileName = trimFilePath(filePath);
 
-    const char *rootDirectory = settings->rootDir;
+    const char *fileDirectory = settings->inputFilePath;
+    const char *rootDirectory = settings->compilerRootPath;
     if (!rootDirectory)
     {
         fprintf(stderr, "Error: Root directory not set\n");
         return 1;
     }
-    const char *buildDir = appendStrings(rootDirectory, "/build");
+    if (!isSingleFile)
+    {
+        buildDir = (char *)appendStrings(rootDirectory, "/build");
+    }
 
     // **New global symbol table**
     // Initialize the new Symbol Table

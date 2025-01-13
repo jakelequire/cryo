@@ -58,13 +58,30 @@ typedef enum
     OPT_DISABLE_LOGS
 } LongOnlyOptions;
 
+typedef struct ProjectSettings
+{
+    const char *projectName;
+    const char *projectDir;
+    const char *projectVersion;
+    const char *projectAuthor;
+    const char *projectDescription;
+    const char *projectLicense;
+    const char *projectURL;
+
+    const char *projectConfigPath;
+    const char *projectBuildPath;
+} ProjectSettings;
+
 typedef struct CompilerSettings
 {
+    const char *projectDir;
     const char *rootDir;
     const char *customOutputPath;
+    const char *compilerRootPath;
     const char *inputFile;
     const char *inputFilePath;
     const char *lspOutputPath; // {WORKSPACE}/build/lsp
+    const char *runtimePath;
     char *sourceText;
     bool verbose;
     DebugLevel debugLevel;
@@ -87,6 +104,8 @@ typedef struct CompilerSettings
     bool activeBuild;
     bool isLSP;
     bool enableLogs;
+    bool isProject;
+    bool isSingleFile;
 
     // Version
     const char *version;

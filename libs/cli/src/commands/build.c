@@ -16,11 +16,52 @@
  ********************************************************************************/
 #include "../include/commands.h"
 
-// The build command.
-// TODO: Need a way to have sub-commands for the build command.
 // - cryo build                             // Build from a project directory
 // - cryo build -f <file>                   // Build a single file
 // - cryo build -f <file> -o <output>       // Build a single file and output to a specific location
+// - cryo build -f <file> --dev|-d          // Build a single file in development mode
+
+#define MAX_COMPILER_FLAGS 32
+
+// Modify the global variables to include the array size
+int compilerFlagsCount = 0;
+char *compilerFlags[MAX_COMPILER_FLAGS] = {NULL};
+
+// Modify handleBuildFlags to safely add flags
+static bool appendCompilerFlag(const char *flag)
+{
+    if (compilerFlagsCount >= MAX_COMPILER_FLAGS)
+    {
+        printf("Error: Maximum number of compiler flags exceeded\n");
+        return false;
+    }
+
+    compilerFlags[compilerFlagsCount++] = (char *)flag;
+    return true;
+}
+
+static void handleBuildFlags(BuildOptions *options)
+{
+    if (options->is_dev)
+    {
+        printf("Building in development mode...\n");
+        if (!appendCompilerFlag("--enable-logs"))
+        {
+            // Handle error if needed
+            return;
+        }
+    }
+
+    // Add more flag handling as needed
+    if (options->has_output)
+    {
+        if (!appendCompilerFlag("-o") ||
+            !appendCompilerFlag(options->output_file))
+        {
+            return;
+        }
+    }
+}
 
 static void handle_project_build(void)
 {
@@ -36,11 +77,25 @@ static void handle_single_file_build(const char *input_file, const char *output_
         printf("Output will be written to: %s\n", output_file);
     }
 
-    // Temporary
-    char *args[] = {"-f", (char *)input_file};
-    cryo_compile(args, 2);
+    // Calculate total arguments needed
+    const int base_args = 2; // For "-f" and input_file
+    const int total_args = base_args + compilerFlagsCount;
 
-    return;
+    // Allocate array on stack with computed size
+    char *args_with_flags[total_args];
+
+    // Add base arguments
+    args_with_flags[0] = "-f";
+    args_with_flags[1] = (char *)input_file;
+
+    // Add compiler flags
+    for (int i = 0; i < compilerFlagsCount; i++)
+    {
+        args_with_flags[base_args + i] = compilerFlags[i];
+    }
+
+    // Call compiler with complete argument list
+    cryo_compile(args_with_flags, total_args);
 }
 
 void exe_CLI_build(BuildOptions *options)
@@ -59,6 +114,9 @@ void exe_CLI_build(BuildOptions *options)
         return;
     }
     printf("Compiler path: %s\n", compiler_path);
+
+    // Handle flags first
+    handleBuildFlags(options);
 
     if (options->single_file)
     {

@@ -24,6 +24,7 @@
 #include "tools/utils/env.h"
 #include "tools/utils/c_logger.h"
 #include "tools/logger/logger_config.h"
+#include "tools/utils/cryoProject.h"
 
 int main(int argc, char *argv[])
 {
@@ -49,6 +50,18 @@ int main(int argc, char *argv[])
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
     initLoggerCompilerSettings(&settings); // Initialize the compiler settings for the logger
+    if (settings.isSingleFile)
+    {
+        printf("Initializing as single file...\n");
+        const char *dir = removeFileFromPath(settings.inputFilePath);
+        INIT_PROJECT_CONFIG(dir, &settings);
+    }
+    else
+    {
+        printf("Initializing as project...\n");
+        INIT_PROJECT_CONFIG(settings.rootDir, &settings);
+    }
+
     logCompilerSettings(&settings);
 
     // Initialize the build stats

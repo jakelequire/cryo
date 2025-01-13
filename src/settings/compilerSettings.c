@@ -79,6 +79,12 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->customOutputPath = NULL;
     settings->debugLevel = DEBUG_NONE;
     settings->buildType = BUILD_DEV;
+    settings->compilerRootPath = getCompilerRootPath();
+    settings->isProject = false;
+
+    const char *runtimePath = appendStrings(settings->compilerRootPath, "/Std/Runtime/");
+    printf("Runtime Path: %s\n", runtimePath);
+    settings->runtimePath = runtimePath;
 
     const char *inputFilePath = (const char *)malloc(sizeof(char) * 256);
 
@@ -90,8 +96,9 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         switch (c)
         {
         case 'f':
+            settings->isSingleFile = true;
             settings->inputFile = optarg;
-            inputFilePath = optarg;
+            inputFilePath = realpath(optarg, NULL);
             break;
         case 's':
             settings->isSource = true;
@@ -221,16 +228,29 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
 void logCompilerSettings(CompilerSettings *settings)
 {
     DEBUG_PRINT_FILTER({
+        const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
+        const char *falseFlag = BOLD RED "false" COLOR_RESET;
+
         printf("\n");
         printf("# ============ Compiler Settings ============ #\n");
         printf("  Root Directory: %s\n", settings->rootDir);
+        printf("  Project Directory: %s\n", settings->projectDir);
+        printf("  Runtime Path: %s\n", settings->runtimePath);
+        printf("  Compiler Root Path: %s\n", settings->compilerRootPath);
         printf("  Input File: %s\n", settings->inputFile);
         printf("  File Path: %s\n", settings->inputFilePath);
-        printf("  Active Build: %s\n", settings->activeBuild ? "true" : "false");
         printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
-        printf("  Verbose: %s\n", settings->verbose ? "true" : "false");
         printf("  Custom Output Path: %s\n", settings->customOutputPath);
-        printf("  Source Text: %s\n", settings->isSource ? "true" : "false");
+        printf(" ----------------------\n");
+        printf(" Flags:\n");
+        printf("  AST Dump: %s\n", settings->astDump ? trueFlag : falseFlag);
+        printf("  IR Dump: %s\n", settings->irDump ? trueFlag : falseFlag);
+        printf("  LSP Symbols: %s\n", settings->isLSP ? trueFlag : falseFlag);
+        printf("  Enable Logs: %s\n", settings->enableLogs ? trueFlag : falseFlag);
+        printf("  Is Single File: %s\n", settings->isSingleFile ? trueFlag : falseFlag);
+        printf("  Is Project: %s\n", settings->isProject ? trueFlag : falseFlag);
+        printf("  Source Text: %s\n", settings->isSource ? trueFlag : falseFlag);
+        printf("  Active Build: %s\n", settings->activeBuild ? trueFlag : falseFlag);
         printf("# =========================================== #\n");
         printf("\n");
     });
@@ -297,6 +317,8 @@ CompiledFile createCompiledFile(void)
 CompilerSettings createCompilerSettings(void)
 {
     CompilerSettings settings;
+    settings.projectDir = (char *)malloc(sizeof(char) * 256);
+    settings.runtimePath = (char *)malloc(sizeof(char) * 256);
     settings.rootDir = getcwd(NULL, 0);
     settings.customOutputPath = NULL;
     settings.activeBuild = false;
@@ -312,6 +334,9 @@ CompilerSettings createCompilerSettings(void)
     settings.astDump = false;
     settings.irDump = false;
     settings.isLSP = false;
+    settings.isSingleFile = false;
+    settings.isProject = false;
+
     return settings;
 }
 

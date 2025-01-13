@@ -47,18 +47,34 @@ void handleArgs(int argc, char *argv[])
     if (argc == 1)
     {
         exe_CLI_help();
+        return;
     }
 
     const char *cwd = getcwd(NULL, 0);
+
+    // Check first if it's a help command
+    if (stringCompare(argv[1], "--help") || stringCompare(argv[1], "-h"))
+    {
+        // If there's an additional argument, it's a command-specific help
+        if (argc > 2)
+        {
+            HelpOptions *options = parse_help_options(argc, argv, 2);
+            exe_CLI_help_options(options);
+            free(options);
+        }
+        else
+        {
+            // General help if no specific command provided
+            exe_CLI_help();
+        }
+        return; // Important: return after handling help
+    }
 
     for (int i = 1; i < argc; i++)
     {
         enum CLI_ARGS arg = get_CLI_arg(argv[i]);
         switch (arg)
         {
-        case CLI_HELP:
-            exe_CLI_help();
-            break;
         case CLI_VERSION:
             exe_CLI_version();
             break;
@@ -89,6 +105,7 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
     options->input_file = NULL;
     options->output_file = NULL;
     options->has_output = false;
+    options->is_dev = false;
 
     // Parse build command options
     for (int i = start_index; i < argc; i++)
@@ -121,6 +138,11 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
                 return NULL; // Missing output file
             }
         }
+        // Check for dev mode
+        else if (stringCompare(argv[i], "-d") || stringCompare(argv[i], "--dev"))
+        {
+            options->is_dev = true;
+        }
     }
 
     // Validate options
@@ -150,6 +172,37 @@ InitOptions *parse_init_options(int argc, char *argv[], int start_index, const c
     for (int i = start_index; i < argc; i++)
     {
         // No additional options for the init command at this time
+    }
+
+    return options;
+}
+
+HelpOptions *parse_help_options(int argc, char *argv[], int start_index)
+{
+    HelpOptions *options = (HelpOptions *)malloc(sizeof(HelpOptions));
+    if (!options)
+        return NULL;
+
+    // Default to general help
+    options->command = CLI_HELP;
+
+    // If we have a command argument
+    if (start_index < argc)
+    {
+        // Convert the command argument to the corresponding CLI_ARGS
+        if (stringCompare(argv[start_index], "build"))
+        {
+            options->command = CLI_BUILD;
+        }
+        else if (stringCompare(argv[start_index], "init"))
+        {
+            options->command = CLI_INIT;
+        }
+        else if (stringCompare(argv[start_index], "version"))
+        {
+            options->command = CLI_VERSION;
+        }
+        // Add other commands as needed
     }
 
     return options;

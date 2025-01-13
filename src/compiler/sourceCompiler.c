@@ -31,7 +31,7 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
 
     const char *source = handleTextBuffer(sourceBuffer);
 
-    const char *rootDirectory = settings->rootDir;
+    const char *rootDirectory = settings->compilerRootPath;
     if (!rootDirectory)
     {
         fprintf(stderr, "Error: Root directory not set\n");
@@ -102,8 +102,7 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
         return 1;
     }
 
-
-    DEBUG_PRINT_FILTER({END_COMPILATION_MESSAGE;});
+    DEBUG_PRINT_FILTER({ END_COMPILATION_MESSAGE; });
 
     printGlobalSymbolTable(globalSymbolTable);
     logASTNodeDebugView(programCopy);

@@ -67,6 +67,11 @@ const char *appendPathToFileName(const char *path, const char *fileName, bool en
 const char *removeFileFromPath(const char *path);
 const char *changeFileExtension(const char *fileName, const char *newExtension);
 
+char *getPathFromCryoPath(void);
+char *getPathFromEnvVar(void);
+char *getCompilerBinPath(void);
+char *getCompilerRootPath(void);
+
 #define CUR_ROOT_DIR_ABS
 #define CUR_ROOT_DIR_REL
 #endif

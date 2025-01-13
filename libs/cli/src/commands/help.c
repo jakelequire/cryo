@@ -18,18 +18,81 @@
 
 void exe_CLI_help(void)
 {
-    printf("\n" BOLD "Cryo CLI Help" COLOR_RESET "\n");
-    printf(BOLD "Usage:" COLOR_RESET " cryo [command] [options]\n\n");
-    printf(BOLD "Commands:" COLOR_RESET "\n");
-    printf("  " BOLD "help" COLOR_RESET "       - Display this help message\n");
-    printf("  " BOLD "build" COLOR_RESET "      - Build the project\n");
-    printf("  " BOLD "version" COLOR_RESET "    - Display the version of the CLI\n");
-    printf("  " BOLD "env" COLOR_RESET "        - Enter the Cryo environment\n");
-    printf("\n" BOLD "Options:" COLOR_RESET "\n");
+    // Title and Version
+    printf("\n" BOLD "Cryo Build System" COLOR_RESET " %s\n", __CLI_VERSION__);
+    printf("A modern build system for Cryo projects\n\n");
 
-    printf("  " BOLD "build" COLOR_RESET "\n");
-    printf("    --release    Build in release mode\n");
-    printf("    --debug      Build in debug mode\n");
+    // Basic Usage
+    printf(BOLD "USAGE\n" COLOR_RESET);
+    printf("  cryo <command> [options]\n\n");
 
+    // Main Commands Section
+    printf(BOLD "COMMANDS\n" COLOR_RESET);
+    printf("  " BOLD "build" COLOR_RESET "     Build a project or single file\n");
+    printf("  " BOLD "help" COLOR_RESET "      Display this help message\n");
+    printf("  " BOLD "version" COLOR_RESET "   Display version information\n");
+    printf("  " BOLD "env" COLOR_RESET "       Enter the Cryo development environment\n\n");
+
+    printf(BOLD "For more information on a specific command, run:\n" COLOR_RESET);
+    printf(YELLOW "    cryo -h|--help <command>\n\n" COLOR_RESET);
+
+    // Additional Information
+    printf(BOLD "ADDITIONAL INFORMATION\n" COLOR_RESET);
+    printf("  For more detailed documentation, visit:\n");
+    printf("  https://github.com/jakelequire/cryo\n\n");
+}
+
+void exe_CLI_help_options(HelpOptions *options)
+{
+    switch (options->command)
+    {
+    case CLI_BUILD:
+        helpcmd_build();
+        break;
+    case CLI_INIT:
+        // helpcmd_init();
+        break;
+    case CLI_VERSION:
+        // helpcmd_version();
+        break;
+    default:
+        exe_CLI_help();
+        break;
+    }
+}
+
+// =============================================================================
+// Specific Command Help Functions
+
+void helpcmd_build(void)
+{
+    // Build Command Details
+    printf("\n\n");
+    printf(BOLD UNDERLINE "BUILD COMMAND\n\n" COLOR_RESET);
+    printf("   " BOLD YELLOW "cryo build" COLOR_RESET ITALIC GRAY " [options]\n\n" COLOR_RESET);
+    printf("  " BOLD "Usage:" COLOR_RESET "\n");
+    printf("    cryo build [options]              Build project in current directory\n");
+    printf("    cryo build -f <file>              Build a single source file\n\n");
+
+    printf("  " BOLD "Options:" COLOR_RESET "\n");
+    printf("    -f, --file <path>          Specify input source file\n");
+    printf("    -o, --output <path>        Specify output file location " ITALIC GRAY "(unimplemented)" COLOR_RESET "\n");
+    printf("    -d, --dev                  Enable development mode with logging\n");
+    printf("    --debug                    Build with debug symbols " ITALIC GRAY "(unimplemented)" COLOR_RESET "\n");
+    printf("    --release                  Build with optimizations " ITALIC GRAY "(unimplemented)" COLOR_RESET "\n\n");
+
+    // Examples Section
+    printf(BOLD "EXAMPLES\n" COLOR_RESET);
+    printf("  Build a project:\n");
+    printf(YELLOW "    $ cryo build\n\n" COLOR_RESET);
+
+    printf("  Build a single file:\n");
+    printf(YELLOW "    $ cryo build -f src/main.cryo\n\n" COLOR_RESET);
+
+    printf("  Build with custom output:\n");
+    printf(YELLOW "    $ cryo build -f src/main.c -o bin/program\n\n" COLOR_RESET);
+
+    printf("  Build in development mode:\n");
+    printf(YELLOW "    $ cryo build -f src/main.cryo --dev\n\n" COLOR_RESET);
     printf("\n");
 }
