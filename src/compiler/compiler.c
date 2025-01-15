@@ -98,7 +98,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     // Update the global symbol table to be the primary table.
     setPrimaryTableStatus(globalSymbolTable, true);
 
-    // Initialize the lexer
+    // Initialize the lexerCryoLinker_SetBuildSrcDirectory
     Lexer lex;
     CompilerState *state = initCompilerState(arena, &lex, fileName);
     setGlobalSymbolTable(state, globalSymbolTable);
@@ -130,6 +130,9 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         CONDITION_FAILED;
         return 1;
     }
+
+    // After the compilation is complete, we need to link up everything.
+    CryoLinker_CompleteCompilationAndLink(linker, buildDir);
 
     DEBUG_PRINT_FILTER({
         END_COMPILATION_MESSAGE;

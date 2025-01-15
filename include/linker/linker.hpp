@@ -34,13 +34,18 @@ extern "C"
     void *CryoLinker_LinkModules(CryoLinker linker);
 
     void CryoLinker_InitDependencies(CryoLinker linker);
-
     void CryoLinker_LogState(CryoLinker linker);
+
+    void CryoLinker_CompleteCompilationAndLink(CryoLinker linker, const char *buildDir);
 
 #ifdef __cplusplus
 }
 
+// ============================================================================= //
+
+// -----------------------------------------------
 // C++ includes
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -50,10 +55,11 @@ extern "C"
 #include <stdint.h>
 #include <fstream>
 #include <sstream>
-#include <filesystem>
 #include <functional>
 
+// -----------------------------------------------
 // LLVM includes
+
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
@@ -71,22 +77,45 @@ extern "C"
 #include "llvm/IR/ValueSymbolTable.h"
 #include "llvm/IR/ValueMap.h"
 #include "llvm/IR/ValueHandle.h"
-#include "llvm/Support/FileSystem.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"
-#include "llvm/Support/FormattedStream.h"
-#include "llvm/Linker/IRMover.h"
-#include "llvm/Linker/Linker.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/IRReader/IRReader.h"
-#include "llvm/Support/SourceMgr.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/Verifier.h>
+
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FormattedStream.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/CodeGen.h"
+
+#include "llvm/Linker/IRMover.h"
+#include "llvm/Linker/Linker.h"
+
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/CodeGenCWrappers.h"
+#include "llvm/Target/CGPassBuilderOption.h"
+#include <llvm/Target/TargetOptions.h>
+#include "llvm/MC/TargetRegistry.h"
+
 #include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Transforms/Utils.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/IPO.h>
+#include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
+
+#include "llvm/IRReader/IRReader.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+
+// -----------------------------------------------
+// C Includes
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
@@ -130,6 +159,16 @@ namespace Cryo
         void hoistDeclarations(llvm::Module *module);
         void contextMismatchMerge(llvm::Module *dest, llvm::Module *src);
 
+        // Complete the compilation and linking process
+
+        void completeCompilationAndLink(const char *buildDir);
+
+        void checkDirectories(const std::string &outDirPath, const std::string &depsDirPath);
+        std::unique_ptr<llvm::Module> combineModules(const std::string &depsDirPath, llvm::LLVMContext &context);
+        void optimizeModule(std::unique_ptr<llvm::Module> &module);
+        std::string generateObjectFile(std::unique_ptr<llvm::Module> &module, const std::string &outDirPath);
+        void linkObjectFiles(const std::string &objectFilePath, const std::string &buildDirPath);
+
     private:
         void createModulesFromDependencies(const std::vector<std::string> &deps);
         llvm::Module *compileAndMergeModule(std::string inputFile);
@@ -138,6 +177,7 @@ namespace Cryo
         bool contextMatch(llvm::Module *mod1, llvm::Module *mod2);
     };
 
+    // ============================================================================= //
     // C API Implementation
     inline CryoLinker CryoLinker_Create()
     {
@@ -169,6 +209,11 @@ namespace Cryo
     inline void *CryoLinker_LinkModules(CryoLinker linker)
     {
         return reinterpret_cast<void *>(reinterpret_cast<Linker *>(linker)->linkModules());
+    }
+
+    inline void CryoLinker_CompleteCompilationAndLink(CryoLinker linker, const char *buildDir)
+    {
+        reinterpret_cast<Linker *>(linker)->completeCompilationAndLink(buildDir);
     }
 } // namespace Cryo
 

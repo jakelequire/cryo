@@ -16,6 +16,13 @@
  ********************************************************************************/
 #include "linker/linker.hpp"
 #include "tools/logger/logger_config.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+
+#include <cstdlib>
+#include <iostream>
+#include <bits/stdc++.h>
 
 extern "C"
 {
@@ -92,6 +99,14 @@ extern "C"
         if (linker)
         {
             reinterpret_cast<Cryo::Linker *>(linker)->initDependencies();
+        }
+    }
+
+    void CryoLinker_CompleteCompilationAndLink(CryoLinker linker, const char *buildDir)
+    {
+        if (linker)
+        {
+            reinterpret_cast<Cryo::Linker *>(linker)->completeCompilationAndLink(buildDir);
         }
     }
 }
@@ -202,8 +217,8 @@ namespace Cryo
 
     const std::vector<std::string> Linker::scanDependenciesDir(void)
     {
-        std::filesystem::path dir(dependencyDir);
-        if (!std::filesystem::exists(dir))
+        std::filesystem::path _dir = dependencyDir;
+        if (!std::filesystem::exists(_dir))
         {
             std::cerr << "Dependency directory does not exist: " << dependencyDir << std::endl;
             CONDITION_FAILED;
@@ -217,7 +232,7 @@ namespace Cryo
             std::cout << "\033[0m";
         });
 
-        for (const auto &entry : std::filesystem::directory_iterator(dir))
+        for (const auto &entry : std::filesystem::directory_iterator(_dir))
         {
             DEBUG_PRINT_FILTER({
                 std::cout << "\n";
@@ -421,6 +436,247 @@ namespace Cryo
     bool Linker::contextMatch(llvm::Module *mod1, llvm::Module *mod2)
     {
         return &mod1->getContext() == &mod2->getContext();
+    }
+
+    // ========================================================================== #
+    // Finished Compilation
+
+    void Linker::completeCompilationAndLink(const char *buildDir)
+    {
+        std::string buildDirPath = buildDir;
+        std::cout << "LINKER: Build Directory: " << buildDirPath << std::endl;
+
+        std::string outDirPath = buildDirPath + "/out";
+        std::string depsDirPath = outDirPath + "/deps";
+
+        // Check if directories exist
+        std::cout << "Checking directories..." << std::endl;
+        checkDirectories(outDirPath, depsDirPath);
+        std::cout << "Directories exist, linking modules..." << std::endl;
+
+        // Create a persistent LLVM context
+        llvm::LLVMContext context;
+
+        // Combine all valid .ll files
+        std::unique_ptr<llvm::Module> combinedModule = combineModules(depsDirPath, context);
+
+        // Optimize the combined IR
+        std::cout << "Optimizing combined module..." << std::endl;
+        optimizeModule(combinedModule);
+
+        // Generate final object file
+        std::cout << "Generating object file..." << std::endl;
+        std::string objectFilePath = generateObjectFile(combinedModule, outDirPath);
+
+        // Link the object files and place the output in the build directory
+        std::cout << "Linking object files..." << std::endl;
+        linkObjectFiles(objectFilePath, buildDirPath);
+    }
+
+    void Linker::checkDirectories(const std::string &outDirPath, const std::string &depsDirPath)
+    {
+        if (!std::filesystem::exists(outDirPath))
+        {
+            std::cerr << "Error: Output directory does not exist: " << outDirPath << std::endl;
+            CONDITION_FAILED;
+        }
+        if (!std::filesystem::exists(depsDirPath))
+        {
+            std::cerr << "Error: Dependency directory does not exist: " << depsDirPath << std::endl;
+            CONDITION_FAILED;
+        }
+    }
+
+    std::unique_ptr<llvm::Module> Linker::combineModules(const std::string &depsDirPath, llvm::LLVMContext &context)
+    {
+        llvm::SMDiagnostic err;
+        std::unique_ptr<llvm::Module> combinedModule = std::make_unique<llvm::Module>("combined", context);
+
+        for (const auto &entry : std::filesystem::directory_iterator(depsDirPath))
+        {
+            if (entry.path().extension() == ".ll")
+            {
+                // Check if it's the `runtime.ll` file and skip it
+                if (entry.path().filename() == "runtime.ll")
+                {
+                    std::cout << "Skipping runtime module." << std::endl;
+                    continue;
+                }
+
+                std::cout << "Parsing IR file: " << entry.path() << std::endl;
+                std::unique_ptr<llvm::Module> module = llvm::parseIRFile(entry.path().string(), err, context);
+                if (!module)
+                {
+                    std::cerr << "Failed to parse IR file: " << entry.path() << std::endl;
+                    CONDITION_FAILED;
+                }
+
+                if (llvm::Linker::linkModules(*combinedModule, std::move(module)))
+                {
+                    std::cerr << "Failed to link module: " << entry.path() << std::endl;
+                    CONDITION_FAILED;
+                }
+
+                std::cout << "Module linked successfully." << std::endl;
+            }
+        }
+
+        // Move up one directory, the main `.ll` file should be above the `/deps` directory
+        std::string parentDir = depsDirPath.substr(0, depsDirPath.find_last_of("/"));
+        std::cout << "Parent directory: " << parentDir << std::endl;
+
+        // Get the main `.ll` file
+        std::string mainFilePath = parentDir + "/main.ll";
+        std::cout << "Parsing main IR file: " << mainFilePath << std::endl;
+
+        std::unique_ptr<llvm::Module> mainModule = llvm::parseIRFile(mainFilePath, err, context);
+        if (!mainModule)
+        {
+            std::cerr << "Failed to parse main IR file: " << mainFilePath << std::endl;
+            CONDITION_FAILED;
+        }
+
+        if (llvm::Linker::linkModules(*combinedModule, std::move(mainModule)))
+        {
+            std::cerr << "Failed to link main module: " << mainFilePath << std::endl;
+            CONDITION_FAILED;
+        }
+
+        std::cout << "Modules combined successfully." << std::endl;
+
+        return combinedModule;
+    }
+
+    void Linker::optimizeModule(std::unique_ptr<llvm::Module> &module)
+    {
+        if (!module)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Module is null");
+            CONDITION_FAILED;
+        }
+
+        llvm::LLVMContext &context = module->getContext();
+        std::cout << "LLVMContext address: " << &context << std::endl;
+
+        if (!context.getDiagHandlerPtr())
+        {
+            logMessage(LMI, "ERROR", "Linker", "LLVM context diagnostic handler is null");
+            CONDITION_FAILED;
+        }
+
+        std::cout << "LLVM context diagnostic handler is valid." << std::endl;
+
+        llvm::legacy::PassManager passManager;
+        passManager.add(llvm::createPromoteMemoryToRegisterPass());
+        std::cout << "Promoting memory to register..." << std::endl;
+        passManager.add(llvm::createInstructionCombiningPass());
+        std::cout << "Combining instructions..." << std::endl;
+        passManager.add(llvm::createReassociatePass());
+        std::cout << "Reassociating instructions..." << std::endl;
+        passManager.add(llvm::createGVNPass());
+        std::cout << "Performing GVN..." << std::endl;
+        passManager.add(llvm::createCFGSimplificationPass());
+        std::cout << "Simplifying CFG..." << std::endl;
+
+        std::cout << "Module before optimization:" << std::endl;
+        module->print(llvm::errs(), nullptr);
+
+        std::cout << "Running pass manager..." << std::endl;
+        passManager.run(*module);
+        std::cout << "Module optimized successfully." << std::endl;
+    }
+
+    std::string Linker::generateObjectFile(std::unique_ptr<llvm::Module> &module, const std::string &outDirPath)
+    {
+        std::string objectFilePath = outDirPath + "/combined.o";
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(objectFilePath, EC, llvm::sys::fs::OF_None);
+        if (EC)
+        {
+            std::cerr << "Could not open file: " << EC.message() << std::endl;
+            CONDITION_FAILED;
+        }
+
+        std::cout << "Destination file: " << objectFilePath << std::endl;
+
+        std::cout << "Initializing targets..." << std::endl;
+        llvm::InitializeAllTargets();
+        llvm::InitializeAllTargetMCs();
+        llvm::InitializeAllAsmPrinters();
+        llvm::InitializeAllAsmParsers();
+        std::cout << "Targets initialized." << std::endl;
+
+        std::string targetTriple = std::string(LLVMGetDefaultTargetTriple());
+        std::cout << "Target triple: " << targetTriple << std::endl;
+        module->setTargetTriple(targetTriple);
+        std::cout << "Module target triple set." << std::endl;
+
+        std::string error;
+        auto target = llvm::TargetRegistry::lookupTarget(targetTriple, error);
+        if (!target)
+        {
+            std::cerr << "Could not lookup target: " << error << std::endl;
+            CONDITION_FAILED;
+        }
+
+        auto CPU = "generic";
+        auto features = "";
+
+        std::cout << "Creating target machine..." << std::endl;
+        llvm::TargetOptions opt;
+        auto targetMachine = target->createTargetMachine(
+            targetTriple,
+            CPU,
+            features,
+            opt,
+            llvm::Reloc::PIC_);
+        std::cout << "Target machine created." << std::endl;
+        module->setDataLayout(targetMachine->createDataLayout());
+        std::cout << "Module data layout set." << std::endl;
+
+        llvm::legacy::PassManager pass;
+        if (targetMachine->addPassesToEmitFile(
+                pass,
+                dest,
+                nullptr,
+                llvm::CodeGenFileType::ObjectFile))
+        {
+            std::cerr << "TargetMachine can't emit a file of this type" << std::endl;
+            CONDITION_FAILED;
+        }
+
+        std::cout << "Running pass manager..." << std::endl;
+        pass.run(*module);
+        std::cout << "Pass manager run." << std::endl;
+        dest.flush();
+        std::cout << "Object file flushed." << std::endl;
+
+        if (!std::filesystem::exists(objectFilePath))
+        {
+            std::cerr << "Failed to create combined object file. Please check the LLVM IR files and the compilation process." << std::endl;
+            CONDITION_FAILED;
+        }
+
+        std::cout << "Combined object file created successfully." << std::endl;
+
+        return objectFilePath;
+    }
+
+    void Linker::linkObjectFiles(const std::string &objectFilePath, const std::string &buildDirPath)
+    {
+        std::string finalExecutablePath = buildDirPath + "/" + "finalExecutable";
+        std::cout << "Linking object files..." << "\n"
+                  << "Object file: " << objectFilePath << "\n"
+                  << "Final executable: " << finalExecutablePath << std::endl;
+        std::string command = "clang++-18 -fno-pie -no-pie " + objectFilePath + " -o " + finalExecutablePath;
+        std::cout << "Running command: " << command << std::endl;
+        if (system(command.c_str()) != 0)
+        {
+            std::cerr << "Failed to link the object files." << std::endl;
+            CONDITION_FAILED;
+        }
+
+        std::cout << "Final executable created successfully at: " << finalExecutablePath << std::endl;
     }
 
 } // namespace Cryo

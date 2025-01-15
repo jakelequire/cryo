@@ -283,7 +283,16 @@
     "args.h": "c",
     "ioctl.h": "c",
     "messages.h": "c",
-    "cryoproject.h": "c"
+    "cryoproject.h": "c",
+    "ipo.h": "c",
+    "legacypassmanager.h": "c",
+    "debuginfometadata.h": "c",
+    "filesystem.h": "c",
+    "diagnosticprinter.h": "c",
+    "raw_ostream.h": "c",
+    "cloning.h": "c",
+    "targetregistry.h": "c",
+    "instcombine.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

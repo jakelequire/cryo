@@ -28,7 +28,7 @@ char *runtimePaths[] = {
 #define RUNTIME_SRC_FILE runtimePaths[0]
 #define RUINTIME_OBJ_FILE runtimePaths[1]
 
-// CRYO_ROOT/cryo/runtime.cryo (CRYO_ROOT is an environment variable)
+// CRYO_ROOT/Std/Runtime/runtime.cryo (CRYO_ROOT is an environment variable)
 char *getRuntimeSrcFile(void)
 {
     char *runtimeBuffer = (char *)malloc(sizeof(char) * 1024);
@@ -39,39 +39,33 @@ char *getRuntimeSrcFile(void)
         return RUNTIME_SRC_FILE;
     }
 
-    sprintf(runtimeBuffer, "%scryo/runtime.cryo", envRoot);
+    sprintf(runtimeBuffer, "%sStd/Runtime/runtime.cryo", envRoot);
 
     DEBUG_PRINT_FILTER({
         printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
         return runtimeBuffer;
     });
 
-    printf("Runtime Found Environment: %s\n", runtimeBuffer);
+    printf("Runtime Source Found: %s\n", runtimeBuffer);
 
     return runtimeBuffer;
 }
 
-// CRYO_ROOT/build/out/deps/runtime.ll (CRYO_ROOT is an environment variable)
-char *getRuntimeObjFile(void)
+// {CWD}/build/out/deps/runtime.ll (CRYO_ROOT is an environment variable)
+char *getRuntimeObjFile(CryoGlobalSymbolTable *globalTable)
 {
-    char *runtimeBuffer = (char *)malloc(sizeof(char) * 1024);
-    char *envRoot = getenv("CRYO_ROOT");
-    if (!envRoot)
-    {
-        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set, using fallback that may not work!!\n" COLOR_RESET);
-        return RUINTIME_OBJ_FILE;
-    }
-
-    sprintf(runtimeBuffer, "%sbuild/out/deps/runtime.ll", envRoot);
+    char *runtimePathBuffer = (char *)malloc(sizeof(char) * 1024);
+    const char *buildDir = GetBuildDir(globalTable);
+    sprintf(runtimePathBuffer, "%s/out/deps/runtime.ll", buildDir);
 
     DEBUG_PRINT_FILTER({
-        printf(LIGHT_GREEN BOLD "Runtime Object Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
-        return runtimeBuffer;
+        printf(LIGHT_GREEN BOLD "Runtime Object Found Environment: %s\n" COLOR_RESET, runtimePathBuffer);
+        return runtimePathBuffer;
     });
 
-    printf("Runtime Object Found Environment: %s\n", runtimeBuffer);
+    printf("Runtime Object Found Environment: %s\n", runtimePathBuffer);
 
-    return runtimeBuffer;
+    return runtimePathBuffer;
 }
 
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
@@ -117,7 +111,7 @@ void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *glo
     TableFinished(globalTable);
 
     // Create the runtime object file
-    const char *outputFile = getRuntimeObjFile();
+    const char *outputFile = getRuntimeObjFile(globalTable);
     bootstrap->state->settings->inputFile = getRuntimeSrcFile();
 
     preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile);
