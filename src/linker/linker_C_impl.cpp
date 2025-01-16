@@ -14,37 +14,41 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "stdint.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "stdarg.h"
+#include "linker/linkerv2.hpp"
 
-void printInt(int value)
-{
-    printf("%d\n", value);
-}
+// This file containes the C Implementation for the Cryo Linker class.
 
-void printIntPtr(int *value)
+namespace Cryo
 {
-    printf("%d\n", *value);
-}
-
-void printStr(char *value)
-{
-    printf("%s\n", value);
-}
-
-int strLength(char *str)
-{
-    int length = 0;
-    while (str[length] != '\0')
+    CryoLinker *CryoLinker_Create(void)
     {
-        length++;
+        try
+        {
+            auto linker = new CryoLinker();
+            return reinterpret_cast<CryoLinker *>(linker);
+        }
+        catch (...)
+        {
+            logMessage(LMI, "ERROR", "CryoLinker", "Failed to create linker");
+            return nullptr;
+        }
     }
-    return length;
-}
 
-void sys_exit(int code)
-{
-    exit(code);
-}
+    void CryoLinker_Destroy(CryoLinker *linker)
+    {
+        if (linker)
+        {
+            logMessage(LMI, "INFO", "CryoLinker", "Destroying linker");
+            delete reinterpret_cast<CryoLinker *>(linker);
+        }
+    }
+
+    void CryoLinker_SetRootDir(CryoLinker *linker, const char *rootDir)
+    {
+        if (linker)
+        {
+            reinterpret_cast<CryoLinker *>(linker)->setRootDir(rootDir);
+        }
+    }
+
+} // namespace Cryo

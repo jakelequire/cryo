@@ -454,6 +454,10 @@ namespace Cryo
         checkDirectories(outDirPath, depsDirPath);
         std::cout << "Directories exist, linking modules..." << std::endl;
 
+        // Create the runtime module
+        std::cout << "Creating runtime module..." << std::endl;
+        createRuntimeModule(buildDirPath);
+
         // Create a persistent LLVM context
         llvm::LLVMContext context;
 
@@ -492,6 +496,12 @@ namespace Cryo
         llvm::SMDiagnostic err;
         std::unique_ptr<llvm::Module> combinedModule = std::make_unique<llvm::Module>("combined", context);
 
+        // Move up one directory, the main `.ll` file should be above the `/deps` directory
+        std::string parentDir = depsDirPath.substr(0, depsDirPath.find_last_of("/"));
+        std::cout << "Parent directory: " << parentDir << std::endl;
+
+        std::string runtimeFile = parentDir + "/combined_runtime.ll";
+
         for (const auto &entry : std::filesystem::directory_iterator(depsDirPath))
         {
             if (entry.path().extension() == ".ll")
@@ -521,9 +531,20 @@ namespace Cryo
             }
         }
 
-        // Move up one directory, the main `.ll` file should be above the `/deps` directory
-        std::string parentDir = depsDirPath.substr(0, depsDirPath.find_last_of("/"));
-        std::cout << "Parent directory: " << parentDir << std::endl;
+        // Link the runtime module
+        std::cout << "Parsing runtime module: " << runtimeFile << std::endl;
+        std::unique_ptr<llvm::Module> runtimeModule = llvm::parseIRFile(runtimeFile, err, context);
+        if (!runtimeModule)
+        {
+            std::cerr << "Failed to parse runtime module: " << runtimeFile << std::endl;
+            CONDITION_FAILED;
+        }
+
+        if (llvm::Linker::linkModules(*combinedModule, std::move(runtimeModule)))
+        {
+            std::cerr << "Failed to link runtime module: " << runtimeFile << std::endl;
+            CONDITION_FAILED;
+        }
 
         // Get the main `.ll` file
         std::string mainFilePath = parentDir + "/main.ll";
@@ -535,6 +556,8 @@ namespace Cryo
             std::cerr << "Failed to parse main IR file: " << mainFilePath << std::endl;
             CONDITION_FAILED;
         }
+
+        std::cout << "Main module parsed successfully." << std::endl;
 
         if (llvm::Linker::linkModules(*combinedModule, std::move(mainModule)))
         {
@@ -577,9 +600,6 @@ namespace Cryo
         std::cout << "Performing GVN..." << std::endl;
         passManager.add(llvm::createCFGSimplificationPass());
         std::cout << "Simplifying CFG..." << std::endl;
-
-        std::cout << "Module before optimization:" << std::endl;
-        module->print(llvm::errs(), nullptr);
 
         std::cout << "Running pass manager..." << std::endl;
         passManager.run(*module);
@@ -677,6 +697,48 @@ namespace Cryo
         }
 
         std::cout << "Final executable created successfully at: " << finalExecutablePath << std::endl;
+    }
+
+    void Linker::generateObjectFileFromLLVMIRFile(const std::string pathToIR, const std::string outPath)
+    {
+    }
+
+    void Linker::createRuntimeModule(const std::string buildDir)
+    {
+        std::string cryoRootDir = std::getenv("CRYO_ROOT");
+        if (cryoRootDir.empty())
+        {
+            std::cerr << "Error: CRYO_ROOT environment variable not set." << std::endl;
+            CONDITION_FAILED;
+        }
+
+        std::string cxxRuntimePath = cryoRootDir + "/Std/Runtime/cxx_support.cpp";
+        std::string runtimePath = buildDir + "/out/deps/runtime.ll";
+        std::string runtimeOutPath = buildDir + "/out";
+
+        // Build the cxx file and output it to the build directory
+        std::cout << "Compiling cxx support file..." << std::endl;
+        std::string cxxCommand = "clang++-18 -S -emit-llvm " + cxxRuntimePath + " -o " + runtimeOutPath + "/cxx_support.ll";
+        std::cout << "Running Command: \n"
+                  << cxxCommand << std::endl;
+        if (system(cxxCommand.c_str()) != 0)
+        {
+            std::cerr << "Failed to compile cxx support file." << std::endl;
+            CONDITION_FAILED;
+        }
+
+        // Combine the two LL files using llvm-link-18
+        std::cout << "Combining runtime files..." << std::endl;
+        std::string linkCommand = "llvm-link-18 " + runtimePath + " " + runtimeOutPath + "/cxx_support.ll -S -o " + runtimeOutPath + "/combined_runtime.ll";
+        std::cout << "Running Command:\n"
+                  << linkCommand << std::endl;
+        if (system(linkCommand.c_str()) != 0)
+        {
+            std::cerr << "Failed to combine runtime files." << std::endl;
+            CONDITION_FAILED;
+        }
+
+        std::cout << "Runtime module created successfully." << std::endl;
     }
 
 } // namespace Cryo

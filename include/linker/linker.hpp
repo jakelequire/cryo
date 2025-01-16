@@ -169,12 +169,15 @@ namespace Cryo
         std::string generateObjectFile(std::unique_ptr<llvm::Module> &module, const std::string &outDirPath);
         void linkObjectFiles(const std::string &objectFilePath, const std::string &buildDirPath);
 
+        void generateObjectFileFromLLVMIRFile(const std::string pathToIR, const std::string outPath);
+
     private:
         void createModulesFromDependencies(const std::vector<std::string> &deps);
         llvm::Module *compileAndMergeModule(std::string inputFile);
         void setModuleAndContextFromRoot(llvm::Module *root);
 
         bool contextMatch(llvm::Module *mod1, llvm::Module *mod2);
+        void createRuntimeModule(const std::string buildDir);
     };
 
     // ============================================================================= //

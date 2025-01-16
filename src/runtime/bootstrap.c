@@ -35,8 +35,8 @@ char *getRuntimeSrcFile(void)
     char *envRoot = getenv("CRYO_ROOT");
     if (!envRoot)
     {
-        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set, using fallback that may not work!!\n" COLOR_RESET);
-        return RUNTIME_SRC_FILE;
+        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set!!\n" COLOR_RESET);
+        CONDITION_FAILED;
     }
 
     sprintf(runtimeBuffer, "%sStd/Runtime/runtime.cryo", envRoot);

@@ -14,18 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include <iostream>
-#include <string>
-#include <vector>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <cstring>
-#include <fstream>
-#include <dirent.h>
-#include <fcntl.h>
+#include "linker/linkerv2.hpp"
 
-#define __EXTERN_C__ extern "C"
+namespace Cryo
+{
+
+} // namespace Cryo

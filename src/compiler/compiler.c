@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
+#include "linker/linkerv2.hpp"
 #include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
 #include "tools/logger/logger_config.h"
@@ -81,8 +82,6 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     CryoLinker linker = CryoLinker_Create();
     CryoLinker_SetBuildSrcDirectory(linker, buildDir);
 
-    CryoLinker_LogState(linker);
-
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
@@ -91,7 +90,6 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     // Import the runtime definitions and initialize the global dependencies
     boostrapRuntimeDefinitions(typeTable, globalSymbolTable);
-    CryoLinker_LogState(linker);
 
     printGlobalSymbolTable(globalSymbolTable);
 
