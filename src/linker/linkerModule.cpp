@@ -14,9 +14,14 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "linker/linkerv2.hpp"
+#include "linker/linker.hpp"
 
 namespace Cryo
 {
+
+    void LinkerModule::generateIRFromModule(llvm::Module *module)
+    {
+
+    }
 
 } // namespace Cryo

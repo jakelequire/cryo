@@ -14,18 +14,18 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "linker/linkerv2.hpp"
+#include "linker/linker.hpp"
 
 // This file containes the C Implementation for the Cryo Linker class.
 
 namespace Cryo
 {
-    CryoLinker *CryoLinker_Create(void)
+    Linker *CryoLinker_Create(void)
     {
         try
         {
             auto linker = new CryoLinker();
-            return reinterpret_cast<CryoLinker *>(linker);
+            return reinterpret_cast<Linker *>(linker);
         }
         catch (...)
         {
@@ -34,20 +34,20 @@ namespace Cryo
         }
     }
 
-    void CryoLinker_Destroy(CryoLinker *linker)
+    void CryoLinker_Destroy(Linker *linker)
     {
         if (linker)
         {
             logMessage(LMI, "INFO", "CryoLinker", "Destroying linker");
-            delete reinterpret_cast<CryoLinker *>(linker);
+            delete reinterpret_cast<Linker *>(linker);
         }
     }
 
-    void CryoLinker_SetRootDir(CryoLinker *linker, const char *rootDir)
+    void CryoLinker_SetBuildSrcDirectory(Linker *linker, const char *rootDir)
     {
         if (linker)
         {
-            reinterpret_cast<CryoLinker *>(linker)->setRootDir(rootDir);
+            reinterpret_cast<Linker *>(linker)->setBuildDir(rootDir);
         }
     }
 
