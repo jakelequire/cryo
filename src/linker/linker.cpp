@@ -18,12 +18,65 @@
 
 namespace Cryo
 {
-
     void Linker::setBuildDir(const char *buildDir)
     {
-        this->buildDir = std::string(buildDir);
-        std::string upOneDir = this->buildDir.substr(0, this->buildDir.find_last_of("/"));
-        this->projectRoot = upOneDir;
+        std::cout << "Setting build directory for Linker..." << std::endl;
+        std::cout << "Path passed to Linker: " << buildDir << std::endl;
+
+        std::string cxxbuildDir = std::string(buildDir);
+
+        std::string rootDir = cxxbuildDir.substr(0, cxxbuildDir.find_last_of("/"));
+        std::cout << "Setting build directory for Linker. Root Directory: " << rootDir << std::endl;
+
+        DirectoryInfo *dirInfo = new DirectoryInfo();
+        dirInfo->rootDir = rootDir;
+        dirInfo->buildDir = cxxbuildDir;
+        dirInfo->outDir = cxxbuildDir + "/out";
+        dirInfo->depDir = cxxbuildDir + "/out/deps";
+        dirInfo->runtimeDir = cxxbuildDir + "/out/runtime";
+
+        this->dirInfo = dirInfo;
+    }
+
+    // ==================================================================
+
+    void Linker::addPreprocessingModule(llvm::Module *mod)
+    {
+        logMessage(LMI, "INFO", "Linker", "Adding Preprocessing Module...");
+
+        if (!mod)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Module is null");
+            return;
+        }
+
+        linkerModule->addPreprocessedModule(mod);
+
+        return;
+    }
+
+    void Linker::newInitDependencies(llvm::Module *srcModule)
+    {
+    }
+
+    void Linker::appendDependenciesToRoot(llvm::Module *root)
+    {
+        if (!root)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Root module is null");
+            return;
+        }
+
+        std::string rootName = root->getName().str();
+        if (rootName.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Root module name is empty");
+            return;
+        }
+
+        linkerModule->addNewModule(root, rootName);
+
+        return;
     }
 
 } // namespace Cryo

@@ -26,7 +26,7 @@ namespace Cryo
         CryoContext &cryoContext = compiler.getContext();
         CompilerSettings *settings = compiler.getCompilerSettings();
 
-        // Linker *linker = compiler.getLinker();
+        Linker *linker = compiler.getLinker();
 
         // Hoist the declarations from the linker
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Hoisting Declarations");
@@ -68,8 +68,10 @@ namespace Cryo
         if (isPreprocessing)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Preprocessing Compilation");
-            std::string outputPath = compiler.customOutputPath;
-            compileUniquePath(outputPath);
+            // std::string outputPath = compiler.customOutputPath;
+            // compileUniquePath(outputPath);
+
+            linker->addPreprocessingModule(cryoContext.module.get());
             return;
         }
 
@@ -131,7 +133,7 @@ namespace Cryo
         LoadStoreWhitespaceAnnotator LSWA;
         cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
         dest.close();
-        
+
         DEBUG_PRINT_FILTER({
             LLVMIRHighlighter highlighter;
             llvm::formatted_raw_ostream formatted_out(llvm::outs());

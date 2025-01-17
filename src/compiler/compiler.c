@@ -66,6 +66,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
 
     logMessage(LMI, "INFO", "Compiler", "Build directory: %s", buildDir);
+
     // **New global symbol table**
     // Initialize the new Symbol Table
     CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);
@@ -78,7 +79,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     printGlobalSymbolTable(globalSymbolTable);
 
     // Create and initialize linker
-    CryoLinker linker = CryoLinker_Create();
+    CryoLinker *linker = CryoLinker_Create();
     SetLinkerBuildDir(linker, buildDir);
 
     // Initialize the Arena
@@ -119,7 +120,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     printTypeTable(typeTable);
 
     // Generate code (The C++ backend process)
-    int result = generateCodeWrapper(programNode, state, linker);
+    int result = generateCodeWrapper(programNode, state, *linker);
     if (result != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");

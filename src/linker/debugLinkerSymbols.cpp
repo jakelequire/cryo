@@ -18,50 +18,20 @@
 
 namespace Cryo
 {
+    // ================================================================ //
+    //             Linker Module Handler Debug Methods                  //
+    // ================================================================ //
 
-    void LinkerModule::generateIRFromModule(llvm::Module *module)
+    void LinkerModule::logDirectoryInfo(DirectoryInfo *dirInfo)
     {
+        std::cout << "Root Directory: " << dirInfo->rootDir << std::endl;
+        std::cout << "Build Directory: " << dirInfo->buildDir << std::endl;
+        std::cout << "Output Directory: " << dirInfo->outDir << std::endl;
+        std::cout << "Dependency Directory: " << dirInfo->depDir << std::endl;
     }
 
-    void LinkerModule::addNewModule(llvm::Module *mod, std::string name)
-    {
-    }
-
-    void LinkerModule::addMainModule(llvm::Module *mod)
-    {
-    }
-
-    void LinkerModule::addPreprocessedModule(llvm::Module *mod)
-    {
-        logMessage(LMI, "INFO", "Linker", "Adding Preprocessed Module...");
-
-        std::string runtimeDir = getDirInfo()->runtimeDir;
-        if (runtimeDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
-            return;
-        }
-
-        std::error_code EC;
-        llvm::raw_fd_ostream dest(runtimeDir, EC, llvm::sys::fs::OF_None);
-        if (EC)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing");
-            return;
-        }
-
-        mod->print(dest, nullptr);
-        dest.flush();
-        dest.close();
-
-        return;
-    }
-
-    // ========================================================================== //
-
-    bool LinkerModule::contextMatch(llvm::Module *mod1, llvm::Module *mod2)
-    {
-        return &mod1->getContext() == &mod2->getContext();
-    }
+    // ================================================================ //
+    //                    Linker Debug Methods                          //
+    // ================================================================ //
 
 } // namespace Cryo

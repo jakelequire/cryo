@@ -122,11 +122,22 @@ extern "C"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
 
+struct DirectoryInfo
+{
+    std::string rootDir;
+    std::string buildDir;
+    std::string outDir;
+    std::string depDir;
+    std::string runtimeDir;
+};
+
 namespace Cryo
 {
     class LinkerModule;
     class Linker;
 
+    // ================================================================ //
+    //                        Linker Manager                            //
     // ================================================================ //
 
     class Linker
@@ -135,18 +146,25 @@ namespace Cryo
         Linker() {}
         ~Linker() {}
 
-        std::string projectRoot;
-        std::string buildDir;
+        DirectoryInfo *dirInfo;
+        DirectoryInfo *getDirInfo() { return dirInfo; }
 
         void setBuildDir(const char *buildDir);
+
+        void newInitDependencies(llvm::Module *srcModule);
+        void appendDependenciesToRoot(llvm::Module *root);
+
+        void addPreprocessingModule(llvm::Module *mod);
 
     private:
         std::unique_ptr<LinkerModule> linkerModule;
     };
 
     // ================================================================ //
+    //                     Linker Module Handler                        //
+    // ================================================================ //
 
-    class LinkerModule
+    class LinkerModule : public Linker
     {
     public:
         LinkerModule(LinkerModule const &) = delete;
@@ -155,12 +173,48 @@ namespace Cryo
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
 
-        void generateIRFromModule(llvm::Module *module);
+        std::vector<llvm::Module *> dependencies;
+        llvm::Module *preprocessedModule;
+
+        size_t moduleCount = 0;
+
+        void addMainModule(llvm::Module *mod);
+        void addNewModule(llvm::Module *mod, std::string namename);
+        void addPreprocessedModule(llvm::Module *mod);
 
     private:
+        void generateIRFromModule(llvm::Module *module);
+        bool contextMatch(llvm::Module *mod1, llvm::Module *mod2);
+
+        // Public Debug Methods
+    public:
+        void logDirectoryInfo(DirectoryInfo *dirInfo);
     };
 
     // ================================================================ //
+    //                     C API Implementation                         //
+    // ================================================================ //
+
+    inline CryoLinker *CryoLinker_Create(void)
+    {
+        try
+        {
+            auto linker = new Linker();
+            return reinterpret_cast<CryoLinker *>(linker);
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
+    inline void CryoLinker_SetBuildSrcDirectory(CryoLinker *linker, const char *buildDir)
+    {
+        if (linker)
+        {
+            reinterpret_cast<Linker *>(linker)->setBuildDir(buildDir);
+        }
+    }
 
 } // namespace Cryo
 

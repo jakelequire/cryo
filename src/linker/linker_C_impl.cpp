@@ -18,14 +18,14 @@
 
 // This file containes the C Implementation for the Cryo Linker class.
 
-namespace Cryo
+extern "C"
 {
-    Linker *CryoLinker_Create(void)
+    CryoLinker *CryoLinker_Create(void)
     {
         try
         {
             auto linker = new CryoLinker();
-            return reinterpret_cast<Linker *>(linker);
+            return reinterpret_cast<CryoLinker *>(linker);
         }
         catch (...)
         {
@@ -34,21 +34,21 @@ namespace Cryo
         }
     }
 
-    void CryoLinker_Destroy(Linker *linker)
+    void CryoLinker_Destroy(CryoLinker *linker)
     {
         if (linker)
         {
             logMessage(LMI, "INFO", "CryoLinker", "Destroying linker");
-            delete reinterpret_cast<Linker *>(linker);
+            delete reinterpret_cast<Cryo::Linker *>(linker);
         }
     }
 
-    void CryoLinker_SetBuildSrcDirectory(Linker *linker, const char *rootDir)
+    void CryoLinker_SetBuildSrcDirectory(CryoLinker *linker, const char *rootDir)
     {
         if (linker)
         {
-            reinterpret_cast<Linker *>(linker)->setBuildDir(rootDir);
+            reinterpret_cast<Cryo::Linker *>(linker)->setBuildDir(rootDir);
         }
     }
 
-} // namespace Cryo
+} // C API
