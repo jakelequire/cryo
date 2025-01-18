@@ -17,7 +17,7 @@
 #include "codegen/oldCodeGen.hpp"
 #include "tools/logger/logger_config.h"
 
-int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker cLinker)
+int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *cLinker)
 {
     DEBUG_PRINT_FILTER({
         std::cout << ">===------------- CPP Code Generation -------------===<\n"
@@ -42,7 +42,7 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker cLinker)
     return 0;
 }
 
-int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath)
+int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker)
 {
     DEBUG_PRINT_FILTER({
         std::cout << ">===------------- CPP Runtime Generation -------------===<\n"
@@ -56,6 +56,10 @@ int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *
     compiler.setCompilerState(state);
     compiler.setCompilerSettings(state->settings);
     compiler.setModuleIdentifier(moduleName);
+
+    // Convert C opaque pointer back to C++ type
+    Cryo::Linker *cppLinker = reinterpret_cast<Cryo::Linker *>(cLinker);
+    compiler.setLinker(cppLinker);
 
     // Set the output path for the runtime
     compiler.setCustomOutputPath(outputPath);

@@ -18,20 +18,26 @@
 
 namespace Cryo
 {
-    // ================================================================ //
-    //             Linker Module Handler Debug Methods                  //
-    // ================================================================ //
 
-    void LinkerModule::logDirectoryInfo(DirectoryInfo *dirInfo)
+    void Linker::logDirectoryInfo(DirectoryInfo *dirInfo)
     {
         std::cout << "Root Directory: " << dirInfo->rootDir << std::endl;
         std::cout << "Build Directory: " << dirInfo->buildDir << std::endl;
         std::cout << "Output Directory: " << dirInfo->outDir << std::endl;
         std::cout << "Dependency Directory: " << dirInfo->depDir << std::endl;
+        std::cout << "Runtime Directory: " << dirInfo->runtimeDir << std::endl;
     }
 
-    // ================================================================ //
-    //                    Linker Debug Methods                          //
-    // ================================================================ //
+    DirectoryInfo *Linker::createDirectoryInfo(std::string rootDir)
+    {
+        DirectoryInfo *dirInfo = new DirectoryInfo();
+        dirInfo->rootDir = rootDir;
+        dirInfo->buildDir = rootDir + "/build";
+        dirInfo->outDir = rootDir + "/build/out";
+        dirInfo->depDir = rootDir + "/build/out/deps";
+        dirInfo->runtimeDir = rootDir + "/build/out/runtime";
+
+        return dirInfo;
+    }
 
 } // namespace Cryo

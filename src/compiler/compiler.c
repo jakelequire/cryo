@@ -79,8 +79,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     printGlobalSymbolTable(globalSymbolTable);
 
     // Create and initialize linker
-    CryoLinker *linker = CryoLinker_Create();
-    SetLinkerBuildDir(linker, buildDir);
+    CryoLinker *linker = CreateCryoLinker(buildDir);
+    printf("Linker created\n");
 
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
@@ -89,7 +89,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     TypeTable *typeTable = initTypeTable();
 
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(typeTable, globalSymbolTable);
+    boostrapRuntimeDefinitions(typeTable, globalSymbolTable, linker);
 
     printGlobalSymbolTable(globalSymbolTable);
 
@@ -120,7 +120,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     printTypeTable(typeTable);
 
     // Generate code (The C++ backend process)
-    int result = generateCodeWrapper(programNode, state, *linker);
+    int result = generateCodeWrapper(programNode, state, linker);
     if (result != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");

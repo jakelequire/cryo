@@ -44,7 +44,7 @@ extern "C"
 {
 #endif
     typedef struct CryoLinker_t *CryoLinker;
-    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker linker);
+    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *linker);
 
 #ifdef __cplusplus
 }

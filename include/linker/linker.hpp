@@ -31,15 +31,11 @@ extern "C"
     // Constructors & Destructors
     CryoLinker *CryoLinker_Create(const char *buildDir);
 
-    // State Functions
-    void CryoLinker_SetBuildSrcDirectory(CryoLinker *linker, const char *buildDir);
-
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Macros
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#define CreateCryoLinker() CryoLinker_Create()
-#define SetLinkerBuildDir(linker, rootDir) CryoLinker_SetBuildSrcDirectory(linker, rootDir)
+#define CreateCryoLinker(buildDir) CryoLinker_Create(buildDir)
 
 #ifdef __cplusplus
 }
@@ -121,6 +117,7 @@ extern "C"
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
+#include "tools/utils/env.h"
 
 struct DirectoryInfo
 {
@@ -131,23 +128,8 @@ struct DirectoryInfo
     std::string runtimeDir;
 };
 
-DirectoryInfo *createDirectoryInfo(std::string rootDir)
-{
-    DirectoryInfo *dirInfo = new DirectoryInfo();
-    dirInfo->rootDir = rootDir;
-    dirInfo->buildDir = rootDir + "/build";
-    dirInfo->outDir = rootDir + "/build/out";
-    dirInfo->depDir = rootDir + "/build/out/deps";
-    dirInfo->runtimeDir = rootDir + "/build/out/runtime";
-
-    return dirInfo;
-}
-
 namespace Cryo
 {
-    class LinkerModule;
-    class Linker;
-
     // ================================================================ //
     //                        Linker Manager                            //
     // ================================================================ //
@@ -159,59 +141,32 @@ namespace Cryo
         {
             std::string rootDir = std::string(buildDir).substr(0, std::string(buildDir).find_last_of("/"));
             dirInfo = createDirectoryInfo(rootDir);
-            linkerModule = std::make_unique<LinkerModule>(dirInfo);
         }
         ~Linker() {}
 
-        std::unique_ptr<LinkerModule> linkerModule = nullptr;
-        DirectoryInfo *dirInfo;
-        DirectoryInfo *getDirInfo() { return dirInfo; }
+        llvm::LLVMContext context;
+        std::unique_ptr<llvm::Module> finalModule;
+        std::unique_ptr<llvm::Module> preprocessedModule;
+        std::vector<llvm::Module *> dependencies;
 
-        void setBuildDir(const char *buildDir);
+        DirectoryInfo *dirInfo;
 
         void newInitDependencies(llvm::Module *srcModule);
         void appendDependenciesToRoot(llvm::Module *root);
-
         void addPreprocessingModule(llvm::Module *mod);
 
+        std::string createIRFromModule(llvm::Module *module, std::string outDir);
+
     private:
-    };
-
-    // ================================================================ //
-    //                     Linker Module Handler                        //
-    // ================================================================ //
-
-    class LinkerModule
-    {
-    public:
-        LinkerModule(DirectoryInfo *dirInfo)
-        {
-            std::cout << "Linker Module Constructor Called..." << std::endl;
-            this->dirInfo = dirInfo;
-        }
-
-        DirectoryInfo *dirInfo;
+        DirectoryInfo *createDirectoryInfo(std::string rootDir);
         DirectoryInfo *getDirInfo() { return dirInfo; }
-
-        llvm::LLVMContext context;
-        std::unique_ptr<llvm::Module> finalModule;
-
-        std::vector<llvm::Module *> dependencies;
-        llvm::Module *preprocessedModule;
-
-        size_t moduleCount = 0;
-
-        void addMainModule(llvm::Module *mod);
-        void addNewModule(llvm::Module *mod, std::string namename);
-        void addPreprocessedModule(llvm::Module *mod);
-
-    private:
-        void generateIRFromModule(llvm::Module *module);
-        bool contextMatch(llvm::Module *mod1, llvm::Module *mod2);
-
-        // Public Debug Methods
-    public:
         void logDirectoryInfo(DirectoryInfo *dirInfo);
+
+        std::string getCRuntimePath();
+        std::string covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
+        bool mergeAllRuntimeFiles();
+
+        std::vector<std::string> listDir(const char *path);
     };
 
     // ================================================================ //
@@ -230,15 +185,6 @@ namespace Cryo
             return nullptr;
         }
     }
-
-    inline void CryoLinker_SetBuildSrcDirectory(CryoLinker *linker, const char *buildDir)
-    {
-        if (linker)
-        {
-            reinterpret_cast<Linker *>(linker)->setBuildDir(buildDir);
-        }
-    }
-
 } // namespace Cryo
 
 #endif // __cplusplus

@@ -51,8 +51,7 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     printGlobalSymbolTable(globalSymbolTable);
 
     // Create and initialize linker
-    CryoLinker *linker = CryoLinker_Create();
-    SetLinkerBuildDir(linker, buildDir);
+    CryoLinker *linker = CryoLinker_Create(buildDir);
 
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
@@ -61,7 +60,7 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     TypeTable *typeTable = initTypeTable();
 
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(typeTable, globalSymbolTable);
+    boostrapRuntimeDefinitions(typeTable, globalSymbolTable, linker);
 
     printGlobalSymbolTable(globalSymbolTable);
 
@@ -92,7 +91,7 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     printTypeTable(typeTable);
 
     // Generate code (The C++ backend process)
-    int result = generateCodeWrapper(programNode, state, *linker);
+    int result = generateCodeWrapper(programNode, state, linker);
     if (result != 0)
     {
         CONDITION_FAILED;

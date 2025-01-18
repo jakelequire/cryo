@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "linker/linker.hpp"
 #include "symbolTable/cInterfaceTable.h"
 #include "runtime/bootstrap.h"
 #include "tools/logger/logger_config.h"
@@ -71,7 +72,7 @@ char *getRuntimeObjFile(CryoGlobalSymbolTable *globalTable)
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
 // compile the runtime into the program.
-void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker)
 {
     logMessage(LMI, "INFO", "Bootstrap", "Bootstrapping runtime definitions...");
 
@@ -114,7 +115,7 @@ void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *glo
     const char *outputFile = getRuntimeObjFile(globalTable);
     bootstrap->state->settings->inputFile = getRuntimeSrcFile();
 
-    preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile);
+    preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker);
 
     // Free the bootstrap state
     free(bootstrap);

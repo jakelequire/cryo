@@ -37,6 +37,7 @@ typedef struct Arena Arena;
 typedef struct ASTNode ASTNode;
 
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
+typedef struct CryoLinker_t *CryoLinker;
 
 // C++ headers
 #ifdef __cplusplus
@@ -44,7 +45,7 @@ extern "C"
 {
 #endif
 
-    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath);
+    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker);
 
 #ifdef __cplusplus
 }
@@ -68,7 +69,7 @@ typedef struct Bootstrapper
     enum BootstrapStatus status;
 } Bootstrapper;
 
-void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker);
 Bootstrapper *initBootstrapper(const char *filePath);
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 

@@ -43,12 +43,4 @@ extern "C"
         }
     }
 
-    void CryoLinker_SetBuildSrcDirectory(CryoLinker *linker, const char *rootDir)
-    {
-        if (linker)
-        {
-            reinterpret_cast<Cryo::Linker *>(linker)->setBuildDir(rootDir);
-        }
-    }
-
 } // C API
