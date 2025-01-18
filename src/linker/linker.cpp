@@ -50,6 +50,8 @@ namespace Cryo
             return;
         }
 
+        std::cout << "Adding Preprocessing Module..." << std::endl;
+
         linkerModule->addPreprocessedModule(mod);
 
         return;

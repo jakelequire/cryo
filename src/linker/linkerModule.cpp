@@ -33,6 +33,7 @@ namespace Cryo
 
     void LinkerModule::addPreprocessedModule(llvm::Module *mod)
     {
+        std::cout << "Adding Preprocessed Module..." << std::endl;
         logMessage(LMI, "INFO", "Linker", "Adding Preprocessed Module...");
 
         std::string runtimeDir = getDirInfo()->runtimeDir;

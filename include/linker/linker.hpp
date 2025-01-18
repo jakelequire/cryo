@@ -143,7 +143,10 @@ namespace Cryo
     class Linker
     {
     public:
-        Linker() {}
+        Linker()
+        {
+            linkerModule = std::make_unique<LinkerModule>();
+        }
         ~Linker() {}
 
         DirectoryInfo *dirInfo;
@@ -167,8 +170,10 @@ namespace Cryo
     class LinkerModule : public Linker
     {
     public:
-        LinkerModule(LinkerModule const &) = delete;
-        void operator=(LinkerModule const &) = delete;
+        LinkerModule()
+        {
+            std::cout << "Linker Module Constructor Called..." << std::endl;
+        }
 
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
