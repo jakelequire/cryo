@@ -20,11 +20,11 @@
 
 extern "C"
 {
-    CryoLinker *CryoLinker_Create(void)
+    CryoLinker *CryoLinker_Create(const char *buildDir)
     {
         try
         {
-            auto linker = new CryoLinker();
+            auto linker = new Cryo::Linker(buildDir);
             return reinterpret_cast<CryoLinker *>(linker);
         }
         catch (...)

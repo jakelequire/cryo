@@ -29,7 +29,7 @@ extern "C"
     typedef struct CryoLinker_t *CryoLinker;
 
     // Constructors & Destructors
-    CryoLinker *CryoLinker_Create(void);
+    CryoLinker *CryoLinker_Create(const char *buildDir);
 
     // State Functions
     void CryoLinker_SetBuildSrcDirectory(CryoLinker *linker, const char *buildDir);
@@ -131,6 +131,18 @@ struct DirectoryInfo
     std::string runtimeDir;
 };
 
+DirectoryInfo *createDirectoryInfo(std::string rootDir)
+{
+    DirectoryInfo *dirInfo = new DirectoryInfo();
+    dirInfo->rootDir = rootDir;
+    dirInfo->buildDir = rootDir + "/build";
+    dirInfo->outDir = rootDir + "/build/out";
+    dirInfo->depDir = rootDir + "/build/out/deps";
+    dirInfo->runtimeDir = rootDir + "/build/out/runtime";
+
+    return dirInfo;
+}
+
 namespace Cryo
 {
     class LinkerModule;
@@ -143,12 +155,15 @@ namespace Cryo
     class Linker
     {
     public:
-        Linker()
+        Linker(const char *buildDir)
         {
-            linkerModule = std::make_unique<LinkerModule>();
+            std::string rootDir = std::string(buildDir).substr(0, std::string(buildDir).find_last_of("/"));
+            dirInfo = createDirectoryInfo(rootDir);
+            linkerModule = std::make_unique<LinkerModule>(dirInfo);
         }
         ~Linker() {}
 
+        std::unique_ptr<LinkerModule> linkerModule = nullptr;
         DirectoryInfo *dirInfo;
         DirectoryInfo *getDirInfo() { return dirInfo; }
 
@@ -160,20 +175,23 @@ namespace Cryo
         void addPreprocessingModule(llvm::Module *mod);
 
     private:
-        std::unique_ptr<LinkerModule> linkerModule;
     };
 
     // ================================================================ //
     //                     Linker Module Handler                        //
     // ================================================================ //
 
-    class LinkerModule : public Linker
+    class LinkerModule
     {
     public:
-        LinkerModule()
+        LinkerModule(DirectoryInfo *dirInfo)
         {
             std::cout << "Linker Module Constructor Called..." << std::endl;
+            this->dirInfo = dirInfo;
         }
+
+        DirectoryInfo *dirInfo;
+        DirectoryInfo *getDirInfo() { return dirInfo; }
 
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
@@ -200,11 +218,11 @@ namespace Cryo
     //                     C API Implementation                         //
     // ================================================================ //
 
-    inline CryoLinker *CryoLinker_Create(void)
+    inline CryoLinker *CryoLinker_Create(const char *buildDir)
     {
         try
         {
-            auto linker = new Linker();
+            auto linker = new Linker(buildDir);
             return reinterpret_cast<CryoLinker *>(linker);
         }
         catch (...)
