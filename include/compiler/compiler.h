@@ -62,7 +62,7 @@ const char *handleTextBuffer(char *source);
 // Module Compiler
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state, Arena *arena, CryoGlobalSymbolTable *globalTable);
-int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath);
+int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker);
 
 // LSP Compiler
 int lspCompiler(const char *filePath, CompilerSettings *settings);

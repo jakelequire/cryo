@@ -53,6 +53,8 @@ extern "C"
     void CryoGlobalSymbolTable_TableFinished(CryoGlobalSymbolTable *symTable);
     void CryoGlobalSymbolTable_InitNamespace(CryoGlobalSymbolTable *symTable, const char *namespaceName);
     void CryoGlobalSymbolTable_CompleteFrontend(CryoGlobalSymbolTable *symTable);
+    void CryoGlobalSymbolTable_SetLinker(CryoGlobalSymbolTable *symTable, CryoLinker *linker);
+    CryoLinker *CryoGlobalSymbolTable_GetLinker(CryoGlobalSymbolTable *symTable);
 
     // Symbol Table Functions ---------------------------------------
 
@@ -151,6 +153,10 @@ extern "C"
     CryoGlobalSymbolTable_CompleteFrontend(symTable)
 #define GetBuildDir(symTable) \
     CryoGlobalSymbolTable_GetBuildDir(symTable)
+#define SetGSTLinker(symTable, linker) \
+    CryoGlobalSymbolTable_SetLinker(symTable, linker)
+#define GetGSTLinker(symTable) \
+    CryoGlobalSymbolTable_GetLinker(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \
@@ -428,6 +434,8 @@ namespace Cryo
 
         SymbolTable *reapedTable = nullptr; // Reaped symbol table
 
+        CryoLinker *linker = nullptr; // Linker for the symbol table
+
         //===================================================================
         // Table State Management
         //===================================================================
@@ -456,6 +464,8 @@ namespace Cryo
         void addParamToSymbolTable(ASTNode *node, const char *functionScopeID);                          // [C API]
         SymbolTable *getCurrentSymbolTable(void);                                                        // [C API]
         Symbol *getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType); // [C API]
+        void setLinker(CryoLinker *linker);                                                              // [C API]
+        CryoLinker *getLinker(void);                                                                     // [C API]
 
         void addSymbolToTable(Symbol *symbol, SymbolTable *table);
         void completeDependencyTable(void);
@@ -762,6 +772,16 @@ namespace Cryo
     inline void CryoGlobalSymbolTable_CompleteFrontend(CryoGlobalSymbolTable *symTable)
     {
         reinterpret_cast<GlobalSymbolTable *>(symTable)->completeFrontend();
+    }
+
+    inline void CryoGlobalSymbolTable_SetLinker(CryoGlobalSymbolTable *symTable, CryoLinker *linker)
+    {
+        reinterpret_cast<GlobalSymbolTable *>(symTable)->setLinker(linker);
+    }
+
+    inline CryoLinker *CryoGlobalSymbolTable_GetLinker(CryoGlobalSymbolTable *symTable)
+    {
+        return reinterpret_cast<GlobalSymbolTable *>(symTable)->getLinker();
     }
 
     // Symbol Table Functions ---------------------------------------

@@ -91,6 +91,10 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_CompleteFrontend(symTable)
 #define GetBuildDir(symTable) \
     CryoGlobalSymbolTable_GetBuildDir(symTable)
+#define SetGSTLinker(symTable, linker) \
+    CryoGlobalSymbolTable_SetLinker(symTable, linker)
+#define GetGSTLinker(symTable) \
+    CryoGlobalSymbolTable_GetLinker(symTable)
 
 // Symbol Table Functions
 #define initDependencySymbolTable(symTable, namespaceName) \
@@ -117,13 +121,18 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 
 #define GetReapedTable(symTable) \
     CryoGlobalSymbolTable_GetReapedTable(symTable)
+#define GetReapedTypeTable(symTable) \
+    CryoGlobalSymbolTable_GetReapedTypesTable(symTable)
 #define ImportReapedTable(symTable, reapedTable) \
     CryoGlobalSymbolTable_ImportReapedTable(symTable, reapedTable)
+#define ImportReapedTypesTable(symTable, reapedTable) \
+    CryoGlobalSymbolTable_ImportReapedTypesTable(symTable, reapedTable)
 
 #define GetSpecificSymbolTable(symTable, namespaceName) \
     CryoGlobalSymbolTable_GetSpecificSymbolTable(symTable, namespaceName)
-#define ImportRuntimeSymbols(symTable, runtimeTable) \
-    CryoGlobalSymbolTable_ImportRuntimeSymbols(symTable, runtimeTable)
+
+#define ResolveDataType(symTable, name) \
+    CryoGlobalSymbolTable_ResolveDataType(symTable, name)
 
 #define CleanupAndDestroySymbolTable(symTable) \
     CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)
@@ -158,10 +167,14 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 // Debug Functions
 #define printGlobalSymbolTable(symTable) \
     CryoGlobalSymbolTable_PrintGlobalTable(symTable)
-#define MergeDBChunks(symTable) \
-    CryoGlobalSymbolTable_MergeDBChunks(symTable)
 #define TypeOfSymbolToString(symTable, symbolType) \
     CryoGlobalSymbolTable_TypeOfSymbolToString(symTable, symbolType)
+#define LogSymbol(symTable, symbol) \
+    CryoGlobalSymbolTable_LogSymbol(symTable, symbol)
+#define GetDependencyDirStr(symTable) \
+    CryoGlobalSymbolTable_GetDependencyDirStr(symTable)
+#define PrintSymbolTable(symTable, symbolTable) \
+    CryoGlobalSymbolTable_PrintSymbolTable(symTable, symbolTable)
 
 // Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
@@ -170,8 +183,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_AddPropertyToClass(symTable, className, property)
 #define AddMethodToClass(symTable, className, method) \
     CryoGlobalSymbolTable_AddMethodToClass(symTable, className, method)
-#define CompleteClassDeclaration(symTable, classNode, classSymbol) \
-    CryoGlobalSymbolTable_CompleteClassDeclaration(symTable, classNode, classSymbol)
+#define CompleteClassDeclaration(symTable, classNode, className) \
+    CryoGlobalSymbolTable_CompleteClassDeclaration(symTable, classNode, className)
 
 // Declaration Functions (Structs)
 #define InitStructDeclaration(symTable, structName, parentNameID) \
@@ -188,8 +201,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_InitFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType)
 #define CompleteFunctionDeclaration(symTable, functionNode, functionName, parentScopeID) \
     CryoGlobalSymbolTable_CompleteFunctionDeclaration(symTable, functionNode, functionName, parentScopeID)
-#define AddExternFunctionToTable(symTable, externNode, namespaceScopeID) \
-    CryoGlobalSymbolTable_AddExternFunctionToTable(symTable, externNode, namespaceScopeID)
+#define AddExternFunctionToTable(symTable, externNode) \
+    CryoGlobalSymbolTable_AddExternFunctionToTable(symTable, externNode)
 
 // Symbol Resolution Functions
 #define GetFrontendSymbol(symTable, name, scopeID, symbolType) \
@@ -197,6 +210,10 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 
 #define GetNamespace(symTable) \
     CryoGlobalSymbolTable_GetNamespace(symTable)
+
+// Misc Functions
+#define MergeAllSymbolsToASTArray(symTable) \
+    CryoGlobalSymbolTable_MergeAllSymbolsToASTArray(symTable)
 
 // ====================================================================================================
 

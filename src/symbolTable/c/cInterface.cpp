@@ -102,6 +102,23 @@ extern "C"
         }
     }
 
+    void CryoGlobalSymbolTable_SetLinker(CryoGlobalSymbolTable *symTable, CryoLinker *linker)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->setLinker(linker);
+        }
+    }
+
+    CryoLinker *CryoGlobalSymbolTable_GetLinker(CryoGlobalSymbolTable *symTable)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->getLinker();
+        }
+        return nullptr;
+    }
+
     // --------------------------------------------------------------
     // Symbol Table Functions
 

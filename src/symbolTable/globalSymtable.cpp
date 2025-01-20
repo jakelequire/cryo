@@ -49,6 +49,16 @@ namespace Cryo
         return tableContext.isDependency;
     }
 
+    void GlobalSymbolTable::setLinker(CryoLinker *linker)
+    {
+        this->linker = linker;
+    }
+
+    CryoLinker *GlobalSymbolTable::getLinker(void)
+    {
+        return linker;
+    }
+
     void GlobalSymbolTable::setIsPrimaryTable(bool isPrimary)
     {
         tableContext.isPrimary = isPrimary;
