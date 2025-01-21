@@ -23,13 +23,20 @@ BAR=">>====---------------------------====<<"
 
 INIT_LIBS_SIG="$TEAL$BOLD[INIT_LIBS]$COLOR_RESET"
 
+function error {
+    local message=$1
+    echo -e "$INIT_LIBS_SIG $RED $BOLD $message $COLOR_RESET"
+
+    exit 1
+}
+
 # Function to build and move binaries for each library
 function buildAndMoveLib {
     LIB_ROOT=$1
     LIB_NAME=$(basename $LIB_ROOT)
     echo -e "$INIT_LIBS_SIG Building the $LIB_NAME library"
     cd $LIB_ROOT
-    make all || echo -e "$INIT_LIBS_SIG $RED $BOLD Failed to build the $LIB_NAME library $COLOR_RESET"
+    make all || error "Failed to build the $LIB_NAME library"
     if [ -f "bin/$LIB_NAME" ]; then
         echo -e "$INIT_LIBS_SIG $RED $BOLD Moving the $LIB_NAME binary to the root bin directory $COLOR_RESET"
         mv "bin/$LIB_NAME" $ROOT_BIN_DIR
@@ -70,6 +77,8 @@ function cleanup {
         fi
     done
 }
+
+
 
 # Build and move binaries for each specified library
 for lib in "$@"; do
