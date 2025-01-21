@@ -38,6 +38,8 @@
 #include "compiler.h"
 #include "messages.h"
 
+#define USE_GDB true
+
 typedef struct BuildOptions BuildOptions;
 typedef struct InitOptions InitOptions;
 typedef struct HelpOptions HelpOptions;
@@ -76,6 +78,11 @@ static int check_quit_command(const char *buffer);
 // Build Command (./commands/build.c)
 
 void exe_CLI_build(BuildOptions *options);
+
+// =============================================================================
+// Build Command (./commands/build-compiler.c)
+
+void exe_CLI_build_compiler(void);
 
 // =============================================================================
 // Init Command (./commands/init.c)

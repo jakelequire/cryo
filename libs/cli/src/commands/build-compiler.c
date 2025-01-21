@@ -14,54 +14,40 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CLI_ARGS_H
-#define CLI_ARGS_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+#include "../include/commands.h"
 
-#include "commands.h"
-#include "utils.h"
-
-#define __CLI_VERSION__ "0.0.1"
-
-enum CLI_ARGS
+void exe_CLI_build_compiler(void)
 {
-    CLI_HELP,
-    CLI_VERSION,
-    CLI_BUILD,
-    CLI_BUILD_COMPILER,
-    CLI_INIT,
-    CLI_UNKNOWN
-};
+    char *compiler_path = getCompilerExePath();
+    if (!compiler_path)
+    {
+        printf("Error: Unable to locate the compiler binary\n");
+        exit(0);
+    }
 
-typedef struct HelpOptions
-{
-    enum CLI_ARGS command;
-} HelpOptions;
+    printf("Compiler path: %s\n", compiler_path);
 
-typedef struct BuildOptions
-{
-    bool single_file;  // -s flag
-    char *input_file;  // input file path
-    char *output_file; // -o flag output path
-    bool has_output;   // whether -o was specified
-    bool is_dev;       // -d flag or --dev
-    bool use_gdb;      // -g flag
-} BuildOptions;
+    // Trim the last directory from the path
+    char *compiler_dir = trimLastDir(trimLastDir(compiler_path));
 
-typedef struct InitOptions
-{
-    const char *cwd;
-} InitOptions;
+    printf("Compiler directory: %s\n", compiler_dir);
 
-void handleArgs(int argc, char *argv[]);
+    // Now that we have the compiler dir, we need to run the make file
+    char *_make_command = concatStrings("make -C ", compiler_dir);
+    char *make_command = concatStrings(_make_command, " all");
 
-enum CLI_ARGS get_CLI_arg(char *arg);
+    printf("Make command: %s\n", make_command);
 
-BuildOptions *parse_build_options(int argc, char *argv[], int start_index);
-InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0);
-HelpOptions *parse_help_options(int argc, char *argv[], int start_index);
+    // Execute the make command
+    if (runSystemCommand(make_command))
+    {
+        printf("Compiler built successfully\n");
+    }
+    else
+    {
+        printf("Error: Failed to build the compiler\n");
+    }
 
-#endif // CLI_ARGS_H
+    free(compiler_path);
+    exit(0);
+}

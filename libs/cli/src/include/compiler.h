@@ -23,6 +23,6 @@
 
 #include "utils.h"
 
-int cryo_compile(char *args[], int argCount);
+int cryo_compile(char *args[], int argCount, bool useGDB);
 
 #endif // COMPILER_H

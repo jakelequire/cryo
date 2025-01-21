@@ -16,10 +16,10 @@
  ********************************************************************************/
 #include "include/compiler.h"
 
-int cryo_compile(char *args[], int argCount)
+int cryo_compile(char *args[], int argCount, bool useGDB)
 {
-    printf("\n");
-    printf("Starting Cryo Compiler...\n");
+    bool USE_GDB = useGDB;
+    printf("\nStarting Cryo Compiler...\n");
     const char *compiler_path = getCompilerExePath();
     if (!compiler_path)
     {
@@ -33,12 +33,24 @@ int cryo_compile(char *args[], int argCount)
         printf("%s\n", args[i]);
     }
 
-    // Prepare the command
-    char *command = concatStrings((char *)compiler_path, " ");
+    // Build the command string based on whether GDB is enabled
+    char *command;
+    if (USE_GDB)
+    {
+        // Format: gdb -ex "run" --args executable arg1 arg2 ...
+        // The -ex "run" tells GDB to automatically execute the run command
+        command = concatStrings("gdb -ex \"run\" --args ", (char *)compiler_path);
+    }
+    else
+    {
+        command = concatStrings((char *)compiler_path, "");
+    }
+
+    // Add arguments
     for (int i = 0; i < argCount; i++)
     {
-        command = concatStrings(command, args[i]);
         command = concatStrings(command, " ");
+        command = concatStrings(command, args[i]);
     }
 
     printf("\nCommand: %s\n", command);
@@ -53,5 +65,6 @@ int cryo_compile(char *args[], int argCount)
         printf("Compilation failed\n");
     }
 
+    free(command); // Don't forget to free the allocated memory
     return 0;
 }

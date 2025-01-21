@@ -69,7 +69,7 @@ static void handle_project_build(void)
     // TODO: Implement project directory build logic
 }
 
-static void handle_single_file_build(const char *input_file, const char *output_file)
+static void handle_single_file_build(const char *input_file, const char *output_file, bool useGDB)
 {
     printf("Building single file: %s\n", input_file);
     if (output_file)
@@ -95,7 +95,7 @@ static void handle_single_file_build(const char *input_file, const char *output_
     }
 
     // Call compiler with complete argument list
-    cryo_compile(args_with_flags, total_args);
+    cryo_compile(args_with_flags, total_args, useGDB);
 }
 
 void exe_CLI_build(BuildOptions *options)
@@ -117,11 +117,13 @@ void exe_CLI_build(BuildOptions *options)
 
     // Handle flags first
     handleBuildFlags(options);
+    bool useGDB = options->use_gdb;
 
     if (options->single_file)
     {
         handle_single_file_build(options->input_file,
-                                 options->has_output ? options->output_file : NULL);
+                                 options->has_output ? options->output_file : NULL,
+                                 useGDB);
     }
     else
     {

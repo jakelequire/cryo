@@ -30,6 +30,10 @@ enum CLI_ARGS get_CLI_arg(char *arg)
     {
         return CLI_BUILD;
     }
+    else if (stringCompare(arg, "build-compiler"))
+    {
+        return CLI_BUILD_COMPILER;
+    }
     else if (stringCompare(arg, "init"))
     {
         return CLI_INIT;
@@ -81,6 +85,9 @@ void handleArgs(int argc, char *argv[])
         case CLI_BUILD:
             exe_CLI_build(parse_build_options(argc, argv, i + 1));
             return;
+        case CLI_BUILD_COMPILER:
+            exe_CLI_build_compiler();
+            break;
         case CLI_INIT:
             exe_CLI_init(parse_init_options(argc, argv, i + 1, cwd));
             break;
@@ -106,6 +113,7 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
     options->output_file = NULL;
     options->has_output = false;
     options->is_dev = false;
+    options->use_gdb = false;
 
     // Parse build command options
     for (int i = start_index; i < argc; i++)
@@ -137,6 +145,11 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
                 free(options);
                 return NULL; // Missing output file
             }
+        }
+        // Check for gdb mode
+        else if (stringCompare(argv[i], "-g"))
+        {
+            options->use_gdb = true;
         }
         // Check for dev mode
         else if (stringCompare(argv[i], "-d") || stringCompare(argv[i], "--dev"))
