@@ -34,8 +34,6 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *cLinker
 
     // Convert C opaque pointer back to C++ type
     std::cout << "Setting linker..." << std::endl;
-    Cryo::Linker *cppLinker = reinterpret_cast<Cryo::Linker *>(cLinker);
-    compiler.setLinker(cppLinker);
     compiler.initDependencies();
 
     compiler.compile(node);
@@ -57,10 +55,6 @@ int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *
     compiler.setCompilerState(state);
     compiler.setCompilerSettings(state->settings);
     compiler.setModuleIdentifier(moduleName);
-
-    // Convert C opaque pointer back to C++ type
-    Cryo::Linker *cppLinker = reinterpret_cast<Cryo::Linker *>(cLinker);
-    compiler.setLinker(cppLinker);
 
     // Set the output path for the runtime
     compiler.setCustomOutputPath(outputPath);

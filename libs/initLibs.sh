@@ -19,7 +19,7 @@ TEAL='\033[0;36m'
 BOLD='\033[1m'
 COLOR_RESET='\033[0m'
 
-BAR=">>====---------------------------====<<"
+BAR=">>====------------------------------------------------------------------====<<"
 
 INIT_LIBS_SIG="$TEAL$BOLD[INIT_LIBS]$COLOR_RESET"
 
@@ -78,8 +78,6 @@ function cleanup {
     done
 }
 
-
-
 # Build and move binaries for each specified library
 for lib in "$@"; do
     if [ -d "./libs/$lib" ]; then
@@ -90,3 +88,8 @@ for lib in "$@"; do
         echo -e "$INIT_LIBS_SIG Attempted path: ./libs/$lib"
     fi
 done
+
+echo -e "$INIT_LIBS_SIG $GREEN $BOLD Finished building and moving libraries $COLOR_RESET"
+echo -e "$GREEN$BOLD$BAR $COLOR_RESET"
+echo " "
+echo " "

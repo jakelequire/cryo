@@ -130,6 +130,10 @@ struct DirectoryInfo
 
 namespace Cryo
 {
+    class Linker;
+    extern CryoLinker *globalLinker; // Global Linker Object
+    #define GetCXXLinker() reinterpret_cast<Cryo::Linker *>(globalLinker)
+
     // ================================================================ //
     //                        Linker Manager                            //
     // ================================================================ //
@@ -139,14 +143,20 @@ namespace Cryo
     public:
         Linker(const char *buildDir)
         {
+            std::cout << "Linker Constructor Called..." << std::endl;
             std::string rootDir = std::string(buildDir).substr(0, std::string(buildDir).find_last_of("/"));
             dirInfo = createDirectoryInfo(rootDir);
+
+            // Set the global linker object
+            globalLinker = reinterpret_cast<CryoLinker *>(this);
         }
-        ~Linker() {}
+
+        Cryo::Linker *getCXXLinker() { return reinterpret_cast<Cryo::Linker *>(globalLinker); }
+        CryoLinker *getCLinker() { return globalLinker; }
 
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
-        std::unique_ptr<llvm::Module> preprocessedModule;
+        llvm::Module *preprocessedModule;
         std::vector<llvm::Module *> dependencies;
 
         DirectoryInfo *dirInfo;
@@ -167,6 +177,7 @@ namespace Cryo
         std::string getCRuntimePath();
         std::string covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
         bool mergeAllRuntimeFiles();
+        std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName);
 
         std::vector<std::string> listDir(const char *path);
     };

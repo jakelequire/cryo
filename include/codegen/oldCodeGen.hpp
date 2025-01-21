@@ -231,7 +231,7 @@ namespace Cryo
     {
     public:
         CryoCompiler();
-        ~CryoCompiler() = default;
+        ~CryoCompiler();
 
         void setCompilerState(CompilerState *state) { CryoContext::getInstance().state = state; }
         CompilerState *getCompilerState() { return CryoContext::getInstance().state; }
@@ -259,15 +259,8 @@ namespace Cryo
         Objects &getObjects() { return *objects; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
-        Linker *getLinker() { return linker.get(); }
-        void setLinker(Linker *newLinker)
-        {
-            if (newLinker)
-            {
-                linker = std::unique_ptr<Linker>(newLinker);
-                std::cout << "Linker Set" << std::endl;
-            }
-        }
+
+        Linker *getLinker() { return GetCXXLinker(); }
 
         std::string customOutputPath = "";
         bool isPreprocessing = false;
@@ -288,27 +281,14 @@ namespace Cryo
 
         void initDependencies()
         {
-            if (linker)
-            {
-                linker->initMainModule(&getModule());
-            }
-            else
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "CryoCompiler", "Linker not set");
-            }
+
+            GetCXXLinker()->newInitDependencies(&getModule());
         }
 
         void linkDependencies(void)
         {
-            if (linker)
-            {
-                std::cout << "Linking Dependencies to Main Module" << std::endl;
-                linker->appendDependenciesToRoot(&getModule());
-            }
-            else
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "CryoCompiler", "Linker not set");
-            }
+            std::cout << "Linking Dependencies to Main Module" << std::endl;
+            GetCXXLinker()->appendDependenciesToRoot(&getModule());
         }
 
     private:
@@ -328,7 +308,6 @@ namespace Cryo
         std::unique_ptr<Imports> imports;
         std::unique_ptr<WhileStatements> whileStatements;
         std::unique_ptr<ErrorHandler> errorHandler;
-        std::unique_ptr<Linker> linker;
         std::unique_ptr<Classes> classes;
         std::unique_ptr<Objects> objects;
     };

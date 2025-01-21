@@ -20,22 +20,20 @@
 
 namespace Cryo
 {
+    CryoLinker *globalLinker = nullptr;
+
     void Linker::initMainModule(llvm::Module *module)
     {
+        std::cout << "Initializing Main Module before CodeGen..." << std::endl;
+
         // At this step of the compilation process, this module being passed is the newly created
         // module from the Cryo Compiler. We will add the required dependencies to this module before
         // it is passed to the LLVM backend code generator.
-        if (!module)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Module is null");
-            return;
-        }
 
-        llvm::Module *runtimeModule = this->preprocessedModule.get();
-        if (!runtimeModule)
+        if (!preprocessedModule)
         {
             logMessage(LMI, "ERROR", "Linker", "Runtime Module is null");
-            return;
+            CONDITION_FAILED;
         }
 
         std::cout << "Runtime Module is not undefined" << std::endl;
@@ -48,16 +46,11 @@ namespace Cryo
 
         std::cout << "Runtime Module:\n--------\n"
                   << std::endl;
-        runtimeModule->print(llvm::errs(), nullptr);
+        preprocessedModule->print(llvm::errs(), nullptr);
         std::cout << "\n--------\n\n"
                   << std::endl;
 
         // Add the runtime module to the main module
-        for (llvm::Function &func : runtimeModule->functions())
-        {
-            module->getFunctionList().push_back(&func);
-        }
-
         DEBUG_BREAKPOINT;
     }
 
@@ -118,15 +111,6 @@ namespace Cryo
             return;
         }
 
-        // Set the preprocessed module from the IR file
-        llvm::SMDiagnostic EC = llvm::SMDiagnostic();
-        preprocessedModule = llvm::parseIRFile(modIR, EC, context);
-        if (!preprocessedModule)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to parse IR file");
-            return;
-        }
-
         std::cout << "Module IR is not undefined" << std::endl;
         std::cout << "Module IR: " << modIR << std::endl;
 
@@ -137,8 +121,37 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
             return;
         }
-
         std::cout << "C Runtime IR is not undefined" << std::endl;
+
+        // Now that the `runtime.ll` and `cRuntime.ll` files are generated, we will
+        // merge them into one file and set that as the `preprocessedModule`.
+        std::string outputFilePath = mergeTwoIRFiles(modIR, cRuntimeIR, "cryo_runtime");
+        if (outputFilePath.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to merge IR files");
+            return;
+        }
+
+        std::cout << "Output File Path is not undefined" << std::endl;
+        std::cout << "Output File Path: " << outputFilePath << std::endl;
+
+        // Parse the merged IR file
+        llvm::SMDiagnostic err;
+        std::unique_ptr<llvm::Module> mergedModule = llvm::parseIRFile(outputFilePath, err, context);
+        if (!mergedModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to parse merged IR file");
+            CONDITION_FAILED;
+            return;
+        }
+
+        std::cout << "Merged Module is not undefined" << std::endl;
+
+        // Now that we have the merged module, we can set it as the preprocessed module
+        preprocessedModule = mergedModule.get();
+        std::cout << "Merged Module Set as Preprocessed Module" << std::endl;
+
+        preprocessedModule->print(llvm::errs(), nullptr);
 
         return;
     }
@@ -211,14 +224,20 @@ namespace Cryo
 
     std::string Linker::getCRuntimePath()
     {
-        std::string cryoRoot = getCryoCompilerPath();
+        std::string cryoRoot = getCryoRootPath();
         if (cryoRoot.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Cryo Root is empty");
             return "";
         }
 
-        return cryoRoot + "/Std/Runtime";
+        std::cout << "@getCRuntimePath | Cryo Root: " << cryoRoot << std::endl;
+
+        std::string fullPath = cryoRoot + "/Std/Runtime";
+
+        std::cout << "@getCRuntimePath | Full Path: " << fullPath << std::endl;
+
+        return fullPath;
     }
 
     std::string Linker::covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir)
@@ -228,6 +247,8 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
             return "";
         }
+
+        std::cout << "@convertCRuntimeToLLVMIR | C Runtime Path: " << cRuntimePath << std::endl;
 
         // Check and see if the `cRuntime.c` file exists
         std::string cRuntimeFile = cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
@@ -322,6 +343,51 @@ namespace Cryo
         }
 
         return files;
+    }
+
+    // This function will be used to merge two IR files together.
+    // This function will return the full path to where the file was created.
+    std::string Linker::mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName)
+    {
+        logMessage(LMI, "INFO", "Linker", "Merging two IR files...");
+
+        if (file1.empty() || file2.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "One or both files are empty");
+            CONDITION_FAILED;
+            return "";
+        }
+
+        std::string outDir = file1.substr(0, file1.find_last_of("/"));
+        std::string outPath = outDir + "/" + fileName + ".ll";
+
+        std::string cmd = "llvm-link-18 " + file1 + " " + file2 + " -S -o " + outPath;
+        int result = system(cmd.c_str());
+        if (result != 0)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to merge IR files");
+            CONDITION_FAILED;
+            return "";
+        }
+
+        logMessage(LMI, "INFO", "Linker", "IR files merged");
+
+        std::string fullPathToFile = file1.substr(0, file1.find_last_of("/")) + "/" + fileName + ".ll";
+        logMessage(LMI, "INFO", "Linker", "Merged IR file: %s", fullPathToFile.c_str());
+
+        llvm::LLVMContext context;
+        llvm::SMDiagnostic err;
+        std::unique_ptr<llvm::Module> mergedModule = llvm::parseIRFile(fullPathToFile, err, context);
+        if (!mergedModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to parse merged IR file");
+            CONDITION_FAILED;
+            return "";
+        }
+
+        std::cout << "Module Merged Successfully" << std::endl;
+
+        return fullPathToFile;
     }
 
 } // namespace Cryo

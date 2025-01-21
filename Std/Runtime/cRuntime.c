@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
+#include <fcntl.h>
 
 extern void *getCryoNullValue();
 
