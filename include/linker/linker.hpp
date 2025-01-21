@@ -151,6 +151,8 @@ namespace Cryo
 
         DirectoryInfo *dirInfo;
 
+        void initMainModule(llvm::Module *module);
+
         void newInitDependencies(llvm::Module *srcModule);
         void appendDependenciesToRoot(llvm::Module *root);
         void addPreprocessingModule(llvm::Module *mod);

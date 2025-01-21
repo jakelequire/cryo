@@ -20,6 +20,47 @@
 
 namespace Cryo
 {
+    void Linker::initMainModule(llvm::Module *module)
+    {
+        // At this step of the compilation process, this module being passed is the newly created
+        // module from the Cryo Compiler. We will add the required dependencies to this module before
+        // it is passed to the LLVM backend code generator.
+        if (!module)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Module is null");
+            return;
+        }
+
+        llvm::Module *runtimeModule = this->preprocessedModule.get();
+        if (!runtimeModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Runtime Module is null");
+            return;
+        }
+
+        std::cout << "Runtime Module is not undefined" << std::endl;
+
+        std::cout << "Module:\n--------\n"
+                  << std::endl;
+        module->print(llvm::errs(), nullptr);
+        std::cout << "\n--------\n\n"
+                  << std::endl;
+
+        std::cout << "Runtime Module:\n--------\n"
+                  << std::endl;
+        runtimeModule->print(llvm::errs(), nullptr);
+        std::cout << "\n--------\n\n"
+                  << std::endl;
+
+        // Add the runtime module to the main module
+        for (llvm::Function &func : runtimeModule->functions())
+        {
+            module->getFunctionList().push_back(&func);
+        }
+
+        DEBUG_BREAKPOINT;
+    }
+
     // This function will be used to to handle the runtime IR. The module passed to this function
     // is the cryo runtime file and will be combined with the c runtime file.
     void Linker::addPreprocessingModule(llvm::Module *mod)
@@ -53,6 +94,12 @@ namespace Cryo
         std::cout << "Runtime Directory is not undefined" << std::endl;
         std::cout << "Runtime Directory: " << runtimeDir << std::endl;
 
+        std::cout << "\n\nModule:\n--------\n"
+                  << std::endl;
+        mod->print(llvm::errs(), nullptr);
+        std::cout << "\n--------\n\n"
+                  << std::endl;
+
         std::string cRuntimePath = getCRuntimePath();
         if (cRuntimePath.empty())
         {
@@ -68,6 +115,15 @@ namespace Cryo
         if (modIR.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to create IR from module");
+            return;
+        }
+
+        // Set the preprocessed module from the IR file
+        llvm::SMDiagnostic EC = llvm::SMDiagnostic();
+        preprocessedModule = llvm::parseIRFile(modIR, EC, context);
+        if (!preprocessedModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to parse IR file");
             return;
         }
 
@@ -126,10 +182,16 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Output directory is empty");
             CONDITION_FAILED;
         }
-
         logMessage(LMI, "INFO", "Linker", "Creating IR from module...");
 
-        std::string outPath = outDir + "/" + module->getName().str() + ".ll";
+        std::cout << "@createIRFromModule | ourDir passed for file creation: " << outDir << std::endl;
+        std::string moduleName = module->getName().str();
+        std::cout << "Module Name passed to @createIRFromModule: " << moduleName << std::endl;
+
+        std::string outPath = outDir + "/" + moduleName + ".ll";
+
+        fs->createNewEmptyFile(moduleName.c_str(), ".ll", outDir.c_str());
+
         std::error_code EC;
         llvm::raw_fd_ostream out(outPath, EC, llvm::sys::fs::OF_Text);
         if (EC)

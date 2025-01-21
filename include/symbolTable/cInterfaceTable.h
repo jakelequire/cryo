@@ -201,8 +201,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_InitFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType)
 #define CompleteFunctionDeclaration(symTable, functionNode, functionName, parentScopeID) \
     CryoGlobalSymbolTable_CompleteFunctionDeclaration(symTable, functionNode, functionName, parentScopeID)
-#define AddExternFunctionToTable(symTable, externNode) \
-    CryoGlobalSymbolTable_AddExternFunctionToTable(symTable, externNode)
+#define AddExternFunctionToTable(symTable, externNode, namespaceScopeID) \
+    CryoGlobalSymbolTable_AddExternFunctionToTable(symTable, externNode, namespaceScopeID)
 
 // Symbol Resolution Functions
 #define GetFrontendSymbol(symTable, name, scopeID, symbolType) \

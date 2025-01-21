@@ -22,4 +22,10 @@
 #define __C_DESTRUCTOR__ \
     __attribute__((destructor))
 
+#define __C_UNUSED__ \
+    __attribute__((unused))
+
+#define __C_NORETURN__ \
+    __attribute__((noreturn))
+
 #endif // ATTRIBUTES_H

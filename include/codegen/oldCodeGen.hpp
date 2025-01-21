@@ -265,6 +265,7 @@ namespace Cryo
             if (newLinker)
             {
                 linker = std::unique_ptr<Linker>(newLinker);
+                std::cout << "Linker Set" << std::endl;
             }
         }
 
@@ -289,7 +290,7 @@ namespace Cryo
         {
             if (linker)
             {
-                linker->newInitDependencies(&getModule());
+                linker->initMainModule(&getModule());
             }
             else
             {
@@ -301,6 +302,7 @@ namespace Cryo
         {
             if (linker)
             {
+                std::cout << "Linking Dependencies to Main Module" << std::endl;
                 linker->appendDependenciesToRoot(&getModule());
             }
             else

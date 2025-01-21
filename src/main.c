@@ -25,11 +25,15 @@
 #include "tools/utils/c_logger.h"
 #include "tools/logger/logger_config.h"
 #include "tools/utils/cryoProject.h"
+#include "tools/utils/fs.h"
 
 int main(int argc, char *argv[])
 {
     // Initialize the logging system
     INIT_LOGS();
+
+    // Initialize the global file system utilities
+    initGlobalFS();
 
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);

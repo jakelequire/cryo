@@ -19,6 +19,47 @@
 
 #define PATH_MAX 4096
 
+jFS *fs = NULL;
+
+jFS *initFS(void)
+{
+    jFS *fs = (jFS *)malloc(sizeof(jFS));
+    if (!fs)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for FS");
+        return NULL;
+    }
+
+    fs->readFile = readFile;
+    fs->fileExists = fileExists;
+    fs->dirExists = dirExists;
+    fs->createDir = createDir;
+    fs->removeFile = removeFile;
+    fs->getSTDFilePath = getSTDFilePath;
+    fs->trimFilePath = trimFilePath;
+    fs->getFileNameFromPathNoExt = getFileNameFromPathNoExt;
+    fs->getFileNameFromPath = getFileNameFromPath;
+    fs->getCurRootDir = getCurRootDir;
+    fs->getCryoSrcLocation = getCryoSrcLocation;
+    fs->getCRuntimePath = getCRuntimePath;
+    fs->appendStrings = appendStrings;
+    fs->appendExtensionToFileName = appendExtensionToFileName;
+    fs->appendPathToFileName = appendPathToFileName;
+    fs->removeFileFromPath = removeFileFromPath;
+    fs->changeFileExtension = changeFileExtension;
+    fs->getPathFromCryoPath = getPathFromCryoPath;
+    fs->getPathFromEnvVar = getPathFromEnvVar;
+    fs->getCompilerBinPath = getCompilerBinPath;
+    fs->getCompilerRootPath = getCompilerRootPath;
+    fs->createNewEmptyFile = createNewEmptyFile;
+    return fs;
+}
+
+void initGlobalFS(void)
+{
+    fs = initFS();
+}
+
 // This is being hard coded for now, but will be replaced with a config file later
 CryoSrcLocations srcLocations[] = {
     {"/workspaces/cryo/"},
@@ -639,4 +680,75 @@ char *getCompilerRootPath(void)
     }
 
     return NULL;
+}
+void createNewEmptyFile(const char *fileName, const char *ext, const char *path)
+{
+    // Create the file name
+    char *newFileName = (char *)malloc(strlen(fileName) + strlen(ext) + 1);
+    strcpy(newFileName, fileName);
+    strcat(newFileName, ext);
+
+    // Create the file path
+    char *filePath = (char *)malloc(strlen(path) + strlen(newFileName) + 2);
+    strcpy(filePath, path);
+    strcat(filePath, "/");
+    strcat(filePath, newFileName);
+
+    // Create directories recursively
+    char *tempPath = strdup(path);
+    char *p = tempPath;
+
+    // Skip leading slashes
+    while (*p == '/')
+        p++;
+
+    while (*p != '\0')
+    {
+        if (*p == '/')
+        {
+            *p = '\0'; // Temporarily terminate the string
+            if (mkdir(tempPath, 0755) != 0 && errno != EEXIST)
+            {
+                logMessage(LMI, "ERROR", "FS", "Failed to create directory: %s", tempPath);
+                perror("mkdir");
+                DEBUG_BREAKPOINT;
+                free(tempPath);
+                free(newFileName);
+                free(filePath);
+                return;
+            }
+            *p = '/'; // Restore the slash
+        }
+        p++;
+    }
+
+    // Create final directory
+    if (mkdir(tempPath, 0755) != 0 && errno != EEXIST)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to create directory: %s", tempPath);
+        perror("mkdir");
+        DEBUG_BREAKPOINT;
+        free(tempPath);
+        free(newFileName);
+        free(filePath);
+        return;
+    }
+
+    free(tempPath);
+
+    // Create the file
+    FILE *file = fopen(filePath, "w");
+    if (!file)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to create file: %s", filePath);
+        perror("fopen");
+        DEBUG_BREAKPOINT;
+        free(newFileName);
+        free(filePath);
+        return;
+    }
+
+    fclose(file);
+    free(newFileName);
+    free(filePath);
 }
