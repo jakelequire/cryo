@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "utils.h"
+#include "messages.h"
 
 int cryo_compile(char *args[], int argCount, bool useGDB);
 

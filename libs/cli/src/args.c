@@ -34,6 +34,10 @@ enum CLI_ARGS get_CLI_arg(char *arg)
     {
         return CLI_BUILD_COMPILER;
     }
+    else if (stringCompare(arg, "clean-compiler"))
+    {
+        return CLI_CLEAN_COMPILER;
+    }
     else if (stringCompare(arg, "init"))
     {
         return CLI_INIT;
@@ -87,6 +91,9 @@ void handleArgs(int argc, char *argv[])
             return;
         case CLI_BUILD_COMPILER:
             exe_CLI_build_compiler();
+            break;
+        case CLI_CLEAN_COMPILER:
+            exe_CLI_clean_compiler(parse_clean_compiler_options(argc, argv, i + 1));
             break;
         case CLI_INIT:
             exe_CLI_init(parse_init_options(argc, argv, i + 1, cwd));
@@ -211,11 +218,56 @@ HelpOptions *parse_help_options(int argc, char *argv[], int start_index)
         {
             options->command = CLI_INIT;
         }
+        else if (stringCompare(argv[start_index], "build-compiler"))
+        {
+            options->command = CLI_BUILD_COMPILER;
+        }
+        else if (stringCompare(argv[start_index], "clean-compiler"))
+        {
+            options->command = CLI_CLEAN_COMPILER;
+        }
         else if (stringCompare(argv[start_index], "version"))
         {
             options->command = CLI_VERSION;
         }
         // Add other commands as needed
+    }
+
+    return options;
+}
+
+CleanCompilerOptions *parse_clean_compiler_options(int argc, char *argv[], int start_index)
+{
+    CleanCompilerOptions *options = (CleanCompilerOptions *)malloc(sizeof(CleanCompilerOptions));
+    if (!options)
+        return NULL;
+
+    // Initialize defaults
+    options->clean_all = false;
+    options->clean_custom = false;
+
+    // Parse clean-compiler command options
+    for (int i = start_index; i < argc; i++)
+    {
+        // Check for clean all
+        if (stringCompare(argv[i], "--all"))
+        {
+            options->clean_all = true;
+        }
+        // Check for clean custom
+        else if (stringCompare(argv[i], "--custom"))
+        {
+            options->clean_custom = true;
+            if (i + 1 < argc)
+            {
+                options->custom_name = argv[++i];
+            }
+            else
+            {
+                free(options);
+                return NULL; // Missing custom name
+            }
+        }
     }
 
     return options;

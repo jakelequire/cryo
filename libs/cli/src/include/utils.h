@@ -32,5 +32,6 @@ bool runSystemCommand(const char *command);
 
 char *getCompilerExePath(void);
 char *getCompilerBinPath(void);
+char *getCryoRootDir(void);
 
 #endif // UTILS_H

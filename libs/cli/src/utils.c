@@ -48,6 +48,17 @@ bool stringCompare(char *str1, char *str2)
 bool runSystemCommand(const char *command)
 {
     int result = system(command);
+    if (result == -1)
+    {
+        fprintf(stderr, "Failed to run command: %s\n", command);
+        return false;
+    }
+    // Check if the command did not execute successfully
+    if (WEXITSTATUS(result) != 0)
+    {
+        fprintf(stderr, "Command returned non-zero exit status: %d\n", WEXITSTATUS(result));
+        return false;
+    }
     return result == 0;
 }
 
@@ -187,4 +198,23 @@ char *getCompilerBinPath(void)
     }
 
     return NULL;
+}
+
+char *getCryoRootDir(void)
+{
+    char *compiler_path = getCompilerExePath();
+    if (!compiler_path)
+    {
+        printf("Error: Unable to locate the compiler binary\n");
+        exit(0);
+    }
+    // Trim the last directory from the path (x2) to get the root directory
+    char *compiler_dir = trimLastDir(trimLastDir(compiler_path));
+    if (!compiler_dir)
+    {
+        printf("Error: Unable to locate the compiler directory\n");
+        exit(0);
+    }
+
+    return compiler_dir;
 }

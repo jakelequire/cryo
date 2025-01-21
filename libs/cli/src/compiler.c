@@ -55,6 +55,11 @@ int cryo_compile(char *args[], int argCount, bool useGDB)
 
     printf("\nCommand: %s\n", command);
 
+    if (USE_GDB)
+    {
+        printf(BUILDING_WITH_GDB);
+    }
+
     // Execute the command
     if (runSystemCommand(command))
     {

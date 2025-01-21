@@ -14,30 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "../include/commands.h"
+#ifndef CRYO_TEST_SUITE_H
+#define CRYO_TEST_SUITE_H
 
-void exe_CLI_build_compiler(void)
-{
-    // Trim the last directory from the path
-    char *compiler_dir = getCryoRootDir();
-
-    printf("Compiler directory: %s\n", compiler_dir);
-
-    // Now that we have the compiler dir, we need to run the make file
-    char *_make_command = concatStrings("make -C ", compiler_dir);
-    char *make_command = concatStrings(_make_command, " all");
-
-    printf("Make command: %s\n", make_command);
-
-    // Execute the make command
-    if (runSystemCommand(make_command))
-    {
-        printf("Compiler built successfully\n");
-    }
-    else
-    {
-        printf("Error: Failed to build the compiler\n");
-    }
-
-    exit(0);
-}
+#endif // CRYO_TEST_SUITE_H

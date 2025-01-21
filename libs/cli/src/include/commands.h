@@ -38,11 +38,10 @@
 #include "compiler.h"
 #include "messages.h"
 
-#define USE_GDB true
-
 typedef struct BuildOptions BuildOptions;
 typedef struct InitOptions InitOptions;
 typedef struct HelpOptions HelpOptions;
+typedef struct CleanCompilerOptions CleanCompilerOptions;
 
 // =============================================================================
 // Help Command (./commands/help.c)
@@ -51,6 +50,8 @@ void exe_CLI_help(void);
 void exe_CLI_help_options(HelpOptions *options);
 
 void helpcmd_build(void);
+void helpcmd_build_compiler(void);
+void helpcmd_clean_compiler(void);
 
 // =============================================================================
 // Env Command (./commands/env.c)
@@ -83,6 +84,11 @@ void exe_CLI_build(BuildOptions *options);
 // Build Command (./commands/build-compiler.c)
 
 void exe_CLI_build_compiler(void);
+
+// =============================================================================
+// Clean Compiler Command (./commands/clean-compiler.c)
+
+void exe_CLI_clean_compiler(CleanCompilerOptions *options);
 
 // =============================================================================
 // Init Command (./commands/init.c)

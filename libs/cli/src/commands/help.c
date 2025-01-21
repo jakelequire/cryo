@@ -16,10 +16,12 @@
  ********************************************************************************/
 #include "../include/commands.h"
 
+#define DEV_COMMAND BOLD CYAN "(dev)" COLOR_RESET
+
 void exe_CLI_help(void)
 {
     // Title and Version
-    printf("\n" BOLD "Cryo Build System" COLOR_RESET " %s\n", __CLI_VERSION__);
+    printf("\n" BOLD CYAN "Cryo Build System" COLOR_RESET GRAY ITALIC " %s%s\n", __CLI_VERSION__, COLOR_RESET);
     printf("A modern build system for Cryo projects\n\n");
 
     // Basic Usage
@@ -33,13 +35,17 @@ void exe_CLI_help(void)
     printf("  " BOLD "version" COLOR_RESET "   Display version information\n");
     printf("  " BOLD "env" COLOR_RESET "       Enter the Cryo development environment\n\n");
 
+    printf(BOLD "DEV COMMANDS\n" COLOR_RESET);
+    printf("  " BOLD "build-compiler" COLOR_RESET "  Build the Cryo compiler (runs makefile)\n");
+    printf("  " BOLD "clean-compiler" COLOR_RESET "  Clean the Cryo compiler build directory\n\n");
+
     printf(BOLD "For more information on a specific command, run:\n" COLOR_RESET);
     printf(YELLOW "    cryo -h|--help <command>\n\n" COLOR_RESET);
 
     // Additional Information
     printf(BOLD "ADDITIONAL INFORMATION\n" COLOR_RESET);
     printf("  For more detailed documentation, visit:\n");
-    printf("  https://github.com/jakelequire/cryo\n\n");
+    printf(LIGHT_BLUE "  https://github.com/jakelequire/cryo\n\n" COLOR_RESET);
 }
 
 void exe_CLI_help_options(HelpOptions *options)
@@ -54,6 +60,12 @@ void exe_CLI_help_options(HelpOptions *options)
         break;
     case CLI_VERSION:
         // helpcmd_version();
+        break;
+    case CLI_BUILD_COMPILER:
+        helpcmd_build_compiler();
+        break;
+    case CLI_CLEAN_COMPILER:
+        helpcmd_clean_compiler();
         break;
     default:
         exe_CLI_help();
@@ -94,5 +106,53 @@ void helpcmd_build(void)
 
     printf("  Build in development mode:\n");
     printf(YELLOW "    $ cryo build -f src/main.cryo --dev\n\n" COLOR_RESET);
+    printf("\n");
+}
+
+void helpcmd_build_compiler(void)
+{
+    // Build Compiler Command Details
+    printf("\n\n");
+    printf(BOLD UNDERLINE "BUILD COMPILER COMMAND\t" COLOR_RESET DEV_COMMAND "\n\n");
+    printf("   " BOLD YELLOW "cryo build-compiler\n\n" COLOR_RESET);
+    printf("  " BOLD "Usage:" COLOR_RESET "\n");
+    printf("    cryo build-compiler              Build the Cryo compiler\n\n");
+
+    printf("  " BOLD "Description:" COLOR_RESET "\n");
+    printf("    This command will build the Cryo compiler using the makefile\n\n");
+
+    printf("  " BOLD "Options:" COLOR_RESET "\n");
+    printf("    None\n\n");
+
+    // Examples Section
+    printf(BOLD "EXAMPLES\n" COLOR_RESET);
+    printf("  Build the Cryo compiler:\n");
+    printf(YELLOW "    $ cryo build-compiler\n\n" COLOR_RESET);
+    printf("\n");
+}
+
+void helpcmd_clean_compiler(void)
+{
+    // Clean Compiler Command Details
+    printf("\n\n");
+    printf(BOLD UNDERLINE "CLEAN COMPILER COMMAND\t" COLOR_RESET DEV_COMMAND "\n\n");
+    printf("   " BOLD YELLOW "cryo clean-compiler\n\n" COLOR_RESET);
+    printf("  " BOLD "Usage:" COLOR_RESET "\n");
+    printf("    cryo clean-compiler              Clean the Cryo compiler build directory\n\n");
+
+    printf("  " BOLD "Description:" COLOR_RESET "\n");
+    printf("    This command will clean the Cryo compiler build directory\n\n");
+
+    printf("  " BOLD "Options:" COLOR_RESET "\n");
+    printf("    --all                           Clean all compiler directories\n");
+    printf("    --custom <name>                 Clean a custom directory\n\n");
+
+    // Examples Section
+    printf(BOLD "EXAMPLES\n" COLOR_RESET);
+    printf("  Clean all compiler directories:\n");
+    printf(YELLOW "    $ cryo clean-compiler --all\n\n" COLOR_RESET);
+
+    printf("  Clean a custom directory:\n");
+    printf(YELLOW "    $ cryo clean-compiler --custom <name>\n\n" COLOR_RESET);
     printf("\n");
 }

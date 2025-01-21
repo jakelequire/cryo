@@ -17,6 +17,8 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
+#include "consoleColors.h"
+
 // ====================================================================================================
 // init.c Messages
 // ====================================================================================================
@@ -34,5 +36,11 @@
                                 "project_version: \"0.1.0\"\n"   \
                                 "project_author: \"John Doe\"\n" \
                                 "project_description: \"A Cryo project\"\n"
+
+#define BUILDING_WITH_GDB "\n\n" BOLD CYAN                                                         \
+                          "+--------------------------------------------------------+\n"           \
+                          "|                Building with GDB enabled                |\n"          \
+                          "+--------------------------------------------------------+" COLOR_RESET \
+                          "\n\n"
 
 #endif // MESSAGES_H

@@ -16,28 +16,41 @@
  ********************************************************************************/
 #include "../include/commands.h"
 
-void exe_CLI_build_compiler(void)
+#define MAX_CMD_LEN 1024
+
+void exe_CLI_clean_compiler(CleanCompilerOptions *options)
 {
-    // Trim the last directory from the path
+    // Get the compiler directory
     char *compiler_dir = getCryoRootDir();
 
-    printf("Compiler directory: %s\n", compiler_dir);
+    // Now that we have the root dir, we need to access the clean script
+    // This depends on the arguments of `CleanCompilerOptions`.
+    char clean_command[MAX_CMD_LEN]; // Changed from char* array to char array
 
-    // Now that we have the compiler dir, we need to run the make file
-    char *_make_command = concatStrings("make -C ", compiler_dir);
-    char *make_command = concatStrings(_make_command, " all");
-
-    printf("Make command: %s\n", make_command);
-
-    // Execute the make command
-    if (runSystemCommand(make_command))
+    // The directory we are interested in is under {root}/scripts/
+    // In this directory there is `clean.py` and `custom-clean.py`
+    // which custom-clean takes in a name argument to clean a specific
+    // directory.
+    if (options->clean_all)
     {
-        printf("Compiler built successfully\n");
+        printf("Cleaning all compiler directories...\n\n");
+        snprintf(clean_command, MAX_CMD_LEN, "python3 %s/scripts/clean.py", compiler_dir);
+    }
+    else if (options->clean_custom)
+    {
+        // Check and make sure a custom name was provided
+        if (options->custom_name == NULL)
+        {
+            printf("Error: No custom name provided for clean\n");
+            return;
+        }
+        printf("Cleaning custom directory: %s\n\n", options->custom_name);
+        snprintf(clean_command, MAX_CMD_LEN, "python3 %s/scripts/custom-clean.py %s",
+                 compiler_dir, options->custom_name);
     }
     else
     {
-        printf("Error: Failed to build the compiler\n");
+        printf("Error: No clean options specified\n");
+        return;
     }
-
-    exit(0);
 }

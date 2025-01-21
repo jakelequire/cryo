@@ -32,6 +32,7 @@ enum CLI_ARGS
     CLI_VERSION,
     CLI_BUILD,
     CLI_BUILD_COMPILER,
+    CLI_CLEAN_COMPILER,
     CLI_INIT,
     CLI_UNKNOWN
 };
@@ -56,6 +57,13 @@ typedef struct InitOptions
     const char *cwd;
 } InitOptions;
 
+typedef struct CleanCompilerOptions
+{
+    bool clean_all;
+    bool clean_custom;
+    const char *custom_name;
+} CleanCompilerOptions;
+
 void handleArgs(int argc, char *argv[]);
 
 enum CLI_ARGS get_CLI_arg(char *arg);
@@ -63,5 +71,6 @@ enum CLI_ARGS get_CLI_arg(char *arg);
 BuildOptions *parse_build_options(int argc, char *argv[], int start_index);
 InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0);
 HelpOptions *parse_help_options(int argc, char *argv[], int start_index);
+CleanCompilerOptions *parse_clean_compiler_options(int argc, char *argv[], int start_index);
 
 #endif // CLI_ARGS_H
