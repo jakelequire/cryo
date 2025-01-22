@@ -22,21 +22,24 @@ namespace Cryo
 {
     CryoLinker *globalLinker = nullptr;
 
-    llvm::Module *Linker::initMainModule(void)
+    std::unique_ptr<llvm::Module> Linker::initMainModule(void)
     {
         std::cout << "Initializing Main Module before CodeGen..." << std::endl;
 
         // At this step of the compilation process, this module being passed is the newly created
         // module from the Cryo Compiler. We will add the required dependencies to this module before
         // it is passed to the LLVM backend code generator.
-
-        if (!preprocessedModule)
+        Cryo::Linker *cLinker = GetCXXLinker();
+        if (!cLinker)
         {
-            logMessage(LMI, "ERROR", "Linker", "Runtime Module is null");
-            CONDITION_FAILED;
+            logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
+            return nullptr;
         }
 
-        return preprocessedModule;
+        std::cout << "Cryo Linker is not undefined" << std::endl;
+        // Add the dependencies to the root module
+
+        return std::move(cLinker->appendDependenciesToRoot());
     }
 
     // This function will be used to to handle the runtime IR. The module passed to this function
@@ -122,7 +125,7 @@ namespace Cryo
 
         // Parse the merged IR file
         llvm::SMDiagnostic err;
-        std::unique_ptr<llvm::Module> mergedModule = llvm::parseIRFile(outputFilePath, err, context);
+        llvm::Module *mergedModule = llvm::parseIRFile(outputFilePath, err, context).get();
         if (!mergedModule)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to parse merged IR file");
@@ -133,28 +136,47 @@ namespace Cryo
         std::cout << "Merged Module is not undefined" << std::endl;
 
         // Now that we have the merged module, we can set it as the preprocessed module
-        preprocessedModule = mergedModule.get();
+        GetCXXLinker()->setPreprocessedModule(mergedModule);
         std::cout << "Merged Module Set as Preprocessed Module" << std::endl;
+
+        std::cout << "\n\nMerged Module @addPreprocessingModule:\n--------\n"
+                  << std::endl;
+        mergedModule->print(llvm::errs(), nullptr);
+        std::cout << "\n--------\n\n"
+                  << std::endl;
 
         return;
     }
 
-    void Linker::appendDependenciesToRoot(llvm::Module *root)
+    std::unique_ptr<llvm::Module> Linker::appendDependenciesToRoot()
     {
-        if (!root)
+        Cryo::Linker *cLinker = GetCXXLinker();
+        if (!cLinker)
         {
-            logMessage(LMI, "ERROR", "Linker", "Root module is null");
-            return;
+            logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
+            return nullptr;
         }
 
-        std::string rootName = root->getName().str();
-        if (rootName.empty())
+        std::string cryoRuntimefile = cLinker->getDirInfo()->runtimeDir + "/cryo_runtime.ll";
+        if (cryoRuntimefile.empty())
         {
-            logMessage(LMI, "ERROR", "Linker", "Root module name is empty");
-            return;
+            logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file is empty");
+            return nullptr;
         }
 
-        return;
+        // Parse the cryo runtime file
+        llvm::LLVMContext temp_context;
+        llvm::SMDiagnostic err;
+        std::unique_ptr<llvm::Module> cryoRuntimeModule = llvm::parseIRFile(cryoRuntimefile, err, temp_context);
+        if (!cryoRuntimeModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to parse Cryo Runtime file");
+            std::cout << "Runtime File: " << cryoRuntimefile << std::endl;
+            CONDITION_FAILED;
+            return nullptr;
+        }
+
+        return std::move(cryoRuntimeModule);
     }
 
     void Linker::newInitDependencies(llvm::Module *srcModule)
@@ -217,7 +239,7 @@ namespace Cryo
 
         std::cout << "@getCRuntimePath | Cryo Root: " << cryoRoot << std::endl;
 
-        std::string fullPath = cryoRoot + "/Std/Runtime";
+        std::string fullPath = cryoRoot + "Std/Runtime";
 
         std::cout << "@getCRuntimePath | Full Path: " << fullPath << std::endl;
 
@@ -372,6 +394,49 @@ namespace Cryo
         std::cout << "Module Merged Successfully" << std::endl;
 
         return fullPathToFile;
+    }
+
+    std::string Linker::getCryoRuntimeFilePath(void)
+    {
+        std::string runtimeDir = dirInfo->runtimeDir;
+        if (runtimeDir.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
+            return "";
+        }
+
+        std::string cryoRuntimeFile = runtimeDir + "/cryo_runtime.ll";
+        if (!fileExists(cryoRuntimeFile.c_str()))
+        {
+            logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file does not exist: %s", cryoRuntimeFile.c_str());
+            return "";
+        }
+
+        return cryoRuntimeFile;
+    }
+
+    void Linker::mergeTwoModules(llvm::Module *destMod, std::unique_ptr<llvm::Module> srcMod)
+    {
+        if (!destMod)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Destination module is null");
+            CONDITION_FAILED;
+        }
+
+        if (!srcMod)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Source module is null");
+            CONDITION_FAILED;
+        }
+
+        bool result = llvm::Linker::linkModules(*destMod, std::move(srcMod));
+        if (result)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to merge modules");
+            CONDITION_FAILED;
+        }
+
+        std::cout << "@mergeTwoModule | Module Merged Successfully" << std::endl;
     }
 
 } // namespace Cryo

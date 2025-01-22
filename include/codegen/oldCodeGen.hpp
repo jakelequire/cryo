@@ -145,6 +145,34 @@ namespace Cryo
         std::unordered_map<std::string, llvm::GlobalVariable *> stringTable;
         size_t stringCounter = 0;
 
+        void mergeModule(std::unique_ptr<llvm::Module> srcModule)
+        {
+            if (!module)
+            {
+                logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
+                return;
+            }
+
+            if (!srcModule)
+            {
+                logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
+                return;
+            }
+
+            llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
+            bool result = llvm::Linker::linkModules(
+                *module,
+                std::move(srcModule),
+                linkerFlags);
+            if (result)
+            {
+                logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
+                return;
+            }
+
+            std::cout << "@mergeModule Module merged successfully" << std::endl;
+        }
+
         llvm::GlobalVariable *getOrCreateGlobalString(const std::string &content)
         {
             // First check if we already have this string
@@ -282,28 +310,15 @@ namespace Cryo
         void initDependencies()
         {
             // Get the dependency module
-            llvm::Module *depMod = GetCXXLinker()->initMainModule();
-
-            // Get the primary module
-            std::unique_ptr<llvm::Module> &primaryModule = CryoContext::getInstance().module;
-
-            // Link the modules together
-            // The second module (depMod) will be destroyed after linking
-            bool err = llvm::Linker::linkModules(*primaryModule, std::unique_ptr<llvm::Module>(depMod));
-
-            // Handle any linking errors
-            if (err)
-            {
-                // Handle the error appropriately
-                llvm::errs() << "Error linking modules: " << "\n";
-                return;
-            }
+            std::cout << "@initDependencies Initializing Dependencies" << std::endl;
+            CryoContext::getInstance().mergeModule(std::move(GetCXXLinker()->appendDependenciesToRoot()));
         }
 
         void linkDependencies(void)
         {
-            std::cout << "Linking Dependencies to Main Module" << std::endl;
-            GetCXXLinker()->appendDependenciesToRoot(&getModule());
+            std::cout << "@linkDependencies Linking Dependencies" << std::endl;
+            // CryoContext::getInstance().mergeModule(std::move(GetCXXLinker()->appendDependenciesToRoot()));
+            DEBUG_BREAKPOINT;
         }
 
     private:

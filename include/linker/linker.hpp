@@ -158,14 +158,15 @@ namespace Cryo
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
         llvm::Module *preprocessedModule;
+        void setPreprocessedModule(llvm::Module *mod) { preprocessedModule = mod; }
         std::vector<llvm::Module *> dependencies;
 
         DirectoryInfo *dirInfo;
 
-        llvm::Module *initMainModule(void);
+        std::unique_ptr<llvm::Module> initMainModule(void);
+        std::unique_ptr<llvm::Module> appendDependenciesToRoot(void);
 
         void newInitDependencies(llvm::Module *srcModule);
-        void appendDependenciesToRoot(llvm::Module *root);
         void addPreprocessingModule(llvm::Module *mod);
 
         std::string createIRFromModule(llvm::Module *module, std::string outDir);
@@ -181,6 +182,10 @@ namespace Cryo
         std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName);
 
         std::vector<std::string> listDir(const char *path);
+
+    public:
+        std::string getCryoRuntimeFilePath(void);
+        void mergeTwoModules(llvm::Module *destMod, std::unique_ptr<llvm::Module> srcMod);
     };
 
     // ================================================================ //
