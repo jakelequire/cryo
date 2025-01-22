@@ -975,6 +975,11 @@ namespace Cryo
         context.initializeContext();
     }
 
+    inline CryoCompiler::~CryoCompiler()
+    {
+        // Clean up the compiler
+    }
+
     inline void CryoCompiler::compile(ASTNode *root)
     {
         codeGen->executeCodeGeneration(root);

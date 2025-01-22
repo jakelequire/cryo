@@ -151,8 +151,6 @@ namespace Cryo
         preprocessedModule = mergedModule.get();
         std::cout << "Merged Module Set as Preprocessed Module" << std::endl;
 
-        preprocessedModule->print(llvm::errs(), nullptr);
-
         return;
     }
 
