@@ -43,4 +43,13 @@
                           "+--------------------------------------------------------+" COLOR_RESET \
                           "\n\n"
 
+#define COMPILER_UNDEFINED_ERR "\n\n" BOLD RED                                                          \
+                               "+--------------------------------------------------------+\n"           \
+                               "|                Compiler Undefined Error                |\n"           \
+                               "|                                                        |\n"           \
+                               "|   Please ensure that the compiler has been properly    |\n"           \
+                               "|   built and installed.                                 |\n"           \
+                               "+--------------------------------------------------------+" COLOR_RESET \
+                               "\n\n"
+
 #endif // MESSAGES_H

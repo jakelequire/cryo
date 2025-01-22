@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "./include/utils.h"
+#include "./include/messages.h"
 
 char *trimLastDir(char *path)
 {
@@ -197,6 +198,10 @@ char *getCompilerBinPath(void)
         }
     }
 
+    if (path == NULL)
+    {
+        fprintf(stderr, COMPILER_UNDEFINED_ERR);
+    }
     return NULL;
 }
 

@@ -22,7 +22,7 @@ namespace Cryo
 {
     CryoLinker *globalLinker = nullptr;
 
-    void Linker::initMainModule(llvm::Module *module)
+    llvm::Module *Linker::initMainModule(void)
     {
         std::cout << "Initializing Main Module before CodeGen..." << std::endl;
 
@@ -36,22 +36,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        std::cout << "Runtime Module is not undefined" << std::endl;
-
-        std::cout << "Module:\n--------\n"
-                  << std::endl;
-        module->print(llvm::errs(), nullptr);
-        std::cout << "\n--------\n\n"
-                  << std::endl;
-
-        std::cout << "Runtime Module:\n--------\n"
-                  << std::endl;
-        preprocessedModule->print(llvm::errs(), nullptr);
-        std::cout << "\n--------\n\n"
-                  << std::endl;
-
-        // Add the runtime module to the main module
-        DEBUG_BREAKPOINT;
+        return preprocessedModule;
     }
 
     // This function will be used to to handle the runtime IR. The module passed to this function
@@ -174,6 +159,7 @@ namespace Cryo
 
     void Linker::newInitDependencies(llvm::Module *srcModule)
     {
+        std::cout << "Init New Dependencies..." << std::endl;
     }
 
     /// @brief Create a `.ll` file from the given module and output directory.

@@ -132,7 +132,7 @@ namespace Cryo
 {
     class Linker;
     extern CryoLinker *globalLinker; // Global Linker Object
-    #define GetCXXLinker() reinterpret_cast<Cryo::Linker *>(globalLinker)
+#define GetCXXLinker() reinterpret_cast<Cryo::Linker *>(globalLinker)
 
     // ================================================================ //
     //                        Linker Manager                            //
@@ -149,6 +149,7 @@ namespace Cryo
 
             // Set the global linker object
             globalLinker = reinterpret_cast<CryoLinker *>(this);
+            std::cout << "Global Linker Object Set..." << std::endl;
         }
 
         Cryo::Linker *getCXXLinker() { return reinterpret_cast<Cryo::Linker *>(globalLinker); }
@@ -161,7 +162,7 @@ namespace Cryo
 
         DirectoryInfo *dirInfo;
 
-        void initMainModule(llvm::Module *module);
+        llvm::Module *initMainModule(void);
 
         void newInitDependencies(llvm::Module *srcModule);
         void appendDependenciesToRoot(llvm::Module *root);

@@ -47,6 +47,8 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Call Argument Count: " + std::to_string(argCount));
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Callee Name: " + std::string(functionName));
 
+        compiler.getContext().module->print(llvm::errs(), nullptr);
+
         // STFunction *stFunction = compiler.getSymTable().getFunction(compiler.getContext().currentNamespace, functionName);
 
         // Get the argument values
@@ -57,12 +59,12 @@ namespace Cryo
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argNodeType = argNode->metaData->type;
             std::string funcName = std::string(functionName);
-
             // Callee's name:
             llvm::Function *calleeF = compiler.getContext().module->getFunction(funcName);
             if (!calleeF)
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+                compiler.getContext().module->print(llvm::errs(), nullptr);
                 CONDITION_FAILED;
             }
 

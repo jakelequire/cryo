@@ -281,8 +281,23 @@ namespace Cryo
 
         void initDependencies()
         {
+            // Get the dependency module
+            llvm::Module *depMod = GetCXXLinker()->initMainModule();
 
-            GetCXXLinker()->newInitDependencies(&getModule());
+            // Get the primary module
+            std::unique_ptr<llvm::Module> &primaryModule = CryoContext::getInstance().module;
+
+            // Link the modules together
+            // The second module (depMod) will be destroyed after linking
+            bool err = llvm::Linker::linkModules(*primaryModule, std::unique_ptr<llvm::Module>(depMod));
+
+            // Handle any linking errors
+            if (err)
+            {
+                // Handle the error appropriately
+                llvm::errs() << "Error linking modules: " << "\n";
+                return;
+            }
         }
 
         void linkDependencies(void)
