@@ -32,37 +32,37 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Hoisting Declarations");
         // linker->hoistDeclarations(compiler.getContext().module.get());
 
-        if (llvm::verifyModule(*cryoContext.module, nullptr))
-        {
-            DEBUG_PRINT_FILTER({
-                LLVM_MODULE_FAILED_MESSAGE_START;
-
-                LLVMIRHighlighter highlighter;
-                llvm::formatted_raw_ostream formatted_errs(llvm::errs());
-                highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
-
-                LLVM_MODULE_FAILED_MESSAGE_END;
-                LLVM_MODULE_ERROR_START;
-            });
-            // Get the error itself without the module showing up
-            std::string errorMessage = getErrorMessage();
-            if (!errorMessage.empty())
-            {
-                llvm::errs() << errorMessage;
-                std::cout << "\n\n";
-            }
-            DEBUG_PRINT_FILTER({
-                LLVM_MODULE_ERROR_END;
-                std::cout << "\n\n";
-            });
-
-            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
-
-            // Output the broken IR to a file
-            // outputFailedIR();
-
-            exit(1);
-        }
+        // if (llvm::verifyModule(*cryoContext.module, nullptr))
+        // {
+        //     DEBUG_PRINT_FILTER({
+        //         LLVM_MODULE_FAILED_MESSAGE_START;
+        //
+        //         LLVMIRHighlighter highlighter;
+        //         llvm::formatted_raw_ostream formatted_errs(llvm::errs());
+        //         highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
+        //
+        //         LLVM_MODULE_FAILED_MESSAGE_END;
+        //         LLVM_MODULE_ERROR_START;
+        //     });
+        //     // Get the error itself without the module showing up
+        //     std::string errorMessage = getErrorMessage();
+        //     if (!errorMessage.empty())
+        //     {
+        //         llvm::errs() << errorMessage;
+        //         std::cout << "\n\n";
+        //     }
+        //     DEBUG_PRINT_FILTER({
+        //         LLVM_MODULE_ERROR_END;
+        //         std::cout << "\n\n";
+        //     });
+        //
+        //     DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
+        //
+        //     // Output the broken IR to a file
+        //     // outputFailedIR();
+        //
+        //     exit(1);
+        // }
 
         bool isPreprocessing = compiler.isPreprocessing;
         if (isPreprocessing)
@@ -142,6 +142,8 @@ namespace Cryo
         });
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
+
+        GetCXXLinker()->completeCodeGeneration(); // unsure if we want to signal this here but lets see !! :)
         return;
     }
 

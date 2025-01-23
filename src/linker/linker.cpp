@@ -22,6 +22,13 @@ namespace Cryo
 {
     CryoLinker *globalLinker = nullptr;
 
+    /// @brief This function will initialize the creation of the Cryo Runtime Module.
+    /// This module is compiled along with a C runtime module to create the final
+    /// runtime module that will be used in the Cryo Compiler before the main Cryo module.
+    ///
+    /// @return The Cryo Runtime Module
+    ///
+    /// @note this function is called from the C++ CodeGen API before code generation.
     llvm::Module *Linker::initMainModule(void)
     {
         std::cout << "Initializing Main Module before CodeGen..." << std::endl;
@@ -46,6 +53,11 @@ namespace Cryo
         return runtimeMod;
     }
 
+    /// @brief This function will seek for the `cryo_runtime.ll` file that should have been created
+    /// at an earlier stage in the compiler. This function is called to parse this file and returns
+    /// the `llvm::Module *`.
+    /// @param
+    /// @return The Cryo Runtime Module
     llvm::Module *Linker::getCryoRuntimeModule(void)
     {
         Cryo::Linker *cLinker = GetCXXLinker();
@@ -86,8 +98,11 @@ namespace Cryo
         return cryoRuntimeModule;
     }
 
-    // This function will be used to to handle the runtime IR. The module passed to this function
-    // is the cryo runtime file and will be combined with the c runtime file.
+    /// @brief This function is called after the cryo runtime module has been parsed and
+    /// and at the end of the code generation process. This will create the `cryo_runtime.ll`
+    /// file that will be used in the final compilation process and used in a later stage.
+    ///
+    /// @param mod The module to be used to create the IR file (runtime.cryo)
     void Linker::addPreprocessingModule(llvm::Module *mod)
     {
         logMessage(LMI, "INFO", "Linker", "Adding Preprocessing Module...");
@@ -192,42 +207,6 @@ namespace Cryo
         return;
     }
 
-    std::unique_ptr<llvm::Module> Linker::appendDependenciesToRoot()
-    {
-        Cryo::Linker *cLinker = GetCXXLinker();
-        if (!cLinker)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
-            return nullptr;
-        }
-
-        std::string cryoRuntimefile = cLinker->getDirInfo()->runtimeDir + "/cryo_runtime.ll";
-        if (cryoRuntimefile.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file is empty");
-            return nullptr;
-        }
-
-        // Parse the cryo runtime file
-        llvm::LLVMContext temp_context;
-        llvm::SMDiagnostic err;
-        std::unique_ptr<llvm::Module> cryoRuntimeModule = llvm::parseIRFile(cryoRuntimefile, err, temp_context);
-        if (!cryoRuntimeModule)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to parse Cryo Runtime file");
-            std::cout << "Runtime File: " << cryoRuntimefile << std::endl;
-            CONDITION_FAILED;
-            return nullptr;
-        }
-
-        return std::move(cryoRuntimeModule);
-    }
-
-    void Linker::newInitDependencies(llvm::Module *srcModule)
-    {
-        std::cout << "Init New Dependencies..." << std::endl;
-    }
-
     /// @brief Create a `.ll` file from the given module and output directory.
     /// @param module The module to create the IR from.
     /// @param outDir The output directory to write the IR file to.
@@ -272,6 +251,8 @@ namespace Cryo
 
     // ================================================================ //
 
+    /// @brief This function will return the path to the Cryo Runtime file path.
+    /// @return The path to the Cryo Runtime file path.
     std::string Linker::getCRuntimePath()
     {
         std::string cryoRoot = getCryoRootPath();
@@ -481,6 +462,34 @@ namespace Cryo
         }
 
         std::cout << "@mergeTwoModule | Module Merged Successfully" << std::endl;
+    }
+
+    // ================================================================ //
+    // End of Compilation API
+
+    void Linker::completeCodeGeneration(void)
+    {
+        std::cout << "End of Compilation Signal Received..." << std::endl;
+
+        // Look for the `main.ll` file that should be under {buildDir}/out/main.ll
+        std::string buildDir = GetCXXLinker()->getDirInfo()->buildDir;
+        if (buildDir.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Build directory is empty");
+            return;
+        }
+        std::string exe_output = buildDir + "/out/";
+        std::string exe_name = "main";
+        std::string mainFile = buildDir + "/out/main.ll";
+        std::string sys_cmd = "clang -o " + exe_output + exe_name + " " + mainFile;
+        int result = system(sys_cmd.c_str());
+        if (result != 0)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to compile main.ll");
+            return;
+        }
+
+        std::cout << "Main File Compiled Successfully" << std::endl;
     }
 
 } // namespace Cryo

@@ -166,13 +166,13 @@ namespace Cryo
         DirectoryInfo *dirInfo;
 
         llvm::Module *initMainModule(void);
-        std::unique_ptr<llvm::Module> appendDependenciesToRoot(void);
 
-        void newInitDependencies(llvm::Module *srcModule);
         void addPreprocessingModule(llvm::Module *mod);
 
         std::string createIRFromModule(llvm::Module *module, std::string outDir);
         llvm::Module *getCryoRuntimeModule(void);
+
+        void completeCodeGeneration(void);
 
     private:
         DirectoryInfo *createDirectoryInfo(std::string rootDir);
