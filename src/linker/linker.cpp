@@ -478,7 +478,7 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Build directory is empty");
             return;
         }
-        std::string exe_output = buildDir + "/out/";
+        std::string exe_output = buildDir + "/";
         std::string exe_name = "main";
         std::string mainFile = buildDir + "/out/main.ll";
         std::string sys_cmd = "clang -o " + exe_output + exe_name + " " + mainFile;
