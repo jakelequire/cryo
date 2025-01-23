@@ -52,10 +52,6 @@ function buildAndMoveLib {
             echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to cryo-path $COLOR_RESET"
             mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/cryo-path"
         fi
-        if [ "$LIB_NAME" == "cryo-config" ]; then
-            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to cryo-config $COLOR_RESET"
-            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/cryoconfig"
-        fi
     else
         echo -e "$INIT_LIBS_SIG $RED $BOLD No binaries found to move for $LIB_NAME $COLOR_RESET"
         echo -e "$INIT_LIBS_SIG Attempted path: $LIB_ROOT/bin/$LIB_NAME"

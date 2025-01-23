@@ -168,7 +168,7 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
 # >>=======--------------------------------------------------=======<< #
 
 # Main target
-$(MAIN_BIN): build-cryo-path build-cli build-lsp-monitor build-cryoconfig $(ALL_OBJS)
+$(MAIN_BIN): build-cryo-path build-cli build-lsp-monitor $(ALL_OBJS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(ALL_OBJS) -o $@ $(LDFLAGS)
 
@@ -179,8 +179,6 @@ build-cli:
 	@$(LIB_INIT) cli
 build-lsp-monitor:
 	@$(LIB_INIT) lsp-monitor
-build-cryoconfig:
-	@$(LIB_INIT) cryo-config
 
 
 # >>=======--------------------------------------------------=======<< #
