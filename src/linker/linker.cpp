@@ -481,12 +481,16 @@ namespace Cryo
         std::string exe_output = buildDir + "/";
         std::string exe_name = "main";
         std::string mainFile = buildDir + "/out/main.ll";
-        std::string sys_cmd = "clang -o " + exe_output + exe_name + " " + mainFile;
+        std::string sys_cmd = "clang-18 -o " + exe_output + exe_name + " " + mainFile;
         int result = system(sys_cmd.c_str());
-        if (result != 0)
+        if (result != 0 || WEXITSTATUS(result) != 0)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to compile main.ll");
-            return;
+            std::string error = "Error: " + std::to_string(result);
+            std::string errReason = std::strerror(errno);
+            logMessage(LMI, "ERROR", "Linker", error.c_str());
+            logMessage(LMI, "ERROR", "Linker", errReason.c_str());
+            CONDITION_FAILED;
         }
 
         std::cout << "Main File Compiled Successfully" << std::endl;

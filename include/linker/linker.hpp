@@ -54,6 +54,9 @@ extern "C"
 #include <fstream>
 #include <sstream>
 #include <functional>
+#include <filesystem>
+
+#include <wait.h>
 
 // -----------------------------------------------
 // LLVM includes

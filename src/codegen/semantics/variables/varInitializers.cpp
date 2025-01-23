@@ -522,6 +522,11 @@ namespace Cryo
         {
             switch (nodeDataType->container->primitive)
             {
+            case PRIM_I8:
+            case PRIM_I16:
+            case PRIM_I32:
+            case PRIM_I64:
+            case PRIM_I128:
             case PRIM_INT:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Int Variable");
@@ -545,7 +550,7 @@ namespace Cryo
                 llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName);
                 llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(llvmType, stValue, varName + ".load.var");
                 llvm::Value *loadValue = llvm::dyn_cast<llvm::Value>(loadInst);
-                llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
+                llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadInst, ptrValue);
                 storeValue->setAlignment(llvm::Align(8));
                 // Add the variable to the named values map & symbol table
                 compiler.getContext().namedValues[varName] = ptrValue;
@@ -610,9 +615,12 @@ namespace Cryo
                 CONDITION_FAILED;
             }
             }
+            break;
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+            std::string typeStr = VerboseDataTypeToString(nodeDataType);
+            std::cout << "Data Type: " << typeStr << std::endl;
             CONDITION_FAILED;
         }
         }

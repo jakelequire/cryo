@@ -271,6 +271,83 @@ char *DataTypeToString(DataType *dataType)
     return typeString;
 }
 
+char *VerboseDataTypeToString(DataType *dataType)
+{
+    if (!dataType)
+        return "<NULL DATATYPE>";
+
+    char *typeString = (char *)malloc(128);
+    if (!typeString)
+    {
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
+        return NULL;
+    }
+
+    switch (dataType->container->baseType)
+    {
+    case PRIMITIVE_TYPE:
+        if (dataType->container->isArray)
+        {
+            sprintf(typeString, "[Primitive]" LIGHT_CYAN BOLD "%s[]" COLOR_RESET,
+                    PrimitiveDataTypeToString(dataType->container->primitive));
+            return typeString;
+        }
+        sprintf(typeString, "[Primitive]" LIGHT_CYAN BOLD "%s" COLOR_RESET, PrimitiveDataTypeToString(dataType->container->primitive));
+        break;
+
+    case STRUCT_TYPE:
+        sprintf(typeString, "[Struct]" LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.structDef->name);
+        break;
+
+    case CLASS_TYPE:
+        sprintf(typeString, "[Class]" LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.classDef->name);
+        break;
+
+    case FUNCTION_TYPE:
+    {
+        // (param1Type, param2Type, ...) → returnType
+        sprintf(typeString, LIGHT_CYAN BOLD "(" COLOR_RESET);
+        int paramCount = dataType->container->custom.funcDef->paramCount;
+        for (int i = 0; i < paramCount; i++)
+        {
+            DataType *paramType = dataType->container->custom.funcDef->paramTypes[i];
+            char *paramTypeStr = DataTypeToString(paramType);
+            sprintf(typeString, "%s%s", typeString, paramTypeStr);
+            if (i < dataType->container->custom.funcDef->paramCount - 1)
+            {
+                sprintf(typeString, "%s, ", typeString);
+            }
+        }
+        if (paramCount == 0)
+        {
+            char *voidStr = (char *)malloc(16);
+            if (!voidStr)
+            {
+                fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for void string.\n");
+                return NULL;
+            }
+            // Add void to the string and make it light cyan
+            sprintf(voidStr, LIGHT_CYAN BOLD "void" COLOR_RESET);
+            sprintf(typeString, "%s%s", typeString, voidStr);
+
+            // Free the void string
+            free(voidStr);
+        }
+
+        sprintf(typeString, "%s" LIGHT_CYAN BOLD ") → " COLOR_RESET, typeString);
+        sprintf(typeString, "%s%s", typeString, DataTypeToString(dataType->container->custom.funcDef->returnType));
+        // End with a color reset
+        sprintf(typeString, "%s" COLOR_RESET, typeString);
+        break;
+    }
+    default:
+        sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
+        break;
+    }
+
+    return typeString;
+}
+
 char *VerboseStructTypeToString(StructType *type)
 {
     if (!type)

@@ -465,6 +465,7 @@ extern "C"
     char *VerboseStructTypeToString(StructType *type);
     char *VerboseClassTypeToString(ClassType *type);
     char *VerboseFunctionTypeToString(FunctionType *type);
+    char *VerboseDataTypeToString(DataType *dataType);
 
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);

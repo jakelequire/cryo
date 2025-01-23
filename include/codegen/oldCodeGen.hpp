@@ -163,6 +163,7 @@ namespace Cryo
 
             std::cout << "Module Name: " << srcModule->getName().str() << std::endl;
             std::cout << "Module IR: \n\n" << std::endl;
+            std::cout << "------------------------------------------------------------" << std::endl;
             srcModule->print(llvm::errs(), nullptr);
             std::cout << "------------------------------------------------------------" << std::endl;
             std::cout << "\n\n" << std::endl;
