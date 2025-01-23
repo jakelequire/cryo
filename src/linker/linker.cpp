@@ -22,7 +22,7 @@ namespace Cryo
 {
     CryoLinker *globalLinker = nullptr;
 
-    std::unique_ptr<llvm::Module> Linker::initMainModule(void)
+    llvm::Module *Linker::initMainModule(void)
     {
         std::cout << "Initializing Main Module before CodeGen..." << std::endl;
 
@@ -39,7 +39,51 @@ namespace Cryo
         std::cout << "Cryo Linker is not undefined" << std::endl;
         // Add the dependencies to the root module
 
-        return std::move(cLinker->appendDependenciesToRoot());
+        llvm::Module *runtimeMod = cLinker->getCryoRuntimeModule();
+        std::cout << "Runtime Module:" << std::endl;
+        runtimeMod->print(llvm::errs(), nullptr);
+
+        return runtimeMod;
+    }
+
+    llvm::Module *Linker::getCryoRuntimeModule(void)
+    {
+        Cryo::Linker *cLinker = GetCXXLinker();
+        if (!cLinker)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
+            return nullptr;
+        }
+
+        std::string cryoRuntimefile = cLinker->getDirInfo()->runtimeDir + "/cryo_runtime.ll";
+        if (cryoRuntimefile.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file is empty");
+            return nullptr;
+        }
+
+        // Parse the cryo runtime file
+        llvm::SMDiagnostic err;
+        llvm::Module *cryoRuntimeModule = llvm::parseIRFile(cryoRuntimefile, err, getLinkerContext()).release();
+        if (!cryoRuntimeModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to parse Cryo Runtime file");
+            std::cout << "Runtime File: " << cryoRuntimefile << std::endl;
+            CONDITION_FAILED;
+            return nullptr;
+        }
+        if (err.getMessage().str().size() > 0)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Error parsing Cryo Runtime file");
+            std::cout << "Error: " << err.getMessage().str() << std::endl;
+            CONDITION_FAILED;
+            return nullptr;
+        }
+
+        // Safely clone the module from LLVM's API
+        std::cout << "Cryo Runtime Module Compiled Successfully" << std::endl;
+
+        return cryoRuntimeModule;
     }
 
     // This function will be used to to handle the runtime IR. The module passed to this function

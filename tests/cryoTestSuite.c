@@ -15,3 +15,58 @@
  *                                                                              *
  ********************************************************************************/
 #include "tests/cryoTestSuite.h"
+
+// Create a new test suite with the given capacity
+CryoTestSuite *createTestSuite(const char *name, int capacity)
+{
+    CryoTestSuite *suite = (CryoTestSuite *)malloc(sizeof(CryoTestSuite));
+    suite->name = name;
+    suite->tests = (CryoTest *)malloc(sizeof(CryoTest) * capacity);
+    suite->testCount = 0;
+    suite->capacity = capacity;
+    return suite;
+}
+
+// Add a test to the test suite
+void addTest(CryoTestSuite *suite, const char *name, bool (*testFunc)(void), void (*setupFunc)(void), void (*teardownFunc)(void))
+{
+    if (suite->testCount >= suite->capacity)
+    {
+        fprintf(stderr, "Error: Test suite capacity exceeded\n");
+        return;
+    }
+    suite->tests[suite->testCount].name = name;
+    suite->tests[suite->testCount].testFunc = testFunc;
+    suite->tests[suite->testCount].setupFunc = setupFunc;
+    suite->tests[suite->testCount].teardownFunc = teardownFunc;
+    suite->testCount++;
+}
+
+// Run all tests in the test suite and report results
+void runTests(const CryoTestSuite *suite)
+{
+    int passed = 0;
+    printf("Running test suite: %s\n", suite->name);
+    for (int i = 0; i < suite->testCount; i++)
+    {
+        CryoTest *test = &suite->tests[i];
+        printf("Running test: %s... ", test->name);
+        if (test->setupFunc)
+            test->setupFunc();
+        bool result = test->testFunc();
+        if (test->teardownFunc)
+            test->teardownFunc();
+        if (result)
+        {
+            printf("PASSED\n");
+            passed++;
+        }
+        else
+        {
+            printf("FAILED\n");
+        }
+    }
+    printf("Passed %d/%d tests in suite: %s\n", passed, suite->testCount, suite->name);
+    free(suite->tests);
+    free(suite);
+}

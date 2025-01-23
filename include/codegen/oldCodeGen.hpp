@@ -145,7 +145,7 @@ namespace Cryo
         std::unordered_map<std::string, llvm::GlobalVariable *> stringTable;
         size_t stringCounter = 0;
 
-        void mergeModule(std::unique_ptr<llvm::Module> srcModule)
+        void mergeModule(llvm::Module *srcModule)
         {
             if (!module)
             {
@@ -159,10 +159,18 @@ namespace Cryo
                 return;
             }
 
+            std::cout << "Starting to merge modules" << std::endl;
+
+            std::cout << "Module Name: " << srcModule->getName().str() << std::endl;
+            std::cout << "Module IR: \n\n" << std::endl;
+            srcModule->print(llvm::errs(), nullptr);
+            std::cout << "------------------------------------------------------------" << std::endl;
+            std::cout << "\n\n" << std::endl;
+
             llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
             bool result = llvm::Linker::linkModules(
                 *module,
-                std::move(srcModule),
+                llvm::CloneModule(*srcModule),
                 linkerFlags);
             if (result)
             {
@@ -311,7 +319,7 @@ namespace Cryo
         {
             // Get the dependency module
             std::cout << "@initDependencies Initializing Dependencies" << std::endl;
-            CryoContext::getInstance().mergeModule(std::move(GetCXXLinker()->appendDependenciesToRoot()));
+            CryoContext::getInstance().mergeModule(GetCXXLinker()->initMainModule());
         }
 
         void linkDependencies(void)

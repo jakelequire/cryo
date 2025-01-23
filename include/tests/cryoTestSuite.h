@@ -16,5 +16,32 @@
  ********************************************************************************/
 #ifndef CRYO_TEST_SUITE_H
 #define CRYO_TEST_SUITE_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+// Structure to represent an individual test
+typedef struct CryoTest
+{
+    const char *name;
+    bool (*testFunc)(void);
+    void (*setupFunc)(void);
+    void (*teardownFunc)(void);
+} CryoTest;
+
+// Structure to represent the test suite
+typedef struct CryoTestSuite
+{
+    const char *name;
+    CryoTest *tests;
+    int testCount;
+    int capacity;
+} CryoTestSuite;
+
+// Function prototypes
+CryoTestSuite *createTestSuite(const char *name, int capacity);
+void addTest(CryoTestSuite *suite, const char *name, bool (*testFunc)(void), void (*setupFunc)(void), void (*teardownFunc)(void));
+void runTests(const CryoTestSuite *suite);
 
 #endif // CRYO_TEST_SUITE_H

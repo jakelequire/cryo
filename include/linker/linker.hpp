@@ -161,15 +161,18 @@ namespace Cryo
         void setPreprocessedModule(llvm::Module *mod) { preprocessedModule = mod; }
         std::vector<llvm::Module *> dependencies;
 
+        llvm::LLVMContext &getLinkerContext() { return context; }
+
         DirectoryInfo *dirInfo;
 
-        std::unique_ptr<llvm::Module> initMainModule(void);
+        llvm::Module *initMainModule(void);
         std::unique_ptr<llvm::Module> appendDependenciesToRoot(void);
 
         void newInitDependencies(llvm::Module *srcModule);
         void addPreprocessingModule(llvm::Module *mod);
 
         std::string createIRFromModule(llvm::Module *module, std::string outDir);
+        llvm::Module *getCryoRuntimeModule(void);
 
     private:
         DirectoryInfo *createDirectoryInfo(std::string rootDir);
