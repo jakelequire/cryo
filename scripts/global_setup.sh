@@ -64,6 +64,15 @@ function checkBinaries {
             else
                 echo "The cryo-path binary does not exist"
             fi
+            # Check if the cryoconfig binary exists
+            if [ -f "$BIN_DIR/cryoconfig" ]; then
+                echo "The cryoconfig binary exists"
+                # Create a symbolic link in /usr/local/bin
+                ln -sf "$BIN_DIR/cryoconfig" /usr/local/bin/cryoconfig
+                echo "The cryoconfig binary has been linked globally"
+            else
+                echo "The cryoconfig binary does not exist"
+            fi
         else
             # The directory is empty
             echo "The bin directory is empty"

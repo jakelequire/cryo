@@ -350,36 +350,6 @@ echo -e "$COLOR_RESET"
 
 
 # ================================================================================
-# Check if the user wants to install the Cryo file icons
-
-echo " "
-echo -e "$YELLOW $BOLD Do you want to install Cryo file icons? $COLOR_RESET"
-echo " "
-echo "This will add a custom icon for Cryo files in your system."
-echo "This is optional, but it will make it easier to identify Cryo files."
-echo " "
-
-read -p "Do you want to install Cryo file icons? (Y/n): " choice
-if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
-    echo " "
-    echo -e "$GREY$BOLD Skipping the installation of Cryo file icons... $COLOR_RESET"
-    echo " "
-else
-
-    installFileIcon || errorHandler "Failed to install the Cryo file icons"
-
-    echo " "
-    echo "You may need to restart your system for the changes to take effect."
-    echo " "
-fi
-
-# Pause Execution, let the user read the output and press any key to continue
-echo " "
-echo -e "$GREEN $BOLD"
-read -n 1 -s -r -p "Icon Installation Complete! Press any key to continue..."
-echo -e "$COLOR_RESET"
-
-# ================================================================================
 # Installation Complete
 
 clear

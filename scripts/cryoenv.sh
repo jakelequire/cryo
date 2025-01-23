@@ -9,7 +9,9 @@ fi
 # Get the absolute path of the current directory
 CURRENT_DIR=$(pwd)
 COMPILER_PATH="${CURRENT_DIR}/bin/compiler"
+ROOT_DIR_PATH="${CURRENT_DIR}"
 VAR_NAME="CRYO_COMPILER"
+ROOT_NAME="CRYO_ROOT"
 
 # Check if compiler exists
 if [ ! -f "$COMPILER_PATH" ]; then
@@ -32,19 +34,35 @@ add_variable() {
     echo "Added ${var_name}=${var_value} to /etc/environment"
 }
 
-# Check if variable already exists
-if ! check_variable "$VAR_NAME"; then
-    # Add to /etc/environment for persistence
-    add_variable "$VAR_NAME" "$COMPILER_PATH"
-fi
+# Handle both variables
+for var in "${VAR_NAME}:${COMPILER_PATH}" "${ROOT_NAME}:${ROOT_DIR_PATH}"; do
+    name="${var%%:*}"
+    value="${var#*:}"
+    
+    if ! check_variable "$name"; then
+        add_variable "$name" "$value"
+    fi
+    
+    # Add to profile.d
+    echo "export ${name}=${value}" >> "/etc/profile.d/compiler_path.sh"
+    
+    # Update current session
+    export "${name}=${value}"
+    
+    # Update user's .bashrc
+    SUDO_USER_HOME=$(eval echo ~${SUDO_USER})
+    BASHRC="${SUDO_USER_HOME}/.bashrc"
+    if [ -f "$BASHRC" ]; then
+        sed -i "/^export ${name}=/d" "$BASHRC"
+        echo "export ${name}=${value}" >> "$BASHRC"
+    fi
+done
 
-# Add to /etc/profile.d for immediate effect
-PROFILE_SCRIPT="/etc/profile.d/compiler_path.sh"
-echo "export ${VAR_NAME}=${COMPILER_PATH}" > "$PROFILE_SCRIPT"
-chmod 644 "$PROFILE_SCRIPT"
+chmod 644 "/etc/profile.d/compiler_path.sh"
 
 # Update current session
 export "${VAR_NAME}=${COMPILER_PATH}"
+
 
 # Update environment for the user who ran sudo
 SUDO_USER_HOME=$(eval echo ~${SUDO_USER})
@@ -57,7 +75,7 @@ if [ -f "$BASHRC" ]; then
     echo "export ${VAR_NAME}=${COMPILER_PATH}" >> "$BASHRC"
 fi
 
-echo "Environment variable ${VAR_NAME} has been:"
+echo "Environment variable ${VAR_NAME} & ${ROOT_NAME} has been:"
 echo "1. Added to /etc/environment for system-wide persistence"
 echo "2. Added to /etc/profile.d/compiler_path.sh for all users"
 echo "3. Exported in current session"
@@ -65,5 +83,6 @@ echo "4. Added to ${SUDO_USER}'s .bashrc"
 echo ""
 echo "The variable is now available in your current session:"
 echo "${VAR_NAME}=${COMPILER_PATH}"
+echo "${ROOT_NAME}=${ROOT_DIR_PATH}"
 echo ""
-echo "You can verify it by running: echo \$${VAR_NAME}"
+echo "You can verify it by running: echo \$${VAR_NAME} or echo \$${ROOT_NAME}"
