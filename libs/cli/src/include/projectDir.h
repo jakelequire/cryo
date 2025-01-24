@@ -14,22 +14,16 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CRYO_PROJECT_H
-#define CRYO_PROJECT_H
-
+#ifndef PROJECT_DIR_H
+#define PROJECT_DIR_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
+#include <sys/types.h>
 
-#include "settings/compilerSettings.h"
+bool isProjectDir(void);
 
-#define INIT_PROJECT_CONFIG(rootDir, settings) \
-    checkForCryoProject(rootDir, settings);
-
-void checkForCryoProject(const char *path, CompilerSettings *settings);
-bool doesConfigExist(const char *path);
-char *getConfigString(const char *path);
-
-#endif // CRYO_PROJECT_H
+#endif // PROJECT_DIR_H

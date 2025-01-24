@@ -14,4 +14,40 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "include/global.h"
+#include "include/projectDir.h"
+
+bool isProjectDir(void)
+{
+    const char *cwd = getcwd(NULL, 0);
+    if (!cwd)
+    {
+        printf("Error getting current working directory\n");
+        return false;
+    }
+
+    // Check for the `cryoconfig` file (no extension)
+    char *configFileName = "cryoconfig";
+    char *configFilePath = (char *)malloc(strlen(cwd) + strlen(configFileName) + 2);
+    if (!configFilePath)
+    {
+        printf("Error allocating memory for config file path\n");
+        return false;
+    }
+
+    strcpy(configFilePath, cwd);
+    strcat(configFilePath, "/");
+    strcat(configFilePath, configFileName);
+
+    FILE *configFile = fopen(configFilePath, "r");
+    if (!configFile)
+    {
+        printf("Error opening config file\n");
+        free(configFilePath);
+        return false;
+    }
+
+    printf("Found config file: %s\n", configFilePath);
+    free(configFilePath);
+    fclose(configFile);
+    return true;
+}

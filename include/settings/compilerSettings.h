@@ -26,8 +26,10 @@
 
 #include "common/common.h"
 #include "settings/compilerArgs.h"
+#include "tools/cryoconfig/cryoProject.h"
+#include "version.h"
 
-#define COMPILER_VERSION "0.0.1"
+#define COMPILER_VERSION _COMPILER_VERSION_
 
 typedef struct CompiledFile CompiledFile;
 
@@ -55,22 +57,9 @@ typedef enum
     OPT_IR_DUMP,         // `--ir-dump`
     OPT_LSP_SYMBOLS,     // `--lsp-symbols`
     OPT_ENABLE_LOGS,     // `--enable-logs`
-    OPT_DISABLE_LOGS     // `--disable-logs`
+    OPT_DISABLE_LOGS,    // `--disable-logs`
+    OPT_PROJECT          // `--project`
 } LongOnlyOptions;
-
-typedef struct ProjectSettings
-{
-    const char *projectName;
-    const char *projectDir;
-    const char *projectVersion;
-    const char *projectAuthor;
-    const char *projectDescription;
-    const char *projectLicense;
-    const char *projectURL;
-
-    const char *projectConfigPath;
-    const char *projectBuildPath;
-} ProjectSettings;
 
 typedef struct CompilerSettings
 {

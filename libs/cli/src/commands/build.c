@@ -27,6 +27,43 @@
 int compilerFlagsCount = 0;
 char *compilerFlags[MAX_COMPILER_FLAGS] = {NULL};
 
+// Entry point to the build command
+void exe_CLI_build(BuildOptions *options)
+{
+    if (!options)
+    {
+        printf("Error: Invalid build command options\n");
+        exe_CLI_help();
+        return;
+    }
+
+    const char *compiler_path = getCompilerBinPath();
+    if (!compiler_path)
+    {
+        printf("Error: Unable to locate the compiler binary\n");
+        return;
+    }
+    printf("Compiler path: %s\n", compiler_path);
+
+    // Handle flags first
+    handleBuildFlags(options);
+    bool useGDB = options->use_gdb;
+
+    if (options->single_file)
+    {
+        handle_single_file_build(options->input_file,
+                                 options->has_output ? options->output_file : NULL,
+                                 useGDB);
+    }
+    else
+    {
+        handle_project_build(options);
+    }
+
+    // Cleanup
+    free(options);
+}
+
 // Modify handleBuildFlags to safely add flags
 static bool appendCompilerFlag(const char *flag)
 {
@@ -63,10 +100,55 @@ static void handleBuildFlags(BuildOptions *options)
     }
 }
 
-static void handle_project_build(void)
+static void handle_project_build(BuildOptions *options)
 {
     printf("Building project from current directory...\n");
-    // TODO: Implement project directory build logic
+
+    if (!options->is_project)
+    {
+        fprintf(stderr, "Error: Project directory not specified\n");
+        return;
+    }
+
+    // For a project build, the compiler expects `-p <project_dir>` flag
+    const char *project_dir = options->project_dir;
+    if (!project_dir)
+    {
+        printf("Error: Project directory not specified\n");
+        return;
+    }
+
+    bool isUsingGDB = options->use_gdb;
+
+    // Calculate total arguments needed
+    const int base_args = 2; // For "-p" and project_dir
+    const int total_args = base_args + compilerFlagsCount;
+
+    // Allocate array on stack with computed size
+    char *args_with_flags[total_args];
+
+    // Add base arguments
+    args_with_flags[0] = "-p";
+    args_with_flags[1] = (char *)project_dir;
+
+    // Add compiler flags
+    for (int i = 0; i < compilerFlagsCount; i++)
+    {
+        args_with_flags[base_args + i] = compilerFlags[i];
+    }
+
+    // Debug print the full command
+    printf("Full command: ");
+    for (int i = 0; i < total_args; i++)
+    {
+        printf("%s ", args_with_flags[i]);
+    }
+    printf("\n");
+
+    // Call compiler with complete argument list
+    cryo_compile(args_with_flags, total_args, isUsingGDB);
+
+    return;
 }
 
 static void handle_single_file_build(const char *input_file, const char *output_file, bool useGDB)
@@ -96,40 +178,4 @@ static void handle_single_file_build(const char *input_file, const char *output_
 
     // Call compiler with complete argument list
     cryo_compile(args_with_flags, total_args, useGDB);
-}
-
-void exe_CLI_build(BuildOptions *options)
-{
-    if (!options)
-    {
-        printf("Error: Invalid build command options\n");
-        exe_CLI_help();
-        return;
-    }
-
-    const char *compiler_path = getCompilerBinPath();
-    if (!compiler_path)
-    {
-        printf("Error: Unable to locate the compiler binary\n");
-        return;
-    }
-    printf("Compiler path: %s\n", compiler_path);
-
-    // Handle flags first
-    handleBuildFlags(options);
-    bool useGDB = options->use_gdb;
-
-    if (options->single_file)
-    {
-        handle_single_file_build(options->input_file,
-                                 options->has_output ? options->output_file : NULL,
-                                 useGDB);
-    }
-    else
-    {
-        handle_project_build();
-    }
-
-    // Cleanup
-    free(options);
 }

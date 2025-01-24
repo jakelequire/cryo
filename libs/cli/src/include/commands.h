@@ -79,6 +79,10 @@ static int check_quit_command(const char *buffer);
 // Build Command (./commands/build.c)
 
 void exe_CLI_build(BuildOptions *options);
+static void handle_project_build(BuildOptions *options);
+static void handle_single_file_build(const char *input_file, const char *output_file, bool useGDB);
+static void handleBuildFlags(BuildOptions *options);
+static bool appendCompilerFlag(const char *flag);
 
 // =============================================================================
 // Build Command (./commands/build-compiler.c)

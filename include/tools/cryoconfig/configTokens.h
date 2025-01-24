@@ -14,7 +14,27 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef CLI_GLOBALS_H
-#define CLI_GLOBALS_H
+#ifndef CONFIG_TOKENS_H
+#define CONFIG_TOKENS_H
 
-#endif // CLI_GLOBALS_H
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef enum
+{
+    CONFIG_TOK_UNKNOWN = -1,
+    CONFIG_TOK_PROJECT = 0,  // [project]
+    CONFIG_TOK_COMPILER,     // [compiler]
+    CONFIG_TOK_DEPENDENCIES, // [dependencies]
+    CONFIG_TOK_BUILD,        // [build]
+    CONFIG_TOK_RUN,          // [run]
+
+    // Primitive tokens
+    CONFIG_TOK_IDENTIFIER, // project_name
+    CONFIG_TOK_STRING,     // "string"
+    CONFIG_TOK_NUMBER,     // 1234
+    CONFIG_TOK_BOOL,       // true/false
+    CONFIG_TOK_NULL,       // null
+} ConfigToken;
+
+#endif // CONFIG_TOKENS_H

@@ -116,11 +116,13 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
 
     // Initialize defaults
     options->single_file = false;
+    options->is_project = false;
     options->input_file = NULL;
     options->output_file = NULL;
     options->has_output = false;
     options->is_dev = false;
     options->use_gdb = false;
+    options->project_dir = NULL;
 
     // Parse build command options
     for (int i = start_index; i < argc; i++)
@@ -165,8 +167,18 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
         }
     }
 
-    // Validate options
-    if (options->single_file && !options->input_file)
+    // If `-f` was not specified, we will treat this as a project build.
+    // Other arguments such as `--dev` and `-g` will still be respected.
+    if (!options->single_file)
+    {
+        printf("Building as project...\n");
+        options->single_file = false;
+        options->is_project = true;
+        options->project_dir = getcwd(NULL, 0);
+        printf("Project directory: %s\n", strdup(options->project_dir));
+    }
+    // Validate options for single file build
+    else if (options->single_file && !options->input_file)
     {
         free(options);
         return NULL;

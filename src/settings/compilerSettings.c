@@ -31,6 +31,8 @@ void printUsage(const char *programName)
     fprintf(stderr, "  -a, --active-build  Flag that indicates the build is active\n");
     fprintf(stderr, "  -v, --verbose        Enable verbose output\n");
     fprintf(stderr, "  -d, --debug-level    Set the debug level (0-3)\n");
+    fprintf(stderr, "  -L, --logs           Enable logs\n");
+    fprintf(stderr, "  -p, --project        Specify project directory\n");
     fprintf(stderr, "  -h, --help           Display this help message\n");
     printf("\n");
     printf("Advanced options:\n");
@@ -51,6 +53,7 @@ static const struct option long_options[] = {
     {"verbose", no_argument, 0, 'v'},
     {"debug", required_argument, 0, 'd'},
     {"logs", required_argument, 0, 'L'},
+    {"project", required_argument, 0, 'p'},
     {"help", no_argument, 0, 'h'},
 
     // Long-only options (no short equivalent)
@@ -61,6 +64,7 @@ static const struct option long_options[] = {
     {"enable-logs", no_argument, 0, OPT_ENABLE_LOGS},
     // Disable Logs: --disable-logs
     {"disable-logs", no_argument, 0, OPT_DISABLE_LOGS},
+    {"project", required_argument, 0, OPT_PROJECT},
 
     {0, 0, 0, 0} // Required terminator
 };
@@ -89,22 +93,30 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
 
     const char *inputFilePath = (const char *)malloc(sizeof(char) * 256);
 
+    printf("Getting compiler settings...\n");
     int c;
     int option_index = 0;
-    char *optstring = "f:s:o:avd:L:h";
+    char *optstring = "f:s:o:avd:L:p:h";
     while ((c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1)
     {
         switch (c)
         {
+        // The `-f` option is used to specify the input file (Single file mode)
         case 'f':
+        {
             settings->isSingleFile = true;
             settings->inputFile = optarg;
             inputFilePath = realpath(optarg, NULL);
             break;
+        }
+        // The `-s` option is used to specify source text directly
         case 's':
+        {
             settings->isSource = true;
             settings->sourceText = optarg;
             break;
+        }
+        // The `-o` option is used to specify a custom output path
         case 'o':
         {
             // Get the current working directory that the program was run from
@@ -130,27 +142,59 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             settings->customOutputPath = outPath;
             break;
         }
+        // The `-a` option is used to indicate that the build is active (deprecated)
         case 'a':
+        {
             settings->activeBuild = true;
             break;
+        }
+        // The `-v` option is used to enable verbose output (deprecated)
         case 'v':
+        {
             settings->verbose = true;
             break;
+        }
+        // The `-d` option is used to set the debug level (unimplemented)
         case 'd':
+        {
             settings->debugLevel = getDebugLevel(atoi(optarg));
             break;
-
+        }
+            // The `-p` option is used to indicate that we are in project mode
+        case 'p':
+        {
+            printf("CompilerSettings: Initializing as project...\n");
+            settings->isProject = true;
+            settings->isSingleFile = false;
+            settings->inputFile = NULL;
+            char *projectDir = realpath(optarg, NULL);
+            if (projectDir == NULL)
+            {
+                fprintf(stderr, "Error: Invalid project directory\n");
+                exit(1);
+            }
+            settings->projectDir = projectDir;
+            printf("Project Directory: %s\n", settings->projectDir);
+            break;
+        }
+        // Usage and help
         case 'h':
+        {
             printUsage(argv[0]);
             exit(0);
             break;
+        }
         case '?':
+        {
             printUsage(argv[0]);
             exit(1);
             break;
+        }
 
         // Long-only options
+        // The `--ast-dump` option is used to dump the AST to stdout
         case OPT_AST_DUMP:
+        {
             settings->astDump = true;
             if (!inputFilePath)
             {
@@ -160,16 +204,20 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             }
             executeASTDump(inputFilePath);
             break;
-
+        }
+        // The `--ir-dump` option is used to dump the IR to stdout
         case OPT_IR_DUMP:
+        {
             settings->irDump = true;
             if (settings->verbose)
             {
                 printf("IR dump enabled\n");
             }
             break;
-
+        }
+        // The `--lsp-symbols` option is used to compile and connect to the LSP server
         case OPT_LSP_SYMBOLS:
+        {
             settings->isLSP = true;
             if (settings->verbose)
             {
@@ -183,27 +231,51 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             }
             settings->lspOutputPath = argv[optind];
             break;
-
+        }
+        // The `--enable-logs` option is used to enable logs
         case OPT_ENABLE_LOGS:
+        {
             settings->enableLogs = true;
             break;
-
+        }
+        // The `--disable-logs` option is used to disable logs
         case OPT_DISABLE_LOGS:
+        {
             settings->enableLogs = false;
             break;
+        }
 
         default:
+        {
+            printf("Error: Unknown option: %c\n", c);
             printUsage(argv[0]);
             exit(1);
             break;
         }
+        }
     }
 
-    if (settings->inputFile == NULL)
+    if (settings->inputFile == NULL && settings->isSingleFile == true)
     {
         fprintf(stderr, "Error: No input file specified\n");
         printUsage(argv[0]);
         exit(1);
+    }
+
+    printf("Finished parsing command line arguments.. initializing compiler settings...\n");
+
+    if (!settings->isSingleFile && settings->isProject)
+    {
+        printf("Completed project initialization, initializing as project...\n");
+        // Set null values for settings we don't need to use
+        settings->inputFile = NULL;
+        settings->inputFilePath = NULL;
+        settings->isSingleFile = false;
+        settings->isProject = true;
+        char *projectBuildDir = concatStrings(settings->projectDir, "/build");
+        settings->buildDir = projectBuildDir;
+
+        return;
     }
 
     char *fullFilePath = (char *)malloc(strlen(settings->rootDir) + strlen(settings->inputFile) + 2);
@@ -230,10 +302,6 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         const char *buildDir = appendStrings(inputFile, "/build");
         settings->buildDir = buildDir;
         printf("Initialized build directory: %s\n", buildDir);
-    }
-    else
-    {
-        settings->projectDir = settings->rootDir;
     }
 }
 

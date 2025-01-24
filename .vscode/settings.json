@@ -306,7 +306,8 @@
     "typeindex": "cpp",
     "valarray": "cpp",
     "cryotestsuite.h": "c",
-    "value.h": "c"
+    "value.h": "c",
+    "projectdir.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

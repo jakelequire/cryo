@@ -23,6 +23,7 @@
 
 #include "commands.h"
 #include "utils.h"
+#include "projectDir.h"
 
 #define __CLI_VERSION__ "0.0.1"
 
@@ -45,11 +46,13 @@ typedef struct HelpOptions
 typedef struct BuildOptions
 {
     bool single_file;  // -s flag
+    bool is_project;   // -p flag
     char *input_file;  // input file path
     char *output_file; // -o flag output path
     bool has_output;   // whether -o was specified
     bool is_dev;       // -d flag or --dev
     bool use_gdb;      // -g flag
+    char *project_dir; // -p flag
 } BuildOptions;
 
 typedef struct InitOptions

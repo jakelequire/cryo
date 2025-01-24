@@ -24,7 +24,7 @@
 #include "tools/utils/env.h"
 #include "tools/utils/c_logger.h"
 #include "tools/logger/logger_config.h"
-#include "tools/utils/cryoProject.h"
+#include "tools/cryoconfig/cryoProject.h"
 #include "tools/utils/fs.h"
 
 int main(int argc, char *argv[])
@@ -59,12 +59,12 @@ int main(int argc, char *argv[])
     {
         printf("Initializing as single file...\n");
         const char *dir = removeFileFromPath(settings.inputFilePath);
-        INIT_PROJECT_CONFIG(dir, &settings);
+        INIT_PROJECT_CONFIG(&settings);
     }
     else
     {
         printf("Initializing as project...\n");
-        INIT_PROJECT_CONFIG(settings.rootDir, &settings);
+        INIT_PROJECT_CONFIG(&settings);
     }
     printf("Compiler settings initialized\n");
     logCompilerSettings(&settings);
