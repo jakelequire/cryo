@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "settings/compilerSettings.h"
 #include "tools/cryoconfig/configTokens.h"
@@ -93,6 +94,7 @@ ProjectSettings *parseCryoConfig(const char *configString);
 ConfigLexer *initConfigLexer(const char *configString);
 ConfigTok *newConfigTok(ConfigToken token, const char *value);
 
+bool consumeConfigTok(ConfigLexer *lexer, ConfigToken expected, ConfigTok **token);
 ConfigTok *getNextConfigToken(ConfigLexer *lexer);
 ConfigToken getTokenType(const char *token);
 const char *getTokenValue(ConfigTok *token);

@@ -175,6 +175,7 @@ ProjectSettings *createEmptyProjectSettings(void)
 
 void logProjectSettings(ProjectSettings *settings)
 {
+    printf("\n---------------------[DEBUG PROJECT SETTINGS]---------------------\n");
     printf("Project Settings:\n");
     printf("Project Name: %s\n", settings->project_name);
     printf("Project Directory: %s\n", settings->project_dir);
@@ -203,4 +204,5 @@ void logProjectSettings(ProjectSettings *settings)
     printf("Project Run Args: %s\n", settings->project_runArgs);
     printf("Project Run Options: %s\n", settings->project_runOptions);
     printf("Project Run Output: %s\n", settings->project_runOutput);
+    printf("------------------------------------------------------------------\n\n");
 }
