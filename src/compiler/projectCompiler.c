@@ -21,4 +21,5 @@
 
 int compileProject(CompilerSettings *settings)
 {
+    DEBUG_BREAKPOINT;
 }

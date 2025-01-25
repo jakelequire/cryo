@@ -41,6 +41,12 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return lspCompiler(inputFilePath, settings);
     }
 
+    bool isProject = settings->isProject;
+    if (isProject)
+    {
+        return compileProject(settings);
+    }
+
     bool isSingleFile = settings->isSingleFile;
 
     // ========================================
