@@ -30,11 +30,11 @@
 #include "version.h"
 
 #define COMPILER_VERSION _COMPILER_VERSION_
-
-typedef struct CompiledFile CompiledFile;
-
 #define CURRENT_DEBUG_LEVEL DEBUG_LEVEL
 #define SET_DEBUG_LEVEL(level) DEBUG_LEVEL = level
+
+typedef struct CompiledFile CompiledFile;
+typedef struct ProjectSettings ProjectSettings;
 
 typedef enum DebugLevel
 {
@@ -63,6 +63,10 @@ typedef enum
 
 typedef struct CompilerSettings
 {
+    // Version
+    const char *version;
+
+    // Paths
     const char *projectDir;
     const char *rootDir;
     const char *customOutputPath;
@@ -73,18 +77,6 @@ typedef struct CompilerSettings
     const char *runtimePath;
     const char *buildDir;
     char *sourceText;
-    bool verbose;
-    DebugLevel debugLevel;
-    /**
-     * typedef enum BuildType
-     * {
-     *     BUILD_DEV = 0, // Default
-     *     BUILD_DEBUG = 1,
-     *     BUILD_RELEASE = 2
-     * } BuildType;
-     */
-    BuildType buildType;
-    CompiledFile **compiledFiles;
     int totalFiles;
 
     // Flags
@@ -96,9 +88,15 @@ typedef struct CompilerSettings
     bool enableLogs;
     bool isProject;
     bool isSingleFile;
+    bool verbose;
 
-    // Version
-    const char *version;
+    // Debugging
+    DebugLevel debugLevel;
+    BuildType buildType;
+    CompiledFile **compiledFiles;
+
+    // Project Settings
+    ProjectSettings *projectSettings;
 } CompilerSettings;
 
 // ==============================

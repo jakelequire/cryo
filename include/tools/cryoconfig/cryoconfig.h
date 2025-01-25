@@ -90,6 +90,9 @@ typedef struct ProjectSettings
 
     // Internals of the project settings
     ActiveSettings activeSettings;
+    _NEW_METHOD(bool, doesSettingExist, struct ProjectSettings *self, const char *setting);
+    _NEW_METHOD(void, logSettings, struct ProjectSettings *self);
+    _NEW_METHOD(void, logActiveSettings, struct ProjectSettings *self);
 } ProjectSettings;
 
 #define INIT_PROJECT_CONFIG(settings) \
@@ -102,7 +105,10 @@ void checkForCryoProject(CompilerSettings *settings);
 bool doesConfigExist(const char *path);
 char *getConfigString(const char *path);
 ProjectSettings *createEmptyProjectSettings(void);
-void logProjectSettings(ProjectSettings *settings);
+ActiveSettings *createEmptyActiveSettings(void);
+
+bool doesProjectSettingExist(ProjectSettings *_this, const char *setting);
+void applyActiveSettings(ProjectSettings *settings);
 
 // =============================================================================
 // Cryo Config Parser Functions (config_parser.c)
@@ -129,5 +135,11 @@ bool consumeConfigTok(ConfigLexer *lexer, ConfigToken expected, ConfigTok **toke
 ConfigTok *getNextConfigToken(ConfigLexer *lexer);
 ConfigToken getTokenType(const char *token);
 const char *getTokenValue(ConfigTok *token);
+
+// =============================================================================
+// Debugging Functions (_debugConfig.c)
+
+void logProjectSettings(ProjectSettings *settings);
+void logActiveSettings(ProjectSettings *settings);
 
 #endif // CRYO_PROJECT_H

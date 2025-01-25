@@ -67,6 +67,9 @@ int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outpu
 // LSP Compiler
 int lspCompiler(const char *filePath, CompilerSettings *settings);
 
+// Project Compiler
+int compileProject(CompilerSettings *settings);
+
 // C++ Accessable Functions
 #ifdef __cplusplus
 extern "C"

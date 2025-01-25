@@ -2,7 +2,7 @@
  *  Copyright 2024 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use _this file except in compliance with the License.          *
+ *    you may not use self file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -71,6 +71,11 @@ void checkForCryoProject(CompilerSettings *settings)
         {
             printf("Project Name: %s\n", projectSettings->project_name);
         }
+
+        // Apply the active settings
+        applyActiveSettings(projectSettings);
+
+        projectSettings->logActiveSettings(projectSettings);
 
         DEBUG_BREAKPOINT;
 
@@ -177,121 +182,201 @@ ProjectSettings *createEmptyProjectSettings(void)
     settings->project_runOptions = NULL;
     settings->project_runOutput = NULL;
 
+    // Initialize the internals
+    settings->activeSettings = *createEmptyActiveSettings();
+    // Initialize methods
+    settings->doesSettingExist = doesProjectSettingExist;
+    settings->logSettings = logProjectSettings;
+    settings->logActiveSettings = logActiveSettings;
+
     return settings;
 }
 
-bool doesProjectSettingExist(ProjectSettings *_this, const char *setting)
+ActiveSettings *createEmptyActiveSettings(void)
+{
+    ActiveSettings *settings = (ActiveSettings *)malloc(sizeof(ActiveSettings));
+    if (!settings)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for active settings\n");
+        return NULL;
+    }
+
+    settings->project_name = false;
+    settings->project_dir = false;
+    settings->project_version = false;
+    settings->project_author = false;
+    settings->project_description = false;
+    settings->project_license = false;
+    settings->project_URL = false;
+
+    settings->project_configPath = false;
+    settings->project_buildPath = false;
+
+    settings->project_buildType = false;
+    settings->project_buildFlags = false;
+    settings->project_buildOptions = false;
+    settings->project_buildOutput = false;
+
+    settings->project_runCommand = false;
+    settings->project_runArgs = false;
+    settings->project_runOptions = false;
+    settings->project_runOutput = false;
+
+    settings->project_dependencies = false;
+
+    return settings;
+}
+
+bool doesProjectSettingExist(ProjectSettings *self, const char *setting)
 {
     if (cStringCompare(setting, "project_name"))
     {
-        return _this->activeSettings.project_name;
+        return self->activeSettings.project_name;
     }
     else if (cStringCompare(setting, "project_dir"))
     {
-        return _this->activeSettings.project_dir;
+        return self->activeSettings.project_dir;
     }
     else if (cStringCompare(setting, "project_version"))
     {
-        return _this->activeSettings.project_version;
+        return self->activeSettings.project_version;
     }
     else if (cStringCompare(setting, "project_author"))
     {
-        return _this->activeSettings.project_author;
+        return self->activeSettings.project_author;
     }
     else if (cStringCompare(setting, "project_description"))
     {
-        return _this->activeSettings.project_description;
+        return self->activeSettings.project_description;
     }
     else if (cStringCompare(setting, "project_license"))
     {
-        return _this->activeSettings.project_license;
+        return self->activeSettings.project_license;
     }
     else if (cStringCompare(setting, "project_URL"))
     {
-        return _this->activeSettings.project_URL;
+        return self->activeSettings.project_URL;
     }
     else if (cStringCompare(setting, "project_configPath"))
     {
-        return _this->activeSettings.project_configPath;
+        return self->activeSettings.project_configPath;
     }
     else if (cStringCompare(setting, "project_buildPath"))
     {
-        return _this->activeSettings.project_buildPath;
+        return self->activeSettings.project_buildPath;
     }
     else if (cStringCompare(setting, "project_buildType"))
     {
-        return _this->activeSettings.project_buildType;
+        return self->activeSettings.project_buildType;
     }
     else if (cStringCompare(setting, "project_buildFlags"))
     {
-        return _this->activeSettings.project_buildFlags;
+        return self->activeSettings.project_buildFlags;
     }
     else if (cStringCompare(setting, "project_buildOptions"))
     {
-        return _this->activeSettings.project_buildOptions;
+        return self->activeSettings.project_buildOptions;
     }
     else if (cStringCompare(setting, "project_buildOutput"))
     {
-        return _this->activeSettings.project_buildOutput;
+        return self->activeSettings.project_buildOutput;
     }
     else if (cStringCompare(setting, "project_runCommand"))
     {
-        return _this->activeSettings.project_runCommand;
+        return self->activeSettings.project_runCommand;
     }
     else if (cStringCompare(setting, "project_runArgs"))
     {
-        return _this->activeSettings.project_runArgs;
+        return self->activeSettings.project_runArgs;
     }
     else if (cStringCompare(setting, "project_runOptions"))
     {
-        return _this->activeSettings.project_runOptions;
+        return self->activeSettings.project_runOptions;
     }
     else if (cStringCompare(setting, "project_runOutput"))
     {
-        return _this->activeSettings.project_runOutput;
+        return self->activeSettings.project_runOutput;
     }
     else if (cStringCompare(setting, "project_dependencies"))
     {
-        return _this->activeSettings.project_dependencies;
+        return self->activeSettings.project_dependencies;
     }
     return false;
 }
 
-void logProjectSettings(ProjectSettings *settings)
+void applyActiveSettings(ProjectSettings *settings)
 {
-    printf("\n---------------------[DEBUG PROJECT SETTINGS]---------------------\n");
-    printf("Project Settings:\n");
-    printf("\n> [project]\n");
-    printf("Project Name: %s\n", settings->project_name);
-    printf("Project Directory: %s\n", settings->project_dir);
-    printf("Project Version: %s\n", settings->project_version);
-    printf("Project Author: %s\n", settings->project_author);
-    printf("Project Description: %s\n", settings->project_description);
-    printf("Project License: %s\n", settings->project_license);
-    printf("Project URL: %s\n", settings->project_URL);
-
-    printf("\n> [compiler]\n");
-    printf("Project Config Path: %s\n", settings->project_configPath);
-    printf("Project Build Path: %s\n", settings->project_buildPath);
-
-    printf("\n> [build]\n");
-    printf("Project Build Type: %s\n", settings->project_buildType);
-    printf("Project Build Flags: %s\n", settings->project_buildFlags);
-    printf("Project Build Options: %s\n", settings->project_buildOptions);
-    printf("Project Build Output: %s\n", settings->project_buildOutput);
-
-    printf("\n> [run]\n");
-    printf("Project Run Command: %s\n", settings->project_runCommand);
-    printf("Project Run Args: %s\n", settings->project_runArgs);
-    printf("Project Run Options: %s\n", settings->project_runOptions);
-    printf("Project Run Output: %s\n", settings->project_runOutput);
-
-    printf("\n> [dependencies]\n");
-    printf("Project Dependencies: ");
-    for (int i = 0; i < settings->project_dependencyCount; i++)
+    ActiveSettings *activeSettings = &settings->activeSettings;
+    if (settings->project_name && settings->project_name != NULL)
     {
-        printf("%s ", settings->project_dependencies[i]);
+        activeSettings->project_name = true;
     }
-    printf("\n");
-    printf("------------------------------------------------------------------\n\n");
+    if (settings->project_dir && settings->project_dir != NULL)
+    {
+        activeSettings->project_dir = true;
+    }
+    if (settings->project_version && settings->project_version != NULL)
+    {
+        activeSettings->project_version = true;
+    }
+    if (settings->project_author && settings->project_author != NULL)
+    {
+        activeSettings->project_author = true;
+    }
+    if (settings->project_description && settings->project_description != NULL)
+    {
+        activeSettings->project_description = true;
+    }
+    if (settings->project_license && settings->project_license != NULL)
+    {
+        activeSettings->project_license = true;
+    }
+    if (settings->project_URL && settings->project_URL != NULL)
+    {
+        activeSettings->project_URL = true;
+    }
+    if (settings->project_configPath && settings->project_configPath != NULL)
+    {
+        activeSettings->project_configPath = true;
+    }
+    if (settings->project_buildPath && settings->project_buildPath != NULL)
+    {
+        activeSettings->project_buildPath = true;
+    }
+    if (settings->project_buildType && settings->project_buildType != NULL)
+    {
+        activeSettings->project_buildType = true;
+    }
+    if (settings->project_buildFlags && settings->project_buildFlags != NULL)
+    {
+        activeSettings->project_buildFlags = true;
+    }
+    if (settings->project_buildOptions && settings->project_buildOptions != NULL)
+    {
+        activeSettings->project_buildOptions = true;
+    }
+    if (settings->project_buildOutput && settings->project_buildOutput != NULL)
+    {
+        activeSettings->project_buildOutput = true;
+    }
+    if (settings->project_runCommand && settings->project_runCommand != NULL)
+    {
+        activeSettings->project_runCommand = true;
+    }
+    if (settings->project_runArgs && settings->project_runArgs != NULL)
+    {
+        activeSettings->project_runArgs = true;
+    }
+    if (settings->project_runOptions && settings->project_runOptions != NULL)
+    {
+        activeSettings->project_runOptions = true;
+    }
+    if (settings->project_runOutput && settings->project_runOutput != NULL)
+    {
+        activeSettings->project_runOutput = true;
+    }
+    if (settings->project_dependencyCount > 0)
+    {
+        activeSettings->project_dependencies = true;
+    }
 }
