@@ -87,7 +87,7 @@
                 "-Wunused-function"
             ],
             "cStandard": "c17",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "mergeConfigurations": false,
             "browse": {
                 "path": [

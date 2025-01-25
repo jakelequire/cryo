@@ -34,9 +34,10 @@
 
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/c_logger.h"
+#include "tools/utils/cWrappers.h"
 
-#define _NEW_METHOD(type, name, ...) \
-    type (*name)(__VA_ARGS__)
+#define INIT_FS() \
+    initGlobalFS();
 
 typedef struct CryoSrcLocations
 {

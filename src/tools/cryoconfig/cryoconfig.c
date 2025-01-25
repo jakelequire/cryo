@@ -2,7 +2,7 @@
  *  Copyright 2024 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
- *    you may not use this file except in compliance with the License.          *
+ *    you may not use _this file except in compliance with the License.          *
  *    You may obtain a copy of the License at                                   *
  *                                                                              *
  *    http://www.apache.org/licenses/LICENSE-2.0                                *
@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "tools/cryoconfig/cryoProject.h"
+#include "tools/cryoconfig/cryoconfig.h"
 
 #define MAX_CONFIG_SIZE 1024 * 10 // 10KB
 
@@ -65,6 +65,13 @@ void checkForCryoProject(CompilerSettings *settings)
         }
 
         logProjectSettings(projectSettings);
+
+        String *projectName = Str(projectSettings->project_name);
+        if (projectName)
+        {
+            printf("Project Name: %s\n", projectSettings->project_name);
+        }
+
         DEBUG_BREAKPOINT;
 
         return;
@@ -173,10 +180,88 @@ ProjectSettings *createEmptyProjectSettings(void)
     return settings;
 }
 
+bool doesProjectSettingExist(ProjectSettings *_this, const char *setting)
+{
+    if (cStringCompare(setting, "project_name"))
+    {
+        return _this->activeSettings.project_name;
+    }
+    else if (cStringCompare(setting, "project_dir"))
+    {
+        return _this->activeSettings.project_dir;
+    }
+    else if (cStringCompare(setting, "project_version"))
+    {
+        return _this->activeSettings.project_version;
+    }
+    else if (cStringCompare(setting, "project_author"))
+    {
+        return _this->activeSettings.project_author;
+    }
+    else if (cStringCompare(setting, "project_description"))
+    {
+        return _this->activeSettings.project_description;
+    }
+    else if (cStringCompare(setting, "project_license"))
+    {
+        return _this->activeSettings.project_license;
+    }
+    else if (cStringCompare(setting, "project_URL"))
+    {
+        return _this->activeSettings.project_URL;
+    }
+    else if (cStringCompare(setting, "project_configPath"))
+    {
+        return _this->activeSettings.project_configPath;
+    }
+    else if (cStringCompare(setting, "project_buildPath"))
+    {
+        return _this->activeSettings.project_buildPath;
+    }
+    else if (cStringCompare(setting, "project_buildType"))
+    {
+        return _this->activeSettings.project_buildType;
+    }
+    else if (cStringCompare(setting, "project_buildFlags"))
+    {
+        return _this->activeSettings.project_buildFlags;
+    }
+    else if (cStringCompare(setting, "project_buildOptions"))
+    {
+        return _this->activeSettings.project_buildOptions;
+    }
+    else if (cStringCompare(setting, "project_buildOutput"))
+    {
+        return _this->activeSettings.project_buildOutput;
+    }
+    else if (cStringCompare(setting, "project_runCommand"))
+    {
+        return _this->activeSettings.project_runCommand;
+    }
+    else if (cStringCompare(setting, "project_runArgs"))
+    {
+        return _this->activeSettings.project_runArgs;
+    }
+    else if (cStringCompare(setting, "project_runOptions"))
+    {
+        return _this->activeSettings.project_runOptions;
+    }
+    else if (cStringCompare(setting, "project_runOutput"))
+    {
+        return _this->activeSettings.project_runOutput;
+    }
+    else if (cStringCompare(setting, "project_dependencies"))
+    {
+        return _this->activeSettings.project_dependencies;
+    }
+    return false;
+}
+
 void logProjectSettings(ProjectSettings *settings)
 {
     printf("\n---------------------[DEBUG PROJECT SETTINGS]---------------------\n");
     printf("Project Settings:\n");
+    printf("\n> [project]\n");
     printf("Project Name: %s\n", settings->project_name);
     printf("Project Directory: %s\n", settings->project_dir);
     printf("Project Version: %s\n", settings->project_version);
@@ -185,24 +270,28 @@ void logProjectSettings(ProjectSettings *settings)
     printf("Project License: %s\n", settings->project_license);
     printf("Project URL: %s\n", settings->project_URL);
 
+    printf("\n> [compiler]\n");
     printf("Project Config Path: %s\n", settings->project_configPath);
     printf("Project Build Path: %s\n", settings->project_buildPath);
 
+    printf("\n> [build]\n");
+    printf("Project Build Type: %s\n", settings->project_buildType);
+    printf("Project Build Flags: %s\n", settings->project_buildFlags);
+    printf("Project Build Options: %s\n", settings->project_buildOptions);
+    printf("Project Build Output: %s\n", settings->project_buildOutput);
+
+    printf("\n> [run]\n");
+    printf("Project Run Command: %s\n", settings->project_runCommand);
+    printf("Project Run Args: %s\n", settings->project_runArgs);
+    printf("Project Run Options: %s\n", settings->project_runOptions);
+    printf("Project Run Output: %s\n", settings->project_runOutput);
+
+    printf("\n> [dependencies]\n");
     printf("Project Dependencies: ");
     for (int i = 0; i < settings->project_dependencyCount; i++)
     {
         printf("%s ", settings->project_dependencies[i]);
     }
     printf("\n");
-
-    printf("Project Build Type: %s\n", settings->project_buildType);
-    printf("Project Build Flags: %s\n", settings->project_buildFlags);
-    printf("Project Build Options: %s\n", settings->project_buildOptions);
-    printf("Project Build Output: %s\n", settings->project_buildOutput);
-
-    printf("Project Run Command: %s\n", settings->project_runCommand);
-    printf("Project Run Args: %s\n", settings->project_runArgs);
-    printf("Project Run Options: %s\n", settings->project_runOptions);
-    printf("Project Run Output: %s\n", settings->project_runOutput);
     printf("------------------------------------------------------------------\n\n");
 }

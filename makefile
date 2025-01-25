@@ -185,8 +185,12 @@ build-lsp-monitor:
 # >>=======                     Commands                     =======<< #
 # >>=======--------------------------------------------------=======<< #
 
+cls:
+	@clear
+
 .PHONY: all
 all: 
+	@$(MAKE) cls
 	@echo "Building with $(NUM_JOBS) parallel jobs"
 	$(MAKE) -j$(NUM_JOBS) build
 

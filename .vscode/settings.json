@@ -307,7 +307,9 @@
     "valarray": "cpp",
     "cryotestsuite.h": "c",
     "value.h": "c",
-    "projectdir.h": "c"
+    "projectdir.h": "c",
+    "cryoconfig.h": "c",
+    "ctypes.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",
@@ -333,5 +335,24 @@
     "HTML (EEx)",
     "HTML (Eex)",
     "plist"
-  ]
+  ],
+"editor.tokenColorCustomizations": {
+    "textMateRules": [
+        {
+            "scope": [
+                "meta.type.struct.c",
+                "meta.type.typedef.c",
+                "meta.type.user-defined.c"
+            ],
+            "settings": {
+                "foreground": "#4EC9B0"
+            }
+        }
+    ]
+},
+"editor.defaultFormatter": "ms-vscode.cpptools-extension-pack",
+"notebook.defaultFormatter": "ms-vscode.cpptools-extension-pack",
+"[c]": {
+  "editor.defaultFormatter": "ms-vscode.cpptools"
+}
 }

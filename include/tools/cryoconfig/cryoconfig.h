@@ -26,8 +26,36 @@
 
 #include "settings/compilerSettings.h"
 #include "tools/cryoconfig/configTokens.h"
+#include "tools/utils/cWrappers.h"
+#include "tools/utils/cTypes.h"
 
 #define MAX_PROJECT_DEPENDENCIES 256
+
+typedef struct ActiveSettings
+{
+    bool project_name;
+    bool project_dir;
+    bool project_version;
+    bool project_author;
+    bool project_description;
+    bool project_license;
+    bool project_URL;
+
+    bool project_configPath;
+    bool project_buildPath;
+
+    bool project_buildType;
+    bool project_buildFlags;
+    bool project_buildOptions;
+    bool project_buildOutput;
+
+    bool project_runCommand;
+    bool project_runArgs;
+    bool project_runOptions;
+    bool project_runOutput;
+
+    bool project_dependencies;
+} ActiveSettings;
 
 typedef struct ProjectSettings
 {
@@ -44,10 +72,6 @@ typedef struct ProjectSettings
     const char *project_configPath;
     const char *project_buildPath;
 
-    // [dependencies] section
-    const char *project_dependencies[MAX_PROJECT_DEPENDENCIES];
-    int project_dependencyCount;
-
     // [build] section
     const char *project_buildType;
     const char *project_buildFlags;
@@ -59,6 +83,13 @@ typedef struct ProjectSettings
     const char *project_runArgs;
     const char *project_runOptions;
     const char *project_runOutput;
+
+    // [dependencies] section
+    const char *project_dependencies[MAX_PROJECT_DEPENDENCIES];
+    int project_dependencyCount;
+
+    // Internals of the project settings
+    ActiveSettings activeSettings;
 } ProjectSettings;
 
 #define INIT_PROJECT_CONFIG(settings) \

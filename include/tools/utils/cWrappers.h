@@ -14,25 +14,16 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-///
-/// attributes.h | #include "/tools/utils/attributes.h"
-///
-/// This file contains utility attributes for C. These are used to help with
-/// compiler optimizations and other things. They are not required, but they
-/// can be helpful in some cases.
-///
-#ifndef ATTRIBUTES_H
-#define ATTRIBUTES_H
+#ifndef C_WRAPPERS_H
+#define C_WRAPPERS_H
+#include <stdio.h>
+#include <stdlib.h>
 
-#define __C_CONSTRUCTOR__ \
-    __attribute__((constructor))
-#define __C_DESTRUCTOR__ \
-    __attribute__((destructor))
+/// @brief A macro to define a new method
+/// @param type The return type of the method
+/// @param name The name of the method
+/// @param ... The arguments of the method
+#define _NEW_METHOD(type, name, ...) \
+    type (*name)(__VA_ARGS__)
 
-#define __C_UNUSED__ \
-    __attribute__((unused))
-
-#define __C_NORETURN__ \
-    __attribute__((noreturn))
-
-#endif // ATTRIBUTES_H
+#endif // C_WRAPPERS_H

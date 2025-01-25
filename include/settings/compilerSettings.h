@@ -26,7 +26,7 @@
 
 #include "common/common.h"
 #include "settings/compilerArgs.h"
-#include "tools/cryoconfig/cryoProject.h"
+#include "tools/cryoconfig/cryoconfig.h"
 #include "version.h"
 
 #define COMPILER_VERSION _COMPILER_VERSION_

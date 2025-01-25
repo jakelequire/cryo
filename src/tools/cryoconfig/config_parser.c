@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "tools/cryoconfig/cryoProject.h"
+#include "tools/cryoconfig/cryoconfig.h"
 
 /*
 Syntax for the cryoconfig file:
