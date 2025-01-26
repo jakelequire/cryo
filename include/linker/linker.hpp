@@ -192,6 +192,7 @@ namespace Cryo
         std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName);
 
         std::vector<std::string> listDir(const char *path);
+        void runCompletedBinary();
 
     public:
         std::string getCryoRuntimeFilePath(void);

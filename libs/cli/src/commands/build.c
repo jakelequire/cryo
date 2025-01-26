@@ -146,7 +146,18 @@ static void handle_project_build(BuildOptions *options)
     printf("\n");
 
     // Call compiler with complete argument list
-    cryo_compile(args_with_flags, total_args, isUsingGDB);
+    int compilerResult = cryo_compile(args_with_flags, total_args, isUsingGDB);
+    if (compilerResult != 0)
+    {
+        printf("Error: Compilation failed\n");
+    }
+
+    // Run the binary
+    printf("Running main binary...\n");
+    const char *buildDir = concatStrings((char *)project_dir, "/build/");
+    printf("------------------------------------------------\n");
+    printf("\n");
+    runMainBinary(buildDir, "main");
 
     return;
 }

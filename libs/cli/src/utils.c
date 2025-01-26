@@ -223,3 +223,11 @@ char *getCryoRootDir(void)
 
     return compiler_dir;
 }
+
+void runMainBinary(const char *buildDir, const char *binName)
+{
+    char *binPath = (char *)malloc(sizeof(char) * 1024);
+    sprintf(binPath, "%s/%s", buildDir, binName);
+    runSystemCommand(binPath);
+    free(binPath);
+}

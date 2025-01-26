@@ -34,4 +34,6 @@ char *getCompilerExePath(void);
 char *getCompilerBinPath(void);
 char *getCryoRootDir(void);
 
+void runMainBinary(const char *buildDir, const char *binName);
+
 #endif // UTILS_H

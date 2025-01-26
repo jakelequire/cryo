@@ -532,6 +532,37 @@ namespace Cryo
         }
 
         std::cout << "Main File Compiled Successfully" << std::endl;
+
+        // Run the binary
+        runCompletedBinary();
     }
+
+    void Linker::runCompletedBinary()
+    {
+        std::string buildDir = GetCXXLinker()->getDirInfo()->buildDir;
+        if (buildDir.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Build directory is empty");
+            return;
+        }
+        // In the future, the binary name may change. Seek the only bianry
+        // file within the build directory and run it.
+
+        std::cout << "Running Main Binary..." << std::endl;
+
+        std::string exe_output = buildDir + "/";
+        std::string exe_name = "main";
+        std::string sys_cmd = exe_output + exe_name;
+        int result = system(sys_cmd.c_str());
+        if (result != 0 || WEXITSTATUS(result) != 0)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to run main binary");
+            std::string error = "Error: " + std::to_string(result);
+            std::string errReason = std::strerror(errno);
+            logMessage(LMI, "ERROR", "Linker", error.c_str());
+            logMessage(LMI, "ERROR", "Linker", errReason.c_str());
+            CONDITION_FAILED;
+        }
+    }    
 
 } // namespace Cryo
