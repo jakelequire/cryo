@@ -21,5 +21,104 @@
 
 int compileProject(CompilerSettings *settings)
 {
-    DEBUG_BREAKPOINT;
+    printf("\nStarting compilation...\n");
+    String *filePath = Str(settings->projectDir);
+    filePath->append(filePath, "/src/main.cryo");
+
+    if (!filePath)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for file path\n");
+        return 1;
+    }
+
+    filePath->print(filePath);
+
+    const char *source = readFile(filePath->c_str(filePath));
+    if (!source)
+    {
+        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        return 1;
+    }
+    const char *fileName = trimFilePath(filePath->c_str(filePath));
+
+    const char *fileDirectory = settings->inputFilePath;
+    const char *rootDirectory = settings->compilerRootPath;
+    const char *buildDir = settings->buildDir;
+    if (!rootDirectory)
+    {
+        fprintf(stderr, "Error: Root directory not set\n");
+        return 1;
+    }
+
+    logMessage(LMI, "INFO", "Compiler", "Build directory: %s", buildDir);
+
+    // **New global symbol table**
+    // Initialize the new Symbol Table
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);
+    if (!globalSymbolTable)
+    {
+        fprintf(stderr, "Error: Failed to create global symbol table\n");
+        return 1;
+    }
+    // Debug print the global symbol table
+    printGlobalSymbolTable(globalSymbolTable);
+
+    // Create and initialize linker
+    CryoLinker *linker = CreateCryoLinker(buildDir);
+    printf("Linker created\n");
+
+    // Initialize the Arena
+    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    // Initialize the type table
+    TypeTable *typeTable = initTypeTable();
+
+    // Import the runtime definitions and initialize the global dependencies
+    boostrapRuntimeDefinitions(typeTable, globalSymbolTable, linker);
+
+    printGlobalSymbolTable(globalSymbolTable);
+
+    // Update the global symbol table to be the primary table.
+    setPrimaryTableStatus(globalSymbolTable, true);
+
+    Lexer lex;
+    CompilerState *state = initCompilerState(arena, &lex, fileName);
+    setGlobalSymbolTable(state, globalSymbolTable);
+    initLexer(&lex, source, fileName, state);
+    state->settings = settings;
+
+    // Initialize the parser
+    ASTNode *programNode = parseProgram(&lex, arena, state, typeTable, globalSymbolTable);
+    if (programNode == NULL)
+    {
+        fprintf(stderr, "Error: Failed to parse program node\n");
+        CONDITION_FAILED;
+        return 1;
+    }
+    TableFinished(globalSymbolTable); // Finish the global symbol table
+
+    ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
+    memcpy(programCopy, programNode, sizeof(ASTNode));
+
+    // Outputs the SymTable into a file in the build directory.
+    initASTDebugOutput(programNode, settings);
+    printTypeTable(typeTable);
+
+    // Generate code (The C++ backend process)
+    int result = generateCodeWrapper(programNode, state, linker);
+    if (result != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");
+        CONDITION_FAILED;
+        return 1;
+    }
+
+    DEBUG_PRINT_FILTER({
+        END_COMPILATION_MESSAGE;
+
+        printGlobalSymbolTable(globalSymbolTable);
+        logASTNodeDebugView(programCopy);
+    });
+
+    return 0;
 }

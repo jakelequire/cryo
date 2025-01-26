@@ -30,6 +30,7 @@
 #include "common/common.h"
 #include "settings/compilerSettings.h"
 #include "runtime/bootstrap.h"
+#include "tools/utils/cTypes.h"
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;

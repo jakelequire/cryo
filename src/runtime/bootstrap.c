@@ -40,7 +40,7 @@ char *getRuntimeSrcFile(void)
         CONDITION_FAILED;
     }
 
-    sprintf(runtimeBuffer, "%sStd/Runtime/runtime.cryo", envRoot);
+    sprintf(runtimeBuffer, "%s/Std/Runtime/runtime.cryo", envRoot);
 
     DEBUG_PRINT_FILTER({
         printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);

@@ -46,6 +46,9 @@ namespace Cryo
         std::cout << "Cryo Linker is not undefined" << std::endl;
         // Add the dependencies to the root module
 
+        // init the C runtime module
+        cLinker->createCRuntimeFile();
+
         llvm::Module *runtimeMod = cLinker->getCryoRuntimeModule();
         std::cout << "Runtime Module:" << std::endl;
         runtimeMod->print(llvm::errs(), nullptr);
@@ -207,6 +210,41 @@ namespace Cryo
         return;
     }
 
+    void Linker::createCRuntimeFile(void)
+    {
+        DirectoryInfo *dirInfo = getDirInfo();
+        if (!dirInfo)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Directory Info is null");
+            return;
+        }
+
+        std::string runtimeDir =dirInfo->runtimeDir + "/";
+        if (runtimeDir.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
+            return;
+        }
+
+        std::string cRuntimePath = getCRuntimePath();
+        if (cRuntimePath.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
+            return;
+        }
+
+        // Then, convert the C runtime to IR
+        std::string cRuntimeIR = covertCRuntimeToLLVMIR(cRuntimePath, runtimeDir);
+        if (cRuntimeIR.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
+            return;
+        }
+        std::cout << "C Runtime IR is not undefined" << std::endl;
+
+        return;
+    }
+
     /// @brief Create a `.ll` file from the given module and output directory.
     /// @param module The module to create the IR from.
     /// @param outDir The output directory to write the IR file to.
@@ -264,7 +302,7 @@ namespace Cryo
 
         std::cout << "@getCRuntimePath | Cryo Root: " << cryoRoot << std::endl;
 
-        std::string fullPath = cryoRoot + "Std/Runtime";
+        std::string fullPath = cryoRoot + "/Std/Runtime";
 
         std::cout << "@getCRuntimePath | Full Path: " << fullPath << std::endl;
 
@@ -282,7 +320,7 @@ namespace Cryo
         std::cout << "@convertCRuntimeToLLVMIR | C Runtime Path: " << cRuntimePath << std::endl;
 
         // Check and see if the `cRuntime.c` file exists
-        std::string cRuntimeFile = cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
+        std::string cRuntimeFile =  cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
         if (!fileExists(cRuntimeFile.c_str()))
         {
             logMessage(LMI, "ERROR", "Linker", "C Runtime file does not exist: %s", cRuntimeFile.c_str());

@@ -27,6 +27,8 @@
 #include "tools/cryoconfig/cryoconfig.h"
 #include "tools/utils/fs.h"
 
+#define MAX_PATH_SIZE 1024 * 10 // 10KB
+
 #define INIT_LIBS()                                   \
     /* Initialize the logging system */               \
     INIT_LOGS();                                      \
@@ -81,7 +83,19 @@ int main(int argc, char *argv[])
     startTimer(compileTimer);
 
     // Check if the input file exists
-    const char *filePath = settings.inputFilePath;
+    bool isProject = settings.isProject;
+    char *filePath = (char *)malloc(MAX_PATH_SIZE);
+    if (isProject)
+    {
+        strcpy(filePath, settings.projectDir);
+        strcat(filePath, "/src/main.cryo");
+    }
+    else
+    {
+        strcpy(filePath, "/");
+        strcpy(filePath, settings.inputFilePath);
+    }
+
     if (!fileExists(filePath))
     {
         fprintf(stderr, "Error: File not found: %s\n", filePath);

@@ -74,8 +74,18 @@ namespace Cryo
             linker->addPreprocessingModule(cryoContext.module.get());
             return;
         }
-
-        const char *unsafe_filePath = strdup(settings->inputFile);
+        bool isProject = settings->isProject;
+        char *unsafe_filePath = (char *)malloc(sizeof(char) * 1024);
+        if(isProject)
+        {
+            strcpy(unsafe_filePath, settings->projectDir);
+            strcat(unsafe_filePath, "/src/main.cryo");
+        }
+        else
+        {
+            strcpy(unsafe_filePath, "/");
+            strcpy(unsafe_filePath, settings->inputFilePath);
+        }
         std::string outputFilePath(unsafe_filePath);
         std::filesystem::path cwd = std::filesystem::current_path();
 

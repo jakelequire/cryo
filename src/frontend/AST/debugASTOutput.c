@@ -44,7 +44,7 @@ int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)
     char *outDir = (char *)malloc(sizeof(char) * 1024);
     sprintf(outDir, "%s/%s", cwd, "build/debug");
 
-    DebugASTOutput *output = createDebugASTOutput(settings->inputFile, outDir, fileExt, cwd);
+    DebugASTOutput *output = createDebugASTOutput("Debug Output", outDir, fileExt, cwd);
     createASTDebugView(root, output, 0);
     createASTDebugOutputFile(output);
 

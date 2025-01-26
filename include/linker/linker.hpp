@@ -150,6 +150,9 @@ namespace Cryo
             std::string rootDir = std::string(buildDir).substr(0, std::string(buildDir).find_last_of("/"));
             dirInfo = createDirectoryInfo(rootDir);
 
+            // Print the directory info
+            logDirectoryInfo(dirInfo);
+
             // Set the global linker object
             globalLinker = reinterpret_cast<CryoLinker *>(this);
             std::cout << "Global Linker Object Set..." << std::endl;
@@ -174,6 +177,7 @@ namespace Cryo
 
         std::string createIRFromModule(llvm::Module *module, std::string outDir);
         llvm::Module *getCryoRuntimeModule(void);
+        void createCRuntimeFile(void);
 
         void completeCodeGeneration(void);
 

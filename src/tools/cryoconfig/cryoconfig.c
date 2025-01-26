@@ -77,8 +77,6 @@ void checkForCryoProject(CompilerSettings *settings)
 
         projectSettings->logActiveSettings(projectSettings);
 
-        DEBUG_BREAKPOINT;
-
         return;
     }
     else
