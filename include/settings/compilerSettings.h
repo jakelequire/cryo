@@ -26,13 +26,15 @@
 
 #include "common/common.h"
 #include "settings/compilerArgs.h"
+#include "tools/cryoconfig/cryoconfig.h"
+#include "version.h"
 
-#define COMPILER_VERSION "0.0.1"
-
-typedef struct CompiledFile CompiledFile;
-
+#define COMPILER_VERSION _COMPILER_VERSION_
 #define CURRENT_DEBUG_LEVEL DEBUG_LEVEL
 #define SET_DEBUG_LEVEL(level) DEBUG_LEVEL = level
+
+typedef struct CompiledFile CompiledFile;
+typedef struct ProjectSettings ProjectSettings;
 
 typedef enum DebugLevel
 {
@@ -49,54 +51,52 @@ typedef enum BuildType
     BUILD_RELEASE = 2
 } BuildType;
 
-typedef struct EnabledLogs
-{
-    bool logLexer;
-    bool logParser;
-    bool logAST;
-    bool logSymtable;
-    bool logCompiler;
-    bool logUtility;
-    bool logArena;
-    bool logCommon;
-    bool logSettings;
-} EnabledLogs;
-
 typedef enum
 {
-    OPT_AST_DUMP = 1000, // Start after ASCII range to avoid conflicts
-    OPT_IR_DUMP,
+    OPT_AST_DUMP = 1000, // `--ast-dump`
+    OPT_IR_DUMP,         // `--ir-dump`
+    OPT_LSP_SYMBOLS,     // `--lsp-symbols`
+    OPT_ENABLE_LOGS,     // `--enable-logs`
+    OPT_DISABLE_LOGS,    // `--disable-logs`
+    OPT_PROJECT          // `--project`
 } LongOnlyOptions;
 
 typedef struct CompilerSettings
 {
+    // Version
+    const char *version;
+
+    // Paths
+    const char *projectDir;
     const char *rootDir;
     const char *customOutputPath;
+    const char *compilerRootPath;
     const char *inputFile;
     const char *inputFilePath;
-    bool activeBuild;
-    bool isSource;
-    bool verbose;
-    EnabledLogs enabledLogs;
-    DebugLevel debugLevel;
-    /**
-     * typedef enum BuildType
-     * {
-     *     BUILD_DEV = 0, // Default
-     *     BUILD_DEBUG = 1,
-     *     BUILD_RELEASE = 2
-     * } BuildType;
-     */
-    BuildType buildType;
-    CompiledFile **compiledFiles;
+    const char *lspOutputPath; // {WORKSPACE}/build/lsp
+    const char *runtimePath;
+    const char *buildDir;
+    char *sourceText;
     int totalFiles;
 
     // Flags
     bool astDump;
     bool irDump;
+    bool isSource;
+    bool activeBuild;
+    bool isLSP;
+    bool enableLogs;
+    bool isProject;
+    bool isSingleFile;
+    bool verbose;
 
-    // Version
-    const char *version;
+    // Debugging
+    DebugLevel debugLevel;
+    BuildType buildType;
+    CompiledFile **compiledFiles;
+
+    // Project Settings
+    ProjectSettings *projectSettings;
 } CompilerSettings;
 
 // ==============================
@@ -111,13 +111,12 @@ const char *DebugLevelToString(DebugLevel level);
 DebugLevel getDebugLevel(int level);
 const char *BuildTypeToString(BuildType type);
 void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file);
-EnabledLogs createEnabledLogs(void);
 CompiledFile createCompiledFile(void);
-EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs);
 CompilerSettings createCompilerSettings();
 
 void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings);
 
 bool isASTDumpEnabled(CompilerSettings *settings);
+bool isSourceText(CompilerSettings *settings);
 
 #endif // COMPILER_SETTINGS_H

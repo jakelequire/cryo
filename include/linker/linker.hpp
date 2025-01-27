@@ -17,30 +17,33 @@
 #ifndef CRYO_LINKER_H
 #define CRYO_LINKER_H
 
+// ================================================================ //
+// C Interface
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    // Opaque pointer type for C
+    // C API
+    // Opaque Pointer for C API
     typedef struct CryoLinker_t *CryoLinker;
 
-    // C API
-    CryoLinker CryoLinker_Create(void);
-    void CryoLinker_Destroy(CryoLinker linker);
-    void CryoLinker_SetBuildSrcDirectory(CryoLinker linker, const char *srcDir);
-    void CryoLinker_AddRootModule(CryoLinker linker, void *module);
-    void CryoLinker_AddModuleDependency(CryoLinker linker, void *module);
-    void *CryoLinker_LinkModules(CryoLinker linker);
+    // Constructors & Destructors
+    CryoLinker *CryoLinker_Create(const char *buildDir);
 
-    void CryoLinker_InitDependencies(CryoLinker linker);
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Macros
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    void CryoLinker_LogState(CryoLinker linker);
+#define CreateCryoLinker(buildDir) CryoLinker_Create(buildDir)
 
 #ifdef __cplusplus
 }
+// ================================================================ //
 
+// -----------------------------------------------
 // C++ includes
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -50,10 +53,14 @@ extern "C"
 #include <stdint.h>
 #include <fstream>
 #include <sstream>
-#include <filesystem>
 #include <functional>
+#include <filesystem>
 
+#include <wait.h>
+
+// -----------------------------------------------
 // LLVM includes
+
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
@@ -71,106 +78,144 @@ extern "C"
 #include "llvm/IR/ValueSymbolTable.h"
 #include "llvm/IR/ValueMap.h"
 #include "llvm/IR/ValueHandle.h"
-#include "llvm/Support/FileSystem.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"
-#include "llvm/Support/FormattedStream.h"
-#include "llvm/Linker/IRMover.h"
-#include "llvm/Linker/Linker.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/IRReader/IRReader.h"
-#include "llvm/Support/SourceMgr.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/Verifier.h>
+
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FormattedStream.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/CodeGen.h"
+
+#include "llvm/Linker/IRMover.h"
+#include "llvm/Linker/Linker.h"
+
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/CodeGenCWrappers.h"
+#include "llvm/Target/CGPassBuilderOption.h"
+#include <llvm/Target/TargetOptions.h>
+#include "llvm/MC/TargetRegistry.h"
+
 #include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Transforms/Utils.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/IPO.h>
+#include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
+
+#include "llvm/IRReader/IRReader.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+
+// -----------------------------------------------
+// C Includes
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
+#include "tools/utils/env.h"
+
+struct DirectoryInfo
+{
+    std::string rootDir;
+    std::string buildDir;
+    std::string outDir;
+    std::string depDir;
+    std::string runtimeDir;
+};
 
 namespace Cryo
 {
+    class Linker;
+    extern CryoLinker *globalLinker; // Global Linker Object
+#define GetCXXLinker() reinterpret_cast<Cryo::Linker *>(globalLinker)
+
+    // ================================================================ //
+    //                        Linker Manager                            //
+    // ================================================================ //
+
     class Linker
     {
     public:
-        Linker();
-        ~Linker();
+        Linker(const char *buildDir)
+        {
+            std::cout << "Linker Constructor Called..." << std::endl;
+            std::string rootDir = std::string(buildDir).substr(0, std::string(buildDir).find_last_of("/"));
+            dirInfo = createDirectoryInfo(rootDir);
 
+            // Print the directory info
+            logDirectoryInfo(dirInfo);
+
+            // Set the global linker object
+            globalLinker = reinterpret_cast<CryoLinker *>(this);
+            std::cout << "Global Linker Object Set..." << std::endl;
+        }
+
+        Cryo::Linker *getCXXLinker() { return reinterpret_cast<Cryo::Linker *>(globalLinker); }
+        CryoLinker *getCLinker() { return globalLinker; }
+
+        llvm::LLVMContext context;
+        std::unique_ptr<llvm::Module> finalModule;
+        llvm::Module *preprocessedModule;
+        void setPreprocessedModule(llvm::Module *mod) { preprocessedModule = mod; }
         std::vector<llvm::Module *> dependencies;
-        llvm::Module *rootModule;
 
-        void setRootModule(llvm::Module *mod) { rootModule = mod; }
+        llvm::LLVMContext &getLinkerContext() { return context; }
 
-        int dependencyCount = 0;
-        void setDependencyCount(int count) { dependencyCount = count; }
+        DirectoryInfo *dirInfo;
 
-        std::string buildSrcDir;
-        std::string dependencyDir = "out/deps/";
+        llvm::Module *initMainModule(void);
 
-        // This should be putting the `buildSrcDir` + `dependencyDir` together once the `buildSrcDir` is set
-        void setDependencyDir(std::string dir);
+        void addPreprocessingModule(llvm::Module *mod);
 
-        llvm::Module *linkModules();
-        void addRootModule(llvm::Module *module);
-        void addModuleDependency(llvm::Module *module);
-        void setBuildSrcDirectory(std::string srcDir) { buildSrcDir = srcDir; }
-        void setBuildSrcDirectory(const char *srcDir) { buildSrcDir = srcDir; }
+        std::string createIRFromModule(llvm::Module *module, std::string outDir);
+        llvm::Module *getCryoRuntimeModule(void);
+        void createCRuntimeFile(void);
 
-        void logState() const;
-
-        // The C++ Linker Implementation
-        void initDependencies(void);
-        void newInitDependencies(llvm::Module *srcModule);
-
-        const std::vector<std::string> scanDependenciesDir(void);
-        void appendDependenciesToRoot(llvm::Module *root);
-        void hoistDeclarations(llvm::Module *module);
-        void contextMismatchMerge(llvm::Module *dest, llvm::Module *src);
+        void completeCodeGeneration(void);
 
     private:
-        void createModulesFromDependencies(const std::vector<std::string> &deps);
-        llvm::Module *compileAndMergeModule(std::string inputFile);
-        void setModuleAndContextFromRoot(llvm::Module *root);
+        DirectoryInfo *createDirectoryInfo(std::string rootDir);
+        DirectoryInfo *getDirInfo() { return dirInfo; }
+        void logDirectoryInfo(DirectoryInfo *dirInfo);
 
-        bool contextMatch(llvm::Module *mod1, llvm::Module *mod2);
+        std::string getCRuntimePath();
+        std::string covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
+        bool mergeAllRuntimeFiles();
+        std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName);
+
+        std::vector<std::string> listDir(const char *path);
+        void runCompletedBinary();
+
+    public:
+        std::string getCryoRuntimeFilePath(void);
+        void mergeTwoModules(llvm::Module *destMod, std::unique_ptr<llvm::Module> srcMod);
     };
 
-    // C API Implementation
-    inline CryoLinker CryoLinker_Create()
-    {
-        return reinterpret_cast<CryoLinker>(new Linker());
-    }
+    // ================================================================ //
+    //                     C API Implementation                         //
+    // ================================================================ //
 
-    inline void CryoLinker_Destroy(CryoLinker linker)
+    inline CryoLinker *CryoLinker_Create(const char *buildDir)
     {
-        delete reinterpret_cast<Linker *>(linker);
-    }
-
-    inline void CryoLinker_SetBuildSrcDirectory(CryoLinker linker, const char *srcDir)
-    {
-        reinterpret_cast<Linker *>(linker)->setBuildSrcDirectory(srcDir);
-        // Set the dependency directory
-        reinterpret_cast<Linker *>(linker)->setDependencyDir(srcDir);
-    }
-
-    inline void CryoLinker_AddRootModule(CryoLinker linker, void *module)
-    {
-        reinterpret_cast<Linker *>(linker)->addRootModule(static_cast<llvm::Module *>(module));
-    }
-
-    inline void CryoLinker_AddModuleDependency(CryoLinker linker, void *module)
-    {
-        reinterpret_cast<Linker *>(linker)->addModuleDependency(static_cast<llvm::Module *>(module));
-    }
-
-    inline void *CryoLinker_LinkModules(CryoLinker linker)
-    {
-        return reinterpret_cast<void *>(reinterpret_cast<Linker *>(linker)->linkModules());
+        try
+        {
+            auto linker = new Linker(buildDir);
+            return reinterpret_cast<CryoLinker *>(linker);
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
     }
 } // namespace Cryo
 
 #endif // __cplusplus
-#endif // CRYO_LINKER_H
+#endif // CRYO_LINKER_V2_H

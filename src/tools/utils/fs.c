@@ -15,6 +15,50 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/fs.h"
+#include "tools/logger/logger_config.h"
+
+#define PATH_MAX 4096
+
+jFS *fs = NULL;
+
+jFS *initFS(void)
+{
+    jFS *fs = (jFS *)malloc(sizeof(jFS));
+    if (!fs)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for FS");
+        return NULL;
+    }
+
+    fs->readFile = readFile;
+    fs->fileExists = fileExists;
+    fs->dirExists = dirExists;
+    fs->createDir = createDir;
+    fs->removeFile = removeFile;
+    fs->getSTDFilePath = getSTDFilePath;
+    fs->trimFilePath = trimFilePath;
+    fs->getFileNameFromPathNoExt = getFileNameFromPathNoExt;
+    fs->getFileNameFromPath = getFileNameFromPath;
+    fs->getCurRootDir = getCurRootDir;
+    fs->getCryoSrcLocation = getCryoSrcLocation;
+    fs->getCRuntimePath = getCRuntimePath;
+    fs->appendStrings = appendStrings;
+    fs->appendExtensionToFileName = appendExtensionToFileName;
+    fs->appendPathToFileName = appendPathToFileName;
+    fs->removeFileFromPath = removeFileFromPath;
+    fs->changeFileExtension = changeFileExtension;
+    fs->getPathFromCryoPath = getPathFromCryoPath;
+    fs->getPathFromEnvVar = getPathFromEnvVar;
+    fs->getCompilerBinPath = getCompilerBinPath;
+    fs->getCompilerRootPath = getCompilerRootPath;
+    fs->createNewEmptyFile = createNewEmptyFile;
+    return fs;
+}
+
+void initGlobalFS(void)
+{
+    fs = initFS();
+}
 
 // This is being hard coded for now, but will be replaced with a config file later
 CryoSrcLocations srcLocations[] = {
@@ -26,11 +70,11 @@ CryoSrcLocations srcLocations[] = {
 /// @brief Takes in a file path and reads the contents of the file into a buffer
 char *readFile(const char *path)
 {
-    printf("[FS] Reading file: %s\n", path);
+    logMessage(LMI, "INFO", "FS", "Reading file: %s", path);
     FILE *file = fopen(path, "rb"); // Open the file in binary mode to avoid transformations
     if (file == NULL)
     {
-        perror("{FS} Could not open file");
+        fprintf(stderr, "{FS} Failed to open file: %s\n", path);
         return NULL;
     }
 
@@ -41,7 +85,7 @@ char *readFile(const char *path)
 
     if (length == 0)
     {
-        perror("{FS} File is empty");
+        fprintf(stderr, "{FS} File is empty: %s\n", path);
         fclose(file);
         return NULL;
     }
@@ -49,7 +93,7 @@ char *readFile(const char *path)
     char *buffer = (char *)malloc(length + 1);
     if (buffer == NULL)
     {
-        perror("{FS} Not enough memory to read file");
+        fprintf(stderr, "{FS} Failed to allocate memory for file: %s\n", path);
         fclose(file);
         return NULL;
     }
@@ -57,7 +101,7 @@ char *readFile(const char *path)
     size_t bytesRead = fread(buffer, 1, length, file);
     if (bytesRead < length)
     {
-        perror("{FS} Failed to read the full file");
+        fprintf(stderr, "{FS} Failed to read file: %s\n", path);
         free(buffer);
         fclose(file);
         return NULL;
@@ -88,7 +132,7 @@ bool fileExists(const char *path)
     }
     else
     {
-        logMessage("WARN", __LINE__, "FS", "File does not exist");
+        logMessage(LMI, "WARN", "FS", "File does not exist");
     }
     return false;
 #endif
@@ -102,7 +146,7 @@ bool fileExists(const char *path)
     }
     else
     {
-        logMessage("WARN", __LINE__, "FS", "File does not exist");
+        logMessage(LMI, "WARN", "FS", "File does not exist");
     }
 
     fclose(file);
@@ -112,43 +156,78 @@ bool fileExists(const char *path)
 
 // <dirExists>
 // @brief Checks if a directory exists at the given path
-bool dirExists(const char *path)
+int dirExists(const char *path)
 {
-    // Make sure the string isn't empty
-    if (path == NULL)
+    if (path == NULL || strlen(path) >= PATH_MAX)
     {
-        return false;
+        return -1;
     }
 
-    // Open the file
-    DIR *dir = opendir(path);
-    if (dir)
+    struct stat st;
+    if (stat(path, &st) == 0)
     {
-        closedir(dir);
-        return true;
+        return S_ISDIR(st.st_mode) ? 1 : 0;
     }
 
-    closedir(dir);
-    return false;
+    return (errno == ENOENT) ? 0 : -1;
 }
 // </dirExists>
 
 // <createDir>
 /// @brief Creates a directory at the given path
-void createDir(const char *path)
+int createDir(const char *path)
 {
-    if (!dirExists(path))
+    if (path == NULL)
     {
-        logMessage("INFO", __LINE__, "FS", "Directory doesn't exist, creating...");
-        int status = mkdir(path, 0777);
-        if (status == -1)
+        return -1;
+    }
+
+    // Create a modifiable copy of the path
+    char temp[PATH_MAX];
+    strncpy(temp, path, PATH_MAX - 1);
+    temp[PATH_MAX - 1] = '\0';
+
+    // Convert forward slashes to system separator if needed
+    for (char *p = temp; *p; p++)
+    {
+        if (*p == '/')
         {
-            logMessage("ERROR", __LINE__, "FS", "Failed to create directory");
-            DEBUG_BREAKPOINT;
+            *p = '/'; // Or use PATH_SEPARATOR if defined
         }
     }
 
-    return;
+    // Create each directory in the path
+    for (char *p = temp + 1; *p; p++)
+    {
+        if (*p == '/')
+        {
+            *p = '\0'; // Temporarily terminate the string
+
+            // Try to create the directory
+            if (mkdir(temp, 0700) != 0)
+            {
+                // Ignore if directory already exists
+                if (errno != EEXIST)
+                {
+                    return -1;
+                }
+            }
+
+            *p = '/'; // Restore the slash
+        }
+    }
+
+    // Create the final directory
+    if (mkdir(temp, 0700) != 0)
+    {
+        // Ignore if directory already exists
+        if (errno != EEXIST)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
 }
 // </createDir>
 
@@ -161,7 +240,7 @@ void removeFile(const char *filePath)
         int status = remove(filePath);
         if (status == -1)
         {
-            logMessage("ERROR", __LINE__, "FS", "Failed to remove file");
+            logMessage(LMI, "ERROR", "FS", "Failed to remove file");
             DEBUG_BREAKPOINT;
         }
     }
@@ -177,14 +256,14 @@ const char *getSTDFilePath(const char *subModule)
     const char *cryoPath = getenv("CRYO_PATH");
     if (!cryoPath)
     {
-        logMessage("ERROR", __LINE__, "TypeDefs", "CRYO_PATH environment variable not set.");
+        logMessage(LMI, "ERROR", "TypeDefs", "CRYO_PATH environment variable not set.");
         DEBUG_BREAKPOINT;
         return NULL;
     }
 
     // The std library path will be $CRYO_PATH/cryo/std/{subModule}.cryo
     char *stdPath = (char *)malloc(strlen(cryoPath) + 16 + strlen(subModule) + 6);
-    sprintf(stdPath, "%s/cryo/std/%s.cryo", cryoPath, subModule);
+    logMessage(LMI, "INFO", "TypeDefs", "Found Cryo path: %s", cryoPath);
 
     return stdPath;
 }
@@ -199,6 +278,97 @@ const char *trimFilePath(const char *filePath)
 }
 // </trimFilePath>
 
+// <getFileNameFromPathNoExt>
+/// @brief Extracts the filename from a file path without the extension
+/// i.e. `/path/to/file.txt` -> `file`
+char *getFileNameFromPathNoExt(const char *filePath)
+{
+    if (!filePath)
+    {
+        return NULL;
+    }
+
+    // Find last occurrence of forward or backward slash
+    const char *lastForwardSlash = strrchr(filePath, '/');
+    const char *lastBackSlash = strrchr(filePath, '\\');
+    const char *fileName = lastForwardSlash > lastBackSlash ? lastForwardSlash : lastBackSlash;
+
+    // If no slash found, use the entire path as filename
+    if (!fileName)
+    {
+        fileName = filePath;
+    }
+    else
+    {
+        // Move past the slash
+        fileName++;
+    }
+
+    // Find the last dot for extension
+    const char *lastDot = strrchr(fileName, '.');
+
+    // Calculate length (either to dot or end of string)
+    size_t nameLength = lastDot ? (size_t)(lastDot - fileName) : strlen(fileName);
+
+    // Allocate memory (+1 for null terminator)
+    char *fileNameNoExt = (char *)malloc(nameLength + 1);
+    if (!fileNameNoExt)
+    {
+        return NULL;
+    }
+
+    // Copy the filename without extension
+    strncpy(fileNameNoExt, fileName, nameLength);
+    fileNameNoExt[nameLength] = '\0';
+
+    return fileNameNoExt;
+}
+// </getFileNameFromPathNoExt>
+
+// <getFileNameFromPath>
+/// @brief Extracts the filename from a file path
+/// i.e. `/path/to/file.txt` -> `file.txt`
+char *getFileNameFromPath(const char *filePath)
+{
+    if (!filePath)
+    {
+        return NULL;
+    }
+
+    // Find last occurrence of forward or backward slash
+    const char *lastForwardSlash = strrchr(filePath, '/');
+    const char *lastBackSlash = strrchr(filePath, '\\');
+    const char *fileName = lastForwardSlash > lastBackSlash ? lastForwardSlash : lastBackSlash;
+
+    // If no slash found, use the entire path as filename
+    if (!fileName)
+    {
+        fileName = filePath;
+    }
+    else
+    {
+        // Move past the slash
+        fileName++;
+    }
+
+    // Calculate length of filename including extension
+    size_t nameLength = strlen(fileName);
+
+    // Allocate memory (+1 for null terminator)
+    char *fileNameCopy = (char *)malloc(nameLength + 1);
+    if (!fileNameCopy)
+    {
+        return NULL;
+    }
+
+    // Copy the complete filename
+    strncpy(fileNameCopy, fileName, nameLength);
+    fileNameCopy[nameLength] = '\0';
+
+    return fileNameCopy;
+}
+// <getFileNameFromPath>
+
 // <getCurRootDir>
 const char *getCurRootDir(void)
 {
@@ -206,7 +376,7 @@ const char *getCurRootDir(void)
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) == NULL)
     {
-        logMessage("ERROR", __LINE__, "FS", "Failed to get current working directory");
+        logMessage(LMI, "ERROR", "FS", "Failed to get current working directory");
         CONDITION_FAILED;
     }
 
@@ -222,7 +392,7 @@ const char *getCryoSrcLocation(void)
     {
         if (dirExists(srcLocations->rootDir))
         {
-            logMessage("INFO", __LINE__, "FS", "Found Cryo source location");
+            logMessage(LMI, "INFO", "FS", "Found Cryo source location");
             return srcLocations->rootDir;
         }
         i++;
@@ -239,7 +409,7 @@ char *getCRuntimePath(void)
     char *srcPath = (char *)getCryoSrcLocation();
     if (!srcPath)
     {
-        logMessage("ERROR", __LINE__, "FS", "Failed to find Cryo source location");
+        logMessage(LMI, "ERROR", "FS", "Failed to find Cryo source location");
         DEBUG_BREAKPOINT;
         return NULL;
     }
@@ -259,7 +429,7 @@ const char *appendStrings(const char *str1, const char *str2)
     char *result = (char *)malloc(strlen(str1) + strlen(str2) + 1);
     if (!result)
     {
-        logMessage("ERROR", __LINE__, "FS", "Failed to allocate memory for string concatenation");
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
         return NULL;
     }
 
@@ -267,4 +437,318 @@ const char *appendStrings(const char *str1, const char *str2)
     strcat(result, str2);
 
     return result;
+}
+
+const char *appendExtensionToFileName(const char *fileName, const char *extension)
+{
+    char *result = (char *)malloc(strlen(fileName) + strlen(extension) + 1);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strcpy(result, fileName);
+    strcat(result, extension);
+
+    return result;
+}
+
+/// @brief Appends a path to a file name.
+/// @param path
+/// @param fileName
+/// @param endingSlash True if the path should end with a slash, false otherwise
+/// @return
+const char *appendPathToFileName(const char *path, const char *fileName, bool endingSlash)
+{
+    char *result = (char *)malloc(strlen(path) + strlen(fileName) + 2);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strcpy(result, path);
+    if (endingSlash)
+    {
+        strcat(result, "/");
+    }
+    strcat(result, fileName);
+
+    return result;
+}
+
+const char *removeFileFromPath(const char *path)
+{
+    const char *lastSlash = strrchr(path, '/');
+    if (!lastSlash)
+    {
+        return path;
+    }
+
+    size_t length = (size_t)(lastSlash - path);
+    char *result = (char *)malloc(length + 1);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strncpy(result, path, length);
+    result[length] = '\0';
+
+    return result;
+}
+
+const char *changeFileExtension(const char *fileName, const char *newExtension)
+{
+    const char *lastDot = strrchr(fileName, '.');
+    if (!lastDot)
+    {
+        return fileName;
+    }
+
+    size_t length = (size_t)(lastDot - fileName);
+    char *result = (char *)malloc(length + strlen(newExtension) + 1);
+    if (!result)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for string concatenation");
+        return NULL;
+    }
+
+    strncpy(result, fileName, length);
+    result[length] = '\0';
+    strcat(result, newExtension);
+
+    return result;
+}
+
+char *getPathFromCryoPath(void)
+{
+    const char *command = "cryo-path";
+    FILE *fp;
+    char *path = NULL;
+    size_t buffer_size = 256; // Start with reasonable buffer size
+    size_t len = 0;
+
+    // Allocate initial buffer
+    path = (char *)malloc(buffer_size * sizeof(char));
+    if (path == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        return NULL;
+    }
+    path[0] = '\0'; // Ensure null termination
+
+    // Open the command for reading
+    fp = popen(command, "r");
+    if (fp == NULL)
+    {
+        fprintf(stderr, "Failed to run command: %s\n", command);
+        free(path);
+        return NULL;
+    }
+
+    // Read the output, handling potential buffer resizing
+    char *fgets_result = fgets(path, buffer_size, fp);
+    if (fgets_result != NULL)
+    {
+        // Remove trailing newline if present
+        len = strlen(path);
+        if (len > 0 && path[len - 1] == '\n')
+        {
+            path[len - 1] = '\0';
+            len--;
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Failed to read command output\n");
+        free(path);
+        pclose(fp);
+        return NULL;
+    }
+
+    // Debug the output
+    printf("Command output: %s\n", path);
+
+    // Close the pipe
+    int close_result = pclose(fp);
+    if (close_result == -1)
+    {
+        fprintf(stderr, "Failed to close command pipe\n");
+        free(path);
+        return NULL;
+    }
+
+    // Check if command executed successfully
+    if (WEXITSTATUS(close_result) != 0)
+    {
+        fprintf(stderr, "ERROR: Command Failed!\n");
+        fprintf(stderr, "Command returned non-zero exit status: %d\n", WEXITSTATUS(close_result));
+        free(path);
+        return NULL;
+    }
+
+    // If path is empty after all this, something went wrong
+    if (strlen(path) == 0)
+    {
+        fprintf(stderr, "Command returned empty path\n");
+        free(path);
+        return NULL;
+    }
+
+    return path;
+}
+
+// This function will see if the `CRYO_COMPILER` environment variable is set
+char *getPathFromEnvVar(void)
+{
+    const char *env_var = getenv("CRYO_COMPILER");
+    if (env_var == NULL)
+    {
+        fprintf(stderr, "CRYO_COMPILER environment variable not set\n");
+        return NULL;
+    }
+
+    return strdup(env_var);
+}
+
+// This function should return `{LOCATION}/cryo/bin/` where `LOCATION` is the root directory of the Cryo compiler
+char *getCompilerBinPath(void)
+{
+    // Try getting path from cryo-path binary first
+    char *path = getPathFromCryoPath();
+    if (path != NULL)
+    {
+        return path;
+    }
+
+    // Try getting path from CRYO_COMPILER environment variable
+    path = getPathFromEnvVar();
+    if (path != NULL)
+    {
+        return path;
+    }
+
+    // Fallback paths to check
+    const char *fallback_paths[] = {
+        "/usr/local/bin/cryo/bin/",
+        "/usr/bin/cryo/bin/",
+        getenv("HOME") ? strcat(getenv("HOME"), "/cryo/bin/") : NULL};
+
+    for (size_t i = 0; i < sizeof(fallback_paths) / sizeof(fallback_paths[0]); i++)
+    {
+        if (fallback_paths[i] && access(fallback_paths[i], F_OK) == 0)
+        {
+            return strdup(fallback_paths[i]);
+        }
+    }
+
+    return NULL;
+}
+
+// This function should return `{LOCATION}/cryo/` where `LOCATION` is the root directory of the Cryo compiler
+char *getCompilerRootPath(void)
+{
+    // Try getting path from cryo-path binary first
+    char *path = getPathFromCryoPath();
+    if (path != NULL)
+    {
+        return (char *)removeFileFromPath(removeFileFromPath(path));
+    }
+
+    // Try getting path from CRYO_COMPILER environment variable
+    path = getPathFromEnvVar();
+    if (path != NULL)
+    {
+        return (char *)removeFileFromPath(removeFileFromPath(path));
+    }
+
+    // Fallback paths to check
+    const char *fallback_paths[] = {
+        "/usr/local/bin/cryo/",
+        "/usr/bin/cryo/",
+        getenv("HOME") ? strcat(getenv("HOME"), "/cryo/") : NULL};
+
+    for (size_t i = 0; i < sizeof(fallback_paths) / sizeof(fallback_paths[0]); i++)
+    {
+        if (fallback_paths[i] && access(fallback_paths[i], F_OK) == 0)
+        {
+            return strdup(fallback_paths[i]);
+        }
+    }
+
+    return NULL;
+}
+void createNewEmptyFile(const char *fileName, const char *ext, const char *path)
+{
+    // Create the file name
+    char *newFileName = (char *)malloc(strlen(fileName) + strlen(ext) + 1);
+    strcpy(newFileName, fileName);
+    strcat(newFileName, ext);
+
+    // Create the file path
+    char *filePath = (char *)malloc(strlen(path) + strlen(newFileName) + 2);
+    strcpy(filePath, path);
+    strcat(filePath, "/");
+    strcat(filePath, newFileName);
+
+    // Create directories recursively
+    char *tempPath = strdup(path);
+    char *p = tempPath;
+
+    // Skip leading slashes
+    while (*p == '/')
+        p++;
+
+    while (*p != '\0')
+    {
+        if (*p == '/')
+        {
+            *p = '\0'; // Temporarily terminate the string
+            if (mkdir(tempPath, 0755) != 0 && errno != EEXIST)
+            {
+                logMessage(LMI, "ERROR", "FS", "Failed to create directory: %s", tempPath);
+                perror("mkdir");
+                DEBUG_BREAKPOINT;
+                free(tempPath);
+                free(newFileName);
+                free(filePath);
+                return;
+            }
+            *p = '/'; // Restore the slash
+        }
+        p++;
+    }
+
+    // Create final directory
+    if (mkdir(tempPath, 0755) != 0 && errno != EEXIST)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to create directory: %s", tempPath);
+        perror("mkdir");
+        DEBUG_BREAKPOINT;
+        free(tempPath);
+        free(newFileName);
+        free(filePath);
+        return;
+    }
+
+    free(tempPath);
+
+    // Create the file
+    FILE *file = fopen(filePath, "w");
+    if (!file)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to create file: %s", filePath);
+        perror("fopen");
+        DEBUG_BREAKPOINT;
+        free(newFileName);
+        free(filePath);
+        return;
+    }
+
+    fclose(file);
+    free(newFileName);
+    free(filePath);
 }

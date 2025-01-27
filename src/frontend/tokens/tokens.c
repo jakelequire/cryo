@@ -188,6 +188,14 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "CLASS_CONSTRUCTOR";
     case NODE_OBJECT_INST:
         return "OBJECT_INST";
+    case NODE_NULL_LITERAL:
+        return "NULL_LITERAL";
+    case NODE_TYPEOF:
+        return "TYPEOF";
+    case NODE_USING:
+        return "USING";
+    case NODE_MODULE:
+        return "MODULE";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -214,6 +222,19 @@ char *CryoVisibilityTypeToString(CryoVisibilityType visibility)
     }
 }
 // </CryoVisibilityTypeToString>
+
+CryoVisibilityType stringToVisibilityType(const char *visibility)
+{
+    if (strcmp(visibility, "public") == 0)
+        return VISIBILITY_PUBLIC;
+    if (strcmp(visibility, "private") == 0)
+        return VISIBILITY_PRIVATE;
+    if (strcmp(visibility, "protected") == 0)
+        return VISIBILITY_PROTECTED;
+    if (strcmp(visibility, "extern") == 0)
+        return VISIBILITY_EXTERN;
+    return VISIBILITY_UNKNOWN;
+}
 
 // <CryoTokenToString>
 char *CryoTokenToString(CryoTokenType node)
@@ -378,14 +399,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_ENUM";
     case TOKEN_KW_TRAIT:
         return "TOKEN_KW_TRAIT";
-    case TOKEN_KW_IMPL:
-        return "TOKEN_KW_IMPL";
-    case TOKEN_KW_USE:
-        return "TOKEN_KW_USE";
     case TOKEN_KW_AS:
         return "TOKEN_KW_AS";
-    case TOKEN_KW_MODULE:
-        return "TOKEN_KW_MODULE";
     case TOKEN_KW_NAMESPACE:
         return "TOKEN_KW_NAMESPACE";
     case TOKEN_KW_TYPE:
@@ -476,6 +491,10 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_CONSTRUCTOR";
     case TOKEN_KW_THIS:
         return "TOKEN_KW_THIS";
+    case TOKEN_KW_USING:
+        return "TOKEN_KW_USING";
+    case TOKEN_KW_MODULE:
+        return "TOKEN_KW_MODULE";
 
     case TOKEN_BANG:
         return "TOKEN_BANG";

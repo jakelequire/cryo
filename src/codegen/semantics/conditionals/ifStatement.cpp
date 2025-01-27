@@ -176,7 +176,7 @@ namespace Cryo
             // Get the operator
             CryoOperatorType binaryOperator = node->data.bin_op->op;
 
-            condition = binExp.createComparisonExpression(leftOperand, rightOperand, binaryOperator);
+            condition = binExp.createComparisonExpression(leftOperand, rightOperand, binaryOperator, conditionBlock);
 
             break;
         }

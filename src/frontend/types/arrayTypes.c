@@ -50,7 +50,7 @@ ArrayType *createArrayTypeContainer(DataType *baseType, DataType **elementTypes,
     ArrayType *arrayType = (ArrayType *)malloc(sizeof(ArrayType));
     if (!arrayType)
     {
-        logMessage("ERROR", __LINE__, "DataTypes", "Failed to allocate memory for ArrayType");
+        logMessage(LMI, "ERROR", "DataTypes", "Failed to allocate memory for ArrayType");
         CONDITION_FAILED;
     }
     arrayType->baseType = baseType;
@@ -59,7 +59,7 @@ ArrayType *createArrayTypeContainer(DataType *baseType, DataType **elementTypes,
     arrayType->elements = (DataType **)malloc(sizeof(DataType *) * 64);
     if (!arrayType->elements)
     {
-        logMessage("ERROR", __LINE__, "DataTypes", "Failed to allocate memory for ArrayType elements");
+        logMessage(LMI, "ERROR", "DataTypes", "Failed to allocate memory for ArrayType elements");
         CONDITION_FAILED;
     }
     arrayType->elementCount = 0;
@@ -72,7 +72,7 @@ DataType *wrapArrayType(ArrayType *arrayType)
     TypeContainer *container = createTypeContainer();
     if (!container)
     {
-        logMessage("ERROR", __LINE__, "DataTypes", "Failed to create type container for array type");
+        logMessage(LMI, "ERROR", "DataTypes", "Failed to create type container for array type");
         CONDITION_FAILED;
     }
 

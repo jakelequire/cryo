@@ -15,11 +15,44 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
+#include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
+#include "tools/logger/logger_config.h"
 
 int cryoCompiler(const char *filePath, CompilerSettings *settings)
 {
-    START_COMPILATION_MESSAGE;
+    DEBUG_PRINT_FILTER({ START_COMPILATION_MESSAGE; });
+
+    // ========================================
+    // Handle Flags
+
+    bool isSource = settings->isSource;
+    if (isSource)
+    {
+        char *sourceText = settings->sourceText;
+        return sourceTextCompiler(sourceText, settings);
+    }
+
+    bool isLSP = settings->isLSP;
+    if (isLSP)
+    {
+        const char *inputFilePath = settings->inputFile;
+        fprintf(stdout, "File Path: %s\n", inputFilePath);
+        return lspCompiler(inputFilePath, settings);
+    }
+
+    bool isProject = settings->isProject;
+    if (isProject)
+    {
+        return compileProject(settings);
+    }
+
+    bool isSingleFile = settings->isSingleFile;
+
+    // ========================================
+    // Compile the file (default behavior)
+
+    printf("\nStarting compilation...\n");
 
     const char *source = readFile(filePath);
     if (!source)
@@ -29,71 +62,84 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     }
     const char *fileName = trimFilePath(filePath);
 
-    const char *rootDirectory = settings->rootDir;
+    const char *fileDirectory = settings->inputFilePath;
+    const char *rootDirectory = settings->compilerRootPath;
+    const char *buildDir = settings->buildDir;
     if (!rootDirectory)
     {
         fprintf(stderr, "Error: Root directory not set\n");
         return 1;
     }
-    const char *buildDir = appendStrings(rootDirectory, "/build");
+
+    logMessage(LMI, "INFO", "Compiler", "Build directory: %s", buildDir);
+
+    // **New global symbol table**
+    // Initialize the new Symbol Table
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);
+    if (!globalSymbolTable)
+    {
+        fprintf(stderr, "Error: Failed to create global symbol table\n");
+        return 1;
+    }
+    // Debug print the global symbol table
+    printGlobalSymbolTable(globalSymbolTable);
 
     // Create and initialize linker
-    CryoLinker linker = CryoLinker_Create();
-    CryoLinker_SetBuildSrcDirectory(linker, buildDir);
-
-    CryoLinker_LogState(linker);
+    CryoLinker *linker = CreateCryoLinker(buildDir);
+    printf("Linker created\n");
 
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
 
     // Initialize the type table
     TypeTable *typeTable = initTypeTable();
 
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(table, typeTable);
-    CryoLinker_LogState(linker);
+    boostrapRuntimeDefinitions(typeTable, globalSymbolTable, linker);
 
-    // Initialize the lexer
+    printGlobalSymbolTable(globalSymbolTable);
+
+    // Update the global symbol table to be the primary table.
+    setPrimaryTableStatus(globalSymbolTable, true);
+
     Lexer lex;
-    CompilerState *state = initCompilerState(arena, &lex, table, fileName);
+    CompilerState *state = initCompilerState(arena, &lex, fileName);
+    setGlobalSymbolTable(state, globalSymbolTable);
     initLexer(&lex, source, fileName, state);
     state->settings = settings;
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, table, arena, state, typeTable);
-
+    ASTNode *programNode = parseProgram(&lex, arena, state, typeTable, globalSymbolTable);
     if (programNode == NULL)
     {
+        fprintf(stderr, "Error: Failed to parse program node\n");
         CONDITION_FAILED;
         return 1;
     }
+    TableFinished(globalSymbolTable); // Finish the global symbol table
 
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
 
     // Outputs the SymTable into a file in the build directory.
-    outputSymTable(table, settings);
     initASTDebugOutput(programCopy, settings);
     printTypeTable(typeTable);
-    logASTNodeDebugView(programCopy);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);
     if (result != 0)
     {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");
         CONDITION_FAILED;
         return 1;
     }
 
-    // Before returning, add cleanup
-    // CryoLinker_Destroy(linker); <- This was causing a problem at the end of compilation, unsure why
+    DEBUG_PRINT_FILTER({
+        END_COMPILATION_MESSAGE;
 
-    END_COMPILATION_MESSAGE;
-
-    logASTNodeDebugView(programCopy);
+        printGlobalSymbolTable(globalSymbolTable);
+        logASTNodeDebugView(programCopy);
+    });
 
     return 0;
 }
@@ -112,19 +158,16 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
     TypeTable *typeTable = initTypeTable();
 
     // Initialize the lexer
     Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
+    CompilerState *state = initCompilerState(arena, &lexer, filePath);
     state->settings = settings;
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, NULL);
 
     if (programNode == NULL)
     {
@@ -161,19 +204,16 @@ ASTNode *compileForProgramNode(const char *filePath)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the symbol table
-    CryoSymbolTable *table = createSymbolTable(arena);
-
     TypeTable *typeTable = initTypeTable();
 
     // Initialize the lexer
     Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, table, filePath);
+    CompilerState *state = initCompilerState(arena, &lexer, filePath);
     state->settings = &settings;
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, table, arena, state, typeTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, NULL);
 
     if (programNode == NULL)
     {

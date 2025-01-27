@@ -25,17 +25,19 @@
 #include "frontend/lexer.h"
 #include "frontend/parser.h"
 #include "frontend/tokens.h"
-#include "frontend/symTable.h"
 #include "frontend/dataTypes.h"
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"
 #include "runtime/bootstrap.h"
+#include "tools/utils/cTypes.h"
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
 typedef struct ASTNode ASTNode;
 typedef struct Bootstrapper Bootstrapper;
+typedef struct SymbolTable SymbolTable;
+typedef struct TypesTable TypesTable;
 
 // C++ headers
 #ifdef __cplusplus
@@ -43,15 +45,31 @@ extern "C"
 {
 #endif
     typedef struct CryoLinker_t *CryoLinker;
-    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker linker);
+    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *linker);
 
 #ifdef __cplusplus
 }
 #endif
 
+// Compiler Functions
 int cryoCompiler(const char *filePath, CompilerSettings *settings);
 ASTNode *compileForProgramNode(const char *filePath);
 int compileImportFile(const char *filePath, CompilerSettings *settings);
+
+// Source Text Compiler
+int sourceTextCompiler(char *filePath, CompilerSettings *settings);
+const char *handleTextBuffer(char *source);
+
+// Module Compiler
+ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state, Arena *arena, CryoGlobalSymbolTable *globalTable);
+int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker);
+
+// LSP Compiler
+int lspCompiler(const char *filePath, CompilerSettings *settings);
+
+// Project Compiler
+int compileProject(CompilerSettings *settings);
 
 // C++ Accessable Functions
 #ifdef __cplusplus

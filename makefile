@@ -13,7 +13,11 @@
 #    See the License for the specific language governing permissions and       *
 #    limitations under the License.                                            *
 #                                                                              *
-#*******************************************************************************/
+#*******************************************************************************
+
+#*******************************************************************************
+# Cryo Compiler Makefile                                                       *
+#*******************************************************************************
 
 # --------------------------------------------- #
 # `-O0`    - No optimization					#
@@ -25,11 +29,20 @@
 # `-Ofast` - Optimize for speed					#
 # `-Oz`    - Optimize for size					#
 # --------------------------------------------- #
-OPTIMIZATION =  -O1
+OPTIMIZATION =  -Og
 NO_WARNINGS =   -w
-DEBUG_FLAGS =   -v -D_CRT_SECURE_NO_WARNINGS  $(NO_WARNINGS)
+DEBUG_FLAGS =   -D_CRT_SECURE_NO_WARNINGS  $(NO_WARNINGS)
 C_STANDARD =    -std=c23
 CXX_STANDARD =  -std=c++17
+
+# Determine number of CPU cores
+ifeq ($(OS), Windows_NT)
+    NUM_CORES = $(NUMBER_OF_PROCESSORS)
+else
+    NUM_CORES = $(shell nproc)
+endif
+
+NUM_JOBS = $(shell expr $(NUM_CORES) + 1)
 
 # OS-specific settings for compilers
 ifeq ($(OS), Windows_NT)
@@ -38,8 +51,8 @@ ifeq ($(OS), Windows_NT)
 	CXX_COMPILER = C:/msys64/mingw64/bin/g++
 else
 # Linux settings
-	C_COMPILER = clang
-	CXX_COMPILER = clang++
+	C_COMPILER = clang-18
+	CXX_COMPILER = clang++-18
 endif
 
 # >>=======--------------------------------------------------=======<< #
@@ -79,7 +92,7 @@ else
     CXX =           $(CXX_COMPILER) $(CXX_STANDARD) $(DEBUG_FLAGS) $(OPTIMIZATION)
     CFLAGS =        $(LINUX_INCLUDES) $(LLVM_CFLAGS) -fexceptions
     CXXFLAGS =      $(LINUX_INCLUDES) $(LLVM_CXXFLAGS) -fexceptions
-    LLVM_CONFIG =   llvm-config
+    LLVM_CONFIG =   llvm-config-18
     LLVM_CFLAGS =   $(shell $(LLVM_CONFIG) --cflags)
 	LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
     LLVM_LDFLAGS =  $(shell $(LLVM_CONFIG) --ldflags) $(shell $(LLVM_CONFIG) --libs) $(shell $(LLVM_CONFIG) --system-libs)
@@ -104,6 +117,8 @@ DEBUG_BIN_DIR = $(BIN_DIR)debug/
 # ---------------------------------------------
 # Source directory
 SRC_DIR =   ./src/
+LIB_DIR =   ./libs/
+LIB_INIT = $(LIB_DIR)initLibs.sh
 MAIN_FILE = $(SRC_DIR)main.c
 
 # >>=======--------------------------------------------------=======<< #
@@ -132,15 +147,19 @@ CPP_OBJS := $(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.o,$(CPP_SRCS))
 # Combine all object files
 ALL_OBJS := $(C_OBJS) $(CPP_OBJS)
 
+# Add these directory rules
+$(BIN_DIR) $(OBJ_DIR):
+	@mkdir -p $@
+
 # ---------------------------------------------
 # Compile C source files
-$(OBJ_DIR)%.o: $(SRC_DIR)%.c
+$(OBJ_DIR)%.o: $(SRC_DIR)%.c | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 # ---------------------------------------------
 # Compile C++ source files
-$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -149,17 +168,48 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
 # >>=======--------------------------------------------------=======<< #
 
 # Main target
-$(MAIN_BIN): $(ALL_OBJS)
+$(MAIN_BIN): build-cryo-path build-cli build-lsp-monitor $(ALL_OBJS)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
-    
+	$(CXX) $(CXXFLAGS) $(ALL_OBJS) -o $@ $(LDFLAGS)
+
+# Build the CLI library
+build-cryo-path:
+	@$(LIB_INIT) cryo_path
+build-cli:
+	@$(LIB_INIT) cli
+build-lsp-monitor:
+	@$(LIB_INIT) lsp-monitor
+
+
 # >>=======--------------------------------------------------=======<< #
 # >>=======                     Commands                     =======<< #
 # >>=======--------------------------------------------------=======<< #
 
-all: $(MAIN_BIN)
+cls:
+	@clear
 
+.PHONY: all
+all: 
+	@$(MAKE) cls
+	@echo "Building with $(NUM_JOBS) parallel jobs"
+	$(MAKE) -j$(NUM_JOBS) build
+
+.PHONY: build
+build: $(MAIN_BIN)
+
+libs:
+	$(LIB_INIT) 
+
+# Define the valid clean targets
+CLEAN_TARGETS := codegen common compiler diagnostics frontend linker runtime settings symbolTable tools main
+
+# Generic clean target for any component
+clean-%:
+	python3 ./scripts/custom_clean.py $*
+
+# Clean all components
 clean:
 	python3 ./scripts/clean.py
 
 .PHONY: debug clean all 
+.NOTPARALLEL: clean clean-% libs

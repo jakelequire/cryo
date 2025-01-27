@@ -42,8 +42,10 @@ namespace Cryo
             return compiler.getGenerator().getInitilizerValue(node);
         }
 
+        bool isStringBinOp = false;
         llvm::Value *result = nullptr;
         ASTNode *currentNode = node;
+        CryoOperatorType op = currentNode->data.bin_op->op;
 
         compiler.getContext().builder.SetInsertPoint(compiler.getContext().builder.GetInsertBlock());
 
@@ -51,6 +53,21 @@ namespace Cryo
         {
             ASTNode *leftNode = currentNode->data.bin_op->left;
             ASTNode *rightNode = currentNode->data.bin_op->right;
+
+            bool isStringBinOp = isStringOperation(leftNode, rightNode);
+            if (isStringBinOp)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "BinExp", "String Binary Operation");
+                result = createStringBinOpInitializer(leftNode, rightNode, op, "unknown");
+
+                if (!result)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create string binary operation");
+                    CONDITION_FAILED;
+                }
+
+                break;
+            }
 
             // The left value:
             llvm::Value *leftValue;
@@ -61,7 +78,6 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Getting left value");
                 std::string varName = leftNode->data.varName->varName;
-                std::cout << "<!> (left) Variable Name: " << varName << std::endl;
 
                 STVariable *symTableVar = symTable.getVariable(namespaceName, varName);
                 if (!symTableVar)
@@ -355,6 +371,7 @@ namespace Cryo
         if (!stStoreInst)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get store instruction from symtable");
+            compiler.dumpModule();
             CONDITION_FAILED;
         }
 
@@ -426,7 +443,7 @@ namespace Cryo
         return tempValue;
     }
 
-    llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op)
+    llvm::Value *BinaryExpressions::createComparisonExpression(ASTNode *left, ASTNode *right, CryoOperatorType op, llvm::BasicBlock *ifBlock)
     {
         llvm::IRBuilder<> &builder = compiler.getContext().builder;
         DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating Comparison Expression");
@@ -452,7 +469,7 @@ namespace Cryo
             leftEval = compiler.getVariables().getVariable(varName);
             if (!leftEval)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value");
+                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get left value: " + varName);
                 compiler.dumpModule();
                 CONDITION_FAILED;
             }
@@ -516,6 +533,16 @@ namespace Cryo
             }
             break;
         }
+        case NODE_NULL_LITERAL:
+        {
+            rightEval = compiler.getGenerator().getInitilizerValue(right);
+            if (!rightEval)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get right value");
+                CONDITION_FAILED;
+            }
+            break;
+        }
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Unknown right node type");
@@ -528,6 +555,9 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to generate values for comparison expression");
             CONDITION_FAILED;
         }
+
+        // Set the insert point to the if block
+        builder.SetInsertPoint(ifBlock);
 
         // // Load value if right is a pointer (a variable)
         if (rightValue->getType()->isPointerTy())
@@ -605,7 +635,229 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        return compiler.getContext().builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");
+        // Set the insert point to the if block
+        builder.SetInsertPoint(ifBlock);
+
+        llvm::Value *compareResult = builder.CreateICmp(predicate, leftValue, rightValue, "compareResult");
+        if (!compareResult)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create comparison expression");
+            CONDITION_FAILED;
+        }
+
+        return compareResult;
+    }
+
+    llvm::Value *BinaryExpressions::createStringBinOpInitializer(ASTNode *lhs, ASTNode *rhs, CryoOperatorType op, std::string varName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating String Binary Operation");
+
+        llvm::Value *leftValue = compiler.getGenerator().getInitilizerValue(lhs);
+        llvm::Value *rightValue = compiler.getGenerator().getInitilizerValue(rhs);
+
+        if (isStringLiteral(rhs))
+        {
+            // If the right value is a string literal, we need to create a global string
+            std::string strContent = rhs->data.literal->value.stringValue;
+            llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(strContent);
+            if (!globalStr)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create global string for concatenation");
+                CONDITION_FAILED;
+            }
+
+            rightValue = globalStr;
+        }
+
+        if (isStringLiteral(lhs))
+        {
+            // If the left value is a string literal, we need to create a global string
+            std::string strContent = lhs->data.literal->value.stringValue;
+            llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(strContent);
+            if (!globalStr)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create global string for concatenation");
+                CONDITION_FAILED;
+            }
+
+            leftValue = globalStr;
+        }
+
+        if (!leftValue || !rightValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get values for string binary operation");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *result = nullptr;
+        switch (op)
+        {
+        case OPERATOR_ADD:
+            result = createStringConcatenation(leftValue, rightValue, varName);
+            break;
+        default:
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "No Operator Overload for String Binary Operation");
+            CONDITION_FAILED;
+        }
+
+        if (!result)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create string binary operation");
+            CONDITION_FAILED;
+        }
+
+        return result;
+    }
+
+    llvm::Value *BinaryExpressions::createStringConcatenation(llvm::Value *leftValue, llvm::Value *rightValue, std::string varName)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Creating String Concatenation");
+
+        // Get the string contents from the left and right values
+        llvm::GlobalVariable *leftGlobalStr = llvm::dyn_cast<llvm::GlobalVariable>(leftValue);
+        llvm::GlobalVariable *rightGlobalStr = llvm::dyn_cast<llvm::GlobalVariable>(rightValue);
+
+        if (!leftGlobalStr || !rightGlobalStr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get global strings for concatenation");
+            CONDITION_FAILED;
+        }
+
+        llvm::ConstantDataArray *leftStrArray = llvm::dyn_cast<llvm::ConstantDataArray>(leftGlobalStr->getInitializer());
+        llvm::ConstantDataArray *rightStrArray = llvm::dyn_cast<llvm::ConstantDataArray>(rightGlobalStr->getInitializer());
+
+        if (!leftStrArray || !rightStrArray)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get string arrays for concatenation");
+            CONDITION_FAILED;
+        }
+
+        std::string leftStr = leftStrArray->getAsString().str();
+        std::string rightStr = rightStrArray->getAsString().str();
+
+        // Remove Null Terminator from both strings
+        if (leftStr.back() == '\0')
+        {
+            leftStr.pop_back();
+        }
+        if (rightStr.back() == '\0')
+        {
+            rightStr.pop_back();
+        }
+
+        // Concatenate the strings
+        std::string concatenatedStr = leftStr + rightStr;
+
+        // Create a new global string with the concatenated content
+        llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(concatenatedStr);
+
+        if (!globalStr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create global string for concatenation");
+            CONDITION_FAILED;
+        }
+
+        // Get pointer to the first character of the global string
+        std::vector<llvm::Value *> indices = {
+            llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0),
+            llvm::ConstantInt::get(llvm::Type::getInt64Ty(compiler.getContext().context), 0)};
+
+        llvm::Value *strPtr = compiler.getContext().builder.CreateInBoundsGEP(
+            globalStr->getValueType(),
+            globalStr,
+            indices,
+            varName + ".str.ptr");
+
+        if (!strPtr)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to create string pointer for concatenation");
+            CONDITION_FAILED;
+        }
+
+        return strPtr;
+    }
+
+    bool BinaryExpressions::isStringOperation(ASTNode *lhs, ASTNode *rhs)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Checking if binary operation is a string operation");
+        DataType *lhsType = getDataTypeFromASTNode(lhs);
+        if (!lhsType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get data type for left operand");
+            CONDITION_FAILED;
+        }
+        DataType *rhsType = getDataTypeFromASTNode(rhs);
+        if (!rhsType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get data type for right operand");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Checking data types");
+
+        logDataType(lhsType);
+        logDataType(rhsType);
+
+        bool isLhsString = isStringDataType(lhsType);
+        bool isRhsString = isStringDataType(rhsType);
+
+        if (isLhsString && isRhsString)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Binary operation is a string operation");
+            return true;
+        }
+
+        return false;
+    }
+
+    bool BinaryExpressions::isStringBinOp(ASTNode *binOpNode)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Checking if binary operation is a string operation");
+        if (binOpNode->metaData->type != NODE_BINARY_EXPR)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Not a binary expression");
+            CONDITION_FAILED;
+        }
+
+        ASTNode *lhs = binOpNode->data.bin_op->left;
+        ASTNode *rhs = binOpNode->data.bin_op->right;
+
+        bool isStringOp = isStringOperation(lhs, rhs);
+        if (isStringOp)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Binary operation is a string operation");
+            return true;
+        }
+
+        return false;
+    }
+
+    bool BinaryExpressions::isStringLiteral(ASTNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Checking if node is a string literal");
+        CryoNodeType nodeType = node->metaData->type;
+        if (nodeType != NODE_LITERAL_EXPR)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Not a literal expression");
+            return false;
+        }
+
+        DataType *dataType = node->data.literal->type;
+        if (!dataType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get data type for literal expression");
+            return false;
+        }
+
+        bool isString = isStringDataType(dataType);
+        if (isString)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Node is a string literal");
+            return true;
+        }
+
+        DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Node is not a string literal");
+        return false;
     }
 
 } // namespace Cryo

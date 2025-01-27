@@ -25,6 +25,8 @@
 
 #include "frontend/AST.h"
 
+extern void logMessage(int line, const char *file, const char *func, const char *type, const char *module, const char *message, ...);
+
 namespace Cryo
 {
 #define VALIDATE_ASTNODE(node) checkNode(node)

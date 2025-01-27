@@ -1,0 +1,10 @@
+namespace Any;
+
+// struct Any <T> {
+//     value: T;
+// 
+//     constructor(val: T) {
+//         this.value = val;
+//     }
+// }
+// 

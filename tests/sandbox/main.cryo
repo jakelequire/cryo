@@ -1,18 +1,15 @@
 namespace Main;
 
-struct Int {
-    value: int;
+using Std::Types;
 
-    constructor(val: int) {
-        this.value = val;
-    }
+class FooBaz {
+    public anotherFooProp: string;
+    public anotherFooPropTwo: int;
 
-    toString() -> string {
-        return intToString(this.value);
-    }
+    constructor() {}
 
-    fooMethod() -> void {
-        printStr("Foo method called");
+    public static anotherFooMethod() -> void {
+        printStr("Another foo method called");
         return;
     }
 }
@@ -21,21 +18,27 @@ struct Int {
 function stringTesting() -> void {
     printStr("------- String Testing --------");
 
-    const testString: string = "Hello";
+    const testString: string = "Hello ";
     printStr(testString);
 
-    //const indexStringOne: string = testString[0];
-    //const indexStringTwo: string = testString[1];
-    //const indexStringThree: string = testString[2];
-    //
-    //printStr(indexStringOne);
-    //printStr(indexStringTwo);
-    //printStr(indexStringThree);
-    //
-    //printStr(testString[0]);
+    const testStringTwo: string = "World";
+    printStr(testStringTwo);
+
+    const testStringThree: string = testString + testStringTwo;
+    printStr(testStringThree);
+
+    const testStringFour: string = testString + "World";
+    printStr(testStringFour);
+
+    const testStringFive: string = "Hello " + testStringTwo;
+    printStr(testStringFive);
+
+    const testStringSix: string = "Hello " + "World";
+    printStr(testStringSix);
 
     return;
 }
+
 
 function arrayTesting() -> void {
     printStr("--------- Array Testing ---------");
@@ -54,9 +57,10 @@ function arrayTesting() -> void {
     return;
 }
 
+
 function structTesting() -> void {
     printStr("-------- Struct Testing --------");
-    const intTest: Int = 1234; // WE ARE BREAKING HERE
+    const intTest: Int = 1234;
     const intTestTwo: int = intTest.value;
     printInt(intTestTwo);
     printInt(intTest.value);
@@ -69,6 +73,7 @@ function structTesting() -> void {
 
     return;
 }
+
 
 function binOpTest() -> void {
     printStr("------ Binary Ops Testing ------");
@@ -95,6 +100,67 @@ function binOpTest() -> void {
     return;
 }
 
+
+function runtimeClassTesting() -> void {
+    printStr("----- Runtime Class Testing -----");
+    const filePathStr: String = "/home/phock/Programming/apps/cryo/testing.txt";
+    const mode: String = "r";
+
+    // const file: string = FS::readFile(filePathStr.value, mode.value);
+
+    printStr("File contents:");
+    //printStr(file);
+
+    return;
+}
+
+function typeofTesting() -> void {
+    printStr("-------- Typeof Testing --------");
+    const foo: string = "Hello"; 
+    const bar: int = 1234;
+    const baz: boolean = true;
+    const qux: Int = 1234;
+
+    printStr("Type of foo: ");
+    printStr(typeof(foo));
+
+    printStr("Type of bar: ");
+    printStr(typeof(bar));
+
+    printStr("Type of baz: ");
+    printStr(typeof(baz));
+
+    printStr("Type of qux: ");
+    printStr(typeof(qux));
+
+    printStr("Type of int literal: ");
+    printStr(typeof(1234));
+
+    printStr("Type of string literal: ");
+    printStr(typeof("Hello"));
+
+    printStr("Type of boolean literal: ");
+    printStr(typeof(true));
+}
+
+function anyTypeTesting() -> void {
+    printStr("-------- Any Type Testing --------");
+
+    return;
+}
+
+function forLoopTesting() -> void {
+    printStr("-------- For Loop Testing --------");
+
+    // {VAR_DECL}? ; {CONDITION} ; {INCREMENT} 
+    // for (mut i: int = 0; i < 10; i = i++) {
+    //     printInt(i);
+    // }
+
+    return;
+}
+
+
 function main(argc: int, argv: string[]) -> int {
     printStr("-------- Main Function --------");
     printStr("Arg count: ");
@@ -107,9 +173,13 @@ function main(argc: int, argv: string[]) -> int {
     stringTesting();
     structTesting();
     binOpTest();
-    // arrayTesting();
+    arrayTesting();
+    runtimeClassTesting();
+    typeofTesting();
+    // anyTypeTesting();
+    // forLoopTesting();
 
     sys_exit(0);
-
     return 0;
 }
+

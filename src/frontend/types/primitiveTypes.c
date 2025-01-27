@@ -48,11 +48,12 @@ DataType *createPrimitiveStringType(int length)
 }
 
 // Primitive boolean Type creation `(default/baseline)`
-DataType *createPrimitiveBooleanType(void)
+DataType *createPrimitiveBooleanType(bool booleanValue)
 {
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_BOOLEAN;
+    container->boolValue = booleanValue;
 
     return wrapTypeContainer(container);
 }

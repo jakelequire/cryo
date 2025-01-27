@@ -1,0 +1,15 @@
+namespace Int;
+
+extern function intToString(val: int) -> string;
+
+struct Int {
+    value: int;
+
+    constructor(val: int) {
+        this.value = val;
+    }
+
+    toString() -> string {
+        return intToString(this.value);
+    }
+}

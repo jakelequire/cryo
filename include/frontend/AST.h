@@ -27,7 +27,6 @@
 
 #include "frontend/tokens.h"
 #include "frontend/lexer.h"
-#include "frontend/symTable.h"
 #include "tools/arena/arena.h"
 #include "tools/utils/c_logger.h"
 #include "tools/macros/consoleColors.h"
@@ -36,6 +35,11 @@
 
 typedef struct DataType DataType;
 typedef struct GenericType GenericType;
+typedef struct ParsingContext ParsingContext;
+typedef struct TypeTable TypeTable;
+typedef struct ASTNode ASTNode;
+typedef struct CompilerSettings CompilerSettings;
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 #define INITIAL_CAPACITY 8
 #define PROGRAM_CAPACITY 512
@@ -64,6 +68,8 @@ typedef struct CryoModule
 typedef struct CryoNamespace
 {
     char *name;
+    const char *parentName;
+    bool hasParent;
     Position position;
 } CryoNamespace;
 
@@ -126,6 +132,8 @@ typedef struct ExternFunctionNode
     int paramCount;
     int paramCapacity;
     DataType *type;
+
+    const char *parentScopeID;
 } ExternFunctionNode;
 
 typedef struct FunctionDeclNode
@@ -139,7 +147,11 @@ typedef struct FunctionDeclNode
     struct ASTNode **params;
     int paramCount;
     int paramCapacity;
+    DataType **paramTypes;
     struct ASTNode *body;
+
+    const char *parentScopeID;
+    const char *functionScopeID;
 } FunctionDeclNode;
 
 typedef struct FunctionCallNode
@@ -195,6 +207,7 @@ typedef struct VariableNameNode
     DataType *type;
     bool isRef; // Remove Later
     char *varName;
+    const char *scopeID;
 
     // Unary operators
     bool hasUnaryOp;
@@ -330,6 +343,7 @@ typedef struct MethodNode
     ASTNode **params;
     int paramCount;
     int paramCapacity;
+    DataType **paramTypes;
     ASTNode *body;
     CryoVisibilityType visibility;
     bool isStatic;
@@ -351,7 +365,7 @@ typedef struct MethodCallNode
 
 typedef struct StructNode
 {
-    char *name;
+    const char *name;
     ASTNode **properties;
     ASTNode **methods;
     ASTNode *constructor;
@@ -519,6 +533,39 @@ typedef struct ObjectNode
     int genericCapacity;
 } ObjectNode;
 
+typedef struct NullNode
+{
+    DataType *type;
+} NullNode;
+
+typedef struct TypeofNode
+{
+    DataType *type;
+    ASTNode *expression;
+} TypeofNode;
+
+typedef struct UsingNode
+{
+    // There will always be a constant primary module.
+    const char *primaryModule;
+    // There can be an array of secondary modules to go lower in the hierarchy.
+    const char **secondaryModules;
+    int secondaryModuleCount;
+    int secondaryModuleCapacity;
+
+    const char *filePath;
+} UsingNode;
+
+// This node will not be used in the IR generation phase.
+// It is only used for the AST generation phase.
+typedef struct ModuleNode
+{
+    const char *moduleName;
+    const char *modulePath;
+    const char *moduleDir;
+    const char *moduleFile;
+} ModuleNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -606,6 +653,14 @@ typedef struct ASTNode
         ClassConstructorNode *classConstructor;
         // For Objects
         ObjectNode *objectNode;
+        // For Null Values
+        NullNode *nullNode;
+        // For Typeof Expressions
+        TypeofNode *typeofNode;
+        // For Using Statements
+        UsingNode *usingNode;
+        // For Module Declarations
+        ModuleNode *moduleNode;
     } data;
 } ASTNode;
 
@@ -638,6 +693,8 @@ extern "C"
         ASTNode *parent,
         ASTNode *child,
         Arena *arena, CompilerState *state, TypeTable *typeTable);
+
+    const char *getNamespaceNameFromRootNode(ASTNode *root);
 
     /**
      * Program Structure Nodes
@@ -742,8 +799,8 @@ extern "C"
 
     ASTNode *createIdentifierNode(
         char *name,
-        CryoSymbolTable *symTable,
-        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context,
+        CryoGlobalSymbolTable *globalTable);
 
     /**
      * Function-Related Nodes
@@ -840,7 +897,7 @@ extern "C"
      */
     // Struct definitions
     ASTNode *createStructNode(
-        char *structName,
+        const char *structName,
         ASTNode **properties,
         int propertyCount,
         ASTNode *constructor,
@@ -992,6 +1049,22 @@ extern "C"
         DataType **generics, int genericCount,
         Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
 
+    ASTNode *createNullNode(
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
+    ASTNode *createTypeofNode(
+        ASTNode *expression,
+        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
+    /**
+     * Import / Using Nodes
+     */
+    ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules[],
+                             int secondaryModuleCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
+    ASTNode *createModuleNode(const char *moduleName,
+                              Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer);
+
     /**
      * String Utility Functions
      */
@@ -1050,6 +1123,10 @@ void *createMembersContainer(Arena *arena, CompilerState *state);
 ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state);
 ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, CompilerState *state);
 ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state);
+NullNode *createNullNodeContainer(Arena *arena, CompilerState *state);
+TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state);
+UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state);
+ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

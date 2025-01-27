@@ -387,7 +387,7 @@ ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concre
         newStatement->data.methodCall->name = strdup(statement->data.methodCall->name);
         break;
     default:
-        logMessage("ERROR", __LINE__, "DataTypes", "Failed to clone and substitute generic statement, received node type: %s",
+        logMessage(LMI, "ERROR", "DataTypes", "Failed to clone and substitute generic statement, received node type: %s",
                    CryoNodeTypeToString(statement->metaData->type));
         break;
     }

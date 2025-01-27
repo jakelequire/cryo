@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/AST.h"
+#include "tools/logger/logger_config.h"
 
 #define AST_OUTPUT_EXT ".txt"
 #define AST_OUTPUT_FILENAME "ast_debug"
@@ -23,11 +24,11 @@
     int line = node->metaData->line; \
     int column = node->metaData->column;
 
-#define BUFFER_FAILED_ALLOCA_CATCH                                                             \
-    if (!buffer)                                                                               \
-    {                                                                                          \
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer"); \
-        return NULL;                                                                           \
+#define BUFFER_FAILED_ALLOCA_CATCH                                                   \
+    if (!buffer)                                                                     \
+    {                                                                                \
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST buffer"); \
+        return NULL;                                                                 \
     }
 
 #define BUFFER_CHAR_SIZE sizeof(char) * 10512 * 32
@@ -43,7 +44,7 @@ int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)
     char *outDir = (char *)malloc(sizeof(char) * 1024);
     sprintf(outDir, "%s/%s", cwd, "build/debug");
 
-    DebugASTOutput *output = createDebugASTOutput(settings->inputFile, outDir, fileExt, cwd);
+    DebugASTOutput *output = createDebugASTOutput("Debug Output", outDir, fileExt, cwd);
     createASTDebugView(root, output, 0);
     createASTDebugOutputFile(output);
 
@@ -58,10 +59,10 @@ void initASTConsoleOutput(ASTNode *root, const char *filePath)
     char *buffer = getASTBuffer(output, true);
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
+        logMessage(LMI, "ERROR", "AST", "Failed to get AST buffer for debug output");
         return;
     }
-    logMessage("INFO", __LINE__, "AST::DBG", "AST debug output created for console");
+    logMessage(LMI, "INFO", "AST", "AST debug output created for console");
     sprintf(buffer, "%s\n", buffer);
 }
 
@@ -73,7 +74,7 @@ void logASTNodeDebugView(ASTNode *node)
     char *buffer = logASTBuffer(output, true);
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
+        logMessage(LMI, "ERROR", "AST", "Failed to get AST buffer for debug output");
         return;
     }
 }
@@ -127,45 +128,46 @@ DebugASTOutput *addDebugNodesToOutput(ASTDebugNode *node, DebugASTOutput *output
 
 void createASTDebugOutputFile(DebugASTOutput *output)
 {
-    char *buffer = getASTBuffer(output, false);
-    if (!buffer)
-    {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
-        return;
-    }
-
-    const char *fileName = AST_OUTPUT_FILENAME;
-    const char *ext = AST_OUTPUT_EXT;
-    const char *filePath = output->cwd;
-
-    if (!filePath)
-    {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get file path for AST debug output");
-        return;
-    }
-    if (!dirExists(filePath))
-    {
-        logMessage("WARN", __LINE__, "AST::DBG", "Creating directory for AST debug output: %s", filePath);
-        createDir(filePath);
-    }
-
-    char *outputPath = (char *)malloc(sizeof(char) * 1024);
-    sprintf(outputPath, "%s", output->cwd);
-
-    char *outputFilePath = (char *)malloc(sizeof(char) * 1024);
-    sprintf(outputFilePath, "%s/%s%s", outputPath, fileName, ext);
-
-    removePrevASTOutput(outputFilePath);
-
-    FILE *file = fopen(outputFilePath, "w");
-    if (!file)
-    {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to open file for AST debug output");
-        return;
-    }
-
-    fprintf(file, "%s", buffer);
-    fclose(file);
+    // char *buffer = getASTBuffer(output, false);
+    // if (!buffer)
+    //{
+    //     logMessage(LMI, "ERROR", "AST", "Failed to get AST buffer for debug output");
+    //     return;
+    // }
+    //
+    // const char *fileName = AST_OUTPUT_FILENAME;
+    // const char *ext = AST_OUTPUT_EXT;
+    // const char *filePath = output->cwd;
+    //
+    // if (!filePath)
+    //{
+    //    logMessage(LMI, "ERROR", "AST", "Failed to get file path for AST debug output");
+    //    return;
+    //}
+    // if (!dirExists(filePath))
+    //{
+    //    logMessage(LMI, "ERROR", "AST", "Directory does not exist for AST debug output");
+    //    createDir(filePath);
+    //}
+    //
+    // char *outputPath = (char *)malloc(sizeof(char) * 1024);
+    // sprintf(outputPath, "%s", output->cwd);
+    //
+    // char *outputFilePath = (char *)malloc(sizeof(char) * 1024);
+    // sprintf(outputFilePath, "%s/%s%s", outputPath, fileName, ext);
+    //
+    // removePrevASTOutput(outputFilePath);
+    //
+    // FILE *file = fopen(outputFilePath, "w");
+    // if (!file)
+    //{
+    //    logMessage(LMI, "ERROR", "AST", "Failed to open file for AST debug output");
+    //    return;
+    //}
+    //
+    // fprintf(file, "%s", buffer);
+    // fclose(file);
+    return;
 }
 
 void removePrevASTOutput(const char *filePath)
@@ -210,76 +212,86 @@ bool propHasDefault(PropertyNode *prop)
 
 char *getASTBuffer(DebugASTOutput *output, bool console)
 {
-    printf("Creating AST buffer\n");
-    char *buffer = (char *)malloc(sizeof(char) * AST_BUFFER_SIZE);
-    if (!buffer)
-    {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer");
-        return NULL;
-    }
-
-    // Start the buffer with the AST Tree header
-    sprintf(buffer, GREEN "\n\n╔═══════════════════════════════ AST Tree ═══════════════════════════════╗" COLOR_RESET);
-
-    for (int i = 0; i < output->nodeCount; i++)
-    {
-        ASTDebugNode *node = &output->nodes[i];
-        char *formattedNode = formatASTNode(node, output, node->indent, console);
-        if (formattedNode)
+    DEBUG_PRINT_FILTER({
+        printf("Creating AST buffer\n");
+        char *buffer = (char *)malloc(sizeof(char) * AST_BUFFER_SIZE);
+        if (!buffer)
         {
-            sprintf(buffer, "%s\n%s", buffer, formattedNode);
-            free(formattedNode);
+            logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST buffer");
+            return NULL;
         }
-    }
-    sprintf(buffer, "%s\n\n", buffer);
 
-    // End the buffer with the AST Tree footer
-    sprintf(buffer, "%s" GREEN "╚════════════════════════════════════════════════════════════════════════╝\n\n" COLOR_RESET, buffer);
+        // Start the buffer with the AST Tree header
+        sprintf(buffer, GREEN "\n\n╔═══════════════════════════════ AST Tree ═══════════════════════════════╗" COLOR_RESET);
 
-    return buffer;
+        for (int i = 0; i < output->nodeCount; i++)
+        {
+            ASTDebugNode *node = &output->nodes[i];
+            char *formattedNode = formatASTNode(node, output, node->indent, console);
+            if (formattedNode)
+            {
+                sprintf(buffer, "%s\n%s", buffer, formattedNode);
+                free(formattedNode);
+            }
+        }
+        sprintf(buffer, "%s\n\n", buffer);
+
+        // End the buffer with the AST Tree footer
+        sprintf(buffer, "%s" GREEN "╚════════════════════════════════════════════════════════════════════════╝\n\n" COLOR_RESET, buffer);
+
+        return buffer;
+    });
+
+    return NULL;
 }
 
 char *logASTBuffer(DebugASTOutput *output, bool console)
 {
-    char *buffer = (char *)malloc(sizeof(char) * AST_BUFFER_SIZE);
-    if (!buffer)
-    {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for AST buffer");
-        return NULL;
-    }
-
-    for (int i = 0; i < output->nodeCount; i++)
-    {
-        ASTDebugNode *node = &output->nodes[i];
-        char *formattedNode = formatASTNode(node, output, node->indent, console);
-        if (formattedNode)
+    DEBUG_PRINT_FILTER({
+        char *buffer = (char *)malloc(sizeof(char) * AST_BUFFER_SIZE);
+        if (!buffer)
         {
-            sprintf(buffer, "%s\n%s", buffer, formattedNode);
-            free(formattedNode);
+            logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST buffer");
+            return NULL;
         }
-    }
-    printf("%s\n", buffer);
 
-    return buffer;
+        for (int i = 0; i < output->nodeCount; i++)
+        {
+            ASTDebugNode *node = &output->nodes[i];
+            char *formattedNode = formatASTNode(node, output, node->indent, console);
+            if (formattedNode)
+            {
+                sprintf(buffer, "%s\n%s", buffer, formattedNode);
+                free(formattedNode);
+            }
+        }
+        printf("%s\n", buffer);
+
+        return buffer;
+    });
+
+    return NULL;
 }
 
 void logASTNode(ASTNode *node)
 {
-    if (!node)
-    {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Node is null in logASTNode");
-        return;
-    }
+    DEBUG_PRINT_FILTER({
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "AST", "Node is null in logASTNode");
+            return;
+        }
 
-    DebugASTOutput *output = createDebugASTOutput("console", "console", "txt", "console");
-    createASTDebugView(node, output, 0);
-    char *buffer = logASTBuffer(output, true);
-    if (!buffer)
-    {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to get AST buffer for debug output");
-        return;
-    }
-    sprintf(buffer, "%s\n", buffer);
+        DebugASTOutput *output = createDebugASTOutput("console", "console", "txt", "console");
+        createASTDebugView(node, output, 0);
+        char *buffer = logASTBuffer(output, true);
+        if (!buffer)
+        {
+            logMessage(LMI, "ERROR", "AST", "Failed to get AST buffer for debug output");
+            return;
+        }
+        sprintf(buffer, "%s\n", buffer);
+    });
 }
 
 // # ============================================================ #
@@ -638,7 +650,7 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
     }
     else
     {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Unhandled node type: %s", nodeType);
+        logMessage(LMI, "ERROR", "AST", "Unhandled node type: %s", nodeType);
         return NULL;
     }
 
@@ -646,7 +658,7 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
     char *indentedNode = MALLOC_BUFFER;
     if (!indentedNode)
     {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for indented node");
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for indented node");
         return NULL;
     }
     sprintf(indentedNode, "%s%s", indent, formattedNode);
@@ -1186,7 +1198,7 @@ char *CONSOLE_formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
     // <IntLiteral> [VALUE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<IntLiteral>%s %s[%i]%s %s%s<%i:%i>%s",
+    sprintf(buffer, "%s%s<IntLiteral>%s %s[%s]%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
@@ -1395,7 +1407,7 @@ char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output)
     char *argumentBuffer = (char *)malloc(sizeof(char) * 512);
     if (!argumentBuffer)
     {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for argument buffer");
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for argument buffer");
         return NULL;
     }
     sprintf(argumentBuffer, "[");
@@ -1485,8 +1497,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 {
     if (output->nodeCount >= AST_DEBUG_VIEW_NODE_COUNT)
     {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Exceeded maximum node count for debug output");
-        logMessage("ERROR", __LINE__, "AST::DBG", "Node Count: %d", output->nodeCount);
+        logMessage(LMI, "ERROR", "AST", "Exceeded maximum node count for debug output");
+        logMessage(LMI, "ERROR", "AST", "Node Count: %d", output->nodeCount);
         return;
     }
 
@@ -1716,10 +1728,10 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             char *literalValue = intToSafeString(intValue);
             if (literalValue == NULL)
             {
-                logMessage("ERROR", __LINE__, "AST::DBG", "Failed to convert int to string");
+                logMessage(LMI, "ERROR", "AST", "Failed to convert int to string");
                 return;
             }
-            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
+            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", strdup(literalValue), dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
             free(literalValue);
@@ -1736,7 +1748,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             char *literalValue = intToSafeString(intValue);
             if (literalValue == NULL)
             {
-                logMessage("ERROR", __LINE__, "AST::DBG", "Failed to convert int to string");
+                logMessage(LMI, "ERROR", "AST", "Failed to convert int to string");
                 return;
             }
             ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
@@ -1797,7 +1809,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 
         if (node->data.returnStatement->expression != NULL)
         {
-            createASTDebugView(node->data.returnStatement->expression, output, indentLevel + 1);
+            ASTNode *expr = node->data.returnStatement->expression;
+            createASTDebugView(expr, output, indentLevel + 1);
         }
 
         break;
@@ -2039,7 +2052,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 
     default:
     {
-        printf("Unknown Node Type @debugOutputAST.c | Node Type: %s\n", CryoNodeTypeToString(nodeType));
+        logMessage(LMI, "ERROR", "AST", "Unknown node type encountered: %d", CryoNodeTypeToString(nodeType));
         break;
     }
     }
@@ -2077,8 +2090,18 @@ char *ASTNodeValueBuffer(ASTNode *node)
         }
         case PRIM_STRING:
         {
-            char *buffer = (char *)malloc(sizeof(char) * 32);
+            char *buffer = (char *)malloc(sizeof(char) * 1024);
+            if (!node->data.literal->value.stringValue)
+            {
+                logMessage(LMI, "ERROR", "AST", "Failed to convert string to buffer");
+                return NULL;
+            }
             sprintf(buffer, "%s", node->data.literal->value.stringValue);
+            if (buffer == NULL)
+            {
+                logMessage(LMI, "ERROR", "AST", "Failed to convert string to buffer");
+                return NULL;
+            }
             char *strippedStr = stringToUFString(buffer);
             return strippedStr;
         }
@@ -2126,7 +2149,7 @@ char *printFormattedDataTypeArray(DataType **typeArray, int typeCount)
     char *buffer = (char *)malloc(sizeof(char) * 512);
     if (!buffer)
     {
-        logMessage("ERROR", __LINE__, "AST::DBG", "Failed to allocate memory for type buffer");
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for type buffer");
         return NULL;
     }
 

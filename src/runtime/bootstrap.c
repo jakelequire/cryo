@@ -14,7 +14,10 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "linker/linker.hpp"
+#include "symbolTable/cInterfaceTable.h"
 #include "runtime/bootstrap.h"
+#include "tools/logger/logger_config.h"
 
 char *runtimePaths[] = {
     "/home/phock/Programming/apps/cryo/cryo/runtime.cryo",
@@ -26,63 +29,65 @@ char *runtimePaths[] = {
 #define RUNTIME_SRC_FILE runtimePaths[0]
 #define RUINTIME_OBJ_FILE runtimePaths[1]
 
-// CRYO_ROOT/cryo/runtime.cryo (CRYO_ROOT is an environment variable)
+// CRYO_ROOT/Std/Runtime/runtime.cryo (CRYO_ROOT is an environment variable)
 char *getRuntimeSrcFile(void)
 {
     char *runtimeBuffer = (char *)malloc(sizeof(char) * 1024);
     char *envRoot = getenv("CRYO_ROOT");
     if (!envRoot)
     {
-        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set, using fallback that may not work!!\n" COLOR_RESET);
-        return RUNTIME_SRC_FILE;
+        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set!!\n" COLOR_RESET);
+        CONDITION_FAILED;
     }
 
-    sprintf(runtimeBuffer, "%scryo/runtime.cryo", envRoot);
+    sprintf(runtimeBuffer, "%s/Std/Runtime/runtime.cryo", envRoot);
 
-    printf("\n");
-    printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
+        return runtimeBuffer;
+    });
+
+    printf("Runtime Source Found: %s\n", runtimeBuffer);
 
     return runtimeBuffer;
 }
 
-// CRYO_ROOT/build/out/deps/runtime.ll (CRYO_ROOT is an environment variable)
-char *getRuntimeObjFile(void)
+// {CWD}/build/out/deps/runtime.ll (CRYO_ROOT is an environment variable)
+char *getRuntimeObjFile(CryoGlobalSymbolTable *globalTable)
 {
-    char *runtimeBuffer = (char *)malloc(sizeof(char) * 1024);
-    char *envRoot = getenv("CRYO_ROOT");
-    if (!envRoot)
-    {
-        printf(LIGHT_RED BOLD "Error: CRYO_ROOT environment variable not set, using fallback that may not work!!\n" COLOR_RESET);
-        return RUINTIME_OBJ_FILE;
-    }
+    char *runtimePathBuffer = (char *)malloc(sizeof(char) * 1024);
+    const char *buildDir = GetBuildDir(globalTable);
+    sprintf(runtimePathBuffer, "%s/out/deps/runtime.ll", buildDir);
 
-    sprintf(runtimeBuffer, "%sbuild/out/deps/runtime.ll", envRoot);
+    DEBUG_PRINT_FILTER({
+        printf(LIGHT_GREEN BOLD "Runtime Object Found Environment: %s\n" COLOR_RESET, runtimePathBuffer);
+        return runtimePathBuffer;
+    });
 
-    printf("\n");
-    printf(LIGHT_GREEN BOLD "Runtime Object Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
-    printf("\n");
+    printf("Runtime Object Found Environment: %s\n", runtimePathBuffer);
 
-    return runtimeBuffer;
+    return runtimePathBuffer;
 }
 
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
 // compile the runtime into the program.
-void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
+void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker)
 {
-    logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapping runtime definitions...");
+    logMessage(LMI, "INFO", "Bootstrap", "Bootstrapping runtime definitions...");
+
+    setDependencyTableStatus(globalTable, true);
 
     char *runtimePath = getRuntimeSrcFile();
     Bootstrapper *bootstrap = initBootstrapper(runtimePath);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapper initialized");
+    logMessage(LMI, "INFO", "Bootstrap", "Bootstrapper initialized");
 
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_IN_PROGRESS);
 
     // Compile the runtime file
-    ASTNode *runtimeNode = compileForRuntimeNode(bootstrap, runtimePath);
+    ASTNode *runtimeNode = compileForRuntimeNode(bootstrap, runtimePath, globalTable);
 
     if (!runtimeNode)
     {
@@ -91,60 +96,38 @@ void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable)
         return;
     }
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime node compiled successfully");
-
-    importRuntimeDefinitionsToSymTable(table, runtimeNode, bootstrap->arena);
-
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions added to symbol table");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime node compiled successfully");
 
     // Add the runtime definitions to the type table
     importTypesFromRootNode(typeTable, runtimeNode);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions added to type table");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions added to type table");
 
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_SUCCESS);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Runtime definitions bootstrapped successfully");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions bootstrapped successfully");
+
+    // Signal the completion of the dependency table
+    TableFinished(globalTable);
 
     // Create the runtime object file
-    const char *outputFile = getRuntimeObjFile();
+    const char *outputFile = getRuntimeObjFile(globalTable);
     bootstrap->state->settings->inputFile = getRuntimeSrcFile();
 
-    preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile);
+    preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker);
 
     // Free the bootstrap state
     free(bootstrap);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Bootstrapper freed");
+    logMessage(LMI, "INFO", "Bootstrap", "Bootstrapper freed");
 
     return;
 }
 
-Bootstrapper *initBootstrapper(const char *filePath)
+ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, CryoGlobalSymbolTable *globalTable)
 {
-    Bootstrapper *bootstrapper = (Bootstrapper *)malloc(sizeof(Bootstrapper));
-
-    // Init the bootstrapper state
-    bootstrapper->status = BOOTSTRAP_IDLE;
-
-    // Initialize the Arena
-    bootstrapper->arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the symbol table
-    bootstrapper->table = createSymbolTable(bootstrapper->arena);
-
-    bootstrapper->typeTable = initTypeTable();
-
-    // Set the program node to null, we will parse it later.
-    bootstrapper->programNode = NULL;
-
-    return bootstrapper;
-}
-
-ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
-{
-    logMessage("INFO", __LINE__, "Bootstrap", "@compileForRuntimeNode Reading file: %s", filePath);
+    logMessage(LMI, "INFO", "Bootstrap", "@compileForRuntimeNode Reading file: %s", filePath);
     // This needs to create a whole separate compiler state & arena for each program node
     // This is because the program node is the root of the AST and needs to be compiled separately
     char *source = readFile(filePath);
@@ -156,17 +139,17 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
 
     // Initialize the lexer
     Lexer lexer;
-    CompilerState *state = initCompilerState(bootstrap->arena, &lexer, bootstrap->table, filePath);
+    CompilerState *state = initCompilerState(bootstrap->arena, &lexer, filePath);
     bootstrap->state = state;
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Compiler state initialized");
+    logMessage(LMI, "INFO", "Bootstrap", "Compiler state initialized");
 
     initLexer(&lexer, source, filePath, state);
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Lexer initialized");
+    logMessage(LMI, "INFO", "Bootstrap", "Lexer initialized");
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, bootstrap->table, bootstrap->arena, state, bootstrap->typeTable);
+    ASTNode *programNode = parseProgram(&lexer, bootstrap->arena, state, bootstrap->typeTable, globalTable);
 
     if (programNode == NULL)
     {
@@ -174,14 +157,14 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath)
         return NULL;
     }
 
-    logMessage("INFO", __LINE__, "Bootstrap", "Program node parsed successfully");
+    logMessage(LMI, "INFO", "Bootstrap", "Program node parsed successfully");
 
     return programNode;
 }
 
 void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
 {
-    logMessage("INFO", __LINE__, "Bootstrap", "Compiling runtime object file...");
+    logMessage(LMI, "INFO", "Bootstrap", "Compiling runtime object file...");
 
     // Generate code
     int result = generateCodeWrapper(runtimeNode, state, NULL);
@@ -197,4 +180,22 @@ void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status)
 {
     bootstrapper->status = status;
+}
+
+Bootstrapper *initBootstrapper(const char *filePath)
+{
+    Bootstrapper *bootstrapper = (Bootstrapper *)malloc(sizeof(Bootstrapper));
+
+    // Init the bootstrapper state
+    bootstrapper->status = BOOTSTRAP_IDLE;
+
+    // Initialize the Arena
+    bootstrapper->arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    bootstrapper->typeTable = initTypeTable();
+
+    // Set the program node to null, we will parse it later.
+    bootstrapper->programNode = NULL;
+
+    return bootstrapper;
 }

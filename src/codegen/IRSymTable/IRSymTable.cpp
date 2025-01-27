@@ -20,12 +20,10 @@ namespace Cryo
 {
     void IRSymTable::initSymTable()
     {
-        std::cout << "[IRSymTable] SymTable Initialized" << std::endl;
     }
 
     void IRSymTable::initModule(ASTNode *root, std::string namespaceName)
     {
-        std::cout << "[IRSymTable] Creating Module" << std::endl;
         // Create the main namespace
         SymTableNode program;
         assert(root != nullptr);
@@ -33,7 +31,6 @@ namespace Cryo
         // Check to make sure the namespace doesn't already exist
         if (symTable.namespaces.find(namespaceName) != symTable.namespaces.end())
         {
-            std::cerr << "[IRSymTable] Namespace already exists" << std::endl;
             return;
         }
         // Add the namespace to the SymTable
@@ -42,9 +39,6 @@ namespace Cryo
         SymTableNode module = traverseModule(root, namespaceName);
         symTable.namespaces[namespaceName] = module;
         module.namespaceName = namespaceName;
-        std::cout << "\n\n";
-        std::cout << "[IRSymTable] Module Created" << std::endl;
-        std::cout << "\n\n";
     }
 
     // -----------------------------------------------------------------------------------------------
@@ -63,10 +57,6 @@ namespace Cryo
         {
             // Find the variable in the SymTable
             CryoVariableNode varNode = symNode.variables[nodeName];
-            std::cout << "Variable Name: " << nodeName << std::endl;
-            // std::cout << "===-------------------===" << std::endl;
-            // DevDebugger::logNode(varNode.initializer);
-            // std::cout << "===-------------------===" << std::endl;
             return varNode.initializer;
         }
         case NODE_FUNCTION_DECLARATION:
@@ -82,7 +72,6 @@ namespace Cryo
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Unknown node type");
-            std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;
             break;
         }
         }
@@ -237,7 +226,6 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Class to SymTable");
         // Add the class to the SymTable
         std::string className = classTy->getName().str();
-        std::cout << "Class Name: " << className << std::endl;
 
         STClass classContainer;
         classContainer.LLVMStruct = classTy;
@@ -259,7 +247,6 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Struct to SymTable");
         // Add the struct to the SymTable
         std::string structName = structTy->getName().str();
-        std::cout << "Struct Name: " << structName << std::endl;
 
         STStruct structContainer;
         structContainer.LLVMStruct = structTy;
@@ -311,8 +298,6 @@ namespace Cryo
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Function to SymTable");
-        std::cout << "Function Name: " << funcName << std::endl;
-        std::cout << "Namespace Name: " << namespaceName << std::endl;
         // Add the function to the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
         // Create the function container
@@ -353,8 +338,6 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Parameter to SymTable");
         // Add the parameter to the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
-        std::cout << "Parameter Name: " << paramName << std::endl;
-        std::cout << "Namespace Name: " << namespaceName << std::endl;
         // Create the parameter container
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Creating Parameter Container");
         STParameter paramContainer = createParamContainer();
@@ -385,7 +368,6 @@ namespace Cryo
         // Update the parameter in the SymTable
         symNode.parameterNode[paramName] = paramNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Value Added to Parameter" << std::endl;
         return;
     }
 
@@ -411,7 +393,6 @@ namespace Cryo
         // Update the variable in the SymTable
         symNode.variableNode[varName] = varNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Variable Node Updated" << std::endl;
         return;
     }
 
@@ -428,7 +409,6 @@ namespace Cryo
         // Update the variable in the SymTable
         symNode.variableNode[varName] = varNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Store Instruction Added to Variable" << std::endl;
         return;
     }
 
@@ -446,7 +426,6 @@ namespace Cryo
         // Update the variable in the SymTable
         symNode.variableNode[varName] = varNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Data Type Added to Variable" << std::endl;
         return;
     }
 
@@ -463,7 +442,6 @@ namespace Cryo
         // Update the variable in the SymTable
         symNode.variableNode[varName] = varNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Function Added to Variable" << std::endl;
         return;
     }
 
@@ -480,7 +458,6 @@ namespace Cryo
         // Update the variable in the SymTable
         symNode.variableNode[varName] = varNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Load Instruction Added to Variable" << std::endl;
         return;
     }
 
@@ -501,7 +478,6 @@ namespace Cryo
         // Add the variable to the SymTable
         symNode.variableNode[paramName] = varContainer;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Parameter Added as Variable: " << paramName << std::endl;
         return;
     }
 
@@ -520,7 +496,6 @@ namespace Cryo
         // Update the function in the SymTable
         symNode.functionNode[funcName] = funcNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Function Node Updated" << std::endl;
         return;
     }
 
@@ -539,7 +514,6 @@ namespace Cryo
         // Update the extern function in the SymTable
         symNode.externFunctionNode[funcName] = externFuncNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Extern Function Node Updated" << std::endl;
         return;
     }
 
@@ -557,7 +531,6 @@ namespace Cryo
         // Update the parameter in the SymTable
         symNode.parameterNode[paramName] = paramNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Parameter Updated" << std::endl;
         return;
     }
 
@@ -573,7 +546,6 @@ namespace Cryo
         // Update the struct in the SymTable
         symNode.structNode[structName] = structNode;
         symTable.namespaces[namespaceName] = symNode;
-        std::cout << "[IRSymTable] Struct Constructor Updated" << std::endl;
         return;
     }
 
@@ -611,7 +583,6 @@ namespace Cryo
 
     void IRSymTable::printTable(std::string namespaceName)
     {
-
         // Find the namespace in the SymTable and print it
         SymTableNode symNode = getSymTableNode(namespaceName);
         std::cout << "[IRSymTable] Printing SymTable" << std::endl;
@@ -673,11 +644,9 @@ namespace Cryo
     // -----------------------------------------------------------------------------------------------
     SymTableNode IRSymTable::traverseModule(ASTNode *root, std::string namespaceName)
     {
-        std::cout << "[IRSymTable] Traversing Module" << std::endl;
         SymTableNode program;
         // Start the recursive traversal
         traverseASTNode(root, program);
-        std::cout << "[IRSymTable] Module Traversal Complete" << std::endl;
         return program;
     }
 

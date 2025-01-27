@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/env.h"
+#include "tools/logger/logger_config.h"
 
 #define PATH_MAX 4096
 
@@ -26,7 +27,6 @@ const char *ENV_VECTOR[] = {
 build path: {CRYO_ROOT}/build/
 runtime files: {CRYO_ROOT}/cryo/
 compiler deps: {CRYO_ROOT}/build/out/deps/
-
 cryo compiler: {CRYO_ROOT}/bin/compiler
 */
 
@@ -192,11 +192,22 @@ int ensureEnvVar(const char *env_name, const char *env_value)
             perror("Failed to set environment variable");
             return -1;
         }
-        printf("%s%sSet %s=%s%s\n", LIGHT_RED, BOLD, env_name, env_value, COLOR_RESET);
+
+        DEBUG_PRINT_FILTER({
+            printf("%s%sSet %s=%s%s\n", LIGHT_RED, BOLD, env_name, env_value, COLOR_RESET);
+            return 0;
+        });
+        // without color formatting
+        printf("Set %s=%s\n", env_name, env_value);
     }
     else
     {
-        printf("%s%s%s is already set to: %s%s\n", LIGHT_GREEN, BOLD, env_name, value, COLOR_RESET);
+        DEBUG_PRINT_FILTER({
+            printf("%s%s%s is already set to: %s%s\n", LIGHT_GREEN, BOLD, env_name, value, COLOR_RESET);
+            return 0;
+        });
+        // without color formatting
+        printf("%s is already set to: %s\n", env_name, value);
     }
 
     return 0;
@@ -227,4 +238,39 @@ int verifyEnvSetup(void)
         }
     }
     return 0;
+}
+
+// ----------------------------------------------------------------
+
+char *getCryoRootPath(void)
+{
+    char *cryoRoot = getenv("CRYO_ROOT");
+    if (!cryoRoot)
+    {
+        fprintf(stderr, "Error: CRYO_ROOT environment variable not set\n");
+        return NULL;
+    }
+    return strdup(cryoRoot);
+}
+
+char *getCWD(void)
+{
+    char *cwd = getcwd(NULL, 0);
+    if (!cwd)
+    {
+        perror("Failed to get current working directory");
+        return NULL;
+    }
+    return cwd;
+}
+
+char *getCryoCompilerPath(void)
+{
+    char *compilerPath = getenv("CRYO_COMPILER");
+    if (!compilerPath)
+    {
+        fprintf(stderr, "Error: CRYO_COMPILER environment variable not set\n");
+        return NULL;
+    }
+    return strdup(compilerPath);
 }

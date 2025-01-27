@@ -109,17 +109,15 @@ extern "C"
         TOKEN_KW_CONTINUE,     // `continue`
         TOKEN_KW_RETURN,       // `return`
         TOKEN_KW_FN,           // `function`
+        TOKEN_KW_MODULE,       // `module`
+        TOKEN_KW_DECLARE,      // `declare`
         TOKEN_KW_CONST,        // `const`
         TOKEN_KW_PUBLIC,       // `public`
         TOKEN_KW_PRIVATE,      // `private`
         TOKEN_KW_STRUCT,       // `struct`
-        TOKEN_KW_DECLARE,      // `declare`
         TOKEN_KW_ENUM,         // `enum`
         TOKEN_KW_TRAIT,        // `trait`
-        TOKEN_KW_IMPL,         // `impl`
-        TOKEN_KW_USE,          // `use`
         TOKEN_KW_AS,           // `as`
-        TOKEN_KW_MODULE,       // `module`
         TOKEN_KW_NAMESPACE,    // `namespace`
         TOKEN_KW_TYPE,         // `type`
         TOKEN_KW_CAST,         // `cast`
@@ -166,6 +164,7 @@ extern "C"
         TOKEN_KW_DEBUGGER,     // `debugger`
         TOKEN_KW_CONSTRUCTOR,  // `constructor`
         TOKEN_KW_THIS,         // `this`
+        TOKEN_KW_USING,        // `using`
                                // Add more keywords as needed
 
         // Operators and punctuations
@@ -311,7 +310,11 @@ extern "C"
         NODE_CLASS,                // 48
         NODE_CLASS_CONSTRUCTOR,    // 49
         NODE_OBJECT_INST,          // 50
-        NODE_UNKNOWN,              // 51
+        NODE_NULL_LITERAL,         // 51
+        NODE_TYPEOF,               // 52
+        NODE_USING,                // 53
+        NODE_MODULE,               // 54
+        NODE_UNKNOWN,              // 55
     } CryoNodeType;
 
     typedef enum CryoVisibilityType
@@ -379,6 +382,7 @@ extern "C"
     char *CryoOperatorToString(CryoOperatorType op);
     char *TokenToString(Token token);
 
+    CryoVisibilityType stringToVisibilityType(const char *visibility);
     CryoOperatorType CryoTokenToOperator(CryoTokenType token);
 
 #ifdef __cplusplus

@@ -100,7 +100,8 @@ namespace Cryo
             conditionValue = binExp.createComparisonExpression(
                 node->data.forStatement->condition->data.bin_op->left,
                 node->data.forStatement->condition->data.bin_op->right,
-                node->data.forStatement->condition->data.bin_op->op);
+                node->data.forStatement->condition->data.bin_op->op,
+                loopBB);
         }
         else
         {
@@ -131,7 +132,6 @@ namespace Cryo
                 CryoTokenType op = incrementNode->data.unary_op->op;
                 std::string varName = incrementNode->data.unary_op->operand->data.varName->varName;
                 // Find the variable in the symbol table
-                std::cout << "Variable Name: " << varName << std::endl;
                 ASTNode *varNode = compiler.getSymTable().getASTNode(compiler.getContext().currentNamespace, NODE_VAR_DECLARATION, varName);
                 if (!varNode)
                 {
@@ -144,7 +144,6 @@ namespace Cryo
                     CryoTokenType op = incrementNode->data.unary_op->op;
                     std::string varName = incrementNode->data.unary_op->operand->data.varName->varName;
                     // Find the variable in the symbol table
-                    std::cout << "Variable Name: " << varName << std::endl;
                     llvm::Value *indexVar = variables.getLocalScopedVariable(varName);
                     llvm::Value *currentValue = builder.CreateLoad(llvm::Type::getInt32Ty(context), indexVar);
                     llvm::Value *incrementedValue;

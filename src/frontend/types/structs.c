@@ -29,7 +29,7 @@ DataType *createStructDefinition(const char *structName)
         return NULL;
     }
 
-    structDef->name = strdup(structName);
+    structDef->name = structName;
     structDef->size = 0;
     structDef->propertyCount = 0;
     structDef->methodCount = 0;
@@ -66,22 +66,19 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
         return NULL;
     }
 
-    printf("Creating struct type from node: %s\n", structNode->data.structNode->name);
-
     structType->name = strdup(structNode->data.structNode->name);
     structType->size = 0;
     structType->propertyCount = 0;
     structType->methodCount = 0;
-    structType->properties = NULL;
-    structType->methods = NULL;
+    structType->properties = (ASTNode **)malloc(sizeof(ASTNode *) * PROPERTY_CAPACITY);
+    structType->methods = (ASTNode **)malloc(sizeof(ASTNode *) * METHOD_CAPACITY);
     structType->hasDefaultValue = structNode->data.structNode->hasDefaultValue;
 
     structType->hasConstructor = structNode->data.structNode->hasConstructor;
     structType->ctorParamCount = structNode->data.structNode->ctorArgCount;
     structType->ctorParamCapacity = structNode->data.structNode->ctorArgCapacity;
-    structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs);
-
-    printf("Struct Created, name: %s\n", structType->name);
+    // structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs);
+    structType->ctorParams = NULL;
 
     return structType;
 }
@@ -91,21 +88,26 @@ DataType *createDataTypeFromStructNode(
     ASTNode **methods, int methodCount,
     CompilerState *state, TypeTable *typeTable)
 {
+    logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structNode->data.structNode->name);
     StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to create struct type from node.\n");
         CONDITION_FAILED;
     }
-    logMessage("INFO", __LINE__, "DataTypes", "Created struct type from node: %s", structType->name);
-    addPropertiesToStruct(properties, propCount, structType);
-    addMethodsToStruct(methods, methodCount, structType);
+    logMessage(LMI, "INFO", "DataTypes", "Created struct type from node: %s", structType->name);
 
-    logMessage("INFO", __LINE__, "DataTypes", "Creating data type from struct node: %s", structType->name);
+    addPropertiesToStruct(properties, propCount, structType);
+    logMessage(LMI, "INFO", "DataTypes", "Added properties to struct: %s", structType->name);
+
+    addMethodsToStruct(methods, methodCount, structType);
+    logMessage(LMI, "INFO", "DataTypes", "Added methods to struct: %s", structType->name);
+
+    logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structType->name);
     const char *typeName = structType->name;
-    logMessage("INFO", __LINE__, "DataTypes", "Type name: %s", typeName);
+    logMessage(LMI, "INFO", "DataTypes", "Type name: %s", typeName);
     TypeContainer *structContainer = createStructType(typeName, structType);
-    logMessage("INFO", __LINE__, "DataTypes", "Created struct type: %s", structType->name);
+    logMessage(LMI, "INFO", "DataTypes", "Created struct type: %s", structType->name);
 
     DataType *dataType = wrapTypeContainer(structContainer);
     dataType->container->baseType = STRUCT_TYPE;
@@ -117,11 +119,14 @@ DataType *createDataTypeFromStructNode(
 void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)
 {
     if (!properties || propCount <= 0)
+    {
+        logMessage(LMI, "INFO", "DataTypes", "No properties to add to struct: %s", structType->name);
         return;
-
+    }
     if (structType->propertyCount + propCount >= structType->propertyCapacity)
     {
         // Grow properties array
+        logMessage(LMI, "INFO", "DataTypes", "Growing properties array for struct: %s", structType->name);
         int newCapacity = structType->propertyCapacity * 2;
         ASTNode **newProperties = (ASTNode **)realloc(structType->properties, newCapacity * sizeof(ASTNode *));
         if (!newProperties)
@@ -129,13 +134,20 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
 
         structType->properties = newProperties;
         structType->propertyCapacity = newCapacity;
+        logMessage(LMI, "INFO", "DataTypes", "Grew properties array for struct: %s", structType->name);
     }
 
     // Add properties to struct
+    logASTNode(properties[0]);
     for (int i = 0; i < propCount; i++)
     {
+        logMessage(LMI, "INFO", "DataTypes", "Added property to struct: %s", properties[i]->data.property->name);
         structType->properties[structType->propertyCount++] = properties[i];
     }
+
+    logMessage(LMI, "INFO", "DataTypes", "Added properties to struct: %s", structType->name);
+
+    return;
 }
 
 void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType)

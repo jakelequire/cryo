@@ -47,6 +47,8 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Call Argument Count: " + std::to_string(argCount));
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Callee Name: " + std::string(functionName));
 
+        compiler.getContext().module->print(llvm::errs(), nullptr);
+
         // STFunction *stFunction = compiler.getSymTable().getFunction(compiler.getContext().currentNamespace, functionName);
 
         // Get the argument values
@@ -56,28 +58,19 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Processing Argument " + std::to_string(i + 1) + " of " + std::to_string(argCount));
             ASTNode *argNode = functionCallNode->args[i];
             CryoNodeType argNodeType = argNode->metaData->type;
-
-            std::cout << "===----------------------===" << std::endl;
-            std::cout << "Argument #: " << i + 1 << std::endl;
-            std::cout << "Function Name: " << functionName << std::endl;
-            std::cout << "Argument Node Type: " << CryoNodeTypeToString(argNodeType) << std::endl;
-            std::cout << "===----------------------===" << std::endl;
-
             std::string funcName = std::string(functionName);
-            std::cout << "\n\nFunction Name: " << funcName << "\n";
-
             // Callee's name:
             llvm::Function *calleeF = compiler.getContext().module->getFunction(funcName);
             if (!calleeF)
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+                compiler.getContext().module->print(llvm::errs(), nullptr);
                 CONDITION_FAILED;
             }
 
             // Get the argument type values
             llvm::FunctionType *calleeFT = calleeF->getFunctionType();
             llvm::Type *expectedType = calleeFT->getParamType(i);
-            std::cout << "Argument Type: " << std::endl;
 
             // Get the current callee function return type
             llvm::Type *returnType = calleeF->getReturnType();
@@ -217,6 +210,22 @@ namespace Cryo
                 argValues.push_back(argNode);
                 break;
             }
+            case NODE_TYPEOF:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a typeof expression");
+                TypeofNode *typeofNode = argNode->data.typeofNode;
+                assert(typeofNode != nullptr);
+
+                llvm::Value *argNode = createTypeofCall(typeofNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
@@ -230,6 +239,7 @@ namespace Cryo
         // If there are no arguments, just create the function call
         if (argCount == 0)
         {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call with no arguments");
             llvm::Function *function = compiler.getContext().module->getFunction(functionName);
             if (!function)
             {
@@ -249,6 +259,7 @@ namespace Cryo
             return functionCall;
         }
 
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Function Call with arguments");
         // If there are arguments, create the function call with the arguments
         // We will verify the arguments in the function call
         llvm::Function *function = compiler.getContext().module->getFunction(functionName);
@@ -294,7 +305,6 @@ namespace Cryo
         logVerboseDataType(structDataType);
 
         int propertyCount = structDataType->container->custom.structDef->propertyCount;
-        std::cout << "Property Count: " << propertyCount << std::endl;
 
         // Find the property index
         int propertyIndex = -1;
@@ -473,7 +483,6 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable not found");
             CONDITION_FAILED;
         }
-
         DataType *varDataType = var->dataType;
         if (!varDataType)
         {
@@ -483,7 +492,6 @@ namespace Cryo
 
         bool isStructType = varDataType->container->baseType == STRUCT_TYPE;
 
-        std::cout << "@createVarNameCall Variable Name: " << varName << std::endl;
         llvm::Value *varValue = var->LLVMValue;
         if (!varValue)
         {
@@ -707,7 +715,6 @@ namespace Cryo
                 // Get the string content from the literal node
                 std::string strContent = literalNode->value.stringValue;
                 const std::string &strContentRef = strContent;
-                std::cout << "String Content: " << strContentRef << std::endl;
 
                 // Get or create the global string constant
                 llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(strContentRef);
@@ -740,8 +747,8 @@ namespace Cryo
             case PRIM_BOOLEAN:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(), 0);
                 bool literalValue = literalNode->value.booleanValue;
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(literalValue), 0);
                 llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
                 if (!literalVarPtr)
@@ -1254,6 +1261,27 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Static Method Call Handled");
 
         return;
+    }
+
+    llvm::Value *Functions::createTypeofCall(TypeofNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Typeof Call");
+
+        ASTNode *exprNode = node->expression;
+        DataType *exprType = getDataTypeFromASTNode(exprNode);
+        if (!exprType)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Expression type not found");
+            CONDITION_FAILED;
+        }
+        std::string exprTypeStr = DataTypeToStringUnformatted(exprType);
+        std::cout << "Typeof Expression Type: " << exprTypeStr << std::endl;
+
+        // Always return the type as a string
+        llvm::Value *typeValue = compiler.getContext().builder.CreateGlobalStringPtr(exprTypeStr, "typeof");
+
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Typeof Call Created");
+        return typeValue;
     }
 
 } // namespace Cryo

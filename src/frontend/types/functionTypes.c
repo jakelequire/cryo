@@ -46,7 +46,7 @@ DataType *createMethodType(const char *methodName, DataType *returnType, DataTyp
     DataType *methodType = wrapTypeContainer(createTypeContainer());
     if (!methodType)
     {
-        logMessage("ERROR", __LINE__, "DataTypes", "Failed to allocate memory for method type");
+        logMessage(LMI, "ERROR", "DataTypes", "Failed to allocate memory for method type");
         return NULL;
     }
 
@@ -74,7 +74,7 @@ DataType *createFunctionType(const char *functionName, DataType *returnType, Dat
     DataType *functionType = wrapTypeContainer(createTypeContainer());
     if (!functionType)
     {
-        logMessage("ERROR", __LINE__, "DataTypes", "Failed to allocate memory for function type");
+        logMessage(LMI, "ERROR", "DataTypes", "Failed to allocate memory for function type");
         return NULL;
     }
 

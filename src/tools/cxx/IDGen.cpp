@@ -40,12 +40,11 @@ extern "C"
         }
     }
 
-    const char *CryoIDGen_Generate32BitID(CryoIDGen idGen)
+    const char *CryoIDGen_Generate64BitHashID(CryoIDGen idGen, const char *seed)
     {
         if (idGen)
         {
-            std::string id = reinterpret_cast<Cryo::IDGen *>(idGen)->generate32BitID();
-            return id.c_str();
+            return reinterpret_cast<Cryo::IDGen *>(idGen)->generate64BitHashID(seed);
         }
         return nullptr;
     }
@@ -54,15 +53,52 @@ extern "C"
 
 namespace Cryo
 {
-
-    std::string IDGen::generate32BitID(void)
+    const char *IDGen::generate64BitHashID(const char *seed)
     {
-        std::string id = "";
-        for (int i = 0; i < 32; i++)
+        uint64_t hash = 0;
+        size_t len = strlen(seed);
+        for (size_t i = 0; i < len; ++i)
         {
-            id += std::to_string(rand() % 2);
+            hash = (hash << 5) + hash + seed[i]; // hash * 33 + seed[i]
         }
-        return id;
+        hash = hash & 0xFFFFFFFFFFFFFFFF; // Ensure it's 64-bit
+
+        // Convert hash to string
+        char *hashStr = (char *)std::malloc(17); // 16 digits + null terminator
+        std::sprintf(hashStr, "%016lX", hash);
+        return hashStr;
+    }
+
+    const char *IDGen::generate32BitHashID(const char *seed)
+    {
+        uint32_t hash = 0;
+        size_t len = strlen(seed);
+        for (size_t i = 0; i < len; ++i)
+        {
+            hash = (hash << 5) + hash + seed[i]; // hash * 33 + seed[i]
+        }
+        hash = hash & 0xFFFFFFFF; // Ensure it's 32-bit
+
+        // Convert hash to string
+        char *hashStr = (char *)std::malloc(9); // 8 digits + null terminator
+        std::sprintf(hashStr, "%08X", hash);
+        return hashStr;
+    }
+
+    const char *IDGen::generate16BitHashID(const char *seed)
+    {
+        uint16_t hash = 0;
+        size_t len = strlen(seed);
+        for (size_t i = 0; i < len; ++i)
+        {
+            hash = (hash << 5) + hash + seed[i]; // hash * 33 + seed[i]
+        }
+        hash = hash & 0xFFFF; // Ensure it's 16-bit
+
+        // Convert hash to string
+        char *hashStr = (char *)std::malloc(5); // 4 digits + null terminator
+        std::sprintf(hashStr, "%04X", hash);
+        return hashStr;
     }
 
 } // namespace Cryo

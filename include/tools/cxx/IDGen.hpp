@@ -29,7 +29,8 @@ extern "C"
     // C API functions
     CryoIDGen CryoIDGen_Create(void);
     void CryoIDGen_Destroy(CryoIDGen idGen);
-    const char *CryoIDGen_Generate32BitID(CryoIDGen idGen);
+    const char *CryoIDGen_Generate64BitHashID(CryoIDGen idGen, const char *seed);
+#define Generate64BitHashID(seed) Cryo_Generate64BitHashID(seed)
 
 #ifdef __cplusplus
 } // C API
@@ -45,6 +46,7 @@ extern "C"
 #include <sstream>
 #include <filesystem>
 #include <functional>
+#include <string.h>
 
 namespace Cryo
 {
@@ -52,13 +54,29 @@ namespace Cryo
     class IDGen
     {
     public:
-        static std::string generate32BitID(void);
+        /// @brief Generate a 64-bit hash ID from a seed string.
+        /// This is a *deterministic* hash ID generator.
+        static const char *generate64BitHashID(const char *seed);
+
+        /// @brief Generate a 32-bit hash ID from a seed string.
+        /// This is a *deterministic* hash ID generator.
+        const char *generate32BitHashID(const char *seed);
+
+        /// @brief Generate a 16-bit hash ID from a seed string.
+        /// This is a *deterministic* hash ID generator.
+        const char *generate16BitHashID(const char *seed);
 
     private:
         std::string id;
     };
 
 } // namespace Cryo
+
+// Implementation of the new function
+inline const char *Cryo_Generate64BitHashID(const char *seed)
+{
+    return Cryo::IDGen::generate64BitHashID(seed);
+}
 
 #endif // __cplusplus
 #endif // IDGEN_H

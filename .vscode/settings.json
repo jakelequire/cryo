@@ -262,9 +262,97 @@
     "diagnosticinfo.h": "c",
     "errorcodes.h": "c",
     "env.h": "c",
-    "libgen.h": "c"
+    "libgen.h": "c",
+    "scope.h": "c",
+    "globalsymtable.hpp": "c",
+    "cinterfacetable.h": "c",
+    "debugsymbols.hpp": "c",
+    "sys_errlist.h": "c",
+    "symdefs.h": "c",
+    "std_function.h": "c",
+    "signal.h": "c",
+    "features.h": "c",
+    "wordsize.h": "c",
+    "lspsymbols.h": "c",
+    "socket.h": "c",
+    "cryo-path.h": "c",
+    "inet.h": "c",
+    "select.h": "c",
+    "in.h": "c",
+    "logger_config.h": "c",
+    "args.h": "c",
+    "ioctl.h": "c",
+    "messages.h": "c",
+    "cryoproject.h": "c",
+    "ipo.h": "c",
+    "legacypassmanager.h": "c",
+    "debuginfometadata.h": "c",
+    "filesystem.h": "c",
+    "diagnosticprinter.h": "c",
+    "raw_ostream.h": "c",
+    "cloning.h": "c",
+    "targetregistry.h": "c",
+    "instcombine.h": "c",
+    "barrier": "cpp",
+    "cfenv": "cpp",
+    "complex": "cpp",
+    "csetjmp": "cpp",
+    "csignal": "cpp",
+    "cuchar": "cpp",
+    "source_location": "cpp",
+    "latch": "cpp",
+    "scoped_allocator": "cpp",
+    "syncstream": "cpp",
+    "typeindex": "cpp",
+    "valarray": "cpp",
+    "cryotestsuite.h": "c",
+    "value.h": "c",
+    "projectdir.h": "c",
+    "cryoconfig.h": "c",
+    "ctypes.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",
-  "editor.selectionClipboard": false
+  "editor.selectionClipboard": false,
+  "search.useIgnoreFiles": false,
+  "auto-close-tag.activationOnLanguage": [
+    "xml",
+    "php",
+    "blade",
+    "ejs",
+    "jinja",
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "plaintext",
+    "markdown",
+    "vue",
+    "liquid",
+    "erb",
+    "lang-cfml",
+    "cfml",
+    "HTML (EEx)",
+    "HTML (Eex)",
+    "plist"
+  ],
+"editor.tokenColorCustomizations": {
+    "textMateRules": [
+        {
+            "scope": [
+                "meta.type.struct.c",
+                "meta.type.typedef.c",
+                "meta.type.user-defined.c"
+            ],
+            "settings": {
+                "foreground": "#4EC9B0"
+            }
+        }
+    ]
+},
+"editor.defaultFormatter": "ms-vscode.cpptools-extension-pack",
+"notebook.defaultFormatter": "ms-vscode.cpptools-extension-pack",
+"[c]": {
+  "editor.defaultFormatter": "ms-vscode.cpptools"
+}
 }

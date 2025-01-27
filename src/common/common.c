@@ -19,24 +19,31 @@
 // -------------------------------------------------------------------
 // @Compiler Errors
 
-CompilerState *initCompilerState(Arena *arena, Lexer *lexer, CryoSymbolTable *table, const char *fileName)
+CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileName)
 {
     CompilerState *state = (CompilerState *)malloc(sizeof(CompilerState));
     state->arena = arena;
     state->lexer = lexer;
-    state->table = table;
     state->programNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     state->currentNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     state->fileName = fileName;
     state->lineNumber = 0;
     state->columnNumber = 0;
-    state->isActiveBuild = false;
     state->errorCount = 0;
     state->settings = (CompilerSettings *)malloc(sizeof(CompilerSettings));
     state->errors = (CompilerError **)malloc(sizeof(CompilerError *));
+    state->globalTable = (CryoGlobalSymbolTable *)malloc(sizeof(CryoGlobalSymbolTable));
 
-    logMessage("INFO", __LINE__, "CompilerState", "Compiler state initialized");
+    state->isActiveBuild = false;
+    state->isModuleFile = false;
+
+    logMessage(LMI, "INFO", "CompilerState", "Compiler state initialized");
     return state;
+}
+
+void setGlobalSymbolTable(CompilerState *state, CryoGlobalSymbolTable *table)
+{
+    state->globalTable = table;
 }
 
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state)
@@ -119,7 +126,7 @@ void errorReport(CompilerState state)
 {
     if (state.errorCount == 0)
     {
-        logMessage("INFO", __LINE__, "CompilerState", "No errors found.");
+        logMessage(LMI, "INFO", "CompilerState", "No errors found.");
         return;
     }
 
@@ -188,7 +195,6 @@ void dumpCompilerState(CompilerState state)
 void dumpSymbolTable(CompilerState state)
 {
     printf("\n\n!# ==================== Symbol Table ==================== #!\n");
-    printSymbolTable(state.table);
     printf("!# ======================================================== #!\n\n");
 }
 

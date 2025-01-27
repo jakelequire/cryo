@@ -1,0 +1,18 @@
+namespace Testing;
+
+using Std::Types;
+using Std::IO;
+
+function testUsingKW() -> void {
+    const fileOps: IO = new IO();
+    printStr("FileOps instance created");
+    fileOps.write(1, "Hi!", 13);
+}
+
+function main(argc: int, argv: string[]) -> int {
+    printStr("---------- Main Function ----------");
+
+    testUsingKW();
+
+    return 0;
+}

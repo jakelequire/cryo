@@ -63,7 +63,6 @@ namespace Cryo
 
         // Find the variable in the symbol table
         std::string existingVarName = std::string(node->data.varReassignment->existingVarName);
-        std::cout << "Variable Name: " << existingVarName << std::endl;
 
         STVariable *var = compiler.getSymTable().getVariable(currentModuleName, existingVarName);
         if (!var)
@@ -178,7 +177,6 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Processing Mutable Variable");
         CryoVariableNode *varNode = node->data.varDecl;
         char *varName = varNode->name;
-        std::cout << "Variable Name: " << varName << std::endl;
         DataType *type = varNode->type;
         ASTNode *initializer = varNode->initializer;
 
@@ -285,8 +283,8 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Processing Const Variable");
 
         char *varName = varNode->name;
-        std::cout << "Variable Name: " << varName << std::endl;
         DataType *type = varNode->type;
+        std::cout << "Variable Type: " << DataTypeToString(type) << std::endl;
         ASTNode *initializer = varNode->initializer;
 
         llvm::Type *llvmType = nullptr;
@@ -437,8 +435,6 @@ namespace Cryo
         std::string varName = std::string(varDecl->name);
         llvm::Value *llvmValue = nullptr;
 
-        // Check if it already exists
-        std::cout << "Variable Name: " << varName << std::endl;
         llvmValue = compiler.getContext().namedValues[varName];
         if (llvmValue)
         {
@@ -512,6 +508,14 @@ namespace Cryo
             DataType *varType = varDecl->type;
             return createPropertyAccessVariable(propertyAccess, varName, varType);
         }
+        case NODE_OBJECT_INST:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable initializer is an ObjectInstanceNode.");
+            ObjectNode *objectNode = initializer->data.objectNode;
+            std::string varName = std::string(varDecl->name);
+            DataType *varType = varDecl->type;
+            return createObjectInstanceVariable(objectNode, varName, varType);
+        }
         default:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is of unknown type");
@@ -574,6 +578,19 @@ namespace Cryo
             llvmValue = nullptr;
         }
 
+        // Try to find the variable in the symbol table
+        STVariable *var = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, name);
+        if (!var)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+            llvmValue = nullptr;
+        }
+        else
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Found");
+            llvmValue = var->LLVMValue;
+        }
+
         if (llvmValue != nullptr)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Found");
@@ -599,7 +616,6 @@ namespace Cryo
 
         CryoNodeType nodeType = node->metaData->type;
         std::string nodeTypeStr = CryoNodeTypeToString(nodeType);
-        std::cout << "Node Type: " << nodeTypeStr << std::endl;
 
         switch (nodeType)
         {
@@ -613,7 +629,6 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Literal Variable");
                 std::string literalValue = node->data.literal->value.stringValue;
-                std::cout << "Literal Value: " << literalValue << std::endl;
 
                 // Get or create global string
                 llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(literalValue);
@@ -643,7 +658,6 @@ namespace Cryo
             DataType *varType = varNode->type;
             ASTNode *initializer = varNode->initializer;
             std::string varName = std::string(varNode->name);
-            std::cout << "Variable Name: " << varName << std::endl;
 
             llvm::Value *llvmValue = nullptr;
             llvmValue = compiler.getContext().namedValues[varName];
@@ -665,7 +679,6 @@ namespace Cryo
                     {
                         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating String Literal Expression");
                         std::string literalValue = initializer->data.literal->value.stringValue;
-                        std::cout << "Literal Value: " << literalValue << std::endl;
 
                         // Get or create global string
                         llvm::GlobalVariable *globalStr = compiler.getContext().getOrCreateGlobalString(literalValue);

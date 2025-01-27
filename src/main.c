@@ -22,14 +22,29 @@
 #include "tools/utils/compileTimer.h"
 #include "tools/utils/buildStats.h"
 #include "tools/utils/env.h"
+#include "tools/utils/c_logger.h"
+#include "tools/logger/logger_config.h"
+#include "tools/cryoconfig/cryoconfig.h"
+#include "tools/utils/fs.h"
+
+#define MAX_PATH_SIZE 1024 * 10 // 10KB
+
+#define INIT_LIBS()                                   \
+    /* Initialize the logging system */               \
+    INIT_LOGS();                                      \
+    /* Initialize the global file system utilities */ \
+    INIT_FS();
 
 int main(int argc, char *argv[])
 {
+    // Initialize the libraries and tools
+    INIT_LIBS();
+
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);
     if (parent)
     {
-        printf("Parent directory: %s\n", parent);
+        logMessage(LMI, "INFO", "MAIN", "Parent directory: %s", parent);
     }
 
     // Initialize environment variables
@@ -39,11 +54,24 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error: Failed to initialize environment variables\n");
         return 1;
     }
-    // Free the parent directory string
-    free(parent);
+    free(parent); // Free the parent directory string
 
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
+    initLoggerCompilerSettings(&settings); // Initialize the compiler settings for the logger
+    updateEnabledLogs(g_enabledLogs, settings.enableLogs);
+    if (settings.isSingleFile)
+    {
+        printf("Initializing as single file...\n");
+        const char *dir = removeFileFromPath(settings.inputFilePath);
+        INIT_PROJECT_CONFIG(&settings);
+    }
+    else
+    {
+        printf("Initializing as project...\n");
+        INIT_PROJECT_CONFIG(&settings);
+    }
+    printf("Compiler settings initialized\n");
     logCompilerSettings(&settings);
 
     // Initialize the build stats
@@ -55,7 +83,19 @@ int main(int argc, char *argv[])
     startTimer(compileTimer);
 
     // Check if the input file exists
-    const char *filePath = settings.inputFilePath;
+    bool isProject = settings.isProject;
+    char *filePath = (char *)malloc(MAX_PATH_SIZE);
+    if (isProject)
+    {
+        strcpy(filePath, settings.projectDir);
+        strcat(filePath, "/src/main.cryo");
+    }
+    else
+    {
+        strcpy(filePath, "/");
+        strcpy(filePath, settings.inputFilePath);
+    }
+
     if (!fileExists(filePath))
     {
         fprintf(stderr, "Error: File not found: %s\n", filePath);
@@ -75,6 +115,8 @@ int main(int argc, char *argv[])
     getSystemInfo(buildStats);
     addElapsedTime(buildStats, elapsed);
     printBuildStats(buildStats);
+
+    CLEANUP_LOGS();
 
     exit(EXIT_SUCCESS);
 }

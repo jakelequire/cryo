@@ -91,8 +91,6 @@ namespace Cryo
         // Create the function type
         llvm::FunctionType *functionType = llvm::FunctionType::get(returnLLVMType, argTypes, false);
 
-        std::cout << "Function Type: " << std::endl;
-
         // Create the function
         llvm::Function *function = llvm::Function::Create(
             functionType,
@@ -115,7 +113,6 @@ namespace Cryo
         {
             // We are storing the aguments in the named values map
             std::string paramName = std::string(functionNode->params[i]->data.param->name);
-            std::cout << "Function Param Name: " << paramName << std::endl;
             ASTNode *paramNode = functionNode->params[i];
             arg.setName(paramName);
             llvm::Value *param = createParameter(&arg, argTypes[i], paramNode);
@@ -135,7 +132,6 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parsing Statement " + std::to_string(i + 1) + " of " + std::to_string(functionBody->data.functionBlock->statementCount));
             ASTNode *statement = functionBody->data.functionBlock->statements[i];
             CryoNodeType nodeType = statement->metaData->type;
-            std::cout << "Statement: " << CryoNodeTypeToString(statement->metaData->type) << std::endl;
 
             switch (nodeType)
             {
@@ -157,9 +153,6 @@ namespace Cryo
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
 
-                std::cout << "TypeOfDataType: " << std::string(TypeofDataTypeToString(returnType->container->baseType)) << std::endl;
-                std::cout << "PrimitiveType: " << std::string(PrimitiveDataTypeToString(returnType->container->primitive)) << std::endl;
-
                 switch (returnType->container->primitive)
                 {
                 case PRIM_VOID:
@@ -171,7 +164,6 @@ namespace Cryo
                 case PRIM_INT:
                 {
                     CryoNodeType returnTypeNode = statement->data.returnStatement->expression->metaData->type;
-                    std::cout << "Return Type Node: " << CryoNodeTypeToString(returnTypeNode) << std::endl;
                     switch (returnTypeNode)
                     {
                     case NODE_VAR_NAME:
@@ -213,7 +205,7 @@ namespace Cryo
                     }
                     default:
                     {
-                        std::cout << "Unknown return type node: " << CryoNodeTypeToString(returnTypeNode) << std::endl;
+                        DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
                         CONDITION_FAILED;
                     }
                     }

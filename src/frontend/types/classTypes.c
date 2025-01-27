@@ -34,6 +34,7 @@ ClassType *createClassType(const char *name, ClassNode *classNode)
     classType->hasConstructor = classNode->hasConstructor;
     classType->isStatic = classNode->isStatic;
     classType->hasConstructor = classNode->hasConstructor;
+    classType->classNode = (ASTNode *)malloc(sizeof(ASTNode));
 
     classType->publicMembers = createPublicMembersType();
     if (!classType->publicMembers)

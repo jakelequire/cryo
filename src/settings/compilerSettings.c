@@ -15,7 +15,10 @@
  *                                                                              *
  ********************************************************************************/
 #include "settings/compilerSettings.h"
+#include "tools/logger/logger_config.h"
 int DEBUG_LEVEL = 0;
+
+#define MAX_SOURCE_BUFFER 1024 * 1024 // 1MB
 
 void printUsage(const char *programName)
 {
@@ -28,11 +31,16 @@ void printUsage(const char *programName)
     fprintf(stderr, "  -a, --active-build  Flag that indicates the build is active\n");
     fprintf(stderr, "  -v, --verbose        Enable verbose output\n");
     fprintf(stderr, "  -d, --debug-level    Set the debug level (0-3)\n");
+    fprintf(stderr, "  -L, --logs           Enable logs\n");
+    fprintf(stderr, "  -p, --project        Specify project directory\n");
     fprintf(stderr, "  -h, --help           Display this help message\n");
     printf("\n");
     printf("Advanced options:\n");
     printf("      --ast-dump         Dump AST to stdout\n");
     printf("      --ir-dump          Dump IR to stdout (UNIMPLEMENTED)\n");
+    printf("      --lsp-symbols      Compile and connect to LSP server\n");
+    printf("      --enable-logs      Enable logs\n");
+    printf("      --disable-logs     Disable logs\n");
     printf("\n");
 }
 
@@ -45,11 +53,19 @@ static const struct option long_options[] = {
     {"verbose", no_argument, 0, 'v'},
     {"debug", required_argument, 0, 'd'},
     {"logs", required_argument, 0, 'L'},
+    {"project", required_argument, 0, 'p'},
     {"help", no_argument, 0, 'h'},
 
     // Long-only options (no short equivalent)
     {"ast-dump", no_argument, 0, OPT_AST_DUMP},
     {"ir-dump", no_argument, 0, OPT_IR_DUMP},
+    {"lsp-symbols", no_argument, 0, OPT_LSP_SYMBOLS},
+    // Enable Logs: --enable-logs
+    {"enable-logs", no_argument, 0, OPT_ENABLE_LOGS},
+    // Disable Logs: --disable-logs
+    {"disable-logs", no_argument, 0, OPT_DISABLE_LOGS},
+    {"project", required_argument, 0, OPT_PROJECT},
+
     {0, 0, 0, 0} // Required terminator
 };
 
@@ -67,29 +83,40 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->customOutputPath = NULL;
     settings->debugLevel = DEBUG_NONE;
     settings->buildType = BUILD_DEV;
-    settings->enabledLogs = createEnabledLogs();
+    settings->compilerRootPath = getCompilerRootPath();
+    settings->isProject = false;
+    settings->version = COMPILER_VERSION;
 
-    printf("Parsing Command Line Arguments\n");
-    printf("Argc: %i\n", argc);
-    printf("Argv: %s\n", argv[0]);
+    const char *runtimePath = appendStrings(getCompilerRootPath(), "/Std/Runtime/");
+    printf("Runtime Path: %s\n", runtimePath);
+    settings->runtimePath = runtimePath;
 
     const char *inputFilePath = (const char *)malloc(sizeof(char) * 256);
 
+    printf("Getting compiler settings...\n");
     int c;
     int option_index = 0;
-    char *optstring = "f:s:o:avd:L:h";
-    while ((c = getopt_long(argc, argv, "f:s:o:avd:L:h", long_options, &option_index)) != -1)
+    char *optstring = "f:s:o:avd:L:p:h";
+    while ((c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1)
     {
         switch (c)
         {
+        // The `-f` option is used to specify the input file (Single file mode)
         case 'f':
+        {
+            settings->isSingleFile = true;
             settings->inputFile = optarg;
-            inputFilePath = optarg;
+            inputFilePath = realpath(optarg, NULL);
             break;
+        }
+        // The `-s` option is used to specify source text directly
         case 's':
+        {
             settings->isSource = true;
-            settings->inputFile = optarg;
+            settings->sourceText = optarg;
             break;
+        }
+        // The `-o` option is used to specify a custom output path
         case 'o':
         {
             // Get the current working directory that the program was run from
@@ -115,23 +142,61 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             settings->customOutputPath = outPath;
             break;
         }
+        // The `-a` option is used to indicate that the build is active (deprecated)
         case 'a':
+        {
             settings->activeBuild = true;
             break;
+        }
+        // The `-v` option is used to enable verbose output (deprecated)
         case 'v':
+        {
             settings->verbose = true;
             break;
+        }
+        // The `-d` option is used to set the debug level (unimplemented)
         case 'd':
+        {
             settings->debugLevel = getDebugLevel(atoi(optarg));
             break;
-        case 'L':
-            parseEnabledLogsArgs(optarg, &settings->enabledLogs);
+        }
+            // The `-p` option is used to indicate that we are in project mode
+        case 'p':
+        {
+            printf("CompilerSettings: Initializing as project...\n");
+            settings->isProject = true;
+            settings->isSingleFile = false;
+            settings->inputFile = NULL;
+            char *projectDir = realpath(optarg, NULL);
+            if (projectDir == NULL)
+            {
+                fprintf(stderr, "Error: Invalid project directory\n");
+                exit(1);
+            }
+            settings->projectDir = projectDir;
+            printf("Project Directory: %s\n", settings->projectDir);
             break;
+        }
+        // Usage and help
+        case 'h':
+        {
+            printUsage(argv[0]);
+            exit(0);
+            break;
+        }
+        case '?':
+        {
+            printUsage(argv[0]);
+            exit(1);
+            break;
+        }
 
         // Long-only options
+        // The `--ast-dump` option is used to dump the AST to stdout
         case OPT_AST_DUMP:
+        {
             settings->astDump = true;
-            if(!inputFilePath)
+            if (!inputFilePath)
             {
                 fprintf(stderr, "Error: No input file specified\n");
                 printUsage(argv[0]);
@@ -139,35 +204,78 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             }
             executeASTDump(inputFilePath);
             break;
-
+        }
+        // The `--ir-dump` option is used to dump the IR to stdout
         case OPT_IR_DUMP:
+        {
             settings->irDump = true;
             if (settings->verbose)
             {
                 printf("IR dump enabled\n");
             }
             break;
+        }
+        // The `--lsp-symbols` option is used to compile and connect to the LSP server
+        case OPT_LSP_SYMBOLS:
+        {
+            settings->isLSP = true;
+            if (settings->verbose)
+            {
+                printf("LSP Symbols enabled\n");
+            }
+            if (optind >= argc)
+            {
+                fprintf(stderr, "Error: No input file specified for LSP symbols\n");
+                printUsage(argv[0]);
+                exit(1);
+            }
+            settings->lspOutputPath = argv[optind];
+            break;
+        }
+        // The `--enable-logs` option is used to enable logs
+        case OPT_ENABLE_LOGS:
+        {
+            settings->enableLogs = true;
+            break;
+        }
+        // The `--disable-logs` option is used to disable logs
+        case OPT_DISABLE_LOGS:
+        {
+            settings->enableLogs = false;
+            break;
+        }
 
-        case 'h':
-            printUsage(argv[0]);
-            exit(0);
-            break;
-        case '?':
-            printUsage(argv[0]);
-            exit(1);
-            break;
         default:
+        {
+            printf("Error: Unknown option: %c\n", c);
             printUsage(argv[0]);
             exit(1);
             break;
         }
+        }
     }
 
-    if (settings->inputFile == NULL)
+    if (settings->inputFile == NULL && settings->isSingleFile == true)
     {
         fprintf(stderr, "Error: No input file specified\n");
         printUsage(argv[0]);
         exit(1);
+    }
+
+    printf("Finished parsing command line arguments.. initializing compiler settings...\n");
+
+    if (!settings->isSingleFile && settings->isProject)
+    {
+        printf("Completed project initialization, initializing as project...\n");
+        // Set null values for settings we don't need to use
+        settings->inputFile = NULL;
+        settings->inputFilePath = NULL;
+        settings->isSingleFile = false;
+        settings->isProject = true;
+        char *projectBuildDir = concatStrings(settings->projectDir, "/build");
+        settings->buildDir = projectBuildDir;
+
+        return;
     }
 
     char *fullFilePath = (char *)malloc(strlen(settings->rootDir) + strlen(settings->inputFile) + 2);
@@ -186,34 +294,50 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         printUsage(argv[0]);
         exit(1);
     }
+
+    if (settings->isSingleFile)
+    {
+        settings->projectDir = NULL;
+        const char *inputFile = removeFileFromPath(settings->inputFilePath);
+        const char *buildDir = appendStrings(inputFile, "/build");
+        settings->buildDir = buildDir;
+        printf("Initialized build directory: %s\n", buildDir);
+    }
 }
+
 // ==============================
 // Utility Functions
 
 void logCompilerSettings(CompilerSettings *settings)
 {
-    printf("\n");
-    printf("# ============ Compiler Settings ============ #\n");
-    printf("  Root Directory: %s\n", settings->rootDir);
-    printf("  Input File: %s\n", settings->inputFile);
-    printf("  File Path: %s\n", settings->inputFilePath);
-    printf("  Active Build: %s\n", settings->activeBuild ? "true" : "false");
-    printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
-    printf("  Verbose: %s\n", settings->verbose ? "true" : "false");
-    printf("  Custom Output Path: %s\n", settings->customOutputPath);
-    printf("  Source Text: %s\n", settings->isSource ? "true" : "false");
-    printf("  Enabled Logs:\n");
-    printf("    Lexer: %s\n", settings->enabledLogs.logLexer ? "true" : "false");
-    printf("    Parser: %s\n", settings->enabledLogs.logParser ? "true" : "false");
-    printf("    AST: %s\n", settings->enabledLogs.logAST ? "true" : "false");
-    printf("    Symtable: %s\n", settings->enabledLogs.logSymtable ? "true" : "false");
-    printf("    Compiler: %s\n", settings->enabledLogs.logCompiler ? "true" : "false");
-    printf("    Utility: %s\n", settings->enabledLogs.logUtility ? "true" : "false");
-    printf("    Arena: %s\n", settings->enabledLogs.logArena ? "true" : "false");
-    printf("    Common: %s\n", settings->enabledLogs.logCommon ? "true" : "false");
-    printf("    Settings: %s\n", settings->enabledLogs.logSettings ? "true" : "false");
-    printf("# =========================================== #\n");
-    printf("\n");
+    const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
+    const char *falseFlag = BOLD RED "false" COLOR_RESET;
+    printf("Printing compiler settings...\n");
+    DEBUG_PRINT_FILTER({
+        printf("\n");
+        printf("# ============ Compiler Settings ============ #\n");
+        printf("  Root Directory: %s\n", settings->rootDir);
+        printf("  Project Directory: %s\n", settings->projectDir);
+        printf("  Build Directory: %s\n", settings->buildDir);
+        printf("  Runtime Path: %s\n", settings->runtimePath);
+        printf("  Compiler Root Path: %s\n", settings->compilerRootPath);
+        printf("  Input File: %s\n", settings->inputFile);
+        printf("  File Path: %s\n", settings->inputFilePath);
+        printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
+        printf("  Custom Output Path: %s\n", settings->customOutputPath);
+        printf(" ----------------------\n");
+        printf(" Flags:\n");
+        printf("  AST Dump: %s\n", settings->astDump ? trueFlag : falseFlag);
+        printf("  IR Dump: %s\n", settings->irDump ? trueFlag : falseFlag);
+        printf("  LSP Symbols: %s\n", settings->isLSP ? trueFlag : falseFlag);
+        printf("  Enable Logs: %s\n", settings->enableLogs ? trueFlag : falseFlag);
+        printf("  Is Single File: %s\n", settings->isSingleFile ? trueFlag : falseFlag);
+        printf("  Is Project: %s\n", settings->isProject ? trueFlag : falseFlag);
+        printf("  Source Text: %s\n", settings->isSource ? trueFlag : falseFlag);
+        printf("  Active Build: %s\n", settings->activeBuild ? trueFlag : falseFlag);
+        printf("# =========================================== #\n");
+        printf("\n");
+    });
 }
 
 const char *DebugLevelToString(DebugLevel level)
@@ -265,21 +389,6 @@ const char *BuildTypeToString(BuildType type)
     }
 }
 
-EnabledLogs createEnabledLogs()
-{
-    EnabledLogs logs;
-    logs.logLexer = false;
-    logs.logParser = false;
-    logs.logAST = false;
-    logs.logSymtable = false;
-    logs.logCompiler = false;
-    logs.logUtility = false;
-    logs.logArena = false;
-    logs.logCommon = false;
-    logs.logSettings = false;
-    return logs;
-}
-
 CompiledFile createCompiledFile(void)
 {
     CompiledFile file;
@@ -292,20 +401,30 @@ CompiledFile createCompiledFile(void)
 CompilerSettings createCompilerSettings(void)
 {
     CompilerSettings settings;
+    settings.projectDir = (char *)malloc(sizeof(char) * 1024);
+    settings.runtimePath = (char *)malloc(sizeof(char) * 1024);
+    settings.inputFile = (char *)malloc(sizeof(char) * 1024);
+    settings.inputFilePath = (char *)malloc(sizeof(char) * 1024);
+    settings.lspOutputPath = (char *)malloc(sizeof(char) * 1024);
+    settings.buildDir = (char *)malloc(sizeof(char) * 1024);
     settings.rootDir = getcwd(NULL, 0);
     settings.customOutputPath = NULL;
     settings.activeBuild = false;
     settings.verbose = false;
     settings.isSource = false;
+    settings.sourceText = (char *)malloc(sizeof(char) * MAX_SOURCE_BUFFER);
     settings.customOutputPath = NULL;
     settings.debugLevel = DEBUG_NONE;
     settings.buildType = BUILD_DEV;
-    settings.enabledLogs = createEnabledLogs();
     settings.compiledFiles = (CompiledFile **)malloc(sizeof(CompiledFile *) * 64);
     settings.version = COMPILER_VERSION;
     settings.totalFiles = 0;
     settings.astDump = false;
     settings.irDump = false;
+    settings.isLSP = false;
+    settings.isSingleFile = false;
+    settings.isProject = false;
+
     return settings;
 }
 
@@ -321,69 +440,12 @@ void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file)
     }
 }
 
-EnabledLogs parseEnabledLogsArgs(const char *logArgs, EnabledLogs *logs)
-{
-    char *logStr = strdup(logArgs);
-    char *token = strtok(logStr, ",");
-    while (token != NULL)
-    {
-        if (strcmp(token, "LEXER") == 0)
-        {
-            printf("Lexer Enabled\n");
-            logs->logLexer = true;
-        }
-        else if (strcmp(token, "PARSER") == 0)
-        {
-            printf("Parser Enabled\n");
-            logs->logParser = true;
-        }
-        else if (strcmp(token, "AST") == 0)
-        {
-            printf("AST Enabled\n");
-            logs->logAST = true;
-        }
-        else if (strcmp(token, "SYMTABLE") == 0)
-        {
-            printf("Symtable Enabled\n");
-            logs->logSymtable = true;
-        }
-        else if (strcmp(token, "COMPILER") == 0)
-        {
-            printf("Compiler Enabled\n");
-            logs->logCompiler = true;
-        }
-        else if (strcmp(token, "UTILITY") == 0)
-        {
-            printf("Utility Enabled\n");
-            logs->logUtility = true;
-        }
-        else if (strcmp(token, "ARENA") == 0)
-        {
-            printf("Arena Enabled\n");
-            logs->logArena = true;
-        }
-        else if (strcmp(token, "COMMON") == 0)
-        {
-            printf("Common Enabled\n");
-            logs->logCommon = true;
-        }
-        else if (strcmp(token, "SETTINGS") == 0)
-        {
-            printf("Settings Enabled\n");
-            logs->logSettings = true;
-        }
-        else
-        {
-            fprintf(stderr, "Unknown log type: %s\n", token);
-        }
-        token = strtok(NULL, ",");
-    }
-    free(logStr);
-
-    return *logs;
-}
-
 bool isASTDumpEnabled(CompilerSettings *settings)
 {
     return settings->astDump;
+}
+
+bool isSourceText(CompilerSettings *settings)
+{
+    return settings->isSource;
 }

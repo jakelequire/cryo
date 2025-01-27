@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/lexer.h"
+#include "tools/logger/logger_config.h"
 
 // #################################//
 //        Keyword Dictionary.       //
@@ -56,6 +57,11 @@ KeywordToken keywords[] = {
     {"static", TOKEN_KW_STATIC},
     {"protected", TOKEN_KW_PROTECTED},
     {"class", TOKEN_KW_CLASS},
+    {"using", TOKEN_KW_USING},
+    {"extends", TOKEN_KW_EXTENDS},
+    {"typeof", TOKEN_KW_TYPEOF},
+    {"module", TOKEN_KW_MODULE},
+    {"declare", TOKEN_KW_DECLARE},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
@@ -72,7 +78,7 @@ DataTypeToken dataTypes[] = {
 // <initLexer>
 void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerState *state)
 {
-    printf("Starting Lexer Initialization...\n");
+    logMessage(LMI, "INFO", "Lexer", "Initializing lexer...");
     lexer->start = source;
     lexer->current = source;
     lexer->end = source + strlen(source);
@@ -83,10 +89,12 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
     lexer->nextToken = peekNextToken(lexer, state);
     lexer->source = source;
 
-    printf("{lexer} -------------- <Input Source Code> --------------\n\n");
-    printf("\n{lexer} File Name: %s\n", fileName);
-    printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
-    printf("\n{lexer} -------------------- <END> ----------------------\n\n");
+    DEBUG_PRINT_FILTER({
+        printf("{lexer} -------------- <Input Source Code> --------------\n\n");
+        printf("\n{lexer} File Name: %s\n", fileName);
+        printf("\n{lexer} Lexer initialized. \nStart: %p \nCurrent: %p \n\nSource:\n-------\n%s\n\n", lexer->start, lexer->current, source);
+        printf("\n{lexer} -------------------- <END> ----------------------\n\n");
+    });
 }
 // </initLexer>
 
@@ -111,6 +119,22 @@ Lexer *freezeLexer(Lexer *lexer)
     frozenLexer->hasPeeked = lexer->hasPeeked;
     frozenLexer->fileName = lexer->fileName;
     return frozenLexer;
+}
+
+bool isModuleFile(Lexer *lexer)
+{
+    // Check if the file is a module file ({FILENAME}.mod.cryo)
+    const char *needle = ".mod.cryo";
+    if (strstr(lexer->fileName, needle) != NULL)
+    {
+        return true;
+    }
+    return false;
+}
+
+const char *getCurrentFileLocationFromLexer(Lexer *lexer)
+{
+    return lexer->fileName;
 }
 
 // <getLPos>
@@ -158,7 +182,7 @@ char peekNext(Lexer *lexer, CompilerState *state)
     if (isAtEnd(lexer, state))
         return '\0';
     char c = *lexer->current;
-    printf("[Lexer] <!> Peeked next character: %c\n", c);
+    logMessage(LMI, "INFO", "Lexer", "Peeking next character: %c", c);
     return c;
 }
 // </peekNext>
@@ -235,7 +259,7 @@ void skipWhitespace(Lexer *lexer, CompilerState *state)
                 }
                 if (isAtEnd(lexer, state))
                 {
-                    logMessage("ERROR", __LINE__, "Lexer", "Unterminated block comment.");
+                    logMessage(LMI, "ERROR", "Lexer", "Unterminated block comment.");
                     return;
                 }
                 advance(lexer, state);
@@ -268,50 +292,67 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
 
     if (isAtEnd(lexer, state))
     {
-        logMessage("INFO", __LINE__, "Lexer", "Creating EOF token");
+        logMessage(LMI, "INFO", "Lexer", "Creating EOF token");
         *token = makeToken(lexer, TOKEN_EOF, state);
         return *token;
     }
 
     char c = advance(lexer, state);
-    // logMessage("INFO", __LINE__, "Lexer", "Current character: %c", c);
 
     if (isAlpha(c))
     {
         *token = checkKeyword(lexer, state);
-        // logMessage("INFO", __LINE__, "Lexer", "Keyword token created");
         return *token;
     }
 
     if (isDigit(c))
     {
-        *token = number(lexer, state);
-        // logMessage("INFO", __LINE__, "Lexer", "Number token created");
+        *token = number(lexer, state, false);
         return *token;
+    }
+
+    if (c == '-')
+    {
+        // For negative numbers
+        if (isDigit(peek(lexer, state)))
+        {
+            *token = number(lexer, state, true);
+            return *token;
+        }
+        // For arrow operator
+        else if (peek(lexer, state) == '>')
+        {
+            advance(lexer, state);
+            *token = makeToken(lexer, TOKEN_RESULT_ARROW, state);
+            return *token;
+        }
+        // For minus operator
+        else
+        {
+            *token = makeToken(lexer, TOKEN_MINUS, state);
+            return *token;
+        }
     }
 
     if (c == '"')
     {
         *token = string(lexer, state);
-        // logMessage("INFO", __LINE__, "Lexer", "String token created");
         return *token;
     }
 
     if (c == '&')
     {
         *token = makeToken(lexer, TOKEN_AMPERSAND, state);
-        // logMessage("INFO", __LINE__, "Lexer", "Ampersand token created");
         return *token;
     }
     Token symToken = symbolChar(lexer, c, state);
     if (symToken.type != TOKEN_UNKNOWN)
     {
         *token = symToken;
-        // logMessage("INFO", __LINE__, "Lexer", "Symbol token created");
         return *token;
     }
 
-    logMessage("ERROR", __LINE__, "Lexer", "Unexpected character: %c", c);
+    logMessage(LMI, "ERROR", "Lexer", "Unexpected character: %c", c);
     return identifier(lexer, state);
 }
 // </nextToken>
@@ -384,7 +425,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
     token.line = lexer->line;
     token.column = lexer->column;
 
-    // logMessage("INFO", __LINE__, "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
+    // logMessage(LMI, "INFO", "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
     return token;
 }
 // </makeToken>
@@ -403,14 +444,31 @@ Token errorToken(Lexer *lexer, const char *message, CompilerState *state)
 // </errorToken>
 
 // <number>
-Token number(Lexer *lexer, CompilerState *state)
+Token number(Lexer *lexer, CompilerState *state, bool isNegative)
 {
+    if (isNegative)
+    {
+        advance(lexer, state); // Consume the minus sign
+    }
+
     while (isDigit(peek(lexer, state)))
     {
         advance(lexer, state);
     }
+
     Token token = makeToken(lexer, TOKEN_INT_LITERAL, state);
-    // printf("[Lexer] Number token: %.*s\n", token.length, token.start);
+    if (isNegative)
+    {
+        // Prepend the minus sign to the lexeme
+        char *negativeLexeme = (char *)malloc(token.length + 2); // +1 for '-' and +1 for '\0'
+        negativeLexeme[0] = '-';
+        strncpy(negativeLexeme + 1, token.lexeme, token.length);
+        negativeLexeme[token.length + 1] = '\0';
+
+        token.lexeme = negativeLexeme;
+        token.length += 1;
+    }
+
     return token;
 }
 // </number>
@@ -698,7 +756,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
     {
         if (peekNext(lexer, state) == ']')
         {
-            logMessage("INFO", __LINE__, "Lexer", "Parsing array type...");
+            logMessage(LMI, "INFO", "Lexer", "Parsing array type...");
             advance(lexer, state);
             // append the `[]` to the data type
             char *arrayType = (char *)malloc(strlen(dataType) + 2);
@@ -710,7 +768,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
         }
         if (isDigit(peekNext(lexer, state)))
         {
-            logMessage("INFO", __LINE__, "Lexer", "Parsing array index...");
+            logMessage(LMI, "INFO", "Lexer", "Parsing array index...");
             while (isDigit(peek(lexer, state)))
             {
                 advance(lexer, state);

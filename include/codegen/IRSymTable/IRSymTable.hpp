@@ -126,6 +126,7 @@ namespace Cryo
         std::unordered_map<std::string, STParameter> parameterNode;
         std::unordered_map<std::string, STStruct> structNode;
         std::unordered_map<std::string, STClass> classNode;
+        
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program

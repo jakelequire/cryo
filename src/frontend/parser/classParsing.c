@@ -14,65 +14,77 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/cxx/IDGen.hpp"
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 
 ASTNode *parseClassDeclaration(bool isStatic,
-                               Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+                               Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Parsing class declaration");
-    consume(__LINE__, lexer, TOKEN_KW_CLASS, "Expected `class` keyword.", "parseclassNodearation", table, arena, state, typeTable, context);
+    logMessage(LMI, "INFO", "Parser", "Parsing class declaration");
+    consume(__LINE__, lexer, TOKEN_KW_CLASS, "Expected `class` keyword.", "parseclassNodearation", arena, state, typeTable, context);
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier for class name.", "parseclassNodearation", table, arena, state, lexer, lexer->source, typeTable);
+        parsingError("Expected an identifier for class name.", "parseclassNodearation", arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
-    char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    logMessage("INFO", __LINE__, "Parser", "Class name: %s", className);
+    const char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage(LMI, "INFO", "Parser", "Class name: %s", className);
 
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for class name.", "parseclassNodearation", table, arena, state, typeTable, context);
+    InitClassDeclaration(globalTable, className);
+    createClassScope(context, className);
+
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for class name.", "parseclassNodearation", arena, state, typeTable, context);
 
     ASTNode *classNode = createClassDeclarationNode(className, arena, state, typeTable, lexer);
     if (!classNode)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Failed to create class declaration node.");
-        parsingError("Failed to create class declaration node.", "parseclassNodearation", table, arena, state, lexer, lexer->source, typeTable);
+        logMessage(LMI, "ERROR", "Parser", "Failed to create class declaration node.");
+        parsingError("Failed to create class declaration node.", "parseclassNodearation", arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
     clearThisContext(context, typeTable);
     setThisContext(context, className, NODE_CLASS, typeTable);
 
-    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start class body.", "parseclassNodearation", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start class body.", "parseclassNodearation", arena, state, typeTable, context);
 
-    ASTNode *classBody = parseClassBody(classNode, className, isStatic, lexer, table, context, arena, state, typeTable);
+    ASTNode *classBody = parseClassBody(classNode, className, isStatic, lexer, context, arena, state, typeTable, globalTable);
     if (!classBody)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Failed to parse class body.");
-        parsingError("Failed to parse class body.", "parseclassNodearation", table, arena, state, lexer, lexer->source, typeTable);
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse class body.");
+        parsingError("Failed to parse class body.", "parseclassNodearation", arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
     DataType *classType = createClassDataType(className, classNode->data.classNode);
+    if (!classType)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to create class data type.");
+        parsingError("Failed to create class data type.", "parseclassNodearation", arena, state, lexer, lexer->source, typeTable, globalTable);
+        CONDITION_FAILED;
+    }
+    classNode->data.classNode->type = classType;
+    classNode->data.classNode->type->container->custom.name = strdup(className);
+    classNode->data.classNode->type->container->primitive = PRIM_CUSTOM;
+    classNode->data.classNode->type->container->custom.classDef->classNode = classNode;
 
-    // Add to the symbol table
-    addASTNodeSymbol(table, classNode, arena);
-    // Add to the TypeTable
-    addTypeToTypeTable(typeTable, className, classType);
+    CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
+
     // Clear the context
     clearThisContext(context, typeTable);
-
-    // Add the class type to the node
-    addDataTypeToClassNode(classNode, classType);
+    // Clear Scope
+    clearScopeContext(context);
 
     return classNode;
 }
 
 ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic,
-                        Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+                        Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Parsing class body...");
+    logMessage(LMI, "INFO", "Parser", "Parsing class body...");
 
     int privateMethodCount = 0;
     int publicMethodCount = 0;
@@ -91,11 +103,11 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
         case TOKEN_KW_CONSTRUCTOR:
         {
             ConstructorMetaData *constructorMetaData = createConstructorMetaData(className, NODE_CLASS, false);
-            ASTNode *constructor = parseConstructor(lexer, table, context, arena, state, constructorMetaData, typeTable);
+            ASTNode *constructor = parseConstructor(lexer, context, arena, state, constructorMetaData, typeTable, globalTable);
             if (!constructor)
             {
-                logMessage("ERROR", __LINE__, "Parser", "Failed to parse method declaration.");
-                parsingError("Failed to parse method declaration.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
+                logMessage(LMI, "ERROR", "Parser", "Failed to parse method declaration.");
+                parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
                 CONDITION_FAILED;
             }
 
@@ -112,14 +124,24 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
         // Properties: { public, private, protected } {?static} <identifier>: <type> = <?value>; (Optional)
         // Methods: { public, private, protected } {?static} <identifier>(<params>) { <body> }
         case TOKEN_KW_PUBLIC:
+        case TOKEN_KW_PRIVATE:
+        case TOKEN_KW_PROTECTED:
         {
+            CryoVisibilityType visibility;
+            if (lexer->currentToken.type == TOKEN_KW_PUBLIC)
+                visibility = VISIBILITY_PUBLIC;
+            else if (lexer->currentToken.type == TOKEN_KW_PRIVATE)
+                visibility = VISIBILITY_PRIVATE;
+            else
+                visibility = VISIBILITY_PROTECTED;
+
             bool isStatic = false;
-            consume(__LINE__, lexer, TOKEN_KW_PUBLIC, "Expected `public` keyword.", "parseClassBody", table, arena, state, typeTable, context);
+            consume(__LINE__, lexer, lexer->currentToken.type, "Expected visibility keyword.", "parseClassBody", arena, state, typeTable, context);
             if (lexer->currentToken.type == TOKEN_KW_STATIC)
             {
-                logMessage("INFO", __LINE__, "Parser", "Parsing static method or property...");
+                logMessage(LMI, "INFO", "Parser", "Parsing static method or property...");
                 isStatic = true;
-                consume(__LINE__, lexer, TOKEN_KW_STATIC, "Expected `static` keyword.", "parseClassBody", table, arena, state, typeTable, context);
+                consume(__LINE__, lexer, TOKEN_KW_STATIC, "Expected `static` keyword.", "parseClassBody", arena, state, typeTable, context);
             }
 
             if (lexer->currentToken.type == TOKEN_IDENTIFIER)
@@ -130,23 +152,124 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_COLON)
                 {
                     // Consume the identifier
-                    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseClassBody", table, arena, state, typeTable, context);
+                    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseClassBody", arena, state, typeTable, context);
                     // Move past the `:` token
                     getNextToken(lexer, arena, state, typeTable);
 
-                    logMessage("INFO", __LINE__, "Parser", "Parsing property declaration...");
-                    DataType *type = parseType(lexer, context, table, arena, state, typeTable);
+                    logMessage(LMI, "INFO", "Parser", "Parsing property declaration...");
+                    DataType *type = parseType(lexer, context, arena, state, typeTable, globalTable);
                     type->container->custom.name = strdup(identifier);
 
                     // Move past the data type token
                     getNextToken(lexer, arena, state, typeTable);
+
+                    // Check for initializer
+                    ASTNode *initializer = NULL;
+                    if (lexer->currentToken.type == TOKEN_EQUAL)
+                    {
+                        consume(__LINE__, lexer, TOKEN_EQUAL, "Expected '=' for property initializer.", "parseClassBody", arena, state, typeTable, context);
+                        initializer = parseExpression(lexer, context, arena, state, typeTable, globalTable);
+                    }
+
                     // Consume the semicolon
-                    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseClassBody", table, arena, state, typeTable, context);
+                    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseClassBody", arena, state, typeTable, context);
 
-                    ASTNode *propNode = createFieldNode(identifier, type, className, NODE_CLASS, NULL, arena, state, typeTable, lexer);
-                    addPropertyToClass(classNode, propNode, VISIBILITY_PUBLIC, arena, state, typeTable, context);
+                    ASTNode *propNode = createFieldNode(identifier, type, className, NODE_CLASS, initializer, arena, state, typeTable, lexer);
+                    addPropertyToClass(classNode, propNode, visibility, arena, state, typeTable, context, globalTable);
 
-                    logMessage("INFO", __LINE__, "Parser", "Property added to class.");
+                    logMessage(LMI, "INFO", "Parser", "Property added to class.");
+
+                    if (visibility == VISIBILITY_PUBLIC)
+                        publicPropertyCount++;
+                    else if (visibility == VISIBILITY_PRIVATE)
+                        privatePropertyCount++;
+                    else
+                        protectedPropertyCount++;
+
+                    break;
+                }
+
+                // For Methods
+                else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN)
+                {
+                    logMessage(LMI, "INFO", "Parser", "Parsing method declaration...");
+                    ASTNode *methodNode = parseMethodDeclaration(isStatic, className, lexer, context, arena, state, typeTable, globalTable);
+                    if (!methodNode)
+                    {
+                        logMessage(LMI, "ERROR", "Parser", "Failed to parse method declaration.");
+                        parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
+                        CONDITION_FAILED;
+                    }
+                    logMessage(LMI, "INFO", "Parser", "Method node created.");
+                    addMethodToClass(classNode, methodNode, visibility, arena, state, typeTable, context, globalTable);
+
+                    if (visibility == VISIBILITY_PUBLIC)
+                        publicMethodCount++;
+                    else if (visibility == VISIBILITY_PRIVATE)
+                        privateMethodCount++;
+                    else
+                        protectedMethodCount++;
+
+                    break;
+                }
+                // Unknown
+                else
+                {
+                    printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
+                    parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
+                    CONDITION_FAILED;
+                }
+            }
+            else
+            {
+                printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
+                parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
+                CONDITION_FAILED;
+            }
+
+            break;
+        }
+
+        case TOKEN_KW_STATIC:
+        {
+            // Handle static properties and methods
+            bool isStatic = true;
+            consume(__LINE__, lexer, TOKEN_KW_STATIC, "Expected `static` keyword.", "parseClassBody", arena, state, typeTable, context);
+
+            if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+            {
+                char *identifier = strndup(lexer->currentToken.start, lexer->currentToken.length);
+
+                // For Properties
+                if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_COLON)
+                {
+                    // Consume the identifier
+                    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseClassBody", arena, state, typeTable, context);
+                    // Move past the `:` token
+                    getNextToken(lexer, arena, state, typeTable);
+
+                    logMessage(LMI, "INFO", "Parser", "Parsing static property declaration...");
+                    DataType *type = parseType(lexer, context, arena, state, typeTable, globalTable);
+                    type->container->custom.name = strdup(identifier);
+
+                    // Move past the data type token
+                    getNextToken(lexer, arena, state, typeTable);
+
+                    // Check for initializer
+                    ASTNode *initializer = NULL;
+                    if (lexer->currentToken.type == TOKEN_EQUAL)
+                    {
+                        consume(__LINE__, lexer, TOKEN_EQUAL, "Expected '=' for property initializer.", "parseClassBody", arena, state, typeTable, context);
+                        initializer = parseExpression(lexer, context, arena, state, typeTable, globalTable);
+                    }
+
+                    // Consume the semicolon
+                    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseClassBody", arena, state, typeTable, context);
+
+                    ASTNode *propNode = createFieldNode(identifier, type, className, NODE_CLASS, initializer, arena, state, typeTable, lexer);
+                    addPropertyToClass(classNode, propNode, VISIBILITY_PUBLIC, arena, state, typeTable, context, globalTable);
+
+                    logMessage(LMI, "INFO", "Parser", "Static property added to class.");
 
                     publicPropertyCount++;
 
@@ -156,53 +279,37 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 // For Methods
                 else if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LPAREN)
                 {
-                    logMessage("INFO", __LINE__, "Parser", "Parsing method declaration...");
-                    ASTNode *methodNode = parseMethodDeclaration(isStatic, lexer, table, context, arena, state, typeTable);
+                    logMessage(LMI, "INFO", "Parser", "Parsing static method declaration...");
+                    ASTNode *methodNode = parseMethodDeclaration(isStatic, className, lexer, context, arena, state, typeTable, globalTable);
                     if (!methodNode)
                     {
-                        logMessage("ERROR", __LINE__, "Parser", "Failed to parse method declaration.");
-                        parsingError("Failed to parse method declaration.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
+                        logMessage(LMI, "ERROR", "Parser", "Failed to parse method declaration.");
+                        parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
                         CONDITION_FAILED;
                     }
-                    logMessage("INFO", __LINE__, "Parser", "Method node created.");
-                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, typeTable, context);
+                    logMessage(LMI, "INFO", "Parser", "Static method node created.");
+                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, typeTable, context, globalTable);
 
                     publicMethodCount++;
 
                     break;
                 }
-
                 // Unknown
                 else
                 {
                     printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-                    parsingError("Unexpected token in class body.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
+                    parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
                     CONDITION_FAILED;
                 }
             }
             else
             {
                 printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-                parsingError("Unexpected token in class body.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
+                parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
                 CONDITION_FAILED;
             }
 
             break;
-        }
-
-        case TOKEN_KW_PRIVATE:
-        {
-            // TODO: Will implement later
-        }
-
-        case TOKEN_KW_PROTECTED:
-        {
-            // TODO: Will implement later
-        }
-
-        case TOKEN_KW_STATIC:
-        {
-            // TODO: Will implement later
         }
 
         case TOKEN_IDENTIFIER:
@@ -213,7 +320,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
         default:
         {
             printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-            parsingError("Unexpected token in class body.", "parseClassBody", table, arena, state, lexer, lexer->source, typeTable);
+            parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
         }
@@ -222,8 +329,8 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
     int propertyCount = privatePropertyCount + publicPropertyCount + protectedPropertyCount;
     int methodCount = privateMethodCount + publicMethodCount + protectedMethodCount;
 
-    logMessage("INFO", __LINE__, "Parser", "Property count: %i", propertyCount);
-    logMessage("INFO", __LINE__, "Parser", "Method count: %i", methodCount);
+    logMessage(LMI, "INFO", "Parser", "Property count: %i", propertyCount);
+    logMessage(LMI, "INFO", "Parser", "Method count: %i", methodCount);
 
     // Update the constructor flag with the local variable flag
     classNode->data.classNode->hasConstructor = hasConstructor;
@@ -242,8 +349,8 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 
     logASTNode(classNode);
 
-    consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` to end class body.", "parseClassBody", table, arena, state, typeTable, context);
-    logMessage("INFO", __LINE__, "Parser", "Finished parsing class body.");
+    consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` to end class body.", "parseClassBody", arena, state, typeTable, context);
+    logMessage(LMI, "INFO", "Parser", "Finished parsing class body.");
     return classNode;
 }
 
@@ -256,7 +363,7 @@ static void ensureCapacity(ASTNode **array, int *capacity, int count, int increm
         ASTNode **newArray = (ASTNode **)realloc(array, *capacity * sizeof(ASTNode *));
         if (!newArray)
         {
-            logMessage("ERROR", __LINE__, "Memory", "Failed to reallocate memory for class members");
+            logMessage(LMI, "ERROR", "Memory", "Failed to reallocate memory for class members");
             return;
         }
         array = newArray;
@@ -265,10 +372,10 @@ static void ensureCapacity(ASTNode **array, int *capacity, int count, int increm
 
 void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding constructor to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding constructor to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
@@ -278,54 +385,54 @@ void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *
         classData->constructor = (ASTNode *)calloc(1, sizeof(ASTNode));
         if (!classData->constructor)
         {
-            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate constructors");
+            logMessage(LMI, "ERROR", "Memory", "Failed to allocate constructors");
             return;
         }
     }
     classData->constructor = constructorNode;
 
-    logMessage("INFO", __LINE__, "Parser", "Constructor added to class.");
+    logMessage(LMI, "INFO", "Parser", "Constructor added to class.");
 }
 
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
+                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding method to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
     switch (visibility)
     {
     case VISIBILITY_PRIVATE:
-        logMessage("INFO", __LINE__, "Parser", "Adding private method to class...");
+        logMessage(LMI, "INFO", "Parser", "Adding private method to class...");
         addPrivateMethod(classNode, methodNode, arena, state, typeTable, context);
         break;
     case VISIBILITY_PUBLIC:
-        logMessage("INFO", __LINE__, "Parser", "Adding public method to class...");
+        logMessage(LMI, "INFO", "Parser", "Adding public method to class...");
         addPublicMethod(classNode, methodNode, arena, state, typeTable, context);
         break;
     case VISIBILITY_PROTECTED:
-        logMessage("INFO", __LINE__, "Parser", "Adding protected method to class...");
+        logMessage(LMI, "INFO", "Parser", "Adding protected method to class...");
         addProtectedMethod(classNode, methodNode, arena, state, typeTable, context);
         break;
     default:
-        logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
+        logMessage(LMI, "ERROR", "Parser", "Invalid visibility type");
     }
 
-    logMessage("INFO", __LINE__, "Parser", "Method added to class.");
+    logMessage(LMI, "INFO", "Parser", "Method added to class.");
     return;
 }
 
 void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
-                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
+                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding property to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
@@ -341,17 +448,23 @@ void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityTyp
         addProtectedProperty(classNode, propNode, arena, state, typeTable, context);
         break;
     default:
-        logMessage("ERROR", __LINE__, "Parser", "Invalid visibility type");
+        logMessage(LMI, "ERROR", "Parser", "Invalid visibility type");
     }
+
+    const char *className = classNode->data.classNode->name;
+    AddPropertyToClass(globalTable, className, propNode); // Update Global Symbol Table
+
+    logMessage(LMI, "INFO", "Parser", "Property added to class.");
+    return;
 }
 
 void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
                       Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding private method to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding private method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
@@ -361,7 +474,7 @@ void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
         classData->privateMembers = (PrivateMembers *)calloc(1, sizeof(PrivateMembers));
         if (!classData->privateMembers)
         {
-            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate private members");
+            logMessage(LMI, "ERROR", "Memory", "Failed to allocate private members");
             return;
         }
     }
@@ -376,28 +489,28 @@ void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
 void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding public method to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding public method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
-    logMessage("INFO", __LINE__, "Parser", "Setting public method to class...");
+    logMessage(LMI, "INFO", "Parser", "Setting public method to class...");
     classNode->data.classNode->publicMembers->methods[classNode->data.classNode->publicMembers->methodCount++] = methodNode;
 
     addMethodToThisContext(context, methodNode, typeTable);
-    logMessage("INFO", __LINE__, "Parser", "Public method added to class.");
+    logMessage(LMI, "INFO", "Parser", "Public method added to class.");
     return;
 }
 
 void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
                         Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding protected method to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding protected method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
@@ -407,7 +520,7 @@ void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
         classData->protectedMembers = (ProtectedMembers *)calloc(1, sizeof(ProtectedMembers));
         if (!classData->protectedMembers)
         {
-            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate protected members");
+            logMessage(LMI, "ERROR", "Memory", "Failed to allocate protected members");
             return;
         }
     }
@@ -422,10 +535,10 @@ void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
 void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding public property to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding public property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
@@ -437,10 +550,10 @@ void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
 void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
                         Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding private property to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding private property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
 
@@ -450,7 +563,7 @@ void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
         classData->privateMembers = (PrivateMembers *)calloc(1, sizeof(PrivateMembers));
         if (!classData->privateMembers)
         {
-            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate private members");
+            logMessage(LMI, "ERROR", "Memory", "Failed to allocate private members");
             return;
         }
     }
@@ -461,10 +574,10 @@ void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
 void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
                           Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
-    logMessage("INFO", __LINE__, "Parser", "Adding protected property to class...");
+    logMessage(LMI, "INFO", "Parser", "Adding protected property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
+        logMessage(LMI, "ERROR", "Parser", "Expected class declaration node.");
         return;
     }
     ClassNode *classData = classNode->data.classNode;
@@ -473,7 +586,7 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
         classData->protectedMembers = (ProtectedMembers *)calloc(1, sizeof(ProtectedMembers));
         if (!classData->protectedMembers)
         {
-            logMessage("ERROR", __LINE__, "Memory", "Failed to allocate protected members");
+            logMessage(LMI, "ERROR", "Memory", "Failed to allocate protected members");
             return;
         }
     }
@@ -485,49 +598,43 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
     classData->protectedMembers->properties[classData->protectedMembers->propertyCount++] = propNode;
 }
 
-void addDataTypeToClassNode(ASTNode *classNode, DataType *type)
-{
-    logMessage("INFO", __LINE__, "Parser", "Adding data type to class node...");
-    if (classNode->metaData->type != NODE_CLASS)
-    {
-        logMessage("ERROR", __LINE__, "Parser", "Expected class declaration node.");
-        return;
-    }
-
-    classNode->data.classNode->type = type;
-    logMessage("INFO", __LINE__, "Parser", "Data type added to class node.");
-}
-
 ASTNode *parseMethodScopeResolution(const char *scopeName,
-                                    Lexer *lexer, CryoSymbolTable *table, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
+                                    Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    logMessage("INFO", __LINE__, "Parser", "Parsing method scope resolution...");
+    logMessage(LMI, "INFO", "Parser", "Parsing method scope resolution...");
 
     const char *methodName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseMethodScopeResolution", table, arena, state, typeTable, context);
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseMethodScopeResolution", arena, state, typeTable, context);
 
-    logMessage("INFO", __LINE__, "Parser", "Method name: %s", methodName);
+    logMessage(LMI, "INFO", "Parser", "Method name: %s", methodName);
 
-    // Look up the method in the symbol table
-    CryoSymbol *sym = resolveModuleSymbol(scopeName, methodName, table, arena);
-    if (!sym)
+    Symbol *symbol = FindMethodSymbol(globalTable, methodName, strdup(scopeName), CLASS_TYPE);
+    if (!symbol)
     {
-        logMessage("ERROR", __LINE__, "Parser", "Failed to resolve method symbol.");
-        parsingError("Failed to resolve method symbol.", "parseMethodScopeResolution", table, arena, state, lexer, lexer->source, typeTable);
+        logMessage(LMI, "ERROR", "Parser", "Failed to find method symbol.");
+        parsingError("Failed to find method symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, typeTable, globalTable);
         CONDITION_FAILED;
     }
 
-    logASTNode(sym->node);
+    ASTNode *methodNode = GetASTNodeFromSymbol(globalTable, symbol);
+    if (!methodNode)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to get method node from symbol.");
+        parsingError("Failed to get method node from symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, typeTable, globalTable);
+        CONDITION_FAILED;
+    }
+
+    DataType *methodType = methodNode->data.method->type;
 
     // Check if this is a static method
-    if (sym->node->metaData->type == NODE_METHOD)
+    if (methodNode->metaData->type == NODE_METHOD)
     {
-        bool isStaticMethod = sym->node->data.method->isStatic;
-        ASTNode *argList = parseArgumentList(lexer, table, context, arena, state, typeTable);
+        bool isStaticMethod = methodNode->data.method->isStatic;
+        ASTNode *argList = parseArgumentList(lexer, context, arena, state, typeTable, globalTable);
         if (!argList)
         {
-            logMessage("ERROR", __LINE__, "Parser", "Failed to parse method arguments.");
-            parsingError("Failed to parse method arguments.", "parseMethodScopeResolution", table, arena, state, lexer, lexer->source, typeTable);
+            logMessage(LMI, "ERROR", "Parser", "Failed to parse method arguments.");
+            parsingError("Failed to parse method arguments.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
         ASTNode **args = argList->data.argList->args;
@@ -537,24 +644,52 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
         DataType *classType = findClassTypeFromName(scopeName, typeTable);
         if (!classType)
         {
-            logMessage("ERROR", __LINE__, "Parser", "Failed to find class type.");
-            parsingError("Failed to find class type.", "parseMethodScopeResolution", table, arena, state, lexer, lexer->source, typeTable);
+            logMessage(LMI, "ERROR", "Parser", "Failed to find class type.");
+            parsingError("Failed to find class type.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
 
         // Create the method call node
-        ASTNode *methodCall = createMethodCallNode(NULL, sym->type, classType, methodName, args, argCount, isStaticMethod,
+        ASTNode *methodCall = createMethodCallNode(NULL, methodType, classType, methodName, args, argCount, isStaticMethod,
                                                    arena, state, typeTable, lexer);
         if (!methodCall)
         {
-            logMessage("ERROR", __LINE__, "Parser", "Failed to create method call node.");
-            parsingError("Failed to create method call node.", "parseMethodScopeResolution", table, arena, state, lexer, lexer->source, typeTable);
+            logMessage(LMI, "ERROR", "Parser", "Failed to create method call node.");
+            parsingError("Failed to create method call node.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, typeTable, globalTable);
             CONDITION_FAILED;
         }
+
+        const char *classScopeID = Generate64BitHashID(scopeName);
+        Symbol *classSym = FindSymbol(globalTable, scopeName, classScopeID);
+        if (!classSym)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to find class symbol.");
+            parsingError("Failed to find class symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, typeTable, globalTable);
+            CONDITION_FAILED;
+        }
+        ASTNode *classASTNode = GetASTNodeFromSymbol(globalTable, classSym);
+        methodCall->data.methodCall->accessorObj = classASTNode;
 
         logASTNode(methodCall);
 
         return methodCall;
     }
     DEBUG_BREAKPOINT;
+}
+
+ASTNode *createClassPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propName, DataType *typeOfNode,
+                                       Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+{
+    logMessage(LMI, "INFO", "Parser", "Creating class property access node...");
+
+    ASTNode *propAccess = createPropertyAccessNode(object, propName, arena, state, typeTable, lexer);
+    if (!propAccess)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to create property access node.");
+        parsingError("Failed to create property access node.", "createClassPropertyAccessNode", arena, state, lexer, lexer->source, typeTable, NULL);
+        CONDITION_FAILED;
+    }
+
+    logASTNode(propAccess);
+    return propAccess;
 }

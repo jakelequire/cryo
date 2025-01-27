@@ -22,6 +22,8 @@
 /// typedef struct CryoNamespace
 /// {
 ///     char *name;
+///     const char *parentName;
+///     bool hasParent;
 /// } CryoNamespace;
 ///```
 CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state)
@@ -34,6 +36,8 @@ CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *sta
     }
 
     node->name = "defaulted";
+    node->parentName = (const char *)malloc(64 * sizeof(char));
+    node->hasParent = false;
 
     return node;
 }
@@ -351,6 +355,12 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
     node->functionType = wrapTypeContainer(createTypeContainer());
+    node->paramCount = 0;
+    node->paramCapacity = PARAM_CAPACITY;
+    node->paramTypes = NULL;
+
+    node->parentScopeID = (const char *)malloc(sizeof(char) * 65);
+    node->functionScopeID = (const char *)malloc(sizeof(char) * 65);
 
     return node;
 }
@@ -606,6 +616,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
     node->type = wrapTypeContainer(createTypeContainer());
     node->isRef = false;
     node->varName = strdup(varName);
+    node->scopeID = (char *)calloc(1, sizeof(char));
 
     node->hasUnaryOp = false;
     node->unaryOp = NULL;
@@ -878,7 +889,7 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
     ;
     node->newVarNode = NULL;
 
-    logMessage("INFO", __LINE__, "Containers", "Created VariableReassignmentNode");
+    logMessage(LMI, "INFO", "Containers", "Created VariableReassignmentNode");
 
     return node;
 }
@@ -1166,6 +1177,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
+    node->paramTypes = NULL;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
     node->type = wrapTypeContainer(createTypeContainer());
@@ -1426,6 +1438,71 @@ ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
     node->genericTypes = (DataType **)calloc(1, sizeof(DataType *) * GENERIC_CAPACITY);
     node->genericCount = 0;
     node->genericCapacity = GENERIC_CAPACITY;
+
+    return node;
+}
+
+NullNode *createNullNodeContainer(Arena *arena, CompilerState *state)
+{
+    NullNode *node = (NullNode *)ARENA_ALLOC(arena, sizeof(NullNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate NullNode node.");
+        return NULL;
+    }
+
+    node->type = createPrimitiveNullType();
+
+    return node;
+}
+
+TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state)
+{
+    TypeofNode *node = (TypeofNode *)ARENA_ALLOC(arena, sizeof(TypeofNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate TypeofNode node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
+
+    return node;
+}
+
+UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state)
+{
+    UsingNode *node = (UsingNode *)ARENA_ALLOC(arena, sizeof(UsingNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate UsingNode node.");
+        return NULL;
+    }
+
+    node->primaryModule = (const char *)calloc(1, sizeof(char));
+    node->secondaryModuleCount = 0;
+    node->secondaryModuleCapacity = MAX_USING_MODULES;
+    node->secondaryModules = (const char **)calloc(1, sizeof(char *) * MAX_USING_MODULES);
+
+    node->filePath = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state)
+{
+    ModuleNode *node = (ModuleNode *)ARENA_ALLOC(arena, sizeof(ModuleNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ModuleNode node.");
+        return NULL;
+    }
+
+    node->moduleName = (char *)calloc(1, sizeof(char));
+    node->moduleDir = (char *)calloc(1, sizeof(char));
+    node->modulePath = (char *)calloc(1, sizeof(char));
+    node->moduleFile = (char *)calloc(1, sizeof(char));
 
     return node;
 }

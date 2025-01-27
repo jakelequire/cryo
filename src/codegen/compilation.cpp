@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "codegen/utility/highlighter.hpp"
 #include "codegen/oldCodeGen.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -29,47 +30,62 @@ namespace Cryo
 
         // Hoist the declarations from the linker
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Hoisting Declarations");
-        linker->hoistDeclarations(compiler.getContext().module.get());
+        // linker->hoistDeclarations(compiler.getContext().module.get());
 
-        if (llvm::verifyModule(*cryoContext.module, nullptr))
-        {
-            LLVM_MODULE_FAILED_MESSAGE_START;
-
-            LLVMIRHighlighter highlighter;
-            llvm::formatted_raw_ostream formatted_errs(llvm::errs());
-            highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
-
-            LLVM_MODULE_FAILED_MESSAGE_END;
-            LLVM_MODULE_ERROR_START;
-            // Get the error itself without the module showing up
-            std::string errorMessage = getErrorMessage();
-            if (!errorMessage.empty())
-            {
-                llvm::errs() << errorMessage;
-                std::cout << "\n\n";
-            }
-            LLVM_MODULE_ERROR_END;
-            std::cout << "\n\n";
-
-            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
-
-            // Output the broken IR to a file
-            outputFailedIR();
-
-            exit(1);
-        }
+        // if (llvm::verifyModule(*cryoContext.module, nullptr))
+        // {
+        //     DEBUG_PRINT_FILTER({
+        //         LLVM_MODULE_FAILED_MESSAGE_START;
+        //
+        //         LLVMIRHighlighter highlighter;
+        //         llvm::formatted_raw_ostream formatted_errs(llvm::errs());
+        //         highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
+        //
+        //         LLVM_MODULE_FAILED_MESSAGE_END;
+        //         LLVM_MODULE_ERROR_START;
+        //     });
+        //     // Get the error itself without the module showing up
+        //     std::string errorMessage = getErrorMessage();
+        //     if (!errorMessage.empty())
+        //     {
+        //         llvm::errs() << errorMessage;
+        //         std::cout << "\n\n";
+        //     }
+        //     DEBUG_PRINT_FILTER({
+        //         LLVM_MODULE_ERROR_END;
+        //         std::cout << "\n\n";
+        //     });
+        //
+        //     DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
+        //
+        //     // Output the broken IR to a file
+        //     // outputFailedIR();
+        //
+        //     exit(1);
+        // }
 
         bool isPreprocessing = compiler.isPreprocessing;
         if (isPreprocessing)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Preprocessing Compilation");
-            std::string outputPath = compiler.customOutputPath;
-            compileUniquePath(outputPath);
+            // std::string outputPath = compiler.customOutputPath;
+            // compileUniquePath(outputPath);
+
+            linker->addPreprocessingModule(cryoContext.module.get());
             return;
         }
-
-        std::cout << "\n Getting the output path\n";
-        const char *unsafe_filePath = strdup(settings->inputFile);
+        bool isProject = settings->isProject;
+        char *unsafe_filePath = (char *)malloc(sizeof(char) * 1024);
+        if(isProject)
+        {
+            strcpy(unsafe_filePath, settings->projectDir);
+            strcat(unsafe_filePath, "/src/main.cryo");
+        }
+        else
+        {
+            strcpy(unsafe_filePath, "/");
+            strcpy(unsafe_filePath, settings->inputFilePath);
+        }
         std::string outputFilePath(unsafe_filePath);
         std::filesystem::path cwd = std::filesystem::current_path();
 
@@ -83,11 +99,13 @@ namespace Cryo
         std::string outputFileIR = trimmedFileExt + ".ll";
         std::string outputFileDir = outputPath + outputFileIR;
 
-        std::cout << "\n\n\n Output Path: " << outputPath << "\n";
-        std::cout << "Trimmed File: " << trimmedOutputFile << "\n";
-        std::cout << "Trimmed File Ext: " << trimmedFileExt << "\n";
-        std::cout << "Output File IR: " << outputFileIR << "\n";
-        std::cout << "Output File Dir: " << outputFileDir << "\n\n\n";
+        DEBUG_PRINT_FILTER({
+            std::cout << "\n\n\n Output Path: " << outputPath << "\n";
+            std::cout << "Trimmed File: " << trimmedOutputFile << "\n";
+            std::cout << "Trimmed File Ext: " << trimmedFileExt << "\n";
+            std::cout << "Output File IR: " << outputFileIR << "\n";
+            std::cout << "Output File Dir: " << outputFileDir << "\n\n\n";
+        });
         if (settings->customOutputPath)
         {
             // outputPath = std::string(settings->customOutputPath) + "/" + outputFile;
@@ -101,7 +119,6 @@ namespace Cryo
             return;
         }
 
-        std::cout << "\n\n\n <!> <!> <!> \nFINAL OUTPUT PATH: " << outputPath << "\n\n\n";
         // Ensure the output directory exists
         bool didMkDir = std::filesystem::create_directories(outputPath);
         if (!didMkDir)
@@ -120,19 +137,23 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Error opening file for writing: " + EC.message());
             return;
         }
-        LLVM_MODULE_COMPLETE_START;
 
-        LLVMIRHighlighter highlighter;
-        // We need to print the highlighted version to the console
-        // and the raw version to the file
-        cryoContext.module->print(dest, nullptr);
-        llvm::formatted_raw_ostream formatted_out(llvm::outs());
-        highlighter.printWithHighlighting(cryoContext.module.get(), formatted_out);
-        LLVM_MODULE_COMPLETE_END;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
 
+        LoadStoreWhitespaceAnnotator LSWA;
+        cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
         dest.close();
 
+        DEBUG_PRINT_FILTER({
+            LLVMIRHighlighter highlighter;
+            llvm::formatted_raw_ostream formatted_out(llvm::outs());
+            highlighter.printWithHighlighting(cryoContext.module.get(), formatted_out);
+            LLVM_MODULE_COMPLETE_END;
+        });
+
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Compilation Complete");
+
+        GetCXXLinker()->completeCodeGeneration(); // unsure if we want to signal this here but lets see !! :)
         return;
     }
 
@@ -154,14 +175,14 @@ namespace Cryo
             return;
         }
 
-        LLVM_MODULE_COMPLETE_START;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
         LoadStoreWhitespaceAnnotator LSWA;
 
         // Use the custom annotator when printing
         compiler.getContext().module->print(dest, &LSWA);
-        compiler.getContext().module->print(llvm::outs(), &LSWA);
+        DEBUG_PRINT_FILTER({ compiler.getContext().module->print(llvm::outs(), &LSWA); });
 
-        LLVM_MODULE_COMPLETE_END;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_END; });
 
         dest.close();
 
@@ -194,14 +215,14 @@ namespace Cryo
             return;
         }
 
-        LLVM_MODULE_COMPLETE_START;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
         LoadStoreWhitespaceAnnotator LSWA;
 
         // Use the custom annotator when printing
         compiler.getContext().module->print(dest, &LSWA);
-        compiler.getContext().module->print(llvm::outs(), &LSWA);
+        DEBUG_PRINT_FILTER({ compiler.getContext().module->print(llvm::outs(), &LSWA); });
 
-        LLVM_MODULE_COMPLETE_END;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_END; });
 
         dest.close();
 
@@ -227,13 +248,13 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Code CodeGen Complete");
 
-        LLVM_MODULE_COMPLETE_START;
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
         LoadStoreWhitespaceAnnotator LSWA;
 
         // Use the custom annotator when printing
         cryoContext.module->print(dest, &LSWA);
-        cryoContext.module->print(llvm::outs(), &LSWA);
-        LLVM_MODULE_COMPLETE_END;
+        DEBUG_PRINT_FILTER({ cryoContext.module->print(llvm::outs(), &LSWA); });
+        DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_END; });
 
         dest.close();
 
@@ -270,8 +291,10 @@ namespace Cryo
         }
         else
         {
-            std::cout << "\n>===------- LLVM IR Code -------===<\n"
-                      << std::endl;
+            DEBUG_PRINT_FILTER({
+                std::cout << "\n>===------- LLVM IR Code -------===<\n"
+                          << std::endl;
+            });
 
             compiler.getContext().getModules()->back()->print(dest, nullptr);
 
@@ -280,10 +303,12 @@ namespace Cryo
 
             // Use the custom annotator when printing
             compiler.getModule().print(dest, &LSWA);
-            compiler.getModule().print(llvm::outs(), &LSWA);
+            DEBUG_PRINT_FILTER({ compiler.getModule().print(llvm::outs(), &LSWA); });
 
-            std::cout << "\n>===------- End IR Code ------===<\n"
-                      << std::endl;
+            DEBUG_PRINT_FILTER({
+                std::cout << "\n>===------- End IR Code ------===<\n"
+                          << std::endl;
+            });
 
             dest.flush();
             dest.close();

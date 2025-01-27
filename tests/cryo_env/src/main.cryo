@@ -1,0 +1,6 @@
+namespace Main;
+
+function main(argc: int, argv: string[]): int {
+    printStr("Hello, World!");
+    return 0;
+}

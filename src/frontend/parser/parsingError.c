@@ -14,27 +14,24 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/misc/syntaxHighlighter.h"
 
 void parsingError(
     char *message,
     char *functionName,
-    CryoSymbolTable *table,
     Arena *arena,
     CompilerState *state,
     Lexer *lexer,
     const char *source,
-    TypeTable *typeTable)
+    TypeTable *typeTable,
+    CryoGlobalSymbolTable *globalTable)
 {
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
 
-    char *curModule = getCurrentNamespace(table);
-    if (!curModule)
-    {
-        curModule = "Unnamed";
-    }
+    const char *curModule = GetNamespace(globalTable);
 
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);
@@ -112,8 +109,8 @@ void parsingError(
     // Bottom border
     printf("%s╚══════════════════════════════════════════════════════════════════════════════╝%s\n\n", LIGHT_RED, COLOR_RESET);
 
-    printSymbolTable(table);
-
+    // printSymbolTable(table);
+    printGlobalSymbolTable(globalTable);
     exit(1);
 }
 
@@ -173,6 +170,6 @@ void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTab
 {
     // printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",
     //        CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start);
-    logMessage("DEBUG", __LINE__, "Parser", "Current Token: %s, Lexeme: %.*s",
+    logMessage(LMI, "INFO", "Parser", "Current Token: %s, Lexeme: %.*s",
                CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start);
 }

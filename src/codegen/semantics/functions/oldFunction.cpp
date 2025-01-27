@@ -169,8 +169,6 @@ namespace Cryo
         // Create the function type
         llvm::FunctionType *functionType = llvm::FunctionType::get(returnLLVMType, argTypes, false);
 
-        std::cout << "Function Type: " << std::endl;
-
         // Create the function
         llvm::Function *function = llvm::Function::Create(
             functionType,
@@ -193,7 +191,6 @@ namespace Cryo
         {
             // We are storing the aguments in the named values map
             std::string paramName = std::string(functionNode->params[i]->data.param->name);
-            std::cout << "Function Param Name: " << paramName << std::endl;
             ASTNode *paramNode = functionNode->params[i];
             arg.setName(paramName);
             llvm::Value *param = createParameter(&arg, argTypes[i], paramNode);
@@ -213,7 +210,6 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parsing Statement " + std::to_string(i + 1) + " of " + std::to_string(functionBody->data.functionBlock->statementCount));
             ASTNode *statement = functionBody->data.functionBlock->statements[i];
             CryoNodeType nodeType = statement->metaData->type;
-            std::cout << "Statement: " << CryoNodeTypeToString(statement->metaData->type) << std::endl;
 
             switch (nodeType)
             {
@@ -234,9 +230,6 @@ namespace Cryo
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
-
-                std::cout << "TypeOfDataType: " << std::string(TypeofDataTypeToString(returnType->container->baseType)) << std::endl;
-                std::cout << "PrimitiveType: " << std::string(PrimitiveDataTypeToString(returnType->container->primitive)) << std::endl;
 
                 switch (returnType->container->primitive)
                 {
@@ -291,7 +284,7 @@ namespace Cryo
                     }
                     default:
                     {
-                        std::cout << "Unknown return type node: " << CryoNodeTypeToString(returnTypeNode) << std::endl;
+                        DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
                         CONDITION_FAILED;
                     }
                     }
@@ -305,6 +298,13 @@ namespace Cryo
                     llvm::Value *returnValue = generator.getInitilizerValue(statement);
                     compiler.getContext().builder.CreateRet(returnValue);
 
+                    break;
+                }
+                case PRIM_ANY:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning any");
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
                     break;
                 }
                 default:
@@ -329,7 +329,8 @@ namespace Cryo
         if (!currentBlock->getTerminator())
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Adding terminator to function");
-            CONDITION_FAILED;
+            // Set the return type to void if the function is not terminated
+            compiler.getContext().builder.CreateRetVoid();
         }
         else
         {
@@ -411,7 +412,6 @@ namespace Cryo
         }
 
         CryoNodeType nodeType = returnNode->expression->metaData->type;
-        std::cout << "Return Node Type: " << CryoNodeTypeToString(nodeType) << std::endl;
 
         switch (nodeType)
         {
@@ -503,6 +503,27 @@ namespace Cryo
             {
                 cryoContext.builder.CreateRet(funcCallVal);
             }
+            break;
+        }
+        case NODE_NULL_LITERAL:
+        {
+            // Returning null is always valid unless the functions return type is void.
+            llvm::Type *returnType = cryoContext.currentFunction->getReturnType();
+            if (returnType->isVoidTy())
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Cannot return null from a void function");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *nullValue = llvm::Constant::getNullValue(returnType);
+            cryoContext.builder.CreateRet(nullValue);
+            break;
+        }
+        case NODE_BOOLEAN_LITERAL:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
+            llvm::Value *returnValue = generator.getInitilizerValue(node);
+            cryoContext.builder.CreateRet(returnValue);
             break;
         }
         default:
@@ -722,9 +743,6 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Parameter");
 
         std::string paramName = param->getName().str() + ".ptr";
-        std::cout << "Parameter Name: " << param->getName().str() << std::endl;
-        std::cout << "Parameter Type: " << std::endl;
-        std::cout << "Argument Type: " << std::endl;
 
         // llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(argTypes, param, paramName);
         llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, paramName);
@@ -771,7 +789,6 @@ namespace Cryo
 
         DataType *paramType = paramNode->data.param->type;
         llvm::Type *paramLLVMType = types.getType(paramType, 0);
-        std::cout << "Parameter Type: " << std::endl;
         DevDebugger::logLLVMType(paramLLVMType);
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Alloca Instruction");

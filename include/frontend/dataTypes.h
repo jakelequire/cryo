@@ -54,10 +54,13 @@ typedef struct Arena Arena;
 typedef struct DataType DataType;
 typedef struct TypeContainer TypeContainer;
 typedef struct ClassNode ClassNode;
+typedef struct CryoVariableNode CryoVariableNode;
 
 typedef struct PublicMembers PublicMembers;
 typedef struct PrivateMembers PrivateMembers;
 typedef struct ProtectedMembers ProtectedMembers;
+
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 typedef enum PrimitiveDataType
 {
@@ -210,6 +213,7 @@ typedef struct ClassType
 {
     const char *name;
     ASTNode *constructor;
+    ASTNode *classNode;
     int propertyCount;
     int propertyCapacity;
     int methodCount;
@@ -230,6 +234,7 @@ typedef struct TypeContainer
     int length;                  // Length of the type
     bool isArray;                // Array flag
     int arrayDimensions;         // Number of array dimensions
+    bool boolValue;              // Boolean value
     struct custom
     {
         const char *name; // Type identifier name
@@ -289,18 +294,20 @@ extern "C"
     TypeTable *initTypeTable(void);
     TypeContainer *createTypeContainer(void);
 
-    DataType *parseDataType(const char *typeStr, TypeTable *typeTable);
+    DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
     DataType *wrapTypeContainer(TypeContainer *container);
 
     DataType *lookupType(TypeTable *table, const char *name);
     void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
 
-    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
+    ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable);
     DataType *CryoDataTypeStringToType(const char *typeStr);
     DataType *DataTypeFromNode(ASTNode *node);
     const char *getDataTypeName(DataType *type);
 
-    DataType **getTypeArrayFromASTNode(ASTNode **node);
+    DataType **getDataTypeArrayFromASTNode(ASTNode *node);
+    DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount);
+    DataType **getTypeArrayFromASTNode(ASTNode **node, int size);
     DataType **getParamTypeArray(ASTNode **node);
 
     DataType *getDataTypeFromASTNode(ASTNode *node);
@@ -313,6 +320,9 @@ extern "C"
     DataType *findClassType(ASTNode *node, TypeTable *typeTable);
     DataType *findClassTypeFromName(const char *name, TypeTable *typeTable);
 
+    ASTNode **getAllClassMethods(ASTNode *classNode);
+    ASTNode **getAllClassPropsFromDataType(DataType *classType);
+
     // # =========================================================================== #
     // # Primitive Type Functions
     // # (primitives.c)
@@ -321,7 +331,7 @@ extern "C"
     DataType *createPrimitiveIntType(void);
     DataType *createPrimitiveFloatType(void);
     DataType *createPrimitiveStringType(int length);
-    DataType *createPrimitiveBooleanType(void);
+    DataType *createPrimitiveBooleanType(bool booleanValue);
     DataType *createPrimitiveVoidType(void);
     DataType *createPrimitiveNullType(void);
     DataType *createPrimitiveAnyType(void);
@@ -455,6 +465,7 @@ extern "C"
     char *VerboseStructTypeToString(StructType *type);
     char *VerboseClassTypeToString(ClassType *type);
     char *VerboseFunctionTypeToString(FunctionType *type);
+    char *VerboseDataTypeToString(DataType *dataType);
 
     void printFormattedStructType(StructType *type);
     void printFormattedPrimitiveType(PrimitiveDataType type);
@@ -465,6 +476,9 @@ extern "C"
     void logVerboseDataType(DataType *type);
     void printClassType(ClassType *type);
     void printFunctionType(FunctionType *funcType);
+    void printFunctionType_UF(FunctionType *funcType);
+    char *getFunctionTypeStr_UF(FunctionType *funcType);
+    char *getFunctionArgTypeArrayStr(ASTNode *functionNode);
 
     void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
@@ -477,11 +491,12 @@ extern "C"
 
     // # =============================================================================================== #
 
-#define VALIDATE_TYPE(type)                                         \
-    if (!isValidType(type))                                         \
-    {                                                               \
-        logMessage("ERROR", __LINE__, "TypeTable", "Invalid type"); \
-        CONDITION_FAILED;                                           \
+#define VALIDATE_TYPE(type)                                       \
+    if (!isValidType(type))                                       \
+    {                                                             \
+        logMessage(LMI, "ERROR", "TypeTable", "Invalid type: %s", \
+                   DataTypeToString(type));                       \
+        CONDITION_FAILED;                                         \
     }
 
 #ifdef __cplusplus

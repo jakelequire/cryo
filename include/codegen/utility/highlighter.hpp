@@ -70,6 +70,7 @@ private:
         "Load operand must be a pointer.",
         "Call parameter type does not match function signature!",
         "Function context does not match Module context!",
+        "Instruction does not dominate all uses!",
     };
 
     void initializePatterns()

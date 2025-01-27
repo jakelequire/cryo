@@ -68,6 +68,7 @@ char *intToSafeString(int value)
 
     if (written < 0 || written >= BUFFER_SIZE)
     {
+        perror("Failed to write int to string");
         free(buffer); // Clean up on error
         return NULL;
     }
@@ -81,6 +82,11 @@ char *intToSafeString(int value)
 // (Makes a copy of the original string)
 char *stringToUFString(const char *str)
 {
+    if (str == NULL || str[0] == '\0')
+    {
+        perror("Cannot convert NULL string to UF string");
+        return NULL;
+    }
     // We make a string copy of the input string, do not modify the original
     char *buffer = strdup(str);
     if (buffer == NULL)

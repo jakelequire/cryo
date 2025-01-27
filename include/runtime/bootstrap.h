@@ -25,12 +25,10 @@
 #include "frontend/AST.h"
 #include "frontend/lexer.h"
 #include "frontend/parser.h"
-#include "frontend/symTable.h"
 #include "frontend/dataTypes.h"
 
 #include "tools/utils/fs.h"
 
-typedef struct CryoSymbolTable CryoSymbolTable;
 typedef struct TypeTable TypeTable;
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
@@ -38,13 +36,16 @@ typedef struct Lexer Lexer;
 typedef struct Arena Arena;
 typedef struct ASTNode ASTNode;
 
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
+typedef struct CryoLinker_t *CryoLinker;
+
 // C++ headers
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath);
+    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker);
 
 #ifdef __cplusplus
 }
@@ -61,7 +62,6 @@ enum BootstrapStatus
 typedef struct Bootstrapper
 {
     Arena *arena;
-    CryoSymbolTable *table;
     TypeTable *typeTable;
     Lexer *lexer;
     CompilerState *state;
@@ -69,10 +69,10 @@ typedef struct Bootstrapper
     enum BootstrapStatus status;
 } Bootstrapper;
 
-void boostrapRuntimeDefinitions(CryoSymbolTable *table, TypeTable *typeTable);
+void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker);
 Bootstrapper *initBootstrapper(const char *filePath);
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 
-ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath);
+ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, CryoGlobalSymbolTable *globalTable);
 
 #endif // CRYO_BOOTSTRAP_H
