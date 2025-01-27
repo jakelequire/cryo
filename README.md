@@ -22,22 +22,57 @@ I started this project to learn more about compilers and programming languages.
 
 - [ ] [Self-hosted.](<https://en.wikipedia.org/wiki/Self-hosting_(compilers)>) (Later Goal)
 
+
 ## Table of Contents
 
+- [Installation](#installation)
+  - [Dependencies](#dependencies)
+  - [Compiling with Cryo](#compiling-with-cryo)
+  - [Using the CLI](#using-the-cli)
 - [Language Introduction](#language-introduction)
   - [Keywords / Reserve Words / Data Types](#keywords--reserve-words--data-types)
   - [Operators](#operators)
   - [Hello, world!](#hello-world)
   - [Fibonacci Sequence](#fibonacci-sequence)
   - [Structures](#structures)
-- [Compile & Run](#compile--run)
-  - [Dependencies](#dependencies)
-  - [Building](#building)
-  - [Environment Variables](#environment-variables)
-  - [Using the compiler](#using-the-compiler)
-  - [LSP](#lsp)
 - [Conclusion](#conclusion)
 - [License](#license)
+
+
+## Installation
+### Dependencies
+- [Clang](https://clang.llvm.org/)
+- [Make](https://www.gnu.org/software/make/)
+- [LLVM 18](https://llvm.org/)
+
+In the repository, there is a `install.sh` file. This will install the required dependencies and build the project. You can run this by running:
+```bash
+./install.sh
+```
+Note: This will only work on a Debian-Linux based system. Sudo permissions are required to install the dependencies.
+
+### Compiling with Cryo
+After running the `install.sh` file, the compiler has been build and the CLI tool is installed on your system. With the CLI tool, you can navigate to an empty directory and run the following command to create a new Cryo project:
+```bash
+cryo init
+```
+
+This will create the `main.cryo` file under the `src/` directory as wel as the `cryoconfig` file in the root directory. You can then run the following command to compile the project:
+```bash
+cryo build
+```
+
+### Using the CLI
+
+There are some helpful commands in the CLI that can be used. You can run the following command to see the help menu:
+```bash
+cryo help
+```
+
+If you want to display more information about a specific command, you can run:
+```bash
+cryo help <command>
+```
 
 ## Language Introduction
 
@@ -47,16 +82,16 @@ This will be a basic overview of the language and its features. This will be upd
 
 ### <u>Keywords / Reserve Words / Data Types</u>
 
-| Keywords      |          | Data Types | Reserved Words |
-| --------      | -------- | ---------- | -------------- |
-| `extern`      | `struct` | `int`      | `if`           |
-| `function`    | `return` | `string`   | `else`         |
-| `const`       | `true`   | `boolean`  | `while`        |
-| `mut`         | `false`  | `float`    | `for`          |
-| `namespace`   | `public` | `void`     |                |
-| `private`     | `class`  |            |                |
-| `constructor` | `static` |            |                |
-| `this`        | `new`    |            |                |
+| Keywords      |          |         | Data Types | Reserved Words |
+| --------      | -------- |-------- | ---------- | -------------- |
+| `extern`      | `struct` |`using`  | `int`      | `if`           |
+| `function`    | `return` |`module` | `string`   | `else`         |
+| `const`       | `true`   |         | `boolean`  | `while`        |
+| `mut`         | `false`  |         | `float`    | `for`          |
+| `namespace`   | `public` |         | `void`     |                |
+| `private`     | `class`  |         |            |                |
+| `constructor` | `static` |         |            |                |
+| `this`        | `new`    |         |            |                |
 
 
 ### <u>Operators</u>
@@ -70,14 +105,11 @@ This will be a basic overview of the language and its features. This will be upd
 |                      |                   | `<=` - LTE           | `%=`                 |
 
 ### <u>Hello, world!</u>
-Since there is no standard library yet, the language is very limited in what it can do. When the project builds, it will use a C++ file to borrow functions from. This is located in [`./cryo/cxx_support.cpp`](./cryo/cxx_support.cpp).
 
 Here is a simple hello world program in Cryo:
 
 ```cpp
 namespace Main;
-
-// Note: `printStr` is a runtime function that is baked into the main program before compiling.
 
 function main() -> void {
     printStr("Hello, world!");
@@ -152,47 +184,8 @@ function main() -> void {
 **<u><i>
 Note: 
 There must be a `main` function in the program in order to execute.
+Also for Cryo projects, the `main.cryo` file must be in the `src/` directory.
 </i></u>**
-
-**<u><i>
-`argc` and `argv` are not yet implemented.
-</i></u>**
-
-## Compile & Run
-There are some dependencies that you will need to have installed on your system to compile the language.
-
-#### Dependencies
-- [Clang](https://clang.llvm.org/)
-- [Make](https://www.gnu.org/software/make/)
-- [LLVM 18](https://llvm.org/)
-
-
-To compile the language, you will need to have `clang` and `make` installed on your system. You can install it by running:
-```bash
-sudo apt-get install clang make
-```
-
-For the LLVM library might be a little more difficult to install. You can follow the instructions on the [LLVM website](https://llvm.org/) to install it on your system. The makefile should be able to find the library if it is installed correctly.
-
-#### Building
-
-To compile the project, you will first need to build it. You can do this by running:
-```bash
-make all
-```
-This will build the source code of the project and create an executable file called `compiler` in [`./bin/`](./bin/).
-
-#### Environment Variables
-There is only one environmental variable you need to set in order to run the program. This is something that I will fix in the future, but for now, you will need to set the `CRYO_PATH` variable for the program to work. You can set this by running:
-```bash
-export CRYO_PATH=<path-to-cryo-directory>
-```
-
-#### Using the compiler
-There is a build script in the project directory that will compile and execute a Cryo file. As of right now, it can only compile one file at a time. You can run the build script by running:
-```bash
-./build.sh -f <file>
-```
 
 ### LSP
 There is a small LSP within the project under the [`./assets/`](./assets/) directory. This is a VS Code Extension that will provide syntax highlighting for the Cryo language. You can just double click the `.vsix` file to install it in VS Code.
