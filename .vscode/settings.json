@@ -354,5 +354,8 @@
 "notebook.defaultFormatter": "ms-vscode.cpptools-extension-pack",
 "[c]": {
   "editor.defaultFormatter": "ms-vscode.cpptools"
+},
+"[rust]": {
+  "editor.defaultFormatter": "rust-lang.rust-analyzer"
 }
 }

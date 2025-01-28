@@ -75,4 +75,7 @@ note.txt
 /libs/cryo_path/bin/
 /libs/lsp-monitor/bin/*
 /libs/lsp-monitor/bin/
-
+/libs/dev-server/bin/*
+/libs/dev-server/bin/
+/libs/dev-server/target/*
+/libs/dev-server/target/

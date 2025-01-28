@@ -7,7 +7,7 @@ IFS=$'\n\t'
 # Set the shell options
 shopt -s nullglob
 # Set the trap to cleanup on termination
-trap cleanup EXIT
+trap EXIT
 
 # Bin directory
 LIB_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,5 +21,6 @@ function error() {
 # Build with cargo
 cargo build --release || error "Failed to build"
 
-# Take the binary 
+# Take the binary and move it to the ./bin directory (no rename)
+cp target/release/dev-server "${BIN_DIR}/dev-server"
 
