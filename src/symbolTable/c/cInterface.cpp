@@ -30,7 +30,8 @@ extern "C"
         }
         catch (...)
         {
-            fprintf(stderr, "Failed to create GlobalSymbolTable\n");
+            fprintf(stderr, "ERROR: Failed to create GlobalSymbolTable @CryoGlobalSymbolTable_Create\n");
+            fprintf(stderr, "ERROR: Build Dir: %s\n", buildDir);
             return nullptr;
         }
     }
@@ -39,12 +40,13 @@ extern "C"
     {
         try
         {
-            auto symTable = new Cryo::GlobalSymbolTable(forReaping);
+            auto symTable = new Cryo::GlobalSymbolTable(forReaping, buildDir);
             return reinterpret_cast<CryoGlobalSymbolTable *>(symTable);
         }
         catch (...)
         {
-            fprintf(stderr, "Failed to create GlobalSymbolTable\n");
+            fprintf(stderr, "ERROR: Failed to create GlobalSymbolTable for reaping @CryoGlobalSymbolTable_Create_Reaping\n");
+            fprintf(stderr, "ERROR: Build Dir: %s\n", buildDir);
             return nullptr;
         }
     }

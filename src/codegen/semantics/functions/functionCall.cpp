@@ -514,7 +514,7 @@ namespace Cryo
                     CONDITION_FAILED;
                 }
             }
-
+            std::cout << "Named Value: " << std::endl;
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Named value found");
             varValue = namedValue;
         }

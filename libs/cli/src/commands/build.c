@@ -150,6 +150,7 @@ static void handle_project_build(BuildOptions *options)
     if (compilerResult != 0)
     {
         printf("Error: Compilation failed\n");
+        return;
     }
 
     // Run the binary

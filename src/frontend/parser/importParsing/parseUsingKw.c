@@ -293,7 +293,7 @@ const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state
     // Get the path to the STD Library module
     // This will be used to import the module into the current scope.
     // Root Directory: {CRYO_ROOT}/std/
-    const char *rootDir = state->settings->rootDir;
+    const char *rootDir = state->settings->compilerRootPath;
     DEBUG_PRINT_FILTER({
         printf("getSTDLibPath: Root Directory: %s\n", rootDir);
         printf("getSTDLibPath: Module Name: %s\n", moduleName);
@@ -454,13 +454,17 @@ int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *
     logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");
 
     const char *dependencyDir = GetDependencyDirStr(globalTable);
-
+    logMessage(LMI, "INFO", "Parser", "Dependency Directory: %s", dependencyDir);
     ASTNode *programNode = compileModuleFileToProgramNode(modulePath, dependencyDir, state, globalTable);
     if (programNode == NULL)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to compile module file definitions.");
         return 1;
     }
+
+    printf("\n<!> DEBUG: PROGRAM NODE COMPLETE! \n\n");
+
+    logASTNode(programNode);
 
     logMessage(LMI, "INFO", "Parser", "Parsing Complete, importing module file definitions...");
 
