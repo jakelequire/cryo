@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/cryoconfig/cryoconfig.h"
+#include "tools/logger/logger_config.h"
 
 #define MAX_CONFIG_SIZE 1024 * 10 // 10KB
 
@@ -22,7 +23,7 @@ void checkForCryoProject(CompilerSettings *settings)
 {
     if (!settings->isSingleFile && settings->isProject)
     {
-        printf("Initializing as project...\n");
+        logMessage(LMI, "INFO", "CryoConfig", "Initializing as project...");
 
         const char *projectDir = settings->projectDir;
         if (!projectDir)
@@ -30,7 +31,7 @@ void checkForCryoProject(CompilerSettings *settings)
             fprintf(stderr, "Error: Invalid project directory\n");
             exit(EXIT_FAILURE);
         }
-        printf("Project Directory: %s\n", projectDir);
+        logMessage(LMI, "INFO", "CryoConfig", "Project Directory: %s", projectDir);
         const char *cryoConfigPath = concatStrings(projectDir, "/cryoconfig");
         if (!cryoConfigPath)
         {
@@ -43,7 +44,7 @@ void checkForCryoProject(CompilerSettings *settings)
             fprintf(stderr, "Error: Project directory is not a valid Cryo project\n");
             exit(EXIT_FAILURE);
         }
-        printf("Found cryoconfig file\n");
+        logMessage(LMI, "INFO", "CryoConfig", "CryoConfig Path: %s", cryoConfigPath);
 
         char *configString = getConfigString(cryoConfigPath);
         if (!configString)
@@ -52,10 +53,12 @@ void checkForCryoProject(CompilerSettings *settings)
             exit(EXIT_FAILURE);
         }
 
-        printf("Config String: \n");
-        printf("============================================\n\n");
-        printf("%s\n", configString);
-        printf("============================================\n");
+        DEBUG_PRINT_FILTER({
+            printf("Config String: \n");
+            printf("============================================\n\n");
+            printf("%s\n", configString);
+            printf("============================================\n");
+        });
 
         ProjectSettings *projectSettings = parseCryoConfig(configString);
         if (!projectSettings)
@@ -69,7 +72,7 @@ void checkForCryoProject(CompilerSettings *settings)
         String *projectName = Str(projectSettings->project_name);
         if (projectName)
         {
-            printf("Project Name: %s\n", projectSettings->project_name);
+            logMessage(LMI, "INFO", "CryoConfig", "Project Name: %s", projectName->c_str(projectName));
         }
 
         // Apply the active settings
@@ -81,7 +84,7 @@ void checkForCryoProject(CompilerSettings *settings)
     }
     else
     {
-        printf("Single file mode\n");
+        logMessage(LMI, "INFO", "CryoConfig", "Initializing as single file...");
         settings->isProject = false;
         settings->projectDir = NULL;
 

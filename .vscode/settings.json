@@ -309,7 +309,8 @@
     "value.h": "c",
     "projectdir.h": "c",
     "cryoconfig.h": "c",
-    "ctypes.h": "c"
+    "ctypes.h": "c",
+    "diagnostics.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

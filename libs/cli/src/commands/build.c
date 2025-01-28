@@ -136,6 +136,11 @@ static void handle_project_build(BuildOptions *options)
     {
         args_with_flags[base_args + i] = compilerFlags[i];
     }
+    bool logs_enabled = options->is_dev;
+    if (!logs_enabled)
+    {
+        appendCompilerFlag("--disable-logs");
+    }
 
     // Debug print the full command
     printf("Full command: ");
@@ -150,6 +155,12 @@ static void handle_project_build(BuildOptions *options)
     if (compilerResult != 0)
     {
         printf("Error: Compilation failed\n");
+        return;
+    }
+
+    bool auto_run_enabled = options->auto_run;
+    if (!auto_run_enabled)
+    {
         return;
     }
 

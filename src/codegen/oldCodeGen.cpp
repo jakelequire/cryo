@@ -642,4 +642,21 @@ namespace Cryo
         return llvmValue;
     }
 
+    inline void CryoCompiler::dumpModule(void)
+    {
+        DEBUG_PRINT_FILTER({
+            std::cout << "\n";
+            std::cout << BOLD;
+            std::cout << "═══════════════════════════ Module IR Dump ═══════════════════════════" << std::endl;
+            context.module->print(llvm::outs(), nullptr);
+            std::cout << "══════════════════════════════════════════════════════════════════════" << std::endl;
+            std::cout << COLOR_RESET;
+            std::cout << "\n";
+        });
+
+        // Call the Compilation class to output the current module to a file
+        // Compilation compileCode = Compilation(*this);
+        // compileCode.DumpModuleToDebugFile();
+    }
+
 } // namespace Cryo

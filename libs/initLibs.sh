@@ -30,35 +30,6 @@ function error {
     exit 1
 }
 
-# Function to build and move binaries for each library
-function buildAndMoveLib {
-    LIB_ROOT=$1
-    LIB_NAME=$(basename $LIB_ROOT)
-    echo -e "$INIT_LIBS_SIG Building the $LIB_NAME library"
-    cd $LIB_ROOT
-    make all || error "Failed to build the $LIB_NAME library"
-    if [ -f "bin/$LIB_NAME" ]; then
-        echo -e "$INIT_LIBS_SIG $RED $BOLD Moving the $LIB_NAME binary to the root bin directory $COLOR_RESET"
-        mv "bin/$LIB_NAME" $ROOT_BIN_DIR
-        if [ "$LIB_NAME" == "cli" ]; then
-            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to cryo $COLOR_RESET"
-            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/cryo"
-        fi
-        if [ "$LIB_NAME" == "lsp-monitor" ]; then
-            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to lspmonitor $COLOR_RESET"
-            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/lspmonitor"
-        fi
-        if [ "$LIB_NAME" == "cryo_path" ]; then
-            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to cryo-path $COLOR_RESET"
-            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/cryo-path"
-        fi
-    else
-        echo -e "$INIT_LIBS_SIG $RED $BOLD No binaries found to move for $LIB_NAME $COLOR_RESET"
-        echo -e "$INIT_LIBS_SIG Attempted path: $LIB_ROOT/bin/$LIB_NAME"
-    fi
-    cd ..
-}
-
 # Function to cleanup each library
 function cleanupLib {
     LIB_ROOT=$1
@@ -76,6 +47,46 @@ function cleanup {
             cleanupLib "./libs/$lib"
         fi
     done
+}
+
+
+# Function to build and move binaries for each library
+function buildAndMoveLib {
+    LIB_ROOT=$1
+    LIB_NAME=$(basename $LIB_ROOT)
+    echo -e "$INIT_LIBS_SIG Building the $LIB_NAME library"
+    cd $LIB_ROOT
+    if [ "$LIB_NAME" == "dev-server" ]; then
+        echo "Building dev-server"
+        bash build.sh  || error "Failed to build the $LIB_NAME library"
+    else
+        make all || error "Failed to build the $LIB_NAME library"
+    fi
+
+    if [ -f "bin/$LIB_NAME" ]; then
+        echo -e "$INIT_LIBS_SIG $RED $BOLD Moving the $LIB_NAME binary to the root bin directory $COLOR_RESET"
+        mv "bin/$LIB_NAME" $ROOT_BIN_DIR
+        if [ "$LIB_NAME" == "cli" ]; then
+            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to cryo $COLOR_RESET"
+            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/cryo"
+        fi
+        if [ "$LIB_NAME" == "lsp-monitor" ]; then
+            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to lspmonitor $COLOR_RESET"
+            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/lspmonitor"
+        fi
+        if [ "$LIB_NAME" == "cryo_path" ]; then
+            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Renaming the $LIB_NAME binary to cryo-path $COLOR_RESET"
+            mv "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/cryo-path"
+        fi
+        if [ "$LIB_NAME" == "dev-server" ]; then
+            echo -e "$INIT_LIBS_SIG $GREEN $BOLD Moving the $LIB_NAME binary to the root bin directory $COLOR_RESET"
+            cp -n "$ROOT_BIN_DIR/$LIB_NAME" "$ROOT_BIN_DIR/$LIB_NAME"
+        fi
+    else
+        echo -e "$INIT_LIBS_SIG $RED $BOLD No binaries found to move for $LIB_NAME $COLOR_RESET"
+        echo -e "$INIT_LIBS_SIG Attempted path: $LIB_ROOT/bin/$LIB_NAME"
+    fi
+    cd ..
 }
 
 # Build and move binaries for each specified library

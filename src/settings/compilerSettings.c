@@ -163,7 +163,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             // The `-p` option is used to indicate that we are in project mode
         case 'p':
         {
-            printf("CompilerSettings: Initializing as project...\n");
+            logMessage(LMI, "INFO", "Compiler Settings", "Initializing as project...");
             settings->isProject = true;
             settings->isSingleFile = false;
             settings->inputFile = NULL;
@@ -174,7 +174,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
                 exit(1);
             }
             settings->projectDir = projectDir;
-            printf("Project Directory: %s\n", settings->projectDir);
+            
             break;
         }
         // Usage and help
@@ -312,8 +312,8 @@ void logCompilerSettings(CompilerSettings *settings)
 {
     const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
     const char *falseFlag = BOLD RED "false" COLOR_RESET;
-    printf("Printing compiler settings...\n");
     DEBUG_PRINT_FILTER({
+        printf("Printing compiler settings...\n");
         printf("\n");
         printf("# ============ Compiler Settings ============ #\n");
         printf("  Root Directory: %s\n", settings->rootDir);
@@ -331,6 +331,7 @@ void logCompilerSettings(CompilerSettings *settings)
         printf("  IR Dump: %s\n", settings->irDump ? trueFlag : falseFlag);
         printf("  LSP Symbols: %s\n", settings->isLSP ? trueFlag : falseFlag);
         printf("  Enable Logs: %s\n", settings->enableLogs ? trueFlag : falseFlag);
+        printf("  Disable Logs: %s\n", !settings->enableLogs ? trueFlag : falseFlag);
         printf("  Is Single File: %s\n", settings->isSingleFile ? trueFlag : falseFlag);
         printf("  Is Project: %s\n", settings->isProject ? trueFlag : falseFlag);
         printf("  Source Text: %s\n", settings->isSource ? trueFlag : falseFlag);

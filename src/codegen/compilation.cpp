@@ -139,7 +139,7 @@ namespace Cryo
         }
 
         DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
-
+        
         LoadStoreWhitespaceAnnotator LSWA;
         cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
         dest.close();

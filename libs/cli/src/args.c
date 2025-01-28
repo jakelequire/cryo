@@ -123,6 +123,7 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
     options->is_dev = false;
     options->use_gdb = false;
     options->project_dir = NULL;
+    options->auto_run = false;
 
     // Parse build command options
     for (int i = start_index; i < argc; i++)
@@ -164,6 +165,11 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
         else if (stringCompare(argv[i], "-d") || stringCompare(argv[i], "--dev"))
         {
             options->is_dev = true;
+        }
+        // Check for auto run
+        else if (stringCompare(argv[i], "-r"))
+        {
+            options->auto_run = true;
         }
     }
 

@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "codegen/oldCodeGen.hpp"
+#include "tools/logger/logger_config.h"
 
 namespace Cryo
 {
@@ -47,8 +48,6 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Call Argument Count: " + std::to_string(argCount));
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Callee Name: " + std::string(functionName));
 
-        compiler.getContext().module->print(llvm::errs(), nullptr);
-
         // STFunction *stFunction = compiler.getSymTable().getFunction(compiler.getContext().currentNamespace, functionName);
 
         // Get the argument values
@@ -63,8 +62,10 @@ namespace Cryo
             llvm::Function *calleeF = compiler.getContext().module->getFunction(funcName);
             if (!calleeF)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
-                compiler.getContext().module->print(llvm::errs(), nullptr);
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: @" + funcName);
+                DEBUG_PRINT_FILTER({
+                    // compiler.getContext().module->print(llvm::errs(), nullptr);
+                });
                 CONDITION_FAILED;
             }
 
@@ -243,7 +244,7 @@ namespace Cryo
             llvm::Function *function = compiler.getContext().module->getFunction(functionName);
             if (!function)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: " + std::string(functionName));
                 CONDITION_FAILED;
             }
 
@@ -1066,7 +1067,7 @@ namespace Cryo
         llvm::Function *function = compiler.getContext().module->getFunction(functionName);
         if (!function)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: @" + std::string(functionName));
             CONDITION_FAILED;
         }
 
