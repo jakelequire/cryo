@@ -58,6 +58,7 @@ void setLogSettings(EnabledLogs *logs, CompilerSettings *settings);
     } while (0)
 
 #define DEBUG_PRINT_ENABLED() (g_enabledLogs && g_enabledLogs->all && !g_enabledLogs->disabled)
+#define DISABLE_ALL_LOGS() updateEnabledLogs(g_enabledLogs, false)
 
 #define DEBUG_PRINT_FILTER(code)   \
     do                             \

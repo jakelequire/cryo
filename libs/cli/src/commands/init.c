@@ -16,6 +16,28 @@
  ********************************************************************************/
 #include "../include/commands.h"
 
+// Parse init command options.
+// The `cwd` option is where the command was executed from.
+// For now, there are no additional options for the init command.
+// e.g `cryo init` will initialize a project in the current directory.
+InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0)
+{
+    InitOptions *options = (InitOptions *)malloc(sizeof(InitOptions));
+    if (!options)
+        return NULL;
+
+    // Initialize defaults
+    options->cwd = argv0;
+
+    // Parse init command options
+    for (int i = start_index; i < argc; i++)
+    {
+        // No additional options for the init command at this time
+    }
+
+    return options;
+}
+
 void exe_CLI_init(InitOptions *options)
 {
     const char *cwd = options->cwd;

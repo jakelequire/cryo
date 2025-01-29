@@ -74,8 +74,6 @@ int main(int argc, char *argv[])
         logMessage(LMI, "INFO", "MAIN", "Initializing as project...");
         INIT_PROJECT_CONFIG(&settings);
     }
-    logMessage(LMI, "INFO", "MAIN", "Compiler settings initialized");
-    logCompilerSettings(&settings);
 
     // Initialize the build stats
     BuildStats *buildStats = createBuildStats();

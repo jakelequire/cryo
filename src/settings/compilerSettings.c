@@ -174,7 +174,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
                 exit(1);
             }
             settings->projectDir = projectDir;
-            
+
             break;
         }
         // Usage and help
@@ -242,6 +242,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         case OPT_DISABLE_LOGS:
         {
             settings->enableLogs = false;
+            DISABLE_ALL_LOGS();
             break;
         }
 

@@ -18,6 +18,43 @@
 
 #define MAX_CMD_LEN 1024
 
+CleanCompilerOptions *parse_clean_compiler_options(int argc, char *argv[], int start_index)
+{
+    CleanCompilerOptions *options = (CleanCompilerOptions *)malloc(sizeof(CleanCompilerOptions));
+    if (!options)
+        return NULL;
+
+    // Initialize defaults
+    options->clean_all = false;
+    options->clean_custom = false;
+
+    // Parse clean-compiler command options
+    for (int i = start_index; i < argc; i++)
+    {
+        // Check for clean all
+        if (stringCompare(argv[i], "--all"))
+        {
+            options->clean_all = true;
+        }
+        // Check for clean custom
+        else if (stringCompare(argv[i], "--custom"))
+        {
+            options->clean_custom = true;
+            if (i + 1 < argc)
+            {
+                options->custom_name = argv[++i];
+            }
+            else
+            {
+                free(options);
+                return NULL; // Missing custom name
+            }
+        }
+    }
+
+    return options;
+}
+
 void exe_CLI_clean_compiler(CleanCompilerOptions *options)
 {
     // Get the compiler directory

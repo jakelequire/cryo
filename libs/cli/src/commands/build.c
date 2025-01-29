@@ -16,6 +16,91 @@
  ********************************************************************************/
 #include "../include/commands.h"
 
+BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
+{
+    BuildOptions *options = (BuildOptions *)malloc(sizeof(BuildOptions));
+    if (!options)
+        return NULL;
+
+    // Initialize defaults
+    options->single_file = false;
+    options->is_project = false;
+    options->input_file = NULL;
+    options->output_file = NULL;
+    options->has_output = false;
+    options->is_dev = false;
+    options->use_gdb = false;
+    options->project_dir = NULL;
+    options->auto_run = false;
+
+    // Parse build command options
+    for (int i = start_index; i < argc; i++)
+    {
+        // Check for single file build
+        if (stringCompare(argv[i], "-f"))
+        {
+            options->single_file = true;
+            if (i + 1 < argc)
+            {
+                options->input_file = argv[++i];
+            }
+            else
+            {
+                free(options);
+                return NULL; // Missing input file
+            }
+        }
+        // Check for output file
+        else if (stringCompare(argv[i], "-o"))
+        {
+            if (i + 1 < argc)
+            {
+                options->output_file = argv[++i];
+                options->has_output = true;
+            }
+            else
+            {
+                free(options);
+                return NULL; // Missing output file
+            }
+        }
+        // Check for gdb mode
+        else if (stringCompare(argv[i], "-g") || stringCompare(argv[i], "--gdb"))
+        {
+            options->use_gdb = true;
+        }
+        // Check for dev mode
+        else if (stringCompare(argv[i], "-d") || stringCompare(argv[i], "--dev"))
+        {
+            options->is_dev = true;
+        }
+        // Check for auto run
+        else if (stringCompare(argv[i], "-r") || stringCompare(argv[i], "--run"))
+        {
+            options->auto_run = true;
+        }
+    }
+
+    // If `-f` was not specified, we will treat this as a project build.
+    // Other arguments such as `--dev` and `-g` will still be respected.
+    if (!options->single_file)
+    {
+        printf("Building as project...\n");
+        options->single_file = false;
+        options->is_project = true;
+        options->project_dir = getcwd(NULL, 0);
+        printf("Project directory: %s\n", strdup(options->project_dir));
+    }
+    // Validate options for single file build
+    else if (options->single_file && !options->input_file)
+    {
+        free(options);
+        return NULL;
+    }
+
+    return options;
+}
+
 // - cryo build                             // Build from a project directory
 // - cryo build -f <file>                   // Build a single file
 // - cryo build -f <file> -o <output>       // Build a single file and output to a specific location

@@ -27,6 +27,9 @@
 
 #define __CLI_VERSION__ "0.0.1"
 
+#define DEV_COMMAND BOLD CYAN "(dev)" COLOR_RESET
+#define UNIMPLEMENTED ITALIC GRAY "(unimplemented)" COLOR_RESET
+
 enum CLI_ARGS
 {
     CLI_HELP,           // `--help | -h`

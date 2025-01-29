@@ -511,7 +511,7 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Linker", "Main Binary Compiled Successfully");
         // Run the binary
-        runCompletedBinary();
+        // runCompletedBinary();
     }
 
     void Linker::runCompletedBinary()
