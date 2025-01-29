@@ -40,8 +40,8 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);
-    node->metaData->line = lexer->line;
-    node->metaData->column = lexer->column;
+    node->metaData->line = lexer->currentToken.line;
+    node->metaData->column = lexer->currentToken.column;
 
     switch (type)
     {

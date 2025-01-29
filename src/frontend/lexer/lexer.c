@@ -89,6 +89,9 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
     lexer->nextToken = peekNextToken(lexer, state);
     lexer->source = source;
 
+    lexer->getLPos = getLPos;
+    lexer->getCPos = getCPos;
+
     DEBUG_PRINT_FILTER({
         printf("{lexer} -------------- <Input Source Code> --------------\n\n");
         printf("\n{lexer} File Name: %s\n", fileName);
@@ -140,7 +143,7 @@ const char *getCurrentFileLocationFromLexer(Lexer *lexer)
 // <getLPos>
 int getLPos(Lexer *lexer)
 {
-    return lexer->current - lexer->start;
+    return lexer->line;
 }
 // </getLPos>
 

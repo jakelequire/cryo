@@ -98,8 +98,8 @@ ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, Dat
     node->nodeType = nodeType;
     node->nodeName = nodeName;
     node->dataType = dataType;
-    node->line = 0;
-    node->column = 0;
+    node->line = sourceNode->metaData->line;
+    node->column = sourceNode->metaData->column;
     node->children = (ASTDebugNode *)malloc(sizeof(ASTDebugNode) * AST_DEBUG_VIEW_NODE_COUNT);
     node->childCount = 0;
     node->indent = indent;
@@ -967,10 +967,10 @@ char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
 
-    sprintf(buffer, "%s%s<Property>%s %s[%s]%s %s%s{ %s }%s %s%s<0:0>%s",
+    sprintf(buffer, "%s%s<Property>%s %s[%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET, YELLOW, node->nodeName, COLOR_RESET,
             BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
-            DARK_GRAY, ITALIC, COLOR_RESET);
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
 // </Property>
@@ -1173,11 +1173,11 @@ char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
     // <Method> [NAME] → { FUNCTION_SIGNATURE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<Method>%s %s[%s]:%s%s%s %s %s%s<0:0>%s%s",
+    sprintf(buffer, "%s%s<Method>%s %s[%s]:%s%s%s %s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
-            DARK_GRAY, ITALIC, COLOR_RESET, COLOR_RESET);
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
 // </Method>
@@ -1268,11 +1268,11 @@ char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
     // <MethodCall> [NAME] { RETURN_TYPE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<MethodCall>%s %s[%s]:%s%s%s %s %s%s<0:0>%s%s",
+    sprintf(buffer, "%s%s<MethodCall>%s %s[%s]:%s%s%s %s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
-            DARK_GRAY, ITALIC, COLOR_RESET, COLOR_RESET);
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
 // </MethodCall>
@@ -1362,10 +1362,10 @@ char *CONSOLE_formatClassNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<Class>%s %s[%s]%s %s%s<0:0>%s",
+    sprintf(buffer, "%s%s<Class>%s %s[%s]%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
-            DARK_GRAY, ITALIC, COLOR_RESET);
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
 // </Class>
@@ -1468,19 +1468,19 @@ char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output)
     if (isNew)
     {
         char *newKeyword = formattedNewKeyword();
-        sprintf(buffer, "%s%s%s<ObjectInst>%s %s %s[%s]%s %s %s%s<0:0>%s",
+        sprintf(buffer, "%s%s%s<ObjectInst>%s %s %s[%s]%s %s %s%s<%i:%i>%s",
                 COLOR_RESET, BOLD, LIGHT_MAGENTA, COLOR_RESET,
                 newKeyword,
                 YELLOW, node->nodeName, COLOR_RESET,
                 argTypeArray,
-                DARK_GRAY, ITALIC, COLOR_RESET);
+                DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     }
     else
     {
-        sprintf(buffer, "%s%s<ObjectInst>%s %s[%s]%s %s%s<0:0>%s",
+        sprintf(buffer, "%s%s<ObjectInst>%s %s[%s]%s %s%s<%i:%i>%s",
                 BOLD, LIGHT_MAGENTA, COLOR_RESET,
                 YELLOW, node->nodeName, COLOR_RESET,
-                DARK_GRAY, ITALIC, COLOR_RESET);
+                DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     }
     return buffer;
 }

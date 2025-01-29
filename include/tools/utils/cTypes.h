@@ -37,8 +37,9 @@
 
 bool cStringCompare(const char *str1, const char *str2);
 
-// =============================================================================
-// String Type & Functions
+// + ======================================================================================== + //
+// +                             String Type & Functions                                      + //
+// + ======================================================================================== + //
 
 /// @brief A structure to represent a string in a safer way
 typedef struct String
@@ -132,5 +133,9 @@ void *foo();
 
 #define Str(...) createString(__VA_ARGS__)
 #define StrAlloc(allocator, ...) createAllocaString(allocator, __VA_ARGS__)
+
+// + ======================================================================================== + //
+// +                             Array Types & Functions                                      + //
+// + ======================================================================================== + //
 
 #endif // C_TYPES_H

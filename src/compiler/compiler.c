@@ -18,6 +18,7 @@
 #include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 int cryoCompiler(const char *filePath, CompilerSettings *settings)
 {
@@ -117,6 +118,9 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
         return 1;
     }
     TableFinished(globalSymbolTable); // Finish the global symbol table
+
+    printf("Printing Stack Trace...\n");
+    GDM->printStackTrace(GDM);
 
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
