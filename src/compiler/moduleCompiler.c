@@ -39,6 +39,8 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     Lexer lexer;
     initLexer(&lexer, source, filePath, state);
 
+    state->isModuleFile = true;
+
     ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, globalTable);
     if (programNode == NULL)
     {
@@ -122,9 +124,19 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     }
 
     SymbolTable *copiedTable = (SymbolTable *)malloc(sizeof(SymbolTable));
+    if (!copiedTable)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to allocate memory for copied table");
+        CONDITION_FAILED;
+    }
     memcpy(copiedTable, reapedSymbols, sizeof(SymbolTable));
 
     TypesTable *copiedTypes = (TypesTable *)malloc(sizeof(TypesTable));
+    if (!copiedTypes)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to allocate memory for copied types");
+        CONDITION_FAILED;
+    }
     memcpy(copiedTypes, reapedTypes, sizeof(TypesTable));
 
     ImportReapedTypesTable(globalTable, copiedTypes);
@@ -141,7 +153,7 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     logMessage(LMI, "INFO", "Compiler", "Symbols reaped successfully");
     PrintSymbolTable(globalSymbolTable, reapedSymbols);
 
-    CleanupAndDestroySymbolTable(globalSymbolTable);
+    // CleanupAndDestroySymbolTable(globalSymbolTable);
 
     setGlobalSymbolTable(state, globalTable);
 

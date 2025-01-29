@@ -103,6 +103,11 @@ int initMainFile(const char *cwd);
 int initProjectSettings(const char *cwd);
 
 // =============================================================================
+// Dev Server Command (./commands/devserver.c)
+
+void exe_CLI_devserver(void);
+
+// =============================================================================
 // Version Command (./commands/version.c)
 
 void exe_CLI_version(void);

@@ -16,44 +16,133 @@
  ********************************************************************************/
 #ifndef GLOBAL_DIAGNOSTICS_MANAGER_H
 #define GLOBAL_DIAGNOSTICS_MANAGER_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include "errorCodes.h"
-#include <string>
-#include <vector>
-#include <memory>
-#include <functional>
+#include "tools/utils/cTypes.h"
+#include "tools/utils/cWrappers.h"
 
-// ================================================================ //
-// C Interface
-#ifdef __cplusplus
-extern "C"
+/*
+Error Code Template:
+    X0-000000
+    X = Error Type
+        E = General Error
+        F = Frontend Error
+        S = Semantic Error
+        L = Linker Error
+        I = Internal Error
+    0 = Error Severity
+        0 = Note
+        1 = Warning
+        2 = Error
+        3 = Fatal
+    000000 = Error Number
+*/
+
+#define ERROR_CAPACITY 100
+
+// =============================================================================
+// Structures & Enums
+
+typedef struct GlobalDiagnosticsManager GlobalDiagnosticsManager;
+typedef struct DiagnosticEntry DiagnosticEntry;
+typedef struct CompilerInternalError CompilerInternalError;
+typedef struct CryoErrorInfo CryoErrorInfo;
+typedef struct StackFrame StackFrame;
+typedef struct StackTrace StackTrace;
+
+// The global diagnostics manager
+extern GlobalDiagnosticsManager *g_diagnosticsManager;
+
+typedef struct GlobalDiagnosticsManager
 {
-#endif
+    // -----------------------------------
+    // Public Properties
 
-    // Opaque pointer for C API
-    typedef struct CryoDiagnostics_t *CryoDiagnostics;
+    DiagnosticEntry **errors;
+    size_t errorCount;
+    size_t errorCapacity;
 
-    // Constructor & Destructor
-    CryoDiagnostics *CryoDiagnostics_Create(const char *buildDir);
-    void CryoDiagnostics_Destroy(CryoDiagnostics *diagnostics);
+    StackTrace *stackTrace;
 
-    // Error reporting
-    void CryoDiagnostics_ReportError(CryoDiagnostics *diagnostics,
-                                     CryoErrorCode code,
-                                     CryoErrorSeverity severity,
-                                     const char *message,
-                                     const char *filename,
-                                     int line,
-                                     int column);
+    // -----------------------------------
+    // Public Methods
 
-    // Error querying
-    int CryoDiagnostics_HasErrors(CryoDiagnostics *diagnostics);
-    int CryoDiagnostics_GetErrorCount(CryoDiagnostics *diagnostics);
+} GlobalDiagnosticsManager;
 
-#ifdef __cplusplus
-}
-#endif
+typedef struct DiagnosticEntry
+{
+    CryoErrorCode *err;
+    CompilerInternalError *internalErr;
+    CryoErrorInfo *cryoErrInfo;
+    bool isInternalError;
+    bool isCryoError;
+} DiagnosticEntry;
 
+typedef struct CompilerInternalError
+{
+    char *message;
+    char *filename;
+    int line;
+    int column;
+} CompilerInternalError;
+
+typedef struct CryoErrorInfo
+{
+    char *message;
+    char *filename;
+    int line;
+    int column;
+} CryoErrorInfo;
+
+typedef struct StackFrame
+{
+    char *functionName;
+    char *filename;
+    int line;
+    int column;
+} StackFrame;
+
+typedef struct StackTrace
+{
+    StackFrame **frames;
+    size_t frameCount;
+    size_t frameCapacity;
+} StackTrace;
+
+// =============================================================================
+// Initialization & Cleanup
+
+void initGlobalDiagnosticsManager(void);
+CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code);
+DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo);
+CompilerInternalError *newCompilerInternalError(char *filename, int line, int column, char *message);
+CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column, char *message);
+
+StackFrame *newStackFrame(char *functionName, char *filename, int line, int column);
+StackTrace *newStackTrace(void);
+
+// =============================================================================
+// Macros
+
+// GDM - Global Diagnostics Manager.
+// This macro is used to initialize the global diagnostics manager.
+#define INIT_GDM() initGlobalDiagnosticsManager();
+// GDM - Global Diagnostics Manager.
+#define GDM g_diagnosticsManager
+// FLC - File, Line, Column
+#define FLC __FILE__, __LINE__, __COLUMN__
+// FFLC - Function, File, Line, Column
+#define FFLC __FUNCTION__, __FILE__, __LINE__, __COLUMN__
+
+#endif // GLOBAL_DIAGNOSTICS_MANAGER_H
+// =============================================================================
+// =============================================================================
+
+/*
 namespace Cryo
 {
 
@@ -125,4 +214,4 @@ namespace Cryo
 
 } // namespace Cryo
 
-#endif // GLOBAL_DIAGNOSTICS_MANAGER_H
+*/

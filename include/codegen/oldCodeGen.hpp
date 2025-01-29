@@ -159,14 +159,8 @@ namespace Cryo
                 return;
             }
 
-            std::cout << "Starting to merge modules" << std::endl;
-
-            std::cout << "Module Name: " << srcModule->getName().str() << std::endl;
-            std::cout << "Module IR: \n\n" << std::endl;
-            std::cout << "------------------------------------------------------------" << std::endl;
-            srcModule->print(llvm::errs(), nullptr);
-            std::cout << "------------------------------------------------------------" << std::endl;
-            std::cout << "\n\n" << std::endl;
+            logMessage(LMI, "INFO", "CryoContext", "Merging modules");
+            logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
 
             llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
             bool result = llvm::Linker::linkModules(

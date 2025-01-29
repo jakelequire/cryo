@@ -27,14 +27,18 @@
 
 #define __CLI_VERSION__ "0.0.1"
 
+#define DEV_COMMAND BOLD CYAN "(dev)" COLOR_RESET
+#define UNIMPLEMENTED ITALIC GRAY "(unimplemented)" COLOR_RESET
+
 enum CLI_ARGS
 {
-    CLI_HELP,
-    CLI_VERSION,
-    CLI_BUILD,
-    CLI_BUILD_COMPILER,
-    CLI_CLEAN_COMPILER,
-    CLI_INIT,
+    CLI_HELP,           // `--help | -h`
+    CLI_VERSION,        // `--version | -v`
+    CLI_BUILD,          // `build`
+    CLI_BUILD_COMPILER, // `build-compiler`
+    CLI_CLEAN_COMPILER, // `clean-compiler`
+    CLI_INIT,           // `init`
+    CLI_DEVSERVER,      // `devserver`
     CLI_UNKNOWN
 };
 
@@ -53,6 +57,7 @@ typedef struct BuildOptions
     bool is_dev;       // -d flag or --dev
     bool use_gdb;      // -g flag
     char *project_dir; // -p flag
+    bool auto_run;     // -r flag
 } BuildOptions;
 
 typedef struct InitOptions

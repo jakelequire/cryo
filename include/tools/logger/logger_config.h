@@ -18,6 +18,9 @@
 #define LOGGER_CONFIG_H
 
 #include <stdbool.h>
+#include "settings/compilerSettings.h"
+
+typedef struct CompilerSettings CompilerSettings;
 
 typedef struct EnabledLogs
 {
@@ -33,6 +36,7 @@ typedef struct EnabledLogs
     bool bootstrap;
     bool state;
     bool all;
+    bool disabled;
 } EnabledLogs;
 
 // Declare the global variable as extern
@@ -41,11 +45,20 @@ extern EnabledLogs *g_enabledLogs;
 // Function declarations
 EnabledLogs *createDefaultEnabledLogs(bool setting);
 void updateEnabledLogs(EnabledLogs *logs, bool setting);
+void setLogStatus(EnabledLogs *logs, const char *logType, bool setting);
+void setLogSettings(EnabledLogs *logs, CompilerSettings *settings);
 
 // Macros
 #define ARE_LOGS_ENABLED true
 
-#define DEBUG_PRINT_ENABLED() (g_enabledLogs && g_enabledLogs->all)
+#define INIT_LOGS_WITH_SETTINGS(compiler_settings)        \
+    do                                                    \
+    {                                                     \
+        setLogSettings(g_enabledLogs, compiler_settings); \
+    } while (0)
+
+#define DEBUG_PRINT_ENABLED() (g_enabledLogs && g_enabledLogs->all && !g_enabledLogs->disabled)
+#define DISABLE_ALL_LOGS() updateEnabledLogs(g_enabledLogs, false)
 
 #define DEBUG_PRINT_FILTER(code)   \
     do                             \
@@ -78,7 +91,9 @@ void updateEnabledLogs(EnabledLogs *logs, bool setting);
                       (strcmp(type, "Settings") == 0 && g_enabledLogs->settings) ||       \
                       (strcmp(type, "Arena") == 0 && g_enabledLogs->arena) ||             \
                       (strcmp(type, "Bootstrap") == 0 && g_enabledLogs->bootstrap) ||     \
-                      (strcmp(type, "CompilerState") == 0 && g_enabledLogs->state)))
+                      (strcmp(type, "CompilerState") == 0 && g_enabledLogs->state))) ||     \
+                      (strcmp(type, "All") == 0 && g_enabledLogs->all) ||                 \
+                        (strcmp(type, "Disabled") == 0 && g_enabledLogs->disabled))
 
 #define CLEANUP_LOGS()        \
     do                        \

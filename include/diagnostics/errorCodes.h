@@ -17,6 +17,26 @@
 #ifndef CRYO_ERROR_CODES_H
 #define CRYO_ERROR_CODES_H
 
+/*
+Error Code Template:
+    X0-000000
+    X = Error Type
+        E = General Error
+        F = Frontend Error
+        S = Semantic Error
+        L = Linker Error
+        I = Internal Error
+    0 = Error Severity
+        0 = Note
+        1 = Warning
+        2 = Error
+        3 = Fatal
+    000000 = Error Number
+
+The format of `X0-000000` is the template of the error codes used in Cryo.
+The first digit after the Error Type is the Error Severity.
+*/
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -59,6 +79,22 @@ extern "C"
         CRYO_SEVERITY_ERROR,
         CRYO_SEVERITY_FATAL
     } CryoErrorSeverity;
+
+    typedef enum CryoErrorType
+    {
+        CRYO_ERROR_TYPE_GENERAL     = 0x45,     // 'E' (General Error)
+        CRYO_ERROR_TYPE_FRONTEND    = 0x46,     // 'F' (Frontend Error)
+        CRYO_ERROR_TYPE_SEMANTIC    = 0x53,     // 'S' (Semantic Error)
+        CRYO_ERROR_TYPE_LINKER      = 0x4C,     // 'L' (Linker Error)
+        CRYO_ERROR_TYPE_INTERNAL    = 0x49      // 'I' (Internal Error)
+    } CryoErrorType;
+
+    typedef struct CryoError
+    {
+        CryoErrorType type;
+        CryoErrorSeverity severity;
+        CryoErrorCode code;
+    } CryoError;
 
 #ifdef __cplusplus
 }

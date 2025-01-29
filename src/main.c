@@ -19,6 +19,7 @@
 
 #include "settings/compilerSettings.h"
 #include "compiler/compiler.h"
+#include "diagnostics/diagnostics.h"
 #include "tools/utils/compileTimer.h"
 #include "tools/utils/buildStats.h"
 #include "tools/utils/env.h"
@@ -33,7 +34,9 @@
     /* Initialize the logging system */               \
     INIT_LOGS();                                      \
     /* Initialize the global file system utilities */ \
-    INIT_FS();
+    INIT_FS();                                        \
+    /* Initialize the global diagnostics manager */   \
+    INIT_GDM();
 
 int main(int argc, char *argv[])
 {
@@ -59,20 +62,18 @@ int main(int argc, char *argv[])
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
     initLoggerCompilerSettings(&settings); // Initialize the compiler settings for the logger
-    updateEnabledLogs(g_enabledLogs, settings.enableLogs);
+    INIT_LOGS_WITH_SETTINGS(&settings);
     if (settings.isSingleFile)
     {
-        printf("Initializing as single file...\n");
+        logMessage(LMI, "INFO", "MAIN", "Initializing as single file...");
         const char *dir = removeFileFromPath(settings.inputFilePath);
         INIT_PROJECT_CONFIG(&settings);
     }
     else
     {
-        printf("Initializing as project...\n");
+        logMessage(LMI, "INFO", "MAIN", "Initializing as project...");
         INIT_PROJECT_CONFIG(&settings);
     }
-    printf("Compiler settings initialized\n");
-    logCompilerSettings(&settings);
 
     // Initialize the build stats
     BuildStats *buildStats = createBuildStats();

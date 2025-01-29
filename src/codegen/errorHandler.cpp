@@ -88,7 +88,7 @@ namespace Cryo
         llvm::Function *errorFunc = context.module->getFunction("outOfBoundsError");
         if (!errorFunc)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "ErrorHandler", "Error handler function not found");
+            DevDebugger::logMessage("ERROR", __LINE__, "ErrorHandler", "Error handler function not found: @outOfBoundsError");
             CONDITION_FAILED;
         }
         context.builder.CreateCall(errorFunc);

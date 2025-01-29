@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/cryoconfig/cryoconfig.h"
+#include "tools/logger/logger_config.h"
 
 /*
 Syntax for the cryoconfig file:

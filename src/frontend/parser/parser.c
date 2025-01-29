@@ -38,6 +38,10 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, TypeTabl
     }
 
     bool isModuleFile = state->isModuleFile;
+    if (isModuleFile)
+    {
+        logMessage(LMI, "INFO", "Parser", "%s%sModule File Parsing%s", BOLD, CYAN, COLOR_RESET);
+    }
 
     // Initialize the parsing context
     ParsingContext *context = createParsingContext();

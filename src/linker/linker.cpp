@@ -50,9 +50,6 @@ namespace Cryo
         cLinker->createCRuntimeFile();
 
         llvm::Module *runtimeMod = cLinker->getCryoRuntimeModule();
-        std::cout << "Runtime Module:" << std::endl;
-        runtimeMod->print(llvm::errs(), nullptr);
-
         return runtimeMod;
     }
 
@@ -96,7 +93,7 @@ namespace Cryo
         }
 
         // Safely clone the module from LLVM's API
-        std::cout << "Cryo Runtime Module Compiled Successfully" << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Cryo Runtime Module Parsed Successfully");
 
         return cryoRuntimeModule;
     }
@@ -116,7 +113,7 @@ namespace Cryo
             return;
         }
 
-        std::cout << "Module is not undefined" << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Creating Preprocessing Module...");
 
         DirectoryInfo *dirInfo = getDirInfo();
         if (!dirInfo)
@@ -125,7 +122,7 @@ namespace Cryo
             return;
         }
 
-        std::cout << "Directory Info is not undefined" << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Directory Info is not null");
 
         std::string runtimeDir = dirInfo->runtimeDir;
         if (runtimeDir.empty())
@@ -134,14 +131,7 @@ namespace Cryo
             return;
         }
 
-        std::cout << "Runtime Directory is not undefined" << std::endl;
-        std::cout << "Runtime Directory: " << runtimeDir << std::endl;
-
-        std::cout << "\n\nModule:\n--------\n"
-                  << std::endl;
-        mod->print(llvm::errs(), nullptr);
-        std::cout << "\n--------\n\n"
-                  << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Runtime Directory is not empty");
 
         std::string cRuntimePath = getCRuntimePath();
         if (cRuntimePath.empty())
@@ -150,8 +140,7 @@ namespace Cryo
             return;
         }
 
-        std::cout << "C Runtime Path is not undefined" << std::endl;
-        std::cout << "C Runtime Path: " << cRuntimePath << std::endl;
+        logMessage(LMI, "INFO", "Linker", "C Runtime Path is not empty");
 
         // Create the IR for the mod first and output it to the runtime directory
         std::string modIR = createIRFromModule(mod, runtimeDir);
@@ -161,8 +150,7 @@ namespace Cryo
             return;
         }
 
-        std::cout << "Module IR is not undefined" << std::endl;
-        std::cout << "Module IR: " << modIR << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Module IR is not empty");
 
         // Then, convert the C runtime to IR
         std::string cRuntimeIR = covertCRuntimeToLLVMIR(cRuntimePath, runtimeDir);
@@ -171,7 +159,8 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
             return;
         }
-        std::cout << "C Runtime IR is not undefined" << std::endl;
+
+        logMessage(LMI, "INFO", "Linker", "C Runtime IR is not empty");
 
         // Now that the `runtime.ll` and `cRuntime.ll` files are generated, we will
         // merge them into one file and set that as the `preprocessedModule`.
@@ -182,8 +171,7 @@ namespace Cryo
             return;
         }
 
-        std::cout << "Output File Path is not undefined" << std::endl;
-        std::cout << "Output File Path: " << outputFilePath << std::endl;
+        logMessage(LMI, "INFO", "Linker", "IR Files Merged Successfully");
 
         // Parse the merged IR file
         llvm::SMDiagnostic err;
@@ -195,17 +183,12 @@ namespace Cryo
             return;
         }
 
-        std::cout << "Merged Module is not undefined" << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Merged IR File Parsed Successfully");
 
         // Now that we have the merged module, we can set it as the preprocessed module
         GetCXXLinker()->setPreprocessedModule(mergedModule);
-        std::cout << "Merged Module Set as Preprocessed Module" << std::endl;
 
-        std::cout << "\n\nMerged Module @addPreprocessingModule:\n--------\n"
-                  << std::endl;
-        mergedModule->print(llvm::errs(), nullptr);
-        std::cout << "\n--------\n\n"
-                  << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Preprocessed Module Set Successfully");
 
         return;
     }
@@ -240,7 +223,8 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
             return;
         }
-        std::cout << "C Runtime IR is not undefined" << std::endl;
+
+        logMessage(LMI, "INFO", "Linker", "C Runtime IR is not empty");
 
         return;
     }
@@ -264,24 +248,23 @@ namespace Cryo
         }
         logMessage(LMI, "INFO", "Linker", "Creating IR from module...");
 
-        std::cout << "@createIRFromModule | ourDir passed for file creation: " << outDir << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Module is not null");
         std::string moduleName = module->getName().str();
-        std::cout << "Module Name passed to @createIRFromModule: " << moduleName << std::endl;
+        if (moduleName.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Module name is empty");
+            CONDITION_FAILED;
+        }
 
         std::string outPath = outDir + "/" + moduleName + ".ll";
 
         fs->createNewEmptyFile(moduleName.c_str(), ".ll", outDir.c_str());
 
-        std::error_code EC;
-        llvm::raw_fd_ostream out(outPath, EC, llvm::sys::fs::OF_Text);
-        if (EC)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to open file: %s", outPath.c_str());
-            CONDITION_FAILED;
-        }
+        logMessage(LMI, "INFO", "Linker", "IR file created: %s", outPath.c_str());
 
+        std::error_code error;
+        llvm::raw_fd_ostream out(outPath, error, llvm::sys::fs::OF_None);
         module->print(out, nullptr);
-
         logMessage(LMI, "INFO", "Linker", "IR file created: %s", outPath.c_str());
 
         return outPath;
@@ -300,11 +283,9 @@ namespace Cryo
             return "";
         }
 
-        std::cout << "@getCRuntimePath | Cryo Root: " << cryoRoot << std::endl;
-
+        logMessage(LMI, "INFO", "Linker", "Cryo Root is not empty");
         std::string fullPath = cryoRoot + "/Std/Runtime";
-
-        std::cout << "@getCRuntimePath | Full Path: " << fullPath << std::endl;
+        logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", fullPath.c_str());
 
         return fullPath;
     }
@@ -317,8 +298,7 @@ namespace Cryo
             return "";
         }
 
-        std::cout << "@convertCRuntimeToLLVMIR | C Runtime Path: " << cRuntimePath << std::endl;
-
+        logMessage(LMI, "INFO", "Linker", "Converting C Runtime to IR...");
         // Check and see if the `cRuntime.c` file exists
         std::string cRuntimeFile =  cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
         if (!fileExists(cRuntimeFile.c_str()))
@@ -454,8 +434,7 @@ namespace Cryo
             return "";
         }
 
-        std::cout << "Module Merged Successfully" << std::endl;
-
+        logMessage(LMI, "INFO", "Linker", "Merged IR file parsed successfully");
         return fullPathToFile;
     }
 
@@ -498,8 +477,7 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Failed to merge modules");
             CONDITION_FAILED;
         }
-
-        std::cout << "@mergeTwoModule | Module Merged Successfully" << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Modules merged successfully");
     }
 
     // ================================================================ //
@@ -531,10 +509,9 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        std::cout << "Main File Compiled Successfully" << std::endl;
-
+        logMessage(LMI, "INFO", "Linker", "Main Binary Compiled Successfully");
         // Run the binary
-        runCompletedBinary();
+        // runCompletedBinary();
     }
 
     void Linker::runCompletedBinary()
@@ -548,8 +525,7 @@ namespace Cryo
         // In the future, the binary name may change. Seek the only bianry
         // file within the build directory and run it.
 
-        std::cout << "Running Main Binary..." << std::endl;
-
+        logMessage(LMI, "INFO", "Linker", "Running main binary...");
         std::string exe_output = buildDir + "/";
         std::string exe_name = "main";
         std::string sys_cmd = exe_output + exe_name;

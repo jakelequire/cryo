@@ -20,8 +20,11 @@ from datetime import datetime
 
 object_files = []
 
+# One directory up from this script
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 def recursive_file_names():
-    folder = "./bin/.o"
+    folder = root_dir + "/bin/.o"
     file_list = []
     for root, dirs, files in os.walk(folder):
         for file in files:
@@ -31,7 +34,7 @@ def recursive_file_names():
     return file_list
 
 def delete_folder():
-    folder = "./bin/.o"
+    folder = root_dir + "/bin/.o"
     try:
         # Force delete folder and all contents
         os.system(f"rm -rf {folder}")
@@ -41,7 +44,7 @@ def delete_folder():
 
 # Function to create cleaned.txt log file
 def create_cleaned_log(list):
-    cleaned_file_path = "./bin/cleaned.txt"
+    cleaned_file_path = root_dir + "/bin/cleaned.txt"
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     compiler_version = os.popen("clang --version").read().strip().split('\n')[0]
     print("Cleaned Files List: ")

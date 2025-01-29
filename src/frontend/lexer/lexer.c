@@ -417,13 +417,16 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
     char *currentToken = strndup(lexer->start, lexer->current - lexer->start);
     // printf("Current Token: %s\n", currentToken);
 
+    int tokLen = (int)(lexer->current - lexer->start);
+    int col = lexer->column - tokLen;
+
     Token token;
     token.lexeme = currentToken;
     token.type = type;
     token.start = lexer->start;
-    token.length = (int)(lexer->current - lexer->start);
+    token.length = tokLen;
     token.line = lexer->line;
-    token.column = lexer->column;
+    token.column = col;
 
     // logMessage(LMI, "INFO", "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
     return token;

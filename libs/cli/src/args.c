@@ -18,29 +18,40 @@
 
 enum CLI_ARGS get_CLI_arg(char *arg)
 {
-    if (stringCompare(arg, "--help") || stringCompare(arg, "-h"))
+    // help
+    if (stringCompare(arg, "help") || stringCompare(arg, "-h"))
     {
         return CLI_HELP;
     }
+    // --version
     else if (stringCompare(arg, "--version") || stringCompare(arg, "-v"))
     {
         return CLI_VERSION;
     }
+    // build
     else if (stringCompare(arg, "build"))
     {
         return CLI_BUILD;
     }
-    else if (stringCompare(arg, "build-compiler"))
+    // build-compiler
+    else if (stringCompare(arg, "bc"))
     {
         return CLI_BUILD_COMPILER;
     }
-    else if (stringCompare(arg, "clean-compiler"))
+    // clean-compiler
+    else if (stringCompare(arg, "cc"))
     {
         return CLI_CLEAN_COMPILER;
     }
+    // init
     else if (stringCompare(arg, "init"))
     {
         return CLI_INIT;
+    }
+    // devserver
+    else if (stringCompare(arg, "devserver"))
+    {
+        return CLI_DEVSERVER;
     }
     else
     {
@@ -61,7 +72,7 @@ void handleArgs(int argc, char *argv[])
     const char *cwd = getcwd(NULL, 0);
 
     // Check first if it's a help command
-    if (stringCompare(argv[1], "--help") || stringCompare(argv[1], "-h"))
+    if (stringCompare(argv[1], "help") || stringCompare(argv[1], "-h"))
     {
         // If there's an additional argument, it's a command-specific help
         if (argc > 2)
@@ -98,6 +109,9 @@ void handleArgs(int argc, char *argv[])
         case CLI_INIT:
             exe_CLI_init(parse_init_options(argc, argv, i + 1, cwd));
             break;
+        case CLI_DEVSERVER:
+            exe_CLI_devserver();
+            break;
         case CLI_UNKNOWN:
             exe_CLI_help();
             break;
@@ -106,181 +120,4 @@ void handleArgs(int argc, char *argv[])
             break;
         }
     }
-}
-
-BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
-{
-    BuildOptions *options = (BuildOptions *)malloc(sizeof(BuildOptions));
-    if (!options)
-        return NULL;
-
-    // Initialize defaults
-    options->single_file = false;
-    options->is_project = false;
-    options->input_file = NULL;
-    options->output_file = NULL;
-    options->has_output = false;
-    options->is_dev = false;
-    options->use_gdb = false;
-    options->project_dir = NULL;
-
-    // Parse build command options
-    for (int i = start_index; i < argc; i++)
-    {
-        // Check for single file build
-        if (stringCompare(argv[i], "-f"))
-        {
-            options->single_file = true;
-            if (i + 1 < argc)
-            {
-                options->input_file = argv[++i];
-            }
-            else
-            {
-                free(options);
-                return NULL; // Missing input file
-            }
-        }
-        // Check for output file
-        else if (stringCompare(argv[i], "-o"))
-        {
-            if (i + 1 < argc)
-            {
-                options->output_file = argv[++i];
-                options->has_output = true;
-            }
-            else
-            {
-                free(options);
-                return NULL; // Missing output file
-            }
-        }
-        // Check for gdb mode
-        else if (stringCompare(argv[i], "-g"))
-        {
-            options->use_gdb = true;
-        }
-        // Check for dev mode
-        else if (stringCompare(argv[i], "-d") || stringCompare(argv[i], "--dev"))
-        {
-            options->is_dev = true;
-        }
-    }
-
-    // If `-f` was not specified, we will treat this as a project build.
-    // Other arguments such as `--dev` and `-g` will still be respected.
-    if (!options->single_file)
-    {
-        printf("Building as project...\n");
-        options->single_file = false;
-        options->is_project = true;
-        options->project_dir = getcwd(NULL, 0);
-        printf("Project directory: %s\n", strdup(options->project_dir));
-    }
-    // Validate options for single file build
-    else if (options->single_file && !options->input_file)
-    {
-        free(options);
-        return NULL;
-    }
-
-    return options;
-}
-
-// Parse init command options.
-// The `cwd` option is where the command was executed from.
-// For now, there are no additional options for the init command.
-// e.g `cryo init` will initialize a project in the current directory.
-InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0)
-{
-    InitOptions *options = (InitOptions *)malloc(sizeof(InitOptions));
-    if (!options)
-        return NULL;
-
-    // Initialize defaults
-    options->cwd = argv0;
-
-    // Parse init command options
-    for (int i = start_index; i < argc; i++)
-    {
-        // No additional options for the init command at this time
-    }
-
-    return options;
-}
-
-HelpOptions *parse_help_options(int argc, char *argv[], int start_index)
-{
-    HelpOptions *options = (HelpOptions *)malloc(sizeof(HelpOptions));
-    if (!options)
-        return NULL;
-
-    // Default to general help
-    options->command = CLI_HELP;
-
-    // If we have a command argument
-    if (start_index < argc)
-    {
-        // Convert the command argument to the corresponding CLI_ARGS
-        if (stringCompare(argv[start_index], "build"))
-        {
-            options->command = CLI_BUILD;
-        }
-        else if (stringCompare(argv[start_index], "init"))
-        {
-            options->command = CLI_INIT;
-        }
-        else if (stringCompare(argv[start_index], "build-compiler"))
-        {
-            options->command = CLI_BUILD_COMPILER;
-        }
-        else if (stringCompare(argv[start_index], "clean-compiler"))
-        {
-            options->command = CLI_CLEAN_COMPILER;
-        }
-        else if (stringCompare(argv[start_index], "version"))
-        {
-            options->command = CLI_VERSION;
-        }
-        // Add other commands as needed
-    }
-
-    return options;
-}
-
-CleanCompilerOptions *parse_clean_compiler_options(int argc, char *argv[], int start_index)
-{
-    CleanCompilerOptions *options = (CleanCompilerOptions *)malloc(sizeof(CleanCompilerOptions));
-    if (!options)
-        return NULL;
-
-    // Initialize defaults
-    options->clean_all = false;
-    options->clean_custom = false;
-
-    // Parse clean-compiler command options
-    for (int i = start_index; i < argc; i++)
-    {
-        // Check for clean all
-        if (stringCompare(argv[i], "--all"))
-        {
-            options->clean_all = true;
-        }
-        // Check for clean custom
-        else if (stringCompare(argv[i], "--custom"))
-        {
-            options->clean_custom = true;
-            if (i + 1 < argc)
-            {
-                options->custom_name = argv[++i];
-            }
-            else
-            {
-                free(options);
-                return NULL; // Missing custom name
-            }
-        }
-    }
-
-    return options;
 }

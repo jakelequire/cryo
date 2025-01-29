@@ -41,7 +41,7 @@ int initASTDebugOutput(ASTNode *root, CompilerSettings *settings)
     const char *fileExt = AST_OUTPUT_EXT;
     const char *cwd = settings->rootDir;
 
-    char *outDir = (char *)malloc(sizeof(char) * 1024);
+    char *outDir = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
     sprintf(outDir, "%s/%s", cwd, "build/debug");
 
     DebugASTOutput *output = createDebugASTOutput("Debug Output", outDir, fileExt, cwd);
@@ -103,7 +103,7 @@ ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, Dat
     node->children = (ASTDebugNode *)malloc(sizeof(ASTDebugNode) * AST_DEBUG_VIEW_NODE_COUNT);
     node->childCount = 0;
     node->indent = indent;
-    node->namespaceName = (const char *)malloc(sizeof(char) * 1024);
+    node->namespaceName = (const char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
     node->sourceNode = sourceNode;
     node->value = NULL;
     node->args = NULL;
@@ -290,7 +290,6 @@ void logASTNode(ASTNode *node)
             logMessage(LMI, "ERROR", "AST", "Failed to get AST buffer for debug output");
             return;
         }
-        sprintf(buffer, "%s\n", buffer);
     });
 }
 
@@ -310,7 +309,7 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
     {
         if (console)
         {
-            char *coloredBar = (char *)malloc(sizeof(char) * 8);
+            char *coloredBar = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
             sprintf(coloredBar, LIGHT_MAGENTA BOLD "|    " COLOR_RESET);
             strcat(indent, coloredBar);
         }
@@ -1404,7 +1403,7 @@ char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output)
 {
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    char *argumentBuffer = (char *)malloc(sizeof(char) * 512);
+    char *argumentBuffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
     if (!argumentBuffer)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for argument buffer");
@@ -1567,7 +1566,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         int statementCount = node->data.block->statementCount;
-        char *blockName = (char *)malloc(sizeof(char) * 32);
+        char *blockName = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
         if (statementCount == 0)
         {
             sprintf(blockName, "EmptyBlock");
@@ -1760,7 +1759,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
 
         case PRIM_FLOAT:
         {
-            char *literalValue = (char *)malloc(sizeof(char) * 32);
+            char *literalValue = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
             sprintf(literalValue, "%f", node->data.literal->value.floatValue);
             ASTDebugNode *floatLiteralNode = createASTDebugNode("FloatLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *floatLiteralNode;
@@ -1780,7 +1779,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         }
         case PRIM_BOOLEAN:
         {
-            char *literalValue = (char *)malloc(sizeof(char) * 32);
+            char *literalValue = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
             sprintf(literalValue, "%s", node->data.literal->value.booleanValue ? "true" : "false");
             ASTDebugNode *boolLiteralNode = createASTDebugNode("BoolLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *boolLiteralNode;
@@ -2078,19 +2077,19 @@ char *ASTNodeValueBuffer(ASTNode *node)
         {
         case PRIM_INT:
         {
-            char *buffer = (char *)malloc(sizeof(char) * 32);
+            char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
             sprintf(buffer, "%d", node->data.literal->value.intValue);
             return buffer;
         }
         case PRIM_FLOAT:
         {
-            char *buffer = (char *)malloc(sizeof(char) * 32);
+            char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
             sprintf(buffer, "%f", node->data.literal->value.floatValue);
             return buffer;
         }
         case PRIM_STRING:
         {
-            char *buffer = (char *)malloc(sizeof(char) * 1024);
+            char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
             if (!node->data.literal->value.stringValue)
             {
                 logMessage(LMI, "ERROR", "AST", "Failed to convert string to buffer");
@@ -2107,7 +2106,7 @@ char *ASTNodeValueBuffer(ASTNode *node)
         }
         case PRIM_BOOLEAN:
         {
-            char *buffer = (char *)malloc(sizeof(char) * 32);
+            char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
             sprintf(buffer, "%s", node->data.literal->value.booleanValue ? "true" : "false");
             return buffer;
         }
@@ -2136,7 +2135,7 @@ char *ASTNodeValueBuffer(ASTNode *node)
 
 char *formattedNewKeyword(void)
 {
-    char *buffer = (char *)malloc(sizeof(char) * 32);
+    char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
     sprintf(buffer, BOLD CYAN "new" COLOR_RESET);
     // Another color reset on the buffer to be safe
     strcat(buffer, COLOR_RESET);
@@ -2146,7 +2145,7 @@ char *formattedNewKeyword(void)
 char *printFormattedDataTypeArray(DataType **typeArray, int typeCount)
 {
     // Yellow `[]` brackets and Light Cyan for the type
-    char *buffer = (char *)malloc(sizeof(char) * 512);
+    char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
     if (!buffer)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for type buffer");

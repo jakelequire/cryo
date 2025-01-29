@@ -73,7 +73,7 @@ namespace Cryo
         llvm::Function *function = context.module->getFunction(functionName);
         if (!function)
         {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found");
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: " + functionName);
             CONDITION_FAILED;
         }
         return function;

@@ -47,7 +47,7 @@ char *getRuntimeSrcFile(void)
         return runtimeBuffer;
     });
 
-    printf("Runtime Source Found: %s\n", runtimeBuffer);
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime Found Environment: %s", runtimeBuffer);
 
     return runtimeBuffer;
 }
@@ -64,7 +64,7 @@ char *getRuntimeObjFile(CryoGlobalSymbolTable *globalTable)
         return runtimePathBuffer;
     });
 
-    printf("Runtime Object Found Environment: %s\n", runtimePathBuffer);
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime Object Found Environment: %s", runtimePathBuffer);
 
     return runtimePathBuffer;
 }

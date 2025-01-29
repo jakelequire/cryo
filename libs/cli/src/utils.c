@@ -123,9 +123,6 @@ char *getPathFromCryoPath(void)
         return NULL;
     }
 
-    // Debug the output
-    printf("Command output: %s\n", path);
-
     // Close the pipe
     int close_result = pclose(fp);
     if (close_result == -1)

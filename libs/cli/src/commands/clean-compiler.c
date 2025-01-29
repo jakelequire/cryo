@@ -18,10 +18,49 @@
 
 #define MAX_CMD_LEN 1024
 
+CleanCompilerOptions *parse_clean_compiler_options(int argc, char *argv[], int start_index)
+{
+    CleanCompilerOptions *options = (CleanCompilerOptions *)malloc(sizeof(CleanCompilerOptions));
+    if (!options)
+        return NULL;
+
+    // Initialize defaults
+    options->clean_all = false;
+    options->clean_custom = false;
+
+    // Parse clean-compiler command options
+    for (int i = start_index; i < argc; i++)
+    {
+        // Check for clean all
+        if (stringCompare(argv[i], "--all"))
+        {
+            options->clean_all = true;
+        }
+        // Check for clean custom
+        else if (stringCompare(argv[i], "--custom"))
+        {
+            options->clean_custom = true;
+            if (i + 1 < argc)
+            {
+                options->custom_name = argv[++i];
+            }
+            else
+            {
+                free(options);
+                return NULL; // Missing custom name
+            }
+        }
+    }
+
+    return options;
+}
+
 void exe_CLI_clean_compiler(CleanCompilerOptions *options)
 {
     // Get the compiler directory
     char *compiler_dir = getCryoRootDir();
+
+    char *cwd = getcwd(NULL, 0);
 
     // Now that we have the root dir, we need to access the clean script
     // This depends on the arguments of `CleanCompilerOptions`.
@@ -34,7 +73,21 @@ void exe_CLI_clean_compiler(CleanCompilerOptions *options)
     if (options->clean_all)
     {
         printf("Cleaning all compiler directories...\n\n");
-        snprintf(clean_command, MAX_CMD_LEN, "python3 %s/scripts/clean.py", compiler_dir);
+        char *clean_cmd = (char *)malloc(sizeof(char *) * MAX_CMD_LEN);
+        strcpy(clean_cmd, "python3 ");
+        strcat(clean_cmd, compiler_dir);
+        strcat(clean_cmd, "/scripts/clean.py");
+
+        printf("Running command: %s\n", clean_cmd);
+
+        // Run the clean command in a new process
+        if (!runSystemCommand(clean_cmd))
+        {
+            printf("Error: Failed to clean compiler directories\n");
+        }
+
+        printf("Successfully cleaned compiler directories\n");
+        exit(EXIT_SUCCESS);
     }
     else if (options->clean_custom)
     {
@@ -47,6 +100,17 @@ void exe_CLI_clean_compiler(CleanCompilerOptions *options)
         printf("Cleaning custom directory: %s\n\n", options->custom_name);
         snprintf(clean_command, MAX_CMD_LEN, "python3 %s/scripts/custom-clean.py %s",
                  compiler_dir, options->custom_name);
+
+        printf("Running command: %s\n", clean_command);
+
+        // Run the clean command in a new process
+        if (!runSystemCommand(clean_command))
+        {
+            printf("Error: Failed to clean custom directory\n");
+        }
+
+        printf("Successfully cleaned custom directory\n");
+        exit(EXIT_SUCCESS);
     }
     else
     {

@@ -16,6 +16,12 @@
  ********************************************************************************/
 #include "tools/utils/cTypes.h"
 
+// Store every single `String *` in an array. This is used to either check for
+// existing strings or to free all strings at the end of the program.
+String **_stringArray = NULL;
+size_t _stringArraySize = 0;
+size_t _stringArrayCapacity = 0;
+
 // =============================================================================
 // General Utility Functions
 
