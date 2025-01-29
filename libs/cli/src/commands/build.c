@@ -253,7 +253,7 @@ static void handle_project_build(BuildOptions *options)
     printf("Running main binary...\n");
     const char *buildDir = concatStrings((char *)project_dir, "/build/");
     printf("------------------------------------------------\n");
-    printf("\n");
+    system("clear");
     runMainBinary(buildDir, "main");
 
     return;

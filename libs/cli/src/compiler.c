@@ -68,7 +68,7 @@ int cryo_compile(char *args[], int argCount, bool useGDB)
     else
     {
         printf("[CLI] Compilation failed.\n");
-        // exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     free(command); // Don't forget to free the allocated memory
