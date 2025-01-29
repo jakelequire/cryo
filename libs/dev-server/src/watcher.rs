@@ -1,4 +1,3 @@
-// src/watcher.rs
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -8,6 +7,7 @@ use std::{
     collections::HashMap,
     sync::atomic::{AtomicBool, Ordering},
     sync::Arc,
+    io::BufRead,
 };
 
 pub struct FileWatcher {
@@ -87,31 +87,58 @@ impl FileWatcher {
 
     fn rebuild_project(&self) -> std::io::Result<()> {
         println!("Changes detected, rebuilding project...");
-    
         println!("Project path: {}", self.project_path.display());
+        
         let is_valid = &self.is_valid_dir(&self.project_path.as_path());
         if !is_valid {
             eprintln!("Error: Specified path does not exist or is not a directory");
             std::process::exit(1);
-        } else {
-            println!("Watching directory: {}", self.project_path.display());
         }
-    
-        let output = Command::new("make")  // Changed this line
-            .arg("all")                    // Added this line
+        
+        let mut child = Command::new("make")
+            .arg("all")
             .current_dir(&self.project_path)
-            .output()
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
             .map_err(|e| {
                 eprintln!("Failed to execute make command. Is make installed? Error: {}", e);
                 e
             })?;
-        
-        if output.status.success() {
+    
+        let stdout = child.stdout.take().expect("Failed to capture stdout");
+        let stderr = child.stderr.take().expect("Failed to capture stderr");
+    
+        // Create separate threads to handle stdout and stderr streams
+        let stdout_thread = thread::spawn(move || {
+            let reader = std::io::BufReader::new(stdout);
+            for line in reader.lines() {
+                if let Ok(line) = line {
+                    println!("{}", line);
+                }
+            }
+        });
+    
+        let stderr_thread = thread::spawn(move || {
+            let reader = std::io::BufReader::new(stderr);
+            for line in reader.lines() {
+                if let Ok(line) = line {
+                    eprintln!("{}", line);
+                }
+            }
+        });
+    
+        // Wait for the process to complete
+        let status = child.wait()?;
+    
+        // Wait for output threads to finish
+        stdout_thread.join().expect("stdout thread panicked");
+        stderr_thread.join().expect("stderr thread panicked");
+    
+        if status.success() {
             println!("Build successful!");
-            println!("{}", String::from_utf8_lossy(&output.stdout));
         } else {
             eprintln!("Build failed!");
-            eprintln!("{}", String::from_utf8_lossy(&output.stderr));
         }
     
         Ok(())

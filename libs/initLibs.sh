@@ -30,6 +30,11 @@ function error {
     exit 1
 }
 
+function skiplib {
+    local lib=$1
+    echo -e "$INIT_LIBS_SIG $RED $BOLD Skipping the $lib library $COLOR_RESET"
+}
+
 # Function to cleanup each library
 function cleanupLib {
     LIB_ROOT=$1
@@ -58,7 +63,7 @@ function buildAndMoveLib {
     cd $LIB_ROOT
     if [ "$LIB_NAME" == "dev-server" ]; then
         echo "Building dev-server"
-        bash build.sh  || error "Failed to build the $LIB_NAME library"
+        bash build.sh  || skiplib $LIB_NAME
     else
         make all || error "Failed to build the $LIB_NAME library"
     fi
@@ -89,7 +94,7 @@ function buildAndMoveLib {
     cd ..
 }
 
-# Build and move binaries for each specified library
+# Build and move binaries for each specified library    
 for lib in "$@"; do
     if [ -d "./libs/$lib" ]; then
         echo -e "$INIT_LIBS_SIG Processing the $lib library"

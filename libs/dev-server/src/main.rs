@@ -21,7 +21,6 @@ fn main() -> std::io::Result<()> {
     }
 
     let ignore_dirs = vec![
-        "node_modules",
         ".git",
         "target",
         "dist",
@@ -30,6 +29,9 @@ fn main() -> std::io::Result<()> {
         "obj",
         ".o",
         "dev-server",
+        "makefile",
+        "CMakeLists.txt",
+        "initLibs.sh",
     ];
 
     println!("Watching directory: {}", project_path.display());
