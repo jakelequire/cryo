@@ -17,14 +17,15 @@
 #include "diagnostics/diagnostics.h"
 #include "tools/logger/logger_config.h"
 
-GlobalDiagnosticsManager *g_diagnosticsManager = NULL;
-
-void initGlobalDiagnosticsManager(void)
+String *getErrorMessage(enum CryoErrorCode code)
 {
-    if (g_diagnosticsManager == NULL)
+    switch (code)
     {
-        g_diagnosticsManager = (GlobalDiagnosticsManager *)malloc(sizeof(GlobalDiagnosticsManager));
-        g_diagnosticsManager->errorCount = 0;
-        g_diagnosticsManager->errors = NULL;
+    case CRYO_SUCCESS:
+        return Str("Success");
+    case CRYO_ERROR_UNKNOWN:
+        return Str("Unknown error");
+    default:
+        return Str("Unknown error code: %d", code);
     }
 }

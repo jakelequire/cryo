@@ -16,22 +16,67 @@
  ********************************************************************************/
 #include "diagnostics/diagnostics.h"
 
-CryoError *
-newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code)
+CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code)
 {
+    CryoError *error = (CryoError *)malloc(sizeof(CryoError));
+    error->type = type;
+    error->severity = severity;
+    error->code = code;
+
+    return error;
 }
 
-DiagnosticEntry *
-newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo)
+DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo)
 {
+    DiagnosticEntry *entry = (DiagnosticEntry *)malloc(sizeof(DiagnosticEntry));
+    entry->err = err;
+    entry->internalErr = internalErr;
+    entry->cryoErrInfo = cryoErrInfo;
+    entry->isInternalError = internalErr != NULL;
+    entry->isCryoError = cryoErrInfo != NULL;
+
+    return entry;
 }
 
-CompilerInternalError *
-newCompilerInternalError(char *message, char *filename, int line, int column)
+CompilerInternalError *newCompilerInternalError(char *filename, int line, int column, char *message)
 {
+    CompilerInternalError *error = (CompilerInternalError *)malloc(sizeof(CompilerInternalError));
+    error->filename = filename;
+    error->line = line;
+    error->column = column;
+    error->message = message;
+
+    return error;
 }
 
-CryoErrorInfo *
-newCryoErrorInfo(char *filename, int line, int column)
+CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column, char *message)
 {
+    CryoErrorInfo *info = (CryoErrorInfo *)malloc(sizeof(CryoErrorInfo));
+    info->filename = filename;
+    info->line = line;
+    info->column = column;
+    info->message = message;
+
+    return info;
+}
+
+StackFrame *newStackFrame(char *functionName, char *filename, int line, int column)
+{
+    StackFrame *frame = (StackFrame *)malloc(sizeof(StackFrame));
+    frame->functionName = functionName;
+    frame->filename = filename;
+    frame->line = line;
+    frame->column = column;
+
+    return frame;
+}
+
+StackTrace *newStackTrace(void)
+{
+    StackTrace *trace = (StackTrace *)malloc(sizeof(StackTrace));
+    trace->frames = NULL;
+    trace->frameCount = 0;
+    trace->frameCapacity = 0;
+
+    return trace;
 }

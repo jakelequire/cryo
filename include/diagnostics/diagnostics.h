@@ -42,6 +42,8 @@ Error Code Template:
     000000 = Error Number
 */
 
+#define ERROR_CAPACITY 100
+
 // =============================================================================
 // Structures & Enums
 
@@ -49,6 +51,8 @@ typedef struct GlobalDiagnosticsManager GlobalDiagnosticsManager;
 typedef struct DiagnosticEntry DiagnosticEntry;
 typedef struct CompilerInternalError CompilerInternalError;
 typedef struct CryoErrorInfo CryoErrorInfo;
+typedef struct StackFrame StackFrame;
+typedef struct StackTrace StackTrace;
 
 // The global diagnostics manager
 extern GlobalDiagnosticsManager *g_diagnosticsManager;
@@ -58,9 +62,11 @@ typedef struct GlobalDiagnosticsManager
     // -----------------------------------
     // Public Properties
 
-    struct DiagnosticEntry *errors;
+    DiagnosticEntry **errors;
     size_t errorCount;
     size_t errorCapacity;
+
+    StackTrace *stackTrace;
 
     // -----------------------------------
     // Public Methods
@@ -72,6 +78,8 @@ typedef struct DiagnosticEntry
     CryoErrorCode *err;
     CompilerInternalError *internalErr;
     CryoErrorInfo *cryoErrInfo;
+    bool isInternalError;
+    bool isCryoError;
 } DiagnosticEntry;
 
 typedef struct CompilerInternalError
@@ -84,10 +92,26 @@ typedef struct CompilerInternalError
 
 typedef struct CryoErrorInfo
 {
+    char *message;
     char *filename;
     int line;
     int column;
 } CryoErrorInfo;
+
+typedef struct StackFrame
+{
+    char *functionName;
+    char *filename;
+    int line;
+    int column;
+} StackFrame;
+
+typedef struct StackTrace
+{
+    StackFrame **frames;
+    size_t frameCount;
+    size_t frameCapacity;
+} StackTrace;
 
 // =============================================================================
 // Initialization & Cleanup
@@ -95,8 +119,11 @@ typedef struct CryoErrorInfo
 void initGlobalDiagnosticsManager(void);
 CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code);
 DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo);
-CompilerInternalError *newCompilerInternalError(char *message, char *filename, int line, int column);
-CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column);
+CompilerInternalError *newCompilerInternalError(char *filename, int line, int column, char *message);
+CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column, char *message);
+
+StackFrame *newStackFrame(char *functionName, char *filename, int line, int column);
+StackTrace *newStackTrace(void);
 
 // =============================================================================
 // Macros
@@ -104,6 +131,12 @@ CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column);
 // GDM - Global Diagnostics Manager.
 // This macro is used to initialize the global diagnostics manager.
 #define INIT_GDM() initGlobalDiagnosticsManager();
+// GDM - Global Diagnostics Manager.
+#define GDM g_diagnosticsManager
+// FLC - File, Line, Column
+#define FLC __FILE__, __LINE__, __COLUMN__
+// FFLC - Function, File, Line, Column
+#define FFLC __FUNCTION__, __FILE__, __LINE__, __COLUMN__
 
 #endif // GLOBAL_DIAGNOSTICS_MANAGER_H
 // =============================================================================

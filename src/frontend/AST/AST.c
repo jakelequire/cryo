@@ -249,6 +249,7 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
     DEBUG_PRINT_FILTER({
         printf("Manipulated string: %s\n", strdup(trimmedString));
     });
+    
     int length = getStringLength(trimmedString);
     node->data.literal->type = createPrimitiveStringType(length);
     node->data.literal->value.stringValue = strdup(trimmedString);
