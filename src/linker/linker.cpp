@@ -260,14 +260,11 @@ namespace Cryo
 
         fs->createNewEmptyFile(moduleName.c_str(), ".ll", outDir.c_str());
 
-        std::error_code EC;
-        llvm::raw_fd_ostream out(outPath, EC, llvm::sys::fs::OF_Text);
-        if (EC)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to open file: %s", outPath.c_str());
-            CONDITION_FAILED;
-        }
+        logMessage(LMI, "INFO", "Linker", "IR file created: %s", outPath.c_str());
 
+        std::error_code error;
+        llvm::raw_fd_ostream out(outPath, error, llvm::sys::fs::OF_None);
+        module->print(out, nullptr);
         logMessage(LMI, "INFO", "Linker", "IR file created: %s", outPath.c_str());
 
         return outPath;
