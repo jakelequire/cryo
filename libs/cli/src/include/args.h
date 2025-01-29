@@ -38,6 +38,7 @@ enum CLI_ARGS
     CLI_BUILD_COMPILER, // `build-compiler`
     CLI_CLEAN_COMPILER, // `clean-compiler`
     CLI_INIT,           // `init`
+    CLI_DEVSERVER,      // `devserver`
     CLI_UNKNOWN
 };
 

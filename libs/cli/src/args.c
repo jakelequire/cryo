@@ -18,29 +18,40 @@
 
 enum CLI_ARGS get_CLI_arg(char *arg)
 {
+    // help
     if (stringCompare(arg, "help") || stringCompare(arg, "-h"))
     {
         return CLI_HELP;
     }
+    // --version
     else if (stringCompare(arg, "--version") || stringCompare(arg, "-v"))
     {
         return CLI_VERSION;
     }
+    // build
     else if (stringCompare(arg, "build"))
     {
         return CLI_BUILD;
     }
+    // build-compiler
     else if (stringCompare(arg, "bc"))
     {
         return CLI_BUILD_COMPILER;
     }
+    // clean-compiler
     else if (stringCompare(arg, "cc"))
     {
         return CLI_CLEAN_COMPILER;
     }
+    // init
     else if (stringCompare(arg, "init"))
     {
         return CLI_INIT;
+    }
+    // devserver
+    else if (stringCompare(arg, "devserver"))
+    {
+        return CLI_DEVSERVER;
     }
     else
     {
@@ -97,6 +108,9 @@ void handleArgs(int argc, char *argv[])
             break;
         case CLI_INIT:
             exe_CLI_init(parse_init_options(argc, argv, i + 1, cwd));
+            break;
+        case CLI_DEVSERVER:
+            exe_CLI_devserver();
             break;
         case CLI_UNKNOWN:
             exe_CLI_help();

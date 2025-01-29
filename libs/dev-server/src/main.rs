@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
         "bin",
         "obj",
         ".o",
-        "libs",
+        "dev-server",
     ];
 
     println!("Watching directory: {}", project_path.display());
