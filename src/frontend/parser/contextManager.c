@@ -17,9 +17,11 @@
 #include "tools/cxx/IDGen.hpp"
 #include "frontend/parser.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 ParsingContext *createParsingContext(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ParsingContext *context = (ParsingContext *)malloc(sizeof(ParsingContext));
     context->lastTokenCount = 0;
     context->thisContext = NULL;
@@ -37,6 +39,7 @@ ParsingContext *createParsingContext(void)
 
 void setDefaultThisContext(const char *currentNamespace, ParsingContext *context, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
     thisContext->nodeName = currentNamespace;
     thisContext->nodeType = NODE_NAMESPACE;
@@ -49,6 +52,7 @@ void setDefaultThisContext(const char *currentNamespace, ParsingContext *context
 
 void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
     thisContext->nodeName = nodeName;
     thisContext->nodeType = nodeType;
@@ -62,6 +66,7 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
 
 void setCurrentFunction(ParsingContext *context, const char *functionName, const char *namespaceScopeID)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     clearScopeContext(context);
     context->functionName = functionName;
     createFunctionScope(context, functionName, namespaceScopeID);
@@ -70,6 +75,7 @@ void setCurrentFunction(ParsingContext *context, const char *functionName, const
 
 void setCurrentMethod(ParsingContext *context, const char *methodName, const char *className)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     clearScopeContext(context);
     context->functionName = methodName;
     createMethodScope(context, methodName, className);
@@ -78,6 +84,7 @@ void setCurrentMethod(ParsingContext *context, const char *methodName, const cha
 
 void resetCurrentMethod(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->scopeContext)
     {
         ScopeParsingContext *parent = context->scopeContext->parent;
@@ -87,6 +94,7 @@ void resetCurrentMethod(ParsingContext *context)
 
 void resetCurrentFunction(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     clearScopeContext(context);
     context->functionName = NULL;
     return;
@@ -94,6 +102,7 @@ void resetCurrentFunction(ParsingContext *context)
 
 const char *getCurrentScopeID(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->scopeContext)
     {
         return context->scopeContext->scopeID;
@@ -105,6 +114,7 @@ const char *getCurrentScopeID(ParsingContext *context)
 
 void clearThisContext(ParsingContext *context, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->thisContext)
     {
         free(context->thisContext);
@@ -114,6 +124,7 @@ void clearThisContext(ParsingContext *context, TypeTable *typeTable)
 
 void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->thisContext)
     {
         int index = context->thisContext->propertyCount;
@@ -124,6 +135,7 @@ void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode, Ty
 
 void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->thisContext)
     {
         int index = context->thisContext->methodCount;
@@ -134,11 +146,13 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTa
 
 void setModuleFileParsingFlag(ParsingContext *context, bool value)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     context->isParsingModuleFile = value;
 }
 
 ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->thisContext)
     {
         for (int i = 0; i < context->thisContext->propertyCount; i++)
@@ -155,6 +169,7 @@ ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable 
 
 ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->thisContext)
     {
         for (int i = 0; i < context->thisContext->methodCount; i++)
@@ -171,6 +186,7 @@ ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *t
 
 void addStaticIdentifierToContext(ParsingContext *context, bool value)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->thisContext)
     {
         context->thisContext->isStatic = value;
@@ -181,6 +197,7 @@ void addStaticIdentifierToContext(ParsingContext *context, bool value)
 // If the array is full, it will shift all the tokens to the left by one
 void addTokenToContext(ParsingContext *context, Token token)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Shift all tokens to the right by one
     for (int i = 15; i > 0; i--)
     {
@@ -197,6 +214,7 @@ void addTokenToContext(ParsingContext *context, Token token)
 
 ScopeParsingContext *createScopeParsingContext(const char *name, int level, bool isStatic, CryoNodeType nodeType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
     scopeContext->name = name;
     scopeContext->scopeID = Generate64BitHashID(name);
@@ -209,6 +227,7 @@ ScopeParsingContext *createScopeParsingContext(const char *name, int level, bool
 
 ScopeParsingContext *createClassScopeContext(const char *className, int level, bool isStatic)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
     scopeContext->name = className;
     scopeContext->scopeID = Generate64BitHashID(className);
@@ -221,6 +240,7 @@ ScopeParsingContext *createClassScopeContext(const char *className, int level, b
 
 ScopeParsingContext *createMethodScopeContext(const char *methodName, int level, bool isStatic, ScopeParsingContext *parent)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
     scopeContext->name = methodName;
     scopeContext->scopeID = Generate64BitHashID(methodName);
@@ -233,6 +253,7 @@ ScopeParsingContext *createMethodScopeContext(const char *methodName, int level,
 
 ScopeParsingContext *createFunctionScopeContext(const char *functionName, int level, ScopeParsingContext *parent)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
     scopeContext->name = functionName;
     scopeContext->scopeID = Generate64BitHashID(functionName);
@@ -245,6 +266,7 @@ ScopeParsingContext *createFunctionScopeContext(const char *functionName, int le
 
 ScopeParsingContext *createNamespaceScopeContext(const char *namespaceName)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = (ScopeParsingContext *)malloc(sizeof(ScopeParsingContext));
     scopeContext->name = namespaceName;
     scopeContext->scopeID = Generate64BitHashID(namespaceName);
@@ -257,6 +279,7 @@ ScopeParsingContext *createNamespaceScopeContext(const char *namespaceName)
 
 void createNamespaceScope(ParsingContext *context, const char *namespaceName)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = createNamespaceScopeContext(namespaceName);
     context->scopeContext = scopeContext;
     context->namespaceScopeID = Generate64BitHashID(namespaceName);
@@ -265,11 +288,13 @@ void createNamespaceScope(ParsingContext *context, const char *namespaceName)
 
 const char *getNamespaceScopeID(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     return context->namespaceScopeID;
 }
 
 void createFunctionScope(ParsingContext *context, const char *functionName, const char *namespaceScopeID)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = createFunctionScopeContext(
         functionName,
         context->scopeLevel,
@@ -282,6 +307,7 @@ void createFunctionScope(ParsingContext *context, const char *functionName, cons
 
 void createClassScope(ParsingContext *context, const char *className)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = createScopeParsingContext(
         className,
         context->scopeLevel,
@@ -296,6 +322,7 @@ void createClassScope(ParsingContext *context, const char *className)
 // which means that properties of the class are accessible from the method.
 void createMethodScope(ParsingContext *context, const char *methodName, const char *className)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopeParsingContext *scopeContext = createScopeParsingContext(
         methodName,
         context->scopeLevel,
@@ -312,6 +339,7 @@ void createMethodScope(ParsingContext *context, const char *methodName, const ch
 
 void clearScopeContext(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (context->scopeContext)
     {
         free(context->scopeContext);
@@ -323,6 +351,7 @@ void clearScopeContext(ParsingContext *context)
 
 void logThisContext(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         if (context->thisContext)
         {
@@ -351,6 +380,7 @@ void logThisContext(ParsingContext *context)
 
 void logTokenArray(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         printf(BOLD YELLOW "\n┌────────────────────────── Last Tokens ──────────────────────────┐\n" COLOR_RESET);
         for (int i = 0; i < 16; i++)
@@ -364,6 +394,7 @@ void logTokenArray(ParsingContext *context)
 
 void logParsingContext(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         printf(BOLD CYAN "\n╔══════════════════════════════ Parsing Context ══════════════════════════════╗\n" COLOR_RESET);
         logThisContext(context);
@@ -374,6 +405,7 @@ void logParsingContext(ParsingContext *context)
 
 void logScopeInformation(ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         printf(BOLD GREEN "\n┌───────────────── Scope Information ─────────────────┐\n" COLOR_RESET);
         printf("Scope ID: %s\n", context->scopeContext->scopeID);
@@ -387,5 +419,6 @@ void logScopeInformation(ParsingContext *context)
 
 const char *getScopeID(const char *name)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     return Generate64BitHashID(name);
 }

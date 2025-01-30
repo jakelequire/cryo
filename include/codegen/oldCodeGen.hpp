@@ -295,6 +295,7 @@ namespace Cryo
 
         std::string customOutputPath = "";
         bool isPreprocessing = false;
+        bool isImporting = false;
 
         void compile(ASTNode *root);
         void dumpModule(void);
@@ -305,6 +306,18 @@ namespace Cryo
         }
 
         void setCustomOutputPath(std::string path)
+        {
+            customOutputPath = path;
+        }
+
+        void setCustomOutputPath(std::string path, bool isImport)
+        {
+            customOutputPath = path;
+            isImporting = isImport;
+            isPreprocessing = false;
+        }
+
+        void setPreprocessOutputPath(std::string path)
         {
             customOutputPath = path;
             isPreprocessing = true;

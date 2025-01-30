@@ -29,63 +29,48 @@ namespace Cryo
         Linker *linker = compiler.getLinker();
 
         // Hoist the declarations from the linker
-        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Hoisting Declarations");
-        // linker->hoistDeclarations(compiler.getContext().module.get());
-
-        // if (llvm::verifyModule(*cryoContext.module, nullptr))
-        // {
-        //     DEBUG_PRINT_FILTER({
-        //         LLVM_MODULE_FAILED_MESSAGE_START;
-        //
-        //         LLVMIRHighlighter highlighter;
-        //         llvm::formatted_raw_ostream formatted_errs(llvm::errs());
-        //         highlighter.printWithHighlighting(cryoContext.module.get(), formatted_errs);
-        //
-        //         LLVM_MODULE_FAILED_MESSAGE_END;
-        //         LLVM_MODULE_ERROR_START;
-        //     });
-        //     // Get the error itself without the module showing up
-        //     std::string errorMessage = getErrorMessage();
-        //     if (!errorMessage.empty())
-        //     {
-        //         llvm::errs() << errorMessage;
-        //         std::cout << "\n\n";
-        //     }
-        //     DEBUG_PRINT_FILTER({
-        //         LLVM_MODULE_ERROR_END;
-        //         std::cout << "\n\n";
-        //     });
-        //
-        //     DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "LLVM module verification failed");
-        //
-        //     // Output the broken IR to a file
-        //     // outputFailedIR();
-        //
-        //     exit(1);
-        // }
+        DevDebugger::logMessage("INFO", __LINE__, "Compilation", "<!> Hoisting Declarations");
 
         bool isPreprocessing = compiler.isPreprocessing;
         if (isPreprocessing)
         {
-            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Preprocessing Compilation");
+            DevDebugger::logMessage("INFO", __LINE__, "Compilation", "Preprocessing Compilation for Runtime");
             // std::string outputPath = compiler.customOutputPath;
             // compileUniquePath(outputPath);
 
             linker->addPreprocessingModule(cryoContext.module.get());
             return;
         }
+
+        if (!settings || settings == NULL)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Compiler settings are null");
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Compiler", "Getting file path...");
         bool isProject = settings->isProject;
-        char *unsafe_filePath = (char *)malloc(sizeof(char) * 1024);
+        std::string unsafe_filePath;
         if(isProject)
         {
-            strcpy(unsafe_filePath, settings->projectDir);
-            strcat(unsafe_filePath, "/src/main.cryo");
+            logMessage(LMI, "INFO", "Compiler", "Project Directory: %s", settings->projectDir);
+            unsafe_filePath.append(settings->projectDir);
+            unsafe_filePath.append( "/src/main.cryo");
+        }
+        else if (compiler.isImporting)
+        {
+            logMessage(LMI, "INFO", "Compiler", "Importing File...");
+            std::string _custom_output_path = compiler.customOutputPath;
+            unsafe_filePath.append(_custom_output_path);
+            logMessage(LMI, "INFO", "Compiler", "Custom Output Path: %s", unsafe_filePath.c_str());
         }
         else
         {
-            strcpy(unsafe_filePath, "/");
-            strcpy(unsafe_filePath, settings->inputFilePath);
+            logMessage(LMI, "INFO", "Compiler", "Single File Compilation...");
+            unsafe_filePath.append("/");
+            unsafe_filePath.append(settings->inputFile);
         }
+        logMessage(LMI, "INFO", "Compiler", "File Path: %s", unsafe_filePath.c_str());
         std::string outputFilePath(unsafe_filePath);
         std::filesystem::path cwd = std::filesystem::current_path();
 

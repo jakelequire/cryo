@@ -188,7 +188,7 @@ namespace Cryo
         // Now that we have the merged module, we can set it as the preprocessed module
         GetCXXLinker()->setPreprocessedModule(mergedModule);
 
-        logMessage(LMI, "INFO", "Linker", "Preprocessed Module Set Successfully");
+        logMessage(LMI, "INFO", "Linker", "Preprocessed Module Set Successfully for Module: %s", mergedModule->getName().str().c_str());
 
         return;
     }

@@ -17,10 +17,12 @@
 #include "tools/cxx/IDGen.hpp"
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
+#include "diagnostics/diagnostics.h"
 
 ASTNode *parseClassDeclaration(bool isStatic,
                                Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing class declaration");
     consume(__LINE__, lexer, TOKEN_KW_CLASS, "Expected `class` keyword.", "parseclassNodearation", arena, state, typeTable, context);
 
@@ -84,6 +86,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
 ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic,
                         Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing class body...");
 
     int privateMethodCount = 0;
@@ -357,6 +360,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 // Helper function to ensure capacity for members
 static void ensureCapacity(ASTNode **array, int *capacity, int count, int increment)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (count >= *capacity)
     {
         *capacity = *capacity == 0 ? 4 : *capacity * 2;
@@ -372,6 +376,7 @@ static void ensureCapacity(ASTNode **array, int *capacity, int count, int increm
 
 void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding constructor to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -397,6 +402,7 @@ void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
                       Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -429,6 +435,7 @@ void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityTyp
 void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
                         Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -461,6 +468,7 @@ void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityTyp
 void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
                       Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding private method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -489,6 +497,7 @@ void addPrivateMethod(ASTNode *classNode, ASTNode *methodNode,
 void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
                      Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding public method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -507,6 +516,7 @@ void addPublicMethod(ASTNode *classNode, ASTNode *methodNode,
 void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
                         Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding protected method to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -535,6 +545,7 @@ void addProtectedMethod(ASTNode *classNode, ASTNode *methodNode,
 void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
                        Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding public property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -550,6 +561,7 @@ void addPublicProperty(ASTNode *classNode, ASTNode *propNode,
 void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
                         Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding private property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -574,6 +586,7 @@ void addPrivateProperty(ASTNode *classNode, ASTNode *propNode,
 void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
                           Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Adding protected property to class...");
     if (classNode->metaData->type != NODE_CLASS)
     {
@@ -601,6 +614,7 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
 ASTNode *parseMethodScopeResolution(const char *scopeName,
                                     Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing method scope resolution...");
 
     const char *methodName = strndup(lexer->currentToken.start, lexer->currentToken.length);
@@ -680,6 +694,7 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
 ASTNode *createClassPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propName, DataType *typeOfNode,
                                        Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Creating class property access node...");
 
     ASTNode *propAccess = createPropertyAccessNode(object, propName, arena, state, typeTable, lexer);

@@ -21,6 +21,7 @@ BOLD='\033[1m'
 ITALIC='\033[3m'
 UNDERLINE='\033[4m'
 COLOR_RESET='\033[0m'
+NEW_LINE=$'\n'
 
 echo -e "$TEAL"
 echo "               ██████╗██████╗ ██╗   ██╗ ██████╗ "
@@ -292,6 +293,12 @@ function buildProject {
     echo " "
     make all || echo -e "$RED $BOLD Failed to build the Cryo Compiler $COLOR_RESET"
 }
+
+# Pause Execution, this will take a while if this is the first time building the project
+echo " "
+echo -e "$TEAL $BOLD"
+read -n 1 -s -r -p "If this is the first time building the compiler, this may take a while. ${NEW_LINE}Press any key to continue..."
+echo -e "$COLOR_RESET"
 
 # Build the Cryo Project
 buildProject || errorHandler "Failed to build the Cryo Project"

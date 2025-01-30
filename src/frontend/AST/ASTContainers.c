@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/AST.h"
+#include "diagnostics/diagnostics.h"
 
 /// ---
 /// ### Structure
@@ -28,6 +29,7 @@
 ///```
 CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoNamespace *node = (CryoNamespace *)ARENA_ALLOC(arena, sizeof(CryoNamespace));
     if (!node)
     {
@@ -54,6 +56,7 @@ CryoNamespace *createCryoNamespaceNodeContainer(Arena *arena, CompilerState *sta
 ///```
 CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoProgram *node = (CryoProgram *)ARENA_ALLOC(arena, sizeof(CryoProgram));
     if (!node)
     {
@@ -88,6 +91,7 @@ CryoProgram *createCryoProgramContainer(Arena *arena, CompilerState *state)
 ///
 CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoBlockNode *node = (CryoBlockNode *)ARENA_ALLOC(arena, sizeof(CryoBlockNode));
     if (!node)
     {
@@ -124,6 +128,7 @@ CryoBlockNode *createCryoBlockNodeContainer(Arena *arena, CompilerState *state)
 ///
 CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     int initialCapacity = FUNCTION_BLOCK_CAPACITY;
     CryoFunctionBlock *block = (CryoFunctionBlock *)ARENA_ALLOC(arena, sizeof(CryoFunctionBlock));
     if (!block)
@@ -158,6 +163,7 @@ CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState 
 ///
 CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoModule *node = (CryoModule *)ARENA_ALLOC(arena, sizeof(CryoModule));
     if (!node)
     {
@@ -186,6 +192,7 @@ CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 ///
 CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoMetaData *node = (CryoMetaData *)ARENA_ALLOC(arena, sizeof(CryoMetaData));
     if (!node)
     {
@@ -216,6 +223,7 @@ CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state)
 ///
 CryoImportNode *createCryoImportNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoImportNode *node = (CryoImportNode *)ARENA_ALLOC(arena, sizeof(CryoImportNode));
     if (!node)
     {
@@ -244,6 +252,7 @@ CryoImportNode *createCryoImportNodeContainer(Arena *arena, CompilerState *state
 ///
 CryoScope *createCryoScopeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoScope *node = (CryoScope *)ARENA_ALLOC(arena, sizeof(CryoScope));
     if (!node)
     {
@@ -269,6 +278,7 @@ CryoScope *createCryoScopeContainer(Arena *arena, CompilerState *state)
 ///
 ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ExternNode *node = (ExternNode *)ARENA_ALLOC(arena, sizeof(ExternNode));
     if (!node)
     {
@@ -308,6 +318,7 @@ ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerS
 ///
 ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ExternFunctionNode *node = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
     if (!node)
     {
@@ -342,6 +353,7 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerStat
 ///
 FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     FunctionDeclNode *node = (FunctionDeclNode *)ARENA_ALLOC(arena, sizeof(FunctionDeclNode));
     if (!node)
     {
@@ -380,6 +392,7 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
 ///
 FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     FunctionCallNode *node = (FunctionCallNode *)ARENA_ALLOC(arena, sizeof(FunctionCallNode));
     if (!node)
     {
@@ -414,6 +427,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *s
 ///
 LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     LiteralNode *node = (LiteralNode *)ARENA_ALLOC(arena, sizeof(LiteralNode) * 2);
     if (!node)
     {
@@ -444,6 +458,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
 ///
 IfStatementNode *createIfStatementContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     IfStatementNode *node = (IfStatementNode *)ARENA_ALLOC(arena, sizeof(IfStatementNode));
     if (!node)
     {
@@ -472,6 +487,7 @@ IfStatementNode *createIfStatementContainer(Arena *arena, CompilerState *state)
 ///
 ForStatementNode *createForStatementNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ForStatementNode *node = (ForStatementNode *)ARENA_ALLOC(arena, sizeof(ForStatementNode));
     if (!node)
     {
@@ -500,6 +516,7 @@ ForStatementNode *createForStatementNodeContainer(Arena *arena, CompilerState *s
 ///
 WhileStatementNode *createWhileStatementNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     WhileStatementNode *node = (WhileStatementNode *)ARENA_ALLOC(arena, sizeof(WhileStatementNode));
     if (!node)
     {
@@ -529,6 +546,7 @@ WhileStatementNode *createWhileStatementNodeContainer(Arena *arena, CompilerStat
 ///
 CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoExpressionNode *node = (CryoExpressionNode *)ARENA_ALLOC(arena, sizeof(CryoExpressionNode));
     if (!node)
     {
@@ -566,6 +584,7 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *s
 ///
 CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoVariableNode *node = (CryoVariableNode *)ARENA_ALLOC(arena, sizeof(CryoVariableNode));
     if (!node)
     {
@@ -606,6 +625,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state
 ///
 VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     VariableNameNode *node = (VariableNameNode *)ARENA_ALLOC(arena, sizeof(VariableNameNode));
     if (!node)
     {
@@ -639,6 +659,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
 ///
 CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoParameterNode *node = (CryoParameterNode *)ARENA_ALLOC(arena, sizeof(CryoParameterNode));
     if (!node)
     {
@@ -671,6 +692,7 @@ CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *sta
 ///
 ParamNode *createParamNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ParamNode *node = (ParamNode *)ARENA_ALLOC(arena, sizeof(ParamNode));
     if (!node)
     {
@@ -702,6 +724,7 @@ ParamNode *createParamNodeContainer(Arena *arena, CompilerState *state)
 ///
 ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ArgNode *node = (ArgNode *)ARENA_ALLOC(arena, sizeof(ArgNode));
     if (!node)
     {
@@ -731,6 +754,7 @@ ArgNode *createArgNodeContainer(Arena *arena, CompilerState *state)
 ///
 CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoReturnNode *node = (CryoReturnNode *)ARENA_ALLOC(arena, sizeof(CryoReturnNode));
     if (!node)
     {
@@ -758,6 +782,7 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state)
 ///
 CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoBinaryOpNode *node = (CryoBinaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoBinaryOpNode));
     if (!node)
     {
@@ -784,6 +809,7 @@ CryoBinaryOpNode *createBinaryOpNodeContainer(Arena *arena, CompilerState *state
 ///
 CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoUnaryOpNode *node = (CryoUnaryOpNode *)ARENA_ALLOC(arena, sizeof(CryoUnaryOpNode));
     if (!node)
     {
@@ -811,6 +837,7 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state)
 ///
 CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoArrayNode *node = (CryoArrayNode *)ARENA_ALLOC(arena, sizeof(CryoArrayNode));
     if (!node)
     {
@@ -848,6 +875,7 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
 ///
 IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     IndexExprNode *node = (IndexExprNode *)ARENA_ALLOC(arena, sizeof(IndexExprNode));
     if (!node)
     {
@@ -876,6 +904,7 @@ IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state)
 ///
 VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     VariableReassignmentNode *node = (VariableReassignmentNode *)ARENA_ALLOC(arena, sizeof(VariableReassignmentNode));
     if (!node)
     {
@@ -916,6 +945,7 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
 ///
 StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     StructNode *node = (StructNode *)ARENA_ALLOC(arena, sizeof(StructNode));
     if (!node)
     {
@@ -962,6 +992,7 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
 ///
 PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     PropertyNode *node = (PropertyNode *)ARENA_ALLOC(arena, sizeof(PropertyNode));
     if (!node)
     {
@@ -993,6 +1024,7 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
 ///
 ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ScopedFunctionCallNode *node = (ScopedFunctionCallNode *)ARENA_ALLOC(arena, sizeof(ScopedFunctionCallNode));
     if (!node)
     {
@@ -1023,6 +1055,7 @@ ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState
 ///
 StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     StructConstructorNode *node = (StructConstructorNode *)ARENA_ALLOC(arena, sizeof(StructConstructorNode));
     if (!node)
     {
@@ -1053,6 +1086,7 @@ StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, Compil
 ///
 ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ConstructorMetaData *node = (ConstructorMetaData *)ARENA_ALLOC(arena, sizeof(ConstructorMetaData));
     if (!node)
     {
@@ -1082,6 +1116,7 @@ ConstructorMetaData *createConstructorMetaDataContainer(Arena *arena, CompilerSt
 ///
 PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     PropertyAccessNode *node = (PropertyAccessNode *)ARENA_ALLOC(arena, sizeof(PropertyAccessNode));
     if (!node)
     {
@@ -1109,6 +1144,7 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
 ///
 ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ThisNode *node = (ThisNode *)ARENA_ALLOC(arena, sizeof(ThisNode));
     if (!node)
     {
@@ -1134,6 +1170,7 @@ ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state)
 ///
 PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     PropertyReassignmentNode *node = (PropertyReassignmentNode *)ARENA_ALLOC(arena, sizeof(PropertyReassignmentNode));
     if (!node)
     {
@@ -1166,6 +1203,7 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
 ///
 MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     MethodNode *node = (MethodNode *)ARENA_ALLOC(arena, sizeof(MethodNode));
     if (!node)
     {
@@ -1207,6 +1245,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
 ///
 MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     MethodCallNode *node = (MethodCallNode *)ARENA_ALLOC(arena, sizeof(MethodCallNode));
     if (!node)
     {
@@ -1243,6 +1282,7 @@ MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state
 ///
 GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     GenericDeclNode *node = (GenericDeclNode *)ARENA_ALLOC(arena, sizeof(GenericDeclNode));
     if (!node)
     {
@@ -1274,6 +1314,7 @@ GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *sta
 ///
 GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     GenericInstNode *node = (GenericInstNode *)ARENA_ALLOC(arena, sizeof(GenericInstNode));
     if (!node)
     {
@@ -1291,6 +1332,7 @@ GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *sta
 
 PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     PublicMembers *node = (PublicMembers *)ARENA_ALLOC(arena, sizeof(PublicMembers));
     if (!node)
     {
@@ -1311,6 +1353,7 @@ PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
 
 PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     PrivateMembers *node = (PrivateMembers *)ARENA_ALLOC(arena, sizeof(PrivateMembers));
     if (!node)
     {
@@ -1331,6 +1374,7 @@ PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state
 
 ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ProtectedMembers *node = (ProtectedMembers *)ARENA_ALLOC(arena, sizeof(ProtectedMembers));
     if (!node)
     {
@@ -1375,6 +1419,7 @@ ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *s
 ///
 ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ClassNode *node = (ClassNode *)ARENA_ALLOC(arena, sizeof(ClassNode));
     if (!node)
     {
@@ -1401,6 +1446,7 @@ ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
 
 ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     StructConstructorNode *node = (StructConstructorNode *)ARENA_ALLOC(arena, sizeof(StructConstructorNode));
     if (!node)
     {
@@ -1420,6 +1466,7 @@ ClassConstructorNode *createClassConstructorNodeContainer(Arena *arena, Compiler
 
 ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ObjectNode *node = (ObjectNode *)ARENA_ALLOC(arena, sizeof(ObjectNode));
     if (!node)
     {
@@ -1444,6 +1491,7 @@ ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
 
 NullNode *createNullNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     NullNode *node = (NullNode *)ARENA_ALLOC(arena, sizeof(NullNode));
     if (!node)
     {
@@ -1458,6 +1506,7 @@ NullNode *createNullNodeContainer(Arena *arena, CompilerState *state)
 
 TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeofNode *node = (TypeofNode *)ARENA_ALLOC(arena, sizeof(TypeofNode));
     if (!node)
     {
@@ -1473,6 +1522,7 @@ TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state)
 
 UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     UsingNode *node = (UsingNode *)ARENA_ALLOC(arena, sizeof(UsingNode));
     if (!node)
     {
@@ -1492,6 +1542,7 @@ UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state)
 
 ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ModuleNode *node = (ModuleNode *)ARENA_ALLOC(arena, sizeof(ModuleNode));
     if (!node)
     {

@@ -57,9 +57,31 @@ int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *
     compiler.setModuleIdentifier(moduleName);
 
     // Set the output path for the runtime
-    compiler.setCustomOutputPath(outputPath);
+    compiler.setPreprocessOutputPath(outputPath);
     // Compile Runtime Node
     compiler.compile(runtimeNode);
+
+    return 0;
+}
+
+int generateImportCode(ASTNode *importNode, CompilerState *state, CryoLinker *cLinker, const char *outputPath)
+{
+    DEBUG_PRINT_FILTER({
+        std::cout << ">===------------- CPP Import Generation -------------===<\n"
+                  << std::endl;
+    });
+
+    std::string moduleName = state->fileName;
+    Cryo::CryoCompiler compiler;
+
+    compiler.setCompilerState(state);
+    compiler.setCompilerSettings(state->settings);
+    compiler.setModuleIdentifier(moduleName);
+
+    // Set the output path for the runtime
+    compiler.setCustomOutputPath(outputPath, true);
+    // Compile Runtime Node
+    compiler.compile(importNode);
 
     return 0;
 }
@@ -124,6 +146,22 @@ namespace Cryo
         // Parse the AST tree
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
         parseTree(root);
+
+        bool isImport = compiler.isImporting;
+        if (isImport)
+        {
+            Linker *linker = compiler.getLinker();
+            if (!linker)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Linker is null");
+                CONDITION_FAILED;
+            }
+            compiler.getContext().module->print(llvm::outs(), nullptr);
+            linker->generateIRFromCodegen(compiler.getContext().module.get(), compiler.customOutputPath.c_str());
+            
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
+            return;
+        }
 
         // Compile the IR file
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Compiling IR File");

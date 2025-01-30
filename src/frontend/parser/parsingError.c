@@ -17,6 +17,7 @@
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/misc/syntaxHighlighter.h"
+#include "diagnostics/diagnostics.h"
 
 void parsingError(
     char *message,
@@ -28,6 +29,7 @@ void parsingError(
     TypeTable *typeTable,
     CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
 
@@ -116,6 +118,7 @@ void parsingError(
 
 void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     const char *start = source;
     for (int i = 1; i < line; i++)
     {
@@ -145,6 +148,7 @@ void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 
 void printHorizontalLine(int width)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     for (int i = 0; i < width; i++)
     {
         printf(GRAY "%s" COLOR_RESET, HORIZONTAL);
@@ -154,6 +158,7 @@ void printHorizontalLine(int width)
 
 Position getPosition(Lexer *lexer)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Set the position of the lexer
     Position position;
     position.line = lexer->line;
@@ -163,11 +168,13 @@ Position getPosition(Lexer *lexer)
 
 void printPosition(Position position)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     printf("Line: %d, Column: %d\n", position.line, position.column);
 }
 
 void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",
     //        CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start);
     logMessage(LMI, "INFO", "Parser", "Current Token: %s, Lexeme: %.*s",

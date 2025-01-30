@@ -179,6 +179,7 @@ namespace Cryo
         llvm::Module *getCryoRuntimeModule(void);
         void createCRuntimeFile(void);
 
+        void generateIRFromCodegen(llvm::Module *mod, const char *outputPath);
         void completeCodeGeneration(void);
 
     private:

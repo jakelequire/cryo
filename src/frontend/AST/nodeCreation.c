@@ -16,9 +16,11 @@
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/AST.h"
+#include "diagnostics/diagnostics.h"
 
 ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     if (!node)
     {
@@ -183,6 +185,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
 // <addChildNode>
 void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *state)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!parent || !child)
     {
         logMessage(LMI, "ERROR", "AST", "Parent or child node is NULL");
@@ -208,6 +211,7 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
 // <addStatementToBlock>
 void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (blockNode->metaData->type != NODE_BLOCK && blockNode->metaData->type != NODE_FUNCTION_BLOCK)
     {
         logMessage(LMI, "ERROR", "AST", "Invalid block node");
@@ -242,6 +246,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, C
 
 void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!functionBlock || !statement || !functionBlock->metaData || functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
     {
         logMessage(LMI, "ERROR", "AST", "Invalid function block node");
@@ -294,6 +299,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
 // <addFunctionToProgram>
 void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, CompilerState *state, Lexer *lexer)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!program || !function)
     {
         logMessage(LMI, "ERROR", "AST", "Program or function node is NULL");

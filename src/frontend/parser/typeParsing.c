@@ -17,6 +17,7 @@
 #include "tools/cxx/IDGen.hpp"
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
+#include "diagnostics/diagnostics.h"
 
 /* ====================================================================== */
 /* @ASTNode_Parsing - Structures                                          */
@@ -24,6 +25,7 @@
 // <parseStructDeclaration>
 ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing struct declaration...");
     consume(__LINE__, lexer, TOKEN_KW_STRUCT, "Expected `struct` keyword.", "parseStructDeclaration", arena, state, typeTable, context);
 
@@ -201,6 +203,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
 
 bool parsePropertyForDefaultFlag(ASTNode *propertyNode)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (propertyNode->metaData->type == NODE_PROPERTY)
     {
         PropertyNode *property = propertyNode->data.property;
@@ -212,6 +215,7 @@ bool parsePropertyForDefaultFlag(ASTNode *propertyNode)
 // <parseStructField>
 ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing struct field...");
 
     int defaultCount = 0; // This should never be more than 1
@@ -266,6 +270,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
 
 ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing constructor...");
     consume(__LINE__, lexer, TOKEN_KW_CONSTRUCTOR, "Expected `constructor` keyword.", "parseConstructor", arena, state, typeTable, context);
 
@@ -289,6 +294,7 @@ ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
 ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing method declaration...");
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
@@ -350,6 +356,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
 ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *instanceType,
                          Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing method call...");
 
     ASTNode *argList = parseArgumentList(lexer, context, arena, state, typeTable, globalTable);
@@ -461,6 +468,7 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
                           ParsingContext *context, Arena *arena, CompilerState *state,
                           TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing generic declaration...");
 
     // Create a list to store generic parameters
@@ -558,6 +566,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
                                    Arena *arena, CompilerState *state,
                                    TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` in generic instantiation.",
             "parseGenericInstantiation", arena, state, typeTable, context);
 
@@ -625,6 +634,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
 
 ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Parser", "Parsing struct instance...");
 
     Token currentToken = lexer->currentToken;
@@ -655,6 +665,7 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContex
 
 ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeType parentNodeType, bool hasDefaultFlag)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ConstructorMetaData *metaData = (ConstructorMetaData *)malloc(sizeof(ConstructorMetaData));
     metaData->parentName = strdup(parentName);
     metaData->parentNodeType = parentNodeType;

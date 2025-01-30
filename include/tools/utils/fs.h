@@ -82,6 +82,7 @@ char *getCompilerBinPath(void);
 char *getCompilerRootPath(void);
 
 void createNewEmptyFile(const char *fileName, const char *ext, const char *path);
+int createNewEmptyFileWpath(const char *fileWithPath);
 
 typedef struct jFS
 {
@@ -129,6 +130,8 @@ typedef struct jFS
     _NEW_METHOD(char *, getCompilerRootPath, void);
     // `createNewEmptyFile` creates a new empty file.
     _NEW_METHOD(void, createNewEmptyFile, const char *fileName, const char *ext, const char *path);
+    // `createNewEmptyFileWpath` creates a new empty file with a path.
+    _NEW_METHOD(int, createNewEmptyFileWpath, const char *fileWithPath);
 } jFS;
 
 jFS *initFS(void);

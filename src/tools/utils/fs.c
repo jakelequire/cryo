@@ -52,6 +52,7 @@ jFS *initFS(void)
     fs->getCompilerBinPath = getCompilerBinPath;
     fs->getCompilerRootPath = getCompilerRootPath;
     fs->createNewEmptyFile = createNewEmptyFile;
+    fs->createNewEmptyFileWpath = createNewEmptyFileWpath;
     return fs;
 }
 
@@ -209,6 +210,7 @@ int createDir(const char *path)
                 // Ignore if directory already exists
                 if (errno != EEXIST)
                 {
+                    fprintf(stderr, "{FS} Failed to create directory: %s\n", temp);
                     return -1;
                 }
             }
@@ -223,8 +225,14 @@ int createDir(const char *path)
         // Ignore if directory already exists
         if (errno != EEXIST)
         {
+            fprintf(stderr, "{FS} Failed to create directory: %s\n", temp);
             return -1;
         }
+        fprintf(stderr, "{FS} Directory already exists: %s\n", temp);
+    }
+    else
+    {
+        fprintf(stderr, "{FS} Created directory: %s\n", temp);
     }
 
     return 0;
@@ -751,4 +759,76 @@ void createNewEmptyFile(const char *fileName, const char *ext, const char *path)
     fclose(file);
     free(newFileName);
     free(filePath);
+}
+
+int createNewEmptyFileWpath(const char *fileWithPath)
+{
+    // Validate input
+    if (!fileWithPath || strlen(fileWithPath) == 0)
+    {
+        fprintf(stderr, "ERROR: Invalid path provided\n");
+        return -1;
+    }
+
+    // Create mutable copies of the path for manipulation
+    char dir_path[PATH_MAX];
+    strncpy(dir_path, fileWithPath, PATH_MAX - 1);
+    dir_path[PATH_MAX - 1] = '\0';
+
+    // Extract directory path by finding last '/'
+    char *last_slash = strrchr(dir_path, '/');
+    if (!last_slash)
+    {
+        // If no directory specified, use current directory
+        fprintf(stderr, "INFO: No directory specified, using current directory\n");
+        strcpy(dir_path, ".");
+    }
+    else
+    {
+        *last_slash = '\0'; // Terminate string at last slash
+    }
+
+    // Create directory structure
+    char *p = dir_path;
+    if (*p == '/')
+        p++; // Skip leading slash
+
+    while (*p != '\0')
+    {
+        if (*p == '/')
+        {
+            *p = '\0'; // Temporarily terminate
+            if (mkdir(dir_path, 0755) == -1 && errno != EEXIST)
+            {
+                fprintf(stderr, "ERROR: Failed to create directory %s: %s\n",
+                        dir_path, strerror(errno));
+                return -1;
+            }
+            *p = '/'; // Restore slash
+        }
+        p++;
+    }
+
+    // Create final directory level
+    if (strlen(dir_path) > 0 && strcmp(dir_path, ".") != 0)
+    {
+        if (mkdir(dir_path, 0755) == -1 && errno != EEXIST)
+        {
+            fprintf(stderr, "ERROR: Failed to create final directory %s: %s\n",
+                    dir_path, strerror(errno));
+            return -1;
+        }
+    }
+
+    // Create the empty file
+    FILE *file = fopen(fileWithPath, "w");
+    if (!file)
+    {
+        fprintf(stderr, "ERROR: Failed to create file %s: %s\n",
+                fileWithPath, strerror(errno));
+        return -1;
+    }
+
+    fclose(file);
+    return 0;
 }

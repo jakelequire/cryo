@@ -163,9 +163,10 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker)
 {
     logMessage(LMI, "INFO", "Compiler", "Processing node to IR object...");
+    logMessage(LMI, "INFO", "Compiler", "Output Path: %s", outputPath);
 
     // Generate code
-    int result = preprocessRuntimeIR(node, state, outputPath, cLinker);
+    int result = generateImportCode(node, state, cLinker, outputPath);
     if (result != 0)
     {
         CONDITION_FAILED;
