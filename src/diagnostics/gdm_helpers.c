@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "diagnostics/diagnostics.h"
 
-#define MAX_NUM_FRAMES 10
+#define MAX_NUM_FRAMES 16
 
 void addLexer(GlobalDiagnosticsManager *self, Lexer *lexer)
 {
@@ -101,13 +101,13 @@ void print_stack_trace(GlobalDiagnosticsManager *self)
         // Check for the last frame and color it red
         if (forward_index == last - 1)
         {
-            printf(BOLD RED "+------------------------------------------------------------------------------------------+\n");
+            printf(BOLD RED "+-------------------------------------------------------------------------------------------------+\n");
             printf("| (%lu) %s%s - " BOLD CYAN "%s\n" COLOR_RESET,
                    display_index, buffer, padStr, frame->functionName);
-            printf(BOLD RED "+------------------------------------------------------------------------------------------+\n" COLOR_RESET);
+            printf(BOLD RED "+-------------------------------------------------------------------------------------------------+\n" COLOR_RESET);
             break;
         }
-        printf("+------------------------------------------------------------------------------------------+\n");
+        printf("+-------------------------------------------------------------------------------------------------+\n");
         printf("| (%lu) %s%s - " BOLD CYAN "%s\n" COLOR_RESET,
                display_index, buffer, padStr, frame->functionName);
         forward_index++;

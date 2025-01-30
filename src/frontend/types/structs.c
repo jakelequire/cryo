@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
 // # ========================================================= #
 // # Structs
@@ -22,6 +23,7 @@
 // Create an empty struct definition
 DataType *createStructDefinition(const char *structName)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     StructType *structDef = (StructType *)malloc(sizeof(StructType));
     if (!structDef)
     {
@@ -44,6 +46,7 @@ DataType *createStructDefinition(const char *structName)
 // Create struct type
 TypeContainer *createStructType(const char *name, StructType *structDef)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createTypeContainer();
     if (!container)
         return NULL;
@@ -59,6 +62,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
 // Creates a struct type from an ASTNode.
 StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     StructType *structType = (StructType *)malloc(sizeof(StructType));
     if (!structType)
     {
@@ -88,6 +92,7 @@ DataType *createDataTypeFromStructNode(
     ASTNode **methods, int methodCount,
     CompilerState *state, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structNode->data.structNode->name);
     StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
     if (!structType)
@@ -118,6 +123,7 @@ DataType *createDataTypeFromStructNode(
 
 void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!properties || propCount <= 0)
     {
         logMessage(LMI, "INFO", "DataTypes", "No properties to add to struct: %s", structType->name);
@@ -152,6 +158,7 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
 
 void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!methods || methodCount <= 0)
         return;
 
@@ -176,6 +183,7 @@ void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structTy
 
 int getPropertyAccessIndex(DataType *type, const char *propertyName)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
@@ -212,6 +220,7 @@ int getPropertyAccessIndex(DataType *type, const char *propertyName)
 
 int calculateStructSize(StructType *structType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
@@ -237,6 +246,7 @@ int calculateStructSize(StructType *structType)
 
 DataType *wrapStructType(StructType *structDef)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createStructType(structDef->name, structDef);
     if (!container)
     {
@@ -249,6 +259,7 @@ DataType *wrapStructType(StructType *structDef)
 
 bool isStructDeclaration(TypeTable *table, const char *name)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DataType *type = lookupType(table, name);
     if (!type)
         return false;
@@ -258,5 +269,6 @@ bool isStructDeclaration(TypeTable *table, const char *name)
 
 bool isStructType(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     return type->container->baseType == STRUCT_TYPE;
 }

@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "tools/utils/fs.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 #define PATH_MAX 4096
 
@@ -23,6 +24,7 @@ jFS *fs = NULL;
 
 jFS *initFS(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     jFS *fs = (jFS *)malloc(sizeof(jFS));
     if (!fs)
     {
@@ -58,6 +60,7 @@ jFS *initFS(void)
 
 void initGlobalFS(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     fs = initFS();
 }
 
@@ -71,6 +74,7 @@ CryoSrcLocations srcLocations[] = {
 /// @brief Takes in a file path and reads the contents of the file into a buffer
 char *readFile(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "FS", "Reading file: %s", path);
     FILE *file = fopen(path, "rb"); // Open the file in binary mode to avoid transformations
     if (file == NULL)
@@ -118,6 +122,7 @@ char *readFile(const char *path)
 /// @brief Checks if a file exists at the given path
 bool fileExists(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Make sure the string isn't empty
     if (path == NULL)
     {
@@ -159,6 +164,7 @@ bool fileExists(const char *path)
 // @brief Checks if a directory exists at the given path
 int dirExists(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (path == NULL || strlen(path) >= PATH_MAX)
     {
         return -1;
@@ -178,6 +184,7 @@ int dirExists(const char *path)
 /// @brief Creates a directory at the given path
 int createDir(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (path == NULL)
     {
         return -1;
@@ -243,6 +250,7 @@ int createDir(const char *path)
 /// @brief Removes a file at the given path
 void removeFile(const char *filePath)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (fileExists(filePath))
     {
         int status = remove(filePath);
@@ -260,6 +268,7 @@ void removeFile(const char *filePath)
 // <getSTDFilePath>
 const char *getSTDFilePath(const char *subModule)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Find the std library path from the environment (CRYO_PATH)
     const char *cryoPath = getenv("CRYO_PATH");
     if (!cryoPath)
@@ -280,6 +289,7 @@ const char *getSTDFilePath(const char *subModule)
 // <trimFilePath>
 const char *trimFilePath(const char *filePath)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Trim the file path
     const char *fileName = strrchr(filePath, '/');
     return fileName;
@@ -291,6 +301,7 @@ const char *trimFilePath(const char *filePath)
 /// i.e. `/path/to/file.txt` -> `file`
 char *getFileNameFromPathNoExt(const char *filePath)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!filePath)
     {
         return NULL;
@@ -338,6 +349,7 @@ char *getFileNameFromPathNoExt(const char *filePath)
 /// i.e. `/path/to/file.txt` -> `file.txt`
 char *getFileNameFromPath(const char *filePath)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!filePath)
     {
         return NULL;
@@ -380,6 +392,7 @@ char *getFileNameFromPath(const char *filePath)
 // <getCurRootDir>
 const char *getCurRootDir(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Get the current working directory
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) == NULL)
@@ -395,6 +408,7 @@ const char *getCurRootDir(void)
 // <getCryoSrcLocation>
 const char *getCryoSrcLocation(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     int i = 0;
     while (srcLocations->rootDir[i] != NULL)
     {
@@ -413,6 +427,7 @@ const char *getCryoSrcLocation(void)
 // <getCRuntimePath>
 char *getCRuntimePath(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Find the path to the Cryo Compiler
     char *srcPath = (char *)getCryoSrcLocation();
     if (!srcPath)
@@ -434,6 +449,7 @@ char *getCRuntimePath(void)
 
 const char *appendStrings(const char *str1, const char *str2)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *result = (char *)malloc(strlen(str1) + strlen(str2) + 1);
     if (!result)
     {
@@ -449,6 +465,7 @@ const char *appendStrings(const char *str1, const char *str2)
 
 const char *appendExtensionToFileName(const char *fileName, const char *extension)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *result = (char *)malloc(strlen(fileName) + strlen(extension) + 1);
     if (!result)
     {
@@ -469,6 +486,7 @@ const char *appendExtensionToFileName(const char *fileName, const char *extensio
 /// @return
 const char *appendPathToFileName(const char *path, const char *fileName, bool endingSlash)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *result = (char *)malloc(strlen(path) + strlen(fileName) + 2);
     if (!result)
     {
@@ -488,6 +506,7 @@ const char *appendPathToFileName(const char *path, const char *fileName, bool en
 
 const char *removeFileFromPath(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     const char *lastSlash = strrchr(path, '/');
     if (!lastSlash)
     {
@@ -510,6 +529,7 @@ const char *removeFileFromPath(const char *path)
 
 const char *changeFileExtension(const char *fileName, const char *newExtension)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     const char *lastDot = strrchr(fileName, '.');
     if (!lastDot)
     {
@@ -533,6 +553,7 @@ const char *changeFileExtension(const char *fileName, const char *newExtension)
 
 char *getPathFromCryoPath(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     const char *command = "cryo-path";
     FILE *fp;
     char *path = NULL;
@@ -612,6 +633,7 @@ char *getPathFromCryoPath(void)
 // This function will see if the `CRYO_COMPILER` environment variable is set
 char *getPathFromEnvVar(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     const char *env_var = getenv("CRYO_COMPILER");
     if (env_var == NULL)
     {
@@ -625,6 +647,7 @@ char *getPathFromEnvVar(void)
 // This function should return `{LOCATION}/cryo/bin/` where `LOCATION` is the root directory of the Cryo compiler
 char *getCompilerBinPath(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Try getting path from cryo-path binary first
     char *path = getPathFromCryoPath();
     if (path != NULL)
@@ -659,6 +682,7 @@ char *getCompilerBinPath(void)
 // This function should return `{LOCATION}/cryo/` where `LOCATION` is the root directory of the Cryo compiler
 char *getCompilerRootPath(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Try getting path from cryo-path binary first
     char *path = getPathFromCryoPath();
     if (path != NULL)
@@ -691,6 +715,7 @@ char *getCompilerRootPath(void)
 }
 void createNewEmptyFile(const char *fileName, const char *ext, const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Create the file name
     char *newFileName = (char *)malloc(strlen(fileName) + strlen(ext) + 1);
     strcpy(newFileName, fileName);
@@ -763,6 +788,7 @@ void createNewEmptyFile(const char *fileName, const char *ext, const char *path)
 
 int createNewEmptyFileWpath(const char *fileWithPath)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Validate input
     if (!fileWithPath || strlen(fileWithPath) == 0)
     {

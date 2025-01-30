@@ -33,15 +33,16 @@
 #define INIT_LIBS()                                   \
     /* Initialize the logging system */               \
     INIT_LOGS();                                      \
-    /* Initialize the global file system utilities */ \
-    INIT_FS();                                        \
     /* Initialize the global diagnostics manager */   \
-    INIT_GDM();
+    INIT_GDM();                                       \
+    /* Initialize the global file system utilities */ \
+    INIT_FS();
 
 int main(int argc, char *argv[])
 {
     // Initialize the libraries and tools
     INIT_LIBS();
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
 
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);

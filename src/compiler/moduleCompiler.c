@@ -17,9 +17,11 @@
 #include "linker/linker.hpp"
 #include "symbolTable/cInterfaceTable.h"
 #include "compiler/compiler.h"
+#include "diagnostics/diagnostics.h"
 
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Compiler", "Compiling module file: %s", filePath);
 
     char *source = readFile(filePath);

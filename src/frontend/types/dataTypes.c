@@ -16,9 +16,11 @@
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
 TypeTable *initTypeTable(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeTable *table = (TypeTable *)malloc(sizeof(TypeTable));
     if (!table)
     {
@@ -42,6 +44,7 @@ TypeTable *initTypeTable(void)
 // Create new TypeContainer
 TypeContainer *createTypeContainer(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
     if (!container)
     {
@@ -68,6 +71,7 @@ TypeContainer *createTypeContainer(void)
 
 DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "DataTypes", "Parsing data type '%s'", typeStr);
     // Check if `[]` is at the end of the type string
     size_t len = strlen(typeStr);
@@ -184,6 +188,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSym
 // Create DataType wrapper
 DataType *wrapTypeContainer(TypeContainer *container)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DataType *type = (DataType *)malloc(sizeof(DataType));
     if (!type)
     {
@@ -202,6 +207,7 @@ DataType *wrapTypeContainer(TypeContainer *container)
 
 DataType *lookupType(TypeTable *table, const char *name)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     for (int i = 0; i < table->count; i++)
     {
         DataType *type = table->types[i];
@@ -222,6 +228,7 @@ DataType *lookupType(TypeTable *table, const char *name)
 
 void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!name || !type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid name or type in addTypeToTypeTable\n");
@@ -259,6 +266,7 @@ void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
 
 ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
@@ -287,6 +295,7 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName, Ty
 
 DataType *CryoDataTypeStringToType(const char *typeStr)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (strcmp(typeStr, "int") == 0)
     {
         return createPrimitiveIntType();
@@ -319,6 +328,7 @@ DataType *CryoDataTypeStringToType(const char *typeStr)
 
 DataType *DataTypeFromNode(ASTNode *node)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     CryoNodeType nodeType = node->metaData->type;
 
     switch (nodeType)
@@ -360,6 +370,7 @@ DataType *DataTypeFromNode(ASTNode *node)
 
 const char *getDataTypeName(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type. @getDataTypeName\n");
@@ -390,6 +401,7 @@ const char *getDataTypeName(DataType *type)
 
 DataType **getTypeArrayFromASTNode(ASTNode **node, int size)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -420,6 +432,7 @@ DataType **getTypeArrayFromASTNode(ASTNode **node, int size)
 
 DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!params)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -454,6 +467,7 @@ DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount)
 /// @return
 DataType **getDataTypeArrayFromASTNode(ASTNode *node)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -495,6 +509,7 @@ DataType **getDataTypeArrayFromASTNode(ASTNode *node)
 
 DataType *getDataTypeFromASTNode(ASTNode *node)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -579,6 +594,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
 
 void setNewDataTypeForNode(ASTNode *node, DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!node || !type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid node or type.\n");
@@ -617,6 +633,7 @@ void setNewDataTypeForNode(ASTNode *node, DataType *type)
 
 DataType *cloneDataType(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type. @cloneDataType\n");
@@ -664,6 +681,7 @@ DataType *cloneDataType(DataType *type)
 
 void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!table || !name || !type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid table, name, or type.\n");
@@ -685,6 +703,7 @@ void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type)
 
 void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!root)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid root node.\n");
@@ -715,6 +734,7 @@ void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
 
 DataType *findClassType(ASTNode *node, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!node || !typeTable)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid node or type table.\n");
@@ -735,6 +755,7 @@ DataType *findClassType(ASTNode *node, TypeTable *typeTable)
 
 DataType *findClassTypeFromName(const char *name, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!name || !typeTable)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid name or type table.\n");
@@ -754,6 +775,7 @@ DataType *findClassTypeFromName(const char *name, TypeTable *typeTable)
 
 DataType **getParamTypeArray(ASTNode **node)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid node.\n");
@@ -785,6 +807,7 @@ DataType **getParamTypeArray(ASTNode **node)
 
 ASTNode **getAllClassMethods(ASTNode *classNode)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!classNode)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class node.\n");
@@ -837,6 +860,7 @@ ASTNode **getAllClassMethods(ASTNode *classNode)
 
 ASTNode **getAllClassPropsFromDataType(DataType *classType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!classType)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type.\n");

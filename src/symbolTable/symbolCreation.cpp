@@ -15,12 +15,14 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/globalSymtable.hpp"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
 
     ScopeBlock *GlobalSymbolTable::createScopeBlock(const char *name, size_t depth)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         ScopeBlock *block = new ScopeBlock();
         block->name = name;
         block->depth = depth;
@@ -34,6 +36,7 @@ namespace Cryo
 
     VariableSymbol *GlobalSymbolTable::createVariableSymbol(const char *name, DataType *type, ASTNode *node, const char *scopeId)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         VariableSymbol *symbol = new VariableSymbol();
         symbol->name = name;
         symbol->type = type;
@@ -45,6 +48,7 @@ namespace Cryo
 
     FunctionSymbol *GlobalSymbolTable::createFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         FunctionSymbol *symbol = new FunctionSymbol();
         symbol->name = name;
         symbol->returnType = returnType;
@@ -59,6 +63,7 @@ namespace Cryo
 
     FunctionSymbol *GlobalSymbolTable::createIncompleteFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         FunctionSymbol *symbol = new FunctionSymbol();
         symbol->name = name;
         symbol->returnType = returnType;
@@ -73,6 +78,7 @@ namespace Cryo
 
     ExternSymbol *GlobalSymbolTable::createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, const char *scopeId)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         ExternSymbol *symbol = new ExternSymbol();
         symbol->name = name;
         symbol->returnType = returnType;
@@ -86,6 +92,7 @@ namespace Cryo
 
     TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         TypeSymbol *symbol = new TypeSymbol();
         symbol->name = name;
         symbol->type = type;
@@ -109,6 +116,7 @@ namespace Cryo
 
     TypeSymbol *GlobalSymbolTable::createIncompleteTypeSymbol(const char *name, TypeofDataType typeOf)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         TypeSymbol *symbol = new TypeSymbol();
         symbol->name = name;
         symbol->type = nullptr;
@@ -131,6 +139,7 @@ namespace Cryo
 
     PropertySymbol *GlobalSymbolTable::createPropertySymbol(ASTNode *propNode)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (propNode->metaData->type != NODE_PROPERTY)
         {
             std::cout << "Error: Failed to create Property Symbol, typeof node mismatch." << std::endl;
@@ -151,6 +160,7 @@ namespace Cryo
 
     MethodSymbol *GlobalSymbolTable::createMethodSymbol(ASTNode *methodNode)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (methodNode->metaData->type != NODE_METHOD)
         {
             std::cout << "Error: Failed to create Method Symbol, typeof node mismatch" << std::endl;
@@ -178,6 +188,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::createSymbol(TypeOfSymbol symbolType, void *symbol)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *symbolNode = new Symbol();
         symbolNode->symbolType = symbolType;
         switch (symbolType)
@@ -208,6 +219,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::createSymbolTable(const char *namespaceName)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         SymbolTable *table = new SymbolTable();
         table->namespaceName = namespaceName;
         table->count = 0;
@@ -221,6 +233,7 @@ namespace Cryo
 
     TypesTable *GlobalSymbolTable::createTypeTable(const char *namespaceName)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         TypesTable *table = new TypesTable();
         table->namespaceName = namespaceName;
         table->count = 0;
@@ -235,6 +248,7 @@ namespace Cryo
 
     bool GlobalSymbolTable::isParamSymbol(ASTNode *node)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         CryoNodeType nodeType = node->metaData->type;
         if (nodeType == NODE_PARAM)
         {

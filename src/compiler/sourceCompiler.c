@@ -18,9 +18,11 @@
 #include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     const char *fileName = "sourceText";
     if (!sourceBuffer)
     {

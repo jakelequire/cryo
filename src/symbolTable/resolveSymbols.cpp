@@ -17,11 +17,13 @@
 #include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
     VariableSymbol *GlobalSymbolTable::getFrontendVariableSymbol(const char *name, const char *scopeID)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!name || name == nullptr)
         {
             return nullptr;
@@ -69,6 +71,7 @@ namespace Cryo
 
     MethodSymbol *GlobalSymbolTable::getFrontendMethodSymbol(const char *methodName, const char *className, const char *scopeID)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!methodName || methodName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Method Name is null");
@@ -125,6 +128,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::getFrontendSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbolName || symbolName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
@@ -241,6 +245,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::findSymbol(const char *symbolName, const char *scopeID)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbolName || symbolName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
@@ -359,6 +364,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::findMethodSymbol(const char *methodName, const char *className, TypeofDataType typeOfNode)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!methodName || methodName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Method Name is null");
@@ -420,6 +426,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::seekMethodSymbolInAllTables(const char *methodName, const char *className, TypeofDataType typeOfNode)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!methodName || methodName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Method Name is null");
@@ -469,6 +476,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::resolveExternSymbol(const char *symbolName)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         // Look at the extern functions in `externFunctions` and resolve the symbol
         // if it exists.
 
@@ -540,6 +548,7 @@ namespace Cryo
 
     DataType *GlobalSymbolTable::getDataTypeFromSymbol(Symbol *symbol)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbol || symbol == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
@@ -584,6 +593,7 @@ namespace Cryo
 
     ASTNode *GlobalSymbolTable::getASTNodeFromSymbol(Symbol *symbol)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbol || symbol == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
@@ -628,6 +638,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::queryCurrentTable(const char *scopeID, const char *name, TypeOfSymbol symbolType)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!scopeID || scopeID == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Scope ID is null");
@@ -752,6 +763,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::querySpecifiedTable(const char *symbolName, TypeOfSymbol symbolType, SymbolTable *table)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbolName || symbolName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");

@@ -17,12 +17,14 @@
 #include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
     // C Facing Function to work with classes
     void GlobalSymbolTable::initClassDeclaration(const char *className)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *classSymbol = createClassDeclarationSymbol(className);
         if (classSymbol)
         {
@@ -40,6 +42,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addPropertyToClass(const char *className, ASTNode *property)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
@@ -62,6 +65,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addMethodToClass(const char *className, ASTNode *method)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
@@ -81,6 +85,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::createClassDeclarationSymbol(const char *className)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         TypeSymbol *typeSymbol = createIncompleteTypeSymbol(className, CLASS_TYPE);
         Symbol *classSymbol = new Symbol();
         classSymbol->symbolType = TYPE_SYMBOL;
@@ -99,6 +104,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateClassSymbolMethods(Symbol *classSymbol, MethodSymbol *method, size_t methodCount)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *methodSymbol = createSymbol(METHOD_SYMBOL, method);
         size_t methodCap = classSymbol->type->methodCapacity;
 
@@ -125,6 +131,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateClassSymbolProperties(Symbol *classSymbol, PropertySymbol *property, size_t propertyCount)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *propertySymbol = createSymbol(PROPERTY_SYMBOL, property);
         size_t propCapacity = classSymbol->type->propertyCapacity;
 
@@ -151,6 +158,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::getClassSymbol(const char *className)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         // Find the class in the symbol table from the hash
         const char *classNameHash = IDGen::generate64BitHashID(className);
 
@@ -166,6 +174,7 @@ namespace Cryo
 
     void GlobalSymbolTable::completeClassDeclaration(ASTNode *classNode, const char *className)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!classNode || classNode == nullptr)
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Class Node is null");
@@ -208,6 +217,7 @@ namespace Cryo
 
     ASTNode *GlobalSymbolTable::findClassProperty(const char *propertyName, const char *className)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
@@ -229,6 +239,7 @@ namespace Cryo
 
     ASTNode *GlobalSymbolTable::findClassMethod(const char *methodName, const char *className)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         Symbol *classSymbol = getClassSymbol(className);
         if (!classSymbol)
         {
@@ -253,11 +264,13 @@ namespace Cryo
 
     void GlobalSymbolTable::addClassDeclarationToTable(Symbol *classSymbol, SymbolTable *table)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         table->symbols[table->count++] = classSymbol;
     }
 
     void GlobalSymbolTable::updateClassSymbol(Symbol *classSymbol, SymbolTable *table)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         for (int i = 0; i < table->count; i++)
         {
             if (table->symbols[i] == classSymbol)

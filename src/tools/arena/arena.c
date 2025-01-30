@@ -15,9 +15,11 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/arena/arena.h"
+#include "diagnostics/diagnostics.h"
 
 Arena *createArena(size_t size, size_t alignment)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     Arena *arena = (Arena *)malloc(sizeof(Arena));
     if (!arena)
     {
@@ -30,6 +32,7 @@ Arena *createArena(size_t size, size_t alignment)
 
 void initMemoryPool(MemoryPool *pool, size_t block_size, size_t num_blocks)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     pool->block_size = block_size;
     pool->num_blocks = num_blocks;
     pool->free_list = NULL;
@@ -50,6 +53,7 @@ void initMemoryPool(MemoryPool *pool, size_t block_size, size_t num_blocks)
 
 void *poolAlloc(MemoryPool *pool)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (pool->free_list == NULL)
     {
         logMessage(LMI, "ERROR", "MemoryPool", "Pool is empty");
@@ -65,6 +69,7 @@ void *poolAlloc(MemoryPool *pool)
 
 void poolFree(MemoryPool *pool, void *ptr)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     PoolBlock *block = (PoolBlock *)ptr;
     block->next = pool->free_list;
     pool->free_list = block;
@@ -74,6 +79,7 @@ void poolFree(MemoryPool *pool, void *ptr)
 
 void initArena(Arena *arena, size_t size, size_t alignment)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Arena", "Initializing arena");
 
     arena->base = aligned_alloc(alignment, size);
@@ -101,6 +107,7 @@ void initArena(Arena *arena, size_t size, size_t alignment)
 
 void *debugArenaAlloc(Arena *arena, size_t size, const char *file, int line)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Arena", "Allocating memory with debug information");
     size_t total_size = size + sizeof(AllocationHeader);
     void *raw_memory = arenaAllocAligned(arena, total_size, arena->alignment, __FILE__, __LINE__);
@@ -125,6 +132,7 @@ void *debugArenaAlloc(Arena *arena, size_t size, const char *file, int line)
 
 void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char *file, int line)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // logMessage(LMI, "INFO", "Arena", "Allocating memory with alignment");
     size_t offset = arena->offset;
     // logMessage(LMI, "INFO", "Arena", "Getting current offset: %zu", offset);
@@ -151,6 +159,7 @@ void *arenaAllocAligned(Arena *arena, size_t size, size_t alignment, const char 
 
 void *growArena(Arena *arena, size_t size)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     Arena *current = arena;
     while (current->next)
     {
@@ -173,6 +182,7 @@ void *growArena(Arena *arena, size_t size)
 
 void *pushSize(Arena *arena, size_t size)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Arena", "Pushing size");
     size_t alignment = arena->alignment;
     size_t offset = arena->offset;
@@ -192,6 +202,7 @@ void *pushSize(Arena *arena, size_t size)
 
 void resetArena(Arena *arena)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     printf("[INFO] { Arena } Resetting arena\n");
     arena->offset = 0;
     arena->free_list = NULL;
@@ -200,6 +211,7 @@ void resetArena(Arena *arena)
 
 void clearArena(Arena *arena)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Arena", "Clearing arena");
     resetArena(arena);
     logMessage(LMI, "INFO", "Arena", "Arena cleared");
@@ -207,6 +219,7 @@ void clearArena(Arena *arena)
 
 void freeArena(Arena *arena)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     logMessage(LMI, "INFO", "Arena", "Freeing arena");
     Arena *current = arena;
     while (current)
@@ -228,6 +241,7 @@ void freeArena(Arena *arena)
 
 void arenaDebugPrint(Arena *arena)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     printf("\n================================================================================\n");
     printf("                                ARENA DEBUG INFO                                \n");
     printf("================================================================================\n\n");
@@ -299,6 +313,7 @@ void arenaDebugPrint(Arena *arena)
 // Helper functions
 char *string_repeat(const char *str, int times)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     size_t len = strlen(str);
     char *result = (char *)malloc(len * times + 1);
     for (int i = 0; i < times; i++)
@@ -311,6 +326,7 @@ char *string_repeat(const char *str, int times)
 
 char *truncate_string(const char *str, size_t max_len)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     static char buffer[21]; // Max length + 1 for null terminator
     if (strlen(strdup(str)) <= max_len)
     {
@@ -322,6 +338,7 @@ char *truncate_string(const char *str, size_t max_len)
 
 const char *get_allocation_type(size_t size)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (size <= 16)
         return "Small";
     if (size <= 32)
@@ -333,6 +350,7 @@ const char *get_allocation_type(size_t size)
 
 void print_pool_info(const char *name, MemoryPool *pool)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     size_t free_blocks = 0;
     PoolBlock *current = pool->free_list;
     while (current)

@@ -17,11 +17,13 @@
 #include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
     SymbolTable *GlobalSymbolTable::mergeAllSymbols(void)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         std::vector<Symbol *> primarySymbols = mergePrimaryTable();
         std::vector<Symbol *> dependencySymbols = mergeAllDependencyTables();
         std::vector<Symbol *> allSymbols = mergeTwoSymbolVectors(primarySymbols, dependencySymbols);
@@ -40,6 +42,7 @@ namespace Cryo
 
     std::vector<Symbol *> GlobalSymbolTable::mergePrimaryTable(void)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         SymbolTable *table = getPrimaryTable();
         if (!table)
         {
@@ -58,6 +61,7 @@ namespace Cryo
 
     std::vector<Symbol *> GlobalSymbolTable::mergeAllDependencyTables(void)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         std::vector<Symbol *> mergedSymbols;
 
         for (auto &table : dependencyTableVector)
@@ -74,6 +78,7 @@ namespace Cryo
 
     std::vector<Symbol *> GlobalSymbolTable::mergeTwoSymbolVectors(std::vector<Symbol *> symbols1, std::vector<Symbol *> symbols2)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         std::vector<Symbol *> mergedSymbols;
         for (auto &symbol : symbols1)
         {
@@ -88,6 +93,7 @@ namespace Cryo
 
     std::vector<Symbol *> GlobalSymbolTable::mergeTwoTables(SymbolTable *table1, SymbolTable *table2)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         std::vector<Symbol *> mergedSymbols;
         if (!table1 || !table2)
         {
@@ -110,6 +116,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::createNewSymbolTableFromSymbols(std::vector<Symbol *> symbols)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         const char *namespaceName = this->currentNamespace;
         SymbolTable *table = createSymbolTable(namespaceName);
         for (auto &symbol : symbols)

@@ -15,11 +15,13 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
 // createMethodType(returnType, paramTypes, paramCount, arena, state, typeTable);
 
 FunctionType *createFunctionTypeContainer(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     FunctionType *funcType = (FunctionType *)malloc(sizeof(FunctionType));
     if (!funcType)
     {
@@ -43,6 +45,7 @@ FunctionType *createFunctionTypeContainer(void)
 
 DataType *createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DataType *methodType = wrapTypeContainer(createTypeContainer());
     if (!methodType)
     {
@@ -71,6 +74,7 @@ DataType *createMethodType(const char *methodName, DataType *returnType, DataTyp
 
 DataType *createFunctionType(const char *functionName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DataType *functionType = wrapTypeContainer(createTypeContainer());
     if (!functionType)
     {

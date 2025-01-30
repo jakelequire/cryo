@@ -17,11 +17,13 @@
 #include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
     DataType *GlobalSymbolTable::resolveDataType(const char *name)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         // No need for strdup here - std::string will make its own copy
         std::string cxxTypeNameStr(name); // Direct construction from const char*
 
@@ -64,6 +66,7 @@ namespace Cryo
 
     void GlobalSymbolTable::parseSymbolTableForTypes(SymbolTable *symbolTable)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbolTable || symbolTable == nullptr)
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Symbol Table is null");
@@ -92,6 +95,7 @@ namespace Cryo
 
     int GlobalSymbolTable::addDataTypeSymbol(Symbol *symbol)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbol || symbol == nullptr)
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Symbol is null");
@@ -116,6 +120,7 @@ namespace Cryo
 
     bool GlobalSymbolTable::doesTypeExist(const char *name)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         DEBUG_PRINT_FILTER({
             std::cout << "Checking if Type Exists: " << name << std::endl;
         });
@@ -152,6 +157,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addTypeToTable(TypeSymbol *typeSymbol)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!typeSymbol || typeSymbol == nullptr)
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");
@@ -176,6 +182,7 @@ namespace Cryo
 
     void GlobalSymbolTable::initTypeDefinition(Symbol *typeSymbol)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!typeSymbol || typeSymbol == nullptr)
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");
@@ -210,6 +217,7 @@ namespace Cryo
     // After the type def is complete. We need to update the type symbol in the table with the new typeSymbol
     void GlobalSymbolTable::completeTypeDefinition(Symbol *typeSymbol, const char *typeName)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!typeSymbol || typeSymbol == nullptr)
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");

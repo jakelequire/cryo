@@ -15,11 +15,13 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/globalSymtable.hpp"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
     void GlobalSymbolTable::enterScope(const char *name)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         ScopeBlock *newScope = createScopeBlock(name, currentScope ? currentScope->depth + 1 : 0);
         newScope->parent = currentScope;
         if (currentScope)
@@ -37,6 +39,7 @@ namespace Cryo
 
     void GlobalSymbolTable::exitScope()
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (currentScope)
         {
             currentScope = currentScope->parent;
@@ -46,6 +49,7 @@ namespace Cryo
 
     void GlobalSymbolTable::initNamepsaceScope(const char *namespaceName)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         ScopeBlock *newScope = createScopeBlock(namespaceName, 0);
         currentScope = newScope;
         scopeDepth = 0;
@@ -53,6 +57,7 @@ namespace Cryo
 
     const char *GlobalSymbolTable::getScopeID(const char *name)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         return IDGen::generate64BitHashID(name);
     }
 

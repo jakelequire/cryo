@@ -16,9 +16,11 @@
  ********************************************************************************/
 #include "frontend/dataTypes.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 void printTypeTable(TypeTable *table)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         printf("\n");
         printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
@@ -46,6 +48,7 @@ void printTypeTable(TypeTable *table)
 
 char *TypeofDataTypeToString(TypeofDataType type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     switch (type)
     {
     case PRIMITIVE_TYPE:
@@ -71,6 +74,7 @@ char *TypeofDataTypeToString(TypeofDataType type)
 
 char *PrimitiveDataTypeToString(PrimitiveDataType type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     switch (type)
     {
     case PRIM_INT:
@@ -111,6 +115,7 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
 
 char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     switch (type)
     {
     case PRIM_INT:
@@ -151,6 +156,7 @@ char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
 
 char *DataTypeToStringUnformatted(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
         return "<NULL DATATYPE>";
 
@@ -196,6 +202,7 @@ char *DataTypeToStringUnformatted(DataType *type)
 
 char *DataTypeToString(DataType *dataType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!dataType)
         return "<NULL DATATYPE>";
 
@@ -273,6 +280,7 @@ char *DataTypeToString(DataType *dataType)
 
 char *VerboseDataTypeToString(DataType *dataType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!dataType)
         return "<NULL DATATYPE>";
 
@@ -350,6 +358,7 @@ char *VerboseDataTypeToString(DataType *dataType)
 
 char *VerboseStructTypeToString(StructType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
         return "<NULL STRUCT>";
 
@@ -396,6 +405,7 @@ char *VerboseStructTypeToString(StructType *type)
 
 char *VerboseClassTypeToString(ClassType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
         return "<NULL CLASS>";
 
@@ -433,6 +443,7 @@ char *VerboseClassTypeToString(ClassType *type)
 
 char *VerboseFunctionTypeToString(FunctionType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
         return "<NULL FUNCTION>";
 
@@ -464,6 +475,7 @@ char *VerboseFunctionTypeToString(FunctionType *type)
 
 void logDataType(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         if (!type)
             return;
@@ -478,6 +490,7 @@ void logDataType(DataType *type)
 
 void logVerboseDataType(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         if (!type)
             return;
@@ -492,6 +505,7 @@ void logVerboseDataType(DataType *type)
 
 void logStructType(StructType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         if (!type)
         {
@@ -514,6 +528,7 @@ void logStructType(StructType *type)
 
 void printFormattedStructType(StructType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         printf("   ────────────────────────────────────────────────────────────\n");
         printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
@@ -553,6 +568,7 @@ void printFormattedStructType(StructType *type)
 
 void printFormattedPrimitiveType(PrimitiveDataType type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         printf("   ────────────────────────────────────────────────────────────\n");
         printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s\n", PrimitiveDataTypeToString(type));
@@ -562,6 +578,7 @@ void printFormattedPrimitiveType(PrimitiveDataType type)
 
 void printFormattedType(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         if (!type)
             return;
@@ -603,6 +620,7 @@ void printFormattedType(DataType *type)
 
 void printTypeContainer(TypeContainer *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!type)
         return;
 
@@ -639,6 +657,7 @@ void printTypeContainer(TypeContainer *type)
 
 void printVerboseTypeContainer(TypeContainer *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         if (!type)
         {
@@ -696,6 +715,7 @@ void printVerboseTypeContainer(TypeContainer *type)
     }
 void printClassType(ClassType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         if (!type)
         {
@@ -724,6 +744,7 @@ void printClassType(ClassType *type)
 
 void printFunctionType(FunctionType *funcType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Make it look like a function signature (e.g., `function (int, float) -> string`)
 
     // (param1Type, param2Type, ...) → returnType
@@ -750,6 +771,7 @@ void printFunctionType(FunctionType *funcType)
 
 void printFunctionType_UF(FunctionType *funcType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Make it look like a function signature (e.g., `function (int, float) -> string`)
 
     // (param1Type, param2Type, ...) → returnType
@@ -774,6 +796,7 @@ void printFunctionType_UF(FunctionType *funcType)
 
 char *getFunctionTypeStr_UF(FunctionType *funcType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     // Make it look like a function signature (e.g., `function (int, float) -> string`)
 
     // (param1Type, param2Type, ...) → returnType
@@ -798,6 +821,7 @@ char *getFunctionTypeStr_UF(FunctionType *funcType)
 
 char *getFunctionArgTypeArrayStr(ASTNode *functionNode)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!functionNode)
         return NULL;
 

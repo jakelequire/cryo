@@ -17,6 +17,7 @@
 #include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
@@ -25,6 +26,7 @@ namespace Cryo
 
     void GlobalSymbolTable::initFunctionDeclaration(const char *functionName, const char *parentScopeID, ASTNode **params, size_t paramCount, DataType *returnType)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!functionName || functionName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Function Name is null");
@@ -59,6 +61,7 @@ namespace Cryo
 
     void GlobalSymbolTable::completeFunctionDeclaration(ASTNode *functionNode, const char *scopeID, const char *parentScopeID)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!functionNode || functionNode == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Function Node is null");
@@ -100,6 +103,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addExternFunctionToTable(ASTNode *externNode, const char *namespaceScopeID)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!externNode || externNode == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Extern Node is null");
@@ -137,6 +141,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::seekFunctionSymbolInAllTables(const char *symbolName)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbolName || symbolName == nullptr)
         {
             return nullptr;
@@ -187,6 +192,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!symbolName || symbolName == nullptr)
         {
             return nullptr;
@@ -257,6 +263,7 @@ namespace Cryo
 
     FunctionSymbol *GlobalSymbolTable::resolveScopedFunctionCall(const char *scopeID, const char *functionName)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!scopeID || scopeID == nullptr)
         {
             return nullptr;
@@ -303,6 +310,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addParamToSymbolTable(ASTNode *node, const char *functionScopeID)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (!node || node == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Node is null");
@@ -321,6 +329,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateFunctionSymbol(Symbol *functionSymbol, SymbolTable *table)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         for (int i = 0; i < table->count; i++)
         {
             if (table->symbols[i] == functionSymbol)

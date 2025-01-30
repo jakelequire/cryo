@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "tools/utils/env.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 #define PATH_MAX 4096
 
@@ -32,6 +33,7 @@ cryo compiler: {CRYO_ROOT}/bin/compiler
 
 char *get_cryo_root(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     const char *cryo_dir = "/cryo/";
     char *found = strstr((char *)path, cryo_dir);
 
@@ -59,6 +61,7 @@ char *get_cryo_root(const char *path)
 
 char *getParentDir(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *parent = strdup(path);
     if (!parent)
     {
@@ -75,6 +78,7 @@ char *getParentDir(const char *path)
 
 char *getCompilerRootPath(const char *argv0)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char resolved_path[PATH_MAX];
     if (!realpath(argv0, resolved_path))
     {
@@ -87,6 +91,7 @@ char *getCompilerRootPath(const char *argv0)
 // Helper function to check if directory exists
 static int dir_exists(const char *path)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     struct stat st;
     return (stat(path, &st) == 0 && S_ISDIR(st.st_mode));
 }
@@ -94,6 +99,7 @@ static int dir_exists(const char *path)
 // Helper to create path string
 static char *create_path(const char *base, const char *suffix)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *result = (char *)malloc(PATH_MAX);
     if (!result)
         return NULL;
@@ -111,6 +117,7 @@ static char *create_path(const char *base, const char *suffix)
 
 int initEnvVars(const char *cryo_dir)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!cryo_dir || !dir_exists(cryo_dir))
     {
         fprintf(stderr, "Invalid CRYO_ROOT directory: %s\n", cryo_dir);
@@ -176,6 +183,7 @@ int initEnvVars(const char *cryo_dir)
 
 int ensureEnvVar(const char *env_name, const char *env_value)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (!env_name || !env_value)
     {
         fprintf(stderr, "Invalid environment variable name or value\n");
@@ -216,6 +224,7 @@ int ensureEnvVar(const char *env_name, const char *env_value)
 // Add this to verify environment is properly set up
 int verifyEnvSetup(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     for (size_t i = 0; i < sizeof(ENV_VECTOR) / sizeof(ENV_VECTOR[0]); i++)
     {
         char *value = getenv(ENV_VECTOR[i]);
@@ -244,6 +253,7 @@ int verifyEnvSetup(void)
 
 char *getCryoRootPath(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *cryoRoot = getenv("CRYO_ROOT");
     if (!cryoRoot)
     {
@@ -255,6 +265,7 @@ char *getCryoRootPath(void)
 
 char *getCWD(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *cwd = getcwd(NULL, 0);
     if (!cwd)
     {
@@ -266,6 +277,7 @@ char *getCWD(void)
 
 char *getCryoCompilerPath(void)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     char *compilerPath = getenv("CRYO_COMPILER");
     if (!compilerPath)
     {

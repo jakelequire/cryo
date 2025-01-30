@@ -15,9 +15,11 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
 void initGenericType(GenericType *type, const char *name)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     type->name = strdup(name);
     type->constraint = NULL;
     type->next = NULL;
@@ -26,6 +28,7 @@ void initGenericType(GenericType *type, const char *name)
 // Function to create a new generic parameter
 GenericType *createGenericParameter(const char *name)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     GenericType *param = (GenericType *)malloc(sizeof(GenericType));
     initGenericType(param, name);
     return param;
@@ -33,6 +36,7 @@ GenericType *createGenericParameter(const char *name)
 
 TypeContainer *createGenericArrayType(DataType *genericParam)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createTypeContainer();
 
     // This is an array type
@@ -50,6 +54,7 @@ TypeContainer *createGenericArrayType(DataType *genericParam)
 
 TypeContainer *createGenericStructType(const char *name, StructType *structDef, DataType *genericParam)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createTypeContainer();
 
     container->baseType = STRUCT_TYPE;
@@ -67,6 +72,7 @@ TypeContainer *createGenericStructType(const char *name, StructType *structDef, 
 
 GenericDeclType *createGenericDeclarationContainer(StructType *structDef, DataType **genericParam, int paramCount)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     GenericDeclType *decl = (GenericDeclType *)malloc(sizeof(GenericDeclType));
     decl->genericDef = structDef;
     decl->params = genericParam;
@@ -75,6 +81,7 @@ GenericDeclType *createGenericDeclarationContainer(StructType *structDef, DataTy
 }
 GenericInstType *createGenericInstanceContainer(StructType *structDef, DataType **typeArgs, int argCount, TypeContainer *baseDef)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     GenericInstType *inst = (GenericInstType *)malloc(sizeof(GenericInstType));
     inst->structDef = structDef;
     inst->typeArgs = typeArgs;
@@ -86,12 +93,14 @@ GenericInstType *createGenericInstanceContainer(StructType *structDef, DataType 
 // Function to add constraint to generic type
 void addGenericConstraint(GenericType *type, DataType *constraint)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     type->constraint = constraint;
 }
 
 // Function to link multiple generic parameters
 void linkGenericParameter(GenericType *base, GenericType *next)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     GenericType *current = base;
     while (current->next != NULL)
     {
@@ -102,6 +111,7 @@ void linkGenericParameter(GenericType *base, GenericType *next)
 
 TypeContainer *createGenericStructInstance(TypeContainer *genericDef, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createTypeContainer();
 
     container->baseType = STRUCT_TYPE;
@@ -128,6 +138,7 @@ TypeContainer *createGenericStructInstance(TypeContainer *genericDef, DataType *
 
 TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createTypeContainer();
     container->baseType = STRUCT_TYPE;
 
@@ -193,6 +204,7 @@ TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteT
 
 bool isGenericType(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (type->container->baseType == STRUCT_TYPE)
     {
         StructType *structDef = type->container->custom.structDef;
@@ -205,12 +217,14 @@ bool isGenericType(DataType *type)
 
 bool isGenericInstance(TypeContainer *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     return type->baseType == STRUCT_TYPE &&
            strstr(type->custom.name, "<") != NULL;
 }
 
 DataType *getGenericParameter(TypeContainer *type, int index)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (index >= 0 && index < type->custom.generic.declaration->paramCount)
     {
         return type->custom.generic.declaration->params[index]->container->custom.generic.declaration->params[0];
@@ -219,17 +233,20 @@ DataType *getGenericParameter(TypeContainer *type, int index)
 
 int getGenericParameterCount(TypeContainer *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     return type->custom.generic.declaration->paramCount;
 }
 
 const char *getGenericTypeName(DataType *type)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     return type->container->custom.name;
 }
 
 // Function to substitute generic types in a struct definition
 StructType *substituteGenericType(StructType *structDef, DataType *genericParam, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     StructType *instance = (StructType *)malloc(sizeof(StructType));
     instance->name = (char *)malloc(strlen(structDef->name) + strlen(concreteType->container->custom.name) + 3);
     sprintf((char *)instance->name, "%s<%s>", structDef->name, concreteType->container->custom.name);
@@ -289,6 +306,7 @@ StructType *substituteGenericType(StructType *structDef, DataType *genericParam,
 // Function to clone and substitute generic types in a method definition
 ASTNode *cloneAndSubstituteGenericMethod(ASTNode *method, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ASTNode *newMethod = (ASTNode *)malloc(sizeof(ASTNode));
     *newMethod = *method; // Shallow copy first
 
@@ -317,6 +335,7 @@ ASTNode *cloneAndSubstituteGenericMethod(ASTNode *method, DataType *concreteType
 // Function to clone and substitute generic types in a method parameter
 ASTNode *cloneAndSubstituteGenericParam(ASTNode *param, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ASTNode *newParam = (ASTNode *)malloc(sizeof(ASTNode));
     *newParam = *param; // Shallow copy first
 
@@ -338,6 +357,7 @@ ASTNode *cloneAndSubstituteGenericParam(ASTNode *param, DataType *concreteType)
 // Function to clone and substitute generic types in a method body
 ASTNode *cloneAndSubstituteGenericBody(ASTNode *body, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ASTNode *newBody = (ASTNode *)malloc(sizeof(ASTNode));
     *newBody = *body; // Shallow copy first
 
@@ -358,6 +378,7 @@ ASTNode *cloneAndSubstituteGenericBody(ASTNode *body, DataType *concreteType)
 // Function to clone and substitute generic types in a method statement
 ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ASTNode *newStatement = (ASTNode *)malloc(sizeof(ASTNode));
     *newStatement = *statement; // Shallow copy first
 
@@ -397,6 +418,7 @@ ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concre
 
 bool validateGenericInstantiation(ASTNode *node, TypeTable *typeTable)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (node->metaData->type != NODE_GENERIC_INST)
         return false;
 
@@ -426,6 +448,7 @@ bool validateGenericInstantiation(ASTNode *node, TypeTable *typeTable)
 
 bool validateGenericType(DataType *type, DataType *concreteType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (type->container->baseType == GENERIC_TYPE)
     {
         DataType *paramDataType = type->container->custom.generic.declaration->params[0];
@@ -437,6 +460,7 @@ bool validateGenericType(DataType *type, DataType *concreteType)
 
 bool isTypeCompatible(DataType *type, DataType *other)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     if (type->container->baseType == STRUCT_TYPE && other->container->baseType == STRUCT_TYPE)
     {
         StructType *structType = type->container->custom.structDef;

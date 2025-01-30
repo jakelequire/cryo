@@ -15,9 +15,11 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
 TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createTypeContainer();
     if (!container)
         return NULL;
@@ -47,6 +49,7 @@ typedef struct ArrayType
 
 ArrayType *createArrayTypeContainer(DataType *baseType, DataType **elementTypes, int length, int dimensions)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ArrayType *arrayType = (ArrayType *)malloc(sizeof(ArrayType));
     if (!arrayType)
     {
@@ -69,6 +72,7 @@ ArrayType *createArrayTypeContainer(DataType *baseType, DataType **elementTypes,
 
 DataType *wrapArrayType(ArrayType *arrayType)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     TypeContainer *container = createTypeContainer();
     if (!container)
     {

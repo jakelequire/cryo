@@ -16,9 +16,11 @@
  ********************************************************************************/
 #include "tools/cryoconfig/cryoconfig.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 void logProjectSettings(ProjectSettings *settings)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     DEBUG_PRINT_FILTER({
         printf("\n---------------------[DEBUG PROJECT SETTINGS]---------------------\n");
         printf("Project Settings:\n");
@@ -60,6 +62,7 @@ void logProjectSettings(ProjectSettings *settings)
 
 void logActiveSettings(ProjectSettings *settings)
 {
+    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
     ActiveSettings *activeSettings = &settings->activeSettings;
     if (!activeSettings)
     {

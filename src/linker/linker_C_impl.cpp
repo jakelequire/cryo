@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
+#include "diagnostics/diagnostics.h"
 
 // This file containes the C Implementation for the Cryo Linker class.
 
@@ -22,6 +23,7 @@ extern "C"
 {
     CryoLinker *CryoLinker_Create(const char *buildDir)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         try
         {
             auto linker = new Cryo::Linker(buildDir);
@@ -36,6 +38,7 @@ extern "C"
 
     void CryoLinker_Destroy(CryoLinker *linker)
     {
+        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
         if (linker)
         {
             logMessage(LMI, "INFO", "CryoLinker", "Destroying linker");
