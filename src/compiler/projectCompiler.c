@@ -105,6 +105,15 @@ int compileProject(CompilerSettings *settings)
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
 
+    // Analyze the AST
+    int analysisResult = initSemanticAnalysis(programCopy);
+    if (analysisResult != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to analyze the AST");
+        CONDITION_FAILED;
+        return 1;
+    }
+
     // Outputs the SymTable into a file in the build directory.
     initASTDebugOutput(programNode, settings);
     printTypeTable(typeTable);

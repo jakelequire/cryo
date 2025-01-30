@@ -120,6 +120,12 @@ bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
     case STRUCT_TYPE:
         return strcmp(left->custom.name, right->custom.name) == 0;
 
+    case FUNCTION_TYPE:
+        return left->custom.funcDef == right->custom.funcDef;
+
+    case CLASS_TYPE:
+        return strcmp(left->custom.name, right->custom.name) == 0;
+
     default:
         return false;
     }
@@ -146,4 +152,43 @@ bool isStringDataType(DataType *type)
 
     logMessage(LMI, "INFO", "TypeTable", "Type is not a string type");
     return false;
+}
+
+bool isSameType(DataType *left, DataType *right)
+{
+    __STACK_FRAME__
+    if (!left || !right)
+    {
+        logMessage(LMI, "ERROR", "TypeTable", "Type is null");
+        return false;
+    }
+
+    if (left->container->baseType != right->container->baseType)
+        return false;
+
+    if (left->container->baseType == PRIMITIVE_TYPE)
+    {
+        if (left->container->primitive != right->container->primitive)
+            return false;
+    }
+
+    if (left->container->baseType == STRUCT_TYPE)
+    {
+        if (strcmp(left->container->custom.name, right->container->custom.name) != 0)
+            return false;
+    }
+
+    if (left->container->baseType == FUNCTION_TYPE)
+    {
+        if (left->container->custom.funcDef != right->container->custom.funcDef)
+            return false;
+    }
+
+    if (left->container->baseType == CLASS_TYPE)
+    {
+        if (strcmp(left->container->custom.name, right->container->custom.name) != 0)
+            return false;
+    }
+
+    return true;
 }

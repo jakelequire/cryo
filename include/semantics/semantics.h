@@ -27,18 +27,37 @@
 #include "tools/utils/cWrappers.h"
 #include "tools/utils/cTypes.h"
 
+enum NodeAnalysisStatus
+{
+    NAS_PASSED,
+    NAS_FAILED,
+    NAS_UNIMPLEMENTED
+};
+
 typedef struct SemanticAnalyzer
 {
     // --------------------------
     // Properties
 
     bool passedAnalysis;
+    char *errorMessage;
+
+    size_t nodesAnalyzed;
+    size_t nodesPassed;
+    size_t nodesFailed;
 
     // --------------------------
     // Methods
 
     // Main method to analyze the AST, the AST Node passed here should be the root program node.
     _NEW_METHOD(void, analyzeAST, struct SemanticAnalyzer *self, ASTNode *root);
+
+    _NEW_METHOD(void, treeAnalysis, struct SemanticAnalyzer *self, ASTNode *node);
+    _NEW_METHOD(void, reportSemanticError, struct SemanticAnalyzer *self, const char *message);
+    _NEW_METHOD(void, unimplementedAnalysis, struct SemanticAnalyzer *self);
+    _NEW_METHOD(void, incrementNodesAnalyzed, struct SemanticAnalyzer *self, enum NodeAnalysisStatus status);
+    _NEW_METHOD(void, setPassedAnalysis, struct SemanticAnalyzer *self, bool passed);
+    _NEW_METHOD(void, printAnalysisReport, struct SemanticAnalyzer *self);
 
     // Specific methods for analyzing different types of nodes
 
@@ -76,7 +95,20 @@ typedef struct SemanticAnalyzer
 /// @return int Returns 0 if the analysis was successful, otherwise returns 1.
 int initSemanticAnalysis(ASTNode *root);
 
+// ----------------------------------------------------------------------------
+// Helper / Utility Functions
+
+void reportSemanticError(struct SemanticAnalyzer *self, const char *message);
+void incrementNodesAnalyzed(struct SemanticAnalyzer *self, enum NodeAnalysisStatus status);
+void unimplementedAnalysis(struct SemanticAnalyzer *self);
+void setPassedAnalysis(struct SemanticAnalyzer *self, bool passed);
+void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node);
+void printAnalysisReport(struct SemanticAnalyzer *self);
+
 SemanticAnalyzer *initSemanticAnalyzer(void);
+
+// ----------------------------------------------------------------------------
+// Specific methods for analyzing different types of nodes
 
 void analyzeAST(struct SemanticAnalyzer *self, ASTNode *root);
 void analyzeProgramNode(struct SemanticAnalyzer *self, ASTNode *node);

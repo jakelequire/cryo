@@ -31,6 +31,7 @@
 #include "settings/compilerSettings.h"
 #include "runtime/bootstrap.h"
 #include "tools/utils/cTypes.h"
+#include "semantics/semantics.h"
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;

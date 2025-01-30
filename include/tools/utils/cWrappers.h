@@ -19,10 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/// @brief A macro to define a new method
-/// @param type The return type of the method
-/// @param name The name of the method
-/// @param ... The arguments of the method
 #define _NEW_METHOD(type, name, ...) \
     type (*name)(__VA_ARGS__)
 
