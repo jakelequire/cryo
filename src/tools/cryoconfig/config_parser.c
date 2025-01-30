@@ -31,7 +31,7 @@ project_version: "1.0.0"        <- CONFIG_TOK_IDENTIFIER : CONFIG_TOK_STRING
 
 ProjectSettings *parseCryoConfig(const char *configString)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ProjectSettings *settings = createEmptyProjectSettings();
     if (!settings)
         return NULL;
@@ -142,7 +142,7 @@ ProjectSettings *parseCryoConfig(const char *configString)
 
 ConfigLexer *initConfigLexer(const char *configString)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ConfigLexer *lexer = (ConfigLexer *)malloc(sizeof(ConfigLexer));
     if (!lexer)
     {
@@ -159,7 +159,7 @@ ConfigLexer *initConfigLexer(const char *configString)
 
 bool consumeConfigTok(ConfigLexer *lexer, ConfigToken expected, ConfigTok **token)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     *token = getNextConfigToken(lexer);
     if (!*token || (*token)->token != expected)
     {
@@ -170,7 +170,7 @@ bool consumeConfigTok(ConfigLexer *lexer, ConfigToken expected, ConfigTok **toke
 
 ConfigTok *newConfigTok(ConfigToken token, const char *value)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ConfigTok *tok = (ConfigTok *)malloc(sizeof(ConfigTok));
     if (!tok)
     {
@@ -186,7 +186,7 @@ ConfigTok *newConfigTok(ConfigToken token, const char *value)
 
 ConfigTok *getNextConfigToken(ConfigLexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (lexer->configPos >= lexer->configLength)
     {
         return NULL;
@@ -317,7 +317,7 @@ ConfigTok *getNextConfigToken(ConfigLexer *lexer)
 
 ConfigToken getTokenType(const char *token)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (strcmp(token, "[project]") == 0)
     {
         return CONFIG_TOK_PROJECT;
@@ -344,6 +344,6 @@ ConfigToken getTokenType(const char *token)
 
 const char *getTokenValue(ConfigTok *token)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return token->value;
 }

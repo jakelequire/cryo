@@ -27,7 +27,7 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
                            Arena *arena, CompilerState *state, TypeTable *typeTable,
                            CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing using keyword...");
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
             "parseUsingKeyword", arena, state, typeTable, context);
@@ -84,7 +84,7 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
 // Helper function implementations
 static void cleanupModuleChain(char **names, size_t length)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     for (size_t i = 0; i < length; i++)
     {
         free(names[i]);
@@ -95,7 +95,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
                              ParsingContext *context, Arena *arena,
                              CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     const char *namespaces[] = {0};
     while (true)
     {
@@ -168,7 +168,7 @@ static void parseTypeList(Lexer *lexer, const char *lastModule,
                           ParsingContext *context, Arena *arena, CompilerState *state,
                           TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing specific types within braces...");
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` after `::`.",
             "parseTypeList", arena, state, typeTable, context);
@@ -224,7 +224,7 @@ static void parseTypeList(Lexer *lexer, const char *lastModule,
 void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount,
                        CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Import the module and scope or function
     // This will allow the module to be used in the current scope.
 
@@ -296,7 +296,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
 
 const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Get the path to the STD Library module
     // This will be used to import the module into the current scope.
     // Root Directory: {CRYO_ROOT}/std/
@@ -330,7 +330,7 @@ const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state
 // If the `using` keyword is used to import a whole module, this function will return all files in the module directory.
 const char **getFilesInModuleDir(const char *modulePath)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Get all files in the module directory
     // This will be used to import the module into the current scope.
     DIR *dir;
@@ -381,7 +381,7 @@ const char **getFilesInModuleDir(const char *modulePath)
 
 bool nonCryoFileCheck(const char *fullPath)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Check if the file is a Cryo file
     // This will be used to import the module into the current scope.
     const char *needle = ".cryo";
@@ -398,7 +398,7 @@ bool nonCryoFileCheck(const char *fullPath)
 // If the module file is not found, this function will return NULL.
 const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const char *moduleName)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char *needle = (char *)malloc(strlen(moduleName) + 6);
     strcpy(needle, moduleName);
     strcat(needle, ".mod.cryo");
@@ -430,7 +430,7 @@ const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const c
 
 const char *findRegularFile(const char **moduleFiles, size_t moduleCount, const char *fileName)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     for (size_t i = 0; i < moduleCount; i++)
     {
         const char *currentFilePath = moduleFiles[i];
@@ -460,7 +460,7 @@ const char *findRegularFile(const char **moduleFiles, size_t moduleCount, const 
 
 int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Compile the module file definitions
     // This will be used to import the module into the current scope.
     logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");
@@ -488,7 +488,7 @@ int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *
 void importSpecificNamespaces(const char *primaryModule, const char *namespaces[], size_t namespaceCount,
                               CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     printf("DEBUG: Importing Specific Namespaces... Primary Module: %s\n", primaryModule);
     const char *rootTypeDir = getSTDLibraryModulePath(primaryModule, state);
     if (rootTypeDir == NULL)
@@ -601,7 +601,7 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
 
 ASTNode *compileModuleFileDefinitions(const char *modulePath, CryoGlobalSymbolTable *globalTable, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Compile the module file definitions
     // This will be used to import the module into the current scope.
     logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");

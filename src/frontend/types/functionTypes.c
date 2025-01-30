@@ -21,7 +21,7 @@
 
 FunctionType *createFunctionTypeContainer(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     FunctionType *funcType = (FunctionType *)malloc(sizeof(FunctionType));
     if (!funcType)
     {
@@ -45,7 +45,7 @@ FunctionType *createFunctionTypeContainer(void)
 
 DataType *createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     DataType *methodType = wrapTypeContainer(createTypeContainer());
     if (!methodType)
     {
@@ -74,7 +74,7 @@ DataType *createMethodType(const char *methodName, DataType *returnType, DataTyp
 
 DataType *createFunctionType(const char *functionName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     DataType *functionType = wrapTypeContainer(createTypeContainer());
     if (!functionType)
     {

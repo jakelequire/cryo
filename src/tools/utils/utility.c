@@ -19,7 +19,7 @@
 
 const char *intToConstChar(int num)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     static char buffer[12];
     snprintf(buffer, sizeof(buffer), "%d", num);
     return buffer;
@@ -27,7 +27,7 @@ const char *intToConstChar(int num)
 
 char *intToChar(int num)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char buffer[12];
     snprintf(buffer, sizeof(buffer), "%d", num);
     return buffer;
@@ -35,7 +35,7 @@ char *intToChar(int num)
 
 int charToInt(char *str)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     int num = 0;
     for (int i = 0; str[i] != '\0'; i++)
     {
@@ -46,7 +46,7 @@ int charToInt(char *str)
 
 char *concatStrings(const char *str1, const char *str2)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char *result = (char *)malloc(strlen(str1) + strlen(str2) + 1);
     if (result == NULL)
     {
@@ -60,7 +60,7 @@ char *concatStrings(const char *str1, const char *str2)
 
 char *intToSafeString(int value)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Size for maximum int (-2147483648) plus null terminator
     const size_t BUFFER_SIZE = 12;
     char *buffer = (char *)malloc(BUFFER_SIZE);
@@ -88,7 +88,7 @@ char *intToSafeString(int value)
 // (Makes a copy of the original string)
 char *stringToUFString(const char *str)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (str == NULL || str[0] == '\0')
     {
         perror("Cannot convert NULL string to UF string");

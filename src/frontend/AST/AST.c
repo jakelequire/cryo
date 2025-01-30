@@ -29,7 +29,7 @@ ASTNode *programNode = NULL;
 // this is apart of the bootstrap process, and will be used to generate the runtime code.
 ASTNode *appendASTNodeDefs(ASTNode *root, TypeTable *typeTable, Arena *arena)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!root)
     {
         logMessage(LMI, "ERROR", "AST", "Root node is NULL");
@@ -43,7 +43,7 @@ ASTNode *appendASTNodeDefs(ASTNode *root, TypeTable *typeTable, Arena *arena)
 
 ASTNode *copyASTNode(ASTNode *node)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!node)
         return NULL;
 
@@ -61,7 +61,7 @@ ASTNode *copyASTNode(ASTNode *node)
 
 const char *getNamespaceNameFromRootNode(ASTNode *root)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!root)
     {
         logMessage(LMI, "ERROR", "AST", "Root node is NULL");
@@ -85,7 +85,7 @@ const char *getNamespaceNameFromRootNode(ASTNode *root)
 
 ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_NAMESPACE, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -100,7 +100,7 @@ ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, Typ
 // Create a program node
 ASTNode *createProgramNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_PROGRAM, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -111,7 +111,7 @@ ASTNode *createProgramNode(Arena *arena, CompilerState *state, TypeTable *typeTa
 // Create a literal expression node
 ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -138,7 +138,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTa
 // Create an expression statement node
 ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_EXPRESSION, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -178,7 +178,7 @@ ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerSt
 // Create a binary expression node
 ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_BINARY_EXPR, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -201,7 +201,7 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Ar
 // Create a unary expression node
 ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_UNARY_EXPR, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -215,7 +215,7 @@ ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, Compi
 /* @Node_Creation - Literals */
 ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -231,7 +231,7 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Typ
 
 ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -245,7 +245,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
 
 ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -273,7 +273,7 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
 
 char *handleStringFormatting(char *value)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Find the first instance of a format specifier
     char *formatSpecifier = strchr(value, '\\');
     if (!formatSpecifier)
@@ -313,7 +313,7 @@ char *handleStringFormatting(char *value)
 
 int getStringLength(char *str)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     int length = 0;
     while (*str != '\0')
     {
@@ -325,7 +325,7 @@ int getStringLength(char *str)
 
 ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -340,7 +340,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
 
 ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -374,7 +374,7 @@ ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Ty
 /* @Node_Blocks - Blocks */
 ASTNode *createBlockNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_BLOCK, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -384,7 +384,7 @@ ASTNode *createBlockNode(Arena *arena, CompilerState *state, TypeTable *typeTabl
 
 ASTNode *createFunctionBlock(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -394,7 +394,7 @@ ASTNode *createFunctionBlock(Arena *arena, CompilerState *state, TypeTable *type
 
 ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_IF_STATEMENT, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -406,7 +406,7 @@ ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_b
 
 ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_FOR_STATEMENT, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -419,7 +419,7 @@ ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *incre
 
 ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_WHILE_STATEMENT, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -431,19 +431,19 @@ ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena, Compi
 /* @Node_Blocks - Literals */
 ASTNode *createBooleanLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return createBooleanLiteralNode(value, arena, state, typeTable, lexer);
 }
 
 ASTNode *createStringLiteralExpr(char *str, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return createStringLiteralNode(str, arena, state, typeTable, lexer);
 }
 
 ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_STRING_EXPRESSION, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -456,7 +456,7 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTab
 /* @Node_Creation - Variables */
 ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -487,7 +487,7 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
 
 ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -499,7 +499,7 @@ ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, Compiler
 /* @Node_Creation - Functions */
 ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -525,7 +525,7 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
 
 ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -568,13 +568,13 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *r
 
 ASTNode *createFunctionCallNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return createASTNode(NODE_FUNCTION_CALL, arena, state, typeTable, lexer);
 }
 
 ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -587,7 +587,7 @@ ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *are
 
 ASTNode *createReturnExpression(ASTNode *returnExpression, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -599,19 +599,19 @@ ASTNode *createReturnExpression(ASTNode *returnExpression, DataType *returnType,
 /* @Node_Creation - Parameters */
 ASTNode *createParamListNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return createASTNode(NODE_PARAM_LIST, arena, state, typeTable, lexer);
 }
 
 ASTNode *createArgumentListNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return createASTNode(NODE_ARG_LIST, arena, state, typeTable, lexer);
 }
 
 ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_PARAM, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -626,7 +626,7 @@ ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *
 
 ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(nodeType, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -693,7 +693,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
 /* @Node_Creation - Modules & Externals */
 ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -707,7 +707,7 @@ ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerS
 
 ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_EXTERN_STATEMENT, arena, state, typeTable, lexer);
     if (!node)
         return NULL;
@@ -718,7 +718,7 @@ ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *stat
 /* @Node_Creation - Conditionals */
 ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createIfBlock(condition, then_branch, else_branch, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -730,7 +730,7 @@ ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *el
 
 ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createForBlock(initializer, condition, increment, body, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -742,7 +742,7 @@ ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *i
 
 ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createWhileBlock(condition, body, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -755,7 +755,7 @@ ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, C
 /* @Node_Creation - Arrays */
 ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_ARRAY_LITERAL, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -768,7 +768,7 @@ ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, TypeTable *t
 // Add a new function to create an index expression node
 ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_INDEX_EXPR, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -785,7 +785,7 @@ ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index,
 
 ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_REASSIGN, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -802,7 +802,7 @@ ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode 
 
 ASTNode *createFieldNode(const char *fieldName, DataType *type, const char *parentName, CryoNodeType parentNodeType, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_PROPERTY, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -823,7 +823,7 @@ ASTNode *createStructNode(const char *structName, ASTNode **properties, int prop
                           ASTNode **methods, int methodCount,
                           Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -846,7 +846,7 @@ ASTNode *createStructNode(const char *structName, ASTNode **properties, int prop
 
 ASTNode *createStructConstructor(char *structName, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -864,7 +864,7 @@ ASTNode *createStructConstructor(char *structName, ASTNode **fields, int argCoun
 /* @Node_Creation - Scoped Calls */
 ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_SCOPED_FUNCTION_CALL, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -879,7 +879,7 @@ ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char
 
 ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -895,7 +895,7 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
 
 ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_THIS, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -908,7 +908,7 @@ ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable
 
 ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_PROPERTY_REASSIGN, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -925,7 +925,7 @@ ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, A
 
 ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -944,7 +944,7 @@ ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields
 
 ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -964,7 +964,7 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
 ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, const char *parentName, bool isStatic,
                           Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_METHOD, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -988,7 +988,7 @@ ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataTy
                               ASTNode **args, int argCount, bool isStatic,
                               Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_METHOD_CALL, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1013,7 +1013,7 @@ ASTNode *createGenericDeclNode(DataType *type, const char *name, GenericType **p
                                Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_GENERIC_DECL, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1034,7 +1034,7 @@ ASTNode *createGenericDeclNode(DataType *type, const char *name, GenericType **p
 ASTNode *createGenericInstNode(const char *baseName, DataType **typeArguments, int argumentCount, DataType *resultType,
                                Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_GENERIC_INST, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1053,7 +1053,7 @@ ASTNode *createGenericInstNode(const char *baseName, DataType **typeArguments, i
 ASTNode *createClassDeclarationNode(const char *className,
                                     Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_CLASS, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1070,7 +1070,7 @@ ASTNode *createClassDeclarationNode(const char *className,
 
 ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_CLASS_CONSTRUCTOR, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1091,7 +1091,7 @@ ASTNode *createObject(const char *objectName, DataType *objectType, bool isNew,
                       ASTNode **args, int argCount,
                       Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1113,7 +1113,7 @@ ASTNode *createObjectWithGenerics(const char *objectName, DataType *objectType, 
                                   DataType **generics, int genericCount,
                                   Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1136,7 +1136,7 @@ ASTNode *createObjectWithGenerics(const char *objectName, DataType *objectType, 
 
 ASTNode *createNullNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_NULL_LITERAL, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1149,7 +1149,7 @@ ASTNode *createNullNode(Arena *arena, CompilerState *state, TypeTable *typeTable
 
 ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_TYPEOF, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1165,7 +1165,7 @@ ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *stat
 ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules[],
                          int secondaryModuleCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_USING, arena, state, typeTable, lexer);
     if (!node)
     {
@@ -1182,7 +1182,7 @@ ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules
 
 ASTNode *createModuleNode(const char *moduleName, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_MODULE, arena, state, typeTable, lexer);
     if (!node)
     {

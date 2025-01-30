@@ -22,7 +22,7 @@ namespace Cryo
 
     void GlobalSymbolTable::handleRootNodeImport(ASTNode *node)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             std::cerr << "handleRootNodeImport: Node is null" << std::endl;
@@ -62,7 +62,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::createNewImportTable(const char *namespaceName)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         SymbolTable *table = createSymbolTable(namespaceName);
         if (!table)
         {
@@ -75,7 +75,7 @@ namespace Cryo
 
     void GlobalSymbolTable::loopRootNode(ASTNode *node, SymbolTable *table, char *currentScopeID)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             std::cerr << "loopRootNode: Node is null" << std::endl;

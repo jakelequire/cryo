@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 {
     // Initialize the libraries and tools
     INIT_LIBS();
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
 
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);

@@ -33,7 +33,7 @@ char *runtimePaths[] = {
 // CRYO_ROOT/Std/Runtime/runtime.cryo (CRYO_ROOT is an environment variable)
 char *getRuntimeSrcFile(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char *runtimeBuffer = (char *)malloc(sizeof(char) * 1024);
     char *envRoot = getenv("CRYO_ROOT");
     if (!envRoot)
@@ -57,7 +57,7 @@ char *getRuntimeSrcFile(void)
 // {CWD}/build/out/deps/runtime.ll (CRYO_ROOT is an environment variable)
 char *getRuntimeObjFile(CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char *runtimePathBuffer = (char *)malloc(sizeof(char) * 1024);
     const char *buildDir = GetBuildDir(globalTable);
     sprintf(runtimePathBuffer, "%s/out/deps/runtime.ll", buildDir);
@@ -77,7 +77,7 @@ char *getRuntimeObjFile(CryoGlobalSymbolTable *globalTable)
 // compile the runtime into the program.
 void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Bootstrap", "Bootstrapping runtime definitions...");
 
     setDependencyTableStatus(globalTable, true);
@@ -131,7 +131,7 @@ void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *glo
 
 ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Bootstrap", "@compileForRuntimeNode Reading file: %s", filePath);
     // This needs to create a whole separate compiler state & arena for each program node
     // This is because the program node is the root of the AST and needs to be compiled separately
@@ -169,7 +169,7 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, Cr
 
 void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Bootstrap", "Compiling runtime object file...");
 
     // Generate code
@@ -185,13 +185,13 @@ void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
 
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     bootstrapper->status = status;
 }
 
 Bootstrapper *initBootstrapper(const char *filePath)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     Bootstrapper *bootstrapper = (Bootstrapper *)malloc(sizeof(Bootstrapper));
 
     // Init the bootstrapper state

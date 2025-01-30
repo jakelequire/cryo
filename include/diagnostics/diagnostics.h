@@ -24,6 +24,7 @@
 #include "errorCodes.h"
 #include "tools/utils/cTypes.h"
 #include "tools/utils/cWrappers.h"
+#include "tools/utils/attributes.h"
 #include "tools/macros/consoleColors.h"
 
 #include "frontend/lexer.h"
@@ -144,7 +145,9 @@ typedef struct StackTrace
 // =============================================================================
 // Initialization & Cleanup
 
+__C_CONSTRUCTOR__
 void initGlobalDiagnosticsManager(void);
+
 CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code);
 DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo);
 CompilerInternalError *newCompilerInternalError(char *function, char *filename, int line, char *message);
@@ -182,6 +185,7 @@ void dyn_stackframe_push(StackFrame *frame);
 
 #define NEW_STACK_FRAME(FN, F, L) \
     GDM->createStackFrame(GDM, FN, F, L);
+#define __STACK_FRAME__ GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
 
 #endif // GLOBAL_DIAGNOSTICS_MANAGER_H
 // =============================================================================

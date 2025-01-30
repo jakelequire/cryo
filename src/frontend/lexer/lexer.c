@@ -79,7 +79,7 @@ DataTypeToken dataTypes[] = {
 // <initLexer>
 void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Lexer", "Initializing lexer...");
     lexer->start = source;
     lexer->current = source;
@@ -115,7 +115,7 @@ void freeLexer(Lexer *lexer)
 
 Lexer *freezeLexer(Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     Lexer *frozenLexer = (Lexer *)malloc(sizeof(Lexer));
     frozenLexer->start = lexer->start;
     frozenLexer->current = lexer->current;
@@ -129,7 +129,7 @@ Lexer *freezeLexer(Lexer *lexer)
 
 bool isModuleFile(Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Check if the file is a module file ({FILENAME}.mod.cryo)
     const char *needle = ".mod.cryo";
     if (strstr(lexer->fileName, needle) != NULL)
@@ -141,14 +141,14 @@ bool isModuleFile(Lexer *lexer)
 
 const char *getCurrentFileLocationFromLexer(Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return lexer->fileName;
 }
 
 // <getLPos>
 int getLPos(Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return lexer->line;
 }
 // </getLPos>
@@ -156,7 +156,7 @@ int getLPos(Lexer *lexer)
 // <getCPos>
 int getCPos(Lexer *lexer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return lexer->column;
 }
 // </getCPos>
@@ -164,7 +164,7 @@ int getCPos(Lexer *lexer)
 // <advance>
 char advance(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // printf("[Lexer] Advancing to next character: %c\n", lexer->current[0]);
     lexer->current++;
     lexer->column++;
@@ -176,7 +176,7 @@ char advance(Lexer *lexer, CompilerState *state)
 // <isAtEnd>
 bool isAtEnd(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return *lexer->current == '\0' || lexer->current >= lexer->end;
 }
 // </isAtEnd>
@@ -184,7 +184,7 @@ bool isAtEnd(Lexer *lexer, CompilerState *state)
 // <peek>
 char peek(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return *lexer->current;
 }
 // </peek>
@@ -192,7 +192,7 @@ char peek(Lexer *lexer, CompilerState *state)
 // <peekNext>
 char peekNext(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (isAtEnd(lexer, state))
         return '\0';
     char c = *lexer->current;
@@ -204,7 +204,7 @@ char peekNext(Lexer *lexer, CompilerState *state)
 // <peekNextUnconsumedLexerToken>
 char peekNextUnconsumedLexerToken(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     Lexer tempLexer = *lexer;
     char c = advance(&tempLexer, state);
     return c;
@@ -214,7 +214,7 @@ char peekNextUnconsumedLexerToken(Lexer *lexer, CompilerState *state)
 // <currentChar>
 char currentChar(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return *lexer->current;
 }
 // </currentChar>
@@ -222,7 +222,7 @@ char currentChar(Lexer *lexer, CompilerState *state)
 // <matchToken>
 bool matchToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (peekToken(lexer, state).type == type)
     {
         nextToken(lexer, &lexer->currentToken, state);
@@ -235,7 +235,7 @@ bool matchToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
 // <skipWhitespace>
 void skipWhitespace(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     for (;;)
     {
         char c = peek(lexer, state);
@@ -304,7 +304,7 @@ void skipWhitespace(Lexer *lexer, CompilerState *state)
 // <nextToken>
 Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     skipWhitespace(lexer, state);
 
     lexer->start = lexer->current;
@@ -379,7 +379,7 @@ Token nextToken(Lexer *lexer, Token *token, CompilerState *state)
 // <get_next_token>
 Token get_next_token(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // printf("[Lexer] Getting next token...\n");
     nextToken(lexer, &lexer->currentToken, state);
 
@@ -392,7 +392,7 @@ Token get_next_token(Lexer *lexer, CompilerState *state)
 // <getToken>
 Token getToken(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (lexer->hasPeeked)
     {
         lexer->hasPeeked = false;
@@ -409,7 +409,7 @@ Token getToken(Lexer *lexer, CompilerState *state)
 // <peekToken>
 Token peekToken(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!lexer->hasPeeked)
     {
         nextToken(lexer, &lexer->lookahead, state);
@@ -422,7 +422,7 @@ Token peekToken(Lexer *lexer, CompilerState *state)
 // <peekNextToken>
 Token peekNextToken(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     Lexer tempLexer = *lexer;                           // Copy the current lexer state
     Token tempNextToken = peekToken(&tempLexer, state); // Get the next token from the copied state
     return tempNextToken;
@@ -435,7 +435,7 @@ Token peekNextToken(Lexer *lexer, CompilerState *state)
 // <makeToken>
 Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // printf("\n\nCreating Token: %s\n\n", CryoTokenToString(type));
     // current token
     char *currentToken = strndup(lexer->start, lexer->current - lexer->start);
@@ -460,7 +460,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
 // <errorToken>
 Token errorToken(Lexer *lexer, const char *message, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     Token token;
     token.type = TOKEN_ERROR;
     token.start = message;
@@ -474,7 +474,7 @@ Token errorToken(Lexer *lexer, const char *message, CompilerState *state)
 // <number>
 Token number(Lexer *lexer, CompilerState *state, bool isNegative)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (isNegative)
     {
         advance(lexer, state); // Consume the minus sign
@@ -505,7 +505,7 @@ Token number(Lexer *lexer, CompilerState *state, bool isNegative)
 // <string>
 Token string(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     while (peek(lexer, state) != '"' && !isAtEnd(lexer, state))
     {
         if (peek(lexer, state) == '\n')
@@ -526,7 +526,7 @@ Token string(Lexer *lexer, CompilerState *state)
 // <boolean>
 Token boolean(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (peek(lexer, state) == 't' && peekNext(lexer, state) == 'r' && peekNext(lexer, state) == 'u' && peekNext(lexer, state) == 'e')
     {
         advance(lexer, state);
@@ -556,7 +556,7 @@ Token boolean(Lexer *lexer, CompilerState *state)
 // <symbolChar>
 Token symbolChar(Lexer *lexer, char symbol, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     switch (symbol)
     {
     case '(':
@@ -673,7 +673,7 @@ Token symbolChar(Lexer *lexer, char symbol, CompilerState *state)
 // <identifier>
 Token identifier(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char *cur_token = strndup(lexer->start, lexer->current - lexer->start);
     // printf("\n!![Lexer] Current token: %s\n", cur_token);
     while (isAlpha(peek(lexer, state)) || isDigit(peek(lexer, state)))
@@ -713,7 +713,7 @@ Token identifier(Lexer *lexer, CompilerState *state)
 // <checkKeyword>
 Token checkKeyword(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     while (isAlpha(peek(lexer, state)))
         advance(lexer, state);
 
@@ -784,7 +784,7 @@ Token checkKeyword(Lexer *lexer, CompilerState *state)
 // <checkDataType>
 CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // printf("[Lexer] Checking data type: %s\n", dataType);
     // Check if the next token is the `[` character to determine if it is an array type
     if (peek(lexer, state) == '[')
@@ -826,7 +826,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
 
 Token handleTypeIdentifier(Lexer *lexer, CompilerState *state)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Skip the initial ':'
     advance(lexer, state);
     skipWhitespace(lexer, state);
@@ -871,18 +871,18 @@ Token handleTypeIdentifier(Lexer *lexer, CompilerState *state)
 
 bool isAlpha(char c)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
 bool isDigit(char c)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return c >= '0' && c <= '9';
 }
 
 bool isType(char c)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return c == '[' || c == ']';
 }

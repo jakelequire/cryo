@@ -20,7 +20,7 @@
 // Primitive int Type `(default/baseline)`
 DataType *createPrimitiveIntType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_INT;
@@ -31,7 +31,7 @@ DataType *createPrimitiveIntType(void)
 // Primitive float Type creation `(default/baseline)`
 DataType *createPrimitiveFloatType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_FLOAT;
@@ -42,7 +42,7 @@ DataType *createPrimitiveFloatType(void)
 // Primitive string Type creation `(default/baseline)`
 DataType *createPrimitiveStringType(int length)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_STRING;
@@ -54,7 +54,7 @@ DataType *createPrimitiveStringType(int length)
 // Primitive boolean Type creation `(default/baseline)`
 DataType *createPrimitiveBooleanType(bool booleanValue)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_BOOLEAN;
@@ -66,7 +66,7 @@ DataType *createPrimitiveBooleanType(bool booleanValue)
 // Primitive void Type creation `(default/baseline)`
 DataType *createPrimitiveVoidType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_VOID;
@@ -77,7 +77,7 @@ DataType *createPrimitiveVoidType(void)
 // Primitive null Type creation `(default/baseline)`
 DataType *createPrimitiveNullType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_NULL;
@@ -88,7 +88,7 @@ DataType *createPrimitiveNullType(void)
 // Primitive any Type creation `(default/baseline)`
 DataType *createPrimitiveAnyType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_ANY;
@@ -99,7 +99,7 @@ DataType *createPrimitiveAnyType(void)
 // Unknown Type `(will be resolved later in the compiler)`
 DataType *createUnknownType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = UNKNOWN_TYPE;
 
@@ -109,7 +109,7 @@ DataType *createUnknownType(void)
 // Create primitive type
 TypeContainer *createPrimitiveType(PrimitiveDataType primType)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     if (!container)
         return NULL;
@@ -122,7 +122,7 @@ TypeContainer *createPrimitiveType(PrimitiveDataType primType)
 
 PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (strcmp(typeStr, "int") == 0)
     {
         return PRIM_INT;
@@ -155,12 +155,12 @@ PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
 
 bool isPrimitiveType(const char *typeStr)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
 }
 
 bool isStringType(DataType *type)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return type->container->baseType == PRIMITIVE_TYPE && type->container->primitive == PRIM_STRING;
 }

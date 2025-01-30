@@ -22,7 +22,7 @@ extern "C"
 
     CryoIDGen CryoIDGen_Create(void)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         try
         {
             auto idGen = new Cryo::IDGen();
@@ -36,7 +36,7 @@ extern "C"
 
     void CryoIDGen_Destroy(CryoIDGen idGen)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (idGen)
         {
             delete reinterpret_cast<Cryo::IDGen *>(idGen);
@@ -45,7 +45,7 @@ extern "C"
 
     const char *CryoIDGen_Generate64BitHashID(CryoIDGen idGen, const char *seed)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (idGen)
         {
             return reinterpret_cast<Cryo::IDGen *>(idGen)->generate64BitHashID(seed);
@@ -59,7 +59,7 @@ namespace Cryo
 {
     const char *IDGen::generate64BitHashID(const char *seed)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         uint64_t hash = 0;
         size_t len = strlen(seed);
         for (size_t i = 0; i < len; ++i)
@@ -76,7 +76,7 @@ namespace Cryo
 
     const char *IDGen::generate32BitHashID(const char *seed)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         uint32_t hash = 0;
         size_t len = strlen(seed);
         for (size_t i = 0; i < len; ++i)
@@ -93,7 +93,7 @@ namespace Cryo
 
     const char *IDGen::generate16BitHashID(const char *seed)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         uint16_t hash = 0;
         size_t len = strlen(seed);
         for (size_t i = 0; i < len; ++i)

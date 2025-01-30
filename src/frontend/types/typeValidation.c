@@ -19,7 +19,7 @@
 
 bool typeAlreadyExists(TypeTable *table, const char *name)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     for (int i = 0; i < table->count; i++)
     {
         DataType *type = table->types[i];
@@ -34,7 +34,7 @@ bool typeAlreadyExists(TypeTable *table, const char *name)
 
 bool isValidType(DataType *type)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!type)
     {
         logMessage(LMI, "ERROR", "TypeTable", "Type is null");
@@ -97,7 +97,7 @@ bool isValidType(DataType *type)
 
 bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!left || !right)
         return false;
 
@@ -129,7 +129,7 @@ bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
 // and not a string array type.
 bool isStringDataType(DataType *type)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!type)
     {
         logMessage(LMI, "ERROR", "TypeTable", "Type is null");

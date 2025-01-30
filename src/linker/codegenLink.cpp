@@ -21,7 +21,7 @@ namespace Cryo
 {
     void Linker::generateIRFromCodegen(llvm::Module *mod, const char *outputPath)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!mod)
         {
             logMessage(LMI, "ERROR", "Linker", "Module is null");

@@ -22,7 +22,7 @@
 
 void checkForCryoProject(CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!settings->isSingleFile && settings->isProject)
     {
         logMessage(LMI, "INFO", "CryoConfig", "Initializing as project...");
@@ -99,7 +99,7 @@ void checkForCryoProject(CompilerSettings *settings)
 // `path/to/project/cryoconfig`
 bool doesConfigExist(const char *path)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     FILE *configFile = fopen(path, "r");
     if (!configFile)
     {
@@ -117,7 +117,7 @@ bool doesConfigExist(const char *path)
 // Read the contents of the `cryoconfig` file and save it to a string
 char *getConfigString(const char *path)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     FILE *configFile = fopen(path, "r");
     if (!configFile)
     {
@@ -153,7 +153,7 @@ char *getConfigString(const char *path)
 
 ProjectSettings *createEmptyProjectSettings(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ProjectSettings *settings = (ProjectSettings *)malloc(sizeof(ProjectSettings));
     if (!settings)
     {
@@ -200,7 +200,7 @@ ProjectSettings *createEmptyProjectSettings(void)
 
 ActiveSettings *createEmptyActiveSettings(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ActiveSettings *settings = (ActiveSettings *)malloc(sizeof(ActiveSettings));
     if (!settings)
     {
@@ -236,7 +236,7 @@ ActiveSettings *createEmptyActiveSettings(void)
 
 bool doesProjectSettingExist(ProjectSettings *self, const char *setting)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (cStringCompare(setting, "project_name"))
     {
         return self->activeSettings.project_name;
@@ -314,7 +314,7 @@ bool doesProjectSettingExist(ProjectSettings *self, const char *setting)
 
 void applyActiveSettings(ProjectSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ActiveSettings *activeSettings = &settings->activeSettings;
     if (settings->project_name && settings->project_name != NULL)
     {

@@ -25,7 +25,7 @@
 // <parseProgram>
 ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing program...");
 
     bool isPrimaryTable = isPrimaryTable(globalTable);
@@ -107,7 +107,7 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, TypeTabl
 // <consume>
 void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, Arena *arena, CompilerState *state, TypeTable *typeTable, ParsingContext *context)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Consuming token...");
     // pushCallStack(&callStack, functionName, lexer->currentToken.line);
 
@@ -129,7 +129,7 @@ void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, co
 // <getNextToken>
 void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (isAtEnd(lexer, state))
     {
         lexer->currentToken.type = TOKEN_EOF;
@@ -148,7 +148,7 @@ void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *t
 // <peekNextUnconsumedToken>
 Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (isAtEnd(lexer, state))
     {
         return lexer->currentToken;
@@ -161,7 +161,7 @@ Token peekNextUnconsumedToken(Lexer *lexer, Arena *arena, CompilerState *state, 
 // <getNamespaceName>
 char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char *namespaceName = NULL;
     if (lexer->currentToken.type == TOKEN_IDENTIFIER)
     {
@@ -179,7 +179,7 @@ char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state, TypeTab
 // <isOperator>
 bool isOperator(CryoTokenType type)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     switch (type)
     {
     case TOKEN_PLUS:
@@ -210,7 +210,7 @@ bool isOperator(CryoTokenType type)
 // <getCryoDataType>
 DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Getting data type for: %s", typeStr);
     DataType *type = parseDataType(typeStr, typeTable, globalTable);
     if (!type)
@@ -226,7 +226,7 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
 // <parseType>
 DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing type...");
     DataType *type = NULL;
     const char *typeTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
@@ -257,7 +257,7 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
 
 TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *type = (TypeContainer *)ARENA_ALLOC(arena, sizeof(TypeContainer));
     type->isArray = false;
     type->arrayDimensions = 0;
@@ -298,7 +298,7 @@ TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, Arena 
 // <getOperatorPrecedence>
 int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Getting operator precedence...");
     switch (type)
     {
@@ -341,7 +341,7 @@ int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *st
 // <addStatementToProgram>
 void addStatementToProgram(ASTNode *programNode, ASTNode *statement, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding statement to program...");
     if (!programNode || programNode->metaData->type != NODE_PROGRAM)
     {
@@ -385,7 +385,7 @@ void addStatementToProgram(ASTNode *programNode, ASTNode *statement, Arena *aren
 // <parseStatement>
 ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing statement...");
 
     switch (lexer->currentToken.type)
@@ -473,7 +473,7 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
 
 ASTNode *parseStaticKeyword(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     consume(__LINE__, lexer, TOKEN_KW_STATIC, "Expected 'static' keyword", "parseStaticKeyword", arena, state, typeTable, context);
 
     CryoTokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
@@ -502,7 +502,7 @@ ASTNode *parseStaticKeyword(Lexer *lexer, ParsingContext *context, Arena *arena,
 // <parseScopeCall>
 ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing scope call...");
 
     char *scopeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
@@ -579,7 +579,7 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
 
 ASTNode *parseScopedFunctionCall(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, const char *functionName, const char *scopeName, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing scoped function call...");
 
     ASTNode *node = createScopedFunctionCall(arena, state, strdup(functionName), typeTable, lexer);
@@ -631,7 +631,7 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, ParsingContext *context, Arena *a
 /// Note: This only stops the program on the parser side, not the runtime.
 void parseDebugger(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing debugger statement...");
     consume(__LINE__, lexer, TOKEN_KW_DEBUGGER, "Expected 'debugger' keyword.", "parseDebugger", arena, state, typeTable, context);
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseDebugger", arena, state, typeTable, context);
@@ -643,7 +643,7 @@ void parseDebugger(Lexer *lexer, ParsingContext *context, Arena *arena, Compiler
 
 ASTNode *parseNamespace(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing namespace...");
     // Equivalent to `package <name>` like in Go.
     consume(__LINE__, lexer, TOKEN_KW_NAMESPACE, "Expected 'namespace' keyword.", "parseNamespace", arena, state, typeTable, context);
@@ -674,7 +674,7 @@ ASTNode *parseNamespace(Lexer *lexer, ParsingContext *context, Arena *arena, Com
 // <parsePrimaryExpression>
 ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing primary expression...");
     logMessage(LMI, "INFO", "Parser", "Current Token: %s", CryoTokenToString(lexer->currentToken.type));
 
@@ -772,7 +772,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
 
 ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     CryoTokenType prevToken = context->lastTokens[0].type;
     char *curToken = strndup(lexer->currentToken.start, lexer->currentToken.length);
     CryoTokenType nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable).type;
@@ -845,7 +845,7 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena 
 // <parseExpression>
 ASTNode *parseExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing expression...");
 
     return parseBinaryExpression(lexer, context, 1, arena, state, typeTable, globalTable);
@@ -855,7 +855,7 @@ ASTNode *parseExpression(Lexer *lexer, ParsingContext *context, Arena *arena, Co
 // <parseExpressionStatement>
 ASTNode *parseExpressionStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing expression statement...");
 
     ASTNode *expression = parseExpression(lexer, context, arena, state, typeTable, globalTable);
@@ -871,7 +871,7 @@ ASTNode *parseExpressionStatement(Lexer *lexer, ParsingContext *context, Arena *
 // <parseBinaryExpression>
 ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPrecedence, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing binary expression...");
     ASTNode *left = parsePrimaryExpression(lexer, context, arena, state, typeTable, globalTable);
     if (!left)
@@ -934,7 +934,7 @@ ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPre
 // <parseUnaryExpression>
 ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing unary expression...");
     CryoTokenType opToken;
     ASTNode *right;
@@ -968,7 +968,7 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
 // <parsePublicDeclaration>
 ASTNode *parsePublicDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing public declaration...");
     consume(__LINE__, lexer, TOKEN_KW_PUBLIC, "Expected 'public' keyword.", "parsePublicDeclaration", arena, state, typeTable, context);
 
@@ -991,7 +991,7 @@ ASTNode *parsePublicDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
 // <parsePrivateDeclaration>
 ASTNode *parsePrivateDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing private declaration...");
     consume(__LINE__, lexer, TOKEN_KW_PRIVATE, "Expected 'private' keyword.", "parsePrivateDeclaration", arena, state, typeTable, context);
 
@@ -1017,7 +1017,7 @@ ASTNode *parsePrivateDeclaration(Lexer *lexer, ParsingContext *context, Arena *a
 // <parseBlock>
 ASTNode *parseBlock(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing block...");
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start block.", "parseBlock", arena, state, typeTable, context);
 
@@ -1047,7 +1047,7 @@ ASTNode *parseBlock(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
 // <parseFunctionBlock>
 ASTNode *parseFunctionBlock(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing function block...");
     context->scopeLevel++;
 
@@ -1096,7 +1096,7 @@ ASTNode *parseFunctionBlock(Lexer *lexer, ParsingContext *context, Arena *arena,
 // <parseVarDeclaration>
 ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing variable declaration...");
     bool isMutable = lexer->currentToken.type == TOKEN_KW_MUT;
     bool isConstant = lexer->currentToken.type == TOKEN_KW_CONST;
@@ -1192,7 +1192,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
 // <parseFunctionDeclaration>
 ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVisibilityType visibility, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing function declaration...");
     consume(__LINE__, lexer, TOKEN_KW_FN, "Expected `function` keyword.", "parseFunctionDeclaration", arena, state, typeTable, context);
 
@@ -1293,7 +1293,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
 // <parseExternFunctionDeclaration>
 ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing extern function declaration...");
     consume(__LINE__, lexer, TOKEN_KW_FN, "Expected `function` keyword", "parseExternFunctionDeclaration", arena, state, typeTable, context);
 
@@ -1346,7 +1346,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
 ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
                            char *functionName, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing function call...");
 
     Token token = lexer->currentToken;
@@ -1648,7 +1648,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
 // <parseReturnStatement>
 ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing return statement...");
 
     if (lexer->currentToken.type == TOKEN_KW_RETURN)
@@ -1706,7 +1706,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
 // <parseParameter>
 ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, char *functionName, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing parameter...");
     Token currentToken = lexer->currentToken;
 
@@ -1737,7 +1737,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
 // <parseParameterList>
 ASTNode **parseParameterList(Lexer *lexer, ParsingContext *context, Arena *arena, char *functionName, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing parameter list...");
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start parameter list.", "parseParameterList", arena, state, typeTable, context);
 
@@ -1791,7 +1791,7 @@ ASTNode **parseParameterList(Lexer *lexer, ParsingContext *context, Arena *arena
 // <parseArguments>
 ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing arguments...");
 
     Token currentToken = lexer->currentToken;
@@ -1905,7 +1905,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
 // <parseArgumentList>
 ASTNode *parseArgumentList(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing argument list...");
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start argument list.", "parseArgumentList", arena, state, typeTable, context);
     ASTNode *argListNode = createArgumentListNode(arena, state, typeTable, lexer);
@@ -1944,7 +1944,7 @@ ASTNode *parseArgumentList(Lexer *lexer, ParsingContext *context, Arena *arena, 
 // <parseArgumentsWithExpectedType>
 ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, DataType *expectedType, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (lexer->currentToken.type == TOKEN_LPAREN)
     {
         consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start arguments.", "parseArgumentsWithExpectedType", arena, state, typeTable, context);
@@ -2097,7 +2097,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
 // <parseExpectedTypeArgWithThisKW>
 ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Argument is a 'this' keyword");
     // We have to check if the this keyword is using dot notation
     Token nextToken = peekNextUnconsumedToken(lexer, arena, state, typeTable);
@@ -2177,7 +2177,7 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
 // <addParameterToList>
 void addParameterToList(ASTNode *paramListNode, ASTNode *param, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding parameter to list...");
     if (paramListNode->metaData->type == NODE_PARAM_LIST)
     {
@@ -2205,7 +2205,7 @@ void addParameterToList(ASTNode *paramListNode, ASTNode *param, Arena *arena, Co
 // <addArgumentToList>
 void addArgumentToList(ASTNode *argListNode, ASTNode *arg, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding argument to list...");
     if (argListNode->metaData->type == NODE_ARG_LIST)
     {
@@ -2234,7 +2234,7 @@ void addArgumentToList(ASTNode *argListNode, ASTNode *arg, Arena *arena, Compile
 // <addArgumentToFunctionCall>
 void addArgumentToFunctionCall(ASTNode *functionCallNode, ASTNode *arg, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding argument to function call...");
     if (functionCallNode->metaData->type == NODE_FUNCTION_CALL)
     {
@@ -2264,7 +2264,7 @@ void addArgumentToFunctionCall(ASTNode *functionCallNode, ASTNode *arg, Arena *a
 // <addParameterToExternDecl>
 void addParameterToExternDecl(ASTNode *externDeclNode, ASTNode *param, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding parameter to extern declaration...");
     if (externDeclNode->metaData->type == NODE_EXTERN_FUNCTION)
     {
@@ -2298,7 +2298,7 @@ void addParameterToExternDecl(ASTNode *externDeclNode, ASTNode *param, Arena *ar
 // <parseImport>
 ASTNode *parseImport(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing import...");
     consume(__LINE__, lexer, TOKEN_KW_IMPORT, "Expected `import` keyword.", "parseImport", arena, state, typeTable, context);
 
@@ -2350,7 +2350,7 @@ ASTNode *parseImport(Lexer *lexer, ParsingContext *context, Arena *arena, Compil
 // <importTypeDefinitions>
 void importTypeDefinitions(const char *module, const char *subModule, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Importing type definitions...");
 
     DEBUG_BREAKPOINT;
@@ -2361,7 +2361,7 @@ void importTypeDefinitions(const char *module, const char *subModule, Arena *are
 // <parseExtern>
 ASTNode *parseExtern(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing extern...");
     consume(__LINE__, lexer, TOKEN_KW_EXTERN, "Expected `extern` keyword.", "parseExtern", arena, state, typeTable, context);
 
@@ -2385,7 +2385,7 @@ ASTNode *parseExtern(Lexer *lexer, ParsingContext *context, Arena *arena, Compil
 // <parseIfStatement>
 ASTNode *parseIfStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing if statement...");
     consume(__LINE__, lexer, TOKEN_KW_IF, "Expected `if` keyword.", "parseIfStatement", arena, state, typeTable, context);
     context->isParsingIfCondition = true;
@@ -2414,7 +2414,7 @@ ASTNode *parseIfStatement(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
 ASTNode *parseIfCondition(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing if condition...");
     char *cur_token = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Current token: %s", cur_token);
@@ -2434,7 +2434,7 @@ ASTNode *parseIfCondition(Lexer *lexer, ParsingContext *context, Arena *arena, C
 // <parseForLoop>
 ASTNode *parseForLoop(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // {VAR_DECL}? ; {CONDITION} ; {INCREMENT} {BLOCK}
     logMessage(LMI, "INFO", "Parser", "Parsing for loop...");
     consume(__LINE__, lexer, TOKEN_KW_FOR, "Expected `for` keyword.", "parseForLoop", arena, state, typeTable, context);
@@ -2476,7 +2476,7 @@ ASTNode *parseForLoop(Lexer *lexer, ParsingContext *context, Arena *arena, Compi
 // <parseWhileStatement>
 ASTNode *parseWhileStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing while statement...");
     consume(__LINE__, lexer, TOKEN_KW_WHILE, "Expected `while` keyword.", "parseWhileStatement", arena, state, typeTable, context);
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start while loop.", "parseWhileStatement", arena, state, typeTable, context);
@@ -2495,7 +2495,7 @@ ASTNode *parseWhileStatement(Lexer *lexer, ParsingContext *context, Arena *arena
 // <parseArrayLiteral>
 ASTNode *parseArrayLiteral(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing array literal...");
     consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array literal.", "parseArrayLiteral", arena, state, typeTable, context);
 
@@ -2548,7 +2548,7 @@ ASTNode *parseArrayLiteral(Lexer *lexer, ParsingContext *context, Arena *arena, 
 // <addElementToArrayLiteral>
 void addElementToArrayLiteral(ASTNode *arrayLiteral, ASTNode *element, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding element to array literal...");
     if (arrayLiteral->metaData->type == NODE_ARRAY_LITERAL)
     {
@@ -2581,7 +2581,7 @@ void addElementToArrayLiteral(ASTNode *arrayLiteral, ASTNode *element, Arena *ar
 // <parseArrayIndexing>
 ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayName, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing array indexing...");
     char *arrName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     char *arrCpyName = strdup(arrName);
@@ -2617,7 +2617,7 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
 
 ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing assignment...");
     char *_varName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     char *varNameCpy = strdup(_varName);
@@ -2678,7 +2678,7 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
 
 ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing `this` context...");
     consume(__LINE__, lexer, TOKEN_KW_THIS, "Expected `this` keyword.", "parseThisContext", arena, state, typeTable, context);
 
@@ -2727,7 +2727,7 @@ ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
 ASTNode *parseLHSIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, DataType *typeOfNode, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing LHS identifier...");
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
@@ -2742,7 +2742,7 @@ ASTNode *parseLHSIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena,
 
 ASTNode *parseDotNotation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing dot notation...");
 
     CryoTokenType currentToken = lexer->currentToken.type;
@@ -2769,7 +2769,7 @@ ASTNode *parseDotNotation(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
 ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logParsingContext(context);
 
     // Check the last token in the context
@@ -2852,7 +2852,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
 
 ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing dot notation with type...");
     consume(__LINE__, lexer, TOKEN_DOT, "Expected `.` for property access.", "parseDotNotationWithType", arena, state, typeTable, context);
     // The first identifier is the type of the node we are accessing
@@ -2946,7 +2946,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
 
 ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing for this value property...");
     if (context->thisContext == NULL)
     {
@@ -3006,7 +3006,7 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
 
 ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing new expression...");
     consume(__LINE__, lexer, TOKEN_KW_NEW, "Expected `new` keyword.", "parseNewExpression", arena, state, typeTable, context);
 
@@ -3082,7 +3082,7 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
 
 ASTNode *parseNullExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing null expression...");
     consume(__LINE__, lexer, TOKEN_KW_NULL, "Expected `null` keyword.", "parseNullExpression", arena, state, typeTable, context);
 
@@ -3093,7 +3093,7 @@ ASTNode *parseNullExpression(Lexer *lexer, ParsingContext *context, Arena *arena
 // e.g. `typeof(x)` would return the type of the variable `x` as a string.
 ASTNode *parseTypeofIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing typeof identifier...");
     consume(__LINE__, lexer, TOKEN_KW_TYPEOF, "Expected `typeof` keyword.", "parseTypeofIdentifier", arena, state, typeTable, context);
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start typeof expression.", "parseTypeofIdentifier", arena, state, typeTable, context);

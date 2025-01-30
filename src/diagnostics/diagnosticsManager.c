@@ -19,6 +19,7 @@
 
 GlobalDiagnosticsManager *g_diagnosticsManager = NULL;
 
+__C_CONSTRUCTOR__
 void initGlobalDiagnosticsManager(void)
 {
     if (g_diagnosticsManager == NULL)

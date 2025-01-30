@@ -22,7 +22,7 @@
 
 int compileProject(CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     printf("\nStarting compilation...\n");
     String *filePath = Str(settings->projectDir);
     filePath->append(filePath, "/src/main.cryo");

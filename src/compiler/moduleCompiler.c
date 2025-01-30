@@ -21,7 +21,7 @@
 
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Compiler", "Compiling module file: %s", filePath);
 
     char *source = readFile(filePath);

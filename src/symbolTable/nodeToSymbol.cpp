@@ -23,7 +23,7 @@ namespace Cryo
 {
     Symbol *GlobalSymbolTable::ASTNodeToSymbol(ASTNode *node)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             std::cout << "ASTNodeToSymbol: Node is null" << std::endl;
@@ -208,7 +208,7 @@ namespace Cryo
 
     const char *GlobalSymbolTable::getRootNamespace(ASTNode *root)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!root || root == nullptr)
         {
             std::cout << "getRootNamespace: Node is null" << std::endl;

@@ -28,7 +28,7 @@ size_t _stringArrayCapacity = 0;
 
 bool cStringCompare(const char *str1, const char *str2)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return strcmp(str1, str2) == 0;
 }
 
@@ -37,7 +37,7 @@ bool cStringCompare(const char *str1, const char *str2)
 
 void String_init(struct String *self, char *str)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     self->length = strlen(str);
     self->capacity = self->length + 1;
     self->data = (char *)malloc(self->capacity);
@@ -51,7 +51,7 @@ void String_init(struct String *self, char *str)
 
 void String_alloc_init(struct String *self, void *(*allocator)(size_t), char *str)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     self->length = strlen(str);
     self->capacity = self->length + 1;
     self->data = (char *)allocator(self->capacity);
@@ -65,7 +65,7 @@ void String_alloc_init(struct String *self, void *(*allocator)(size_t), char *st
 
 void String_append(struct String *self, char *str)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     size_t newLength = self->length + strlen(str);
     if (newLength >= self->capacity)
     {
@@ -83,7 +83,7 @@ void String_append(struct String *self, char *str)
 
 void String_free(struct String *self)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     free(self->data);
     self->data = NULL;
     self->length = 0;
@@ -92,19 +92,19 @@ void String_free(struct String *self)
 
 void String_print(struct String *self)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     printf("%s\n", self->data);
 }
 
 const char *String_c_str(struct String *self)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return self->data;
 }
 
 void String_clear(struct String *self)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     self->data[0] = '\0';
     self->length = 0;
 }
@@ -114,7 +114,7 @@ void String_clear(struct String *self)
 /// @return
 String *_create_string_container(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     String *string = (String *)malloc(sizeof(String));
     if (!string)
     {
@@ -132,7 +132,7 @@ String *_create_string_container(void)
 
 String *_create_alloca_string_container(void *(*allocator)(size_t))
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     String *string = (String *)allocator(sizeof(String));
     if (!string)
     {
@@ -153,7 +153,7 @@ String *_create_alloca_string_container(void *(*allocator)(size_t))
 
 String *createString(const char *str, ...)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     String *string = _create_string_container();
     va_list args, args_copy;
     va_start(args, str);
@@ -180,7 +180,7 @@ String *createString(const char *str, ...)
 
 String *createEmptyString(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     String *string = _create_string_container();
     String_init(string, "");
     return string;
@@ -188,7 +188,7 @@ String *createEmptyString(void)
 
 String *createAllocaString(void *(*allocator)(size_t), char *str)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     String *string = _create_alloca_string_container(allocator);
     String_init(string, str);
     return string;
@@ -196,7 +196,7 @@ String *createAllocaString(void *(*allocator)(size_t), char *str)
 
 void freeString(String *string)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     String_free(string);
     free(string);
 }

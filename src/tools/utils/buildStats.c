@@ -43,7 +43,7 @@
 
 BuildStats *createBuildStats()
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     BuildStats *stats = (BuildStats *)malloc(sizeof(BuildStats));
     if (!stats)
     {
@@ -55,7 +55,7 @@ BuildStats *createBuildStats()
 
 void *addCompilerSettings(BuildStats *stats, CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // We can take some of the info from the CompilerSettings struct and add it to the BuildStats struct
     const char *buildType = BuildTypeToString(settings->buildType);
     strcpy(stats->build_type, buildType);
@@ -73,13 +73,13 @@ void *addCompilerSettings(BuildStats *stats, CompilerSettings *settings)
 
 void addElapsedTime(BuildStats *stats, double elapsed)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     stats->elapsed = elapsed;
 }
 
 void *getSystemInfo(BuildStats *stats)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // Get peak memory usage
     struct rusage usage;
     getrusage(RUSAGE_SELF, &usage);
@@ -130,7 +130,7 @@ void *getSystemInfo(BuildStats *stats)
 
 void formatSize(long bytes, char *buffer)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     const char *units[] = {"B", "KB", "MB", "GB"};
     int unit = 0;
     double size = bytes;
@@ -146,7 +146,7 @@ void formatSize(long bytes, char *buffer)
 
 void printBuildStats(BuildStats *stats)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         char memory_str[32];
         formatSize(stats->peak_memory, memory_str);
@@ -209,7 +209,7 @@ void printBuildStats(BuildStats *stats)
 // Same as above but without colors
 void printBuiltStatsUnformatted(BuildStats *stats)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     char memory_str[32];
     formatSize(stats->peak_memory, memory_str);
 

@@ -32,7 +32,7 @@ namespace Cryo
     /// @note this function is called from the C++ CodeGen API before code generation.
     llvm::Module *Linker::initMainModule(void)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::cout << "Initializing Main Module before CodeGen..." << std::endl;
 
         // At this step of the compilation process, this module being passed is the newly created
@@ -62,7 +62,7 @@ namespace Cryo
     /// @return The Cryo Runtime Module
     llvm::Module *Linker::getCryoRuntimeModule(void)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         Cryo::Linker *cLinker = GetCXXLinker();
         if (!cLinker)
         {
@@ -108,7 +108,7 @@ namespace Cryo
     /// @param mod The module to be used to create the IR file (runtime.cryo)
     void Linker::addPreprocessingModule(llvm::Module *mod)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Adding Preprocessing Module...");
 
         if (!mod)
@@ -199,7 +199,7 @@ namespace Cryo
 
     void Linker::createCRuntimeFile(void)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         DirectoryInfo *dirInfo = getDirInfo();
         if (!dirInfo)
         {
@@ -240,7 +240,7 @@ namespace Cryo
     /// @return The path to the created IR file.
     std::string Linker::createIRFromModule(llvm::Module *module, std::string outDir)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!module)
         {
             logMessage(LMI, "ERROR", "Linker", "Module is null");
@@ -282,7 +282,7 @@ namespace Cryo
     /// @return The path to the Cryo Runtime file path.
     std::string Linker::getCRuntimePath()
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::string cryoRoot = getCryoRootPath();
         if (cryoRoot.empty())
         {
@@ -299,7 +299,7 @@ namespace Cryo
 
     std::string Linker::covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (cRuntimePath.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
@@ -347,7 +347,7 @@ namespace Cryo
     // It will return `false` if there are no files in the runtime directory.
     bool Linker::mergeAllRuntimeFiles()
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Merging all runtime files...");
 
         DirectoryInfo *dirInfo = getDirInfo();
@@ -384,7 +384,7 @@ namespace Cryo
 
     std::vector<std::string> Linker::listDir(const char *path)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::vector<std::string> files;
         DIR *dir;
         struct dirent *ent;
@@ -408,7 +408,7 @@ namespace Cryo
     // This function will return the full path to where the file was created.
     std::string Linker::mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Merging two IR files...");
 
         if (file1.empty() || file2.empty())
@@ -451,7 +451,7 @@ namespace Cryo
 
     std::string Linker::getCryoRuntimeFilePath(void)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::string runtimeDir = dirInfo->runtimeDir;
         if (runtimeDir.empty())
         {
@@ -471,7 +471,7 @@ namespace Cryo
 
     void Linker::mergeTwoModules(llvm::Module *destMod, std::unique_ptr<llvm::Module> srcMod)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!destMod)
         {
             logMessage(LMI, "ERROR", "Linker", "Destination module is null");
@@ -498,7 +498,7 @@ namespace Cryo
 
     void Linker::completeCodeGeneration(void)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::cout << "End of Compilation Signal Received..." << std::endl;
 
         // Look for the `main.ll` file that should be under {buildDir}/out/main.ll
@@ -530,7 +530,7 @@ namespace Cryo
 
     void Linker::runCompletedBinary()
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::string buildDir = GetCXXLinker()->getDirInfo()->buildDir;
         if (buildDir.empty())
         {

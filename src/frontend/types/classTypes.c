@@ -19,7 +19,7 @@
 
 ClassType *createClassType(const char *name, ClassNode *classNode)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ClassType *classType = (ClassType *)malloc(sizeof(ClassType));
     if (!classType)
     {
@@ -69,7 +69,7 @@ ClassType *createClassType(const char *name, ClassNode *classNode)
 
 TypeContainer *wrapClassInTypeContainer(ClassType *classType)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     if (!container)
     {
@@ -86,7 +86,7 @@ TypeContainer *wrapClassInTypeContainer(ClassType *classType)
 
 DataType *createClassDataType(const char *name, ClassNode *classNode)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ClassType *classType = createClassType(name, classNode);
     if (!classType)
     {
@@ -115,7 +115,7 @@ DataType *createClassDataType(const char *name, ClassNode *classNode)
 
 void addPublicPropertyToClassType(ClassType *classType, ASTNode *property)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!classType || !property)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type or property\n");
@@ -143,7 +143,7 @@ void addPublicPropertyToClassType(ClassType *classType, ASTNode *property)
 
 void addPublicMethodToClassType(ClassType *classType, ASTNode *method)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!classType || !method)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type or method\n");
@@ -171,7 +171,7 @@ void addPublicMethodToClassType(ClassType *classType, ASTNode *method)
 
 void addPrivatePropertyToClassType(ClassType *classType, ASTNode *property)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!classType || !property)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type or property\n");
@@ -199,7 +199,7 @@ void addPrivatePropertyToClassType(ClassType *classType, ASTNode *property)
 
 void addPrivateMethodToClassType(ClassType *classType, ASTNode *method)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!classType || !method)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type or method\n");
@@ -227,7 +227,7 @@ void addPrivateMethodToClassType(ClassType *classType, ASTNode *method)
 
 void addProtectedPropertyToClassType(ClassType *classType, ASTNode *property)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!classType || !property)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type or property\n");
@@ -255,7 +255,7 @@ void addProtectedPropertyToClassType(ClassType *classType, ASTNode *property)
 
 void addProtectedMethodToClassType(ClassType *classType, ASTNode *method)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!classType || !method)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type or method\n");
@@ -283,7 +283,7 @@ void addProtectedMethodToClassType(ClassType *classType, ASTNode *method)
 
 PublicMembersTypes *createPublicMembersType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     PublicMembersTypes *members = (PublicMembersTypes *)malloc(sizeof(PublicMembersTypes));
     if (!members)
     {
@@ -314,7 +314,7 @@ PublicMembersTypes *createPublicMembersType(void)
 
 PrivateMembersTypes *createPrivateMembersType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     PrivateMembersTypes *members = (PrivateMembersTypes *)malloc(sizeof(PrivateMembersTypes));
     if (!members)
     {
@@ -345,7 +345,7 @@ PrivateMembersTypes *createPrivateMembersType(void)
 
 ProtectedMembersTypes *createProtectedMembersType(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ProtectedMembersTypes *members = (ProtectedMembersTypes *)malloc(sizeof(ProtectedMembersTypes));
     if (!members)
     {
@@ -376,7 +376,7 @@ ProtectedMembersTypes *createProtectedMembersType(void)
 
 void linkPublicMemebers(PublicMembersTypes *membersType, PublicMembers *membersNode)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!membersType || !membersNode)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid members type or members node\n");
@@ -410,7 +410,7 @@ void linkPublicMemebers(PublicMembersTypes *membersType, PublicMembers *membersN
 
 void linkPrivateMemebers(PrivateMembersTypes *membersType, PrivateMembers *membersNode)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!membersType || !membersNode)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid members type or members node\n");
@@ -444,7 +444,7 @@ void linkPrivateMemebers(PrivateMembersTypes *membersType, PrivateMembers *membe
 
 void linkProtectedMemebers(ProtectedMembersTypes *membersType, ProtectedMembers *membersNode)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (!membersType || !membersNode)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid members type or members node\n");

@@ -20,7 +20,7 @@
 
 void logProjectSettings(ProjectSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         printf("\n---------------------[DEBUG PROJECT SETTINGS]---------------------\n");
         printf("Project Settings:\n");
@@ -62,7 +62,7 @@ void logProjectSettings(ProjectSettings *settings)
 
 void logActiveSettings(ProjectSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     ActiveSettings *activeSettings = &settings->activeSettings;
     if (!activeSettings)
     {

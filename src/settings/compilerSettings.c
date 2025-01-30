@@ -23,7 +23,7 @@ int DEBUG_LEVEL = 0;
 
 void printUsage(const char *programName)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     printf("\n");
     fprintf(stderr, "Usage: %s -f <file> [options]\n", programName);
     fprintf(stderr, "Options:\n");
@@ -73,7 +73,7 @@ static const struct option long_options[] = {
 
 CompilerSettings getCompilerSettings(int argc, char *argv[])
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     CompilerSettings settings = createCompilerSettings();
     parseCommandLineArguments(argc, argv, &settings);
     return settings;
@@ -81,7 +81,7 @@ CompilerSettings getCompilerSettings(int argc, char *argv[])
 
 void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     settings->verbose = false;
     settings->isSource = false;
     settings->customOutputPath = NULL;
@@ -315,7 +315,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
 
 void logCompilerSettings(CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
     const char *falseFlag = BOLD RED "false" COLOR_RESET;
     DEBUG_PRINT_FILTER({
@@ -349,7 +349,7 @@ void logCompilerSettings(CompilerSettings *settings)
 
 const char *DebugLevelToString(DebugLevel level)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     switch (level)
     {
     case DEBUG_NONE:
@@ -367,7 +367,7 @@ const char *DebugLevelToString(DebugLevel level)
 
 DebugLevel getDebugLevel(int level)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     switch (level)
     {
     case 0:
@@ -385,7 +385,7 @@ DebugLevel getDebugLevel(int level)
 
 const char *BuildTypeToString(BuildType type)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     switch (type)
     {
     case BUILD_DEV:
@@ -401,7 +401,7 @@ const char *BuildTypeToString(BuildType type)
 
 CompiledFile createCompiledFile(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     CompiledFile file;
     file.fileName = NULL;
     file.filePath = NULL;
@@ -411,7 +411,7 @@ CompiledFile createCompiledFile(void)
 
 CompilerSettings createCompilerSettings(void)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     CompilerSettings settings;
     settings.projectDir = (char *)malloc(sizeof(char) * 1024);
     settings.runtimePath = (char *)malloc(sizeof(char) * 1024);
@@ -442,7 +442,7 @@ CompilerSettings createCompilerSettings(void)
 
 void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     for (int i = 0; i < 64; ++i)
     {
         if (settings->compiledFiles[i] == NULL)
@@ -455,12 +455,12 @@ void addCompiledFileToSettings(CompilerSettings *settings, CompiledFile *file)
 
 bool isASTDumpEnabled(CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return settings->astDump;
 }
 
 bool isSourceText(CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return settings->isSource;
 }

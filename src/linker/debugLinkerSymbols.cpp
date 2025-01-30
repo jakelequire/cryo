@@ -22,7 +22,7 @@ namespace Cryo
 
     void Linker::logDirectoryInfo(DirectoryInfo *dirInfo)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::cout << "Root Directory: " << dirInfo->rootDir << std::endl;
         std::cout << "Build Directory: " << dirInfo->buildDir << std::endl;
         std::cout << "Output Directory: " << dirInfo->outDir << std::endl;
@@ -32,7 +32,7 @@ namespace Cryo
 
     DirectoryInfo *Linker::createDirectoryInfo(std::string rootDir)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         DirectoryInfo *dirInfo = new DirectoryInfo();
         dirInfo->rootDir = rootDir;
         dirInfo->buildDir = rootDir + "/build";

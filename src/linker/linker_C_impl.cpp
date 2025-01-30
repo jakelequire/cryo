@@ -23,7 +23,7 @@ extern "C"
 {
     CryoLinker *CryoLinker_Create(const char *buildDir)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         try
         {
             auto linker = new Cryo::Linker(buildDir);
@@ -38,7 +38,7 @@ extern "C"
 
     void CryoLinker_Destroy(CryoLinker *linker)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (linker)
         {
             logMessage(LMI, "INFO", "CryoLinker", "Destroying linker");

@@ -22,7 +22,7 @@
 ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
                                 Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // The syntax for the module keyword is as follows:
     // <visibility> module <module_name>;
     // This will include all the definitions within the module.
@@ -93,7 +93,7 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
 
 int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlobalSymbolTable *globalTable, Arena *arena)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Handling module parsing...");
 
     logMessage(LMI, "INFO", "Parser", "File path: %s", moduleSrcPath);
@@ -124,7 +124,7 @@ int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlo
 
 const char *getModuleFile(const char **dirList, const char *moduleName)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     for (int i = 0; i < sizeof(dirList); i++)
     {
         const char *fileName = dirList[i];
@@ -138,7 +138,7 @@ const char *getModuleFile(const char **dirList, const char *moduleName)
 
 const char **getDirFileList(const char *dir)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     DIR *dp;
     struct dirent *ep;
     const char **fileList = (const char **)malloc(sizeof(const char *) * 128);
@@ -174,7 +174,7 @@ const char **getDirFileList(const char *dir)
 
 bool isValidCryoFile(const char *fileName)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     if (strstr(fileName, ".cryo") != NULL)
     {
         return true;

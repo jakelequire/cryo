@@ -22,7 +22,7 @@
 
 int cryoCompiler(const char *filePath, CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({ START_COMPILATION_MESSAGE; });
 
     // ========================================
@@ -151,7 +151,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
 int compileImportFile(const char *filePath, CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // This needs to create a whole separate compiler state & arena for each program node
     // This is because the program node is the root of the AST and needs to be compiled separately
     char *source = readFile(filePath);
@@ -194,7 +194,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
 
 ASTNode *compileForProgramNode(const char *filePath)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     // This needs to create a whole separate compiler state & arena for each program node
     // This is because the program node is the root of the AST and needs to be compiled separately
     char *source = readFile(filePath);
@@ -233,6 +233,6 @@ ASTNode *compileForProgramNode(const char *filePath)
 
 int compileImportFileCXX(const char *filePath, CompilerSettings *settings)
 {
-    GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+    __STACK_FRAME__
     return compileImportFile(filePath, settings);
 }

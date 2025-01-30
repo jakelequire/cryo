@@ -23,7 +23,7 @@ namespace Cryo
 {
     void GlobalSymbolTable::cleanupAndDestroy(void)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (symbolTable)
         {
             logMessage(LMI, "INFO", "SymbolTable", "Deleting primary symbol table");
@@ -44,70 +44,70 @@ namespace Cryo
 
     bool GlobalSymbolTable::getIsPrimaryTable(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         return tableContext.isPrimary;
     }
     bool GlobalSymbolTable::getIsDependencyTable(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         return tableContext.isDependency;
     }
 
     void GlobalSymbolTable::setLinker(CryoLinker *linker)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         this->linker = linker;
     }
 
     CryoLinker *GlobalSymbolTable::getLinker(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         return linker;
     }
 
     void GlobalSymbolTable::setIsPrimaryTable(bool isPrimary)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         tableContext.isPrimary = isPrimary;
         tableContext.isDependency = !isPrimary;
         tableState = TABLE_IN_PROGRESS;
     }
     void GlobalSymbolTable::setIsDependencyTable(bool isDependency)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         tableContext.isDependency = isDependency;
         tableContext.isPrimary = !isDependency;
         tableState = TABLE_IN_PROGRESS;
     }
     void GlobalSymbolTable::resetCurrentDepsTable(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         currentDependencyTable = nullptr;
     }
     void GlobalSymbolTable::setCurrentDependencyTable(SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         resetCurrentDepsTable();
         currentDependencyTable = table;
     }
     void GlobalSymbolTable::setPrimaryTable(SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         symbolTable = table;
     }
     void GlobalSymbolTable::addGlobalFunctionToTable(FunctionSymbol *function)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         globalFunctions.push_back(function);
     }
     void GlobalSymbolTable::addExternFunctionToTable(ExternSymbol *function)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         externFunctions.push_back(function);
     }
     void GlobalSymbolTable::mergeDBChunks(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (isForReaping)
         {
             return;
@@ -119,17 +119,17 @@ namespace Cryo
     }
     const char *GlobalSymbolTable::getDependencyDirStr(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         return debugInfo.dependencyDir.c_str();
     }
     const char *GlobalSymbolTable::getNamespace(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         return this->currentNamespace;
     }
     void GlobalSymbolTable::addSymbolToTable(Symbol *symbol, SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!symbol || symbol == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to add symbol to table, symbol is null");
@@ -145,7 +145,7 @@ namespace Cryo
 
     void GlobalSymbolTable::pushNewDependencyTable(SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!table || table == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to push new dependency table, table is null");
@@ -177,7 +177,7 @@ namespace Cryo
 
     void GlobalSymbolTable::pushTypeSymbols(TypesTable *importedTypesTable)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!importedTypesTable || importedTypesTable == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to push type symbols, imported types table is null");
@@ -200,7 +200,7 @@ namespace Cryo
 
     void GlobalSymbolTable::pushNewScopePair(const char *name, const char *id)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         // Make a new pair
         std::pair<std::string, std::string> pair = std::make_pair(name, id);
         // Make sure the pair is not already in the vector
@@ -214,7 +214,7 @@ namespace Cryo
 
     const char *GlobalSymbolTable::getScopeIDFromName(const char *name)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         for (size_t i = 0; i < scopeLookup.size(); i++)
         {
             if (scopeLookup[i].first == name)
@@ -227,7 +227,7 @@ namespace Cryo
 
     const char *GlobalSymbolTable::getScopeIDFromID(const char *id)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         for (size_t i = 0; i < scopeLookup.size(); i++)
         {
             if (scopeLookup[i].second == id)
@@ -241,7 +241,7 @@ namespace Cryo
     // Looks through all symbol tables to find the name that matches the symbol and returns it's symbol type
     TypeOfSymbol GlobalSymbolTable::getScopeSymbolTypeFromName(const char *symbolName)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!symbolName || symbolName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to get scope symbol type from name, symbol name is null!");
@@ -331,7 +331,7 @@ namespace Cryo
 
     TypeofDataType GlobalSymbolTable::getTypeOfDataTypeFromName(const char *symbolName)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!symbolName || symbolName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to get type of data type from name, symbol name is null!");
@@ -399,7 +399,7 @@ namespace Cryo
 
     const char *GlobalSymbolTable::typeOfSymbolToString(TypeOfSymbol symbolType)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         switch (symbolType)
         {
         case VARIABLE_SYMBOL:
@@ -423,7 +423,7 @@ namespace Cryo
 
     void GlobalSymbolTable::importReapedTable(SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!table || table == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to import reaped table, table is null");
@@ -436,7 +436,7 @@ namespace Cryo
 
     void GlobalSymbolTable::importReapedTypesTable(TypesTable *reapedTable)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!reapedTable || reapedTable == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to import reaped types table, table is null");
@@ -449,7 +449,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::getSpecificSymbolTable(const char *name)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!name || name == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to get specific symbol table, name is null");
@@ -470,7 +470,7 @@ namespace Cryo
 
     void GlobalSymbolTable::importRuntimeSymbols(SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!table || table == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Failed to import runtime symbols, table is null");
@@ -485,7 +485,7 @@ namespace Cryo
 
     ASTNode **GlobalSymbolTable::mergeAllSymbolsToASTArray()
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         std::vector<Symbol *> primarySymbols = mergePrimaryTable();
         std::vector<Symbol *> dependencySymbols = mergeAllDependencyTables();
 
@@ -509,7 +509,7 @@ namespace Cryo
 
     void GlobalSymbolTable::createPrimaryTable(const char *namespaceName)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         SymbolTable *symbolTable = createSymbolTable(namespaceName);
         if (symbolTable)
         {
@@ -523,7 +523,7 @@ namespace Cryo
 
     void GlobalSymbolTable::initDependencyTable(const char *namespaceName)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         SymbolTable *table = createSymbolTable(namespaceName);
         if (table)
         {
@@ -551,7 +551,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addNewDependencyTable(const char *namespaceName, SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!table || table == nullptr)
         {
             return;
@@ -578,7 +578,7 @@ namespace Cryo
 
     void GlobalSymbolTable::initNamespace(const char *namespaceName)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!namespaceName || namespaceName == nullptr)
         {
             return;
@@ -599,7 +599,7 @@ namespace Cryo
 
     void GlobalSymbolTable::completeFrontend(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (isForReaping)
         {
             completeDependencyTable();
@@ -609,7 +609,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addNodeToTable(ASTNode *node)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             return;
@@ -653,7 +653,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addSingleSymbolToTable(Symbol *symbol, SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!symbol || symbol == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
@@ -684,7 +684,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addSymbolsToSymbolTable(Symbol **symbols, SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!symbols || symbols == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbols are null");
@@ -713,7 +713,7 @@ namespace Cryo
 
     void GlobalSymbolTable::completeDependencyTable()
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (currentDependencyTable)
         {
             // Clear the current dependency table, add to the dependency table vector
@@ -726,7 +726,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addVariableToSymbolTable(ASTNode *node, const char *scopeID)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Node is null");
@@ -745,7 +745,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::getCurrentSymbolTable(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (tableContext.isPrimary)
         {
             return symbolTable;
@@ -759,7 +759,7 @@ namespace Cryo
 
     void GlobalSymbolTable::tableFinished(void)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         tableState = TABLE_COMPLETE;
         if (tableContext.isPrimary)
         {
@@ -783,7 +783,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addSymbolToCurrentTable(Symbol *symbol)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (tableContext.isPrimary)
         {
             addSingleSymbolToTable(symbol, symbolTable);
@@ -796,7 +796,7 @@ namespace Cryo
 
     TypesTable *GlobalSymbolTable::initTypeTable(const char *namespaceName)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         TypesTable *typeTable = createTypeTable(namespaceName);
         if (typeTable)
         {
@@ -810,7 +810,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::wrapSubSymbol(TypeOfSymbol symbolType, void *symbol)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!symbol || symbol == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
@@ -828,7 +828,7 @@ namespace Cryo
 
     bool GlobalSymbolTable::doesSymbolExist(Symbol *symbol, SymbolTable *table)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!symbol || symbol == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Symbol is null");
@@ -853,7 +853,7 @@ namespace Cryo
 
     const char *GlobalSymbolTable::getSymbolName(Symbol *symbol)
     {
-            GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         TypeOfSymbol symbolType = symbol->symbolType;
         switch (symbolType)
         {

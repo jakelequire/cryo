@@ -15,4 +15,91 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/semantics.h"
+#include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
+int initSemanticAnalysis(ASTNode *root)
+{
+    __STACK_FRAME__
+    if (!root)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Root node is NULL");
+        return 1;
+    }
+
+    SemanticAnalyzer *analyzer = initSemanticAnalyzer();
+    if (!analyzer)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Failed to initialize semantic analyzer");
+        return 1;
+    }
+
+    analyzeAST(analyzer, root);
+
+    return 0;
+}
+
+SemanticAnalyzer *initSemanticAnalyzer(void)
+{
+    __STACK_FRAME__
+    SemanticAnalyzer *analyzer = (SemanticAnalyzer *)malloc(sizeof(SemanticAnalyzer));
+    if (!analyzer)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Failed to allocate memory for semantic analyzer");
+        return NULL;
+    }
+
+    analyzer->passedAnalysis = false;
+
+    analyzer->analyzeAST = analyzeAST;
+    analyzer->analyzeProgramNode = analyzeProgramNode;
+    analyzer->analyzeFunctionDeclarationNode = analyzeFunctionDeclarationNode;
+    analyzer->analyzeVariableDeclarationNode = analyzeVariableDeclarationNode;
+    analyzer->analyzeStructDeclarationNode = analyzeStructDeclarationNode;
+    analyzer->analyzeClassDeclarationNode = analyzeClassDeclarationNode;
+    analyzer->analyzeMethodDeclarationNode = analyzeMethodDeclarationNode;
+    analyzer->analyzePropertyDeclarationNode = analyzePropertyDeclarationNode;
+    analyzer->analyzeLiteralNode = analyzeLiteralNode;
+    analyzer->analyzeBinaryOperationNode = analyzeBinaryOperationNode;
+    analyzer->analyzeUnaryOperationNode = analyzeUnaryOperationNode;
+    analyzer->analyzeAssignmentNode = analyzeAssignmentNode;
+
+    return analyzer;
+}
+
+void analyzeAST(struct SemanticAnalyzer *self, ASTNode *root)
+{
+}
+void analyzeProgramNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeFunctionDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeVariableDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeStructDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeClassDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeMethodDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzePropertyDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeLiteralNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeBinaryOperationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeUnaryOperationNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}
+void analyzeAssignmentNode(struct SemanticAnalyzer *self, ASTNode *node)
+{
+}

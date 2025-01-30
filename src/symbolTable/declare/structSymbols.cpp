@@ -24,7 +24,7 @@ namespace Cryo
 
     void GlobalSymbolTable::initStructDeclaration(const char *structName, const char *parentNameID)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         Symbol *structSymbol = createStructDeclarationSymbol(structName, parentNameID);
         if (structSymbol)
         {
@@ -41,7 +41,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::createStructDeclarationSymbol(const char *structName, const char *parentNameID)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!structName || structName == nullptr)
         {
             return nullptr;
@@ -66,7 +66,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addPropertyToStruct(const char *structName, ASTNode *property)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         Symbol *structSymbol = getStructSymbol(structName);
         if (!structSymbol)
         {
@@ -84,7 +84,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addMethodToStruct(const char *structName, ASTNode *method)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         Symbol *structSymbol = getStructSymbol(structName);
         if (!structSymbol)
         {
@@ -101,7 +101,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::getStructSymbol(const char *structName)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         // Find the Struct in the symbol table from the hash
         const char *structHashName = IDGen::generate64BitHashID(structName);
 
@@ -118,7 +118,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateStructSymbolMethods(Symbol *structSymbol, MethodSymbol *method, size_t methodCount)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         Symbol *methodSymbol = createSymbol(METHOD_SYMBOL, method);
         size_t methodCap = structSymbol->type->methodCapacity;
 
@@ -148,7 +148,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateStructSymbolProperties(Symbol *structSymbol, PropertySymbol *property, size_t propertyCount)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         Symbol *propertySymbol = createSymbol(PROPERTY_SYMBOL, property);
         size_t propCapacity = structSymbol->type->propertyCapacity;
 
@@ -175,7 +175,7 @@ namespace Cryo
 
     void GlobalSymbolTable::completeStructDeclaration(ASTNode *structNode, const char *structName)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!structNode || structNode == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Struct Node is null");
@@ -218,13 +218,13 @@ namespace Cryo
 
     void GlobalSymbolTable::addStructDeclarationToTable(Symbol *structSymbol, SymbolTable *table)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         table->symbols[table->count++] = structSymbol;
     }
 
     void GlobalSymbolTable::updateStructSymbol(Symbol *structSymbol, SymbolTable *table)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         for (int i = 0; i < table->count; i++)
         {
             if (table->symbols[i] == structSymbol)
@@ -238,7 +238,7 @@ namespace Cryo
 
     bool GlobalSymbolTable::doesStructSymbolExist(const char *name, SymbolTable *table)
     {
-        GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+        __STACK_FRAME__
         if (!name || name == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Struct Name is null");
