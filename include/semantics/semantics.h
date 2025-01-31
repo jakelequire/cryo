@@ -54,7 +54,7 @@ typedef struct SemanticAnalyzer
 
     _NEW_METHOD(void, treeAnalysis, struct SemanticAnalyzer *self, ASTNode *node);
     _NEW_METHOD(void, reportSemanticError, struct SemanticAnalyzer *self, const char *message);
-    _NEW_METHOD(void, unimplementedAnalysis, struct SemanticAnalyzer *self);
+    _NEW_METHOD(void, unimplementedAnalysis, struct SemanticAnalyzer *self, const char *message);
     _NEW_METHOD(void, incrementNodesAnalyzed, struct SemanticAnalyzer *self, enum NodeAnalysisStatus status);
     _NEW_METHOD(void, setPassedAnalysis, struct SemanticAnalyzer *self, bool passed);
     _NEW_METHOD(void, printAnalysisReport, struct SemanticAnalyzer *self);
@@ -83,6 +83,8 @@ typedef struct SemanticAnalyzer
     _NEW_METHOD(void, analyzeUnaryOperationNode, struct SemanticAnalyzer *self, ASTNode *node);
     // Analyze assignment nodes
     _NEW_METHOD(void, analyzeAssignmentNode, struct SemanticAnalyzer *self, ASTNode *node);
+    // Analyze function body
+    _NEW_METHOD(void, analyzeFunctionBody, struct SemanticAnalyzer *self, ASTNode *node);
 
 } SemanticAnalyzer;
 
@@ -100,7 +102,7 @@ int initSemanticAnalysis(ASTNode *root);
 
 void reportSemanticError(struct SemanticAnalyzer *self, const char *message);
 void incrementNodesAnalyzed(struct SemanticAnalyzer *self, enum NodeAnalysisStatus status);
-void unimplementedAnalysis(struct SemanticAnalyzer *self);
+void unimplementedAnalysis(struct SemanticAnalyzer *self, const char *message);
 void setPassedAnalysis(struct SemanticAnalyzer *self, bool passed);
 void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node);
 void printAnalysisReport(struct SemanticAnalyzer *self);
@@ -122,5 +124,6 @@ void analyzeLiteralNode(struct SemanticAnalyzer *self, ASTNode *node);
 void analyzeBinaryOperationNode(struct SemanticAnalyzer *self, ASTNode *node);
 void analyzeUnaryOperationNode(struct SemanticAnalyzer *self, ASTNode *node);
 void analyzeAssignmentNode(struct SemanticAnalyzer *self, ASTNode *node);
+void analyzeFunctionBody(struct SemanticAnalyzer *self, ASTNode *node);
 
 #endif // SEMANTICS_H

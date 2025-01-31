@@ -91,6 +91,7 @@ SemanticAnalyzer *initSemanticAnalyzer(void)
     analyzer->analyzeBinaryOperationNode = analyzeBinaryOperationNode;
     analyzer->analyzeUnaryOperationNode = analyzeUnaryOperationNode;
     analyzer->analyzeAssignmentNode = analyzeAssignmentNode;
+    analyzer->analyzeFunctionBody = analyzeFunctionBody;
 
     return analyzer;
 }
@@ -101,10 +102,10 @@ void reportSemanticError(struct SemanticAnalyzer *self, const char *message)
     logMessage(LMI, "ERROR", "Semantic Analysis", message);
 }
 
-void unimplementedAnalysis(struct SemanticAnalyzer *self)
+void unimplementedAnalysis(struct SemanticAnalyzer *self, const char *message)
 {
     __STACK_FRAME__
-    logMessage(LMI, "WARN", "Semantic Analysis", "Unimplemented node analysis");
+    logMessage(LMI, "WARN", "Semantic Analysis", "Unimplemented node analysis: %s", message);
 }
 
 void incrementNodesAnalyzed(struct SemanticAnalyzer *self, enum NodeAnalysisStatus status)
@@ -154,6 +155,7 @@ void analyzeAST(struct SemanticAnalyzer *self, ASTNode *root)
     }
 
     self->analyzeProgramNode(self, root);
+    return;
 }
 
 void analyzeProgramNode(struct SemanticAnalyzer *self, ASTNode *node)
@@ -176,10 +178,56 @@ void analyzeProgramNode(struct SemanticAnalyzer *self, ASTNode *node)
     return;
 }
 
+// ======================================================================================== //
+//                           Function Declaration Node Analysis                             //
+// ======================================================================================== //
+
 void analyzeFunctionDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
 {
     __STACK_FRAME__
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Function declaration node is NULL");
+        self->reportSemanticError(self, "Function declaration node is NULL");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
+    if (node->metaData->type != NODE_FUNCTION_DECLARATION)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Node is not a function declaration node");
+        self->reportSemanticError(self, "Node is not a function declaration node");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
+
+    logMessage(LMI, "INFO", "Semantic Analysis", "Analyzing function declaration node...");
+
+    DataType *returnType = node->data.functionDecl->type;  // The return type of the function
+    ASTNode *functionBody = node->data.functionDecl->body; // The body of the function
+    ASTNode **params = node->data.functionDecl->params;    // The parameters of the function
+    int paramCount = node->data.functionDecl->paramCount;  // The number of parameters
+
+    if (!returnType)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Function return type is NULL");
+        self->reportSemanticError(self, "Function return type is NULL");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
+    if (!functionBody)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Function body is NULL");
+        self->reportSemanticError(self, "Function body is NULL");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
+    // Analyze the function body
+    self->treeAnalysis(self, functionBody);
 }
+
+// ======================================================================================== //
+//                           Variable Declaration Node Analysis                             //
+// ======================================================================================== //
 
 void analyzeVariableDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node)
 {
@@ -264,4 +312,38 @@ void analyzeUnaryOperationNode(struct SemanticAnalyzer *self, ASTNode *node)
 void analyzeAssignmentNode(struct SemanticAnalyzer *self, ASTNode *node)
 {
     __STACK_FRAME__
+}
+
+// ======================================================================================== //
+//                           Function Body Analysis Function                                //
+// ======================================================================================== //
+
+void analyzeFunctionBody(struct SemanticAnalyzer *self, ASTNode *node)
+{
+    __STACK_FRAME__
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Function body node is NULL");
+        self->reportSemanticError(self, "Function body node is NULL");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
+    if (node->metaData->type != NODE_FUNCTION_BLOCK)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Node is not a function block node");
+        self->reportSemanticError(self, "Node is not a function block node");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
+
+    logMessage(LMI, "INFO", "Semantic Analysis", "Analyzing function body node...");
+
+    size_t statementCount = node->data.functionBlock->statementCount;
+    ASTNode **statements = node->data.functionBlock->statements;
+
+    for (size_t i = 0; i < statementCount; i++)
+    {
+        ASTNode *statement = statements[i];
+        self->treeAnalysis(self, statement);
+    }
 }

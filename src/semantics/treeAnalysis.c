@@ -46,12 +46,12 @@ void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node)
     }
     case NODE_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Statement Node");
         break;
     }
     case NODE_EXPRESSION:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Expression Node");
         break;
     }
     case NODE_BINARY_EXPR:
@@ -71,47 +71,47 @@ void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node)
     }
     case NODE_VAR_NAME:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Variable Name Node");
         break;
     }
     case NODE_FUNCTION_CALL:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Function Call Node");
         break;
     }
     case NODE_IF_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "If Statement Node");
         break;
     }
     case NODE_WHILE_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "While Statement Node");
         break;
     }
     case NODE_FOR_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "For Statement Node");
         break;
     }
     case NODE_RETURN_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Return Statement Node");
         break;
     }
     case NODE_BLOCK:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Block Node");
         break;
     }
     case NODE_FUNCTION_BLOCK:
     {
-        self->unimplementedAnalysis(self);
+        self->analyzeFunctionBody(self, node);
         break;
     }
     case NODE_EXPRESSION_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Expression Statement Node");
         break;
     }
     case NODE_ASSIGN:
@@ -121,22 +121,22 @@ void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node)
     }
     case NODE_PARAM_LIST:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Parameter List Node");
         break;
     }
     case NODE_PARAM:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Parameter Node");
         break;
     }
     case NODE_TYPE:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Type Node");
         break;
     }
     case NODE_STRING_LITERAL:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "String Literal Node");
         break;
     }
     case NODE_STRING_EXPRESSION:
@@ -151,42 +151,42 @@ void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node)
     }
     case NODE_ARRAY_LITERAL:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Array Literal Node");
         break;
     }
     case NODE_IMPORT_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Import Statement Node");
         break;
     }
     case NODE_EXTERN_STATEMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Extern Statement Node");
         break;
     }
     case NODE_EXTERN_FUNCTION:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Extern Function Node");
         break;
     }
     case NODE_ARG_LIST:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Argument List Node");
         break;
     }
     case NODE_NAMESPACE:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Namespace Node");
         break;
     }
     case NODE_INDEX_EXPR:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Index Expression Node");
         break;
     }
     case NODE_VAR_REASSIGN:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Variable Reassignment Node");
         break;
     }
     case NODE_STRUCT_DECLARATION:
@@ -201,72 +201,72 @@ void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node)
     }
     case NODE_CUSTOM_TYPE:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Custom Type Node");
         break;
     }
     case NODE_SCOPED_FUNCTION_CALL:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Scoped Function Call Node");
         break;
     }
     case NODE_EXTERNAL_SYMBOL:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "External Symbol Node");
         break;
     }
     case NODE_STRUCT_CONSTRUCTOR:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Struct Constructor Node");
         break;
     }
     case NODE_PROPERTY_ACCESS:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Property Access Node");
         break;
     }
     case NODE_THIS:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "This Node");
         break;
     }
     case NODE_THIS_ASSIGNMENT:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "This Assignment Node");
         break;
     }
     case NODE_PROPERTY_REASSIGN:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Property Reassignment Node");
         break;
     }
     case NODE_METHOD:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Method Node");
         break;
     }
     case NODE_IDENTIFIER:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Identifier Node");
         break;
     }
     case NODE_METHOD_CALL:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Method Call Node");
         break;
     }
     case NODE_ENUM:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Enum Node");
         break;
     }
     case NODE_GENERIC_DECL:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Generic Declaration Node");
         break;
     }
     case NODE_GENERIC_INST:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Generic Instantiation Node");
         break;
     }
     case NODE_CLASS:
@@ -276,12 +276,12 @@ void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node)
     }
     case NODE_CLASS_CONSTRUCTOR:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Class Constructor Node");
         break;
     }
     case NODE_OBJECT_INST:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Object Instance Node");
         break;
     }
     case NODE_NULL_LITERAL:
@@ -291,22 +291,22 @@ void treeAnalysis(struct SemanticAnalyzer *self, ASTNode *node)
     }
     case NODE_TYPEOF:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Typeof Node");
         break;
     }
     case NODE_USING:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Using Node");
         break;
     }
     case NODE_MODULE:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Module Node");
         break;
     }
     case NODE_UNKNOWN:
     {
-        self->unimplementedAnalysis(self);
+        self->unimplementedAnalysis(self, "Unknown Node");
         break;
     }
     default:
