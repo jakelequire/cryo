@@ -545,6 +545,15 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
     case NODE_FUNCTION_CALL:
         logMessage(LMI, "INFO", "DataTypes", "Getting data type from function call");
         return node->data.functionCall->returnType;
+    case NODE_ARRAY_LITERAL:
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from array literal");
+        return node->data.array->type;
+    case NODE_INDEX_EXPR:
+    {
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from index expression");
+        ASTNode *arr = node->data.indexExpr->array;
+        return getDataTypeFromASTNode(arr);
+    }
     case NODE_PROPERTY_ACCESS:
     {
         logMessage(LMI, "INFO", "DataTypes", "Getting data type from property access");

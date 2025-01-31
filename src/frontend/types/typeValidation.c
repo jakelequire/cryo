@@ -131,29 +131,6 @@ bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
     }
 }
 
-// This function is used to determine if a DataType is a string type
-// and not a string array type.
-bool isStringDataType(DataType *type)
-{
-    __STACK_FRAME__
-    if (!type)
-    {
-        logMessage(LMI, "ERROR", "TypeTable", "Type is null");
-        return false;
-    }
-
-    if (type->container->baseType == PRIMITIVE_TYPE &&
-        type->container->primitive == PRIM_STRING &&
-        type->container->isArray == false)
-    {
-        logMessage(LMI, "INFO", "TypeTable", "Type is a string type");
-        return true;
-    }
-
-    logMessage(LMI, "INFO", "TypeTable", "Type is not a string type");
-    return false;
-}
-
 bool isSameType(DataType *left, DataType *right)
 {
     __STACK_FRAME__
@@ -191,4 +168,63 @@ bool isSameType(DataType *left, DataType *right)
     }
 
     return true;
+}
+
+bool isNumericDataType(DataType *type)
+{
+    __STACK_FRAME__
+    return type->container->primitive == PRIM_INT ||
+           type->container->primitive == PRIM_I8 ||
+           type->container->primitive == PRIM_I16 ||
+           type->container->primitive == PRIM_I32 ||
+           type->container->primitive == PRIM_I64 ||
+           type->container->primitive == PRIM_I128 ||
+           type->container->primitive == PRIM_FLOAT;
+}
+
+bool isStringDataType(DataType *type)
+{
+    __STACK_FRAME__
+    if (!type)
+    {
+        logMessage(LMI, "ERROR", "TypeTable", "Type is null");
+        return false;
+    }
+
+    if (type->container->baseType == PRIMITIVE_TYPE &&
+        type->container->primitive == PRIM_STRING &&
+        type->container->isArray == false)
+    {
+        logMessage(LMI, "INFO", "TypeTable", "Type is a string type");
+        return true;
+    }
+
+    logMessage(LMI, "INFO", "TypeTable", "Type is not a string type");
+    return false;
+}
+
+bool binOpEligible(DataType *lhs, DataType *rhs)
+{
+    __STACK_FRAME__
+    if (!lhs || !rhs)
+    {
+        logMessage(LMI, "ERROR", "DataTypes", "Invalid data types for binary operation");
+        return false;
+    }
+
+    // Check for numeric types for arithmetic operations
+    if (isNumericDataType(lhs) && isNumericDataType(rhs))
+    {
+        return true;
+    }
+
+    // Check for string types for the '+' operation
+    if (isStringType(lhs) && isStringDataType(rhs))
+    {
+        return true;
+    }
+
+    logMessage(LMI, "ERROR", "DataTypes", "Incompatible data types for binary operation: %s and %s",
+               DataTypeToString(lhs), DataTypeToString(rhs));
+    return false;
 }

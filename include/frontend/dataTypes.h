@@ -383,8 +383,12 @@ extern "C"
 
     bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
     bool isValidType(DataType *type);
-    bool isStringDataType(DataType *type);
     bool isSameType(DataType *left, DataType *right);
+
+    bool isNumericDataType(DataType *type);
+    bool isStringDataType(DataType *type);
+
+    bool binOpEligible(DataType *lhs, DataType *rhs);
 
     // # =========================================================================== #
     // # Generic Type Functions
