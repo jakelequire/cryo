@@ -396,6 +396,7 @@ extern "C"
     // # =========================================================================== #
 
     void initGenericType(GenericType *type, const char *name);
+    TypeContainer *createGenericTypeContainer(void);
     GenericType *createGenericParameter(const char *name);
     TypeContainer *createGenericArrayType(DataType *genericParam);
     GenericDeclType *createGenericDeclarationContainer(StructType *structDef, DataType **genericParam, int paramCount);

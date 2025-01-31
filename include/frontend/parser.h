@@ -278,6 +278,8 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContex
 
 ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeType parentNodeType, bool hasDefaultFlag);
 
+ASTNode *parseGenericStructDeclaration(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+
 // # =========================================================================== #
 // # Class Parsing
 // # =========================================================================== #

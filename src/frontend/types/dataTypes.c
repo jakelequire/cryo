@@ -64,6 +64,35 @@ TypeContainer *createTypeContainer(void)
     container->custom.funcDef = NULL;
     container->custom.structDef = NULL;
     container->custom.generic.declaration = NULL;
+    container->custom.generic.declaration->genericDef = NULL;
+    container->custom.generic.instantiation = NULL;
+
+    return container;
+}
+
+TypeContainer *createGenericTypeContainer(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
+    if (!container)
+    {
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate TypeContainer\n");
+        CONDITION_FAILED;
+    }
+
+    container->baseType = GENERIC_TYPE;
+    container->primitive = PRIM_CUSTOM;
+    container->size = 0;
+    container->length = 0;
+    container->isArray = false;
+    container->boolValue = false;
+    container->arrayDimensions = 0;
+    container->custom.name = (char *)malloc(sizeof(char) * 64);
+    container->custom.structDef = NULL;
+    container->custom.funcDef = NULL;
+    container->custom.structDef = NULL;
+    container->custom.generic.declaration = NULL;
+    container->custom.generic.declaration->genericDef = NULL;
     container->custom.generic.instantiation = NULL;
 
     return container;

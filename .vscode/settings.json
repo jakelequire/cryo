@@ -310,7 +310,8 @@
     "projectdir.h": "c",
     "cryoconfig.h": "c",
     "ctypes.h": "c",
-    "diagnostics.h": "c"
+    "diagnostics.h": "c",
+    "idgen.hpp": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

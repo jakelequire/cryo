@@ -47,6 +47,17 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
 
     getNextToken(lexer, arena, state, typeTable);
 
+    // Check if the next token is a `<` character to determine if it is a generic struct declaration
+    if (lexer->currentToken.type == TOKEN_LESS)
+    {
+        ASTNode *genericStruct = parseGenericStructDeclaration(structName, lexer, context, arena, state, typeTable, globalTable);
+        if (genericStruct)
+        {
+            return genericStruct;
+        }
+        CONDITION_FAILED;
+    }
+
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start struct declaration.", "parseStructDeclaration", arena, state, typeTable, context);
 
     ASTNode **properties = (ASTNode **)ARENA_ALLOC(arena, PROPERTY_CAPACITY * sizeof(ASTNode *));
@@ -469,16 +480,18 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
                           TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
+    __DUMP_STACK_TRACE__
     logMessage(LMI, "INFO", "Parser", "Parsing generic declaration...");
 
     // Create a list to store generic parameters
     int genericParamCapacity = 8;
-    GenericType **genericParams = (GenericType **)ARENA_ALLOC(arena,
-                                                              genericParamCapacity * sizeof(GenericType *));
+    GenericType **genericParams = (GenericType **)malloc(genericParamCapacity * sizeof(GenericType *));
     int genericParamCount = 0;
 
     consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` to start generic declaration.",
             "parseGenericDecl", arena, state, typeTable, context);
+
+    logMessage(LMI, "INFO", "Parser", "Parsing generic declaration...");
 
     // Parse generic parameters
     while (lexer->currentToken.type != TOKEN_GREATER)
@@ -491,12 +504,18 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
             return NULL;
         }
 
+        logMessage(LMI, "INFO", "Parser", "Parsing generic parameter...");
+
         // Get generic parameter name
         char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
         getNextToken(lexer, arena, state, typeTable);
 
+        logMessage(LMI, "INFO", "Parser", "Generic parameter name: %s", paramName);
+
         // Create generic parameter
         GenericType *genericParam = createGenericParameter(paramName);
+
+        logMessage(LMI, "INFO", "Parser", "Generic parameter created.");
 
         // Check for constraints (e.g., T extends Number)
         if (lexer->currentToken.type == TOKEN_KW_EXTENDS)
@@ -507,17 +526,23 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
             DataType *constraint = parseType(lexer, context, arena, state, typeTable, globalTable);
             addGenericConstraint(genericParam, constraint);
             getNextToken(lexer, arena, state, typeTable);
+            logMessage(LMI, "INFO", "Parser", "Generic parameter constraint added.");
         }
 
         // Add to generic parameters list
         genericParams[genericParamCount++] = genericParam;
 
+        logMessage(LMI, "INFO", "Parser", "Generic parameter added to list.");
+
         // Handle comma-separated list
         if (lexer->currentToken.type == TOKEN_COMMA)
         {
+            logMessage(LMI, "INFO", "Parser", "Parsing next generic parameter...");
             getNextToken(lexer, arena, state, typeTable);
             continue;
         }
+
+        logMessage(LMI, "INFO", "Parser", "Checking for end of generic declaration...");
 
         if (lexer->currentToken.type != TOKEN_GREATER)
         {
@@ -527,35 +552,51 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
             return NULL;
         }
     }
-
+    logMessage(LMI, "INFO", "Parser", "End of generic declaration.");
     consume(__LINE__, lexer, TOKEN_GREATER, "Expected `>` to end generic declaration.",
             "parseGenericDecl", arena, state, typeTable, context);
 
+    logMessage(LMI, "INFO", "Parser", "Creating generic type...");
+
     // Create generic type container
-    TypeContainer *container = createTypeContainer();
+    TypeContainer *container = createGenericTypeContainer();
+    logMessage(LMI, "INFO", "Parser", "Empty Generic type container created.");
     container->baseType = GENERIC_TYPE;
+    logMessage(LMI, "INFO", "Parser", "Generic type base type set.");
     container->custom.name = strdup(typeName);
+    logMessage(LMI, "INFO", "Parser", "Generic type name set.");
     container->custom.generic.declaration->genericDef = NULL;
+    logMessage(LMI, "INFO", "Parser", "Generic type declaration set.");
     container->custom.generic.declaration->paramCount = genericParamCount;
+    logMessage(LMI, "INFO", "Parser", "Generic type parameter count set.");
+
+    logMessage(LMI, "INFO", "Parser", "Generic type container created.");
 
     // Convert GenericType to DataType for each parameter
     for (int i = 0; i < genericParamCount; i++)
     {
-        DataType *paramType = (DataType *)ARENA_ALLOC(arena, sizeof(DataType));
+        logMessage(LMI, "INFO", "Parser", "Converting generic parameter to DataType...");
+        DataType *paramType = (DataType *)malloc(sizeof(DataType));
         paramType->container = createTypeContainer();
         paramType->container->baseType = GENERIC_TYPE;
         paramType->container->custom.name = strdup(genericParams[i]->name);
         // Transfer constraints if any
         if (genericParams[i]->constraint)
         {
+            logMessage(LMI, "INFO", "Parser", "Transferring generic parameter constraint...");
             paramType->genericParam = genericParams[i]->constraint;
         }
+        logMessage(LMI, "INFO", "Parser", "Generic parameter converted to DataType.");
         container->custom.generic.declaration->params[i] = paramType->container->custom.generic.declaration->params[0];
     }
 
+    logMessage(LMI, "INFO", "Parser", "Creating generic type...");
     DataType *genericType = wrapTypeContainer(container);
+    logMessage(LMI, "INFO", "Parser", "Generic type created.");
     ASTNode *genericDeclNode = createGenericDeclNode(genericType, typeName, genericParams, genericParamCount, NULL, false,
                                                      arena, state, typeTable, lexer);
+
+    logMessage(LMI, "INFO", "Parser", "Generic declaration node created.");
 
     return genericDeclNode;
 }
@@ -671,4 +712,20 @@ ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeT
     metaData->parentNodeType = parentNodeType;
     metaData->hasDefaultFlag = hasDefaultFlag;
     return metaData;
+}
+
+ASTNode *parseGenericStructDeclaration(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing generic struct declaration...");
+
+    ASTNode *genericDecl = parseGenericDecl(structName, lexer, context, arena, state, typeTable, globalTable);
+    if (!genericDecl)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse generic declaration.");
+        parsingError("Failed to parse generic declaration.", "parseGenericStructDeclaration", arena, state, lexer, lexer->source, typeTable, globalTable);
+        CONDITION_FAILED;
+    }
+
+    DEBUG_BREAKPOINT;
 }

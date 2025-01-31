@@ -186,6 +186,7 @@ void dyn_stackframe_push(StackFrame *frame);
 #define NEW_STACK_FRAME(FN, F, L) \
     GDM->createStackFrame(GDM, FN, F, L);
 #define __STACK_FRAME__ GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+#define __DUMP_STACK_TRACE__ GDM->printStackTrace(GDM);
 
 #endif // GLOBAL_DIAGNOSTICS_MANAGER_H
 // =============================================================================
