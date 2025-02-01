@@ -119,7 +119,7 @@ namespace Cryo
         __STACK_FRAME__
         TypeSymbol *symbol = new TypeSymbol();
         symbol->name = name;
-        symbol->type = nullptr;
+        symbol->type = nullptr; // Need to put a temp DataType here
         symbol->typeOf = typeOf;
         symbol->isStatic = false;
         symbol->isGeneric = false;

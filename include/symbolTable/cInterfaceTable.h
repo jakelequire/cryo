@@ -189,6 +189,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 // Declaration Functions (Structs)
 #define InitStructDeclaration(symTable, structName, parentNameID) \
     CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID)
+#define InitGenericStructDeclaration(symTable, structName, parentID) \
+    CryoGlobalSymbolTable_InitGenericStructDeclaration(symTable, structName, parentID)
 #define AddPropertyToStruct(symTable, structName, property) \
     CryoGlobalSymbolTable_AddPropertyToStruct(symTable, structName, property)
 #define AddMethodToStruct(symTable, structName, method) \

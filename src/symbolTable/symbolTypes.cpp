@@ -27,7 +27,7 @@ namespace Cryo
         // No need for strdup here - std::string will make its own copy
         std::string cxxTypeNameStr(name); // Direct construction from const char*
 
-        logMessage(LMI, "INFO", "Symbol Table", "Resolving Data Type", "Type Name", name);
+        logMessage(LMI, "INFO", "Symbol Table", "Resolving Data Type, Type Name: %s", name);
 
         if (cxxTypeNameStr.empty())
         {

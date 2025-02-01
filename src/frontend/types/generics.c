@@ -234,7 +234,7 @@ TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteT
 bool isGenericType(DataType *type)
 {
     __STACK_FRAME__
-    return type->container->baseType == GENERIC_TYPE;
+    return type->container->isGeneric;
 }
 
 bool isGenericInstance(TypeContainer *type)

@@ -39,6 +39,24 @@ namespace Cryo
         }
     }
 
+    void GlobalSymbolTable::initGenericStructDeclaration(const char *structName, const char *parentNameID)
+    {
+        __STACK_FRAME__
+        Symbol *structSymbol = createStructDeclarationSymbol(structName, parentNameID);
+        if (structSymbol)
+        {
+            structSymbol->type->isGeneric = true;
+            addSymbolToCurrentTable(structSymbol);
+            initTypeDefinition(structSymbol);
+            return;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to create struct declaration symbol");
+            return;
+        }
+    }
+
     Symbol *GlobalSymbolTable::createStructDeclarationSymbol(const char *structName, const char *parentNameID)
     {
         __STACK_FRAME__
@@ -204,6 +222,7 @@ namespace Cryo
         // Add the node to the Struct symbol
         structSymbol->type->node = structNode;
         structSymbol->type->type = structNode->data.structNode->type;
+        structSymbol->type->isGeneric = structNode->data.structNode->type->container->isGeneric;
 
         // Update the Struct symbol in the table
         updateStructSymbol(structSymbol, table);

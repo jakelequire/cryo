@@ -18,6 +18,8 @@
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
+#define MAX_CHAR_LENGTH 128 * 4 // 512
+
 void printTypeTable(TypeTable *table)
 {
     __STACK_FRAME__
@@ -190,6 +192,10 @@ char *DataTypeToStringUnformatted(DataType *type)
         sprintf(typeString, "%s", getFunctionTypeStr_UF(type->container->custom.funcDef));
         break;
 
+    case GENERIC_TYPE:
+        sprintf(typeString, "%s", type->container->custom.generic.declaration->genericDef->name);
+        break;
+
     default:
         sprintf(typeString, "<?>");
         break;
@@ -206,7 +212,7 @@ char *DataTypeToString(DataType *dataType)
     if (!dataType)
         return "<NULL DATATYPE>";
 
-    char *typeString = (char *)malloc(128);
+    char *typeString = (char *)malloc(MAX_CHAR_LENGTH);
     if (!typeString)
     {
         fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
@@ -270,6 +276,9 @@ char *DataTypeToString(DataType *dataType)
         sprintf(typeString, "%s" COLOR_RESET, typeString);
         break;
     }
+    case GENERIC_TYPE:
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.generic.declaration->genericDef->name);
+        break;
     default:
         sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
         break;
@@ -496,7 +505,8 @@ void logVerboseDataType(DataType *type)
             return;
 
         printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-        printf(BOLD GREEN "   (v)DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
+        printf(BOLD GREEN "   (v)DATATYPE" COLOR_RESET " | Const: %s | Ref: %s | Generic: %s\n",
+               type->isConst ? "true" : "false", type->isReference ? "true" : "false", type->container->isGeneric ? "true" : "false");
         printVerboseTypeContainer(type->container);
         printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
         printf(COLOR_RESET);
@@ -687,6 +697,9 @@ void printVerboseTypeContainer(TypeContainer *type)
             break;
         case FUNCTION_TYPE:
             printf(" (%s)", VerboseFunctionTypeToString(type->custom.funcDef));
+            break;
+        case GENERIC_TYPE:
+            printf(" (%s)", type->custom.generic.declaration->genericDef->name);
             break;
         default:
             printf(" <UNKNOWN>");

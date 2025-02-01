@@ -114,6 +114,7 @@ extern "C"
 
     // Struct Declarations
     void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentName);
+    void CryoGlobalSymbolTable_InitGenericStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentName);
     void CryoGlobalSymbolTable_AddPropertyToStruct(CryoGlobalSymbolTable *symTable, const char *structName, ASTNode *property);
     void CryoGlobalSymbolTable_AddMethodToStruct(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method);
     void CryoGlobalSymbolTable_CompleteStructDeclaration(CryoGlobalSymbolTable *symTable, ASTNode *structNode, const char *structName);
@@ -251,6 +252,8 @@ extern "C"
 // Declaration Functions (Structs)
 #define InitStructDeclaration(symTable, structName, parentNameID) \
     CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID)
+#define InitGenericStructDeclaration(symTable, structName, parentID) \
+    CryoGlobalSymbolTable_InitGenericStructDeclaration(symTable, structName, parentID)
 #define AddPropertyToStruct(symTable, structName, property) \
     CryoGlobalSymbolTable_AddPropertyToStruct(symTable, structName, property)
 #define AddMethodToStruct(symTable, structName, method) \
@@ -688,10 +691,11 @@ namespace Cryo
         // Struct Symbol Management
         //===================================================================
 
-        void initStructDeclaration(const char *structName, const char *parentNameID); // [C API]
-        void addPropertyToStruct(const char *structName, ASTNode *property);          // [C API]
-        void addMethodToStruct(const char *className, ASTNode *method);               // [C API]
-        void completeStructDeclaration(ASTNode *structNode, const char *structName);  // [C API]
+        void initStructDeclaration(const char *structName, const char *parentNameID);    // [C API]
+        void initGenericStructDeclaration(const char *structName, const char *parentID); // [C API]
+        void addPropertyToStruct(const char *structName, ASTNode *property);             // [C API]
+        void addMethodToStruct(const char *className, ASTNode *method);                  // [C API]
+        void completeStructDeclaration(ASTNode *structNode, const char *structName);     // [C API]
 
         Symbol *createStructDeclarationSymbol(const char *structName, const char *parentNameID);
         Symbol *getStructSymbol(const char *structName);
@@ -1098,6 +1102,14 @@ namespace Cryo
         if (symTable)
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->initStructDeclaration(structName, parentNameID);
+        }
+    }
+
+    inline void CryoGlobalSymbolTable_InitGenericStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentNameID)
+    {
+        if (symTable)
+        {
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->initGenericStructDeclaration(structName, parentNameID);
         }
     }
 

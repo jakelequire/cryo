@@ -434,6 +434,15 @@ extern "C"
         }
     }
 
+    void CryoGlobalSymbolTable_InitGenericStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentID)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->initGenericStructDeclaration(structName, parentID);
+        }
+    }
+
     void CryoGlobalSymbolTable_AddPropertyToStruct(CryoGlobalSymbolTable *symTable, const char *structName, ASTNode *property)
     {
         __STACK_FRAME__

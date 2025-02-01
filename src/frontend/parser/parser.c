@@ -245,9 +245,13 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
         return NULL;
     }
 
+    logMessage(LMI, "INFO", "Parser", "Generic type found: %s", DataTypeToString(genericType));
+
     int expectedParamCount = genericType->container->custom.generic.instantiation->argCount;
     DataType **concreteTypes = (DataType **)malloc(expectedParamCount * sizeof(DataType *));
     int paramCount = 0;
+
+    logMessage(LMI, "INFO", "Parser", "Expected param count: %d", expectedParamCount);
 
     // Parse concrete type arguments
     while (lexer->currentToken.type != TOKEN_GREATER)
@@ -259,6 +263,7 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
         }
 
         DataType *concreteType = parseType(lexer, NULL, arena, state, table, globalTable);
+        logMessage(LMI, "INFO", "Parser", "Concrete type: %s", DataTypeToString(concreteType));
         concreteTypes[paramCount++] = concreteType;
 
         if (lexer->currentToken.type == TOKEN_COMMA)
@@ -279,9 +284,10 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
         parsingError("Too few type arguments", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, table, globalTable);
         return NULL;
     }
-
+    logMessage(LMI, "INFO", "Parser", "Generic type instantiation parsed successfully");
     // Create the generic type instantiation
     DataType *instantiatedType = createGenericDataTypeInstance(genericType, concreteTypes, paramCount);
+    logMessage(LMI, "INFO", "Parser", "Instantiated type: %s", DataTypeToString(instantiatedType));
     return instantiatedType;
 }
 

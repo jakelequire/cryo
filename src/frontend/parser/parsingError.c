@@ -35,6 +35,8 @@ void parsingError(
 
     const char *curModule = GetNamespace(globalTable);
 
+    printGlobalSymbolTable(globalTable);
+
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);
     printf("\n");
@@ -110,10 +112,7 @@ void parsingError(
 
     // Bottom border
     printf("%s╚══════════════════════════════════════════════════════════════════════════════╝%s\n\n", LIGHT_RED, COLOR_RESET);
-
-    // printSymbolTable(table);
-    printGlobalSymbolTable(globalTable);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 void printLine(const char *source, int line, Arena *arena, CompilerState *state)

@@ -40,7 +40,6 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     logMessage(LMI, "INFO", "Parser", "Struct name: %s", structName);
 
     const char *parentNamespaceNameID = getNamespaceScopeID(context);
-    InitStructDeclaration(globalTable, structName, parentNamespaceNameID); // GlobalSymbolTable
 
     // Setting the context to the struct name
     setThisContext(context, structName, NODE_STRUCT_DECLARATION, typeTable);
@@ -50,6 +49,9 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     // Check if the next token is a `<` character to determine if it is a generic struct declaration
     if (lexer->currentToken.type == TOKEN_LESS)
     {
+        logMessage(LMI, "INFO", "Parser", "Parsing generic struct declaration...");
+        InitGenericStructDeclaration(globalTable, structName, parentNamespaceNameID); // GlobalSymbolTable
+        printGlobalSymbolTable(globalTable);
         ASTNode *genericStruct = parseGenericStructDeclaration(structName, lexer, context, arena, state, typeTable, globalTable);
         if (genericStruct)
         {
@@ -57,6 +59,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
         }
         CONDITION_FAILED;
     }
+
+    InitStructDeclaration(globalTable, structName, parentNamespaceNameID); // GlobalSymbolTable
 
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start struct declaration.", "parseStructDeclaration", arena, state, typeTable, context);
 
@@ -228,6 +232,20 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing struct field...");
+
+    // Get the DataType from the `parentName`
+    DataType *parentDataType = ResolveDataType(globalTable, parentName);
+    if (!parentDataType)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to resolve parent data type.");
+        return NULL;
+    }
+    bool isGenericType = parentDataType->container->isGeneric;
+    if (isGenericType)
+    {
+        logMessage(LMI, "INFO", "Parser", "Parent data type is generic.");
+        DEBUG_BREAKPOINT;
+    }
 
     int defaultCount = 0; // This should never be more than 1
     CryoTokenType currentToken = lexer->currentToken.type;
@@ -745,6 +763,7 @@ ASTNode *parseGenericStructDeclaration(const char *structName, Lexer *lexer, Par
 
     // Add the struct name to the type table
     DataType *structDefinition = createStructDefinition(structName);
+    structDefinition->container->isGeneric = true;
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
@@ -857,8 +876,10 @@ ASTNode *parseGenericStructDeclaration(const char *structName, Lexer *lexer, Par
     DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount,
                                                             methods, methodCount,
                                                             state, typeTable);
+    structDataType->container->isGeneric = true;
     structNode->data.structNode->type = structDataType;
     structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
+    structNode->data.structNode->type->container->isGeneric = true;
 
     StructType *structDef = structNode->data.structNode->type->container->custom.structDef;
     structDef->properties = properties;
