@@ -235,6 +235,8 @@ typedef struct TypeContainer
     bool isArray;                // Array flag
     int arrayDimensions;         // Number of array dimensions
     bool boolValue;              // Boolean value
+    bool isGeneric;              // Generic type flag
+    bool isConst;                // Const modifier
     struct custom
     {
         const char *name; // Type identifier name
@@ -395,8 +397,9 @@ extern "C"
     // # (generics.c)
     // # =========================================================================== #
 
-    void initGenericType(GenericType *type, const char *name);
     TypeContainer *createGenericTypeContainer(void);
+
+    void initGenericType(GenericType *type, const char *name);
     GenericType *createGenericParameter(const char *name);
     TypeContainer *createGenericArrayType(DataType *genericParam);
     GenericDeclType *createGenericDeclarationContainer(StructType *structDef, DataType **genericParam, int paramCount);
@@ -422,6 +425,9 @@ extern "C"
     ASTNode *cloneAndSubstituteGenericParam(ASTNode *param, DataType *concreteType);
     ASTNode *cloneAndSubstituteGenericBody(ASTNode *body, DataType *concreteType);
     ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concreteType);
+
+    void addGenericTypeParam(TypeContainer *container, DataType *param);
+    DataType *createGenericDataTypeInstance(DataType *genericType, DataType **concreteTypes, int paramCount);
 
     // # =========================================================================== #
     // # Class Type Functions

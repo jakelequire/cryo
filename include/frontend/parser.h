@@ -135,6 +135,8 @@ bool isOperator(CryoTokenType type);
 /* @DataType_Management */
 DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *state, Lexer *lexer, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
 DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *table, CryoGlobalSymbolTable *globalTable);
+
 int getOperatorPrecedence(CryoOperatorType type, Arena *arena, CompilerState *state, TypeTable *typeTable);
 
 /* @Parser_Management */

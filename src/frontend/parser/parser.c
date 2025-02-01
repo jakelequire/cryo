@@ -111,7 +111,7 @@ void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, co
     logMessage(LMI, "INFO", "Parser", "Consuming token...");
     // pushCallStack(&callStack, functionName, lexer->currentToken.line);
 
-    addTokenToContext(context, lexer->currentToken);
+    // addTokenToContext(context, lexer->currentToken);
 
     if (lexer->currentToken.type == type)
     {
@@ -218,10 +218,72 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
         parsingError("Unknown data type", "getCryoDataType", arena, state, lexer, lexer->source, typeTable, globalTable);
     }
 
+    // Now we need to check if the type is followed by a `<` character to determine if it is a generic type instantiation
+    if (peekNextUnconsumedToken(lexer, arena, state, typeTable).type == TOKEN_LESS)
+    {
+        // Consume the identifier
+        getNextToken(lexer, arena, state, typeTable);
+        logMessage(LMI, "INFO", "Parser", "Parsing generic type instantiation...");
+        type = parseGenericDataTypeInstantiation(type, lexer, arena, state, typeTable, globalTable);
+    }
+
     logMessage(LMI, "INFO", "Parser", "Data type: %s", DataTypeToString(type));
     return type;
 }
 // </getCryoDataType>
+
+DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *table, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` in generic type instantiation", "parseGenericDataTypeInstantiation", arena, state, table, NULL);
+
+    // Find the generic type definition
+    DataType *genericType = ResolveDataType(globalTable, type->container->custom.name);
+    if (!genericType || !isGenericType(genericType))
+    {
+        parsingError("Type is not generic", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, table, globalTable);
+        return NULL;
+    }
+
+    int expectedParamCount = genericType->container->custom.generic.instantiation->argCount;
+    DataType **concreteTypes = (DataType **)malloc(expectedParamCount * sizeof(DataType *));
+    int paramCount = 0;
+
+    // Parse concrete type arguments
+    while (lexer->currentToken.type != TOKEN_GREATER)
+    {
+        if (paramCount >= expectedParamCount)
+        {
+            parsingError("Too many type arguments", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, table, globalTable);
+            return NULL;
+        }
+
+        DataType *concreteType = parseType(lexer, NULL, arena, state, table, globalTable);
+        concreteTypes[paramCount++] = concreteType;
+
+        if (lexer->currentToken.type == TOKEN_COMMA)
+        {
+            getNextToken(lexer, arena, state, table);
+            continue;
+        }
+
+        if (lexer->currentToken.type != TOKEN_GREATER)
+        {
+            parsingError("Expected ',' or '>' in type argument list", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, table, globalTable);
+            return NULL;
+        }
+    }
+
+    if (paramCount != expectedParamCount)
+    {
+        parsingError("Too few type arguments", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, table, globalTable);
+        return NULL;
+    }
+
+    // Create the generic type instantiation
+    DataType *instantiatedType = createGenericDataTypeInstance(genericType, concreteTypes, paramCount);
+    return instantiatedType;
+}
 
 // <parseType>
 DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)

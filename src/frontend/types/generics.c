@@ -17,6 +17,35 @@
 #include "frontend/dataTypes.h"
 #include "diagnostics/diagnostics.h"
 
+TypeContainer *createGenericTypeContainer(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
+    if (!container)
+    {
+        fprintf(stderr, "[DataTypes] Error: Failed to allocate TypeContainer\n");
+        CONDITION_FAILED;
+    }
+
+    container->baseType = GENERIC_TYPE;
+    container->primitive = PRIM_CUSTOM;
+    container->size = 0;
+    container->length = 0;
+    container->isArray = false;
+    container->boolValue = false;
+    container->isGeneric = true;
+    container->arrayDimensions = 0;
+    container->custom.name = (char *)malloc(sizeof(char) * 64);
+    container->custom.structDef = NULL;
+    container->custom.funcDef = NULL;
+    container->custom.structDef = NULL;
+    container->custom.generic.declaration = (GenericDeclType *)malloc(sizeof(GenericDeclType));
+    container->custom.generic.declaration->genericDef = NULL;
+    container->custom.generic.instantiation = (GenericInstType *)malloc(sizeof(GenericInstType));
+
+    return container;
+}
+
 void initGenericType(GenericType *type, const char *name)
 {
     __STACK_FRAME__
@@ -205,14 +234,7 @@ TypeContainer *createGenericInstance(StructType *baseStruct, DataType *concreteT
 bool isGenericType(DataType *type)
 {
     __STACK_FRAME__
-    if (type->container->baseType == STRUCT_TYPE)
-    {
-        StructType *structDef = type->container->custom.structDef;
-        return structDef->propertyCount == 1 &&
-               structDef->methodCount == 0 &&
-               structDef->properties[0]->metaData->type == NODE_PARAM &&
-               structDef->properties[0]->data.param->type->container->baseType == GENERIC_TYPE;
-    }
+    return type->container->baseType == GENERIC_TYPE;
 }
 
 bool isGenericInstance(TypeContainer *type)
@@ -483,4 +505,107 @@ bool isTypeCompatible(DataType *type, DataType *other)
     }
 
     return type->container->baseType == other->container->baseType;
+}
+
+/*
+typedef struct GenericType
+{
+    const char *name;     // Name of the generic type (e.g., "T")
+    DataType *constraint; // Optional constraint on the generic type
+    bool isType;          // Whether this is a type parameter (T) or a concrete type (int)
+    union
+    {
+        struct
+        {                            // For type parameters (when isType is false)
+            ASTNode **genericParams; // Array of generic parameter nodes
+            int genericParamCount;
+            int genericParamCapacity;
+            struct
+            {
+                bool isArray;
+                int arrayDimensions;
+            } arrayInfo;
+        } parameter;
+
+        struct
+        {                           // For concrete types (when isType is true)
+            DataType *concreteType; // The actual type used in instantiation
+        } concrete;
+    };
+    struct GenericType *next; // For linking multiple generic params (e.g., <T, U>)
+} GenericType;
+*/
+void addGenericTypeParam(TypeContainer *container, DataType *param)
+{
+    __STACK_FRAME__
+    if (container->baseType != GENERIC_TYPE)
+    {
+        fprintf(stderr, "[TypeTable] Error: Attempted to add generic type parameter to non-generic type.\n");
+        return;
+    }
+
+    GenericDeclType *decl = container->custom.generic.declaration;
+    if (!decl)
+    {
+        fprintf(stderr, "[TypeTable] Error: Generic type declaration not found.\n");
+        return;
+    }
+
+    if (decl->paramCount == 0)
+    {
+        decl->params = (DataType **)malloc(sizeof(DataType *));
+    }
+    else
+    {
+        decl->params = (DataType **)realloc(decl->params, sizeof(DataType *) * (decl->paramCount + 1));
+    }
+
+    decl->params[decl->paramCount] = param;
+    decl->paramCount++;
+}
+
+DataType *createGenericDataTypeInstance(DataType *genericType, DataType **concreteTypes, int paramCount)
+{
+    __STACK_FRAME__
+    if (!genericType || !concreteTypes || paramCount <= 0)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid generic type or concrete types.\n");
+        return NULL;
+    }
+
+    TypeContainer *container = createTypeContainer();
+    container->baseType = STRUCT_TYPE;
+
+    // Create a new struct type
+    StructType *instance = (StructType *)malloc(sizeof(StructType));
+    instance->name = (char *)malloc(strlen(genericType->container->custom.name) + 1);
+    strcpy((char *)instance->name, (char *)genericType->container->custom.name);
+
+    // Initialize arrays
+    instance->propertyCapacity = 0;
+    instance->methodCapacity = 0;
+    instance->properties = NULL;
+    instance->methods = NULL;
+
+    // Deep copy and substitute generic types in properties
+    instance->propertyCount = 0;
+
+    // Deep copy and substitute generic types in methods
+    instance->methodCount = 0;
+
+    instance->hasDefaultValue = false;
+    instance->hasConstructor = false;
+    instance->size = 0;
+
+    container->custom.structDef = instance;
+    container->custom.name = strdup(instance->name);
+
+    // Set up the generic parameter
+    container->custom.generic.instantiation = createGenericInstanceContainer(
+        genericType->container->custom.structDef,
+        concreteTypes,
+        paramCount,
+        genericType->container);
+
+    return wrapTypeContainer(container);
 }

@@ -587,7 +587,8 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
             paramType->genericParam = genericParams[i]->constraint;
         }
         logMessage(LMI, "INFO", "Parser", "Generic parameter converted to DataType.");
-        container->custom.generic.declaration->params[i] = paramType->container->custom.generic.declaration->params[0];
+        addGenericTypeParam(container, paramType);
+        logMessage(LMI, "INFO", "Parser", "Generic parameter added to container.");
     }
 
     logMessage(LMI, "INFO", "Parser", "Creating generic type...");
@@ -727,5 +728,156 @@ ASTNode *parseGenericStructDeclaration(const char *structName, Lexer *lexer, Par
         CONDITION_FAILED;
     }
 
-    DEBUG_BREAKPOINT;
+    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start generic struct declaration.",
+            "parseGenericStructDeclaration", arena, state, typeTable, context);
+
+    ASTNode **properties = (ASTNode **)ARENA_ALLOC(arena, PROPERTY_CAPACITY * sizeof(ASTNode *));
+    ASTNode **methods = (ASTNode **)ARENA_ALLOC(arena, METHOD_CAPACITY * sizeof(ASTNode *));
+    int propertyCount = 0;
+    int methodCount = 0;
+    bool hasDefaultProperty = false;
+    bool hasConstructor = false;
+    int ctorArgCount = 0;
+    DataType **ctorArgs = (DataType **)ARENA_ALLOC(arena, sizeof(DataType *) * ARG_CAPACITY);
+
+    int defaultPropertyCount = 0;
+    ASTNode *constructorNode = NULL;
+
+    // Add the struct name to the type table
+    DataType *structDefinition = createStructDefinition(structName);
+
+    while (lexer->currentToken.type != TOKEN_RBRACE)
+    {
+        int count = 0;
+        ASTNode *field = parseStructField(structName, lexer, context, arena, state, typeTable, globalTable);
+        if (field)
+        {
+            CryoNodeType fieldType = field->metaData->type;
+            if (fieldType == NODE_PROPERTY)
+            {
+                properties[propertyCount] = field;
+                propertyCount++;
+                addPropertyToThisContext(context, field, typeTable);
+                AddPropertyToStruct(globalTable, structName, field); // GlobalSymbolTable
+
+                if (parsePropertyForDefaultFlag(field) && !hasDefaultProperty)
+                {
+                    hasDefaultProperty = true;
+                    defaultPropertyCount++;
+                }
+                if (defaultPropertyCount > 1)
+                {
+                    logMessage(LMI, "ERROR", "Parser", "Struct can only have one default property.");
+                    return NULL;
+                }
+
+                count++;
+            }
+            else if (fieldType == NODE_METHOD)
+            {
+                methods[methodCount] = field;
+                methodCount++;
+                addMethodToThisContext(context, field, typeTable);
+                count++;
+
+                // Go to the next field
+                continue;
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Parser", "Failed to parse struct field, received Node Type %s", CryoNodeTypeToString(fieldType));
+                parsingError("Failed to parse struct field.", "parseStructDeclaration", arena, state, lexer, lexer->source, typeTable, globalTable);
+            }
+            if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+            {
+                // parse the next field
+                continue;
+            }
+        }
+
+        if (lexer->currentToken.type == TOKEN_KW_CONSTRUCTOR)
+        {
+            hasConstructor = true;
+            ConstructorMetaData *constructorMetaData = createConstructorMetaData(structName, NODE_STRUCT_DECLARATION, hasDefaultProperty);
+            constructorNode = parseConstructor(lexer, context, arena, state, constructorMetaData, typeTable, globalTable);
+            if (constructorNode)
+            {
+                // Get the constructor arguments and add them to the struct data type
+                int argCount = constructorNode->data.structConstructor->argCount;
+                for (int i = 0; i < argCount; i++)
+                {
+                    logMessage(LMI, "INFO", "Parser", "Adding constructor argument to struct data type.");
+                    ASTNode *arg = constructorNode->data.structConstructor->args[i];
+                    if (arg)
+                    {
+                        logMessage(LMI, "INFO", "Parser", "Adding constructor argument to struct data type.");
+                        ctorArgs[ctorArgCount] = getDataTypeFromASTNode(arg);
+                        ctorArgCount++;
+                    }
+                }
+            }
+        }
+
+        // This is for the method declarations
+        if (lexer->currentToken.type == TOKEN_IDENTIFIER &&
+            lexer->nextToken.type == TOKEN_LPAREN &&
+            lexer->currentToken.type != TOKEN_KW_CONSTRUCTOR)
+        {
+            ASTNode *method = parseMethodDeclaration(false, structName, lexer, context, arena, state, typeTable, globalTable);
+            if (method)
+            {
+                methods[methodCount] = method;
+                methodCount++;
+                addMethodToThisContext(context, method, typeTable);
+            }
+        }
+
+        // If we reach the end of the struct declaration with `}`
+        else if (lexer->currentToken.type == TOKEN_RBRACE)
+        {
+            break;
+        }
+        // If we fail to parse a struct field
+        else
+        {
+            char *currentTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+            printf("Current Token: %s, Token Str: %s\n", CryoTokenToString(lexer->currentToken.type), currentTokenStr);
+            logMessage(LMI, "ERROR", "Parser::TypeParsing", "Failed to parse struct field.");
+            CONDITION_FAILED;
+        }
+    }
+
+    logMessage(LMI, "INFO", "Parser", "Property Count: %d | Method Count: %d", propertyCount, methodCount);
+    ASTNode *structNode = createStructNode(structName, properties, propertyCount, constructorNode,
+                                           methods, methodCount,
+                                           arena, state, typeTable, lexer);
+    structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
+    structNode->data.structNode->hasConstructor = hasConstructor;
+
+    DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount,
+                                                            methods, methodCount,
+                                                            state, typeTable);
+    structNode->data.structNode->type = structDataType;
+    structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
+
+    StructType *structDef = structNode->data.structNode->type->container->custom.structDef;
+    structDef->properties = properties;
+    structDef->propertyCount = propertyCount;
+    structDef->methods = methods;
+    structDef->methodCount = methodCount;
+    structDef->ctorParamCount = ctorArgCount;
+    structDef->ctorParams = ctorArgs;
+    structNode->data.structNode->type = structDataType;
+
+    logMessage(LMI, "INFO", "Parser::TypeParsing", "Created struct data type:");
+
+    logVerboseDataType(structDataType);
+
+    CompleteStructDeclaration(globalTable, structNode, structName);
+
+    // Clear the `this` context after parsing the struct
+    clearThisContext(context, typeTable);
+
+    consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` to end struct declaration.", "parseStructDeclaration", arena, state, typeTable, context);
+    return structNode;
 }
