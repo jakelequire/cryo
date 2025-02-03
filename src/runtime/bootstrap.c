@@ -75,7 +75,7 @@ char *getRuntimeObjFile(CryoGlobalSymbolTable *globalTable)
 // This function will take the Symbol Table and Type Table from the compiler and bootstrap the runtime definitions
 // into the primary compiler state. This will produce an AST Node of the runtime definitions that can be used to
 // compile the runtime into the program.
-void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker)
+void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Bootstrap", "Bootstrapping runtime definitions...");
@@ -101,11 +101,6 @@ void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *glo
     }
 
     logMessage(LMI, "INFO", "Bootstrap", "Runtime node compiled successfully");
-
-    // Add the runtime definitions to the type table
-    importTypesFromRootNode(typeTable, runtimeNode);
-
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions added to type table");
 
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_SUCCESS);
@@ -154,7 +149,7 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, Cr
     logMessage(LMI, "INFO", "Bootstrap", "Lexer initialized");
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, bootstrap->arena, state, bootstrap->typeTable, globalTable);
+    ASTNode *programNode = parseProgram(&lexer, bootstrap->arena, state, globalTable);
 
     if (programNode == NULL)
     {
@@ -199,9 +194,6 @@ Bootstrapper *initBootstrapper(const char *filePath)
 
     // Initialize the Arena
     bootstrapper->arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    bootstrapper->typeTable = initTypeTable();
-
     // Set the program node to null, we will parse it later.
     bootstrapper->programNode = NULL;
 

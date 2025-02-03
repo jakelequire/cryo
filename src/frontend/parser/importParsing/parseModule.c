@@ -20,7 +20,7 @@
 #include <dirent.h>
 
 ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
-                                Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+                                Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     // The syntax for the module keyword is as follows:
@@ -29,7 +29,7 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     logMessage(LMI, "INFO", "Parser", "Parsing module declaration...");
 
     consume(__LINE__, lexer, TOKEN_KW_MODULE, "Expected `module` keyword.",
-            "parseModuleDeclaration", arena, state, typeTable, context);
+            "parseModuleDeclaration", arena, state, context);
 
     // Get the module name
     Token moduleNameToken = lexer->currentToken;
@@ -38,7 +38,7 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     logMessage(LMI, "INFO", "Parser", "Module name: %s", moduleName);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected module name.",
-            "parseModuleDeclaration", arena, state, typeTable, context);
+            "parseModuleDeclaration", arena, state, context);
 
     const char *getCurrentFileLocation = getCurrentFileLocationFromLexer(lexer);
     logMessage(LMI, "INFO", "Parser", "Current file location: %s", getCurrentFileLocation);
@@ -76,10 +76,10 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     }
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after module declaration.",
-            "parseModuleDeclaration", arena, state, typeTable, context);
+            "parseModuleDeclaration", arena, state, context);
 
     // Create the module node
-    ASTNode *moduleNode = createModuleNode(moduleName, arena, state, typeTable, lexer);
+    ASTNode *moduleNode = createModuleNode(moduleName, arena, state, lexer);
     if (!moduleNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create module node.");

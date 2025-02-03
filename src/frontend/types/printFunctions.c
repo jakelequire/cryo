@@ -20,34 +20,6 @@
 
 #define MAX_CHAR_LENGTH 128 * 4 // 512
 
-void printTypeTable(TypeTable *table)
-{
-    __STACK_FRAME__
-    DEBUG_PRINT_FILTER({
-        printf("\n");
-        printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
-        printf("  Type Table: %p\n", (void *)table);
-        printf("  Type Count: %d\n", table->count);
-        printf("  Type Capacity: %d\n", table->capacity);
-        printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
-
-        for (int i = 0; i < table->count; i++)
-        {
-            DataType *type = table->types[i];
-            printFormattedType(type);
-        }
-        printf("   ────────────────────────────────────────────────────────────\n");
-        printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-        printf("\n");
-        if (table->count == 0)
-        {
-            printf("  No types in the type table.\n");
-            printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-            printf("\n");
-        }
-    });
-}
-
 char *TypeofDataTypeToString(TypeofDataType type)
 {
     __STACK_FRAME__

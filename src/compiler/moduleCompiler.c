@@ -34,16 +34,13 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the type table
-    TypeTable *typeTable = initTypeTable();
-
     // Initialize the lexer
     Lexer lexer;
     initLexer(&lexer, source, filePath, state);
 
     state->isModuleFile = true;
 
-    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, globalTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, globalTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
@@ -82,10 +79,6 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     logMessage(LMI, "INFO", "Compiler", "File Read. File Path: %s", filePath);
 
-    // Initialize the type table
-    TypeTable *typeTable = initTypeTable();
-    logMessage(LMI, "INFO", "Compiler", "Type Table Initialized");
-
     // Initialize the lexer
     Lexer lexer;
     initLexer(&lexer, source, filePath, state);
@@ -103,7 +96,7 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     setGlobalSymbolTable(state, globalSymbolTable);
 
-    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state,globalSymbolTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");

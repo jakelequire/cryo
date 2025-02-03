@@ -37,7 +37,7 @@ ParsingContext *createParsingContext(void)
     return context;
 }
 
-void setDefaultThisContext(const char *currentNamespace, ParsingContext *context, TypeTable *typeTable)
+void setDefaultThisContext(const char *currentNamespace, ParsingContext *context)
 {
     __STACK_FRAME__
     ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
@@ -50,7 +50,7 @@ void setDefaultThisContext(const char *currentNamespace, ParsingContext *context
     context->thisContext = thisContext;
 }
 
-void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType, TypeTable *typeTable)
+void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType nodeType)
 {
     __STACK_FRAME__
     ThisContext *thisContext = (ThisContext *)malloc(sizeof(ThisContext));
@@ -112,7 +112,7 @@ const char *getCurrentScopeID(ParsingContext *context)
     return NULL;
 }
 
-void clearThisContext(ParsingContext *context, TypeTable *typeTable)
+void clearThisContext(ParsingContext *context)
 {
     __STACK_FRAME__
     if (context->thisContext)
@@ -122,7 +122,7 @@ void clearThisContext(ParsingContext *context, TypeTable *typeTable)
     }
 }
 
-void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode, TypeTable *typeTable)
+void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode)
 {
     __STACK_FRAME__
     if (context->thisContext)
@@ -133,7 +133,7 @@ void addPropertyToThisContext(ParsingContext *context, ASTNode *propertyNode, Ty
     }
 }
 
-void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode, TypeTable *typeTable)
+void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode)
 {
     __STACK_FRAME__
     if (context->thisContext)
@@ -150,7 +150,7 @@ void setModuleFileParsingFlag(ParsingContext *context, bool value)
     context->isParsingModuleFile = value;
 }
 
-ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable *typeTable)
+ASTNode *getPropertyByName(ParsingContext *context, const char *name)
 {
     __STACK_FRAME__
     if (context->thisContext)
@@ -167,7 +167,7 @@ ASTNode *getPropertyByName(ParsingContext *context, const char *name, TypeTable 
     return NULL;
 }
 
-ASTNode *getMethodByName(ParsingContext *context, const char *name, TypeTable *typeTable)
+ASTNode *getMethodByName(ParsingContext *context, const char *name)
 {
     __STACK_FRAME__
     if (context->thisContext)

@@ -18,29 +18,6 @@
 #include "frontend/dataTypes.h"
 #include "diagnostics/diagnostics.h"
 
-TypeTable *initTypeTable(void)
-{
-    __STACK_FRAME__
-    TypeTable *table = (TypeTable *)malloc(sizeof(TypeTable));
-    if (!table)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type table.\n");
-        CONDITION_FAILED;
-    }
-
-    table->types = (DataType **)malloc(sizeof(DataType *) * 64);
-    if (!table->types)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type table types.\n");
-        CONDITION_FAILED;
-    }
-
-    table->count = 0;
-    table->capacity = 64;
-
-    return table;
-}
-
 // Create new TypeContainer
 TypeContainer *createTypeContainer(void)
 {
@@ -67,8 +44,7 @@ TypeContainer *createTypeContainer(void)
     return container;
 }
 
-
-DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "DataTypes", "Parsing data type '%s'", typeStr);
@@ -206,66 +182,7 @@ DataType *wrapTypeContainer(TypeContainer *container)
     return type;
 }
 
-DataType *lookupType(TypeTable *table, const char *name)
-{
-    __STACK_FRAME__
-    for (int i = 0; i < table->count; i++)
-    {
-        DataType *type = table->types[i];
-        if (type->container->custom.name &&
-            strcmp(type->container->custom.name, name) == 0)
-        {
-            logMessage(LMI, "INFO", "DataTypes", "Found type '%s' in type table", name);
-            return type;
-        }
-    }
-
-    logMessage(LMI, "INFO", "DataTypes", "Type '%s' not found in type table", name);
-    return NULL;
-}
-
-// # =========================================================================== #
-// # Add Type to Type Table
-
-void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
-{
-    __STACK_FRAME__
-    if (!name || !type)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid name or type in addTypeToTypeTable\n");
-        return;
-    }
-
-    // Check if the type already exists
-    logMessage(LMI, "INFO", "DataTypes", "Looking up type '%s' in type table", name);
-    DataType *existingType = lookupType(table, name);
-    if (existingType)
-    {
-        logMessage(LMI, "INFO", "DataTypes", "Type '%s' already exists in type table", name);
-        // Update the existing type
-        updateTypeInTypeTable(table, name, type);
-        return;
-    }
-
-    logMessage(LMI, "INFO", "DataTypes", "Adding type '%s' to type table", name);
-    // Add the type to the table
-    if (table->count >= table->capacity)
-    {
-        table->capacity *= 2;
-        table->types = (DataType **)realloc(table->types, table->capacity * sizeof(DataType *));
-        if (!table->types)
-        {
-            fprintf(stderr, "[TypeTable] Error: Failed to reallocate memory for type table\n");
-            return;
-        }
-    }
-
-    logMessage(LMI, "INFO", "DataTypes", "Adding type '%s' to type table, count: %d", name, table->count);
-    table->types[table->count++] = type;
-    logMessage(LMI, "INFO", "DataTypes", "Added type '%s' to type table", name);
-}
-
-ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable)
+ASTNode *findStructProperty(StructType *structType, const char *propertyName)
 {
     __STACK_FRAME__
     if (!structType)
@@ -287,7 +204,6 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName, Ty
     }
 
     fprintf(stderr, "[TypeTable] Error: Failed to find property '%s' in struct '%s'.\n", propertyName, structType->name);
-    printTypeTable(typeTable);
     CONDITION_FAILED;
 }
 
@@ -697,100 +613,6 @@ DataType *cloneDataType(DataType *type)
     newType->genericParam = type->genericParam;
 
     return newType;
-}
-
-void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type)
-{
-    __STACK_FRAME__
-    if (!table || !name || !type)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid table, name, or type.\n");
-        return;
-    }
-
-    for (int i = 0; i < table->count; i++)
-    {
-        DataType *existingType = table->types[i];
-        if (strcmp(existingType->container->custom.name, name) == 0)
-        {
-            table->types[i] = type;
-            return;
-        }
-    }
-
-    fprintf(stderr, "[TypeTable] Error: Type '%s' not found in type table.\n", name);
-}
-
-void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
-{
-    __STACK_FRAME__
-    if (!root)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid root node.\n");
-        return;
-    }
-
-    if (root->metaData->type != NODE_PROGRAM)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid root node type.\n");
-        return;
-    }
-
-    for (int i = 0; i < root->data.program->statementCount; i++)
-    {
-        ASTNode *node = root->data.program->statements[i];
-        if (node->metaData->type == NODE_STRUCT_DECLARATION)
-        {
-            const char *name = node->data.structNode->name;
-            DataType *type = node->data.structNode->type;
-        }
-        if (node->metaData->type == NODE_CLASS)
-        {
-            const char *name = node->data.classNode->name;
-            DataType *type = node->data.classNode->type;
-        }
-    }
-}
-
-DataType *findClassType(ASTNode *node, TypeTable *typeTable)
-{
-    __STACK_FRAME__
-    if (!node || !typeTable)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid node or type table.\n");
-        CONDITION_FAILED;
-    }
-
-    if (node->metaData->type != NODE_CLASS)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid node type.\n");
-        CONDITION_FAILED;
-    }
-
-    const char *name = node->data.classNode->name;
-    DataType *type = lookupType(typeTable, name);
-
-    return type;
-}
-
-DataType *findClassTypeFromName(const char *name, TypeTable *typeTable)
-{
-    __STACK_FRAME__
-    if (!name || !typeTable)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid name or type table.\n");
-        CONDITION_FAILED;
-    }
-
-    DataType *type = lookupType(typeTable, name);
-
-    if (type->container->baseType != CLASS_TYPE)
-    {
-        fprintf(stderr, "[TypeTable] Error: Type '%s' is not a class type.\n", name);
-        CONDITION_FAILED;
-    }
-
-    return type;
 }
 
 DataType **getParamTypeArray(ASTNode **node)

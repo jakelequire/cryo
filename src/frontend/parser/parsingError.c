@@ -26,7 +26,6 @@ void parsingError(
     CompilerState *state,
     Lexer *lexer,
     const char *source,
-    TypeTable *typeTable,
     CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
@@ -171,7 +170,7 @@ void printPosition(Position position)
     printf("Line: %d, Column: %d\n", position.line, position.column);
 }
 
-void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
+void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     // printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",

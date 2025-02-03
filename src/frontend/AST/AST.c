@@ -27,7 +27,7 @@ ASTNode *programNode = NULL;
 
 // This function takes in a preprocessed AST Node which contains the definitions of the program
 // this is apart of the bootstrap process, and will be used to generate the runtime code.
-ASTNode *appendASTNodeDefs(ASTNode *root, TypeTable *typeTable, Arena *arena)
+ASTNode *appendASTNodeDefs(ASTNode *root, Arena *arena)
 {
     __STACK_FRAME__
     if (!root)
@@ -83,10 +83,10 @@ const char *getNamespaceNameFromRootNode(ASTNode *root)
 
 // ======================================================================
 
-ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_NAMESPACE, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_NAMESPACE, arena, state, lexer);
     if (!node)
         return NULL;
     assert(name != NULL);
@@ -98,10 +98,10 @@ ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, Typ
 }
 
 // Create a program node
-ASTNode *createProgramNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createProgramNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_PROGRAM, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_PROGRAM, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -109,10 +109,10 @@ ASTNode *createProgramNode(Arena *arena, CompilerState *state, TypeTable *typeTa
 }
 
 // Create a literal expression node
-ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -136,10 +136,10 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTa
 }
 
 // Create an expression statement node
-ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_EXPRESSION, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_EXPRESSION, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -176,10 +176,10 @@ ASTNode *createExpressionStatement(ASTNode *expression, Arena *arena, CompilerSt
 }
 
 // Create a binary expression node
-ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_BINARY_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_BINARY_EXPR, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -199,10 +199,10 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Ar
 }
 
 // Create a unary expression node
-ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_UNARY_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_UNARY_EXPR, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -213,10 +213,10 @@ ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, Compi
 }
 
 /* @Node_Creation - Literals */
-ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, lexer);
     if (!node)
     {
         return NULL;
@@ -229,10 +229,10 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Typ
     return node;
 }
 
-ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -243,10 +243,10 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
     return node;
 }
 
-ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -323,10 +323,10 @@ int getStringLength(char *str)
     return length;
 }
 
-ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -338,10 +338,10 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
     return node;
 }
 
-ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
+ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -372,30 +372,30 @@ ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Ty
 }
 
 /* @Node_Blocks - Blocks */
-ASTNode *createBlockNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createBlockNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_BLOCK, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_BLOCK, arena, state, lexer);
     if (!node)
         return NULL;
 
     return node;
 }
 
-ASTNode *createFunctionBlock(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createFunctionBlock(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_FUNCTION_BLOCK, arena, state, lexer);
     if (!node)
         return NULL;
 
     return node;
 }
 
-ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_IF_STATEMENT, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_IF_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.ifStatement->condition = condition;
@@ -404,10 +404,10 @@ ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_b
     return node;
 }
 
-ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_FOR_STATEMENT, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_FOR_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.forStatement->initializer = initializer;
@@ -417,10 +417,10 @@ ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *incre
     return node;
 }
 
-ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_WHILE_STATEMENT, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_WHILE_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.whileStatement->condition = condition;
@@ -429,22 +429,22 @@ ASTNode *createWhileBlock(ASTNode *condition, ASTNode *body, Arena *arena, Compi
 }
 
 /* @Node_Blocks - Literals */
-ASTNode *createBooleanLiteralExpr(int value, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createBooleanLiteralExpr(int value, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    return createBooleanLiteralNode(value, arena, state, typeTable, lexer);
+    return createBooleanLiteralNode(value, arena, state, lexer);
 }
 
-ASTNode *createStringLiteralExpr(char *str, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createStringLiteralExpr(char *str, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    return createStringLiteralNode(str, arena, state, typeTable, lexer);
+    return createStringLiteralNode(str, arena, state, lexer);
 }
 
-ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_STRING_EXPRESSION, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_STRING_EXPRESSION, arena, state, lexer);
     if (!node)
         return NULL;
     int length = strlen(str);
@@ -454,10 +454,10 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, TypeTab
 }
 
 /* @Node_Creation - Variables */
-ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create variable declaration node");
@@ -485,10 +485,10 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
     return node;
 }
 
-ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.varName->varName = strdup(name);
@@ -497,10 +497,10 @@ ASTNode *createVariableExpr(char *name, bool isReference, Arena *arena, Compiler
 }
 
 /* @Node_Creation - Functions */
-ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, ASTNode **params, ASTNode *function_body, DataType *returnType, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_FUNCTION_DECLARATION, arena, state, lexer);
     if (!node)
     {
         return NULL;
@@ -518,15 +518,15 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     node->data.functionDecl->paramCapacity = paramCapacity;
     node->data.functionDecl->body = function_body;
     node->data.functionDecl->type = returnType;
-    node->data.functionDecl->functionType = createFunctionType(strdup(function_name), returnType, NULL, 0, arena, state, typeTable);
+    node->data.functionDecl->functionType = createFunctionType(strdup(function_name), returnType, NULL, 0, arena, state);
 
     return node;
 }
 
-ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *returnType, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -566,16 +566,16 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *r
     return node;
 }
 
-ASTNode *createFunctionCallNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createFunctionCallNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    return createASTNode(NODE_FUNCTION_CALL, arena, state, typeTable, lexer);
+    return createASTNode(NODE_FUNCTION_CALL, arena, state, lexer);
 }
 
-ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.returnStatement->returnValue = returnValue;
@@ -585,10 +585,10 @@ ASTNode *createReturnNode(ASTNode *returnValue, DataType *returnType, Arena *are
     return node;
 }
 
-ASTNode *createReturnExpression(ASTNode *returnExpression, DataType *returnType, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createReturnExpression(ASTNode *returnExpression, DataType *returnType, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_RETURN_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.returnStatement->expression = returnExpression;
@@ -597,22 +597,22 @@ ASTNode *createReturnExpression(ASTNode *returnExpression, DataType *returnType,
 }
 
 /* @Node_Creation - Parameters */
-ASTNode *createParamListNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createParamListNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    return createASTNode(NODE_PARAM_LIST, arena, state, typeTable, lexer);
+    return createASTNode(NODE_PARAM_LIST, arena, state, lexer);
 }
 
-ASTNode *createArgumentListNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createArgumentListNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    return createASTNode(NODE_ARG_LIST, arena, state, typeTable, lexer);
+    return createASTNode(NODE_ARG_LIST, arena, state, lexer);
 }
 
-ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_PARAM, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_PARAM, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.param->name = strdup(name);
@@ -624,10 +624,10 @@ ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *
     return node;
 }
 
-ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool isLiteral, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(nodeType, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(nodeType, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create args node");
@@ -691,10 +691,10 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
 }
 
 /* @Node_Creation - Modules & Externals */
-ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_IMPORT_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
 
@@ -705,10 +705,10 @@ ASTNode *createImportNode(char *module, char *subModule, Arena *arena, CompilerS
     return node;
 }
 
-ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_EXTERN_STATEMENT, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_EXTERN_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
     node->data.externNode->externNode = externNode;
@@ -716,10 +716,10 @@ ASTNode *createExternNode(ASTNode *externNode, Arena *arena, CompilerState *stat
 }
 
 /* @Node_Creation - Conditionals */
-ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *else_branch, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createIfBlock(condition, then_branch, else_branch, arena, state, typeTable, lexer);
+    ASTNode *node = createIfBlock(condition, then_branch, else_branch, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create if statement node");
@@ -728,10 +728,10 @@ ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *el
     return node;
 }
 
-ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createForBlock(initializer, condition, increment, body, arena, state, typeTable, lexer);
+    ASTNode *node = createForBlock(initializer, condition, increment, body, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create for statement node");
@@ -740,10 +740,10 @@ ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *i
     return node;
 }
 
-ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createWhileBlock(condition, body, arena, state, typeTable, lexer);
+    ASTNode *node = createWhileBlock(condition, body, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create while statement node");
@@ -753,10 +753,10 @@ ASTNode *createWhileStatement(ASTNode *condition, ASTNode *body, Arena *arena, C
 }
 
 /* @Node_Creation - Arrays */
-ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_ARRAY_LITERAL, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_ARRAY_LITERAL, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create array literal node");
@@ -766,10 +766,10 @@ ASTNode *createArrayLiteralNode(Arena *arena, CompilerState *state, TypeTable *t
 }
 
 // Add a new function to create an index expression node
-ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_INDEX_EXPR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_INDEX_EXPR, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create index expression node");
@@ -783,10 +783,10 @@ ASTNode *createIndexExprNode(char *arrayName, ASTNode *arrayRef, ASTNode *index,
     return node;
 }
 
-ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode *newVarNode, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_VAR_REASSIGN, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_VAR_REASSIGN, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create variable reassignment node");
@@ -800,10 +800,10 @@ ASTNode *createVarReassignment(char *varName, ASTNode *existingVarNode, ASTNode 
     return node;
 }
 
-ASTNode *createFieldNode(const char *fieldName, DataType *type, const char *parentName, CryoNodeType parentNodeType, ASTNode *fieldValue, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createFieldNode(const char *fieldName, DataType *type, const char *parentName, CryoNodeType parentNodeType, ASTNode *fieldValue, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_PROPERTY, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_PROPERTY, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create field node");
@@ -821,10 +821,10 @@ ASTNode *createFieldNode(const char *fieldName, DataType *type, const char *pare
 
 ASTNode *createStructNode(const char *structName, ASTNode **properties, int propertyCount, ASTNode *constructor,
                           ASTNode **methods, int methodCount,
-                          Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                          Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_STRUCT_DECLARATION, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create struct node");
@@ -844,10 +844,10 @@ ASTNode *createStructNode(const char *structName, ASTNode **properties, int prop
     return node;
 }
 
-ASTNode *createStructConstructor(char *structName, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createStructConstructor(char *structName, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create struct constructor node");
@@ -862,10 +862,10 @@ ASTNode *createStructConstructor(char *structName, ASTNode **fields, int argCoun
 }
 
 /* @Node_Creation - Scoped Calls */
-ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char *functionName, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_SCOPED_FUNCTION_CALL, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_SCOPED_FUNCTION_CALL, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create scoped function call node");
@@ -877,10 +877,10 @@ ASTNode *createScopedFunctionCall(Arena *arena, CompilerState *state, const char
     return node;
 }
 
-ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create property access node");
@@ -893,10 +893,10 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
     return node;
 }
 
-ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createThisNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_THIS, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_THIS, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create 'this' node");
@@ -906,10 +906,10 @@ ASTNode *createThisNode(Arena *arena, CompilerState *state, TypeTable *typeTable
     return node;
 }
 
-ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, ASTNode *newValue, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_PROPERTY_REASSIGN, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_PROPERTY_REASSIGN, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create property reassignment node");
@@ -923,10 +923,10 @@ ASTNode *createPropertyReassignmentNode(ASTNode *object, const char *property, A
     return node;
 }
 
-ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_STRUCT_CONSTRUCTOR, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create constructor node");
@@ -942,10 +942,10 @@ ASTNode *createConstructorNode(char *structName, ASTNode *body, ASTNode **fields
     return node;
 }
 
-ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, const char *propertyName, DataType *type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_PROPERTY_ACCESS, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create struct property access node");
@@ -962,10 +962,10 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
 }
 
 ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName, ASTNode **args, int argCount, const char *parentName, bool isStatic,
-                          Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                          Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_METHOD, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_METHOD, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create method node");
@@ -986,10 +986,10 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
 
 ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataType *instanceType, const char *methodName,
                               ASTNode **args, int argCount, bool isStatic,
-                              Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                              Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_METHOD_CALL, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_METHOD_CALL, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create method call node");
@@ -1010,11 +1010,11 @@ ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataTy
 
 ASTNode *createGenericDeclNode(DataType *type, const char *name, GenericType **properties, int propertyCount,
                                DataType **constraintTypes, bool hasConstraint,
-                               Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                               Arena *arena, CompilerState *state, Lexer *lexer)
 
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_GENERIC_DECL, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_GENERIC_DECL, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create method call node");
@@ -1032,10 +1032,10 @@ ASTNode *createGenericDeclNode(DataType *type, const char *name, GenericType **p
 }
 
 ASTNode *createGenericInstNode(const char *baseName, DataType **typeArguments, int argumentCount, DataType *resultType,
-                               Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                               Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_GENERIC_INST, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_GENERIC_INST, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create method call node");
@@ -1051,10 +1051,10 @@ ASTNode *createGenericInstNode(const char *baseName, DataType **typeArguments, i
 }
 
 ASTNode *createClassDeclarationNode(const char *className,
-                                    Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                                    Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_CLASS, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_CLASS, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create class declaration node");
@@ -1068,10 +1068,10 @@ ASTNode *createClassDeclarationNode(const char *className,
     return node;
 }
 
-ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **fields, int argCount, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_CLASS_CONSTRUCTOR, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_CLASS_CONSTRUCTOR, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create class constructor node");
@@ -1089,10 +1089,10 @@ ASTNode *createClassConstructor(const char *className, ASTNode *body, ASTNode **
 
 ASTNode *createObject(const char *objectName, DataType *objectType, bool isNew,
                       ASTNode **args, int argCount,
-                      Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                      Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create object node");
@@ -1111,10 +1111,10 @@ ASTNode *createObject(const char *objectName, DataType *objectType, bool isNew,
 ASTNode *createObjectWithGenerics(const char *objectName, DataType *objectType, bool isNew,
                                   ASTNode **args, int argCount,
                                   DataType **generics, int genericCount,
-                                  Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                                  Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_OBJECT_INST, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create object node");
@@ -1134,10 +1134,10 @@ ASTNode *createObjectWithGenerics(const char *objectName, DataType *objectType, 
     return node;
 }
 
-ASTNode *createNullNode(Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createNullNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_NULL_LITERAL, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_NULL_LITERAL, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create null node");
@@ -1147,10 +1147,10 @@ ASTNode *createNullNode(Arena *arena, CompilerState *state, TypeTable *typeTable
     return node;
 }
 
-ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_TYPEOF, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_TYPEOF, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create typeof node");
@@ -1163,10 +1163,10 @@ ASTNode *createTypeofNode(ASTNode *expression, Arena *arena, CompilerState *stat
 }
 
 ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules[],
-                         int secondaryModuleCount, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+                         int secondaryModuleCount, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_USING, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_USING, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create using node");
@@ -1180,10 +1180,10 @@ ASTNode *createUsingNode(const char *primaryModule, const char *secondaryModules
     return node;
 }
 
-ASTNode *createModuleNode(const char *moduleName, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createModuleNode(const char *moduleName, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createASTNode(NODE_MODULE, arena, state, typeTable, lexer);
+    ASTNode *node = createASTNode(NODE_MODULE, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create module node");

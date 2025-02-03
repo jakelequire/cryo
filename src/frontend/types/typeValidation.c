@@ -17,18 +17,10 @@
 #include "frontend/dataTypes.h"
 #include "diagnostics/diagnostics.h"
 
-bool typeAlreadyExists(TypeTable *table, const char *name)
+bool typeAlreadyExists(const char *name)
 {
     __STACK_FRAME__
-    for (int i = 0; i < table->count; i++)
-    {
-        DataType *type = table->types[i];
-        if (type->container->custom.name &&
-            strcmp(type->container->custom.name, name) == 0)
-        {
-            return true;
-        }
-    }
+    DEBUG_BREAKPOINT;
     return false;
 }
 

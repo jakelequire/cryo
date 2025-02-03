@@ -43,7 +43,7 @@ FunctionType *createFunctionTypeContainer(void)
     return funcType;
 }
 
-DataType *createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
+DataType *createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     DataType *methodType = wrapTypeContainer(createTypeContainer());
@@ -72,7 +72,7 @@ DataType *createMethodType(const char *methodName, DataType *returnType, DataTyp
     return methodType;
 }
 
-DataType *createFunctionType(const char *functionName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state, TypeTable *typeTable)
+DataType *createFunctionType(const char *functionName, DataType *returnType, DataType **paramTypes, int paramCount, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     DataType *functionType = wrapTypeContainer(createTypeContainer());

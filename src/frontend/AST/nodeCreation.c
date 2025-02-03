@@ -18,7 +18,7 @@
 #include "frontend/AST.h"
 #include "diagnostics/diagnostics.h"
 
-ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
     ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));

@@ -438,7 +438,7 @@ ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concre
     return newStatement;
 }
 
-bool validateGenericInstantiation(ASTNode *node, TypeTable *typeTable)
+bool validateGenericInstantiation(ASTNode *node)
 {
     __STACK_FRAME__
     if (node->metaData->type != NODE_GENERIC_INST)
@@ -447,23 +447,7 @@ bool validateGenericInstantiation(ASTNode *node, TypeTable *typeTable)
     GenericInstNode *inst = node->data.genericInst;
 
     // Look up the generic declaration
-    DataType *baseType = lookupType(typeTable, inst->baseName);
-    if (!baseType || !isGenericType(baseType))
-    {
-        return false; // Base type must exist and be generic
-    }
-
-    // Validate argument count matches parameter count
-    GenericDeclType *decl = baseType->container->custom.generic.declaration;
-    int paramCount = baseType->container->custom.generic.declaration->paramCount;
-    for (int i = 0; i < paramCount; i++)
-    {
-        DataType *param = decl->params[i];
-        if (!isTypeCompatible(param, inst->typeArguments[i]))
-        {
-            return false;
-        }
-    }
+    DEBUG_BREAKPOINT;
 
     return true;
 }

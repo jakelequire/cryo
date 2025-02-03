@@ -58,11 +58,8 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the type table
-    TypeTable *typeTable = initTypeTable();
-
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(typeTable, globalSymbolTable, linker);
+    boostrapRuntimeDefinitions(globalSymbolTable, linker);
 
     printGlobalSymbolTable(globalSymbolTable);
 
@@ -76,7 +73,7 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
     state->settings = settings;
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, arena, state, typeTable, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lex, arena, state, globalSymbolTable);
 
     if (programNode == NULL)
     {
@@ -90,7 +87,6 @@ int sourceTextCompiler(char *sourceBuffer, CompilerSettings *settings)
 
     // Outputs the SymTable into a file in the build directory.
     initASTDebugOutput(programCopy, settings);
-    printTypeTable(typeTable);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);

@@ -29,7 +29,6 @@
 
 #include "tools/utils/fs.h"
 
-typedef struct TypeTable TypeTable;
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
 typedef struct Lexer Lexer;
@@ -63,14 +62,13 @@ enum BootstrapStatus
 typedef struct Bootstrapper
 {
     Arena *arena;
-    TypeTable *typeTable;
     Lexer *lexer;
     CompilerState *state;
     ASTNode *programNode;
     enum BootstrapStatus status;
 } Bootstrapper;
 
-void boostrapRuntimeDefinitions(TypeTable *typeTable, CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker);
+void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *cLinker);
 Bootstrapper *initBootstrapper(const char *filePath);
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status);
 

@@ -265,23 +265,6 @@ typedef struct DataType
     struct DataType *genericParam; // For generic type parameters
 } DataType;
 
-// This is the global symbol table specifically for types.
-// This is how we will handle type checking and type inference.
-typedef struct TypeTable
-{
-    DataType **types;
-    int count;
-    int capacity;
-    char *namespaceName;
-} TypeTable;
-
-// Helper macros for type checking
-#define IS_GENERIC_DECLARATION(type) \
-    ((type)->baseType == GENERIC_TYPE && (type)->custom.generic.declaration.genericDef != NULL)
-
-#define IS_GENERIC_INSTANTIATION(type) \
-    ((type)->baseType == STRUCT_TYPE && (type)->custom.generic.instantiation.baseDef != NULL)
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -293,16 +276,12 @@ extern "C"
     // # (datatypes.c)
     // # =========================================================================== #
 
-    TypeTable *initTypeTable(void);
     TypeContainer *createTypeContainer(void);
 
-    DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+    DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable);
     DataType *wrapTypeContainer(TypeContainer *container);
 
-    DataType *lookupType(TypeTable *table, const char *name);
-    void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
-
-    ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable);
+    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
     DataType *CryoDataTypeStringToType(const char *typeStr);
     DataType *DataTypeFromNode(ASTNode *node);
     const char *getDataTypeName(DataType *type);
@@ -315,12 +294,6 @@ extern "C"
     DataType *getDataTypeFromASTNode(ASTNode *node);
     void setNewDataTypeForNode(ASTNode *node, DataType *type);
     DataType *cloneDataType(DataType *type);
-
-    void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type);
-    void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root);
-
-    DataType *findClassType(ASTNode *node, TypeTable *typeTable);
-    DataType *findClassTypeFromName(const char *name, TypeTable *typeTable);
 
     ASTNode **getAllClassMethods(ASTNode *classNode);
     ASTNode **getAllClassPropsFromDataType(DataType *classType);
@@ -353,11 +326,11 @@ extern "C"
     // # =========================================================================== #
 
     DataType *createStructDefinition(const char *structName);
-    StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
+    StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state);
     DataType *createDataTypeFromStructNode(
         ASTNode *structNode, ASTNode **properties, int propCount,
         ASTNode **methods, int methodCount,
-        CompilerState *state, TypeTable *typeTable);
+        CompilerState *state);
 
     int getPropertyAccessIndex(DataType *type, const char *propertyName);
 
@@ -366,7 +339,7 @@ extern "C"
     int calculateStructSize(StructType *structType);
 
     DataType *wrapStructType(StructType *structDef);
-    bool isStructDeclaration(TypeTable *table, const char *name);
+    bool isStructDeclaration(const char *name);
     bool isStructType(DataType *type);
 
     // # =========================================================================== #
@@ -462,9 +435,9 @@ extern "C"
 
     FunctionType *createFunctionTypeContainer(void);
     DataType *createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount,
-                               Arena *arena, CompilerState *state, TypeTable *typeTable);
+                               Arena *arena, CompilerState *state);
     DataType *createFunctionType(const char *functionName, DataType *returnType, DataType **paramTypes, int paramCount,
-                                 Arena *arena, CompilerState *state, TypeTable *typeTable);
+                                 Arena *arena, CompilerState *state);
 
     // # =========================================================================== #
     // # Print Functions
@@ -492,14 +465,11 @@ extern "C"
     char *getFunctionTypeStr_UF(FunctionType *funcType);
     char *getFunctionArgTypeArrayStr(ASTNode *functionNode);
 
-    void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
     void printVerboseTypeContainer(TypeContainer *type);
 
     char *DataTypeToString(DataType *dataType);
     char *DataTypeToStringUnformatted(DataType *type);
-
-    bool typeAlreadyExists(TypeTable *table, const char *name);
 
     // # =============================================================================================== #
 

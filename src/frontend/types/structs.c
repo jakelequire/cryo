@@ -60,7 +60,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
 }
 
 // Creates a struct type from an ASTNode.
-StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable)
+StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state)
 {
     __STACK_FRAME__
     StructType *structType = (StructType *)malloc(sizeof(StructType));
@@ -90,11 +90,11 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
 DataType *createDataTypeFromStructNode(
     ASTNode *structNode, ASTNode **properties, int propCount,
     ASTNode **methods, int methodCount,
-    CompilerState *state, TypeTable *typeTable)
+    CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structNode->data.structNode->name);
-    StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
+    StructType *structType = createStructTypeFromStructNode(structNode, state);
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to create struct type from node.\n");
@@ -257,14 +257,10 @@ DataType *wrapStructType(StructType *structDef)
     return wrapTypeContainer(container);
 }
 
-bool isStructDeclaration(TypeTable *table, const char *name)
+bool isStructDeclaration(const char *name)
 {
     __STACK_FRAME__
-    DataType *type = lookupType(table, name);
-    if (!type)
-        return false;
-
-    return type->container->baseType == STRUCT_TYPE;
+    DEBUG_BREAKPOINT;
 }
 
 bool isStructType(DataType *type)

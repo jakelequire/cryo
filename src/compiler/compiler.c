@@ -93,11 +93,8 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the type table
-    TypeTable *typeTable = initTypeTable();
-
     // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(typeTable, globalSymbolTable, linker);
+    boostrapRuntimeDefinitions(globalSymbolTable, linker);
 
     printGlobalSymbolTable(globalSymbolTable);
 
@@ -111,7 +108,7 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     state->settings = settings;
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, arena, state, typeTable, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lex, arena, state, globalSymbolTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
@@ -128,7 +125,6 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     // Outputs the SymTable into a file in the build directory.
     initASTDebugOutput(programCopy, settings);
-    printTypeTable(typeTable);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);
@@ -164,8 +160,6 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    TypeTable *typeTable = initTypeTable();
-
     // Initialize the lexer
     Lexer lexer;
     CompilerState *state = initCompilerState(arena, &lexer, filePath);
@@ -173,7 +167,7 @@ int compileImportFile(const char *filePath, CompilerSettings *settings)
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, NULL);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, NULL);
 
     if (programNode == NULL)
     {
@@ -211,8 +205,6 @@ ASTNode *compileForProgramNode(const char *filePath)
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    TypeTable *typeTable = initTypeTable();
-
     // Initialize the lexer
     Lexer lexer;
     CompilerState *state = initCompilerState(arena, &lexer, filePath);
@@ -220,7 +212,7 @@ ASTNode *compileForProgramNode(const char *filePath)
     initLexer(&lexer, source, filePath, state);
 
     // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, NULL);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, NULL);
 
     if (programNode == NULL)
     {
