@@ -76,23 +76,33 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file is empty");
             return nullptr;
         }
+        logMessage(LMI, "INFO", "Linker", "Cryo Runtime File: %s", cryoRuntimefile.c_str());
+
+        if (!fs->fileExists(cryoRuntimefile.c_str()))
+        {
+            logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file does not exist");
+            CONDITION_FAILED;
+        }
 
         // Parse the cryo runtime file
         llvm::SMDiagnostic err;
+        logMessage(LMI, "INFO", "Linker", "Attempting to open and parse: %s", cryoRuntimefile.c_str());
         llvm::Module *cryoRuntimeModule = llvm::parseIRFile(cryoRuntimefile, err, getLinkerContext()).release();
         if (!cryoRuntimeModule)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to parse Cryo Runtime file");
             std::cout << "Runtime File: " << cryoRuntimefile << std::endl;
             CONDITION_FAILED;
-            return nullptr;
         }
-        if (err.getMessage().str().size() > 0)
+        else if (err.getMessage().str().size() > 0)
         {
             logMessage(LMI, "ERROR", "Linker", "Error parsing Cryo Runtime file");
             std::cout << "Error: " << err.getMessage().str() << std::endl;
             CONDITION_FAILED;
-            return nullptr;
+        }
+        else
+        {
+            logMessage(LMI, "INFO", "Linker", "Cryo Runtime Module Parsed Successfully!");
         }
 
         // Safely clone the module from LLVM's API
@@ -135,7 +145,7 @@ namespace Cryo
             return;
         }
 
-        logMessage(LMI, "INFO", "Linker", "Runtime Directory is not empty");
+        logMessage(LMI, "INFO", "Linker", "Runtime Directory is not empty: %s", runtimeDir.c_str());
 
         std::string cRuntimePath = getCRuntimePath();
         if (cRuntimePath.empty())
@@ -179,7 +189,8 @@ namespace Cryo
 
         // Parse the merged IR file
         llvm::SMDiagnostic err;
-        llvm::Module *mergedModule = llvm::parseIRFile(outputFilePath, err, context).get();
+        logMessage(LMI, "INFO", "Linker", "Attempting to open and parse merged IR file: %s", outputFilePath.c_str());
+        llvm::Module *mergedModule = llvm::parseIRFile(outputFilePath, err, getLinkerContext()).release();
         if (!mergedModule)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to parse merged IR file");
@@ -207,7 +218,7 @@ namespace Cryo
             return;
         }
 
-        std::string runtimeDir = dirInfo->runtimeDir + "/";
+        std::string runtimeDir = dirInfo->runtimeDir;
         if (runtimeDir.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
@@ -262,6 +273,8 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        logMessage(LMI, "INFO", "Linker", "Module name is not empty: %s", moduleName.c_str());
+
         std::string outPath = outDir + "/" + moduleName + ".ll";
 
         fs->createNewEmptyFile(moduleName.c_str(), ".ll", outDir.c_str());
@@ -291,7 +304,7 @@ namespace Cryo
         }
 
         logMessage(LMI, "INFO", "Linker", "Cryo Root is not empty");
-        std::string fullPath = cryoRoot + "/Std/Runtime";
+        std::string fullPath = cryoRoot + "Std/Runtime";
         logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", fullPath.c_str());
 
         return fullPath;
@@ -307,6 +320,8 @@ namespace Cryo
         }
 
         logMessage(LMI, "INFO", "Linker", "Converting C Runtime to IR...");
+        logMessage(LMI, "INFO", "Linker", "Output Directory: %s", outDir.c_str());
+        logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", cRuntimePath.c_str());
         // Check and see if the `cRuntime.c` file exists
         std::string cRuntimeFile = cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
         if (!fileExists(cRuntimeFile.c_str()))
@@ -328,11 +343,19 @@ namespace Cryo
         // Now that we have the file, we can convert it to IR
         std::string outPath = outDir + "/" + C_RUNTIME_FILENAME + ".ll";
         std::string cmd = "clang -S -emit-llvm " + cRuntimeFile + " -o " + outPath;
+
+        logMessage(LMI, "INFO", "Linker", "Full System Command: \n");
+        printf(BOLD GREEN "%s\n" COLOR_RESET, cmd.c_str());
+
         int result = system(cmd.c_str());
         if (result != 0)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
             return "";
+        }
+        else
+        {
+            logMessage(LMI, "INFO", "Linker", "C Runtime converted to IR: %s", outPath.c_str());
         }
 
         logMessage(LMI, "INFO", "Linker", "C Runtime converted to IR: %s", outPath.c_str());
@@ -437,7 +460,8 @@ namespace Cryo
 
         llvm::LLVMContext context;
         llvm::SMDiagnostic err;
-        std::unique_ptr<llvm::Module> mergedModule = llvm::parseIRFile(fullPathToFile, err, context);
+        logMessage(LMI, "INFO", "Linker", "Attempting to read from: %s", fullPathToFile.c_str());
+        std::unique_ptr<llvm::Module> mergedModule = llvm::parseIRFile(fullPathToFile, err, getLinkerContext());
         if (!mergedModule)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to parse merged IR file");

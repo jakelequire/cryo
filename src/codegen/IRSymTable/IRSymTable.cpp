@@ -336,6 +336,19 @@ namespace Cryo
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Parameter to SymTable");
+        if (paramNode->metaData->type != NODE_PARAM)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Invalid Node Type");
+            return;
+        }
+        if (paramName.empty()) {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Parameter Name is Empty");
+            return;
+        }
+        if (namespaceName.empty()){
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Namespace Name is Empty");
+            return;
+        }
         // Add the parameter to the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
         // Create the parameter container

@@ -162,7 +162,7 @@ namespace Cryo
             logMessage(LMI, "INFO", "CryoContext", "Merging modules");
             logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
 
-            llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
+            llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
             bool result = llvm::Linker::linkModules(
                 *module,
                 llvm::CloneModule(*srcModule),

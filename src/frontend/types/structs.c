@@ -58,9 +58,13 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
 
     container->baseType = STRUCT_TYPE;
     container->custom.name = name;
-    container->custom.structDef = structDef;
     container->primitive = PRIM_CUSTOM;
     container->isGeneric = false;
+
+    container->custom.structDef = structDef;
+    
+    container->custom.structDef->addProperty = _add_struct_property;
+    container->custom.structDef->addMethod = _add_struct_method;
 
     return container;
 }
