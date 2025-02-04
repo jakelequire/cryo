@@ -29,6 +29,7 @@
 #include "settings/compilerSettings.h"
 #include "common/common.h"
 #include "frontend/AST.h"
+#include "tools/utils/cWrappers.h"
 
 // Define each token mapping
 #define DECLARE_TOKEN(str, type) {str, type}
@@ -151,6 +152,9 @@ typedef struct StructType
         StructType *baseStruct; // Original generic struct (for instantiations)
         DataType **typeArgs;    // Concrete type arguments (for instantiations)
     } generic;
+
+    _NEW_METHOD(void, addProperty, struct StructType *self, ASTNode *property);
+    _NEW_METHOD(void, addMethod, struct StructType *self, ASTNode *method);
 
 } StructType;
 
@@ -341,6 +345,12 @@ extern "C"
     DataType *wrapStructType(StructType *structDef);
     bool isStructDeclaration(const char *name);
     bool isStructType(DataType *type);
+
+    // --------------------------
+    // Method Prototypes
+
+    void _add_struct_method(StructType *self, ASTNode *method);
+    void _add_struct_property(StructType *self, ASTNode *property);
 
     // # =========================================================================== #
     // # Array Type Functions

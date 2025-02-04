@@ -33,12 +33,17 @@ DataType *createStructDefinition(const char *structName)
 
     structDef->name = structName;
     structDef->size = 0;
-    structDef->propertyCount = 0;
-    structDef->methodCount = 0;
     structDef->properties = NULL;
+    structDef->propertyCount = 0;
+    structDef->propertyCapacity = PROPERTY_CAPACITY;
     structDef->methods = NULL;
+    structDef->methodCount = 0;
+    structDef->methodCapacity = METHOD_CAPACITY;
     structDef->hasDefaultValue = false;
     structDef->hasConstructor = false;
+
+    structDef->addProperty = _add_struct_property;
+    structDef->addMethod = _add_struct_method;
 
     return wrapStructType(structDef);
 }
@@ -273,4 +278,54 @@ bool isStructType(DataType *type)
 {
     __STACK_FRAME__
     return type->container->baseType == STRUCT_TYPE;
+}
+
+void _add_struct_property(StructType *self, ASTNode *property)
+{
+    __STACK_FRAME__
+    if (!self || !property)
+    {
+        fprintf(stderr, "[AST] Error: Invalid struct node or property.\n");
+        return;
+    }
+
+    if (self->propertyCount + 1 >= self->propertyCapacity)
+    {
+        // Grow properties array
+        int newCapacity = self->propertyCapacity * 2;
+        ASTNode **newProperties = (ASTNode **)realloc(self->properties, newCapacity * sizeof(ASTNode *));
+        if (!newProperties)
+            return;
+
+        self->properties = newProperties;
+        self->propertyCapacity = newCapacity;
+    }
+
+    // Add property to struct
+    self->properties[self->propertyCount++] = property;
+}
+
+void _add_struct_method(StructType *self, ASTNode *method)
+{
+    __STACK_FRAME__
+    if (!self || !method)
+    {
+        fprintf(stderr, "[AST] Error: Invalid struct node or method.\n");
+        return;
+    }
+
+    if (self->methodCount + 1 >= self->methodCapacity)
+    {
+        // Grow methods array
+        int newCapacity = self->methodCapacity * 2;
+        ASTNode **newMethods = (ASTNode **)realloc(self->methods, newCapacity * sizeof(ASTNode *));
+        if (!newMethods)
+            return;
+
+        self->methods = newMethods;
+        self->methodCapacity = newCapacity;
+    }
+
+    // Add method to struct
+    self->methods[self->methodCount++] = method;
 }

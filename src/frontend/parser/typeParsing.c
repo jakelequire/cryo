@@ -110,9 +110,13 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
                 }
 
                 count++;
+
+                // Go to the next field
+                continue;
             }
             else if (fieldType == NODE_METHOD)
             {
+                logMessage(LMI, "INFO", "Parser", "Adding method to struct data type.");
                 methods[methodCount] = field;
                 methodCount++;
                 addMethodToThisContext(context, field);
@@ -125,6 +129,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
             {
                 logMessage(LMI, "ERROR", "Parser", "Failed to parse struct field, received Node Type %s", CryoNodeTypeToString(fieldType));
                 parsingError("Failed to parse struct field.", "parseStructDeclaration", arena, state, lexer, lexer->source, globalTable);
+                DEBUG_BREAKPOINT;
             }
             if (lexer->currentToken.type == TOKEN_IDENTIFIER)
             {
@@ -199,10 +204,16 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
 
     StructType *structDef = structNode->data.structNode->type->container->custom.structDef;
-    structDef->properties = properties;
-    structDef->propertyCount = propertyCount;
-    structDef->methods = methods;
-    structDef->methodCount = methodCount;
+    for (int i = 0; i < propertyCount; i++)
+    {
+        ASTNode *property = properties[i];
+        structDef->addProperty(structDef, property);
+    }
+    for (int i = 0; i < methodCount; i++)
+    {
+        ASTNode *method = methods[i];
+        structDef->addMethod(structDef, method);
+    }
     structDef->ctorParamCount = ctorArgCount;
     structDef->ctorParams = ctorArgs;
     structNode->data.structNode->type = structDataType;
