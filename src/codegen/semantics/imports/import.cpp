@@ -91,11 +91,8 @@ namespace Cryo
             compiler.dumpModule();
 
             DevDebugger::logMessage("INFO", __LINE__, "Imports", "Compiling Cryo STD file...");
-            int compiledFile = compileImportFileCXX(relativePath.c_str(), importSettings);
-            if (compiledFile != 0)
-            {
-                throw std::runtime_error("Failed to compile Cryo STD file: " + relativePath);
-            }
+            int compiledFile = 0;
+            DEBUG_BREAKPOINT;
             DevDebugger::logMessage("INFO", __LINE__, "Imports", "Cryo STD file compiled successfully.");
 
             // Find the compiled IR file

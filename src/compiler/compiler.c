@@ -20,42 +20,78 @@
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
-int cryoCompiler(const char *filePath, CompilerSettings *settings)
+enum CryoBuildType
+{
+    BT_ERROR = -1,
+    BT_SOURCE,
+    BT_LSP,
+    BT_PROJECT,
+    BT_SINGLE_FILE
+} CryoBuildType;
+
+enum CryoBuildType getBuildType(CompilerSettings *settings)
+{
+    if (settings->isSource)
+    {
+        return BT_SOURCE;
+    }
+    else if (settings->isLSP)
+    {
+        return BT_LSP;
+    }
+    else if (settings->isProject)
+    {
+        return BT_PROJECT;
+    }
+    else if (settings->isSingleFile)
+    {
+        return BT_SINGLE_FILE;
+    }
+    else
+    {
+        return BT_ERROR;
+    }
+}
+
+/// @brief The main compiler function for the Cryo programming language.
+/// This function is the entry point for the compiler and is responsible for
+/// managing the compilation process.
+int cryoCompile(CompilerSettings *settings)
 {
     __STACK_FRAME__
     DEBUG_PRINT_FILTER({ START_COMPILATION_MESSAGE; });
 
-    // ========================================
-    // Handle Flags
+    enum CryoBuildType buildType = getBuildType(settings);
 
-    bool isSource = settings->isSource;
-    if (isSource)
+    switch (buildType)
     {
-        char *sourceText = settings->sourceText;
-        return sourceTextCompiler(sourceText, settings);
+    case BT_SOURCE:
+        return exe_source_build(settings);
+    case BT_LSP:
+        return exe_lsp_build(settings);
+    case BT_PROJECT:
+        return exe_project_build(settings);
+    case BT_SINGLE_FILE:
+        return exe_single_file_build(settings);
+    case BT_ERROR:
+        fprintf(stderr, "Error: Invalid build type\n");
+        return 1;
+    default:
+        fprintf(stderr, "Error: Unknown build type\n");
+        return 1;
     }
 
-    bool isLSP = settings->isLSP;
-    if (isLSP)
-    {
-        const char *inputFilePath = settings->inputFile;
-        fprintf(stdout, "File Path: %s\n", inputFilePath);
-        return lspCompiler(inputFilePath, settings);
-    }
+    return 0;
+}
 
-    bool isProject = settings->isProject;
-    if (isProject)
-    {
-        return compileProject(settings);
-    }
+// ============================================================================= //
+//                            Single File Build                                  //
+// ============================================================================= //
 
-    bool isSingleFile = settings->isSingleFile;
-
-    // ========================================
-    // Compile the file (default behavior)
-
-    printf("\nStarting compilation...\n");
-
+int exe_single_file_build(CompilerSettings *settings)
+{
+    __STACK_FRAME__
+    const char *filePath = settings->inputFilePath;
     const char *source = readFile(filePath);
     if (!source)
     {
@@ -75,40 +111,15 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
 
     logMessage(LMI, "INFO", "Compiler", "Build directory: %s", buildDir);
 
-    // **New global symbol table**
-    // Initialize the new Symbol Table
-    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);
-    if (!globalSymbolTable)
-    {
-        fprintf(stderr, "Error: Failed to create global symbol table\n");
-        return 1;
-    }
-    // Debug print the global symbol table
-    printGlobalSymbolTable(globalSymbolTable);
-
-    // Create and initialize linker
-    CryoLinker *linker = CreateCryoLinker(buildDir);
-    printf("Linker created\n");
-
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Import the runtime definitions and initialize the global dependencies
-    boostrapRuntimeDefinitions(globalSymbolTable, linker);
-
-    printGlobalSymbolTable(globalSymbolTable);
-
-    // Update the global symbol table to be the primary table.
-    setPrimaryTableStatus(globalSymbolTable, true);
-
-    Lexer lex;
-    CompilerState *state = initCompilerState(arena, &lex, fileName);
-    setGlobalSymbolTable(state, globalSymbolTable);
-    initLexer(&lex, source, fileName, state);
-    state->settings = settings;
+    CryoGlobalSymbolTable *globalSymbolTable;
+    CryoLinker *linker;
+    Arena *arena;
+    Lexer lexer;
+    CompilerState *state;
+    INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lex, arena, state, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
@@ -145,86 +156,108 @@ int cryoCompiler(const char *filePath, CompilerSettings *settings)
     return 0;
 }
 
-int compileImportFile(const char *filePath, CompilerSettings *settings)
+// ============================================================================= //
+//                              Project Build                                    //
+// ============================================================================= //
+
+int exe_project_build(CompilerSettings *settings)
 {
     __STACK_FRAME__
-    // This needs to create a whole separate compiler state & arena for each program node
-    // This is because the program node is the root of the AST and needs to be compiled separately
-    char *source = readFile(filePath);
+    char *filePath = (char *)malloc(strlen(settings->projectDir) + 16);
+    strcpy(filePath, settings->projectDir);
+    strcat(filePath, "/src/main.cryo");
+    if (!filePath)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for file path\n");
+        return 1;
+    }
+    const char *source = readFile(filePath);
     if (!source)
     {
         fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
         return 1;
     }
+    const char *fileName = trimFilePath(filePath);
 
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the lexer
-    Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, filePath);
-    state->settings = settings;
-    initLexer(&lexer, source, filePath, state);
-
-    // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, arena, state, NULL);
-
-    if (programNode == NULL)
+    const char *fileDirectory = settings->inputFilePath;
+    const char *rootDirectory = settings->compilerRootPath;
+    const char *buildDir = settings->buildDir;
+    if (!rootDirectory)
     {
-        fprintf(stderr, "Error: Failed to parse program node\n");
+        fprintf(stderr, "Error: Root directory not set\n");
         return 1;
     }
 
-    // Generate code
-    int result = generateCodeWrapper(programNode, state, NULL);
-    if (result != 0)
+    CryoGlobalSymbolTable *globalSymbolTable;
+    CryoLinker *linker;
+    Arena *arena;
+    Lexer lexer;
+    CompilerState *state;
+    INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
+
+    // Initialize the parser
+    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
+    if (programNode == NULL)
     {
+        fprintf(stderr, "Error: Failed to parse program node\n");
+        CONDITION_FAILED;
+        return 1;
+    }
+    TableFinished(globalSymbolTable); // Finish the global symbol table
+
+    printf("Printing Stack Trace...\n");
+    GDM->printStackTrace(GDM);
+
+    ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
+    memcpy(programCopy, programNode, sizeof(ASTNode));
+
+    // Analyze the AST
+    int analysisResult = initSemanticAnalysis(programCopy);
+    if (analysisResult != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to analyze the AST");
         CONDITION_FAILED;
         return 1;
     }
 
+    // Outputs the SymTable into a file in the build directory.
+    initASTDebugOutput(programNode, settings);
+
+    // Generate code (The C++ backend process)
+    int result = generateCodeWrapper(programNode, state, linker);
+    if (result != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");
+        CONDITION_FAILED;
+        return 1;
+    }
+
+    DEBUG_PRINT_FILTER({
+        END_COMPILATION_MESSAGE;
+
+        printGlobalSymbolTable(globalSymbolTable);
+        logASTNodeDebugView(programCopy);
+    });
+
     return 0;
 }
 
-ASTNode *compileForProgramNode(const char *filePath)
+// ============================================================================= //
+//                             Source Text Build                                 //
+// ============================================================================= //
+
+int exe_source_build(CompilerSettings *settings)
 {
     __STACK_FRAME__
-    // This needs to create a whole separate compiler state & arena for each program node
-    // This is because the program node is the root of the AST and needs to be compiled separately
-    char *source = readFile(filePath);
-    if (!source)
-    {
-        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
-        return NULL;
-    }
-
-    CompilerSettings settings = createCompilerSettings();
-    settings.inputFile = trimFilePath(filePath);
-    settings.inputFilePath = filePath;
-
-    // Initialize the Arena
-    Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
-
-    // Initialize the lexer
-    Lexer lexer;
-    CompilerState *state = initCompilerState(arena, &lexer, filePath);
-    state->settings = &settings;
-    initLexer(&lexer, source, filePath, state);
-
-    // Parse the source code
-    ASTNode *programNode = parseProgram(&lexer, arena, state, NULL);
-
-    if (programNode == NULL)
-    {
-        fprintf(stderr, "Error: Failed to parse program node\n");
-        return NULL;
-    }
-
-    return programNode;
+    DEBUG_BREAKPOINT;
 }
 
-int compileImportFileCXX(const char *filePath, CompilerSettings *settings)
+// ============================================================================= //
+//                                 LSP Build                                     //
+// ============================================================================= //
+
+int exe_lsp_build(CompilerSettings *settings)
 {
     __STACK_FRAME__
-    return compileImportFile(filePath, settings);
+    DEBUG_BREAKPOINT;
 }

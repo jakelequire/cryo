@@ -15,8 +15,9 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
-#include "symbolTable/cInterfaceTable.h"
+#include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
+#include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
@@ -96,7 +97,7 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     setGlobalSymbolTable(state, globalSymbolTable);
 
-    ASTNode *programNode = parseProgram(&lexer, arena, state,globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");

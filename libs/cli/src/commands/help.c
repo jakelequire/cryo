@@ -75,6 +75,7 @@ void exe_CLI_help(void)
     printf(BOLD "DEV COMMANDS\n" COLOR_RESET);
     printf("  " BOLD "bc" COLOR_RESET "  Build the Cryo compiler (runs makefile)\n");
     printf("  " BOLD "cc" COLOR_RESET "  Clean the Cryo compiler build directory\n\n");
+    printf("  " BOLD "devserver" COLOR_RESET "  Start the Cryo development server\n\n");
 
     printf(BOLD "For more information on a specific command, run:\n" COLOR_RESET);
     printf(YELLOW "    cryo -h|help <command>\n\n" COLOR_RESET);
@@ -93,16 +94,19 @@ void exe_CLI_help_options(HelpOptions *options)
         helpcmd_build();
         break;
     case CLI_INIT:
-        // helpcmd_init();
+        helpcmd_init();
         break;
     case CLI_VERSION:
-        // helpcmd_version();
+        helpcmd_version();
         break;
     case CLI_BUILD_COMPILER:
         helpcmd_build_compiler();
         break;
     case CLI_CLEAN_COMPILER:
         helpcmd_clean_compiler();
+        break;
+    case CLI_DEVSERVER:
+        helpcmd_devserver();
         break;
     default:
         exe_CLI_help();
@@ -114,9 +118,7 @@ void exe_CLI_help_options(HelpOptions *options)
 // Specific Command Help Functions
 
 // ============================================================================= //
-//                                                                               //
 //                                cryo build                                     //
-//                                                                               //
 // ============================================================================= //
 
 void helpcmd_build(void)
@@ -164,9 +166,7 @@ void helpcmd_build(void)
 }
 
 // ============================================================================= //
-//                                                                               //
 //                            cryo build-compiler                                //
-//                                                                               //
 // ============================================================================= //
 
 void helpcmd_build_compiler(void)
@@ -192,9 +192,7 @@ void helpcmd_build_compiler(void)
 }
 
 // ============================================================================= //
-//                                                                               //
 //                            cryo clean-compiler                                //
-//                                                                               //
 // ============================================================================= //
 
 void helpcmd_clean_compiler(void)
@@ -220,5 +218,85 @@ void helpcmd_clean_compiler(void)
 
     printf("  Clean a custom directory:\n");
     printf(YELLOW "    $ cryo clean-compiler --custom <name>\n\n" COLOR_RESET);
+    printf("\n");
+}
+
+// ============================================================================= //
+//                                 cryo init                                     //
+// ============================================================================= //
+
+void helpcmd_init(void)
+{
+    // Init Command Details
+    printf("\n\n");
+    printf(BOLD UNDERLINE "INIT COMMAND\n\n" COLOR_RESET);
+    printf("   " BOLD YELLOW "cryo init\n\n" COLOR_RESET);
+    printf("  " BOLD "Usage:" COLOR_RESET "\n");
+    printf("    cryo init              Initialize a new Cryo project\n\n");
+
+    printf("  " BOLD "Description:" COLOR_RESET "\n");
+    printf("    This command will initialize a new Cryo project in the current directory\n\n");
+
+    printf("  " BOLD "Options:" COLOR_RESET "\n");
+    printf("    None\n\n");
+
+    // Examples Section
+    printf(BOLD "EXAMPLES\n" COLOR_RESET);
+    printf("  Initialize a new Cryo project:\n");
+    printf(YELLOW "    $ cryo init\n\n" COLOR_RESET);
+    printf("\n");
+}
+
+// ============================================================================= //
+//                               cryo version                                    //
+// ============================================================================= //
+
+void helpcmd_version(void)
+{
+    // Version Command Details
+    printf("\n\n");
+    printf(BOLD UNDERLINE "VERSION COMMAND\n\n" COLOR_RESET);
+    printf("   " BOLD YELLOW "cryo version\n\n" COLOR_RESET);
+    printf("  " BOLD "Usage:" COLOR_RESET "\n");
+    printf("    cryo version              Display version information\n\n");
+
+    printf("  " BOLD "Description:" COLOR_RESET "\n");
+    printf("    This command will display the version information for the Cryo build system\n\n");
+
+    printf("  " BOLD "Options:" COLOR_RESET "\n");
+    printf("    None\n\n");
+
+    // Examples Section
+    printf(BOLD "EXAMPLES\n" COLOR_RESET);
+    printf("  Display version information:\n");
+    printf(YELLOW "    $ cryo version\n\n" COLOR_RESET);
+    printf("\n");
+}
+
+// ============================================================================= //
+//                               cryo devserver                                  //
+// ============================================================================= //
+
+void helpcmd_devserver(void)
+{
+    // Dev Server Command Details
+    printf("\n\n");
+    printf(BOLD UNDERLINE "DEV SERVER COMMAND\t" COLOR_RESET DEV_COMMAND "\n\n");
+    printf("   " BOLD YELLOW "cryo devserver\n\n" COLOR_RESET);
+    printf("  " BOLD "Usage:" COLOR_RESET "\n");
+    printf("    cryo devserver              Start the Cryo development server\n\n");
+
+    printf("  " BOLD "Description:" COLOR_RESET "\n");
+    printf("    This command will start the Cryo development server\n\n");
+    printf("    The development server watches the Cryo Compiler root directory for changes\n");
+    printf("    and automatically recompiles the compiler when changes are detected\n\n");
+
+    printf("  " BOLD "Options:" COLOR_RESET "\n");
+    printf("    None\n\n");
+
+    // Examples Section
+    printf(BOLD "EXAMPLES\n" COLOR_RESET);
+    printf("  Start the Cryo development server:\n");
+    printf(YELLOW "    $ cryo devserver\n\n" COLOR_RESET);
     printf("\n");
 }

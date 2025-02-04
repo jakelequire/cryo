@@ -28,7 +28,7 @@
 #include "tools/cryoconfig/cryoconfig.h"
 #include "tools/utils/fs.h"
 
-#define MAX_PATH_SIZE 1024 * 10 // 10KB
+#define MAX_PATH_SIZE 1024 * 10
 
 #define INIT_LIBS()                                   \
     /* Initialize the logging system */               \
@@ -38,11 +38,18 @@
     /* Initialize the global file system utilities */ \
     INIT_FS();
 
+#define CLEANUP_COMPILATION() \
+    /* Logs Destructor */     \
+    CLEANUP_LOGS();
+
 int main(int argc, char *argv[])
 {
     // Initialize the libraries and tools
     INIT_LIBS();
     __STACK_FRAME__
+
+    // Initialize the compile timer
+    START_COMPILER_TIMER
 
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);
@@ -62,63 +69,33 @@ int main(int argc, char *argv[])
 
     // Initialize the compiler settings
     CompilerSettings settings = getCompilerSettings(argc, argv);
+    if (!&settings)
+    {
+        fprintf(stderr, "Error: Failed to initialize compiler settings\n");
+        return 1;
+    }
+
     initLoggerCompilerSettings(&settings); // Initialize the compiler settings for the logger
-    INIT_LOGS_WITH_SETTINGS(&settings);
-    if (settings.isSingleFile)
-    {
-        logMessage(LMI, "INFO", "MAIN", "Initializing as single file...");
-        const char *dir = removeFileFromPath(settings.inputFilePath);
-        INIT_PROJECT_CONFIG(&settings);
-    }
-    else
-    {
-        logMessage(LMI, "INFO", "MAIN", "Initializing as project...");
-        INIT_PROJECT_CONFIG(&settings);
-    }
+    INIT_LOGS_WITH_SETTINGS(&settings);    // Initialize the logger with the compiler settings
+    INIT_PROJECT_CONFIG(&settings);        // Initialize the project configuration
 
     // Initialize the build stats
     BuildStats *buildStats = createBuildStats();
     addCompilerSettings(buildStats, &settings);
 
-    // Initialize the compile timer
-    CompileTimer *compileTimer = createCompileTimer();
-    startTimer(compileTimer);
-
-    // Check if the input file exists
-    bool isProject = settings.isProject;
-    char *filePath = (char *)malloc(MAX_PATH_SIZE);
-    if (isProject)
-    {
-        strcpy(filePath, settings.projectDir);
-        strcat(filePath, "/src/main.cryo");
-    }
-    else
-    {
-        strcpy(filePath, "/");
-        strcpy(filePath, settings.inputFilePath);
-    }
-
-    if (!fileExists(filePath))
-    {
-        fprintf(stderr, "Error: File not found: %s\n", filePath);
-        return 1;
-    }
-
-    // Compile the file
-    int compilerResult = cryoCompiler(filePath, &settings);
-    if (compilerResult != 0)
+    // Entry point for compilation
+    int compileResult = cryoCompile(&settings);
+    if (compileResult != 0)
     {
         CONDITION_FAILED;
         return 1;
     }
 
-    // Wrap up everything
-    double elapsed = stopTimer(compileTimer);
-    getSystemInfo(buildStats);
-    addElapsedTime(buildStats, elapsed);
-    printBuildStats(buildStats);
+    // Stop the compile timer and print the build stats
+    STOP_COMPILER_TIMER
 
-    CLEANUP_LOGS();
+    // Cleanup the compilation
+    CLEANUP_COMPILATION();
 
     exit(EXIT_SUCCESS);
 }

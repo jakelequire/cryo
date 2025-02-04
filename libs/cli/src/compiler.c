@@ -23,7 +23,13 @@ int cryo_compile(char *args[], int argCount, bool useGDB)
     const char *compiler_path = getCompilerExePath();
     if (!compiler_path)
     {
-        printf("Error: Unable to locate the compiler binary\n");
+        printf("\n\n");
+        printf(BOLD RED);
+        printf("<!> ---------------------------------------------------- <!>\n");
+        printf("<!> ERROR: Unable to locate the compiler executable.     <!>\n");
+        printf("<!> Please ensure that the compiler is installed.        <!>\n");
+        printf("<!> ---------------------------------------------------- <!>\n");
+        printf(COLOR_RESET);
         return 1;
     }
     printf("Compiler path: %s\n", compiler_path);
