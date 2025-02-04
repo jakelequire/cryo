@@ -42,10 +42,10 @@ void __c_printStr(char *value)
     printf("%s\n", (char *)value);
 }
 
-//  void printStr(char *value)
-// {
-//     printf("%s\n", value);
-// }
+void __c_println(char *value)
+{
+    printf("%s", value);
+}
 
 char *__c_intToString(int value)
 {
@@ -63,6 +63,10 @@ void __c_sys_exit(int code)
 {
     exit(code);
 }
+
+// ======================================================= //
+//                      FS Operations                      //
+// ======================================================= //
 
 // For the FS Class in Cryo
 int __c_fs_mkdir(const char *path)

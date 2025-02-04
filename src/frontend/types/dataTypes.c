@@ -471,6 +471,11 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
         ASTNode *arr = node->data.indexExpr->array;
         return getDataTypeFromASTNode(arr);
     }
+    case NODE_OBJECT_INST:
+    {
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from object instantiation");
+        return node->data.objectNode->objType;
+    }
     case NODE_PROPERTY_ACCESS:
     {
         logMessage(LMI, "INFO", "DataTypes", "Getting data type from property access");

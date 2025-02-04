@@ -59,8 +59,11 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
         }
         CONDITION_FAILED;
     }
-
-    InitStructDeclaration(globalTable, structName, parentNamespaceNameID); // GlobalSymbolTable
+    else
+    {
+        logMessage(LMI, "INFO", "Parser", "wParsing struct declaration...");
+        logMessage(LMI, "INFO", "Parser", "Current Token: %s", CryoTokenToString(lexer->currentToken.type));
+    }
 
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start struct declaration.", "parseStructDeclaration", arena, state, context);
 
@@ -79,6 +82,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
 
     // Add the struct name to the type table
     DataType *structDefinition = createStructDefinition(structName);
+    InitStructDeclaration(globalTable, structName, parentNamespaceNameID, structDefinition); // GlobalSymbolTable
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
@@ -240,6 +244,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
         logMessage(LMI, "ERROR", "Parser", "Failed to resolve parent data type.");
         return NULL;
     }
+
     bool isGenericType = parentDataType->container->isGeneric;
     if (isGenericType)
     {
@@ -695,8 +700,13 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContex
     Token currentToken = lexer->currentToken;
 
     // Find struct type in type table
-    DataType *structType = NULL;
-    DEBUG_BREAKPOINT;
+    DataType *structType = ResolveDataType(globalTable, structName);
+    if (!structType)
+    {
+        parsingError("Failed to resolve struct type.", "parseStructInstance",
+                     arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected struct name in struct instance.",
             "parseStructInstance", arena, state, context);
@@ -709,8 +719,55 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContex
                      arena, state, lexer, lexer->source, globalTable);
         return NULL;
     }
-
     DEBUG_BREAKPOINT;
+}
+
+ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing struct instance...");
+
+    Token currentToken = lexer->currentToken;
+
+    // Find struct type in type table
+    DataType *structType = ResolveDataType(globalTable, structName);
+    if (!structType)
+    {
+        parsingError("Failed to resolve struct type.", "parseStructInstance",
+                     arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    bool isNew = false;
+    if (currentToken.type == TOKEN_KW_NEW)
+    {
+        isNew = true;
+        getNextToken(lexer, arena, state);
+    }
+
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected struct name in struct instance.",
+            "parseStructInstance", arena, state, context);
+
+    // Parse struct arguments
+    ASTNode *args = parseArgumentList(lexer, context, arena, state, globalTable);
+    if (!args)
+    {
+        parsingError("Failed to parse struct arguments.", "parseStructInstance",
+                     arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+    ASTNode **_args = args->data.argList->args;
+    int argCount = args->data.argList->argCount;
+
+    ASTNode *structObject = createObject(structName, structType, isNew, _args, argCount, arena, state, lexer);
+    if (!structObject)
+    {
+        parsingError("Failed to create struct object.", "parseStructInstance",
+                     arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    return structObject;
 }
 
 ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeType parentNodeType, bool hasDefaultFlag)

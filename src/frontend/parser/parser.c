@@ -111,7 +111,7 @@ void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, co
     logMessage(LMI, "INFO", "Parser", "Consuming token...");
     // pushCallStack(&callStack, functionName, lexer->currentToken.line);
 
-    // addTokenToContext(context, lexer->currentToken);
+    addTokenToContext(context, lexer->currentToken);
 
     if (lexer->currentToken.type == type)
     {
@@ -1422,11 +1422,11 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     // Check if the function name is a struct declaration.
     // In this case, we have to create a new struct instance and redirect the parser
     // to the struct declaration.
-    // if (isStructDeclaration(typeTable, functionName))
-    // {
-    //     logMessage(LMI, "INFO", "Parser", "Struct declaration detected.");
-    //     return parseStructInstance(functionName, lexer,context, arena, state, globalTable);
-    // }
+    if (IsStructSymbol(globalTable, functionName))
+    {
+        logMessage(LMI, "INFO", "Parser", "Struct declaration detected.");
+        return parseNewStructObject(functionName, lexer, context, arena, state, globalTable);
+    }
 
     // Create function call node
     ASTNode *functionCallNode = createFunctionCallNode(arena, state, lexer);

@@ -55,6 +55,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
     container->custom.name = name;
     container->custom.structDef = structDef;
     container->primitive = PRIM_CUSTOM;
+    container->isGeneric = false;
 
     return container;
 }
@@ -110,13 +111,15 @@ DataType *createDataTypeFromStructNode(
 
     logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structType->name);
     const char *typeName = structType->name;
+
     logMessage(LMI, "INFO", "DataTypes", "Type name: %s", typeName);
+
     TypeContainer *structContainer = createStructType(typeName, structType);
     logMessage(LMI, "INFO", "DataTypes", "Created struct type: %s", structType->name);
+    structContainer->baseType = STRUCT_TYPE;
+    structContainer->primitive = PRIM_CUSTOM;
 
     DataType *dataType = wrapTypeContainer(structContainer);
-    dataType->container->baseType = STRUCT_TYPE;
-    dataType->container->primitive = PRIM_CUSTOM;
 
     return dataType;
 }
@@ -253,6 +256,9 @@ DataType *wrapStructType(StructType *structDef)
         fprintf(stderr, "[TypeTable] Error: Failed to wrap struct type.\n");
         return NULL;
     }
+
+    container->primitive = PRIM_CUSTOM;
+    container->baseType = STRUCT_TYPE;
 
     return wrapTypeContainer(container);
 }

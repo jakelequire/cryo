@@ -425,12 +425,12 @@ extern "C"
     // --------------------------------------------------------------
     // Declaration Functions (Structs)
 
-    void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentNameID)
+    void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentNameID, DataType *structPtr)
     {
         __STACK_FRAME__
         if (symTable)
         {
-            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->initStructDeclaration(structName, parentNameID);
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->initStructDeclaration(structName, parentNameID, structPtr);
         }
     }
 
@@ -468,6 +468,16 @@ extern "C"
         {
             reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->completeStructDeclaration(structNode, structName);
         }
+    }
+
+    bool CryoGlobalSymbolTable_IsStructSymbol(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->isStructSymbol(name);
+        }
+        return false;
     }
 
     // --------------------------------------------------------------

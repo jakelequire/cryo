@@ -714,7 +714,7 @@ Token identifier(Lexer *lexer, CompilerState *state)
 Token checkKeyword(Lexer *lexer, CompilerState *state)
 {
     __STACK_FRAME__
-    while (isAlpha(peek(lexer, state)))
+    while (isAlpha(peek(lexer, state)) || isDigit(peek(lexer, state)))
         advance(lexer, state);
 
     int length = (int)(lexer->current - lexer->start);

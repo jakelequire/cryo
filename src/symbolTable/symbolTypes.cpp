@@ -29,6 +29,9 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Symbol Table", "Resolving Data Type, Type Name: %s", name);
 
+        // Print the type table
+        SymbolTableDebugger::logTypeTable(this->typeTable);
+
         if (cxxTypeNameStr.empty())
         {
             std::cerr << "Error: Failed to resolve data type, name is empty!" << std::endl;
@@ -214,7 +217,38 @@ namespace Cryo
         return;
     }
 
-    // After the type def is complete. We need to update the type symbol in the table with the new typeSymbol
+    void GlobalSymbolTable::addOrUpdateType(TypeSymbol *typeSymbol)
+    {
+        __STACK_FRAME__
+        if (!typeSymbol || typeSymbol == nullptr)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol is null");
+            return;
+        }
+
+        const char *typeName = typeSymbol->name;
+        if (!typeName || typeName == nullptr)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Name is null");
+            return;
+        }
+
+        if (doesTypeExist(typeName))
+        {
+            // If the type already exists, we will replace the existing type with the new type
+            logMessage(LMI, "INFO", "Symbol Table", "Type already exists in table, updating type", "Type Name", typeName);
+            typeTable->typeSymbols[typeTable->count] = typeSymbol;
+            return;
+        }
+
+        typeTable->typeSymbols[typeTable->count] = typeSymbol;
+        typeTable->count++;
+
+        logMessage(LMI, "INFO", "Symbol Table", "Added Type to Table", "Type Name", typeName);
+        return;
+    }
+
+    // After the type def is complete.d We need to update the type symbol in the table with the new typeSymbol
     void GlobalSymbolTable::completeTypeDefinition(Symbol *typeSymbol, const char *typeName)
     {
         __STACK_FRAME__

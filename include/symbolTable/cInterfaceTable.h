@@ -187,8 +187,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_CompleteClassDeclaration(symTable, classNode, className)
 
 // Declaration Functions (Structs)
-#define InitStructDeclaration(symTable, structName, parentNameID) \
-    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID)
+#define InitStructDeclaration(symTable, structName, parentNameID, structPtr) \
+    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID, structPtr)
 #define InitGenericStructDeclaration(symTable, structName, parentID) \
     CryoGlobalSymbolTable_InitGenericStructDeclaration(symTable, structName, parentID)
 #define AddPropertyToStruct(symTable, structName, property) \
@@ -197,6 +197,9 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_AddMethodToStruct(symTable, structName, method)
 #define CompleteStructDeclaration(symTable, structNode, structName) \
     CryoGlobalSymbolTable_CompleteStructDeclaration(symTable, structNode, structName)
+
+#define IsStructSymbol(symTable, name) \
+    CryoGlobalSymbolTable_IsStructSymbol(symTable, name)
 
 // Declaration Functions (Functions)
 #define InitFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType) \

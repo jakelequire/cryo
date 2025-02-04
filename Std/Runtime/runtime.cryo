@@ -5,6 +5,7 @@ extern function __c_printStr(s: string) -> void;
 extern function __c_sys_exit(code: int) -> void;
 extern function __c_intToString(num: int) -> string;
 extern function __c_strLen(s: string) -> int;
+extern function __c_println(s: string) -> void;
 
 
 function sys_exit(code: int) -> void {
@@ -19,6 +20,11 @@ function printInt(i: int) -> void {
 
 function printStr(s: string) -> void {
     __c_printStr(s);
+    return;
+}
+
+function println(s: string) -> void {
+    __c_println(s);
     return;
 }
 

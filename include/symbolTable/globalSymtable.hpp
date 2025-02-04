@@ -113,7 +113,7 @@ extern "C"
     void CryoGlobalSymbolTable_CompleteClassDeclaration(CryoGlobalSymbolTable *symTable, ASTNode *classNode, const char *className);
 
     // Struct Declarations
-    void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentName);
+    void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentName, DataType *structPtr);
     void CryoGlobalSymbolTable_InitGenericStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentName);
     void CryoGlobalSymbolTable_AddPropertyToStruct(CryoGlobalSymbolTable *symTable, const char *structName, ASTNode *property);
     void CryoGlobalSymbolTable_AddMethodToStruct(CryoGlobalSymbolTable *symTable, const char *className, ASTNode *method);
@@ -133,6 +133,8 @@ extern "C"
     Symbol *CryoGlobalSymbolTable_FindMethodSymbol(CryoGlobalSymbolTable *symTable, const char *methodName, const char *className, TypeofDataType typeOfNode);
 
     const char *CryoGlobalSymbolTable_GetNamespace(CryoGlobalSymbolTable *symTable);
+
+    bool CryoGlobalSymbolTable_IsStructSymbol(CryoGlobalSymbolTable *symTable, const char *name);
 
     // Misc Functions ---------------------------------------
     ASTNode **CryoGlobalSymbolTable_MergeAllSymbolsToASTArray(CryoGlobalSymbolTable *symTable);
@@ -250,8 +252,8 @@ extern "C"
     CryoGlobalSymbolTable_CompleteClassDeclaration(symTable, classNode, className)
 
 // Declaration Functions (Structs)
-#define InitStructDeclaration(symTable, structName, parentNameID) \
-    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID)
+#define InitStructDeclaration(symTable, structName, parentNameID, structPtr) \
+    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID, structPtr)
 #define InitGenericStructDeclaration(symTable, structName, parentID) \
     CryoGlobalSymbolTable_InitGenericStructDeclaration(symTable, structName, parentID)
 #define AddPropertyToStruct(symTable, structName, property) \
@@ -260,6 +262,9 @@ extern "C"
     CryoGlobalSymbolTable_AddMethodToStruct(symTable, structName, method)
 #define CompleteStructDeclaration(symTable, structNode, structName) \
     CryoGlobalSymbolTable_CompleteStructDeclaration(symTable, structNode, structName)
+
+#define IsStructSymbol(symTable, name) \
+    CryoGlobalSymbolTable_IsStructSymbol(symTable, name)
 
 // Declaration Functions (Functions)
 #define InitFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType) \
@@ -500,6 +505,7 @@ namespace Cryo
         void addTypeToTable(TypeSymbol *typeSymbol);
 
         void initTypeDefinition(Symbol *typeSymbol);
+        void addOrUpdateType(TypeSymbol *typeSymbol);
         void completeTypeDefinition(Symbol *typeSymbol, const char *typeName);
 
         //===================================================================
@@ -691,20 +697,24 @@ namespace Cryo
         // Struct Symbol Management
         //===================================================================
 
-        void initStructDeclaration(const char *structName, const char *parentNameID);    // [C API]
-        void initGenericStructDeclaration(const char *structName, const char *parentID); // [C API]
-        void addPropertyToStruct(const char *structName, ASTNode *property);             // [C API]
-        void addMethodToStruct(const char *className, ASTNode *method);                  // [C API]
-        void completeStructDeclaration(ASTNode *structNode, const char *structName);     // [C API]
+        void initStructDeclaration(const char *structName, const char *parentNameID, DataType *structPtr); // [C API]
+        void initGenericStructDeclaration(const char *structName, const char *parentID);                   // [C API]
+        void addPropertyToStruct(const char *structName, ASTNode *property);                               // [C API]
+        void addMethodToStruct(const char *className, ASTNode *method);                                    // [C API]
+        void completeStructDeclaration(ASTNode *structNode, const char *structName);                       // [C API]
 
         Symbol *createStructDeclarationSymbol(const char *structName, const char *parentNameID);
         Symbol *getStructSymbol(const char *structName);
+
+        TypeSymbol *createStructDeclType(const char *structName, const char *parentNameID, DataType *structType);
 
         void updateStructSymbolMethods(Symbol *structSymbol, MethodSymbol *method, size_t methodCount);
         void updateStructSymbolProperties(Symbol *structSymbol, PropertySymbol *property, size_t propertyCount);
 
         void addStructDeclarationToTable(Symbol *structSymbol, SymbolTable *table);
         void updateStructSymbol(Symbol *structSymbol, SymbolTable *table);
+
+        bool isStructSymbol(const char *name);
 
         //===================================================================
         // Function Symbol Management
@@ -1097,11 +1107,11 @@ namespace Cryo
 
     // Declaration Functions (Structs) ---------------------------------------
 
-    inline void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentNameID)
+    inline void CryoGlobalSymbolTable_InitStructDeclaration(CryoGlobalSymbolTable *symTable, const char *structName, const char *parentNameID, DataType *structPtr)
     {
         if (symTable)
         {
-            reinterpret_cast<GlobalSymbolTable *>(symTable)->initStructDeclaration(structName, parentNameID);
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->initStructDeclaration(structName, parentNameID, structPtr);
         }
     }
 
@@ -1135,6 +1145,15 @@ namespace Cryo
         {
             reinterpret_cast<GlobalSymbolTable *>(symTable)->completeStructDeclaration(structNode, structName);
         }
+    }
+
+    inline bool CryoGlobalSymbolTable_IsStructSymbol(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->isStructSymbol(name);
+        }
+        return false;
     }
 
     // Declaration Functions (Functions) ---------------------------------------

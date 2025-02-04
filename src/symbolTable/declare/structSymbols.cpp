@@ -22,14 +22,13 @@
 namespace Cryo
 {
 
-    void GlobalSymbolTable::initStructDeclaration(const char *structName, const char *parentNameID)
+    void GlobalSymbolTable::initStructDeclaration(const char *structName, const char *parentNameID, DataType *structPtr)
     {
         __STACK_FRAME__
-        Symbol *structSymbol = createStructDeclarationSymbol(structName, parentNameID);
-        if (structSymbol)
+        TypeSymbol *structType = createStructDeclType(structName, parentNameID, structPtr);
+        if (structType)
         {
-            addSymbolToCurrentTable(structSymbol);
-            initTypeDefinition(structSymbol);
+            addOrUpdateType(structType);
             return;
         }
         else
@@ -80,6 +79,28 @@ namespace Cryo
         structSymbol->type->parentNameID = parentNameID;
 
         return structSymbol;
+    }
+
+    TypeSymbol *GlobalSymbolTable::createStructDeclType(const char *structName, const char *parentNameID, DataType *structType)
+    {
+        __STACK_FRAME__
+        TypeSymbol *typeSymbol = new TypeSymbol();
+        typeSymbol->name = structName;
+        typeSymbol->type = structType;
+        typeSymbol->typeOf = STRUCT_TYPE;
+        typeSymbol->isStatic = false;
+        typeSymbol->isGeneric = false;
+        typeSymbol->node = nullptr;
+        typeSymbol->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
+        typeSymbol->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
+        typeSymbol->propertyCapacity = MAX_PROPERTY_COUNT;
+        typeSymbol->methodCapacity = MAX_METHOD_COUNT;
+        typeSymbol->propertyCount = 0;
+        typeSymbol->methodCount = 0;
+        typeSymbol->scopeId = IDGen::generate64BitHashID(structName);
+        typeSymbol->parentNameID = parentNameID;
+
+        return typeSymbol;
     }
 
     void GlobalSymbolTable::addPropertyToStruct(const char *structName, ASTNode *property)
@@ -284,4 +305,32 @@ namespace Cryo
         return false;
     }
 
-} // namespace Cryo
+    bool GlobalSymbolTable::isStructSymbol(const char *name)
+    {
+        __STACK_FRAME__
+        if (!name || name == nullptr)
+        {
+            logMessage(LMI, "ERROR", "SymbolTable", "Struct Name is null");
+            return false;
+        }
+        TypesTable *typeTable = this->typeTable;
+        if (!typeTable || typeTable == nullptr)
+        {
+            logMessage(LMI, "ERROR", "SymbolTable", "Type Table is null");
+            return false;
+        }
+        size_t count = typeTable->count;
+        for (size_t i = 0; i < count; i++)
+        {
+            if (typeTable->typeSymbols[i]->typeOf == STRUCT_TYPE)
+            {
+                if (strcmp(typeTable->typeSymbols[i]->name, name) == 0)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+} // namespace Cryos
