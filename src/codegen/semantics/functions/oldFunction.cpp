@@ -282,6 +282,13 @@ namespace Cryo
                         compiler.getContext().builder.CreateRet(returnValue);
                         break;
                     }
+                    case NODE_FUNCTION_CALL:
+                    {
+                        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning Function Call with type int");
+                        llvm::Value *returnValue = createFunctionCall(statement);
+                        compiler.getContext().builder.CreateRet(returnValue);
+                        break;
+                    }
                     default:
                     {
                         DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");

@@ -181,9 +181,9 @@ namespace Cryo
             //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting int array to LLVM type");
             //     return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
 
-            // case DATA_TYPE_ANY:
-            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
-            //     return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
+        case PRIM_ANY:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting any to LLVM type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();
 
         case PRIM_CUSTOM:
         {

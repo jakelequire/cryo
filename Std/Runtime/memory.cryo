@@ -1,3 +1,26 @@
 namespace Runtime;
 
-extern function __c_malloc(size: int) -> void *;
+extern function __c_memset(pointer: any, value: int, size: int) -> void;
+extern function __c_malloc(size: int) -> any;
+extern function __c_free(_pointer: any) -> void;
+
+struct ProgramMemory {
+    pointer: any;
+    size: int;
+    capacity: int;
+}
+
+function __malloc__(size: int) -> any {
+    return __c_malloc(size);
+}
+
+function __memset__(pointer: any, value: int, size: int) -> void {
+    __c_memset(pointer, value, size);
+    return;
+}
+
+function __free__(pointer: any) -> void {
+    __c_free(pointer);
+    return;
+}
+

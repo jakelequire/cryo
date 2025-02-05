@@ -51,6 +51,8 @@ extern "C"
         TOKEN_TYPE_STRING_LITERAL, // `'Hello, World!'`, `'Hello, ' + 'World!'`, etc
         TOKEN_TYPE_BOOLEAN,        // `true`, `false`
         TOKEN_TYPE_VOID,           // `void`
+        TOKEN_TYPE_NULL,           // `null`
+        TOKEN_TYPE_ANY,            // `any`
         TOKEN_TYPE_INT_ARRAY,      // `int[]`
         TOKEN_TYPE_FLOAT_ARRAY,    // `float[]`
         TOKEN_TYPE_STRING_ARRAY,   // `string[]`

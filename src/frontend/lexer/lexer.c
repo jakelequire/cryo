@@ -63,6 +63,8 @@ KeywordToken keywords[] = {
     {"typeof", TOKEN_KW_TYPEOF},
     {"module", TOKEN_KW_MODULE},
     {"declare", TOKEN_KW_DECLARE},
+    {"any", TOKEN_KW_ANY},
+    {"null", TOKEN_KW_NULL},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

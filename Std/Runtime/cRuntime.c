@@ -71,7 +71,9 @@ void __c_memset(void *ptr, int value, size_t num)
 
 void *__c_malloc(size_t size)
 {
-    return malloc(size);
+    printf("Allocating %ld bytes\n", size);
+    void *ptr = (void *)malloc(size);
+    return ptr;
 }
 
 void __c_free(void *ptr)
@@ -82,6 +84,12 @@ void __c_free(void *ptr)
 void __c_printAddr(void *ptr)
 {
     printf("%p\n", ptr);
+}
+
+int __c_getAddr(void *ptr)
+{
+    printf("Getting address of %p\n", ptr);
+    return (int)ptr;
 }
 
 // ======================================================= //

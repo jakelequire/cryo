@@ -278,6 +278,10 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_TYPE_BOOLEAN";
     case TOKEN_TYPE_VOID:
         return "TOKEN_TYPE_VOID";
+    case TOKEN_TYPE_NULL:
+        return "TOKEN_TYPE_NULL";
+    case TOKEN_TYPE_ANY:
+        return "TOKEN_TYPE_ANY";
     case TOKEN_TYPE_INT_ARRAY:
         return "TOKEN_TYPE_INT_ARRAY";
     case TOKEN_TYPE_FLOAT_ARRAY:

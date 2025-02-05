@@ -306,12 +306,13 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     case TOKEN_KW_STRING:
     case TOKEN_KW_BOOL:
     case TOKEN_KW_ANY:
-        type = getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
+        logMessage(LMI, "INFO", "Parser", "Parsing primitive type: %s", typeTokenStr);
+        return getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
         break;
 
     case TOKEN_IDENTIFIER:
         // type = getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
-        type = ResolveDataType(globalTable, typeTokenStr);
+        return ResolveDataType(globalTable, typeTokenStr);
         break;
 
     default:

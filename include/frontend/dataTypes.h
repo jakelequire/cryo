@@ -40,6 +40,8 @@
     X("string", TOKEN_TYPE_STRING)           \
     X("boolean", TOKEN_TYPE_BOOLEAN)         \
     X("void", TOKEN_TYPE_VOID)               \
+    X("null", TOKEN_TYPE_NULL)               \
+    X("any", TOKEN_TYPE_ANY)                 \
     X("int[]", TOKEN_TYPE_INT_ARRAY)         \
     X("string[]", TOKEN_TYPE_STRING_ARRAY)   \
     X("boolean[]", TOKEN_TYPE_BOOLEAN_ARRAY) \
