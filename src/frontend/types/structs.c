@@ -33,10 +33,10 @@ DataType *createStructDefinition(const char *structName)
 
     structDef->name = structName;
     structDef->size = 0;
-    structDef->properties = NULL;
+    structDef->properties = (ASTNode **)malloc(sizeof(ASTNode *) * PROPERTY_CAPACITY);
     structDef->propertyCount = 0;
     structDef->propertyCapacity = PROPERTY_CAPACITY;
-    structDef->methods = NULL;
+    structDef->methods = (ASTNode **)malloc(sizeof(ASTNode *) * METHOD_CAPACITY);
     structDef->methodCount = 0;
     structDef->methodCapacity = METHOD_CAPACITY;
     structDef->hasDefaultValue = false;
@@ -62,7 +62,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
     container->isGeneric = false;
 
     container->custom.structDef = structDef;
-    
+
     container->custom.structDef->addProperty = _add_struct_property;
     container->custom.structDef->addMethod = _add_struct_method;
 
@@ -91,7 +91,7 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
     structType->hasConstructor = structNode->data.structNode->hasConstructor;
     structType->ctorParamCount = structNode->data.structNode->ctorArgCount;
     structType->ctorParamCapacity = structNode->data.structNode->ctorArgCapacity;
-    // structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs);
+    structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs, structType->ctorParamCount);
     structType->ctorParams = NULL;
 
     return structType;
@@ -296,6 +296,7 @@ void _add_struct_property(StructType *self, ASTNode *property)
     if (self->propertyCount + 1 >= self->propertyCapacity)
     {
         // Grow properties array
+        logMessage(LMI, "INFO", "DataTypes", "Growing properties array for struct: %s", self->name);
         int newCapacity = self->propertyCapacity * 2;
         ASTNode **newProperties = (ASTNode **)realloc(self->properties, newCapacity * sizeof(ASTNode *));
         if (!newProperties)
@@ -304,6 +305,7 @@ void _add_struct_property(StructType *self, ASTNode *property)
         self->properties = newProperties;
         self->propertyCapacity = newCapacity;
     }
+    logMessage(LMI, "INFO", "DataTypes", "Adding property to struct: %s", property->data.property->name);
 
     // Add property to struct
     self->properties[self->propertyCount++] = property;
@@ -321,6 +323,7 @@ void _add_struct_method(StructType *self, ASTNode *method)
     if (self->methodCount + 1 >= self->methodCapacity)
     {
         // Grow methods array
+        logMessage(LMI, "INFO", "DataTypes", "Growing methods array for struct: %s", self->name);
         int newCapacity = self->methodCapacity * 2;
         ASTNode **newMethods = (ASTNode **)realloc(self->methods, newCapacity * sizeof(ASTNode *));
         if (!newMethods)
@@ -329,7 +332,7 @@ void _add_struct_method(StructType *self, ASTNode *method)
         self->methods = newMethods;
         self->methodCapacity = newCapacity;
     }
-
+    logMessage(LMI, "INFO", "DataTypes", "Adding method to struct: %s", method->data.method->name);
     // Add method to struct
     self->methods[self->methodCount++] = method;
 }

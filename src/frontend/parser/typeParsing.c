@@ -61,12 +61,12 @@ ASTNode *parseGenericStructDeclaration(Lexer *lexer, ParsingContext *context, Ar
     logMessage(LMI, "INFO", "Parser", "Parsing generic struct declaration...");
     InitGenericStructDeclaration(globalTable, structName, parentNamespaceNameID); // GlobalSymbolTable
     printGlobalSymbolTable(globalTable);
-    ASTNode *genericStruct = parseGenericStructDeclaration(structName, lexer, context, arena, state, globalTable, parentNamespaceNameID);
-    if (genericStruct)
-    {
-        return genericStruct;
-    }
-    CONDITION_FAILED;
+    // ASTNode *genericStruct = parseGenericStructDeclaration(structName, lexer, context, arena, state, globalTable, parentNamespaceNameID);
+    // if (genericStruct)
+    // {
+    //     return genericStruct;
+    // }
+    DEBUG_BREAKPOINT;
     return NULL;
 }
 
@@ -75,15 +75,8 @@ ASTNode *parseNonGenericStructDeclaration(Lexer *lexer, ParsingContext *context,
     logMessage(LMI, "INFO", "Parser", "Parsing struct declaration...");
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start struct declaration.", "parseStructDeclaration", arena, state, context);
 
-    ASTNode **properties = (ASTNode **)ARENA_ALLOC(arena, PROPERTY_CAPACITY * sizeof(ASTNode *));
-    ASTNode **methods = (ASTNode **)ARENA_ALLOC(arena, METHOD_CAPACITY * sizeof(ASTNode *));
-
-    int propertyCount = 0;
-    int methodCount = 0;
-    bool hasDefaultProperty = false;
-    bool hasConstructor = false;
-    int ctorArgCount = 0;
-    DataType **ctorArgs = (DataType **)ARENA_ALLOC(arena, sizeof(DataType *) * ARG_CAPACITY);
+    ASTNode **properties = (ASTNode **)malloc(PROPERTY_CAPACITY * sizeof(ASTNode *));
+    ASTNode **methods = (ASTNode **)malloc(METHOD_CAPACITY * sizeof(ASTNode *));
 
     int defaultPropertyCount = 0;
     ASTNode *constructorNode = NULL;
@@ -92,9 +85,16 @@ ASTNode *parseNonGenericStructDeclaration(Lexer *lexer, ParsingContext *context,
     DataType *structDefinition = createStructDefinition(structName);
     InitStructDeclaration(globalTable, structName, parentNamespaceNameID, structDefinition); // GlobalSymbolTable
 
+    int propertyCount = structDefinition->container->custom.structDef->propertyCount;
+    int methodCount = structDefinition->container->custom.structDef->methodCount;
+    bool hasDefaultProperty = false;
+    bool hasConstructor = false;
+    int ctorArgCount = 0;
+    DataType **ctorArgs = (DataType **)malloc(sizeof(DataType *) * ARG_CAPACITY);
+
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
-        if (!parseStructFieldOrMethod(lexer, context, arena, state, globalTable, structName, properties, &propertyCount, methods, &methodCount, &hasDefaultProperty, &defaultPropertyCount, &hasConstructor, &constructorNode, ctorArgs, &ctorArgCount))
+        if (!parseStructFieldOrMethod(structDefinition, lexer, context, arena, state, globalTable, structName, properties, &propertyCount, methods, &methodCount, &hasDefaultProperty, &defaultPropertyCount, &hasConstructor, &constructorNode, ctorArgs, &ctorArgCount))
         {
             return NULL;
         }
@@ -103,7 +103,7 @@ ASTNode *parseNonGenericStructDeclaration(Lexer *lexer, ParsingContext *context,
     return finalizeStructDeclaration(lexer, context, arena, state, globalTable, structName, properties, propertyCount, methods, methodCount, hasDefaultProperty, hasConstructor, constructorNode, ctorArgs, ctorArgCount);
 }
 
-bool parseStructFieldOrMethod(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, ASTNode **properties, int *propertyCount, ASTNode **methods, int *methodCount, bool *hasDefaultProperty, int *defaultPropertyCount, bool *hasConstructor, ASTNode **constructorNode, DataType **ctorArgs, int *ctorArgCount)
+bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, ASTNode **properties, int *propertyCount, ASTNode **methods, int *methodCount, bool *hasDefaultProperty, int *defaultPropertyCount, bool *hasConstructor, ASTNode **constructorNode, DataType **ctorArgs, int *ctorArgCount)
 {
     ASTNode *field = parseStructField(structName, lexer, context, arena, state, globalTable);
     if (field)
@@ -114,6 +114,7 @@ bool parseStructFieldOrMethod(Lexer *lexer, ParsingContext *context, Arena *aren
             properties[*propertyCount] = field;
             (*propertyCount)++;
             addPropertyToThisContext(context, field);
+            dataType->container->custom.structDef->addProperty(dataType->container->custom.structDef, field);
 
             if (parsePropertyForDefaultFlag(field) && !(*hasDefaultProperty))
             {
@@ -133,6 +134,7 @@ bool parseStructFieldOrMethod(Lexer *lexer, ParsingContext *context, Arena *aren
             methods[*methodCount] = field;
             (*methodCount)++;
             addMethodToThisContext(context, field);
+            dataType->container->custom.structDef->addMethod(dataType->container->custom.structDef, field);
             return true;
         }
         else
@@ -177,6 +179,7 @@ bool parseStructFieldOrMethod(Lexer *lexer, ParsingContext *context, Arena *aren
             methods[*methodCount] = method;
             (*methodCount)++;
             addMethodToThisContext(context, method);
+            dataType->container->custom.structDef->addMethod(dataType->container->custom.structDef, method);
         }
         return true;
     }
@@ -209,16 +212,6 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
 
     StructType *structDef = structNode->data.structNode->type->container->custom.structDef;
-    for (int i = 0; i < propertyCount; i++)
-    {
-        ASTNode *property = properties[i];
-        structDef->addProperty(structDef, property);
-    }
-    for (int i = 0; i < methodCount; i++)
-    {
-        ASTNode *method = methods[i];
-        structDef->addMethod(structDef, method);
-    }
     structDef->ctorParamCount = ctorArgCount;
     structDef->ctorParams = ctorArgs;
     structNode->data.structNode->type = structDataType;
@@ -278,8 +271,15 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
         getNextToken(lexer, arena, state);
     }
 
+    if (lexer->currentToken.type == TOKEN_KW_CONSTRUCTOR)
+    {
+        // Break from the function and return null. The callee will handle the constructor
+        return NULL;
+    }
+
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse struct field, expected an identifier, received %s", CryoTokenToString(lexer->currentToken.type));
         parsingError("Expected an identifier.", "parseStructField", arena, state, lexer, lexer->source, globalTable);
         return NULL;
     }
