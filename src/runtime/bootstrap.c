@@ -42,7 +42,7 @@ char *getRuntimeSrcFile(void)
         CONDITION_FAILED;
     }
 
-    sprintf(runtimeBuffer, "%s/Std/Runtime/runtime.cryo", envRoot);
+    sprintf(runtimeBuffer, "%sStd/Runtime/runtime.cryo", envRoot);
 
     DEBUG_PRINT_FILTER({
         printf(LIGHT_GREEN BOLD "Runtime Found Environment: %s\n" COLOR_RESET, runtimeBuffer);
@@ -92,15 +92,27 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
 
     // Compile the runtime file
     ASTNode *runtimeNode = compileForRuntimeNode(bootstrap, runtimePath, globalTable);
-
     if (!runtimeNode)
     {
         fprintf(stderr, "Error: Failed to compile runtime node\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
         return;
     }
-
     logMessage(LMI, "INFO", "Bootstrap", "Runtime node compiled successfully");
+
+    String *runtimeMemoryPath = Str(fs->removeFileFromPath(runtimePath));
+    runtimeMemoryPath->append(runtimeMemoryPath, "/memory.cryo");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime Directory Path: %s", runtimeMemoryPath->c_str(runtimeMemoryPath));
+
+    // Compile the runtime memory file
+    ASTNode *runtimeMemoryNode = compileForRuntimeNode(bootstrap, runtimeMemoryPath->c_str(runtimeMemoryPath), globalTable);
+    if (!runtimeMemoryNode)
+    {
+        fprintf(stderr, "Error: Failed to compile runtime memory node\n");
+        updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        return;
+    }
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime memory node compiled successfully");
 
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_SUCCESS);
@@ -114,7 +126,16 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     const char *outputFile = getRuntimeObjFile(globalTable);
     bootstrap->state->settings->inputFile = getRuntimeSrcFile();
 
+    // Create the runtime memory file
+    String *runtimeMemoryObjPath = Str(fs->removeFileFromPath(runtimeMemoryPath->c_str(runtimeMemoryPath)));
+    runtimeMemoryObjPath->append(runtimeMemoryObjPath, "/memory.ll");
+    const char *memoryOutputFile = runtimeMemoryObjPath->c_str(runtimeMemoryObjPath);
+
+    // Compile the runtime object file
     preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker);
+
+    // Compile the runtime memory object file
+    preprocessRuntimeIR(runtimeMemoryNode, bootstrap->state, memoryOutputFile, cLinker);
 
     // Free the bootstrap state
     free(bootstrap);
