@@ -675,9 +675,11 @@ namespace Cryo
         std::vector<llvm::Type *> argTypes;
         for (int i = 0; i < argCount; ++i)
         {
+            logASTNode(functionNode->params[i]);
             CryoParameterNode *argNode = functionNode->params[i]->data.param;
             assert(argNode != nullptr);
             DataType *_argType = argNode->type;
+            logDataType(_argType);
 
             if (_argType->container->baseType == PRIM_STRING)
             {

@@ -7,6 +7,10 @@ extern function __c_intToString(num: int) -> string;
 extern function __c_strLen(s: string) -> int;
 extern function __c_println(s: string) -> void;
 
+extern function __c_memset(pointer: any, value: int, size: int) -> void;
+extern function __c_malloc(size: int) -> any;
+extern function __c_free(pointer: any) -> void;
+
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);
     return;

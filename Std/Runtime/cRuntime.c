@@ -64,6 +64,26 @@ void __c_sys_exit(int code)
     exit(code);
 }
 
+void __c_memset(void *ptr, int value, size_t num)
+{
+    memset(ptr, value, num);
+}
+
+void *__c_malloc(size_t size)
+{
+    return malloc(size);
+}
+
+void __c_free(void *ptr)
+{
+    free(ptr);
+}
+
+void __c_printAddr(void *ptr)
+{
+    printf("%p\n", ptr);
+}
+
 // ======================================================= //
 //                      FS Operations                      //
 // ======================================================= //

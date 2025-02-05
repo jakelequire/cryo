@@ -112,14 +112,6 @@ namespace Cryo
         compiler.getSymTable().initModule(root, namespaceName);
         compiler.getContext().currentNamespace = namespaceName;
 
-        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Linting Tree");
-        bool validateTree = DevDebugger::lintTree(root);
-        if (validateTree == false)
-        {
-            std::cerr << "[CPP] Tree is invalid!" << std::endl;
-            CONDITION_FAILED;
-        }
-
         // Declare all functions in the AST tree
         // declarations.preprocessDeclare(root); <- TODO: Implement this function
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
@@ -158,7 +150,7 @@ namespace Cryo
             }
             compiler.getContext().module->print(llvm::outs(), nullptr);
             linker->generateIRFromCodegen(compiler.getContext().module.get(), compiler.customOutputPath.c_str());
-            
+
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
             return;
         }

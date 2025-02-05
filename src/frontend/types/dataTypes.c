@@ -125,6 +125,7 @@ DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable)
     }
     else if (strcmp(baseTypeStr, "any") == 0)
     {
+        logMessage(LMI, "INFO", "DataTypes", "Resolving `any` type!");
         container->baseType = PRIMITIVE_TYPE;
         container->primitive = PRIM_ANY;
     }

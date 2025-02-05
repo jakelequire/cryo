@@ -305,6 +305,7 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     case TOKEN_KW_INT:
     case TOKEN_KW_STRING:
     case TOKEN_KW_BOOL:
+    case TOKEN_KW_ANY:
         type = getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
         break;
 
@@ -1795,6 +1796,8 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
     consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after parameter name.", "parseParameter", arena, state, context);
 
     DataType *paramType = parseType(lexer, context, arena, state, globalTable);
+    const char *paramTypeStr = DataTypeToString(paramType);
+    logMessage(LMI, "INFO", "Parser", "<!> Parameter type: %s", paramTypeStr);
     // consume data type:
     getNextToken(lexer, arena, state);
     ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena, state, lexer);
@@ -1809,7 +1812,7 @@ ASTNode **parseParameterList(Lexer *lexer, ParsingContext *context, Arena *arena
     logMessage(LMI, "INFO", "Parser", "Parsing parameter list...");
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start parameter list.", "parseParameterList", arena, state, context);
 
-    ASTNode **paramListNode = (ASTNode **)ARENA_ALLOC(arena, 8 * sizeof(ASTNode *));
+    ASTNode **paramListNode = (ASTNode **)malloc(16 * sizeof(ASTNode *));
     if (!paramListNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to allocate memory for parameter list.");
