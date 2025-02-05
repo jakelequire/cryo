@@ -480,8 +480,10 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
         // Get the object type
         DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object);
         if (!objectType)
+        {
+            logMessage(LMI, "ERROR", "DataTypes", "Failed to get object type from property access.");
             CONDITION_FAILED;
-
+        }
         // Get the property name
         const char *propertyName = node->data.propertyAccess->propertyName;
 
