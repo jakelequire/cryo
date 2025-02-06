@@ -6,14 +6,13 @@ extern function __c_free(_pointer: any) -> void;
 
 struct FreeBlock {
 	size: int;
-	next: FreeBlock;
 }
 
 struct MemoryStack {
 	buffer: int;
 	size: int;
 	top: int;
-	free_list: FreeBlock;
+	// free_list: FreeBlock;
 }
 
 function __malloc__(size: int) -> any {

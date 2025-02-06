@@ -173,6 +173,21 @@ namespace Cryo
                 return;
             }
 
+            // Add all structs from `srcModule` to `module` 
+            for (auto &structType : srcModule->getIdentifiedStructTypes())
+            {
+                if (structType->isLiteral())
+                {
+                    continue;
+                }
+
+                std::string structName = structType->getName().str();
+                if (structTypes.find(structName) == structTypes.end())
+                {
+                    structTypes[structName] = structType;
+                }
+            }
+
             std::cout << "@mergeModule Module merged successfully" << std::endl;
         }
 

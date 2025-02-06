@@ -623,6 +623,7 @@ namespace Cryo
         }
 
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct does not exist");
+        CONDITION_FAILED;
         return nullptr;
     }
 

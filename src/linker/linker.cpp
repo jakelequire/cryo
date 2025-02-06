@@ -438,6 +438,7 @@ namespace Cryo
     {
         __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Merging two IR files...");
+        logMessage(LMI, "INFO", "Linker", "Output Directory Passed to @mergeTwoIRFiles: %s", outDir.c_str());
 
         if (file1.empty() || file2.empty())
         {
@@ -448,7 +449,8 @@ namespace Cryo
 
         std::string outPath = outDir + "/" + fileName + ".ll";
 
-        std::string cmd = "llvm-link-18 " + file1 + " " + file2 + " -S -o " + outPath;
+        std::string LLVM_LINK_OPTS = "--internalize ";
+        std::string cmd = "llvm-link-18 " + LLVM_LINK_OPTS + file1 + " " + file2 + " -S -o " + outPath;
         int result = system(cmd.c_str());
         if (result != 0)
         {
@@ -459,7 +461,7 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Linker", "IR files merged");
 
-        std::string fullPathToFile = file1.substr(0, file1.find_last_of("/")) + "/" + fileName + ".ll";
+        std::string fullPathToFile = outPath;
         logMessage(LMI, "INFO", "Linker", "Merged IR file: %s", fullPathToFile.c_str());
 
         llvm::LLVMContext context;
