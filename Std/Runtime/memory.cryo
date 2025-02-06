@@ -4,10 +4,16 @@ extern function __c_memset(pointer: any, value: int, size: int) -> void;
 extern function __c_malloc(size: int) -> any;
 extern function __c_free(_pointer: any) -> void;
 
-struct ProgramMemory {
-    pointer: any;
-    size: int;
-    capacity: int;
+struct FreeBlock {
+	size: int;
+	next: FreeBlock;
+}
+
+struct MemoryStack {
+	buffer: int;
+	size: int;
+	top: int;
+	free_list: FreeBlock;
 }
 
 function __malloc__(size: int) -> any {
@@ -23,4 +29,3 @@ function __free__(pointer: any) -> void {
     __c_free(pointer);
     return;
 }
-

@@ -336,8 +336,20 @@ ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, C
     }
 
     ASTNode *constructorBody = parseBlock(lexer, context, arena, state, globalTable);
+    if (!constructorBody)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse constructor body.");
+        parsingError("Failed to parse constructor body.", "parseConstructor", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
 
     ASTNode *constructorNode = createConstructorNode(consturctorName, constructorBody, params, paramCount, arena, state, lexer);
+    if (!constructorNode)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to create constructor node.");
+        parsingError("Failed to create constructor node.", "parseConstructor", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
 
     return constructorNode;
 }
