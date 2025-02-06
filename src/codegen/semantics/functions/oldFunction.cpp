@@ -67,18 +67,6 @@ namespace Cryo
         }
     }
 
-    llvm::Function *Functions::getFunction(std::string functionName)
-    {
-        CryoContext &context = compiler.getContext();
-        llvm::Function *function = context.module->getFunction(functionName);
-        if (!function)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: " + functionName);
-            CONDITION_FAILED;
-        }
-        return function;
-    }
-
     // -----------------------------------------------------------------------------------------------
 
     void Functions::createFunctionDeclaration(ASTNode *node)

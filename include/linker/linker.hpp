@@ -190,7 +190,7 @@ namespace Cryo
         std::string getCRuntimePath();
         std::string covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
         bool mergeAllRuntimeFiles();
-        std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName);
+        std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName, std::string outDir);
 
         std::vector<std::string> listDir(const char *path);
         void runCompletedBinary();

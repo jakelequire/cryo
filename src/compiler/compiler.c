@@ -223,6 +223,8 @@ int exe_project_build(CompilerSettings *settings)
     // Outputs the SymTable into a file in the build directory.
     initASTDebugOutput(programNode, settings);
 
+    printGlobalSymbolTable(globalSymbolTable);
+
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker);
     if (result != 0)

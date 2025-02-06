@@ -41,6 +41,13 @@ namespace Cryo
         module.namespaceName = namespaceName;
     }
 
+    void IRSymTable::importExternalASTRoot(ASTNode *root)
+    {
+        std::string nodeNamespace = root->metaData->moduleName;
+        SymTableNode module = traverseModule(root, nodeNamespace);
+        symTable.namespaces[nodeNamespace] = module;
+    }
+
     // -----------------------------------------------------------------------------------------------
     ///
     /// Getters
@@ -341,11 +348,13 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Invalid Node Type");
             return;
         }
-        if (paramName.empty()) {
+        if (paramName.empty())
+        {
             DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Parameter Name is Empty");
             return;
         }
-        if (namespaceName.empty()){
+        if (namespaceName.empty())
+        {
             DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Namespace Name is Empty");
             return;
         }

@@ -55,7 +55,7 @@ namespace Cryo
         return runtimeMod;
     }
 
-    /// @brief This function will seek for the `cryo_runtime.ll` file that should have been created
+    /// @brief This function will seek for the `combined_cryo_runtime.ll` file that should have been created
     /// at an earlier stage in the compiler. This function is called to parse this file and returns
     /// the `llvm::Module *`.
     /// @param
@@ -67,13 +67,15 @@ namespace Cryo
         if (!cLinker)
         {
             logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
+            CONDITION_FAILED;
             return nullptr;
         }
 
-        std::string cryoRuntimefile = cLinker->getDirInfo()->runtimeDir + "/cryo_runtime.ll";
+        std::string cryoRuntimefile = cLinker->getDirInfo()->outDir + "/combined_cryo_runtime.ll";
         if (cryoRuntimefile.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file is empty");
+            CONDITION_FAILED;
             return nullptr;
         }
         logMessage(LMI, "INFO", "Linker", "Cryo Runtime File: %s", cryoRuntimefile.c_str());
@@ -171,6 +173,7 @@ namespace Cryo
         if (cRuntimeIR.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
+            CONDITION_FAILED;
             return;
         }
 
@@ -178,10 +181,12 @@ namespace Cryo
 
         // Now that the `runtime.ll` and `cRuntime.ll` files are generated, we will
         // merge them into one file and set that as the `preprocessedModule`.
-        std::string outputFilePath = mergeTwoIRFiles(modIR, cRuntimeIR, "cryo_runtime");
+        std::string _outDir = dirInfo->outDir;
+        std::string outputFilePath = mergeTwoIRFiles(modIR, cRuntimeIR, "combined_cryo_runtime", _outDir);
         if (outputFilePath.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to merge IR files");
+            CONDITION_FAILED;
             return;
         }
 
@@ -304,7 +309,7 @@ namespace Cryo
         }
 
         logMessage(LMI, "INFO", "Linker", "Cryo Root is not empty");
-        std::string fullPath = cryoRoot + "Std/Runtime";
+        std::string fullPath = cryoRoot + "/Std/Runtime";
         logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", fullPath.c_str());
 
         return fullPath;
@@ -429,7 +434,7 @@ namespace Cryo
 
     // This function will be used to merge two IR files together.
     // This function will return the full path to where the file was created.
-    std::string Linker::mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName)
+    std::string Linker::mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName, std::string outDir)
     {
         __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Merging two IR files...");
@@ -441,7 +446,6 @@ namespace Cryo
             return "";
         }
 
-        std::string outDir = file1.substr(0, file1.find_last_of("/"));
         std::string outPath = outDir + "/" + fileName + ".ll";
 
         std::string cmd = "llvm-link-18 " + file1 + " " + file2 + " -S -o " + outPath;
@@ -476,14 +480,14 @@ namespace Cryo
     std::string Linker::getCryoRuntimeFilePath(void)
     {
         __STACK_FRAME__
-        std::string runtimeDir = dirInfo->runtimeDir;
+        std::string runtimeDir = dirInfo->outDir;
         if (runtimeDir.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
             return "";
         }
 
-        std::string cryoRuntimeFile = runtimeDir + "/cryo_runtime.ll";
+        std::string cryoRuntimeFile = runtimeDir + "/combined_cryo_runtime.ll";
         if (!fileExists(cryoRuntimeFile.c_str()))
         {
             logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file does not exist: %s", cryoRuntimeFile.c_str());

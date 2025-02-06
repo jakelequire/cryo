@@ -64,7 +64,7 @@ namespace Cryo
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: @" + funcName);
                 DEBUG_PRINT_FILTER({
-                    // compiler.getContext().module->print(llvm::errs(), nullptr);
+                    compiler.getContext().module->print(llvm::errs(), nullptr);
                 });
                 CONDITION_FAILED;
             }
