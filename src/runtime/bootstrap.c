@@ -127,15 +127,16 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     bootstrap->state->settings->inputFile = getRuntimeSrcFile();
 
     // Create the runtime memory file
-    String *runtimeMemoryObjPath = Str(fs->removeFileFromPath(runtimeMemoryPath->c_str(runtimeMemoryPath)));
-    runtimeMemoryObjPath->append(runtimeMemoryObjPath, "/memory.ll");
+    const char *buildDir = GetBuildDir(globalTable);
+    String *runtimeMemoryObjPath = Str(buildDir);
+    runtimeMemoryObjPath->append(runtimeMemoryObjPath, "/out/runtime/memory.ll");
     const char *memoryOutputFile = runtimeMemoryObjPath->c_str(runtimeMemoryObjPath);
 
     // Compile the runtime object file
     preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker);
 
     // Compile the runtime memory object file
-    preprocessRuntimeIR(runtimeMemoryNode, bootstrap->state, memoryOutputFile, cLinker);
+    generateImportCode(runtimeMemoryNode, bootstrap->state, cLinker, memoryOutputFile);
 
     // Free the bootstrap state
     free(bootstrap);

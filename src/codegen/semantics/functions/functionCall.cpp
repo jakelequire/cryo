@@ -63,6 +63,7 @@ namespace Cryo
             if (!calleeF)
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: @" + funcName);
+                std::cout << "Module Name: " << moduleName << std::endl;
                 DEBUG_PRINT_FILTER({
                     // compiler.getContext().module->print(llvm::errs(), nullptr);
                     // Dump LLVM's function list

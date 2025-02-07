@@ -81,13 +81,42 @@ int generateImportCode(ASTNode *importNode, CompilerState *state, CryoLinker *cL
     // Set the output path for the runtime
     compiler.setCustomOutputPath(outputPath, true);
     // Compile Runtime Node
-    compiler.compile(importNode);
+    compiler.compileIRFile(importNode, outputPath);
 
     return 0;
 }
 
 namespace Cryo
 {
+
+    void CodeGen::compileIRFile(ASTNode *root, std::string outputPath)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Compiling IR File");
+
+        // Create a new separate compiler instance from the current one
+        CryoCompiler _compiler;
+        _compiler.setCompilerState(this->compiler.getCompilerState());
+        _compiler.setCompilerSettings(this->compiler.getCompilerSettings());
+        _compiler.setCustomOutputPath(outputPath);
+
+        // Compile the AST tree
+        _compiler.compile(root);
+
+        // Create the IR from the new compiler instance
+        llvm::Module *mod = _compiler.getContext().module.get();
+        if (!mod)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Module is null");
+            CONDITION_FAILED;
+        }
+
+        // Output the module to the file (the outputPath is the directory + filename)
+        _compiler.getLinker()->generateIRFromCodegen(mod, outputPath.c_str());
+
+        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "IR File Compiled");
+    }
+
+    // ---------------------------------------------------------------------------------------------------
 
     /**
      * @brief The entry point to the generation process (passed from the top-level compiler).

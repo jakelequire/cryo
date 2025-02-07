@@ -173,7 +173,7 @@ namespace Cryo
                 return;
             }
 
-            // Add all structs from `srcModule` to `module` 
+            // Add all structs from `srcModule` to `module`
             for (auto &structType : srcModule->getIdentifiedStructTypes())
             {
                 if (structType->isLiteral())
@@ -313,6 +313,7 @@ namespace Cryo
         bool isImporting = false;
 
         void compile(ASTNode *root);
+        void compileIRFile(ASTNode *root, std::string outputPath);
         void dumpModule(void);
 
         void setModuleIdentifier(std::string name)
@@ -390,6 +391,8 @@ namespace Cryo
          * @brief Destructs the CodeGen object and cleans up the code generation process.
          */
         //~CodeGen() = default;
+
+        void compileIRFile(ASTNode *root, std::string outputPath);
 
         /**
          * @brief The Entry Point to the generation process.
@@ -1044,6 +1047,11 @@ namespace Cryo
     inline void CryoCompiler::compile(ASTNode *root)
     {
         codeGen->executeCodeGeneration(root);
+    }
+
+    inline void CryoCompiler::compileIRFile(ASTNode *root, std::string outputPath)
+    {
+        codeGen->compileIRFile(root, outputPath);
     }
 
     inline void CryoCompiler::dumpModule(void)
