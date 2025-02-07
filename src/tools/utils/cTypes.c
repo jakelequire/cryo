@@ -109,6 +109,20 @@ void String_clear(struct String *self)
     self->length = 0;
 }
 
+void String_destroy(String *self)
+{
+    if (self->data)
+    {
+        free(self->data);
+        self->data = NULL;
+    }
+    self->length = 0;
+    self->capacity = 0;
+
+    // Free the string itself
+    free(self);
+}
+
 /// @brief This function will create the `String` structure and initialize its methods
 /// @param
 /// @return
@@ -127,6 +141,7 @@ String *_create_string_container(void)
     string->c_str = String_c_str;
     string->clear = String_clear;
     string->free = String_free;
+    string->destroy = String_destroy;
     return string;
 }
 

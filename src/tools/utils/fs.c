@@ -36,6 +36,7 @@ jFS *initFS(void)
     fs->fileExists = fileExists;
     fs->dirExists = dirExists;
     fs->createDir = createDir;
+    fs->createDirectory = createDirectory;
     fs->removeFile = removeFile;
     fs->getSTDFilePath = getSTDFilePath;
     fs->trimFilePath = trimFilePath;
@@ -55,6 +56,7 @@ jFS *initFS(void)
     fs->getCompilerRootPath = getCompilerRootPath;
     fs->createNewEmptyFile = createNewEmptyFile;
     fs->createNewEmptyFileWpath = createNewEmptyFileWpath;
+    fs->cleanFilePath = cleanFilePath;
     return fs;
 }
 
@@ -245,6 +247,11 @@ int createDir(const char *path)
     return 0;
 }
 // </createDir>
+
+int createDirectory(const char *path)
+{
+    return createDir(path);
+}
 
 // <removeFile>
 /// @brief Removes a file at the given path
@@ -857,4 +864,30 @@ int createNewEmptyFileWpath(const char *fileWithPath)
 
     fclose(file);
     return 0;
+}
+
+// This function will clean up a file path that removes double slashes like: `/path/to//file`
+const char *cleanFilePath(char *filePath)
+{
+    __STACK_FRAME__
+    char *cleanedPath = (char *)malloc(strlen(filePath) + 1);
+    if (!cleanedPath)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for cleaned path");
+        return NULL;
+    }
+
+    char *p = filePath;
+    char *q = cleanedPath;
+    while (*p)
+    {
+        *q++ = *p++;
+        if (*p == '/' && *(p + 1) == '/')
+        {
+            p++;
+        }
+    }
+    *q = '\0';
+
+    return cleanedPath;
 }

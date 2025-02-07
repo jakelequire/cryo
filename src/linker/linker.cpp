@@ -107,7 +107,31 @@ namespace Cryo
             logMessage(LMI, "INFO", "Linker", "Cryo Runtime Module Parsed Successfully!");
         }
 
-        // Safely clone the module from LLVM's API
+        // Look for any other `.ll` files that isn't the `combined_cryo_runtime.ll` file or the `cRuntime.ll` file or the `Runtime.ll` file
+        // and merge them into the `cryoRuntimeModule` in the runtime directory.
+        std::vector<std::string> files = cLinker->listDir(cLinker->getDirInfo()->runtimeDir.c_str());
+        if (!files.empty())
+        {
+            for (auto file : files)
+            {
+                if (file == "combined_cryo_runtime.ll" || file == "cRuntime.ll" || file == "Runtime.ll")
+                {
+                    continue;
+                }
+
+                std::string filePath = cLinker->getDirInfo()->runtimeDir + "/" + file;
+                logMessage(LMI, "INFO", "Linker", "Merging file: %s", filePath.c_str());
+                llvm::SMDiagnostic err;
+                std::unique_ptr<llvm::Module> mod = llvm::parseIRFile(filePath, err, getLinkerContext());
+                if (!mod)
+                {
+                    logMessage(LMI, "ERROR", "Linker", "Failed to parse file: %s", filePath.c_str());
+                    CONDITION_FAILED;
+                }
+
+                cLinker->mergeTwoModules(cryoRuntimeModule, std::move(mod));
+            }
+        }
         logMessage(LMI, "INFO", "Linker", "Cryo Runtime Module Parsed Successfully");
 
         return cryoRuntimeModule;
@@ -230,12 +254,14 @@ namespace Cryo
             return;
         }
 
-        std::string cRuntimePath = getCRuntimePath();
-        if (cRuntimePath.empty())
+        std::string unsafe_cRuntimePath = getCRuntimePath();
+        if (unsafe_cRuntimePath.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
             return;
         }
+
+        std::string cRuntimePath = fs->cleanFilePath((char *)unsafe_cRuntimePath.c_str());
 
         // Then, convert the C runtime to IR
         std::string cRuntimeIR = covertCRuntimeToLLVMIR(cRuntimePath, runtimeDir);
@@ -280,7 +306,8 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Linker", "Module name is not empty: %s", moduleName.c_str());
 
-        std::string outPath = outDir + "/" + moduleName + ".ll";
+        std::string unsafe_outPath = outDir + "/" + moduleName + ".ll";
+        std::string outPath = fs->cleanFilePath((char *)unsafe_outPath.c_str());
 
         fs->createNewEmptyFile(moduleName.c_str(), ".ll", outDir.c_str());
 
@@ -301,12 +328,14 @@ namespace Cryo
     std::string Linker::getCRuntimePath()
     {
         __STACK_FRAME__
-        std::string cryoRoot = getCryoRootPath();
-        if (cryoRoot.empty())
+        std::string unsafe_cryoRoot = getCryoRootPath();
+        if (unsafe_cryoRoot.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Cryo Root is empty");
             return "";
         }
+
+        std::string cryoRoot = fs->cleanFilePath((char *)unsafe_cryoRoot.c_str());
 
         logMessage(LMI, "INFO", "Linker", "Cryo Root is not empty");
         std::string fullPath = cryoRoot + "/Std/Runtime";
@@ -328,7 +357,8 @@ namespace Cryo
         logMessage(LMI, "INFO", "Linker", "Output Directory: %s", outDir.c_str());
         logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", cRuntimePath.c_str());
         // Check and see if the `cRuntime.c` file exists
-        std::string cRuntimeFile = cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
+        std::string safe_cRuntimePath = fs->cleanFilePath((char *)cRuntimePath.c_str());
+        std::string cRuntimeFile = safe_cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
         if (!fileExists(cRuntimeFile.c_str()))
         {
             logMessage(LMI, "ERROR", "Linker", "C Runtime file does not exist: %s", cRuntimeFile.c_str());
@@ -346,7 +376,8 @@ namespace Cryo
         }
 
         // Now that we have the file, we can convert it to IR
-        std::string outPath = outDir + "/" + C_RUNTIME_FILENAME + ".ll";
+        std::string unsafe_outPath = outDir + "/" + C_RUNTIME_FILENAME + ".ll";
+        std::string outPath = fs->cleanFilePath((char *)unsafe_outPath.c_str());
         std::string cmd = "clang -S -emit-llvm " + cRuntimeFile + " -o " + outPath;
 
         logMessage(LMI, "INFO", "Linker", "Full System Command: \n");
@@ -420,6 +451,11 @@ namespace Cryo
         {
             while ((ent = readdir(dir)) != NULL)
             {
+                // Ignore `.` and `..` directories
+                if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+                {
+                    continue;
+                }
                 files.push_back(ent->d_name);
             }
             closedir(dir);

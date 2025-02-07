@@ -7,12 +7,6 @@ extern function __c_intToString(num: int) -> string;
 extern function __c_strLen(s: string) -> int;
 extern function __c_println(s: string) -> void;
 
-extern function __c_memset(pointer: any, value: int, size: int) -> void;
-extern function __c_malloc(size: int) -> any;
-extern function __c_free(_pointer: any) -> void;
-
-extern function __c_getAddr(pointer: any) -> int;
-
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);
     return;
@@ -42,21 +36,3 @@ function outOfBoundsError() -> void {
     return;
 }
 
-function __malloc__(size: int) -> any {
-    return __c_malloc(size);
-}
-
-function __memset__(pointer: any, value: int, size: int) -> void {
-    __c_memset(pointer, value, size);
-    return;
-}
-
-function __free__(pointer: any) -> void {
-    __c_free(pointer);
-    return;
-}
-
-function __getAddr__(_ptr_: any) -> int {
-    const address: int = __c_getAddr(_ptr_);
-    return address;
-}

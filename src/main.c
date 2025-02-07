@@ -26,6 +26,7 @@
 #include "tools/utils/c_logger.h"
 #include "tools/logger/logger_config.h"
 #include "tools/cryoconfig/cryoconfig.h"
+#include "tools/utils/buildDir.h"
 #include "tools/utils/fs.h"
 
 #define MAX_PATH_SIZE 1024 * 10
@@ -78,6 +79,8 @@ int main(int argc, char *argv[])
     initLoggerCompilerSettings(&settings); // Initialize the compiler settings for the logger
     INIT_LOGS_WITH_SETTINGS(&settings);    // Initialize the logger with the compiler settings
     INIT_PROJECT_CONFIG(&settings);        // Initialize the project configuration
+
+    init_build_dir(settings.rootDir); // Initialize the build directory
 
     // Initialize the build stats
     BuildStats *buildStats = createBuildStats();

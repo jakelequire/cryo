@@ -179,6 +179,7 @@ namespace Cryo
                 }
                 else
                 {
+                    logMessage(LMI, "ERROR", "SymbolTable", "Function Symbol not found: %s", symbolName);
                     printGlobalTable(this);
                     DEBUG_BREAKPOINT;
                 }

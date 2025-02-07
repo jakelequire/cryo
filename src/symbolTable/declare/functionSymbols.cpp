@@ -144,6 +144,7 @@ namespace Cryo
         __STACK_FRAME__
         if (!symbolName || symbolName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
             return nullptr;
         }
 

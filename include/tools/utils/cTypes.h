@@ -106,6 +106,12 @@ typedef struct String
     /// @brief Free the string data and set the string to NULL
     /// @param self The string to free
     _NEW_METHOD(void, free, struct String *self);
+
+    /// `void destroy(struct String *self)`
+    ///
+    /// @brief Destroy the string and free the memory
+    /// @param self The string to destroy
+    _NEW_METHOD(void, destroy, struct String *self);
 } String;
 
 // --------------------------
