@@ -145,129 +145,18 @@ namespace Cryo
         std::unordered_map<std::string, llvm::GlobalVariable *> stringTable;
         size_t stringCounter = 0;
 
-        void mergeModule(llvm::Module *srcModule)
-        {
-            if (!module)
-            {
-                logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-                return;
-            }
+        void mergeModule(llvm::Module *srcModule);
 
-            if (!srcModule)
-            {
-                logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-                return;
-            }
-
-            logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-            logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
-
-            llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-            bool result = llvm::Linker::linkModules(
-                *module,
-                llvm::CloneModule(*srcModule),
-                linkerFlags);
-            if (result)
-            {
-                logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-                return;
-            }
-
-            // Add all structs from `srcModule` to `module`
-            for (auto &structType : srcModule->getIdentifiedStructTypes())
-            {
-                if (structType->isLiteral())
-                {
-                    continue;
-                }
-
-                std::string structName = structType->getName().str();
-                if (structTypes.find(structName) == structTypes.end())
-                {
-                    structTypes[structName] = structType;
-                }
-            }
-
-            std::cout << "@mergeModule Module merged successfully" << std::endl;
-        }
-
-        llvm::GlobalVariable *getOrCreateGlobalString(const std::string &content)
-        {
-            // First check if we already have this string
-            auto it = stringTable.find(content);
-            if (it != stringTable.end())
-            {
-                return it->second;
-            }
-
-            // Create a new global string constant
-            llvm::Constant *stringConstant = llvm::ConstantDataArray::getString(context, content);
-
-            // Generate a unique name for this string
-            std::string globalName = "str." + std::to_string(stringCounter++);
-
-            // Create the global variable
-            llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(
-                *module,
-                stringConstant->getType(),
-                true, // isConstant
-                llvm::GlobalValue::PrivateLinkage,
-                stringConstant,
-                globalName);
-
-            // Store in our table
-            stringTable[content] = globalStr;
-
-            return globalStr;
-        }
-
-        void initializeContext()
-        {
-            // Get the filename from the CompilerState
-            std::string moduleName = "CryoModuleDefaulted";
-            module = std::make_unique<llvm::Module>(moduleName, context);
-        }
-
-        void setModuleIdentifier(std::string name)
-        {
-            module->setModuleIdentifier(name);
-            module->setSourceFileName(name);
-        }
-
-        void addCompiledFileInfo(CompiledFile file)
-        {
-            compiledFiles.push_back(file);
-        }
-
-        void addStructToInstance(std::string name, llvm::StructType *structType)
-        {
-            structTypes[name] = structType;
-        }
-
-        llvm::StructType *getStruct(std::string name)
-        {
-            return structTypes[name];
-        }
-
-        void addClassToInstance(std::string name, llvm::StructType *classType)
-        {
-            classTypes[name] = classType;
-        }
-
-        llvm::StructType *getClass(std::string name)
-        {
-            return classTypes[name];
-        }
-
-        void addStructDataType(std::string name, DataType *dataType)
-        {
-            structDataTypes[name] = dataType;
-        }
-
-        void addClassDataType(std::string name, DataType *dataType)
-        {
-            classDataTypes[name] = dataType;
-        }
+        llvm::GlobalVariable *getOrCreateGlobalString(const std::string &content);
+        void initializeContext();
+        void setModuleIdentifier(std::string name);
+        void addCompiledFileInfo(CompiledFile file);
+        void addStructToInstance(std::string name, llvm::StructType *structType);
+        llvm::StructType *getStruct(std::string name);
+        void addClassToInstance(std::string name, llvm::StructType *classType);
+        llvm::StructType *getClass(std::string name);
+        void addStructDataType(std::string name, DataType *dataType);
+        void addClassDataType(std::string name, DataType *dataType);
 
     private:
         CryoContext() : builder(context) {}

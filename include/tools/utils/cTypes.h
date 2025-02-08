@@ -132,13 +132,94 @@ String *createEmptyString(void);
 /// @return
 String *createAllocaString(void *(*allocator)(size_t), char *str);
 
-void *foo();
-
 // --------------------------
 // String Macros
 
 #define Str(...) createString(__VA_ARGS__)
 #define StrAlloc(allocator, ...) createAllocaString(allocator, __VA_ARGS__)
+
+// + ======================================================================================== + //
+// +                              File Types & Functions                                      + //
+// + ======================================================================================== + //
+
+typedef struct File
+{
+    FILE *file;
+    char *mode;
+    char *filename;
+    char *data;
+    size_t size;
+    size_t capacity;
+
+    // File Constructors -----------------------------------------------------
+
+    /// `void (*init)(struct File *self, char *filename, char *mode)`
+    ///
+    /// @brief Initialize the file with a filename and mode
+    /// @param self The file to initialize
+    /// @param filename The filename to open
+    /// @param mode The mode to open the file in
+    /// @note This is the default constructor
+    _NEW_METHOD(void, init, struct File *self, char *filename, char *mode);
+
+    // File Methods ----------------------------------------------------------
+
+    /// `void open(struct File *self)`
+    ///
+    /// @brief Open the file
+    /// @param self The file to open
+    _NEW_METHOD(void, open, struct File *self);
+
+    /// `void close(struct File *self)`
+    ///
+    /// @brief Close the file
+    /// @param self The file to close
+    _NEW_METHOD(void, close, struct File *self);
+
+    /// `void read(struct File *self)`
+    ///
+    /// @brief Read the file
+    /// @param self The file to read
+    _NEW_METHOD(void, read, struct File *self);
+
+    /// `void write(struct File *self)`
+    ///
+    /// @brief Write to the file
+    /// @param self The file to write to
+    _NEW_METHOD(void, write, struct File *self);
+
+    /// `void print(struct File *self)`
+    ///
+    /// @brief Print the file to stdout
+    /// @param self The file to print
+    _NEW_METHOD(void, print, struct File *self);
+
+    /// `void clear(struct File *self)`
+    ///
+    /// @brief Clear the file data.
+    /// @param self The file to
+    _NEW_METHOD(void, clear, struct File *self);
+
+    /// `void destroy(struct File *self)`
+    ///
+    /// @brief Destroy the file and free the memory
+    /// @param self The file to destroy
+    _NEW_METHOD(void, destroy, struct File *self);
+} File;
+
+// --------------------------
+// File Functions
+
+/// @brief Create a new file object.
+/// @param filename
+/// @param mode
+/// @return
+File *createFile(char *filename, char *mode);
+
+// --------------------------
+// File Macros
+
+#define File(filename, mode) createFile(filename, mode)
 
 // + ======================================================================================== + //
 // +                             Array Types & Functions                                      + //

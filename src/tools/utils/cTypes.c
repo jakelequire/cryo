@@ -32,8 +32,9 @@ bool cStringCompare(const char *str1, const char *str2)
     return strcmp(str1, str2) == 0;
 }
 
-// =============================================================================
-// String Type & Functions
+// + ======================================================================================== + //
+// +                             String Type & Functions                                      + //
+// + ======================================================================================== + //
 
 void String_init(struct String *self, char *str)
 {
@@ -215,3 +216,99 @@ void freeString(String *string)
     String_free(string);
     free(string);
 }
+
+// + ======================================================================================== + //
+// +                              File Types & Functions                                      + //
+// + ======================================================================================== + //
+
+void File_init(struct File *self, char *filename, char *mode)
+{
+    __STACK_FRAME__
+    self->filename = filename;
+    self->mode = mode;
+    self->data = NULL;
+    self->size = 0;
+    self->capacity = 0;
+}
+
+void File_open(struct File *self)
+{
+    __STACK_FRAME__
+    self->file = fopen(self->filename, self->mode);
+    if (!self->file)
+    {
+        fprintf(stderr, "Error: Failed to open file: %s\n", self->filename);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void File_close(struct File *self)
+{
+    __STACK_FRAME__
+    fclose(self->file);
+}
+
+void File_read(struct File *self)
+{
+    __STACK_FRAME__
+    fseek(self->file, 0, SEEK_END);
+    self->size = ftell(self->file);
+    rewind(self->file);
+    self->capacity = self->size + 1;
+    self->data = (char *)malloc(self->capacity);
+    if (!self->data)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for file data\n");
+        exit(EXIT_FAILURE);
+    }
+    fread(self->data, 1, self->size, self->file);
+    self->data[self->size] = '\0';
+}
+
+void File_write(struct File *self)
+{
+    __STACK_FRAME__
+    fwrite(self->data, 1, self->size, self->file);
+}
+
+void File_destroy(struct File *self)
+{
+    __STACK_FRAME__
+    free(self->filename);
+    free(self->mode);
+    free(self->data);
+    self->size = 0;
+    self->capacity = 0;
+    fclose(self->file);
+}
+
+// =============================================================================
+// File Functions
+
+File *createFile(char *filename, char *mode)
+{
+    __STACK_FRAME__
+    File *file = (File *)malloc(sizeof(File));
+    if (!file)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for file\n");
+        exit(EXIT_FAILURE);
+    }
+    file->init = File_init;
+    file->open = File_open;
+    file->close = File_close;
+    file->read = File_read;
+    file->write = File_write;
+    file->destroy = File_destroy;
+    file->init(file, filename, mode);
+    return file;
+}
+
+void freeFile(File *file)
+{
+    __STACK_FRAME__
+    file->destroy(file);
+    free(file);
+}
+
+// =============================================================================
