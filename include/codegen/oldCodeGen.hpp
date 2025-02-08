@@ -67,6 +67,7 @@
 #include "tools/macros/printMacros.h"
 #include "linker/linker.hpp"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/utils/compilationUnit.h"
 
 namespace Cryo
 {
@@ -197,6 +198,7 @@ namespace Cryo
 
         Linker *getLinker() { return GetCXXLinker(); }
 
+        std::string buildDir = "";
         std::string customOutputPath = "";
         bool isPreprocessing = false;
         bool isImporting = false;
@@ -205,42 +207,13 @@ namespace Cryo
         void compileIRFile(ASTNode *root, std::string outputPath);
         void dumpModule(void);
 
-        void setModuleIdentifier(std::string name)
-        {
-            CryoContext::getInstance().setModuleIdentifier(name);
-        }
-
-        void setCustomOutputPath(std::string path)
-        {
-            customOutputPath = path;
-        }
-
-        void setCustomOutputPath(std::string path, bool isImport)
-        {
-            customOutputPath = path;
-            isImporting = isImport;
-            isPreprocessing = false;
-        }
-
-        void setPreprocessOutputPath(std::string path)
-        {
-            customOutputPath = path;
-            isPreprocessing = true;
-        }
-
-        void initDependencies()
-        {
-            // Get the dependency module
-            std::cout << "@initDependencies Initializing Dependencies" << std::endl;
-            CryoContext::getInstance().mergeModule(GetCXXLinker()->initMainModule());
-        }
-
-        void linkDependencies(void)
-        {
-            std::cout << "@linkDependencies Linking Dependencies" << std::endl;
-            // CryoContext::getInstance().mergeModule(std::move(GetCXXLinker()->appendDependenciesToRoot()));
-            DEBUG_BREAKPOINT;
-        }
+        void setBuildDir(std::string dir);
+        void setModuleIdentifier(std::string name);
+        void setCustomOutputPath(std::string path);
+        void setCustomOutputPath(std::string path, bool isImport);
+        void setPreprocessOutputPath(std::string path);
+        void initDependencies();
+        void linkDependencies(void);
 
     private:
         CryoContext &context;

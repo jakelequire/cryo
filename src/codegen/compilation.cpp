@@ -42,6 +42,8 @@ namespace Cryo
             return;
         }
 
+        logMessage(LMI, "INFO", "Compiler", "Not preprocessing... Continuing with compilation");
+
         if (!settings || settings == NULL)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Compilation", "Compiler settings are null");
@@ -51,11 +53,11 @@ namespace Cryo
         logMessage(LMI, "INFO", "Compiler", "Getting file path...");
         bool isProject = settings->isProject;
         std::string unsafe_filePath;
-        if(isProject)
+        if (isProject)
         {
             logMessage(LMI, "INFO", "Compiler", "Project Directory: %s", settings->projectDir);
             unsafe_filePath.append(settings->projectDir);
-            unsafe_filePath.append( "/src/main.cryo");
+            unsafe_filePath.append("/src/main.cryo");
         }
         else if (compiler.isImporting)
         {
@@ -63,6 +65,11 @@ namespace Cryo
             std::string _custom_output_path = compiler.customOutputPath;
             unsafe_filePath.append(_custom_output_path);
             logMessage(LMI, "INFO", "Compiler", "Custom Output Path: %s", unsafe_filePath.c_str());
+        }
+        else if (!compiler.customOutputPath.empty())
+        {
+            logMessage(LMI, "INFO", "Compiler", "Custom Output Path Type...");
+            unsafe_filePath.append(compiler.customOutputPath);
         }
         else
         {
@@ -124,7 +131,7 @@ namespace Cryo
         }
 
         DEBUG_PRINT_FILTER({ LLVM_MODULE_COMPLETE_START; });
-        
+
         LoadStoreWhitespaceAnnotator LSWA;
         cryoContext.module->print(dest /* llvm::outs() */, &LSWA);
         dest.close();

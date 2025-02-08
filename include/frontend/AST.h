@@ -32,6 +32,7 @@
 #include "tools/macros/consoleColors.h"
 #include "frontend/dataTypes.h"
 #include "common/common.h"
+#include "tools/utils/cWrappers.h"
 
 typedef struct DataType DataType;
 typedef struct GenericType GenericType;
@@ -662,6 +663,8 @@ typedef struct ASTNode
         // For Module Declarations
         ModuleNode *moduleNode;
     } data;
+
+    _NEW_METHOD(void, print, struct ASTNode *self);
 } ASTNode;
 
 // # ============================================================ # //

@@ -101,8 +101,54 @@ namespace Cryo
         classDataTypes[name] = dataType;
     }
 
+    void CryoCompiler::setBuildDir(std::string dir)
+    {
+        if (dir.empty())
+        {
+            CONDITION_FAILED;
+            return;
+        }
+        buildDir = dir;
+    }
+
     // + ======================================================================================== + //
     // +                              Cryo Compiler Functions                                     + //
     // + ======================================================================================== + //
 
+    void CryoCompiler::setModuleIdentifier(std::string name)
+    {
+        CryoContext::getInstance().setModuleIdentifier(name);
+    }
+
+    void CryoCompiler::setCustomOutputPath(std::string path)
+    {
+        customOutputPath = path;
+    }
+
+    void CryoCompiler::setCustomOutputPath(std::string path, bool isImport)
+    {
+        customOutputPath = path;
+        isImporting = isImport;
+        isPreprocessing = false;
+    }
+
+    void CryoCompiler::setPreprocessOutputPath(std::string path)
+    {
+        customOutputPath = path;
+        isPreprocessing = true;
+    }
+
+    void CryoCompiler::initDependencies()
+    {
+        // Get the dependency module
+        std::cout << "@initDependencies Initializing Dependencies" << std::endl;
+        CryoContext::getInstance().mergeModule(GetCXXLinker()->initMainModule());
+    }
+
+    void CryoCompiler::linkDependencies(void)
+    {
+        std::cout << "@linkDependencies Linking Dependencies" << std::endl;
+        // CryoContext::getInstance().mergeModule(std::move(GetCXXLinker()->appendDependenciesToRoot()));
+        DEBUG_BREAKPOINT;
+    }
 } // namespace Cryo

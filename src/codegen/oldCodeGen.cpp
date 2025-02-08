@@ -32,6 +32,10 @@ int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *cLinker
     std::string moduleName = state->fileName;
     compiler.setModuleIdentifier(moduleName);
 
+    std::string buildDir = state->settings->buildDir;
+    logMessage(LMI, "INFO", "Compiler", "@generateCodeWrapper DEBUG Build Directory: %s", buildDir.c_str());
+    compiler.setBuildDir(buildDir);
+
     // Convert C opaque pointer back to C++ type
     std::cout << "Setting linker..." << std::endl;
     compiler.initDependencies();
@@ -56,6 +60,10 @@ int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *
     compiler.setCompilerSettings(state->settings);
     compiler.setModuleIdentifier(moduleName);
 
+    std::string buildDir = state->settings->buildDir;
+    logMessage(LMI, "INFO", "Compiler", "@preprocessRuntimeIR DEBUG Build Directory: %s", buildDir.c_str());
+    compiler.setBuildDir(buildDir);
+
     // Set the output path for the runtime
     compiler.setPreprocessOutputPath(outputPath);
     // Compile Runtime Node
@@ -78,6 +86,10 @@ int generateImportCode(ASTNode *importNode, CompilerState *state, CryoLinker *cL
     compiler.setCompilerSettings(state->settings);
     compiler.setModuleIdentifier(moduleName);
 
+    std::string buildDir = state->settings->buildDir;
+    logMessage(LMI, "INFO", "Compiler", "@generateImportCode DEBUG Build Directory: %s", buildDir.c_str());
+    compiler.setBuildDir(buildDir);
+
     // Set the output path for the runtime
     compiler.setCustomOutputPath(outputPath, true);
     // Compile Runtime Node
@@ -92,12 +104,14 @@ namespace Cryo
     void CodeGen::compileIRFile(ASTNode *root, std::string outputPath)
     {
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Compiling IR File");
+        logMessage(LMI, "INFO", "Compiler", "Creating new compiler instance for IR compilation");
 
         // Create a new separate compiler instance from the current one
         CryoCompiler _compiler;
         _compiler.setCompilerState(this->compiler.getCompilerState());
         _compiler.setCompilerSettings(this->compiler.getCompilerSettings());
         _compiler.setCustomOutputPath(outputPath);
+        _compiler.isPreprocessing = false;
 
         // Compile the AST tree
         _compiler.compile(root);

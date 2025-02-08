@@ -133,14 +133,20 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     const char *unsafe_memoryOutputFile = runtimeMemoryObjPath->c_str(runtimeMemoryObjPath);
     const char *memoryOutputFile = fs->cleanFilePath((char *)unsafe_memoryOutputFile);
 
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime Object File: %s", outputFile);
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime Memory Object File: %s", memoryOutputFile);
+
     // Compile the runtime memory object file
     int memResult = generateImportCode(runtimeMemoryNode, bootstrap->state, cLinker, memoryOutputFile);
     if (memResult != 0)
     {
         fprintf(stderr, "Error: Failed to compile runtime memory object file\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        DEBUG_BREAKPOINT;
         return;
     }
+
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime memory object file compiled successfully");
 
     // Compile the runtime object file
     int runtimeResult = preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker);
@@ -148,8 +154,11 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     {
         fprintf(stderr, "Error: Failed to compile runtime object file\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        DEBUG_BREAKPOINT;
         return;
     }
+
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime object file compiled successfully");
 
     // Free the bootstrap state
     free(bootstrap);

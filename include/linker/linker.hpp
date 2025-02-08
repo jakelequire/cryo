@@ -121,6 +121,7 @@ extern "C"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/env.h"
+#include "tools/utils/compilationUnit.h"
 
 struct DirectoryInfo
 {

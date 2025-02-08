@@ -28,6 +28,7 @@
 #include "frontend/dataTypes.h"
 
 #include "tools/utils/fs.h"
+#include "tools/utils/compilationUnit.h"
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
