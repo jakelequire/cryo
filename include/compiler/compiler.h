@@ -46,9 +46,9 @@ extern "C"
 {
 #endif
     typedef struct CryoLinker_t *CryoLinker;
-    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *linker);
-    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker);
-    int generateImportCode(ASTNode *importNode, CompilerState *state, CryoLinker *cLinker, const char *outputPath);
+    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *linker, CryoGlobalSymbolTable *globalTable);
+    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
+    int generateImportCode(ASTNode *importNode, CompilerState *state, CryoLinker *cLinker, const char *outputPath, CryoGlobalSymbolTable *globalTable);
 
 #ifdef __cplusplus
 }
@@ -89,7 +89,7 @@ int exe_source_build(CompilerSettings *settings);
 // Module Compiler
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state, Arena *arena, CryoGlobalSymbolTable *globalTable);
-int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker);
+int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
 
 // C++ Accessable Functions
 #ifdef __cplusplus

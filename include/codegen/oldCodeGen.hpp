@@ -198,6 +198,7 @@ namespace Cryo
 
         Linker *getLinker() { return GetCXXLinker(); }
 
+        std::string outputFile = "";
         std::string buildDir = "";
         std::string customOutputPath = "";
         bool isPreprocessing = false;
@@ -208,6 +209,7 @@ namespace Cryo
         void dumpModule(void);
 
         void setBuildDir(std::string dir);
+        void setOutputFile(std::string file);
         void setModuleIdentifier(std::string name);
         void setCustomOutputPath(std::string path);
         void setCustomOutputPath(std::string path, bool isImport);

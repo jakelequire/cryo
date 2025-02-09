@@ -138,7 +138,7 @@ int exe_single_file_build(CompilerSettings *settings)
     initASTDebugOutput(programCopy, settings);
 
     // Generate code (The C++ backend process)
-    int result = generateCodeWrapper(programNode, state, linker);
+    int result = generateCodeWrapper(programNode, state, linker, globalSymbolTable);
     if (result != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");
@@ -226,7 +226,7 @@ int exe_project_build(CompilerSettings *settings)
     printGlobalSymbolTable(globalSymbolTable);
 
     // Generate code (The C++ backend process)
-    int result = generateCodeWrapper(programNode, state, linker);
+    int result = generateCodeWrapper(programNode, state, linker, globalSymbolTable);
     if (result != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");

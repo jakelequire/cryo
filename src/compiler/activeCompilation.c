@@ -62,7 +62,7 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     CryoLinker *cLinker = GetGSTLinker(globalTable);
 
     // Generate the IR code
-    processNodeToIRObject(programNode, state, completeFilePath, cLinker);
+    processNodeToIRObject(programNode, state, completeFilePath, cLinker, globalTable);
 
     return programNode;
 }
@@ -139,7 +139,7 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     CryoLinker *cLinker = GetGSTLinker(globalTable);
 
-    int resultObj = processNodeToIRObject(programNode, state, outputPath, cLinker);
+    int resultObj = processNodeToIRObject(programNode, state, outputPath, cLinker, globalTable);
     if (resultObj != 0)
     {
         logMessage(LMI, "ERROR", "Compiler", "Failed to process node to IR object");
@@ -156,13 +156,13 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     return copiedTable;
 }
 
-int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker)
+int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Compiler", "Processing node to IR object...");
     logMessage(LMI, "INFO", "Compiler", "Output Path: %s", outputPath);
 
     // Generate code
-    int result = generateImportCode(node, state, cLinker, outputPath);
+    int result = generateImportCode(node, state, cLinker, outputPath, globalTable);
     if (result != 0)
     {
         CONDITION_FAILED;

@@ -22,6 +22,8 @@ namespace Cryo
     void Linker::generateIRFromCodegen(llvm::Module *mod, const char *outputPath)
     {
         __STACK_FRAME__
+        logMessage(LMI, "INFO", "Linker", "@generateIRFromCodegen Generating IR from Codegen");
+        logMessage(LMI, "INFO", "Linker", "@generateIRFromCodegen Output Path: %s", outputPath);
         if (!mod)
         {
             logMessage(LMI, "ERROR", "Linker", "Module is null");

@@ -111,6 +111,16 @@ namespace Cryo
         buildDir = dir;
     }
 
+    void CryoCompiler::setOutputFile(std::string file)
+    {
+        if (file.empty())
+        {
+            CONDITION_FAILED;
+            return;
+        }
+        outputFile = file;
+    }
+
     // + ======================================================================================== + //
     // +                              Cryo Compiler Functions                                     + //
     // + ======================================================================================== + //

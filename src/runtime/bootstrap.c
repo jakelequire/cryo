@@ -137,7 +137,7 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     logMessage(LMI, "INFO", "Bootstrap", "Runtime Memory Object File: %s", memoryOutputFile);
 
     // Compile the runtime memory object file
-    int memResult = generateImportCode(runtimeMemoryNode, bootstrap->state, cLinker, memoryOutputFile);
+    int memResult = generateImportCode(runtimeMemoryNode, bootstrap->state, cLinker, memoryOutputFile, globalTable);
     if (memResult != 0)
     {
         fprintf(stderr, "Error: Failed to compile runtime memory object file\n");
@@ -149,7 +149,7 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     logMessage(LMI, "INFO", "Bootstrap", "Runtime memory object file compiled successfully");
 
     // Compile the runtime object file
-    int runtimeResult = preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker);
+    int runtimeResult = preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker, globalTable);
     if (runtimeResult != 0)
     {
         fprintf(stderr, "Error: Failed to compile runtime object file\n");
@@ -204,22 +204,6 @@ ASTNode *compileForRuntimeNode(Bootstrapper *bootstrap, const char *filePath, Cr
     logMessage(LMI, "INFO", "Bootstrap", "Program node parsed successfully");
 
     return programNode;
-}
-
-void compileRuntimeObjectFile(ASTNode *runtimeNode, CompilerState *state)
-{
-    __STACK_FRAME__
-    logMessage(LMI, "INFO", "Bootstrap", "Compiling runtime object file...");
-
-    // Generate code
-    int result = generateCodeWrapper(runtimeNode, state, NULL);
-    if (result != 0)
-    {
-        CONDITION_FAILED;
-        return;
-    }
-
-    return;
 }
 
 void updateBootstrapStatus(Bootstrapper *bootstrapper, enum BootstrapStatus status)

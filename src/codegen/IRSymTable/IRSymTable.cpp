@@ -360,6 +360,11 @@ namespace Cryo
         }
         // Add the parameter to the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
+        if (symNode.parameterNode.find(paramName) != symNode.parameterNode.end())
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Parameter already exists");
+            return;
+        }
         // Create the parameter container
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Creating Parameter Container");
         STParameter paramContainer = createParamContainer();
