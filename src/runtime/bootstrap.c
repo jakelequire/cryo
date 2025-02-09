@@ -90,7 +90,9 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_IN_PROGRESS);
 
-    // Compile the runtime file
+    // ===========================================
+    // Create ASTNode for the runtime
+
     ASTNode *runtimeNode = compileForRuntimeNode(bootstrap, runtimePath, globalTable);
     if (!runtimeNode)
     {
@@ -101,8 +103,28 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     logMessage(LMI, "INFO", "Bootstrap", "Runtime node compiled successfully");
 
     // ===========================================
+    // Create ASTNode for the runtime memory
+
+    String *runtimeMemoryPath = Str(fs->removeFileFromPath(runtimePath));
+    runtimeMemoryPath->append(runtimeMemoryPath, "/memory.cryo");
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime Directory Path: %s", runtimeMemoryPath->c_str(runtimeMemoryPath));
+
+    ASTNode *runtimeMemoryNode = compileForRuntimeNode(bootstrap, runtimeMemoryPath->c_str(runtimeMemoryPath), globalTable);
+    if (!runtimeMemoryNode)
+    {
+        fprintf(stderr, "Error: Failed to compile runtime memory node\n");
+        updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        return;
+    }
+    logMessage(LMI, "INFO", "Bootstrap", "Runtime memory node compiled successfully");
+
+    // ===========================================
+    // Initialize the C Runtime
 
     INIT_LINKER_C_RUNTIME(cLinker);
+
+    // ===========================================
+    // Initialize the Cryo Runtime
 
     CompilationUnitDir runtimeDir = createCompilationUnitDir(runtimePath, GetBuildDir(globalTable), CRYO_RUNTIME);
     runtimeDir.print(runtimeDir);
@@ -114,15 +136,15 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
         return;
     }
-    int runtimeVerification = runtimeUnit->verify(runtimeUnit);
-    if (runtimeVerification != 0)
+    // Verify the runtime unit
+    if (runtimeUnit->verify(runtimeUnit) != 0)
     {
         fprintf(stderr, "Error: Failed to verify runtime unit\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
         return;
     }
-    int runtimeCompilation = generateIRFromAST(runtimeUnit, bootstrap->state, cLinker, globalTable);
-    if (runtimeCompilation != 0)
+    // Generate the IR from the AST
+    if (generateIRFromAST(runtimeUnit, bootstrap->state, cLinker, globalTable) != 0)
     {
         fprintf(stderr, "Error: Failed to compile runtime unit\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
@@ -130,67 +152,37 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     }
 
     // ===========================================
-
-    String *runtimeMemoryPath = Str(fs->removeFileFromPath(runtimePath));
-    runtimeMemoryPath->append(runtimeMemoryPath, "/memory.cryo");
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime Directory Path: %s", runtimeMemoryPath->c_str(runtimeMemoryPath));
-
-    // Compile the runtime memory file
-    ASTNode *runtimeMemoryNode = compileForRuntimeNode(bootstrap, runtimeMemoryPath->c_str(runtimeMemoryPath), globalTable);
-    if (!runtimeMemoryNode)
-    {
-        fprintf(stderr, "Error: Failed to compile runtime memory node\n");
-        updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
-        return;
-    }
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime memory node compiled successfully");
+    // Initialize the Cryo Runtime Memory
 
     CompilationUnitDir runtimeMemoryDir = createCompilationUnitDir(runtimeMemoryPath->c_str(runtimeMemoryPath), GetBuildDir(globalTable), CRYO_RUNTIME);
     runtimeMemoryDir.print(runtimeMemoryDir);
 
-    // Update the bootstrap status
-    updateBootstrapStatus(bootstrap, BOOTSTRAP_SUCCESS);
-
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime definitions bootstrapped successfully");
-
-    // Signal the completion of the dependency table
-    TableFinished(globalTable);
-
-    // Create the runtime object file
-    const char *outputFile = getRuntimeObjFile(globalTable);
-    bootstrap->state->settings->inputFile = getRuntimeSrcFile();
-
-    // Create the runtime memory file
-    const char *buildDir = GetBuildDir(globalTable);
-    String *runtimeMemoryObjPath = Str(buildDir);
-    runtimeMemoryObjPath->append(runtimeMemoryObjPath, "/out/runtime/memory.ll");
-    const char *unsafe_memoryOutputFile = runtimeMemoryObjPath->c_str(runtimeMemoryObjPath);
-    const char *memoryOutputFile = fs->cleanFilePath((char *)unsafe_memoryOutputFile);
-
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime Object File: %s", outputFile);
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime Memory Object File: %s", memoryOutputFile);
-
-    // Compile the runtime memory object file
-    int memResult = generateImportCode(runtimeMemoryNode, bootstrap->state, cLinker, memoryOutputFile, globalTable);
-    if (memResult != 0)
+    CompilationUnit *runtimeMemoryUnit = createNewCompilationUnit(runtimeMemoryNode, runtimeMemoryDir);
+    if (!runtimeMemoryUnit)
     {
-        fprintf(stderr, "Error: Failed to compile runtime memory object file\n");
+        fprintf(stderr, "Error: Failed to create runtime memory unit\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
-        DEBUG_BREAKPOINT;
         return;
     }
 
-    logMessage(LMI, "INFO", "Bootstrap", "Runtime memory object file compiled successfully");
-
-    // Compile the runtime object file
-    int runtimeResult = preprocessRuntimeIR(runtimeNode, bootstrap->state, outputFile, cLinker, globalTable);
-    if (runtimeResult != 0)
+    // Verify the runtime memory unit
+    if (runtimeMemoryUnit->verify(runtimeMemoryUnit) != 0)
     {
-        fprintf(stderr, "Error: Failed to compile runtime object file\n");
+        fprintf(stderr, "Error: Failed to verify runtime memory unit\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
-        DEBUG_BREAKPOINT;
         return;
     }
+
+    // Generate the IR from the AST
+    if (generateIRFromAST(runtimeMemoryUnit, bootstrap->state, cLinker, globalTable) != 0)
+    {
+        fprintf(stderr, "Error: Failed to compile runtime memory unit\n");
+        updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        return;
+    }
+
+    // ===========================================
+    // Cleanup
 
     logMessage(LMI, "INFO", "Bootstrap", "Runtime object file compiled successfully");
 

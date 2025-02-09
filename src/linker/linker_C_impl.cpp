@@ -56,4 +56,14 @@ extern "C"
         }
     }
 
+    void CryoLinker_LinkAll(CryoLinker *linker)
+    {
+        __STACK_FRAME__
+        if (linker)
+        {
+            logMessage(LMI, "INFO", "CryoLinker", "Linking all modules");
+            reinterpret_cast<Cryo::Linker *>(linker)->linkAll();
+        }
+    }
+
 } // C API

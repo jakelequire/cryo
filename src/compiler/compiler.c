@@ -137,14 +137,25 @@ int exe_single_file_build(CompilerSettings *settings)
     // Outputs the SymTable into a file in the build directory.
     initASTDebugOutput(programCopy, settings);
 
-    CompilationUnitDir dir = createCompilationUnitDir(filePath, buildDir, CRYO_MODULE);
+    CompilationUnitDir dir = createCompilationUnitDir(filePath, buildDir, CRYO_MAIN);
     dir.print(dir);
 
-    // Generate code (The C++ backend process)
-    int result = generateCodeWrapper(programNode, state, linker, globalSymbolTable);
-    if (result != 0)
+    CompilationUnit *unit = createNewCompilationUnit(programNode, dir);
+    if (!unit)
     {
-        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to create CompilationUnit");
+        CONDITION_FAILED;
+        return 1;
+    }
+    if (unit->verify(unit) != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to verify CompilationUnit");
+        CONDITION_FAILED;
+        return 1;
+    }
+    if (generateIRFromAST(unit, state, linker, globalSymbolTable) != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
         CONDITION_FAILED;
         return 1;
     }
@@ -228,17 +239,33 @@ int exe_project_build(CompilerSettings *settings)
 
     printGlobalSymbolTable(globalSymbolTable);
 
+    // ==========================================
+    // Generate code (The C++ backend process)
+
     CompilationUnitDir dir = createCompilationUnitDir(filePath, buildDir, CRYO_MAIN);
     dir.print(dir);
 
-    // Generate code (The C++ backend process)
-    int result = generateCodeWrapper(programNode, state, linker, globalSymbolTable);
-    if (result != 0)
+    CompilationUnit *unit = createNewCompilationUnit(programNode, dir);
+    if (!unit)
     {
-        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate code");
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to create CompilationUnit");
         CONDITION_FAILED;
         return 1;
     }
+    if (unit->verify(unit) != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to verify CompilationUnit");
+        CONDITION_FAILED;
+        return 1;
+    }
+    if (generateIRFromAST(unit, state, linker, globalSymbolTable) != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
+        CONDITION_FAILED;
+        return 1;
+    }
+
+    LINK_ALL_MODULES(linker);
 
     DEBUG_PRINT_FILTER({
         END_COMPILATION_MESSAGE;

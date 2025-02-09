@@ -121,6 +121,13 @@ namespace Cryo
         outputFile = file;
     }
 
+    void CryoCompiler::preInitMain(void)
+    {
+        // Merge in runtime dependencies
+        llvm::Module *depMod = this->getLinker()->initMainModule();
+        CryoContext::getInstance().mergeModule(depMod);
+    }
+
     // + ======================================================================================== + //
     // +                              Cryo Compiler Functions                                     + //
     // + ======================================================================================== + //

@@ -36,8 +36,10 @@ int generateIRFromAST(CompilationUnit *unit,
     compiler.setCompilerState(state);
     compiler.setCompilerSettings(state->settings);
 
-    if (unit->type == CRYO_MAIN)
+    bool isCompilingMain = unit->type == CRYO_MAIN;
+    if (isCompilingMain)
     {
+        compiler.preInitMain();
     }
 
     ASTNode *rootNode = unit->ast;
@@ -48,16 +50,21 @@ int generateIRFromAST(CompilationUnit *unit,
     }
     rootNode->print(rootNode);
 
-    std::string moduleName = state->fileName;
+    std::string moduleName = unit->dir.src_fileName;
     compiler.setModuleIdentifier(moduleName);
 
     // Compile the ASTNode
     compiler.compile(rootNode);
 
+    logMessage(LMI, "INFO", "Compiler", "ASTNode compiled successfully");
+
+    // Generate the IR code
     llvm::Module *mod = compiler.getContext().module.get();
     compiler.getLinker()->compileModule(unit, mod);
 
-    DEBUG_BREAKPOINT;
+    logMessage(LMI, "INFO", "Compiler", "CompilationUnit compiled successfully");
+
+    return 0;
 }
 
 namespace Cryo

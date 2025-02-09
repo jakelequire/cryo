@@ -48,9 +48,6 @@ extern "C"
 {
 #endif
     typedef struct CryoLinker_t *CryoLinker;
-    int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *linker, CryoGlobalSymbolTable *globalTable);
-    int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
-    int generateImportCode(ASTNode *importNode, CompilerState *state, CryoLinker *cLinker, const char *outputPath, CryoGlobalSymbolTable *globalTable);
 
     int generateIRFromAST(CompilationUnit *unit,
                           CompilerState *state, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);

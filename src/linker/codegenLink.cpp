@@ -79,7 +79,9 @@ namespace Cryo
             return;
         }
         std::string outputPath = std::string(unit->dir.out_filePath) + std::string(unit->dir.out_fileExt);
+        logMessage(LMI, "INFO", "Linker", "Output Path: %s", outputPath.c_str());
         generateIRFromCodegen(mod, outputPath.c_str());
+        logMessage(LMI, "INFO", "Linker", "Module compiled successfully");
         return;
     }
 

@@ -162,12 +162,12 @@ int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outpu
     logMessage(LMI, "INFO", "Compiler", "Output Path: %s", outputPath);
 
     // Generate code
-    int result = generateImportCode(node, state, cLinker, outputPath, globalTable);
-    if (result != 0)
-    {
-        CONDITION_FAILED;
-        return result;
-    }
+    // int result = generateImportCode(node, state, cLinker, outputPath, globalTable);
+    // if (result != 0)
+    // {
+    //     CONDITION_FAILED;
+    //     return result;
+    // }
 
     return 0;
 }

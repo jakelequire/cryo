@@ -122,7 +122,7 @@ namespace Cryo
 
         // After creating the IR (`.ll`) file, we will convert it to an object file (`.o`)
         std::string objPath = outDir + "/" + C_RUNTIME_FILENAME + ".o";
-        std::string objCmd = "clang -c " + outPath + " -o " + objPath;
+        std::string objCmd = "clang -fPIE -c " + outPath + " -o " + objPath;
         int objResult = system(objCmd.c_str());
         if (objResult != 0)
         {

@@ -203,6 +203,8 @@ namespace Cryo
         bool isPreprocessing = false;
         bool isImporting = false;
 
+        void preInitMain(void);
+
         void compile(ASTNode *root);
         void compileIRFile(ASTNode *root, std::string outputPath);
         void dumpModule(void);
@@ -779,31 +781,6 @@ namespace Cryo
 
     private:
         CryoCompiler &compiler;
-    };
-
-    // -----------------------------------------------------------------------------------------------
-
-    class Compilation
-    {
-    public:
-        Compilation(CryoCompiler &compiler) : compiler(compiler) {}
-
-        void compileIRFile(void);
-        llvm::Module *compileAndMergeModule(std::string inputFile);
-
-        void DumpModuleToDebugFile(void);
-
-    private:
-        CryoCompiler &compiler;
-        void outputFailedIR(void);
-
-        std::string getErrorMessage(void);
-        void isValidDir(std::string dirPath);
-        void isValidFile(std::string filePath);
-        void makeOutputDir(std::string dirPath);
-        void compile(std::string inputFile, std::string outputPath);
-        void compileUniquePath(std::string outputPath);
-        void cleanErrorDir(void);
     };
 
     // -----------------------------------------------------------------------------------------------
