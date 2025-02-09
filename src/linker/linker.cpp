@@ -17,8 +17,6 @@
 #include "linker/linker.hpp"
 #include "diagnostics/diagnostics.h"
 
-#define C_RUNTIME_FILENAME "cRuntime"
-
 namespace Cryo
 {
     CryoLinker *globalLinker = nullptr;
@@ -237,45 +235,6 @@ namespace Cryo
         return;
     }
 
-    void Linker::createCRuntimeFile(void)
-    {
-        __STACK_FRAME__
-        DirectoryInfo *dirInfo = getDirInfo();
-        if (!dirInfo)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Directory Info is null");
-            return;
-        }
-
-        std::string runtimeDir = dirInfo->runtimeDir;
-        if (runtimeDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
-            return;
-        }
-
-        std::string unsafe_cRuntimePath = getCRuntimePath();
-        if (unsafe_cRuntimePath.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
-            return;
-        }
-
-        std::string cRuntimePath = fs->cleanFilePath((char *)unsafe_cRuntimePath.c_str());
-
-        // Then, convert the C runtime to IR
-        std::string cRuntimeIR = covertCRuntimeToLLVMIR(cRuntimePath, runtimeDir);
-        if (cRuntimeIR.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "C Runtime IR is not empty");
-
-        return;
-    }
-
     /// @brief Create a `.ll` file from the given module and output directory.
     /// @param module The module to create the IR from.
     /// @param outDir The output directory to write the IR file to.
@@ -322,82 +281,6 @@ namespace Cryo
     }
 
     // ================================================================ //
-
-    /// @brief This function will return the path to the Cryo Runtime file path.
-    /// @return The path to the Cryo Runtime file path.
-    std::string Linker::getCRuntimePath()
-    {
-        __STACK_FRAME__
-        std::string unsafe_cryoRoot = getCryoRootPath();
-        if (unsafe_cryoRoot.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Cryo Root is empty");
-            return "";
-        }
-
-        std::string cryoRoot = fs->cleanFilePath((char *)unsafe_cryoRoot.c_str());
-
-        logMessage(LMI, "INFO", "Linker", "Cryo Root is not empty");
-        std::string fullPath = cryoRoot + "/Std/Runtime";
-        logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", fullPath.c_str());
-
-        return fullPath;
-    }
-
-    std::string Linker::covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir)
-    {
-        __STACK_FRAME__
-        if (cRuntimePath.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
-            return "";
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Converting C Runtime to IR...");
-        logMessage(LMI, "INFO", "Linker", "Output Directory: %s", outDir.c_str());
-        logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", cRuntimePath.c_str());
-        // Check and see if the `cRuntime.c` file exists
-        std::string safe_cRuntimePath = fs->cleanFilePath((char *)cRuntimePath.c_str());
-        std::string cRuntimeFile = safe_cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
-        if (!fileExists(cRuntimeFile.c_str()))
-        {
-            logMessage(LMI, "ERROR", "Linker", "C Runtime file does not exist: %s", cRuntimeFile.c_str());
-            return "";
-        }
-
-        // Create the output directory if it doesn't exist
-        if (!dirExists(outDir.c_str()))
-        {
-            if (mkdir(outDir.c_str(), 0777) != 0)
-            {
-                logMessage(LMI, "ERROR", "Linker", "Failed to create output directory: %s", outDir.c_str());
-                return "";
-            }
-        }
-
-        // Now that we have the file, we can convert it to IR
-        std::string unsafe_outPath = outDir + "/" + C_RUNTIME_FILENAME + ".ll";
-        std::string outPath = fs->cleanFilePath((char *)unsafe_outPath.c_str());
-        std::string cmd = "clang -S -emit-llvm " + cRuntimeFile + " -o " + outPath;
-
-        logMessage(LMI, "INFO", "Linker", "Full System Command: \n");
-        printf(BOLD GREEN "%s\n" COLOR_RESET, cmd.c_str());
-
-        int result = system(cmd.c_str());
-        if (result != 0)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
-            return "";
-        }
-        else
-        {
-            logMessage(LMI, "INFO", "Linker", "C Runtime converted to IR: %s", outPath.c_str());
-        }
-
-        logMessage(LMI, "INFO", "Linker", "C Runtime converted to IR: %s", outPath.c_str());
-
-        return outPath;
-    }
 
     // This function is going to be used to merge all of the runtime files into one.
     // It will look into the `DirectoryInfo` struct and find the runtime directory.

@@ -21,14 +21,17 @@
 {ROOT_DIR}
     - build
         - out
+            - obj
             - runtime
-        - deps
+            - deps
+        {exeName}
 */
 
 #define BUILD_DIR "build"
 #define OUT_DIR "out"
 #define RUNTIME_DIR "runtime"
 #define DEPS_DIR "deps"
+#define OBJ_DIR "obj"
 
 void init_build_dir(const char *rootDir)
 {
@@ -48,6 +51,12 @@ void init_build_dir(const char *rootDir)
     outDir->append(outDir, OUT_DIR);
     printf("Out Directory: %s\n", outDir->c_str(outDir));
 
+    // Create the obj directory
+    String *objDir = Str(buildDir->c_str(outDir));
+    objDir->append(objDir, "/");
+    objDir->append(objDir, OBJ_DIR);
+    printf("Obj Directory: %s\n", objDir->c_str(objDir));
+
     // Create the runtime directory
     String *runtimeDir = Str(outDir->c_str(outDir));
     runtimeDir->append(runtimeDir, "/");
@@ -63,12 +72,14 @@ void init_build_dir(const char *rootDir)
     // Create the directories
     fs->createDirectory(buildDir->c_str(buildDir));
     fs->createDirectory(outDir->c_str(outDir));
+    fs->createDirectory(objDir->c_str(objDir));
     fs->createDirectory(runtimeDir->c_str(runtimeDir));
     fs->createDirectory(depsDir->c_str(depsDir));
 
     // Cleanup
     buildDir->destroy(buildDir);
     outDir->destroy(outDir);
+    objDir->destroy(objDir);
     runtimeDir->destroy(runtimeDir);
     depsDir->destroy(depsDir);
 }

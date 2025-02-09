@@ -137,6 +137,9 @@ int exe_single_file_build(CompilerSettings *settings)
     // Outputs the SymTable into a file in the build directory.
     initASTDebugOutput(programCopy, settings);
 
+    CompilationUnitDir dir = createCompilationUnitDir(filePath, buildDir, CRYO_MODULE);
+    dir.print(dir);
+
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker, globalSymbolTable);
     if (result != 0)
@@ -224,6 +227,9 @@ int exe_project_build(CompilerSettings *settings)
     initASTDebugOutput(programNode, settings);
 
     printGlobalSymbolTable(globalSymbolTable);
+
+    CompilationUnitDir dir = createCompilationUnitDir(filePath, buildDir, CRYO_MAIN);
+    dir.print(dir);
 
     // Generate code (The C++ backend process)
     int result = generateCodeWrapper(programNode, state, linker, globalSymbolTable);

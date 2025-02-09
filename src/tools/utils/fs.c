@@ -57,6 +57,8 @@ jFS *initFS(void)
     fs->createNewEmptyFile = createNewEmptyFile;
     fs->createNewEmptyFileWpath = createNewEmptyFileWpath;
     fs->cleanFilePath = cleanFilePath;
+    fs->getFileName = getFileName;
+    fs->getFileExt = getFileExt;
     return fs;
 }
 
@@ -890,4 +892,25 @@ const char *cleanFilePath(char *filePath)
     *q = '\0';
 
     return cleanedPath;
+}
+
+const char *getFileName(const char *file)
+{
+
+    const char *lastSlash = strrchr(file, '/');
+    const char *filename = lastSlash ? lastSlash + 1 : file;
+
+    char *trimmed = strdup(filename);
+    char *dot = strrchr(trimmed, '.');
+    if (dot)
+    {
+        *dot = '\0';
+    }
+    return trimmed;
+}
+
+const char *getFileExt(const char *file)
+{
+    const char *lastDot = strrchr(file, '.');
+    return lastDot ? lastDot + 1 : NULL;
 }

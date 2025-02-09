@@ -153,9 +153,6 @@ namespace Cryo
         assert(root != nullptr);
 
         compiler.getGenerator().generateCode(root);
-
-        logMessage(LMI, "INFO", "Compiler", "Code Generation Complete");
-        compileCode.compileIRFile();
     }
 
     /// @private
@@ -196,22 +193,6 @@ namespace Cryo
         // Parse the AST tree
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
         parseTree(root);
-
-        // bool isImport = compiler.isImporting;
-        // if (isImport)
-        // {
-        //     Linker *linker = compiler.getLinker();
-        //     if (!linker)
-        //     {
-        //         DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Linker is null");
-        //         CONDITION_FAILED;
-        //     }
-        //     compiler.getContext().module->print(llvm::outs(), nullptr);
-        //     linker->generateIRFromCodegen(compiler.getContext().module.get(), compiler.customOutputPath.c_str());
-        //
-        //     DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
-        //     return;
-        // }
 
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
         return;

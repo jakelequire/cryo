@@ -170,21 +170,6 @@ char *stringShortener(const char *string, int length, int addDots)
     return shortened;
 }
 
-char *getFileName(const char *file)
-{
-
-    const char *lastSlash = strrchr(file, '/');
-    const char *filename = lastSlash ? lastSlash + 1 : file;
-
-    char *trimmed = strdup(filename);
-    char *dot = strrchr(trimmed, '.');
-    if (dot)
-    {
-        *dot = '\0';
-    }
-    return trimmed;
-}
-
 const char *getParentDirOfFile(const char *file)
 {
 

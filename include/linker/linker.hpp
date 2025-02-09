@@ -31,9 +31,14 @@ extern "C"
     // Constructors & Destructors
     CryoLinker *CryoLinker_Create(const char *buildDir);
 
+    // Linker Functions
+    void CryoLinker_InitCRuntime(CryoLinker *linker);
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Macros
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#define INIT_LINKER_C_RUNTIME(linker) CryoLinker_InitCRuntime(linker)
 
 #define CreateCryoLinker(buildDir) CryoLinker_Create(buildDir)
 
@@ -121,6 +126,7 @@ extern "C"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/env.h"
+#include "linker/compilationUnit.h"
 
 struct DirectoryInfo
 {
@@ -130,51 +136,6 @@ struct DirectoryInfo
     std::string depDir;
     std::string runtimeDir;
 };
-
-typedef enum CompilationUnitType_t
-{
-    CRYO_MODULE,
-    CRYO_RUNTIME,
-    CRYO_DEPENDENCY
-} CompilationUnitType;
-
-typedef struct CompilationUnitDir_t
-{
-    // The input file. (e.g. `path/to/file.cryo`)
-    std::string src_fileName; // `fileName` is the name of the file without the extension
-    std::string src_fileDir;  // `path/to` is the directory of the file
-    std::string src_filePath; // `path/to/file.*` is the full path to the file
-    std::string src_fileExt;  // `.*` is the file extension
-
-    std::string out_fileName; // `fileName` is the name of the file without the extension
-    std::string out_fileDir;  // `path/to` is the directory of the file
-    std::string out_filePath; // `path/to/file.*` is the full path to the file
-    std::string out_fileExt;  // `.*` is the file extension
-} CompilationUnitDir;
-
-typedef struct CompilationUnit_t
-{
-    CompilationUnitType type;
-    CompilationUnitDir dir;
-    ASTNode *ast;
-    bool isASTSet;
-    llvm::Module *module;
-    bool isModuleSet;
-
-    void (*setAST)(struct CompilationUnit_t *unit, ASTNode *ast);
-    void (*setModule)(struct CompilationUnit_t *unit, llvm::Module *module);
-} CompilationUnit;
-
-CompilationUnit *CompilationUnit_Create(CompilationUnitType type, CompilationUnitDir dir);
-void CompilationUnit_SetAST(CompilationUnit *unit, ASTNode *ast);
-void CompilationUnit_SetModule(CompilationUnit *unit, llvm::Module *module);
-CompilationUnitDir createCompilationUnitDir(const char *inputFile, CompilationUnitType type);
-
-// ------------------------
-// Macros
-
-#define CreateCompilationUnitDir(inputFile, type) createCompilationUnitDir(inputFile, type)
-#define CreateCompilationUnit(type, dir) CompilationUnit_Create(type, dir)
 
 namespace Cryo
 {
@@ -206,15 +167,21 @@ namespace Cryo
         Cryo::Linker *getCXXLinker() { return reinterpret_cast<Cryo::Linker *>(globalLinker); }
         CryoLinker *getCLinker() { return globalLinker; }
 
+        // ================================================================ //
+        // Linker Properties
+
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
         llvm::Module *preprocessedModule;
         void setPreprocessedModule(llvm::Module *mod) { preprocessedModule = mod; }
         std::vector<llvm::Module *> dependencies;
+        DirectoryInfo *dirInfo;
+        bool c_runtime_initialized = false;
 
         llvm::LLVMContext &getLinkerContext() { return context; }
 
-        DirectoryInfo *dirInfo;
+        // ================================================================ //
+        // Linker Functions
 
         llvm::Module *initMainModule(void);
 
@@ -222,18 +189,31 @@ namespace Cryo
 
         std::string createIRFromModule(llvm::Module *module, std::string outDir);
         llvm::Module *getCryoRuntimeModule(void);
-        void createCRuntimeFile(void);
 
         void generateIRFromCodegen(llvm::Module *mod, const char *outputPath);
         void completeCodeGeneration(void);
+
+        // ================================================================ //
+        // CodeGen Interface for Linker
+
+        /// @brief After running the ASTNode through the code generation process, this function will
+        /// compile the module and output the IR to a file given the `CompilationUnit` object.
+        /// @param unit The compilation unit object that contains the module and the output path.
+        void compileModule(CompilationUnit *unit, llvm::Module *mod);
+
+        // ================================================================ //
+        // C Runtime Initialization
+
+        std::string getCRuntimePath();
+        void initCRuntime(void);
+        void createCRuntimeFile(void);
 
     private:
         DirectoryInfo *createDirectoryInfo(std::string rootDir);
         DirectoryInfo *getDirInfo() { return dirInfo; }
         void logDirectoryInfo(DirectoryInfo *dirInfo);
 
-        std::string getCRuntimePath();
-        std::string covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
+        int covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
         bool mergeAllRuntimeFiles();
         std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName, std::string outDir);
 
@@ -260,6 +240,12 @@ namespace Cryo
         {
             return nullptr;
         }
+    }
+
+    inline void CryoLinker_InitCRuntime(CryoLinker *linker)
+    {
+        auto _linker = reinterpret_cast<Linker *>(linker);
+        _linker->initCRuntime();
     }
 } // namespace Cryo
 

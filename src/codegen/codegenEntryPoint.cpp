@@ -14,12 +14,50 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "linker/linker.hpp"
 #include "codegen/oldCodeGen.hpp"
 #include "tools/logger/logger_config.h"
 
 int generateIRFromAST(CompilationUnit *unit,
                       CompilerState *state, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)
 {
+    DEBUG_PRINT_FILTER({
+        std::cout << "\n";
+        std::cout << "<!> ======================= @generateIRFromAST ======================= <!>" << std::endl;
+    });
+
+    if (!unit->isVerified)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "CompilationUnit is not verified");
+        return 1;
+    }
+
+    Cryo::CryoCompiler compiler;
+    compiler.setCompilerState(state);
+    compiler.setCompilerSettings(state->settings);
+
+    if (unit->type == CRYO_MAIN)
+    {
+    }
+
+    ASTNode *rootNode = unit->ast;
+    if (!rootNode)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "ASTNode is null");
+        return 1;
+    }
+    rootNode->print(rootNode);
+
+    std::string moduleName = state->fileName;
+    compiler.setModuleIdentifier(moduleName);
+
+    // Compile the ASTNode
+    compiler.compile(rootNode);
+
+    llvm::Module *mod = compiler.getContext().module.get();
+    compiler.getLinker()->compileModule(unit, mod);
+
+    DEBUG_BREAKPOINT;
 }
 
 namespace Cryo

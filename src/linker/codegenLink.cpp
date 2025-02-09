@@ -59,4 +59,28 @@ namespace Cryo
         return;
     }
 
+    void Linker::compileModule(CompilationUnit *unit, llvm::Module *mod)
+    {
+        __STACK_FRAME__
+        logMessage(LMI, "INFO", "Linker", "@compileModule Compiling Module");
+        if (!unit)
+        {
+            logMessage(LMI, "ERROR", "Linker", "CompilationUnit is null");
+            return;
+        }
+        if (!mod)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Module is null");
+            return;
+        }
+        if (!unit->isVerified)
+        {
+            logMessage(LMI, "ERROR", "Linker", "CompilationUnit is not verified");
+            return;
+        }
+        std::string outputPath = std::string(unit->dir.out_filePath) + std::string(unit->dir.out_fileExt);
+        generateIRFromCodegen(mod, outputPath.c_str());
+        return;
+    }
+
 } // namespace Cryo

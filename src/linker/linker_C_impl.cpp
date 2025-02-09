@@ -46,4 +46,14 @@ extern "C"
         }
     }
 
+    void CryoLinker_InitCRuntime(CryoLinker *linker)
+    {
+        __STACK_FRAME__
+        if (linker)
+        {
+            logMessage(LMI, "INFO", "CryoLinker", "Initializing C Runtime");
+            reinterpret_cast<Cryo::Linker *>(linker)->initCRuntime();
+        }
+    }
+
 } // C API

@@ -85,6 +85,8 @@ char *getCompilerRootPath(void);
 void createNewEmptyFile(const char *fileName, const char *ext, const char *path);
 int createNewEmptyFileWpath(const char *fileWithPath);
 const char *cleanFilePath(char *filePath);
+const char *getFileName(const char *filePath);
+const char *getFileExt(const char *filePath);
 
 typedef struct jFS
 {
@@ -138,6 +140,10 @@ typedef struct jFS
     _NEW_METHOD(int, createNewEmptyFileWpath, const char *fileWithPath);
     // `cleanFilePath` cleans the file path.
     _NEW_METHOD(const char *, cleanFilePath, char *filePath);
+    // `getFileName` gets the file name.
+    _NEW_METHOD(const char *, getFileName, const char *filePath);
+    // `getFileExt` gets the file extension.
+    _NEW_METHOD(const char *, getFileExt, const char *filePath);
 } jFS;
 
 jFS *initFS(void);

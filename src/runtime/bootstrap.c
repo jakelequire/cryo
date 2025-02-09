@@ -100,6 +100,37 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     }
     logMessage(LMI, "INFO", "Bootstrap", "Runtime node compiled successfully");
 
+    // ===========================================
+
+    INIT_LINKER_C_RUNTIME(cLinker);
+
+    CompilationUnitDir runtimeDir = createCompilationUnitDir(runtimePath, GetBuildDir(globalTable), CRYO_RUNTIME);
+    runtimeDir.print(runtimeDir);
+
+    CompilationUnit *runtimeUnit = createNewCompilationUnit(runtimeNode, runtimeDir);
+    if (!runtimeUnit)
+    {
+        fprintf(stderr, "Error: Failed to create runtime unit\n");
+        updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        return;
+    }
+    int runtimeVerification = runtimeUnit->verify(runtimeUnit);
+    if (runtimeVerification != 0)
+    {
+        fprintf(stderr, "Error: Failed to verify runtime unit\n");
+        updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        return;
+    }
+    int runtimeCompilation = generateIRFromAST(runtimeUnit, bootstrap->state, cLinker, globalTable);
+    if (runtimeCompilation != 0)
+    {
+        fprintf(stderr, "Error: Failed to compile runtime unit\n");
+        updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
+        return;
+    }
+
+    // ===========================================
+
     String *runtimeMemoryPath = Str(fs->removeFileFromPath(runtimePath));
     runtimeMemoryPath->append(runtimeMemoryPath, "/memory.cryo");
     logMessage(LMI, "INFO", "Bootstrap", "Runtime Directory Path: %s", runtimeMemoryPath->c_str(runtimeMemoryPath));
@@ -113,6 +144,9 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
         return;
     }
     logMessage(LMI, "INFO", "Bootstrap", "Runtime memory node compiled successfully");
+
+    CompilationUnitDir runtimeMemoryDir = createCompilationUnitDir(runtimeMemoryPath->c_str(runtimeMemoryPath), GetBuildDir(globalTable), CRYO_RUNTIME);
+    runtimeMemoryDir.print(runtimeMemoryDir);
 
     // Update the bootstrap status
     updateBootstrapStatus(bootstrap, BOOTSTRAP_SUCCESS);

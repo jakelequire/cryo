@@ -32,6 +32,7 @@
 #include "runtime/bootstrap.h"
 #include "tools/utils/cTypes.h"
 #include "semantics/semantics.h"
+#include "linker/compilationUnit.h"
 
 typedef struct CompilerSettings CompilerSettings;
 typedef struct CompilerState CompilerState;
@@ -39,6 +40,7 @@ typedef struct ASTNode ASTNode;
 typedef struct Bootstrapper Bootstrapper;
 typedef struct SymbolTable SymbolTable;
 typedef struct TypesTable TypesTable;
+typedef struct CompilationUnit_t CompilationUnit;
 
 // C++ headers
 #ifdef __cplusplus
@@ -49,6 +51,9 @@ extern "C"
     int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *linker, CryoGlobalSymbolTable *globalTable);
     int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
     int generateImportCode(ASTNode *importNode, CompilerState *state, CryoLinker *cLinker, const char *outputPath, CryoGlobalSymbolTable *globalTable);
+
+    int generateIRFromAST(CompilationUnit *unit,
+                          CompilerState *state, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
 
 #ifdef __cplusplus
 }
