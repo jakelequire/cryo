@@ -14,50 +14,15 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef COMPILATION_UNIT_H
-#define COMPILATION_UNIT_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "codegen/oldCodeGen.hpp"
+#include "tools/logger/logger_config.h"
 
-#include "frontend/AST.h"
-#include "tools/utils/cTypes.h"
-#include "tools/utils/cWrappers.h"
-
-typedef struct ASTNode ASTNode;
-
-typedef enum
+int generateIRFromAST(CompilationUnit *unit,
+                      CompilerState *state, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)
 {
-    COF_UNKNOWN,
-    COF_BUILD,   // `/build`
-    COF_OUT,     // `/build/out`
-    COF_DEPS,    // `/build/out/deps`
-    COF_RUNTIME, // `/build/out/runtime`
-} CompilationOutputFolder;
+}
 
-typedef enum
+namespace Cryo
 {
-    CU_TYPE_NONE,
-} CompilationUnitType;
 
-typedef struct CompilationFile
-{
-    char *srcFileName;
-    char *srcFilePath;
-    char *srcFullPath;
-
-    char *outFileName;
-    char *outFilePath;
-    char *outFullPath;
-} CompilationFile;
-
-typedef struct CompilationUnit
-{
-    CompilationUnitType type;
-    ASTNode *AST;
-    CompilationFile *file;
-} CompilationUnit;
-
-#endif // COMPILATION_UNIT_H
+} // namespace Cryo

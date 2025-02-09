@@ -67,7 +67,6 @@
 #include "tools/macros/printMacros.h"
 #include "linker/linker.hpp"
 #include "symbolTable/globalSymtable.hpp"
-#include "tools/utils/compilationUnit.h"
 
 namespace Cryo
 {

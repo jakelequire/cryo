@@ -121,7 +121,6 @@ extern "C"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/env.h"
-#include "tools/utils/compilationUnit.h"
 
 struct DirectoryInfo
 {
@@ -131,6 +130,51 @@ struct DirectoryInfo
     std::string depDir;
     std::string runtimeDir;
 };
+
+typedef enum CompilationUnitType_t
+{
+    CRYO_MODULE,
+    CRYO_RUNTIME,
+    CRYO_DEPENDENCY
+} CompilationUnitType;
+
+typedef struct CompilationUnitDir_t
+{
+    // The input file. (e.g. `path/to/file.cryo`)
+    std::string src_fileName; // `fileName` is the name of the file without the extension
+    std::string src_fileDir;  // `path/to` is the directory of the file
+    std::string src_filePath; // `path/to/file.*` is the full path to the file
+    std::string src_fileExt;  // `.*` is the file extension
+
+    std::string out_fileName; // `fileName` is the name of the file without the extension
+    std::string out_fileDir;  // `path/to` is the directory of the file
+    std::string out_filePath; // `path/to/file.*` is the full path to the file
+    std::string out_fileExt;  // `.*` is the file extension
+} CompilationUnitDir;
+
+typedef struct CompilationUnit_t
+{
+    CompilationUnitType type;
+    CompilationUnitDir dir;
+    ASTNode *ast;
+    bool isASTSet;
+    llvm::Module *module;
+    bool isModuleSet;
+
+    void (*setAST)(struct CompilationUnit_t *unit, ASTNode *ast);
+    void (*setModule)(struct CompilationUnit_t *unit, llvm::Module *module);
+} CompilationUnit;
+
+CompilationUnit *CompilationUnit_Create(CompilationUnitType type, CompilationUnitDir dir);
+void CompilationUnit_SetAST(CompilationUnit *unit, ASTNode *ast);
+void CompilationUnit_SetModule(CompilationUnit *unit, llvm::Module *module);
+CompilationUnitDir createCompilationUnitDir(const char *inputFile, CompilationUnitType type);
+
+// ------------------------
+// Macros
+
+#define CreateCompilationUnitDir(inputFile, type) createCompilationUnitDir(inputFile, type)
+#define CreateCompilationUnit(type, dir) CompilationUnit_Create(type, dir)
 
 namespace Cryo
 {
