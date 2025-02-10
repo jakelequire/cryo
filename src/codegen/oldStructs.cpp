@@ -289,6 +289,44 @@ namespace Cryo
                 llvm::Function *ctor = compiler.getContext().module->getFunction(structName + ".constructor");
                 compiler.getContext().builder.CreateCall(ctor, args);
             }
+            else if (varDecl->initializer->metaData->type == NODE_OBJECT_INST)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling object initializer");
+                ASTNode *objectInit = varDecl->initializer;
+                std::string objectName = objectInit->data.objectNode->name;
+                DevDebugger::logMessage("INFO", __LINE__, "Structs", "Object Name: " + objectName);
+
+                // Get the object type
+                DataType *objectType = objectInit->data.objectNode->objType;
+                logDataType(objectType);
+
+                ASTNode **objArgs = objectInit->data.objectNode->args;
+                std::vector<llvm::Value *> args;
+                // Add the struct pointer as the first argument
+                args.push_back(structPtr);
+
+                for (int i = 0; i < objectInit->data.objectNode->argCount; ++i)
+                {
+                    ASTNode *argNode = objArgs[i];
+                    llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
+                    if (!argValue)
+                    {
+                        DevDebugger::logMessage("ERROR", __LINE__, "Structs", "Argument value not found");
+                        CONDITION_FAILED;
+                    }
+                    args.push_back(argValue);
+                }
+
+                DevDebugger::logMessage("INFO", __LINE__, "Structs", "Calling constructor");
+                llvm::Function *ctor = compiler.getContext().module->getFunction(structName + ".constructor");
+                compiler.getContext().builder.CreateCall(ctor, args);
+            }
+            else
+            {
+                std::string initType = CryoNodeTypeToString(varDecl->initializer->metaData->type);
+                std::cout << "Unknown struct variable initializer. Received: " << initType << std::endl;
+                CONDITION_FAILED;
+            }
         }
 
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct Instance Created");

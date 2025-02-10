@@ -168,4 +168,16 @@ namespace Cryo
         // CryoContext::getInstance().mergeModule(std::move(GetCXXLinker()->appendDependenciesToRoot()));
         DEBUG_BREAKPOINT;
     }
+
+    void CryoContext::printStructTypesMap(void)
+    {
+        std::cout << "\n";
+        std::cout << "+ ---------- Struct Types Map ---------- +" << std::endl;
+        for (auto &pair : structTypes)
+        {
+            std::cout << pair.first << std::endl;
+        }
+        std::cout << "+ -------------------------------------- +" << std::endl;
+        std::cout << "\n";
+    }
 } // namespace Cryo

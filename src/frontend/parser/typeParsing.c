@@ -89,7 +89,7 @@ ASTNode *parseNonGenericStructDeclaration(Lexer *lexer, ParsingContext *context,
     int methodCount = structDefinition->container->custom.structDef->methodCount;
     bool hasDefaultProperty = false;
     bool hasConstructor = false;
-    int ctorArgCount = 0;
+    int ctorArgCount = structDefinition->container->custom.structDef->ctorParamCount;
     DataType **ctorArgs = (DataType **)malloc(sizeof(DataType *) * ARG_CAPACITY);
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
@@ -161,10 +161,11 @@ bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *
                 if (arg)
                 {
                     logMessage(LMI, "INFO", "Parser", "Adding constructor argument to struct data type.");
-                    ctorArgs[*ctorArgCount] = getDataTypeFromASTNode(arg);
-                    (*ctorArgCount)++;
+                    ctorArgs[argCount] = getDataTypeFromASTNode(arg);
                 }
             }
+            dataType->container->custom.structDef->ctorParamCount = argCount;
+            ctorArgCount = &argCount;
         }
         return true;
     }

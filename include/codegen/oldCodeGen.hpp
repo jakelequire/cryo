@@ -128,6 +128,7 @@ namespace Cryo
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
         std::unordered_map<std::string, llvm::StructType *> structTypes = {};
+        void printStructTypesMap(void);
         std::unordered_map<std::string, llvm::StructType *> classTypes = {};
 
         std::unordered_map<std::string, DataType *> structDataTypes;
