@@ -25,6 +25,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#include "./c_support/print_support.c"
+
 extern void *getCryoNullValue();
 
 void __c_printInt(int value)
