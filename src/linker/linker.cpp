@@ -72,6 +72,7 @@ namespace Cryo
         if (!cLinker)
         {
             logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
+            CONDITION_FAILED;
             return nullptr;
         }
 
@@ -79,6 +80,7 @@ namespace Cryo
         if (runtimeDir.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "Runtime Directory is empty");
+            CONDITION_FAILED;
             return nullptr;
         }
 
@@ -87,6 +89,7 @@ namespace Cryo
         if (files.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "No files found in runtime directory");
+            CONDITION_FAILED;
             return nullptr;
         }
         int fileCount = files.size();
@@ -107,12 +110,29 @@ namespace Cryo
         {
             std::string filePath = runtimeDir + "/" + files[i];
             std::cout << "File Path: " << filePath << std::endl;
+            if (!fs->fileExists(filePath.c_str()))
+            {
+                logMessage(LMI, "ERROR", "Linker", "File does not exist: %s", filePath.c_str());
+                CONDITION_FAILED;
+            }
+            else
+            {
+                // Print out the file contents
+                std::string fileContents = fs->readFile(filePath.c_str());
+                std::cout << "File Contents: \n"
+                          << fileContents << std::endl;
+            }
             llvm::SMDiagnostic err;
             llvm::LLVMContext &context = cLinker->context;
             llvm::Module *mod = llvm::parseIRFile(filePath, err, context).release();
             if (!mod)
             {
                 logMessage(LMI, "ERROR", "Linker", "Failed to parse IR file: %s", filePath.c_str());
+                std::string errMsg;
+                llvm::raw_string_ostream rso(errMsg);
+                err.print("Linker", rso);
+                logMessage(LMI, "ERROR", "Linker", "Error: %s", errMsg.c_str());
+                CONDITION_FAILED;
                 return nullptr;
             }
 
@@ -130,11 +150,13 @@ namespace Cryo
         if (!destModule)
         {
             logMessage(LMI, "ERROR", "Linker", "Destination Module is null");
+            CONDITION_FAILED;
             return;
         }
         if (!srcModule)
         {
             logMessage(LMI, "ERROR", "Linker", "Source Module is null");
+            CONDITION_FAILED;
             return;
         }
 
@@ -149,6 +171,7 @@ namespace Cryo
         if (result)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to merge modules");
+            CONDITION_FAILED;
             return;
         }
 

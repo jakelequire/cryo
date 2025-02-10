@@ -250,6 +250,7 @@ namespace Cryo
 
         default:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
+            logVerboseDataType(type);
             CONDITION_FAILED;
         }
     }

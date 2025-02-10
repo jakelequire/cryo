@@ -604,6 +604,10 @@ namespace Cryo
                 llvm::Value *instValue = instruction->getOperand(0);
                 std::string instValueName = instValue->getName().str();
                 std::cout << "Inst Value Name: " << instValueName << std::endl;
+
+                llvm::Type *instType = instruction->getType();
+                std::cout << "Inst Type: " << instType->getTypeID() << std::endl;
+                DevDebugger::logLLVMType(instType);
             }
         }
 

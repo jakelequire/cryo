@@ -24,12 +24,14 @@ namespace Cryo
         if (!module)
         {
             logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
+            CONDITION_FAILED;
             return;
         }
 
         if (!srcModule)
         {
             logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
+            CONDITION_FAILED;
             return;
         }
 
@@ -44,22 +46,8 @@ namespace Cryo
         if (result)
         {
             logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
+            CONDITION_FAILED;
             return;
-        }
-
-        // Add all structs from `srcModule` to `module`
-        for (auto &structType : srcModule->getIdentifiedStructTypes())
-        {
-            if (structType->isLiteral())
-            {
-                continue;
-            }
-
-            std::string structName = structType->getName().str();
-            if (structTypes.find(structName) == structTypes.end())
-            {
-                structTypes[structName] = structType;
-            }
         }
 
         std::cout << "@mergeModule Module merged successfully" << std::endl;

@@ -104,7 +104,7 @@ namespace Cryo
         // Now that we have the file, we can convert it to IR
         std::string unsafe_outPath = outDir + "/" + C_RUNTIME_FILENAME + ".ll";
         std::string outPath = fs->cleanFilePath((char *)unsafe_outPath.c_str());
-        std::string cmd = "clang -S -emit-llvm " + cRuntimeFile + " -o " + outPath;
+        std::string cmd = "clang-18 -S -emit-llvm " + cRuntimeFile + " -o " + outPath;
 
         logMessage(LMI, "INFO", "Linker", "Full System Command: \n");
         printf(BOLD GREEN "%s\n" COLOR_RESET, cmd.c_str());
@@ -122,7 +122,7 @@ namespace Cryo
 
         // After creating the IR (`.ll`) file, we will convert it to an object file (`.o`)
         std::string objPath = outDir + "/" + C_RUNTIME_FILENAME + ".o";
-        std::string objCmd = "clang -fPIE -c " + outPath + " -o " + objPath;
+        std::string objCmd = "clang-18 -fPIE -c " + outPath + " -o " + objPath;
         int objResult = system(objCmd.c_str());
         if (objResult != 0)
         {

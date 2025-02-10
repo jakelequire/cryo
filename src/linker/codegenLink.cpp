@@ -34,6 +34,14 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Output path is null");
             return;
         }
+
+        // Verify the module
+        if (llvm::verifyModule(*mod, &llvm::errs()))
+        {
+            logMessage(LMI, "ERROR", "Linker", "Module verification failed");
+            return;
+        }
+
         // The outputPath should be the full path + the file name
         // e.g /path/to/file/file.ll
         // Make the empty file before writing to it

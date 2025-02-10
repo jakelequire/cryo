@@ -51,7 +51,7 @@ namespace Cryo
         std::string mainFile = buildDir + "/out/main.ll";
 
         // llc -filetype=obj {buildDir}/out/main.ll -o {buildDir}/out/main.o
-        std::string sys_cmd = "llc -filetype=obj -relocation-model=pic " + mainFile + " -o " + objDir + "/main.o";
+        std::string sys_cmd = "llc-18 -filetype=obj -relocation-model=pic " + mainFile + " -o " + objDir + "/main.o";
         int result = system(sys_cmd.c_str());
         if (result != 0 || WEXITSTATUS(result) != 0)
         {
