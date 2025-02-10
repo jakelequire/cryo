@@ -310,6 +310,11 @@ extern "C"
     // # =========================================================================== #
 
     DataType *createPrimitiveIntType(void);
+    DataType *createPrimitiveI8Type(void);
+    DataType *createPrimitiveI16Type(void);
+    DataType *createPrimitiveI32Type(void);
+    DataType *createPrimitiveI64Type(void);
+    DataType *createPrimitiveI128Type(void);
     DataType *createPrimitiveFloatType(void);
     DataType *createPrimitiveStringType(int length);
     DataType *createPrimitiveBooleanType(bool booleanValue);

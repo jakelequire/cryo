@@ -75,6 +75,7 @@ namespace Cryo
                         std::cout << "--------------------------------------------" << std::endl;
                     }
                 });
+                compiler.dumpModule();
                 CONDITION_FAILED;
             }
 
@@ -693,6 +694,126 @@ namespace Cryo
                 // Create the integer literal
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
                 llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I8:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI8Type(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I16:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI16Type(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I32:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI32Type(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I64:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI64Type(), 0);
                 int literalValue = literalNode->value.intValue;
                 llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");

@@ -30,7 +30,7 @@ function __free__(pointer: any) -> void {
     return;
 }
 
-function __getAddr__(_ptr_: any) -> int {
-    const address: int = __c_getAddr(_ptr_);
+function __getAddr__(_ptr_: any) -> i64 {
+    const address: i64 = __c_getAddr(_ptr_);
     return address;
 }

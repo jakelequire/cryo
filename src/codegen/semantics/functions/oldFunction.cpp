@@ -285,6 +285,16 @@ namespace Cryo
                     }
                     break;
                 }
+                case PRIM_I8:
+                case PRIM_I16:
+                case PRIM_I32:
+                case PRIM_I64:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i64");
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
+                    break;
+                }
                 case PRIM_STRING:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
@@ -598,6 +608,41 @@ namespace Cryo
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning int");
                     llvm::Type *retType = types.getType(createPrimitiveIntType(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I8:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i8");
+                    llvm::Type *retType = types.getType(createPrimitiveI8Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I16:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i16");
+                    llvm::Type *retType = types.getType(createPrimitiveI16Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I32:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i32");
+                    llvm::Type *retType = types.getType(createPrimitiveI32Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I64:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i64");
+                    llvm::Type *retType = types.getType(createPrimitiveI64Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I128:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i128");
+                    llvm::Type *retType = types.getType(createPrimitiveI128Type(), 0);
                     DevDebugger::logLLVMType(retType);
                     return retType;
                 }

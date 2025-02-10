@@ -28,6 +28,56 @@ DataType *createPrimitiveIntType(void)
     return wrapTypeContainer(container);
 }
 
+DataType *createPrimitiveI8Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I8;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI16Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I16;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI32Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I32;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI64Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I64;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI128Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I128;
+
+    return wrapTypeContainer(container);
+}
+
 // Primitive float Type creation `(default/baseline)`
 DataType *createPrimitiveFloatType(void)
 {

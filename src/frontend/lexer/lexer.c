@@ -65,6 +65,11 @@ KeywordToken keywords[] = {
     {"declare", TOKEN_KW_DECLARE},
     {"any", TOKEN_KW_ANY},
     {"null", TOKEN_KW_NULL},
+    {"i8", TOKEN_TYPE_I8},
+    {"i16", TOKEN_TYPE_I16},
+    {"i32", TOKEN_TYPE_I32},
+    {"i64", TOKEN_TYPE_I64},
+    {"i128", TOKEN_TYPE_I128},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

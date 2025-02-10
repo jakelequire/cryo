@@ -62,6 +62,31 @@ namespace Cryo
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int type");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
         }
+        case PRIM_I8:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 8-bit integer type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
+        }
+        case PRIM_I16:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 16-bit integer type");
+            return llvm::Type::getInt16Ty(CryoContext::getInstance().context);
+        }
+        case PRIM_I32:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type");
+            return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        }
+        case PRIM_I64:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 64-bit integer type");
+            return llvm::Type::getInt64Ty(CryoContext::getInstance().context);
+        }
+        case PRIM_I128:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 128-bit integer type");
+            return llvm::Type::getInt128Ty(CryoContext::getInstance().context);
+        }
         case PRIM_STRING:
         {
             // [i8 x len]
@@ -88,19 +113,35 @@ namespace Cryo
 
     llvm::Type *OldTypes::getReturnType(DataType *type)
     {
+        logDataType(type);
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting return type");
 
-        if (type->container->baseType == UNKNOWN_TYPE)
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
-            return nullptr;
-        }
+        // if (type->container->baseType == UNKNOWN_TYPE)
+        // {
+        //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
+        //     return nullptr;
+        // }
 
         switch (type->container->primitive)
         {
         case PRIM_INT:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning int type");
             return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I8:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 8-bit integer type");
+            return llvm::Type::getInt8Ty(CryoContext::getInstance().context);
+        case PRIM_I16:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 16-bit integer type");
+            return llvm::Type::getInt16Ty(CryoContext::getInstance().context);
+        case PRIM_I32:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 32-bit integer type");
+            return llvm::Type::getInt32Ty(CryoContext::getInstance().context);
+        case PRIM_I64:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 64-bit integer type");
+            return llvm::Type::getInt64Ty(CryoContext::getInstance().context);
+        case PRIM_I128:
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning 128-bit integer type");
+            return llvm::Type::getInt128Ty(CryoContext::getInstance().context);
         case PRIM_STRING:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning string type");
             return llvm::Type::getInt8Ty(CryoContext::getInstance().context)->getPointerTo();

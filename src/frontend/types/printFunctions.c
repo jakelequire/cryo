@@ -459,7 +459,10 @@ void logDataType(DataType *type)
     __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         if (!type)
+        {
+            printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | <NULL>\n");
             return;
+        }
 
         printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
         printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");

@@ -303,6 +303,11 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     {
     case TOKEN_KW_VOID:
     case TOKEN_KW_INT:
+    case TOKEN_TYPE_I8:
+    case TOKEN_TYPE_I16:
+    case TOKEN_TYPE_I32:
+    case TOKEN_TYPE_I64:
+    case TOKEN_TYPE_I128:
     case TOKEN_KW_STRING:
     case TOKEN_KW_BOOL:
     case TOKEN_KW_ANY:
@@ -1335,8 +1340,6 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     functionDefNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
     functionDefNode->data.functionDecl->functionScopeID = Generate64BitHashID(functionName);
 
-    (functionDefNode, arena);
-
     // Parse the function block
     ASTNode *functionBlock = parseFunctionBlock(lexer, context, arena, state, globalTable);
     if (!functionBlock)
@@ -1348,6 +1351,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, returnType, arena, state, lexer);
     DataType *functionType = createFunctionType(strdup(functionName), returnType, paramTypes, paramCount, arena, state);
     functionNode->data.functionDecl->functionType = functionType;
+    functionNode->data.functionDecl->type = returnType;
     functionNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
 
     (functionNode, arena);
