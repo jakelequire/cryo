@@ -223,6 +223,9 @@ extern "C"
         TOKEN_ITER_VAR,    // `$`
         TOKEN_ITER_STEP,   // `..`
         TOKEN_EMPTY_ARRAY, // `[]`
+
+        TOKEN_ADDRESS_OF,  // `&`
+        TOKEN_DEREFERENCE, // `*`
     } CryoTokenType;
 
     typedef enum
@@ -370,6 +373,7 @@ extern "C"
         int column;         // Column number where the token is found
         const char *style;  // Style of the token
         TokenValue value;   // Token value
+        bool isOperator;    // Whether the token is an operator
     } Token;
 
     //

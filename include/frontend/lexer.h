@@ -101,5 +101,6 @@ bool isAlpha(char c);
 bool isAlphaNumeric(char c);
 bool isDigit(char c);
 bool isType(char c);
+bool isOperatorToken(CryoTokenType type);
 
 #endif // LEXER_H

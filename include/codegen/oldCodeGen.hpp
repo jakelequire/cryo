@@ -610,6 +610,7 @@ namespace Cryo
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
         llvm::Value *createTypeofCall(TypeofNode *node);
+        llvm::Value *createUnaryExprCall(CryoUnaryOpNode *node);
 
         // -----------------------------------
         // Cryo entry point functions

@@ -294,6 +294,7 @@ typedef struct CryoBinaryOpNode
 typedef struct CryoUnaryOpNode
 {
     CryoTokenType op;
+    DataType *resultType;
     struct ASTNode *operand;
     struct ASTNode *expression;
 } CryoUnaryOpNode;

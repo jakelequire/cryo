@@ -40,6 +40,9 @@ TypeContainer *createTypeContainer(void)
     container->custom.structDef = NULL;
     container->custom.funcDef = NULL;
     container->custom.structDef = NULL;
+    container->custom.arrayDef = NULL;
+    container->isPointer = false;
+    container->isReference = false;
 
     return container;
 }
@@ -179,6 +182,34 @@ DataType *wrapTypeContainer(TypeContainer *container)
     type->isReference = false;
     type->next = NULL;
     type->genericParam = NULL;
+
+    return type;
+}
+
+DataType *createPointerType(DataType *operandType)
+{
+    __STACK_FRAME__
+    if (!operandType)
+    {
+        fprintf(stderr, "[TypeTable] Error: Invalid operand type\n");
+        CONDITION_FAILED;
+    }
+
+    TypeContainer *container = createTypeContainer();
+    container->baseType = operandType->container->baseType;
+    container->primitive = operandType->container->primitive;
+    container->size = operandType->container->size;
+    container->length = operandType->container->length;
+    container->isArray = operandType->container->isArray;
+    container->arrayDimensions = operandType->container->arrayDimensions;
+    container->boolValue = operandType->container->boolValue;
+    container->isGeneric = operandType->container->isGeneric;
+    container->isConst = operandType->container->isConst;
+    container->isReference = true;
+    container->isPointer = true;
+
+    DataType *type = wrapTypeContainer(container);
+    type->next = operandType;
 
     return type;
 }

@@ -599,6 +599,11 @@ char *CryoTokenToString(CryoTokenType node)
     case TOKEN_DOUBLE_COLON:
         return "TOKEN_DOUBLE_COLON";
 
+    case TOKEN_ADDRESS_OF:
+        return "TOKEN_ADDRESS_OF";
+    case TOKEN_DEREFERENCE:
+        return "TOKEN_DEREFERENCE";
+
     default:
         return "<TOKEN UNKNOWN>";
     }
@@ -666,6 +671,7 @@ char *CryoOperatorTypeToString(CryoOperatorType op)
         return "OPERATOR_INCREMENT";
     case OPERATOR_DECREMENT:
         return "OPERATOR_DECREMENT";
+
     case OPERATOR_NA:
         return "OPERATOR_NA";
     default:

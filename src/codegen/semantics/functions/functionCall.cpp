@@ -237,6 +237,22 @@ namespace Cryo
                 argValues.push_back(argNode);
                 break;
             }
+            case NODE_UNARY_EXPR:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a unary expression");
+                CryoUnaryOpNode *unaryNode = argNode->data.unary_op;
+                assert(unaryNode != nullptr);
+
+                llvm::Value *argNode = createUnaryExprCall(unaryNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
@@ -541,7 +557,7 @@ namespace Cryo
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Struct type not found");
                 CONDITION_FAILED;
             }
-
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Struct Type Found");
             varType = structType;
         }
 
@@ -1413,6 +1429,71 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Typeof Call Created");
         return typeValue;
+    }
+
+    llvm::Value *Functions::createUnaryExprCall(CryoUnaryOpNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Unary Expression Call");
+
+        ASTNode *exprNode = node->expression;
+        exprNode->print(exprNode);
+        llvm::Value *exprValue = compiler.getGenerator().getInitilizerValue(exprNode);
+        if (!exprValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Expression value not found");
+            CONDITION_FAILED;
+        }
+
+        llvm::Value *unaryValue = nullptr;
+        switch (node->op)
+        {
+        case TOKEN_ADDRESS_OF:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Address Of Call");
+            std::string alloca_name = exprValue->getName().str() + ".addrOf";
+            unaryValue = compiler.getContext().builder.CreateAlloca(exprValue->getType(), nullptr, alloca_name);
+            if (!unaryValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Address of value not created");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *storeInst = compiler.getContext().builder.CreateStore(exprValue, unaryValue);
+            if (!storeInst)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Address of value not stored");
+                CONDITION_FAILED;
+            }
+
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Address Of Call Created");
+            return unaryValue;
+        }
+        case TOKEN_DEREFERENCE:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Dereference Call");
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(exprValue);
+            std::cout << "Instruction: " << std::endl;
+            DevDebugger::logLLVMInst(inst);
+            llvm::Type *varInstType = compiler.getTypes().parseInstForType(inst);
+            llvm::LoadInst *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, exprValue, "deref");
+            if (!varLoadValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not loaded");
+                CONDITION_FAILED;
+            }
+            varLoadValue->setAlignment(llvm::Align(8));
+
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Dereference Call Created");
+            return varLoadValue;
+        }
+        default:
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown unary operator");
+            CONDITION_FAILED;
+        }
+        }
+
+        DEBUG_BREAKPOINT;
     }
 
 } // namespace Cryo

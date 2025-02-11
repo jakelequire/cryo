@@ -819,7 +819,8 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state)
 
     node->op = TOKEN_UNKNOWN;
     node->operand = NULL;
-    node->expression = NULL;
+    node->expression = (ASTNode *)malloc(sizeof(ASTNode));
+    node->resultType = wrapTypeContainer(createTypeContainer());
 
     return node;
 }

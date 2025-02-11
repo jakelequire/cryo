@@ -1011,6 +1011,48 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing unary expression...");
+    if (lexer->currentToken.type == TOKEN_AMPERSAND)
+    {
+        consume(__LINE__, lexer, TOKEN_AMPERSAND, "Expected identifier after &", "parseUnaryExpression", arena, state, context);
+
+        // Parse the operand - must be an lvalue
+        ASTNode *operand = parsePrimaryExpression(lexer, context, arena, state, globalTable);
+
+        // Create address-of node
+        ASTNode *node = createUnaryExpr(TOKEN_AMPERSAND, operand, arena, state, lexer);
+
+        // Set the result type to be a pointer to operand's type
+        DataType *operandType = getDataTypeFromASTNode(operand);
+        node->data.unary_op->resultType = createPointerType(operandType);
+        node->data.unary_op->op = TOKEN_ADDRESS_OF;
+        node->data.unary_op->expression = operand;
+
+        return node;
+    }
+    if (lexer->currentToken.type == TOKEN_STAR)
+    {
+        consume(__LINE__, lexer, TOKEN_STAR, "Expected identifier after *", "parseUnaryExpression", arena, state, context);
+
+        // Parse the operand - must be a pointer type
+        ASTNode *operand = parsePrimaryExpression(lexer, context, arena, state, globalTable);
+
+        // Create dereference node
+        ASTNode *node = createUnaryExpr(TOKEN_STAR, operand, arena, state, lexer);
+
+        // Set the result type to be the type pointed to by operand's type
+        DataType *operandType = getDataTypeFromASTNode(operand);
+        // TODO: implement the code below. Need to fully implement the pointer type system
+        // if (!operandType->isPointer)
+        // {
+        //     parsingError("Dereference operator must be applied to a pointer type", "parseUnaryExpression", arena, state, lexer, lexer->source, globalTable);
+        //     return NULL;
+        // }
+        node->data.unary_op->resultType = operandType;
+        node->data.unary_op->op = TOKEN_DEREFERENCE;
+        node->data.unary_op->expression = operand;
+
+        return node;
+    }
     CryoTokenType opToken;
     ASTNode *right;
 
@@ -1548,8 +1590,14 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     {
         for (int i = 0; lexer->currentToken.type != TOKEN_RPAREN; ++i)
         {
-
             CryoTokenType token = lexer->currentToken.type;
+            if (lexer->currentToken.isOperator)
+            {
+                // Parse the Unary Expression
+                ASTNode *arg = parseUnaryExpression(lexer, context, arena, state, globalTable);
+                addArgumentToFunctionCall(functionCallNode, arg, arena, state, globalTable);
+                continue;
+            }
             logMessage(LMI, "INFO", "Parser", "Current Token Type: %s", CryoTokenToString(token));
             switch (token)
             {

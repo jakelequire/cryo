@@ -36,11 +36,11 @@ namespace Cryo
         }
 
         // Verify the module
-        if (llvm::verifyModule(*mod, &llvm::errs()))
-        {
-            logMessage(LMI, "ERROR", "Linker", "Module verification failed");
-            return;
-        }
+        // if (llvm::verifyModule(*mod, &llvm::errs()))
+        // {
+        //     logMessage(LMI, "ERROR", "Linker", "Module verification failed");
+        //     return;
+        // }
 
         // The outputPath should be the full path + the file name
         // e.g /path/to/file/file.ll

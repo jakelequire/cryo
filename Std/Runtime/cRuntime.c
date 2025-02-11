@@ -90,8 +90,23 @@ void __c_printAddr(void *ptr)
 
 int __c_getAddr(void *ptr)
 {
-    printf("Getting address of %p\n", ptr);
     return (int)ptr;
+}
+void __c_printIntAddr(int *ptr)
+{
+    printf("[DEBUG] IntAddr: %p\n", ptr);
+}
+
+void __c_printI64Hex(int64_t value)
+{
+    // Turn the `value` into a hex string `0x...`
+    printf("0x%lx\n", value);
+}
+
+void __c_printPointer(void *ptr)
+{
+    printf("%p\n", ptr);
+    printf("%ld\n", (unsigned long)ptr);
 }
 
 // ======================================================= //

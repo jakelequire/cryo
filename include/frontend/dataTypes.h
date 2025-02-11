@@ -243,6 +243,8 @@ typedef struct TypeContainer
     bool boolValue;              // Boolean value
     bool isGeneric;              // Generic type flag
     bool isConst;                // Const modifier
+    bool isReference;            // Reference type
+    bool isPointer;              // Is this a pointer type?
     struct custom
     {
         const char *name; // Type identifier name
@@ -267,6 +269,7 @@ typedef struct DataType
     TypeContainer *container;      // Type container
     bool isConst;                  // Const modifier
     bool isReference;              // Reference type
+    bool isPointer;                // Is this a pointer type?
     struct DataType *next;         // For linked types (e.g. generics)
     struct DataType *genericParam; // For generic type parameters
 } DataType;
@@ -286,6 +289,8 @@ extern "C"
 
     DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable);
     DataType *wrapTypeContainer(TypeContainer *container);
+
+    DataType *createPointerType(DataType *operandType);
 
     ASTNode *findStructProperty(StructType *structType, const char *propertyName);
     DataType *CryoDataTypeStringToType(const char *typeStr);

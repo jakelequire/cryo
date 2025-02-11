@@ -458,6 +458,7 @@ Token makeToken(Lexer *lexer, CryoTokenType type, CompilerState *state)
     token.length = tokLen;
     token.line = lexer->line;
     token.column = col;
+    token.isOperator = isOperatorToken(type);
 
     // logMessage(LMI, "INFO", "Lexer", "Token created: Type: %s, Line: %d, Column: %d", CryoTokenToString(token.type), token.line, token.column);
     return token;
@@ -892,4 +893,36 @@ bool isType(char c)
 {
     __STACK_FRAME__
     return c == '[' || c == ']';
+}
+
+bool isOperatorToken(CryoTokenType type)
+{
+    __STACK_FRAME__
+    switch (type)
+    {
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+    case TOKEN_STAR:
+    case TOKEN_SLASH:
+    case TOKEN_PERCENT:
+    case TOKEN_AMPERSAND:
+    case TOKEN_PIPE:
+    case TOKEN_CARET:
+    case TOKEN_TILDE:
+    case TOKEN_EQUAL:
+    case TOKEN_NOT_EQUAL:
+    case TOKEN_LESS:
+    case TOKEN_LESS_EQUAL:
+    case TOKEN_GREATER:
+    case TOKEN_GREATER_EQUAL:
+    case TOKEN_BANG:
+    case TOKEN_RESULT_ARROW:
+    case TOKEN_INCREMENT:
+    case TOKEN_DECREMENT:
+    case TOKEN_DOUBLE_COLON:
+    case TOKEN_ELLIPSIS:
+        return true;
+    default:
+        return false;
+    }
 }
