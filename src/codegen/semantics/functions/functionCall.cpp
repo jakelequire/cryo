@@ -524,7 +524,7 @@ namespace Cryo
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
             // Attempt to check for the variable in the named values map
-            llvm::Value *namedValue = compiler.getContext().namedValues[varName];
+            llvm::Value *namedValue = compiler.getContext().namedValues[varName + ".ptr"];
             if (!namedValue)
             {
                 // Check if it's a parameter in the symbol table
@@ -541,13 +541,15 @@ namespace Cryo
                     CONDITION_FAILED;
                 }
             }
-            std::cout << "Named Value: " << std::endl;
+            std::cout << "Named Value: " << namedValue->getName().str() << std::endl;
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Named value found");
             varValue = namedValue;
         }
 
+        DevDebugger::logLLVMValue(varValue);
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable Value Found");
         llvm::Type *varType = varValue->getType();
+        DevDebugger::logLLVMType(varType);
 
         if (varDataType->container->baseType == STRUCT_TYPE)
         {
@@ -1445,29 +1447,25 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        std::string exprName = exprValue->getName().str();
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Expression Name: " + exprName);
+
         llvm::Value *unaryValue = nullptr;
         switch (node->op)
         {
         case TOKEN_ADDRESS_OF:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Address Of Call");
-            std::string alloca_name = exprValue->getName().str() + ".addrOf";
-            unaryValue = compiler.getContext().builder.CreateAlloca(exprValue->getType(), nullptr, alloca_name);
-            if (!unaryValue)
+            // Find the variable in the current function
+            llvm::Function *function = compiler.getContext().builder.GetInsertBlock()->getParent();
+            llvm::Value *varAddr = function->getValueSymbolTable()->lookup(exprName);
+            if (!varAddr)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Address of value not created");
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable address not found");
                 CONDITION_FAILED;
             }
-
-            llvm::Value *storeInst = compiler.getContext().builder.CreateStore(exprValue, unaryValue);
-            if (!storeInst)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Address of value not stored");
-                CONDITION_FAILED;
-            }
-
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Address Of Call Created");
-            return unaryValue;
+            return varAddr;
         }
         case TOKEN_DEREFERENCE:
         {

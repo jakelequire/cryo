@@ -34,6 +34,17 @@ void __c_printInt(int value)
     printf("%d\n", value);
 }
 
+void __c_printI64(int64_t value)
+{
+    printf("%ld\n", value);
+}
+
+void __c_printI64Hex(int64_t value)
+{
+    // Turn the `value` into a hex string `0x...`
+    printf("0x%lx\n", value);
+}
+
 void __c_printIntPtr(int *value)
 {
     printf("%d\n", *value);
@@ -96,12 +107,6 @@ intptr_t __c_getAddr(void *ptr)
 void __c_printIntAddr(int *ptr)
 {
     printf("[DEBUG] IntAddr: \t%p\n", ptr);
-}
-
-void __c_printI64Hex(int64_t value)
-{
-    // Turn the `value` into a hex string `0x...`
-    printf("0x%lx\n", value);
 }
 
 void __c_printPointer(void *ptr)

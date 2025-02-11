@@ -5,9 +5,7 @@ extern function __c_malloc(size: int) -> any;
 extern function __c_free(_pointer: any) -> void;
 extern function __c_getAddr(_ptr_: any) -> i64;
 
-
 extern function __c_printIntAddr(i: i64) -> void;
-extern function __c_printI64Hex(i: i64) -> void;
 
 function __malloc__(size: int) -> any {
     return __c_malloc(size);

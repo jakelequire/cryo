@@ -14,9 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
 
-typedef struct IRFunctionBlock
+namespace Cryo
 {
 
-} IRFunctionBlock;
+
+} // namespace Cryo

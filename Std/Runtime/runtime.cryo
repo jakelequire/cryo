@@ -1,11 +1,16 @@
 namespace Runtime;
 
 extern function __c_printInt(i: int) -> void;
+extern function __c_printI64(inum: i64) -> void;
+extern function __c_printI64Hex(inum: i64) -> void;
+
 extern function __c_printStr(s: string) -> void;
+extern function __c_println(s: string) -> void;
+
 extern function __c_sys_exit(code: int) -> void;
+
 extern function __c_intToString(num: int) -> string;
 extern function __c_strLen(s: string) -> int;
-extern function __c_println(s: string) -> void;
 
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);
@@ -14,6 +19,16 @@ function sys_exit(code: int) -> void {
 
 function printInt(i: int) -> void {
     __c_printInt(i);
+    return;
+}
+
+function printI64(inum: i64) -> void {
+    __c_printI64(inum);
+    return;
+}
+
+function printI64Hex(inum: i64) -> void {
+    __c_printI64Hex(inum);
     return;
 }
 
