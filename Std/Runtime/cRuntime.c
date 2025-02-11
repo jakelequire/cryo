@@ -88,13 +88,14 @@ void __c_printAddr(void *ptr)
     printf("%p\n", ptr);
 }
 
-int __c_getAddr(void *ptr)
+intptr_t __c_getAddr(void *ptr)
 {
-    return (int)ptr;
+    return (intptr_t)ptr;
 }
+
 void __c_printIntAddr(int *ptr)
 {
-    printf("[DEBUG] IntAddr: %p\n", ptr);
+    printf("[DEBUG] IntAddr: \t%p\n", ptr);
 }
 
 void __c_printI64Hex(int64_t value)
@@ -105,8 +106,7 @@ void __c_printI64Hex(int64_t value)
 
 void __c_printPointer(void *ptr)
 {
-    printf("%p\n", ptr);
-    printf("%ld\n", (unsigned long)ptr);
+    printf("[DEBUG] printPtr: \t%p\n", ptr);
 }
 
 // ======================================================= //

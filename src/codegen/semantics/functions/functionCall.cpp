@@ -558,6 +558,7 @@ namespace Cryo
                 CONDITION_FAILED;
             }
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Struct Type Found");
+            logDataType(varDataType);
             varType = structType;
         }
 
