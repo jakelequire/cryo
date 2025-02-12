@@ -524,7 +524,7 @@ namespace Cryo
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
             // Attempt to check for the variable in the named values map
-            llvm::Value *namedValue = compiler.getContext().namedValues[varName + ".ptr"];
+            llvm::Value *namedValue = compiler.getContext().namedValues[varName];
             if (!namedValue)
             {
                 // Check if it's a parameter in the symbol table
@@ -532,6 +532,7 @@ namespace Cryo
                 if (param)
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter found");
+                    param->ASTNode->print(param->ASTNode);
                     varValue = param->LLVMValue;
                 }
                 else

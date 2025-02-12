@@ -16,6 +16,11 @@
  ********************************************************************************/
 #pragma once
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
@@ -61,7 +66,10 @@ enum class AllocaType
     Aggregate,
 
     // `phi` is used for phi nodes in SSA form.
-    Phi,
+    PhiNode,
+
+    // `DynamicArray` is used for dynamic arrays.
+    DynamicArray,
 
     // `StackSave` is used for saving the stack pointer.
     StackSave,
@@ -69,18 +77,116 @@ enum class AllocaType
 
 struct Allocation
 {
-    AllocaType allocaType;
+    // The type of this allocation
+    AllocaType type;
 
-    // Basic Allocation Instructions
+    // Basic allocation instructions
     llvm::AllocaInst *allocaInst;
     llvm::StoreInst *storeInst;
     llvm::LoadInst *loadInst;
 
-    // Global Allocation Instructions
-    llvm::GlobalVariable *globalVariable;
+    // Global variable (for global allocations)
+    llvm::GlobalVariable *global;
 
     // For phi nodes in SSA form
-    llvm::PHINode *phiNode;
+    llvm::PHINode *phi;
+
+    // For dynamic arrays, store the size computation
+    llvm::Value *dynamicSize;
+
+    // For aggregates, store the member accesses
+    std::vector<llvm::GetElementPtrInst *> memberAccesses;
+
+    // Constructor for local variables
+    Allocation(AllocaType t, llvm::AllocaInst *a = nullptr,
+               llvm::StoreInst *s = nullptr, llvm::LoadInst *l = nullptr)
+        : type(t), allocaInst(a), storeInst(s), loadInst(l), global(nullptr),
+          phi(nullptr), dynamicSize(nullptr) {}
+
+    // Constructor for global variables
+    Allocation(llvm::GlobalVariable *g)
+        : type(AllocaType::Global), allocaInst(nullptr), storeInst(nullptr),
+          loadInst(nullptr), global(g), phi(nullptr), dynamicSize(nullptr) {}
+
+    // Get the value represented by this allocation
+    llvm::Value *getValue() const
+    {
+        switch (type)
+        {
+        case AllocaType::None:
+            return nullptr;
+        case AllocaType::AllocaOnly:
+            return allocaInst;
+        case AllocaType::AllocaAndLoad:
+        case AllocaType::AllocaLoadStore:
+            return loadInst;
+        case AllocaType::Global:
+            return global;
+        case AllocaType::PhiNode:
+            return phi;
+        default:
+            return allocaInst;
+        }
+    }
+
+    // Get the pointer to the allocated memory
+    llvm::Value *getPointer() const
+    {
+        if (global)
+            return global;
+        return allocaInst;
+    }
+
+    // Check if this allocation is valid
+    bool isValid() const
+    {
+        // Basic validity checks based on allocation type
+        switch (type)
+        {
+        case AllocaType::None:
+            return true;
+        case AllocaType::AllocaOnly:
+            return allocaInst != nullptr;
+        case AllocaType::AllocaAndLoad:
+            return allocaInst != nullptr && loadInst != nullptr;
+        case AllocaType::AllocaAndStore:
+            return allocaInst != nullptr && storeInst != nullptr;
+        case AllocaType::AllocaLoadStore:
+            return allocaInst != nullptr && storeInst != nullptr && loadInst != nullptr;
+        case AllocaType::Global:
+            return global != nullptr;
+        case AllocaType::PhiNode:
+            return phi != nullptr;
+        case AllocaType::DynamicArray:
+            return allocaInst != nullptr && dynamicSize != nullptr;
+        default:
+            return allocaInst != nullptr;
+        }
+    }
+
+    // Add a member access for aggregate types
+    void addMemberAccess(llvm::GetElementPtrInst *gep)
+    {
+        memberAccesses.push_back(gep);
+    }
+
+    // Clear all instructions (useful for cleanup)
+    void clear()
+    {
+        allocaInst = nullptr;
+        storeInst = nullptr;
+        loadInst = nullptr;
+        global = nullptr;
+        phi = nullptr;
+        dynamicSize = nullptr;
+        memberAccesses.clear();
+    }
+
+    // Add these methods:
+    bool needsCleanup() const;
+    void generateCleanupCode(llvm::IRBuilder<> &builder);
+    llvm::Value *generateLifetimeStart(llvm::IRBuilder<> &builder);
+    llvm::Value *generateLifetimeEnd(llvm::IRBuilder<> &builder);
 };
 
 typedef struct IRFunctionSymbol
@@ -91,9 +197,12 @@ typedef struct IRFunctionSymbol
 
     llvm::BasicBlock *entryBlock;
 
-    std::vector<llvm::Value *> arguments;
     std::vector<llvm::Value *> localVariables;
     std::vector<llvm::Value *> allocaVariables;
+    std::vector<IRVariableSymbol> parameters;            // Function parameters
+    std::map<std::string, IRVariableSymbol> symbolTable; // Local scope symbol table
+    bool isVariadic;                                     // For variadic functions
+    llvm::FunctionType *functionType;                    // Cache the function type
 } IRFunctionSymbol;
 
 typedef struct IRVariableSymbol
@@ -104,17 +213,44 @@ typedef struct IRVariableSymbol
     AllocaType allocaType;
 } IRVariableSymbol;
 
-typedef struct IRTypeSymbol
+struct IRTypeSymbol
 {
+    llvm::Type *type;
+    std::string name;
 
-} IRTypeSymbol;
+    // For aggregate types (structs/classes)
+    std::vector<IRPropertySymbol> members;
+    std::vector<IRMethodSymbol> methods;
 
-typedef struct IRPropertySymbol
+    // For arrays/vectors
+    llvm::Type *elementType;
+    size_t size; // Fixed size if known
+
+    bool isAggregate() const;
+    bool isArray() const;
+    size_t getSizeInBytes(llvm::DataLayout &layout) const;
+};
+
+struct IRPropertySymbol
 {
+    llvm::Type *type;
+    std::string name;
+    size_t offset; // Byte offset within struct
+    bool isPublic; // For visibility
 
-} IRPropertySymbol;
+    // For class members
+    IRMethodSymbol *getter;
+    IRMethodSymbol *setter;
+};
 
-typedef struct IRMethodSymbol
+struct IRMethodSymbol
 {
+    IRFunctionSymbol function;
+    bool isVirtual;
+    bool isStatic;
+    bool isConstructor;
+    bool isDestructor;
+    size_t vtableIndex; // For virtual methods
 
-} IRMethodSymbol;
+    IRTypeSymbol *parentType; // Owning class/struct
+};
