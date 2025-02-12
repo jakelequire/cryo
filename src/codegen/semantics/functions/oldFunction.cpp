@@ -344,6 +344,16 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Function Declaration Created");
 
+        IRFunctionSymbol funcSymbol = compiler.getContext().symbolTable->getSymbolManager()->createFunctionSymbol(
+            function,
+            functionName,
+            funcRetType,
+            functionType,
+            entryBlock);
+        // Add the function to the symbol table.
+        IR_SYMBOL_TABLE->addFunction(funcSymbol);
+        IR_SYMBOL_TABLE->debugPrint();
+
         // Exit the scope of the function
         compiler.getContext().builder.ClearInsertionPoint();
         compiler.getContext().currentFunction = nullptr;

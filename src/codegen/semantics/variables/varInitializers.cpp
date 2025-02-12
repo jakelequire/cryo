@@ -626,6 +626,8 @@ namespace Cryo
         }
         }
 
+        llvm::Function *function = compiler.getContext().currentFunction;
+        IRVariableSymbol varSymbol = SYMBOL_MANAGER->createVariableSymbol(function, llvmValue, llvmType, varName, AllocaType::AllocaOnly);
         // Add the variable to the named values map & symbol table
         compiler.getContext().namedValues[varName] = llvmValue;
         symTable.updateVariableNode(namespaceName, varName, llvmValue, llvmType);

@@ -23,6 +23,13 @@ namespace Cryo
     // +                              Cryo Context Functions                                      + //
     // + ======================================================================================== + //
 
+    void CryoContext::initializeSymbolTable(void)
+    {
+        // Initialize the symbol table
+        symbolTable = std::make_unique<IRSymbolTable>(module.get());
+        std::cout << "Symbol Table initialized for: " << module->getName().str() << std::endl;
+    }
+
     llvm::GlobalVariable *CryoContext::getOrCreateGlobalString(const std::string &content)
     {
         // First check if we already have this string

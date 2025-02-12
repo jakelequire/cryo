@@ -21,8 +21,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <stdbool.h>
 
 #include "symbolTable/IRdefs.hpp"
+#include "tools/macros/consoleColors.h"
 
 namespace Cryo
 {
@@ -39,63 +41,32 @@ namespace Cryo
         explicit IRSymbolTable(llvm::Module *module)
             : currentModule(module)
         {
+            std::cout << "Creating symbol table for module: " << module->getName().str() << std::endl;
             // Initialize with global scope
             scopeStack.push_back({});
         }
 
-        // Core scope operations
-        void pushScope()
-        {
-            scopeStack.push_back({});
-        }
-
-        void popScope()
-        {
-            if (scopeStack.size() > 1)
-            { // Keep global scope
-                scopeStack.pop_back();
-            }
-        }
-
-        // Symbol management
-        bool addVariable(const IRVariableSymbol &symbol)
-        {
-            if (scopeStack.empty())
-                return false;
-            auto &currentScope = scopeStack.back();
-            currentScope[symbol.name] = symbol;
-            return true;
-        }
-
-        bool addFunction(const IRFunctionSymbol &symbol)
-        {
-            functions[symbol.name] = symbol;
-            return true;
-        }
-
-        // Symbol lookup
-        IRVariableSymbol *findVariable(const std::string &name)
-        {
-            // Search from current scope up to global
-            for (auto it = scopeStack.rbegin(); it != scopeStack.rend(); ++it)
-            {
-                auto found = it->find(name);
-                if (found != it->end())
-                {
-                    return &found->second;
-                }
-            }
-            return nullptr;
-        }
-
-        IRFunctionSymbol *findFunction(const std::string &name)
-        {
-            auto it = functions.find(name);
-            return (it != functions.end()) ? &it->second : nullptr;
-        }
+        friend class IRSymbolManager;
+        IRSymbolManager *getSymbolManager() { return new IRSymbolManager(); }
 
         // Module access
         llvm::Module *getModule() { return currentModule; }
+
+        // Core scope operations
+        void pushScope();
+        void popScope();
+
+        // Symbol management
+        bool addVariable(const IRVariableSymbol &symbol);
+        bool addFunction(const IRFunctionSymbol &symbol);
+        bool addType(const IRTypeSymbol &symbol);
+
+        // Symbol lookup
+        IRVariableSymbol *findVariable(const std::string &name);
+        IRFunctionSymbol *findFunction(const std::string &name);
+        IRTypeSymbol *findType(const std::string &name);
+
+        void debugPrint() const;
     };
 
 } // namespace Cryo
