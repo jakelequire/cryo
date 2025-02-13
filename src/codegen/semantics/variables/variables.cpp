@@ -25,7 +25,7 @@ namespace Cryo
         CryoVariableNode *varDecl = node->data.varDecl;
         assert(varDecl != nullptr);
 
-        processConstVariable(varDecl);
+        processConstVariable(node);
 
         return;
     }
@@ -274,13 +274,14 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    void Variables::processConstVariable(CryoVariableNode *varNode)
+    void Variables::processConstVariable(ASTNode *node)
     {
         CryoContext &cryoContext = compiler.getContext();
         Arrays &arrays = compiler.getArrays();
-
         OldTypes &types = compiler.getTypes();
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Processing Const Variable");
+
+        CryoVariableNode *varNode = node->data.varDecl;
 
         char *varName = varNode->name;
         DataType *type = varNode->type;
@@ -398,6 +399,85 @@ namespace Cryo
             }
         }
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Created");
+
+        // Get current function context
+        llvm::Function *currentFunction = compiler.getContext().currentFunction;
+        if (!currentFunction)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "No current function context");
+            CONDITION_FAILED;
+        }
+
+        // Create builder for the current insertion point
+        llvm::BasicBlock *entryBlock = compiler.getContext().builder.GetInsertBlock();
+        if (!entryBlock)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "No entry block found");
+            CONDITION_FAILED;
+        }
+
+        llvm::IRBuilder<> builder(entryBlock);
+        if (!llvmType)
+        {
+            llvmType = types.getType(type, 0);
+        }
+
+        // Infer allocation type from node
+        AllocaType allocType = AllocaTypeInference::inferFromNode(node);
+
+        llvm::Value *initValue = llvm::dyn_cast<llvm::Value>(llvmConstant);
+
+        // Create the variable symbol
+        auto varSymbol = SYMBOL_MANAGER->createVariableSymbol(
+            currentFunction, initValue, llvmType, varName, allocType);
+
+        // Create appropriate allocation based on type
+        // Create appropriate allocation based on type
+        switch (allocType)
+        {
+        case AllocaType::DynamicArray:
+        {
+            // Get array size from initializer
+            llvm::Value *size = Allocation::getDynamicArraySize(builder, initValue);
+            varSymbol.allocation = Allocation::createDynamicArray(
+                builder,
+                llvmType->getArrayElementType(),
+                size,
+                varName);
+            break;
+        }
+
+        case AllocaType::Aggregate:
+        {
+            // For structs, classes, and static arrays
+            varSymbol.allocation = Allocation::createLocal(
+                builder, llvmType, varName, initValue);
+            break;
+        }
+
+        case AllocaType::Global:
+        {
+            // Handle global variables
+            varSymbol.allocation = Allocation::createGlobal(
+                compiler.getContext().module.get(),
+                llvmType,
+                varName,
+                llvm::dyn_cast<llvm::Constant>(initValue));
+            break;
+        }
+
+        default:
+        {
+            // Default local variable allocation
+            varSymbol.allocation = Allocation::createLocal(
+                builder, llvmType, varName, initValue);
+            break;
+        }
+        }
+
+        // Register in symbol table
+        IR_SYMBOL_TABLE->addVariable(varSymbol);
+
         return;
     }
 

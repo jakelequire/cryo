@@ -523,28 +523,46 @@ namespace Cryo
         if (!varValue)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
-            // Attempt to check for the variable in the named values map
-            llvm::Value *namedValue = compiler.getContext().namedValues[varName];
-            if (!namedValue)
+            // Attempt to check for the variable in the new symbol table
+            IRVariableSymbol *varSymbol = IR_SYMBOL_TABLE->findVariable(varName);
+            if (!varSymbol)
             {
-                // Check if it's a parameter in the symbol table
-                STParameter *param = compiler.getSymTable().getParameter(namespaceName, varName);
-                if (param)
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Named value not found");
+                CONDITION_FAILED;
+            }
+            AllocaType allocType = varSymbol->allocation.type;
+            if (allocType == AllocaType::Parameter)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable is a parameter");
+                llvm::Value *paramValue = varSymbol->allocation.loadInst;
+                if (!paramValue)
                 {
-                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter found");
-                    param->ASTNode->print(param->ASTNode);
-                    varValue = param->LLVMValue;
-                }
-                else
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Named value not found: " + varName);
-                    compiler.dumpModule();
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Parameter value not found");
                     CONDITION_FAILED;
                 }
+
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Value Found");
+                return paramValue;
             }
-            std::cout << "Named Value: " << namedValue->getName().str() << std::endl;
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Named value found");
-            varValue = namedValue;
+            else if (allocType == AllocaType::Global)
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable is a global");
+                llvm::Value *globalValue = varSymbol->allocation.global;
+                if (!globalValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Global value not found");
+                    CONDITION_FAILED;
+                }
+
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Global Value Found");
+                return globalValue;
+            }
+            else
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found");
+                std::cout << "Allocation Type: " << Allocation::allocaTypeToString(allocType) << std::endl;
+                CONDITION_FAILED;
+            }
         }
 
         DevDebugger::logLLVMValue(varValue);

@@ -159,7 +159,8 @@ namespace Cryo
         std::cout << BOLD UNDERLINE << "Variables:" << COLOR_RESET << std::endl;
         for (size_t i = 0; i < scopeStack.size(); ++i)
         {
-            std::cout << "  Scope " << i << ":" << std::endl;
+            std::string scopeName = scopeStack.size() == 1 ? "Global" : "Local";
+            std::cout << "  Scope " << "[" << i << "]" << ":" << scopeName << std::endl;
             for (const auto &varPair : scopeStack[i])
             {
                 const auto &var = varPair.second;

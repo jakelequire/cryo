@@ -316,7 +316,7 @@
     "compilationunit.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
-  "C_Cpp.errorSquiggles": "enabled",
+  "C_Cpp.errorSquiggles": "disabled",
   "editor.selectionClipboard": false,
   "search.useIgnoreFiles": false,
   "auto-close-tag.activationOnLanguage": [

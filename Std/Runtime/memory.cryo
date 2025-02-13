@@ -21,8 +21,13 @@ function __free__(pointer: any) -> void {
     return;
 }
 
-function __getAddr__(pointer: any) -> i64 {
-    const ptr_addr: i64 = __c_getAddr(pointer);
+function __test__() -> void {
+    const mem: any = __malloc__(10);
+    return;
+}
+
+function __getAddr__(_addrPtr_: any) -> i64 {
+    const ptr_addr: i64 = __c_getAddr(_addrPtr_);
     __c_printIntAddr(ptr_addr);
     return ptr_addr;
 }

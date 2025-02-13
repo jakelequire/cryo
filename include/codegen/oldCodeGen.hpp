@@ -507,7 +507,7 @@ namespace Cryo
                                          const std::string &fieldName);
         llvm::Value *createStringIndexExpr(IndexExprNode *indexExprNode, std::string varName);
 
-        void processConstVariable(CryoVariableNode *varNode);
+        void processConstVariable(ASTNode *node);
         void createMutableVariable(ASTNode *node);
 
         llvm::Value *createStringVariable(ASTNode *node);
