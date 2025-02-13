@@ -299,6 +299,7 @@ extern "C"
 #include <sstream>
 #include <filesystem>
 #include <functional>
+#include <algorithm>
 
 #include "symbolTable/symdefs.h"
 #include "symbolTable/debugSymbols.hpp"

@@ -49,6 +49,9 @@ echo -e "$GREEN$BOLD  1. LLVM 18$COLOR_RESET"
 echo -e "$GREEN$BOLD  2. Clang 18$COLOR_RESET"
 echo -e "$GREEN$BOLD  3. Make$COLOR_RESET"
 echo " "
+echo "Optionally, there is an option to install Rust as well, this is optional and is only"
+echo "required for development purposes."
+echo " "
 echo -e "Please note, this script will only work on $YELLOW$BOLD$UNDERLINE*Debian-based systems*$COLOR_RESET. It has been developed"
 echo "and tested on Ubuntu. If you are using a different system, I cannot guarantee that this"
 echo "script will work for you."
@@ -110,6 +113,30 @@ function installLLVM {
     rm llvm.sh
 }
 
+function installMake {
+    echo " "
+    echo -e "$TEAL $BOLD Installing Make... $COLOR_RESET"
+    echo " "
+    sudo apt-get install make
+}
+
+function installRust {
+    echo " "
+    echo -e "$TEAL $BOLD Installing Rust... $COLOR_RESET"
+    echo " "
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source $HOME/.cargo/env
+}
+
+echo " "
+echo -e "Do you want to install Rust as well? $YELLOW$BOLD(Recommended for development)$COLOR_RESET"
+read -p "Do you want to install Rust? (Y/n): " choice
+if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
+    echo -e "$GREY Skipping Rust installation... $COLOR_RESET"
+else
+    installRust
+fi
+
 # ================================================================================
 # Dependency Check
 
@@ -122,7 +149,13 @@ function checkClang {
     if ! command -v clang-18 &> /dev/null; then
         echo -e "$RED $BOLD Clang is not installed! $COLOR_RESET"
         echo -e "$RED $BOLD Please install Clang before proceeding with the installation. $COLOR_RESET"
-        exit 1
+        # Ask the user if they want to install Clang
+        read -p "Do you want to install Clang? (Y/n): " choice
+        if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
+            echo -e "$RED $BOLD Installation cancelled! $COLOR_RESET"
+            exit 1
+        fi
+        installClang
     fi
     # Get the clang version
     clang_version=$(clang-18 --version | grep -oP '(?<=version )[0-9]+')
@@ -188,9 +221,15 @@ function checkMake {
     if ! command -v make &> /dev/null; then
         echo -e "$RED $BOLD Make is not installed! $COLOR_RESET"
         echo -e "$RED $BOLD Please install Make before proceeding with the installation. $COLOR_RESET"
-        exit 1
+        # Ask the user if they want to install Make
+        read -p "Do you want to install Make? (Y/n): " choice
+        if [ "$choice" != "Y" ] && [ "$choice" != "y" ]; then
+            echo -e "$RED $BOLD Installation cancelled! $COLOR_RESET"
+            exit 1
+        fi
+        # Prompt sudo
+        installMake
     fi
-    echo -e "$GREEN $BOLD Make is installed $COLOR_RESET"
 }
 
 # Check if the user has the required dependencies installed
