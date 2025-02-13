@@ -833,22 +833,26 @@ namespace Cryo
 
         std::string paramName = param->getName().str() + ".ptr";
 
-        // llvm::LoadInst *loadInst = compiler.getContext().builder.CreateLoad(argTypes, param, paramName);
-        llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(argTypes, nullptr, paramName);
+        // Create allocations for the parameter
+        llvm::AllocaInst *alloca = compiler.getContext().builder.CreateAlloca(
+            argTypes, nullptr, paramName);
         alloca->setAlignment(llvm::Align(8));
 
-        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(param, alloca);
+        llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(
+            param, alloca);
         storeInst->setAlignment(llvm::Align(8));
 
         // Load the value of the parameter
-        llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(argTypes, alloca, paramName + ".load");
+        llvm::Value *loadInst = compiler.getContext().builder.CreateLoad(
+            argTypes, alloca, paramName + ".load");
 
+        // Old way - keep this for now
         std::string _paramName = param->getName().str();
         compiler.getContext().namedValues[param->getName().str()] = loadInst;
 
         DataType *paramDataType = paramNode->data.param->type;
-
         symTable.addParamAsVariable(namespaceName, _paramName, paramDataType, loadInst, argTypes, storeInst);
+
         DataType *paramType = paramNode->data.param->type;
         if (!paramType)
         {
@@ -856,6 +860,43 @@ namespace Cryo
             CONDITION_FAILED;
         }
         symTable.addDataTypeToVar(namespaceName, _paramName, paramType);
+
+        // New way - add alongside
+        llvm::Function *currentFunction = compiler.getContext().currentFunction;
+        if (currentFunction)
+        {
+            // Create an allocation that tracks all the instructions
+            Allocation paramAlloc;
+            paramAlloc.type = AllocaType::Parameter;
+            paramAlloc.allocaInst = alloca;
+            paramAlloc.storeInst = storeInst;
+            paramAlloc.loadInst = llvm::dyn_cast<llvm::LoadInst>(loadInst);
+
+            // Create the variable symbol
+            auto varSymbol = SYMBOL_MANAGER->createVariableSymbol(
+                currentFunction,
+                param, // Original parameter value
+                argTypes,
+                _paramName,
+                AllocaType::Parameter);
+
+            // Set the allocation with all instructions
+            varSymbol.allocation = paramAlloc;
+
+            // Add to new symbol table
+            IR_SYMBOL_TABLE->addVariable(varSymbol);
+
+            // Log the addition to new symbol table
+            DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                    "Parameter added to new symbol table: " + _paramName);
+
+            // Verify the allocation is valid
+            if (!varSymbol.allocation.isValid())
+            {
+                DevDebugger::logMessage("WARN", __LINE__, "Functions",
+                                        "Parameter allocation validation failed: " + _paramName);
+            }
+        }
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 
@@ -898,11 +939,42 @@ namespace Cryo
         llvm::StoreInst *storeInst = context.builder.CreateStore(alloca, alloca);
         storeInst->setAlignment(llvm::Align(8));
 
+        // Old way - keep this
         std::string _paramName = paramName;
         compiler.getContext().namedValues[paramName] = alloca;
-
         symTable.addParamAsVariable(namespaceName, _paramName, paramType, alloca, paramLLVMType, storeInst);
         DataType *paramDataType = paramNode->data.param->type;
+
+        // New way - add alongside
+        llvm::Function *currentFunction = context.currentFunction;
+        if (currentFunction)
+        {
+            // Create the allocation for the parameter
+            llvm::IRBuilder<> builder(insertBlock);
+            Allocation paramAlloc = Allocation::createLocal(
+                builder,
+                paramLLVMType,
+                paramName,
+                alloca // Use the existing alloca as the initial value
+            );
+
+            // Create variable symbol with parameter allocation type
+            auto varSymbol = SYMBOL_MANAGER->createVariableSymbol(
+                currentFunction,
+                alloca, // The parameter value
+                paramLLVMType,
+                paramName,
+                AllocaType::Parameter);
+
+            // Set the allocation
+            varSymbol.allocation = paramAlloc;
+
+            // Add to new symbol table
+            IR_SYMBOL_TABLE->addVariable(varSymbol);
+
+            DevDebugger::logMessage("INFO", __LINE__, "Functions",
+                                    "Parameter added to new symbol table: " + paramName);
+        }
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter Created");
 

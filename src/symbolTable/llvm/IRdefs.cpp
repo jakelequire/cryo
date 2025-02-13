@@ -94,43 +94,38 @@ namespace Cryo
         switch (symbol.allocaType)
         {
         case AllocaType::AllocaOnly:
-        {
-            llvm::AllocaInst *alloca = builder.CreateAlloca(symbol.type, nullptr, symbol.name);
-            return Allocation(AllocaType::AllocaOnly, alloca);
-        }
-        case AllocaType::AllocaAndLoad:
-        {
-            llvm::AllocaInst *alloca = builder.CreateAlloca(symbol.type, nullptr, symbol.name);
-            llvm::LoadInst *load = builder.CreateLoad(symbol.type, alloca, symbol.name + ".load");
-            return Allocation(AllocaType::AllocaAndLoad, alloca, nullptr, load);
-        }
         case AllocaType::AllocaAndStore:
         {
-            llvm::AllocaInst *alloca = builder.CreateAlloca(symbol.type, nullptr, symbol.name);
-            llvm::StoreInst *store = builder.CreateStore(symbol.value, alloca);
-            return Allocation(AllocaType::AllocaAndStore, alloca, store);
+            return Allocation::createLocal(builder, symbol.type, symbol.name, symbol.value);
         }
+        case AllocaType::AllocaAndLoad:
         case AllocaType::AllocaLoadStore:
         {
-            llvm::AllocaInst *alloca = builder.CreateAlloca(symbol.type, nullptr, symbol.name);
-            llvm::LoadInst *load = builder.CreateLoad(symbol.type, alloca, symbol.name + ".load");
-            llvm::StoreInst *store = builder.CreateStore(symbol.value, alloca);
-            return Allocation(AllocaType::AllocaLoadStore, alloca, store, load);
+            auto alloc = Allocation::createLocal(builder, symbol.type, symbol.name, symbol.value);
+            alloc.load(builder, symbol.name + ".load");
+            return alloc;
         }
         case AllocaType::Global:
         {
-            return Allocation(llvm::dyn_cast<llvm::GlobalVariable>(symbol.value));
+            auto *module = builder.GetInsertBlock()->getModule();
+            auto *constValue = llvm::dyn_cast<llvm::Constant>(symbol.value);
+            return Allocation::createGlobal(module, symbol.type, symbol.name, constValue);
         }
         case AllocaType::Parameter:
         {
-            return Allocation(symbol.value);
+            return Allocation::createParameter(symbol.value);
+        }
+        case AllocaType::DynamicArray:
+        {
+            // Assuming symbol.value contains the size for dynamic arrays
+            return Allocation::createDynamicArray(builder, symbol.type, symbol.value, symbol.name);
         }
         default:
         {
-            // Handle the error case properly
             llvm::errs() << "Unknown AllocaType encountered.\n";
             std::abort();
         }
         }
     }
+
 } // namespace Cryo

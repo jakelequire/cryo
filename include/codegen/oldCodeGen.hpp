@@ -164,6 +164,9 @@ namespace Cryo
         void addStructDataType(std::string name, DataType *dataType);
         void addClassDataType(std::string name, DataType *dataType);
 
+        void setCurrentFunction(llvm::Function *function);
+        void clearCurrentFunction();
+
     private:
         CryoContext() : builder(context) {}
     };

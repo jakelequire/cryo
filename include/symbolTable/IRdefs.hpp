@@ -91,47 +91,90 @@ namespace Cryo
 
     struct Allocation
     {
-        // The type of this allocation
-        AllocaType type;
+        AllocaType type = AllocaType::None;
 
         // Basic allocation instructions
-        llvm::AllocaInst *allocaInst;
-        llvm::StoreInst *storeInst;
-        llvm::LoadInst *loadInst;
+        llvm::AllocaInst *allocaInst = nullptr;
+        llvm::StoreInst *storeInst = nullptr;
+        llvm::LoadInst *loadInst = nullptr;
 
         // Global variable (for global allocations)
-        llvm::GlobalVariable *global;
+        llvm::GlobalVariable *global = nullptr;
 
         // For phi nodes in SSA form
-        llvm::PHINode *phi;
+        llvm::PHINode *phi = nullptr;
 
-        // For dynamic arrays, store the size computation
-        llvm::Value *dynamicSize;
+        // For dynamic arrays
+        llvm::Value *dynamicSize = nullptr;
+
+        // For parameters and other direct values
+        llvm::Value *value = nullptr;
 
         // For aggregates, store the member accesses
         std::vector<llvm::GetElementPtrInst *> memberAccesses;
 
-        // Constructor for local variables
-        Allocation(AllocaType t, llvm::AllocaInst *a = nullptr,
-                   llvm::StoreInst *s = nullptr, llvm::LoadInst *l = nullptr)
-            : type(t), allocaInst(a), storeInst(s), loadInst(l), global(nullptr),
-              phi(nullptr), dynamicSize(nullptr) {}
+        // Constructors with builder pattern
+        static Allocation createLocal(llvm::IRBuilder<> &builder, llvm::Type *type,
+                                      const std::string &name, llvm::Value *initialValue = nullptr)
+        {
+            Allocation alloc;
+            alloc.type = initialValue ? AllocaType::AllocaAndStore : AllocaType::AllocaOnly;
+            alloc.allocaInst = builder.CreateAlloca(type, nullptr, name);
 
-        // Constructor for global variables
-        Allocation(llvm::GlobalVariable *g)
-            : type(AllocaType::Global), allocaInst(nullptr), storeInst(nullptr),
-              loadInst(nullptr), global(g), phi(nullptr), dynamicSize(nullptr) {}
+            if (initialValue)
+            {
+                alloc.storeInst = builder.CreateStore(initialValue, alloc.allocaInst);
+            }
 
-        // Constructor for parameters
-        Allocation(llvm::Value *value)
-            : type(AllocaType::Parameter), allocaInst(nullptr), storeInst(nullptr),
-              loadInst(nullptr), global(nullptr), phi(nullptr), dynamicSize(nullptr) {}
+            return alloc;
+        }
 
-        Allocation(std::nullptr_t)
-            : type(AllocaType::None), allocaInst(nullptr), storeInst(nullptr),
-              loadInst(nullptr), global(nullptr), phi(nullptr), dynamicSize(nullptr) {}
+        static Allocation createGlobal(llvm::Module *module, llvm::Type *type,
+                                       const std::string &name, llvm::Constant *initialValue = nullptr)
+        {
+            Allocation alloc;
+            alloc.type = AllocaType::Global;
+            alloc.global = new llvm::GlobalVariable(
+                *module, type, false,
+                llvm::GlobalValue::ExternalLinkage,
+                initialValue ? initialValue : llvm::Constant::getNullValue(type),
+                name);
+            return alloc;
+        }
 
-        // Get the value represented by this allocation
+        static Allocation createParameter(llvm::Value *param)
+        {
+            Allocation alloc;
+            alloc.type = AllocaType::Parameter;
+            alloc.value = param;
+            return alloc;
+        }
+
+        static Allocation createDynamicArray(llvm::IRBuilder<> &builder, llvm::Type *elementType,
+                                             llvm::Value *size, const std::string &name)
+        {
+            Allocation alloc;
+            alloc.type = AllocaType::DynamicArray;
+            alloc.dynamicSize = size;
+            alloc.allocaInst = builder.CreateAlloca(
+                llvm::ArrayType::get(elementType, 0),
+                size,
+                name);
+            return alloc;
+        }
+
+        bool isValid() const
+        {
+            return type != AllocaType::None;
+        }
+
+        static llvm::Value *getDynamicArraySize(llvm::IRBuilder<> &builder, llvm::Value *array)
+        {
+            llvm::Value *size = builder.CreateExtractValue(array, 0);
+            return builder.CreateIntCast(size, builder.getInt64Ty(), false);
+        }
+
+        // Value access methods
         llvm::Value *getValue() const
         {
             switch (type)
@@ -139,61 +182,99 @@ namespace Cryo
             case AllocaType::None:
                 return nullptr;
             case AllocaType::AllocaOnly:
+            case AllocaType::AllocaAndStore:
                 return allocaInst;
             case AllocaType::AllocaAndLoad:
             case AllocaType::AllocaLoadStore:
                 return loadInst;
             case AllocaType::Global:
                 return global;
+            case AllocaType::Parameter:
+                return value;
             case AllocaType::PhiNode:
                 return phi;
+            case AllocaType::DynamicArray:
+                return allocaInst;
+            default:
+                return nullptr;
+            }
+        }
+
+        llvm::Value *getPointer() const
+        {
+            switch (type)
+            {
+            case AllocaType::Global:
+                return global;
+            case AllocaType::Parameter:
+                return value;
             default:
                 return allocaInst;
             }
         }
 
-        // Get the pointer to the allocated memory
-        llvm::Value *getPointer() const
+        // Mutation methods
+        void load(llvm::IRBuilder<> &builder, const std::string &name = "")
         {
-            if (global)
-                return global;
-            return allocaInst;
-        }
+            if (!allocaInst && !global)
+                return;
 
-        // Check if this allocation is valid
-        bool isValid() const
-        {
-            // Basic validity checks based on allocation type
-            switch (type)
+            llvm::Value *ptr = getPointer();
+            llvm::Type *type = ptr->getType();
+            loadInst = builder.CreateLoad(type, ptr, name);
+
+            if (this->type == AllocaType::AllocaOnly)
             {
-            case AllocaType::None:
-                return true;
-            case AllocaType::AllocaOnly:
-                return allocaInst != nullptr;
-            case AllocaType::AllocaAndLoad:
-                return allocaInst != nullptr && loadInst != nullptr;
-            case AllocaType::AllocaAndStore:
-                return allocaInst != nullptr && storeInst != nullptr;
-            case AllocaType::AllocaLoadStore:
-                return allocaInst != nullptr && storeInst != nullptr && loadInst != nullptr;
-            case AllocaType::Global:
-                return global != nullptr;
-            case AllocaType::PhiNode:
-                return phi != nullptr;
-            case AllocaType::DynamicArray:
-                return allocaInst != nullptr && dynamicSize != nullptr;
-            default:
-                return allocaInst != nullptr;
+                this->type = AllocaType::AllocaAndLoad;
+            }
+            else if (this->type == AllocaType::AllocaAndStore)
+            {
+                this->type = AllocaType::AllocaLoadStore;
             }
         }
 
-        // Add a member access for aggregate types
-        void addMemberAccess(llvm::GetElementPtrInst *gep)
+        void store(llvm::IRBuilder<> &builder, llvm::Value *value)
         {
-            memberAccesses.push_back(gep);
+            if (!allocaInst && !global)
+                return;
+
+            storeInst = builder.CreateStore(value, getPointer());
+
+            if (this->type == AllocaType::AllocaOnly)
+            {
+                this->type = AllocaType::AllocaAndStore;
+            }
+            else if (this->type == AllocaType::AllocaAndLoad)
+            {
+                this->type = AllocaType::AllocaLoadStore;
+            }
         }
 
-        // Clear all instructions (useful for cleanup)
+        // Member access for aggregate types
+        llvm::Value *accessMember(llvm::IRBuilder<> &builder, unsigned idx, const std::string &name = "")
+        {
+            if (!allocaInst)
+                return nullptr;
+
+            auto *gep = builder.CreateStructGEP(allocaInst->getAllocatedType(), allocaInst, idx, name);
+            memberAccesses.push_back(llvm::dyn_cast<llvm::GetElementPtrInst>(gep));
+            return gep;
+        }
+
+        // Array indexing
+        llvm::Value *getArrayElement(llvm::IRBuilder<> &builder, llvm::Value *idx, const std::string &name = "")
+        {
+            if (!allocaInst)
+                return nullptr;
+
+            llvm::Value *indices[] = {
+                llvm::ConstantInt::get(builder.getInt32Ty(), 0),
+                idx};
+
+            return builder.CreateGEP(allocaInst->getAllocatedType(), allocaInst, indices, name);
+        }
+
+        // Cleanup and lifetime management
         void clear()
         {
             allocaInst = nullptr;
@@ -205,11 +286,89 @@ namespace Cryo
             memberAccesses.clear();
         }
 
-        // Add these methods:
-        bool needsCleanup() const;
-        void generateCleanupCode(llvm::IRBuilder<> &builder);
-        llvm::Value *generateLifetimeStart(llvm::IRBuilder<> &builder);
-        llvm::Value *generateLifetimeEnd(llvm::IRBuilder<> &builder);
+        bool needsCleanup() const
+        {
+            return type == AllocaType::DynamicArray ||
+                   (type == AllocaType::Aggregate && !memberAccesses.empty());
+        }
+
+        void generateCleanupCode(llvm::IRBuilder<> &builder)
+        {
+            if (!needsCleanup())
+                return;
+
+            if (type == AllocaType::DynamicArray)
+            {
+                // Generate array cleanup code
+                if (allocaInst)
+                {
+                    // Add array deallocation if needed
+                }
+            }
+
+            // Clear all instructions
+            clear();
+        }
+
+        // Lifetime intrinsics
+        llvm::Value *generateLifetimeStart(llvm::IRBuilder<> &builder)
+        {
+            if (!allocaInst)
+                return nullptr;
+
+            llvm::Function *lifetimeStart = llvm::Intrinsic::getDeclaration(
+                builder.GetInsertBlock()->getModule(),
+                llvm::Intrinsic::lifetime_start);
+
+            llvm::Value *size = llvm::ConstantInt::get(builder.getInt64Ty(), -1);
+            return builder.CreateCall(lifetimeStart, {size, allocaInst});
+        }
+
+        llvm::Value *generateLifetimeEnd(llvm::IRBuilder<> &builder)
+        {
+            if (!allocaInst)
+                return nullptr;
+
+            llvm::Function *lifetimeEnd = llvm::Intrinsic::getDeclaration(
+                builder.GetInsertBlock()->getModule(),
+                llvm::Intrinsic::lifetime_end);
+
+            llvm::Value *size = llvm::ConstantInt::get(builder.getInt64Ty(), -1);
+            return builder.CreateCall(lifetimeEnd, {size, allocaInst});
+        }
+
+        static std::string allocaTypeToString(AllocaType type)
+        {
+            switch (type)
+            {
+            case AllocaType::None:
+                return "None";
+            case AllocaType::AllocaOnly:
+                return "AllocaOnly";
+            case AllocaType::AllocaAndLoad:
+                return "AllocaAndLoad";
+            case AllocaType::AllocaAndStore:
+                return "AllocaAndStore";
+            case AllocaType::AllocaLoadStore:
+                return "AllocaLoadStore";
+            case AllocaType::Global:
+                return "Global";
+            case AllocaType::Parameter:
+                return "Parameter";
+            case AllocaType::Temporary:
+                return "Temporary";
+            case AllocaType::Aggregate:
+                return "Aggregate";
+            case AllocaType::PhiNode:
+                return "PhiNode";
+            case AllocaType::DynamicArray:
+                return "DynamicArray";
+            case AllocaType::StackSave:
+                return "StackSave";
+            default:
+                return "Unknown";
+            }
+        }
     };
 
     typedef struct IRFunctionSymbol
@@ -254,13 +413,17 @@ namespace Cryo
         AllocaType allocaType;
         Allocation allocation;
 
-        // Constructor to initialize the variable symbol with allocation
-        IRVariableSymbol(llvm::Value *val, llvm::Type *typ, const std::string &nm, AllocaType allocType, const Allocation &alloc)
-            : value(val), type(typ), name(nm), astNode(nullptr), dataType(nullptr), allocaType(allocType), allocation(alloc) {}
+        // Constructor for variables with allocation
+        IRVariableSymbol(llvm::Value *val, llvm::Type *typ, const std::string &nm,
+                         AllocaType allocType, const Allocation &alloc)
+            : value(val), type(typ), parentFunction(nullptr), name(nm), astNode(nullptr),
+              dataType(nullptr), allocaType(allocType), allocation(alloc) {}
 
-        // Constructor to initialize the variable symbol with parent function (Local variables)
-        IRVariableSymbol(llvm::Function *func, llvm::Value *val, llvm::Type *typ, const std::string &nm, AllocaType allocType)
-            : value(val), type(typ), parentFunction(func), name(nm), astNode(nullptr), dataType(nullptr), allocaType(allocType), allocation(nullptr) {}
+        // Constructor for local variables with parent function
+        IRVariableSymbol(llvm::Function *func, llvm::Value *val, llvm::Type *typ,
+                         const std::string &nm, AllocaType allocType)
+            : value(val), type(typ), parentFunction(func), name(nm), astNode(nullptr),
+              dataType(nullptr), allocaType(allocType) {}
 
         void createAlloca(llvm::IRBuilder<> &builder);
     } IRVariableSymbol;
@@ -294,6 +457,190 @@ namespace Cryo
         // Constructor to initialize the type symbol
         IRTypeSymbol(llvm::Type *typ, const std::string &nm)
             : type(typ), name(nm), astNode(nullptr), dataType(nullptr), elementType(nullptr), size(0) {}
+    };
+
+    class AllocaTypeInference
+    {
+    public:
+        static AllocaType inferFromNode(ASTNode *node, bool isGlobal = false)
+        {
+            if (!node)
+                return AllocaType::None;
+            if (isGlobal)
+                return AllocaType::Global;
+
+            switch (node->metaData->type)
+            {
+            case NODE_VAR_DECLARATION:
+                return inferFromVarDecl(node->data.varDecl);
+            case NODE_PARAM:
+                return inferFromParam(node->data.param);
+            case NODE_ARRAY_LITERAL:
+                return inferFromArray(node->data.array);
+            case NODE_STRUCT_DECLARATION:
+                return AllocaType::Aggregate;
+            case NODE_CLASS:
+                return AllocaType::Aggregate;
+            default:
+                return AllocaType::None;
+            }
+        }
+
+    private:
+        static AllocaType inferFromVarDecl(CryoVariableNode *varDecl)
+        {
+            if (!varDecl)
+                return AllocaType::None;
+
+            // Handle parameters
+            if (varDecl->isIterator)
+            {
+                return AllocaType::Parameter;
+            }
+
+            // Check variable modifiers
+            if (varDecl->isGlobal)
+            {
+                return AllocaType::Global;
+            }
+
+            if (varDecl->isReference)
+            {
+                return AllocaType::Parameter; // References are handled like parameters
+            }
+
+            // Check data type characteristics
+            if (varDecl->type)
+            {
+                if (varDecl->type->container->isArray)
+                {
+                    return varDecl->type->container->custom.arrayDef->dimensions > 0
+                               ? AllocaType::DynamicArray
+                               : AllocaType::Aggregate;
+                }
+
+                switch (varDecl->type->container->baseType)
+                {
+                case STRUCT_TYPE:
+                case CLASS_TYPE:
+                    return AllocaType::Aggregate;
+                default:
+                    break;
+                }
+            }
+
+            // If there's no initializer, we only need allocation
+            if (!varDecl->initializer)
+            {
+                return AllocaType::AllocaOnly;
+            }
+
+            // Handle initialization
+            return inferFromInitializer(varDecl->initializer, !varDecl->isMutable);
+        }
+
+        static AllocaType inferFromParam(CryoParameterNode *param)
+        {
+            if (!param)
+                return AllocaType::None;
+
+            // Check if parameter is mutable
+            if (param->isMutable)
+            {
+                return AllocaType::AllocaLoadStore;
+            }
+
+            // For parameters with default values
+            if (param->hasDefaultValue)
+            {
+                return AllocaType::AllocaAndStore;
+            }
+
+            return AllocaType::Parameter;
+        }
+
+        static AllocaType inferFromArray(CryoArrayNode *array)
+        {
+            if (!array)
+                return AllocaType::None;
+
+            // Check if it's a dynamic array
+            if (array->type && array->type->container->isArray)
+            {
+                return AllocaType::DynamicArray;
+            }
+
+            return AllocaType::Aggregate;
+        }
+
+        static AllocaType inferFromInitializer(ASTNode *initializer, bool isConst)
+        {
+            if (!initializer)
+                return AllocaType::AllocaOnly;
+
+            switch (initializer->metaData->type)
+            {
+            case NODE_LITERAL_EXPR:
+                return inferFromLiteral(initializer->data.literal, isConst);
+
+            case NODE_VAR_NAME:
+                return AllocaType::AllocaLoadStore;
+
+            case NODE_FUNCTION_CALL:
+            case NODE_METHOD_CALL:
+                return AllocaType::AllocaAndStore;
+
+            case NODE_BINARY_EXPR:
+                return AllocaType::AllocaAndStore;
+
+            case NODE_ARRAY_LITERAL:
+                return AllocaType::DynamicArray;
+
+            case NODE_INDEX_EXPR:
+                return AllocaType::AllocaLoadStore;
+
+            case NODE_OBJECT_INST:
+                return AllocaType::Aggregate;
+
+            case NODE_PROPERTY_ACCESS:
+                return AllocaType::AllocaLoadStore;
+
+            default:
+                return AllocaType::AllocaOnly;
+            }
+        }
+
+        static AllocaType inferFromLiteral(LiteralNode *literal, bool isConst)
+        {
+            if (!literal)
+                return AllocaType::None;
+
+            // Special handling for strings since they're effectively arrays
+            if (literal->type && isStringDataType(literal->type))
+            {
+                return AllocaType::Aggregate;
+            }
+
+            // Constants with literals only need store
+            return isConst ? AllocaType::AllocaAndStore : AllocaType::AllocaLoadStore;
+        }
+
+    private:
+        static bool isAggregateType(DataType *type)
+        {
+            if (!type)
+                return false;
+            return type->container->baseType == STRUCT_TYPE ||
+                   type->container->baseType == CLASS_TYPE ||
+                   (type->container->isArray && !type->container->custom.arrayDef->dimensions);
+        }
+
+        static bool isDynamicArray(DataType *type)
+        {
+            if (!type)
+                return false;
+            return type->container->isArray && type->container->custom.arrayDef->dimensions == 0;
+        }
     };
 
     struct IRPropertySymbol

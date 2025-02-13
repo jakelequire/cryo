@@ -303,9 +303,13 @@ namespace Cryo
         }
         case NODE_VAR_NAME:
         {
-            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Variable Name");
-            llvmValue = variables.getVariable(node->data.varName->varName);
-            break;
+            std::string varName = node->data.varName->varName;
+            IRVariableSymbol *var = IR_SYMBOL_TABLE->findVariable(varName);
+            if (!var)
+                return nullptr;
+
+            // Get the current value using the allocation API
+            return var->allocation.getValue();
         }
         case NODE_INDEX_EXPR:
         {

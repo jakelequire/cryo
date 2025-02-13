@@ -48,6 +48,8 @@ namespace Cryo
 
         friend class IRSymbolManager;
         IRSymbolManager *getSymbolManager() { return new IRSymbolManager(); }
+        void setCurrentFunction(llvm::Function *function) { currentFunction = function; }
+        void clearCurrentFunction() { currentFunction = nullptr; }
 
         // Module access
         llvm::Module *getModule() { return currentModule; }
@@ -63,10 +65,32 @@ namespace Cryo
 
         // Symbol lookup
         IRVariableSymbol *findVariable(const std::string &name);
+        // Helper method for creating global variables
+        IRVariableSymbol *createGlobalVariable(const std::string &name, llvm::Type *type,
+                                               llvm::Value *initialValue = nullptr);
+
         IRFunctionSymbol *findFunction(const std::string &name);
         IRTypeSymbol *findType(const std::string &name);
 
         void debugPrint() const;
+
+    private:
+        llvm::Function *currentFunction;
+
+        template <typename T>
+        llvm::Type *getLLVMType();
+
+        template <typename T>
+        llvm::Value *createLLVMValue(const T &value);
+
+    public:
+        template <typename T>
+        IRVariableSymbol *createLocalVar(const std::string &name, T value)
+        {
+            auto *type = getLLVMType<T>();
+            auto *llvmValue = createLLVMValue<T>(value);
+            return createVariable(name, type, llvmValue);
+        }
     };
 
 } // namespace Cryo

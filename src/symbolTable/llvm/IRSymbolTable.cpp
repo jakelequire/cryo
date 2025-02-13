@@ -18,6 +18,35 @@
 
 namespace Cryo
 {
+    template <typename T>
+    llvm::Type *IRSymbolTable::getLLVMType()
+    {
+        if constexpr (std::is_integral_v<T>)
+        {
+            return llvm::Type::getInt32Ty(currentModule->getContext());
+        }
+        else if constexpr (std::is_floating_point_v<T>)
+        {
+            return llvm::Type::getDoubleTy(currentModule->getContext());
+        }
+        // Add more type mappings as needed
+        return nullptr;
+    }
+
+    template <typename T>
+    llvm::Value *IRSymbolTable::createLLVMValue(const T &value)
+    {
+        llvm::IRBuilder<> builder(currentModule->getContext());
+        if constexpr (std::is_integral_v<T>)
+        {
+            return llvm::ConstantInt::get(getLLVMType<T>(), value);
+        }
+        else if constexpr (std::is_floating_point_v<T>)
+        {
+            return llvm::ConstantFP::get(getLLVMType<T>(), value);
+        }
+        return nullptr;
+    }
 
     // ======================================================================== //
     //                       Scope Management Functions                         //
@@ -79,6 +108,20 @@ namespace Cryo
         return nullptr;
     }
 
+    IRVariableSymbol *IRSymbolTable::createGlobalVariable(const std::string &name, llvm::Type *type,
+                                                          llvm::Value *initialValue)
+    {
+        auto *initVal = initialValue ? llvm::dyn_cast<llvm::Constant>(initialValue)
+                                     : llvm::Constant::getNullValue(type);
+
+        auto varSymbol = IRSymbolManager::createVariableSymbol(
+            nullptr, initVal, type, name, AllocaType::Global);
+        varSymbol.allocation = Allocation::createGlobal(currentModule, type, name, initVal);
+
+        addVariable(varSymbol);
+        return findVariable(name);
+    }
+
     IRFunctionSymbol *IRSymbolTable::findFunction(const std::string &name)
     {
         auto it = functions.find(name);
@@ -122,7 +165,7 @@ namespace Cryo
                 const auto &var = varPair.second;
                 std::cout << "    Name: " << BLUE << var.name << COLOR_RESET << std::endl;
                 std::cout << "    Type: " << typeIDToString(var.type) << std::endl;
-                std::cout << "    AllocaType: " << static_cast<int>(var.allocaType) << std::endl;
+                std::cout << "    AllocaType: " << Allocation::allocaTypeToString(var.allocaType) << std::endl;
                 std::cout << "    ----------------------------------------" << std::endl;
             }
         }

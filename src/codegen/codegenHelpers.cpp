@@ -108,6 +108,16 @@ namespace Cryo
         classDataTypes[name] = dataType;
     }
 
+    void CryoContext::setCurrentFunction(llvm::Function *function)
+    {
+        currentFunction = function;
+    }
+
+    void CryoContext::clearCurrentFunction()
+    {
+        currentFunction = nullptr;
+    }
+
     void CryoCompiler::setBuildDir(std::string dir)
     {
         if (dir.empty())
