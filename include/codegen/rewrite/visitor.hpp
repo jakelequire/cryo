@@ -35,10 +35,10 @@
 #include "frontend/AST.h"
 #include "frontend/dataTypes.h"
 
+typedef struct ASTNode ASTNode;
+
 namespace Cryo
 {
-
-    class ASTNode; // Forward declaration
 
     class Visitor
     {

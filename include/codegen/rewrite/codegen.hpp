@@ -73,6 +73,9 @@ namespace Cryo
 #define IR_SYMBOL_TABLE compiler.getContext().symbolTable
 #define SYMBOL_MANAGER compiler.getContext().symbolTable->getSymbolManager()
 
+    class CodegenContext;
+    class IRSymbolTable;
+
     // ======================================================================== //
     //                            Codegen Context                               //
     // ======================================================================== //
@@ -82,10 +85,10 @@ namespace Cryo
     public:
         static CodegenContext &getInstance()
         {
-            static CryoContext instance;
+            static CodegenContext instance;
             return instance;
         }
-        CryoContext(CodegenContext const &) = delete;
+        CodegenContext(CodegenContext const &) = delete;
         void operator=(CodegenContext const &) = delete;
 
         llvm::LLVMContext context;
@@ -98,7 +101,7 @@ namespace Cryo
 
         llvm::Function *currentFunction;
 
-        void mergeModule(llvm::Module *srcModule);
+        void DONOTUSEYET_mergeModule(llvm::Module *srcModule);
 
         void initializeContext(void);
         void setModuleIdentifier(std::string name);
@@ -121,6 +124,21 @@ namespace Cryo
         ~IRGeneration() {}
 
         void generateIR(ASTNode *root);
+
+    private:
+        CodegenContext &context;
+
+        void processDeclarations(ASTNode *root);
+        void processFunctionDeclaration(ASTNode *node);
+        void processTypeDeclaration(ASTNode *node);
+
+        void generateIRForNode(ASTNode *node);
+        void generateIRForLiteralExpr(ASTNode *node);
+        void generateIRForVarName(ASTNode *node);
+        void generateIRForBinaryExpr(ASTNode *node);
+        void generateIRForFunctionCall(ASTNode *node);
+        void generateIRForReturnStatement(ASTNode *node);
+        // Add other generation methods as needed...
     };
 
     // ======================================================================== //

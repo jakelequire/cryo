@@ -18,7 +18,7 @@
 
 namespace Cryo
 {
-    void CodegenContext::mergeModule(llvm::Module *srcModule)
+    void CodegenContext::DONOTUSEYET_mergeModule(llvm::Module *srcModule)
     {
         if (!module)
         {

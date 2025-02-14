@@ -14,32 +14,40 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/rewrite/visitor.hpp"
+#include "codegen/rewrite/codegen.hpp"
 
 namespace Cryo
 {
-    void CodeGenVisitor::visitLiteralExpr(ASTNode *node)
+    void IRGeneration::processDeclarations(ASTNode *node)
     {
-        // Code generation logic for literal expressions
+        if (!node)
+            return;
+
+        // Handle function declarations
+        if (node->metaData->type == NODE_FUNCTION_DECLARATION)
+        {
+            processFunctionDeclaration(node);
+        }
+
+        // Handle type declarations (structs, classes)
+        if (node->metaData->type == NODE_STRUCT_DECLARATION ||
+            node->metaData->type == NODE_CLASS)
+        {
+            processTypeDeclaration(node);
+        }
+
+        // Recursively process children
+        // for (auto child : node->children)
+        // {
+        //     processDeclarations(child);
+        // }
     }
 
-    void CodeGenVisitor::visitVarName(ASTNode *node)
+    void IRGeneration::processFunctionDeclaration(ASTNode *node)
     {
-        // Code generation logic for variable names
+    }
+    void IRGeneration::processTypeDeclaration(ASTNode *node)
+    {
     }
 
-    void CodeGenVisitor::visitBinaryExpr(ASTNode *node)
-    {
-        // Code generation logic for binary expressions
-    }
-
-    void CodeGenVisitor::visitFunctionCall(ASTNode *node)
-    {
-        // Code generation logic for function calls
-    }
-
-    void CodeGenVisitor::visitReturnStatement(ASTNode *node)
-    {
-        // Code generation logic for return statements
-    }
 } // namespace Cryo

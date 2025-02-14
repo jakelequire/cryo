@@ -83,12 +83,11 @@ typedef struct CryoProgram
 
 typedef struct CryoMetaData
 {
-    enum CryoNodeType type;      // Node Type
-    int line;                    // Line number for error reporting
-    int column;                  // Column number for error reporting
-    struct ASTNode *firstChild;  // First child node (for linked list structure)
-    struct ASTNode *nextSibling; // Next sibling node (for linked list structure)
-    char *moduleName;            // Current Module
+    enum CryoNodeType type; // Node Type
+    int line;               // Line number for error reporting
+    int column;             // Column number for error reporting
+
+    char *moduleName; // Current Module
     Position position;
 } CryoMetaData;
 
@@ -572,6 +571,8 @@ typedef struct ModuleNode
 typedef struct ASTNode
 {
     CryoMetaData *metaData;
+    struct ASTNode *firstChild;  // First child node (for linked list structure)
+    struct ASTNode *nextSibling; // Next sibling node (for linked list structure)
 
     union
     {
@@ -675,6 +676,13 @@ typedef struct ASTNode
 extern "C"
 {
 #endif
+
+    void buildASTTreeLinks(ASTNode *root);
+    void addChildToNode(ASTNode *parent, ASTNode *child);
+    ASTNode *getFirstChild(ASTNode *node);
+    ASTNode *getNextSibling(ASTNode *node);
+    void traverseAST(ASTNode *node, void (*visitor)(ASTNode *));
+
     /**
      * AST Node Core Operations
      * Basic operations for node manipulation and management

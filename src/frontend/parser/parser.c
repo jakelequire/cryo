@@ -96,6 +96,8 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
         logMessage(LMI, "INFO", "Parser", "Next token after statement: %s", CryoTokenToString(lexer->currentToken.type));
     }
 
+    buildASTTreeLinks(program);
+
     CompleteFrontend(globalTable);
     return program;
 }

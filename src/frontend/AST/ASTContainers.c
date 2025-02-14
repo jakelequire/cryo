@@ -203,8 +203,7 @@ CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state)
     node->type = NODE_UNKNOWN;
     node->line = 0;
     node->column = 0;
-    node->firstChild = NULL;
-    node->nextSibling = NULL;
+
     node->moduleName = "defaulted";
 
     return node;

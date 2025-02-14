@@ -14,32 +14,54 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/rewrite/visitor.hpp"
+#include "codegen/rewrite/codegen.hpp"
 
 namespace Cryo
 {
-    void CodeGenVisitor::visitLiteralExpr(ASTNode *node)
+
+    void IRGeneration::generateIR(ASTNode *root)
     {
-        // Code generation logic for literal expressions
+        if (!root)
+            return;
+
+        // Process declarations first (hoisting)
+        processDeclarations(root);
+
+        // Generate code for the AST
+        generateIRForNode(root);
     }
 
-    void CodeGenVisitor::visitVarName(ASTNode *node)
+    void IRGeneration::generateIRForNode(ASTNode *node)
     {
-        // Code generation logic for variable names
+        if (!node)
+            return;
+
+        switch (node->metaData->type)
+        {
+        case NODE_LITERAL_EXPR:
+            // generateIRForLiteralExpr(node);
+            break;
+
+        case NODE_VAR_NAME:
+            // generateIRForVarName(node);
+            break;
+
+        case NODE_BINARY_EXPR:
+            // generateIRForBinaryExpr(node);
+            break;
+
+        case NODE_FUNCTION_CALL:
+            // generateIRForFunctionCall(node);
+            break;
+
+            // ... handle other node types
+        }
+
+        // Process children after current node
+        // for (auto child : node->children)
+        // {
+        //     generateIRForNode(child);
+        // }
     }
 
-    void CodeGenVisitor::visitBinaryExpr(ASTNode *node)
-    {
-        // Code generation logic for binary expressions
-    }
-
-    void CodeGenVisitor::visitFunctionCall(ASTNode *node)
-    {
-        // Code generation logic for function calls
-    }
-
-    void CodeGenVisitor::visitReturnStatement(ASTNode *node)
-    {
-        // Code generation logic for return statements
-    }
 } // namespace Cryo
