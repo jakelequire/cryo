@@ -953,7 +953,7 @@ namespace Cryo
         }
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Function Call Created, Storing in Variable");
 
-        // Store the call into the variable
+        // Load the function call into the variable
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(functionCall, varValue);
         storeInst->setAlignment(llvm::Align(8));
 

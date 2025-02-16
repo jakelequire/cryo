@@ -583,6 +583,7 @@ namespace Cryo
 
         if (returnExpression->metaData->type == NODE_VAR_NAME)
         {
+            // Create a load instruction for the variable
             std::string varName = returnExpression->data.varName->varName;
             STVariable *stVarNode = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, varName);
             if (!stVarNode)
@@ -598,10 +599,23 @@ namespace Cryo
                 CONDITION_FAILED;
             }
 
-            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(varValue);
-            llvm::Type *instTy = compiler.getTypes().parseInstForType(inst);
+            DataType *varDataType = getDataTypeFromASTNode(returnExpression);
+            if (!varDataType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable data type not found");
+                CONDITION_FAILED;
+            }
 
-            llvm::Value *returnValue = compiler.getContext().builder.CreateLoad(instTy, varValue, varName + ".retload");
+            llvm::Type *llvmTy = compiler.getTypes().getType(varDataType, 0);
+            // Create a load instruction for the variable
+            llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(llvmTy, varValue, varName + ".load");
+            if (!loadedValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to load variable value");
+                CONDITION_FAILED;
+            }
+
+            returnValue = loadedValue;
         }
 
         return returnValue;

@@ -127,6 +127,31 @@ namespace Cryo
         std::unordered_map<std::string, STStruct> structNode;
         std::unordered_map<std::string, STClass> classNode;
 
+        void print(SymTableNode node)
+        {
+            std::cout << "Namespace: " << node.namespaceName << std::endl;
+            std::cout << "Variables: " << std::endl;
+            for (auto &var : node.variables)
+            {
+                std::cout << "  " << var.first << std::endl;
+            }
+            std::cout << "Functions: " << std::endl;
+            for (auto &func : node.functions)
+            {
+                std::cout << "  " << func.first << std::endl;
+            }
+            std::cout << "Extern Functions: " << std::endl;
+            for (auto &externFunc : node.externFunctions)
+            {
+                std::cout << "  " << externFunc.first << std::endl;
+            }
+            std::cout << "Parameters: " << std::endl;
+            for (auto &param : node.parameters)
+            {
+                std::cout << "  " << param.first << std::endl;
+            }
+        }
+
     } SymTableNode;
 
     // This will contain all the namespaces for the entire program

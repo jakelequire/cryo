@@ -190,14 +190,19 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
 void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
+    printf("Adding child node\n");
     if (!parent || !child)
     {
         logMessage(LMI, "ERROR", "AST", "Parent or child node is NULL");
         return;
     }
 
+    // Make sure the child node's nextSibling is NULL
+    child->nextSibling = NULL;
+
     if (!parent->firstChild)
     {
+        printf("Parent has no children\n");
         parent->firstChild = child;
     }
     else
@@ -205,12 +210,11 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
         ASTNode *current = parent->firstChild;
         while (current->nextSibling)
         {
+            printf("Iterating through siblings\n");
             current = current->nextSibling;
         }
         current->nextSibling = child;
     }
-
-    addChildToNode(parent, child);
 }
 // </addChildNode>
 
