@@ -20,5 +20,4 @@ struct Error_Internal_ {
     }
 }
 
-struct Error extends Error_Internal_
-{}
+struct Error extends Error_Internal_{}
