@@ -14,54 +14,40 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/rewrite/codegen.hpp"
+#include "codegen_rewrite/codegen.hpp"
 
 namespace Cryo
 {
-
-    void IRGeneration::generateIR(ASTNode *root)
-    {
-        if (!root)
-            return;
-
-        // Process declarations first (hoisting)
-        processDeclarations(root);
-
-        // Generate code for the AST
-        generateIRForNode(root);
-    }
-
-    void IRGeneration::generateIRForNode(ASTNode *node)
+    void IRGeneration::processDeclarations(ASTNode *node)
     {
         if (!node)
             return;
 
-        switch (node->metaData->type)
+        // Handle function declarations
+        if (node->metaData->type == NODE_FUNCTION_DECLARATION)
         {
-        case NODE_LITERAL_EXPR:
-            // generateIRForLiteralExpr(node);
-            break;
-
-        case NODE_VAR_NAME:
-            // generateIRForVarName(node);
-            break;
-
-        case NODE_BINARY_EXPR:
-            // generateIRForBinaryExpr(node);
-            break;
-
-        case NODE_FUNCTION_CALL:
-            // generateIRForFunctionCall(node);
-            break;
-
-            // ... handle other node types
+            processFunctionDeclaration(node);
         }
 
-        // Process children after current node
+        // Handle type declarations (structs, classes)
+        if (node->metaData->type == NODE_STRUCT_DECLARATION ||
+            node->metaData->type == NODE_CLASS)
+        {
+            processTypeDeclaration(node);
+        }
+
+        // Recursively process children
         // for (auto child : node->children)
         // {
-        //     generateIRForNode(child);
+        //     processDeclarations(child);
         // }
+    }
+
+    void IRGeneration::processFunctionDeclaration(ASTNode *node)
+    {
+    }
+    void IRGeneration::processTypeDeclaration(ASTNode *node)
+    {
     }
 
 } // namespace Cryo

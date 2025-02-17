@@ -445,11 +445,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        llvm::IRBuilder<> builder(entryBlock);
         llvm::Type *llvmType = compiler.getTypes().getType(varType, 0);
-
-        // Infer allocation type from node
-        AllocaType allocType = AllocaTypeInference::inferFromNode(node);
 
         // Get initializer value based on node type
         llvm::Value *initValue = nullptr;
@@ -480,17 +476,11 @@ namespace Cryo
 
             case NODE_VAR_NAME:
             {
-                DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating variable reference");
-                std::string refVarName = initializer->data.varName->varName;
-                IRVariableSymbol *refVar = IR_SYMBOL_TABLE->findVariable(refVarName);
-                if (!refVar)
-                {
-                    DevDebugger::logMessage("ERROR", __LINE__, "Variables",
-                                            "Referenced variable not found: " + refVarName);
-                    CONDITION_FAILED;
-                }
-                initValue = refVar->allocation.getValue();
-                break;
+                DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable initializer is a VariableNameNode.");
+                std::string varDeclName = std::string(varDecl->name);
+                std::string refVarName = std::string(initializer->data.varName->varName);
+                VariableNameNode *varNameNode = initializer->data.varName;
+                initValue = createVarNameInitializer(varNameNode, varDeclName, refVarName);
             }
 
             case NODE_ARRAY_LITERAL:
@@ -549,56 +539,11 @@ namespace Cryo
             }
             }
         }
-
-        // Create the variable symbol
-        auto varSymbol = SYMBOL_MANAGER->createVariableSymbol(
-            currentFunction, initValue, llvmType, varName, allocType);
-
-        // Create appropriate allocation based on type
-        switch (allocType)
+        else
         {
-        case AllocaType::DynamicArray:
-        {
-            // Get array size from initializer
-            llvm::Value *size = Allocation::getDynamicArraySize(builder, initValue);
-            varSymbol.allocation = Allocation::createDynamicArray(
-                builder,
-                llvmType->getArrayElementType(),
-                size,
-                varName);
-            break;
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "No initializer found");
+            initValue = llvm::Constant::getNullValue(llvmType);
         }
-
-        case AllocaType::Aggregate:
-        {
-            // For structs, classes, and static arrays
-            varSymbol.allocation = Allocation::createLocal(
-                builder, llvmType, varName, initValue);
-            break;
-        }
-
-        case AllocaType::Global:
-        {
-            // Handle global variables
-            varSymbol.allocation = Allocation::createGlobal(
-                compiler.getContext().module.get(),
-                llvmType,
-                varName,
-                llvm::dyn_cast<llvm::Constant>(initValue));
-            break;
-        }
-
-        default:
-        {
-            // Default local variable allocation
-            varSymbol.allocation = Allocation::createLocal(
-                builder, llvmType, varName, initValue);
-            break;
-        }
-        }
-
-        // Register in symbol table
-        IR_SYMBOL_TABLE->addVariable(varSymbol);
 
         // Register in old symbol table
         compiler.getSymTable().addVariable(
@@ -606,16 +551,13 @@ namespace Cryo
         compiler.getSymTable().updateVariableNode(
             namespaceName, varName, initValue, llvmType);
 
-        DevDebugger::logMessage("INFO", __LINE__, "Variables",
-                                "Created variable: " + varName + " with allocation type: " +
-                                    std::to_string(static_cast<int>(allocType)));
         if (node->data.varDecl->initializer)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables",
                                     "Variable NodeType: " + std::string(CryoNodeTypeToString(node->data.varDecl->initializer->metaData->type)));
         }
 
-        return varSymbol.allocation.getValue();
+        return initValue;
     }
 
     /// ### ============================================================================= ###
@@ -632,25 +574,14 @@ namespace Cryo
 
         llvm::Value *llvmValue = nullptr;
 
-        llvmValue = compiler.getContext().module->getNamedGlobal(name);
-
-        if (!llvmValue)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
-            llvmValue = nullptr;
-        }
-
         std::cout << "Name being passed: " << name << std::endl;
+        compiler.getContext().printNamedValues();
+
         llvmValue = getLocalScopedVariable(name);
         if (!llvmValue)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
             llvmValue = nullptr;
-        }
-
-        if (llvmValue != nullptr)
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Found");
         }
 
         return llvmValue;
@@ -663,12 +594,16 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
         std::cout << "Name being passed (start): " << name << std::endl;
 
-        llvmValue = compiler.getContext().namedValues[name];
-
+        llvmValue = compiler.getContext().namedValues.at(name);
         if (!llvmValue)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
             llvmValue = nullptr;
+        }
+        else
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Found");
+            return llvmValue;
         }
 
         // Try to find the variable in the symbol table

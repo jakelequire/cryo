@@ -23,7 +23,7 @@
 #include <map>
 #include <stdbool.h>
 
-#include "symbolTable/IRdefs.hpp"
+#include "IRdefs.hpp"
 #include "tools/macros/consoleColors.h"
 
 namespace Cryo

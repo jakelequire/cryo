@@ -242,8 +242,9 @@ namespace Cryo
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a unary expression");
                 CryoUnaryOpNode *unaryNode = argNode->data.unary_op;
                 assert(unaryNode != nullptr);
+                ASTNode *_unaryNode = argNode;
 
-                llvm::Value *argNode = createUnaryExprCall(unaryNode);
+                llvm::Value *argNode = createUnaryExprCall(_unaryNode);
                 if (!argNode)
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
@@ -1435,12 +1436,15 @@ namespace Cryo
         return typeValue;
     }
 
-    llvm::Value *Functions::createUnaryExprCall(CryoUnaryOpNode *node)
+    llvm::Value *Functions::createUnaryExprCall(ASTNode *node)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Unary Expression Call");
+        CryoUnaryOpNode *unaryNode = node->data.unary_op;
+        node->print(node);
 
-        ASTNode *exprNode = node->expression;
+        ASTNode *exprNode = unaryNode->expression;
         exprNode->print(exprNode);
+
         llvm::Value *exprValue = compiler.getGenerator().getInitilizerValue(exprNode);
         if (!exprValue)
         {
@@ -1448,21 +1452,31 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        DevDebugger::logLLVMValue(exprValue);
+
         std::string exprName = exprValue->getName().str();
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Expression Name: " + exprName);
 
         llvm::Value *unaryValue = nullptr;
-        switch (node->op)
+        switch (unaryNode->op)
         {
         case TOKEN_ADDRESS_OF:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Address Of Call");
             // Find the variable in the current function
-            llvm::Function *function = compiler.getContext().builder.GetInsertBlock()->getParent();
-            llvm::Value *varAddr = function->getValueSymbolTable()->lookup(exprName);
+            llvm::Function *function = compiler.getContext().currentFunction;
+            compiler.getContext().printNamedValues();
+            std::cout << "Seeking for variable: " << exprName << std::endl;
+            llvm::Value *varAddr = compiler.getContext().namedValues[exprName];
             if (!varAddr)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable address not found");
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable address not found: " + exprName);
+                // Debug print the `getValueSymbolTable`
+                std::cout << "\n\n";
+                function->getValueSymbolTable()->dump();
+                std::cout << "\n\n";
+
+                // Debug print the symbol table
                 CONDITION_FAILED;
             }
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Address Of Call Created");

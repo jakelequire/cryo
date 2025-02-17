@@ -101,6 +101,8 @@ namespace Cryo
         // Add the function to the symbol table
         cryoContext.namedValues[functionName] = function;
 
+        cryoContext.setCurrentFunction(function);
+
         // Create the entry block
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(compiler.getContext().context, "entry", function);
         compiler.getContext().builder.SetInsertPoint(entryBlock);

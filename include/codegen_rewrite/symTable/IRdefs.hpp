@@ -427,8 +427,7 @@ namespace Cryo
 
         void createAlloca(llvm::IRBuilder<> &builder);
 
-        
-    } IRVariableSymbol;
+        } IRVariableSymbol;
 
     struct IRTypeSymbol
     {

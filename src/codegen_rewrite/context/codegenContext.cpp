@@ -14,42 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/rewrite/codegen.hpp"
+#include "codegen_rewrite/codegen.hpp"
 
 namespace Cryo
 {
-    void CodegenContext::DONOTUSEYET_mergeModule(llvm::Module *srcModule)
-    {
-        if (!module)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-            CONDITION_FAILED;
-            return;
-        }
-
-        if (!srcModule)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-            CONDITION_FAILED;
-            return;
-        }
-
-        logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-        logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
-
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-        bool result = llvm::Linker::linkModules(
-            *module,
-            llvm::CloneModule(*srcModule),
-            linkerFlags);
-        if (result)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-            CONDITION_FAILED;
-            return;
-        }
-
-        std::cout << "@mergeModule Module merged successfully" << std::endl;
-    }
 
 } // namespace Cryo

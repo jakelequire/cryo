@@ -39,7 +39,7 @@ function printStr(s: string) -> void {
 
 function println(s: string) -> void {
     __c_println(s);
-    return;
+    return; 
 }
 
 function intToString(i: int) -> string {

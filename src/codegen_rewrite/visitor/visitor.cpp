@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/rewrite/visitor.hpp"
+#include "codegen_rewrite/visitor.hpp"
 
 namespace Cryo
 {

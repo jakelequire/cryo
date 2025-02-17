@@ -53,9 +53,6 @@ int generateIRFromAST(CompilationUnit *unit,
     std::string moduleName = unit->dir.src_fileName;
     compiler.setModuleIdentifier(moduleName);
 
-    // Initialize the symbol table
-    compiler.getContext().initializeSymbolTable();
-
     // Compile the ASTNode
     compiler.compile(rootNode);
 

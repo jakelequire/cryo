@@ -642,6 +642,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatObjectInstNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "UnaryOp") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatUnaryOpNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatUnaryOpNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1486,6 +1497,26 @@ char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output)
 }
 // </ObjectInst>
 // ============================================================
+// ============================================================
+// <UnaryOp>
+char *formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<UnaryOp> [%s] <0:0>",
+            node->nodeName);
+    return buffer;
+}
+char *CONSOLE_formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<UnaryOp>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -2049,9 +2080,19 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         break;
     }
 
+    case NODE_UNARY_EXPR:
+    {
+        __LINE_AND_COLUMN__
+        ASTDebugNode *unaryExprNode = createASTDebugNode("UnaryOp", "UnaryOp", createPrimitiveVoidType(), line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *unaryExprNode;
+        output->nodeCount++;
+        createASTDebugView(node->data.unary_op->expression, output, indentLevel + 1);
+        break;
+    }
+
     default:
     {
-        logMessage(LMI, "ERROR", "AST", "Unknown node type encountered: %d", CryoNodeTypeToString(nodeType));
+        logMessage(LMI, "ERROR", "AST", "Unknown node type encountered: %s", CryoNodeTypeToString(nodeType));
         break;
     }
     }

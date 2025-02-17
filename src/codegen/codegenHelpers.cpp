@@ -23,13 +23,6 @@ namespace Cryo
     // +                              Cryo Context Functions                                      + //
     // + ======================================================================================== + //
 
-    void CryoContext::initializeSymbolTable(void)
-    {
-        // Initialize the symbol table
-        symbolTable = std::make_unique<IRSymbolTable>(module.get());
-        std::cout << "Symbol Table initialized for: " << module->getName().str() << std::endl;
-    }
-
     llvm::GlobalVariable *CryoContext::getOrCreateGlobalString(const std::string &content)
     {
         // First check if we already have this string
@@ -118,6 +111,53 @@ namespace Cryo
         currentFunction = nullptr;
     }
 
+    void CryoContext::printStructTypesMap(void)
+    {
+        std::cout << "\n";
+        std::cout << "+ ---------- Struct Types Map ---------- +" << std::endl;
+        for (auto &pair : structTypes)
+        {
+            std::cout << pair.first << std::endl;
+        }
+        std::cout << "+ -------------------------------------- +" << std::endl;
+        std::cout << "\n";
+    }
+
+    llvm::Value *CryoContext::getVariableAddress(std::string name)
+    {
+        // Get the variable address
+        llvm::Value *varAddr = namedValues[name];
+        if (!varAddr)
+        {
+            std::cout << "Variable not found: " << name << std::endl;
+            return nullptr;
+        }
+
+        return varAddr;
+    }
+
+    void CryoContext::printNamedValues()
+    {
+        // [Debug] --------------------------
+        std::cout << "\n\n --------------- [ Named Values ] --------------- \n\n";
+        for (auto &pair : namedValues)
+        {
+            std::cout << pair.first << std::endl;
+        }
+        std::cout << "\n\n ----------------------------------------------- \n\n";
+        // [Debug] --------------------------
+    }
+
+    void CryoContext::addNamedValue(std::string name, llvm::Value *value)
+    {
+        std::cout << "\n [addNamedValue] Adding named value: " << name << std::endl;
+        namedValues[name] = value;
+    }
+
+    // + ======================================================================================== + //
+    // +                              Cryo Compiler Functions                                     + //
+    // + ======================================================================================== + //
+
     void CryoCompiler::setBuildDir(std::string dir)
     {
         if (dir.empty())
@@ -144,10 +184,6 @@ namespace Cryo
         llvm::Module *depMod = this->getLinker()->initMainModule();
         CryoContext::getInstance().mergeModule(depMod);
     }
-
-    // + ======================================================================================== + //
-    // +                              Cryo Compiler Functions                                     + //
-    // + ======================================================================================== + //
 
     void CryoCompiler::setModuleIdentifier(std::string name)
     {
@@ -186,15 +222,4 @@ namespace Cryo
         DEBUG_BREAKPOINT;
     }
 
-    void CryoContext::printStructTypesMap(void)
-    {
-        std::cout << "\n";
-        std::cout << "+ ---------- Struct Types Map ---------- +" << std::endl;
-        for (auto &pair : structTypes)
-        {
-            std::cout << pair.first << std::endl;
-        }
-        std::cout << "+ -------------------------------------- +" << std::endl;
-        std::cout << "\n";
-    }
 } // namespace Cryo

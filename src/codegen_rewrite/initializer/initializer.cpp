@@ -14,9 +14,13 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/rewrite/codegen.hpp"
+#include "codegen_rewrite/codegen.hpp"
 
 namespace Cryo
 {
+
+    llvm::Value *Initilizer::getInitilizerValue(ASTNode *node)
+    {
+    }
 
 } // namespace Cryo

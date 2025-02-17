@@ -67,7 +67,6 @@
 #include "tools/macros/printMacros.h"
 #include "linker/linker.hpp"
 #include "symbolTable/globalSymtable.hpp"
-#include "symbolTable/IRSymbolTable.hpp"
 
 namespace Cryo
 {
@@ -102,8 +101,6 @@ namespace Cryo
     CompilerState state = compiler.getCompilerState(); \
     dumpSymbolTableCXX(state)
 
-#define IR_SYMBOL_TABLE compiler.getContext().symbolTable
-#define SYMBOL_MANAGER compiler.getContext().symbolTable->getSymbolManager()
     /// -----------------------------------------------------------------------------------------------
     /**
      * @class CryoContext
@@ -128,10 +125,10 @@ namespace Cryo
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
         std::unique_ptr<std::vector<llvm::Module *>> modules;
-        std::unique_ptr<IRSymbolTable> symbolTable; // This will be the new interface for the IR symbol table
-        void initializeSymbolTable(void);
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
+        void addNamedValue(std::string name, llvm::Value *value);
+        void printNamedValues();
         std::unordered_map<std::string, llvm::StructType *> structTypes = {};
         void printStructTypesMap(void);
         std::unordered_map<std::string, llvm::StructType *> classTypes = {};
@@ -166,6 +163,8 @@ namespace Cryo
 
         void setCurrentFunction(llvm::Function *function);
         void clearCurrentFunction();
+
+        llvm::Value *getVariableAddress(std::string name);
 
     private:
         CryoContext() : builder(context) {}
@@ -618,7 +617,7 @@ namespace Cryo
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
         llvm::Value *createTypeofCall(TypeofNode *node);
-        llvm::Value *createUnaryExprCall(CryoUnaryOpNode *node);
+        llvm::Value *createUnaryExprCall(ASTNode *node);
 
         // -----------------------------------
         // Cryo entry point functions

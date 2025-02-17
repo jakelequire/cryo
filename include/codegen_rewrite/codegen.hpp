@@ -65,7 +65,7 @@
 #include "frontend/AST.h"
 #include "tools/macros/printMacros.h"
 #include "linker/linker.hpp"
-#include "symbolTable/IRSymbolTable.hpp"
+#include "codegen_rewrite/symTable/IRSymbolTable.hpp"
 #include "tools/logger/logger_config.h"
 
 namespace Cryo

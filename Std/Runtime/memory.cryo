@@ -26,8 +26,8 @@ function __test__() -> void {
     return;
 }
 
-function __getAddr__(_addrPtr_: any) -> i64 {
-    const ptr_addr: i64 = __c_getAddr(_addrPtr_);
-    __c_printIntAddr(ptr_addr);
-    return ptr_addr;
-}
+// function __getAddr__(_addrPtr_: any) -> i64 {
+//     const ptr_addr: i64 = __c_getAddr(_addrPtr_);
+//     __c_printIntAddr(ptr_addr);
+//     return ptr_addr;
+// }

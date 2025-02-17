@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/rewrite/codegen.hpp"
+#include "codegen_rewrite/codegen.hpp"
 
 int DONOTUSEYET_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
                                   CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)

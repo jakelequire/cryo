@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/IRdefs.hpp"
+#include "codegen_rewrite/symTable/IRdefs.hpp"
 
 namespace Cryo
 {
