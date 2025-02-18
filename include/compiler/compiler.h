@@ -52,9 +52,15 @@ extern "C"
     int generateIRFromAST(CompilationUnit *unit,
                           CompilerState *state, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
 
+    int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
+                                     CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
+
 #ifdef __cplusplus
 }
 #endif
+
+extern int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
+                                        CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
 
 // -------------------------------------------------------------
 // NEW Compiler Functions

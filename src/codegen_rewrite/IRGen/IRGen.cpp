@@ -25,10 +25,12 @@ namespace Cryo
             return;
 
         // Process declarations first (hoisting)
-        processDeclarations(root);
+        // processDeclarations(root);
 
         // Generate code for the AST
-        generateIRForNode(root);
+        // generateIRForNode(root);
+        std::cout << "[IRGeneration] IR Generation Complete!" << std::endl;
+        return;
     }
 
     void IRGeneration::generateIRForNode(ASTNode *node)

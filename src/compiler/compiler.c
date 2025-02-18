@@ -265,6 +265,8 @@ int exe_project_build(CompilerSettings *settings)
         return 1;
     }
 
+    UNFINISHED_generateIRFromAST(unit, state, linker, globalSymbolTable);
+
     LINK_ALL_MODULES(linker);
 
     DEBUG_PRINT_FILTER({

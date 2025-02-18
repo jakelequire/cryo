@@ -16,8 +16,8 @@
  ********************************************************************************/
 #include "codegen_rewrite/codegen.hpp"
 
-int DONOTUSEYET_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
-                                  CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)
+int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
+                                 CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)
 {
     if (!unit->isVerified)
     {
@@ -25,20 +25,16 @@ int DONOTUSEYET_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
         return 1;
     }
 
+    // Initialize the context
+    Cryo::CodegenContext &context = Cryo::CodegenContext::getInstance();
+    context.initializeCodegenContext();
+    context.setModuleIdentifier(unit->dir.src_fileName);
+
     bool isCompilingMain = unit->type == CRYO_MAIN;
     if (isCompilingMain)
     {
-        // compiler.preInitMain();
+        context.preInitMain();
     }
-
-    // Initialize the context
-    Cryo::CodegenContext &context = Cryo::CodegenContext::getInstance();
-    // context.initializeContext();
-    // context.setModuleIdentifier(unit->dir.src_fileName);
-
-    // Initialize symbol table with the current module
-    // context.symbolTable = std::make_unique<IRSymbolTable>(context.module.get());
-    // context.symbolTable->pushScope(); // Push global scope
 
     // Create IR Generator and Visitor
     Cryo::IRGeneration irGen(context);
@@ -56,40 +52,3 @@ int DONOTUSEYET_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
         return 1;
     }
 }
-
-/*
-// The new code generation process will need to emulate the old code generation process.
-// The old code generation process is as follows:
-
-    Cryo::CryoCompiler compiler;
-    compiler.setCompilerState(state);
-    compiler.setCompilerSettings(state->settings);
-
-
-
-    ASTNode *rootNode = unit->ast;
-    if (!rootNode)
-    {
-        logMessage(LMI, "ERROR", "Compiler", "ASTNode is null");
-        return 1;
-    }
-    rootNode->print(rootNode);
-
-    std::string moduleName = unit->dir.src_fileName;
-    compiler.setModuleIdentifier(moduleName);
-
-    // Initialize the symbol table
-    compiler.getContext().initializeSymbolTable();
-
-    // Compile the ASTNode
-    compiler.compile(rootNode);
-
-    logMessage(LMI, "INFO", "Compiler", "ASTNode compiled successfully");
-
-    // Generate the IR code
-    llvm::Module *mod = compiler.getContext().module.get();
-    compiler.getLinker()->compileModule(unit, mod);
-
-    logMessage(LMI, "INFO", "Compiler", "CompilationUnit compiled successfully");
-
-*/

@@ -72,6 +72,7 @@ namespace Cryo
 {
 #define IR_SYMBOL_TABLE compiler.getContext().symbolTable
 #define SYMBOL_MANAGER compiler.getContext().symbolTable->getSymbolManager()
+#define GetCXXLinker() reinterpret_cast<Cryo::Linker *>(globalLinker)
 
     class CodegenContext;
     class IRSymbolTable;
@@ -94,16 +95,20 @@ namespace Cryo
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
+        Linker *getLinker() { return GetCXXLinker(); }
+
+        void preInitMain(void);
 
         // Symbol Table Interface
         std::unique_ptr<IRSymbolTable> symbolTable;
         void initializeSymbolTable(void);
 
+        // Context Interface
         llvm::Function *currentFunction;
 
         void DONOTUSEYET_mergeModule(llvm::Module *srcModule);
 
-        void initializeContext(void);
+        void initializeCodegenContext(void);
         void setModuleIdentifier(std::string name);
 
         void setCurrentFunction(llvm::Function *function);
