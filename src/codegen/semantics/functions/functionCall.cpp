@@ -1442,8 +1442,13 @@ namespace Cryo
         CryoUnaryOpNode *unaryNode = node->data.unary_op;
         node->print(node);
 
+        std::string varName;
         ASTNode *exprNode = unaryNode->expression;
         exprNode->print(exprNode);
+        if (exprNode->metaData->type == NODE_VAR_NAME)
+        {
+            varName = std::string(exprNode->data.varName->varName);
+        }
 
         llvm::Value *exprValue = compiler.getGenerator().getInitilizerValue(exprNode);
         if (!exprValue)
@@ -1463,42 +1468,56 @@ namespace Cryo
         case TOKEN_ADDRESS_OF:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Address Of Call");
-            // Find the variable in the current function
-            llvm::Function *function = compiler.getContext().currentFunction;
-            compiler.getContext().printNamedValues();
-            std::cout << "Seeking for variable: " << exprName << std::endl;
-            llvm::Value *varAddr = compiler.getContext().namedValues[exprName];
-            if (!varAddr)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable address not found: " + exprName);
-                // Debug print the `getValueSymbolTable`
-                std::cout << "\n\n";
-                function->getValueSymbolTable()->dump();
-                std::cout << "\n\n";
 
-                // Debug print the symbol table
-                CONDITION_FAILED;
+            // If exprValue is an AllocaInst, that's already the address
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(exprValue))
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Using alloca directly as address");
+                return allocaInst;
             }
-            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Address Of Call Created");
-            return varAddr;
+
+            // If exprValue is a LoadInst, get its operand (the address being loaded from)
+            if (llvm::LoadInst *loadInst = llvm::dyn_cast<llvm::LoadInst>(exprValue))
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Using load operand as address");
+                return loadInst->getOperand(0);
+            }
+
+            // If we have the variable in namedValues, use that
+            if (auto it = compiler.getContext().namedValues.find(varName);
+                it != compiler.getContext().namedValues.end())
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Found address in namedValues");
+                return it->second;
+            }
+
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Could not determine address of expression");
+            CONDITION_FAILED;
         }
         case TOKEN_DEREFERENCE:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Dereference Call");
-            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(exprValue);
-            std::cout << "Instruction: " << std::endl;
-            DevDebugger::logLLVMInst(inst);
-            llvm::Type *varInstType = compiler.getTypes().parseInstForType(inst);
-            llvm::LoadInst *varLoadValue = compiler.getContext().builder.CreateLoad(varInstType, exprValue, "deref");
-            if (!varLoadValue)
+            llvm::Value *varValue = compiler.getContext().namedValues.find(varName)->second;
+            if (!varValue)
             {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not loaded");
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found: " + exprName);
                 CONDITION_FAILED;
             }
-            varLoadValue->setAlignment(llvm::Align(8));
+
+            llvm::Type *varInstType = varValue->getType();
+            if (!varInstType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable instance type not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::AllocaInst *varPtr = compiler.getContext().builder.CreateAlloca(varInstType, nullptr, "var.ptr");
+            llvm::Value *varStore = compiler.getContext().builder.CreateStore(varValue, varPtr);
+            llvm::LoadInst *varLoad = compiler.getContext().builder.CreateLoad(varInstType, varPtr, "var.load");
 
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Dereference Call Created");
-            return varLoadValue;
+            return varLoad;
         }
         default:
         {

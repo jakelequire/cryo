@@ -457,6 +457,11 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating literal variable");
                 initValue = compiler.getGenerator().getLiteralValue(initializer->data.literal);
+                // Create the alloca for the variable
+                llvm::AllocaInst *varAlloca = compiler.getContext().builder.CreateAlloca(llvmType, nullptr, varName + ".ptr");
+                // Store the value in the alloca
+                compiler.getContext().builder.CreateStore(initValue, varAlloca);
+                compiler.getContext().addNamedValue(varName, initValue);
                 break;
             }
 
