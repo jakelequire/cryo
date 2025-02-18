@@ -19,51 +19,48 @@
 namespace Cryo
 {
 
-    void IRGeneration::generateIR(ASTNode *root)
+    void Cryo::IRGeneration::generateIR(ASTNode *root)
     {
         if (!root)
+        {
+            logMessage(LMI, "ERROR", "IRGeneration", "Root node is null");
             return;
+        }
 
         // Process declarations first (hoisting)
-        // processDeclarations(root);
+        processDeclarations(root);
 
-        // Generate code for the AST
-        // generateIRForNode(root);
-        std::cout << "[IRGeneration] IR Generation Complete!" << std::endl;
-        return;
+        // Start visiting nodes
+        switch (root->metaData->type)
+        {
+        case NODE_PROGRAM:
+            for (size_t i = 0; i < root->data.program->statementCount; i++)
+            {
+                generateIRForNode(root->data.program->statements[i]);
+            }
+            break;
+        default:
+            generateIRForNode(root);
+            break;
+        }
+
+        logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
     }
 
-    void IRGeneration::generateIRForNode(ASTNode *node)
+    void Cryo::IRGeneration::generateIRForNode(ASTNode *node)
     {
         if (!node)
             return;
 
-        switch (node->metaData->type)
+        // Use the visitor through the context
+        if (!context.visitor)
         {
-        case NODE_LITERAL_EXPR:
-            // generateIRForLiteralExpr(node);
-            break;
-
-        case NODE_VAR_NAME:
-            // generateIRForVarName(node);
-            break;
-
-        case NODE_BINARY_EXPR:
-            // generateIRForBinaryExpr(node);
-            break;
-
-        case NODE_FUNCTION_CALL:
-            // generateIRForFunctionCall(node);
-            break;
-
-            // ... handle other node types
+            context.visitor = std::make_unique<CodeGenVisitor>(context);
         }
 
-        // Process children after current node
-        // for (auto child : node->children)
-        // {
-        //     generateIRForNode(child);
-        // }
+        context.visitor->visit(node);
+
+        return;
     }
 
 } // namespace Cryo

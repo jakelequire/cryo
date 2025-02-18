@@ -95,13 +95,12 @@ namespace Cryo
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
+        std::unique_ptr<Cryo::CodeGenVisitor> visitor;
+        std::unique_ptr<IRSymbolTable> symbolTable;
+
         Linker *getLinker() { return GetCXXLinker(); }
 
         void preInitMain(void);
-
-        // Symbol Table Interface
-        std::unique_ptr<IRSymbolTable> symbolTable;
-        void initializeSymbolTable(void);
 
         // Context Interface
         llvm::Function *currentFunction;

@@ -38,7 +38,6 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
 
     // Create IR Generator and Visitor
     Cryo::IRGeneration irGen(context);
-    Cryo::CodeGenVisitor visitor;
 
     // Begin code generation
     try

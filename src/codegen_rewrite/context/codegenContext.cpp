@@ -23,16 +23,13 @@ namespace Cryo
         llvm::Module *depMod = this->getLinker()->initMainModule();
         this->DONOTUSEYET_mergeModule(depMod);
     }
-    void CodegenContext::initializeSymbolTable(void)
-    {
-        symbolTable = std::make_unique<IRSymbolTable>(module.get());
-    }
 
     void CodegenContext::initializeCodegenContext(void)
     {
         std::string moduleName = "CryoModuleDefaulted";
         module = std::make_unique<llvm::Module>(moduleName, context);
-        initializeSymbolTable();
+        symbolTable = std::make_unique<IRSymbolTable>(module.get());
+        visitor = std::make_unique<CodeGenVisitor>(*this);
     }
     void CodegenContext::setModuleIdentifier(std::string name)
     {
