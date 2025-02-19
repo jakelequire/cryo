@@ -18,6 +18,119 @@
 
 namespace Cryo
 {
+    CodeGenVisitor::CodeGenVisitor(CodegenContext &ctx)
+        : context(ctx), builder(ctx.builder), symbolTable(ctx.symbolTable), lastValue(nullptr) {}
+
+    void Visitor::visit(ASTNode *node)
+    {
+        if (!node)
+            return;
+
+        switch (node->metaData->type)
+        {
+        case NODE_PROGRAM:
+            visitProgram(node);
+            break;
+        case NODE_NAMESPACE:
+            visitNamespace(node);
+            break;
+        case NODE_IMPORT_STATEMENT:
+            visitImport(node);
+            break;
+        case NODE_USING:
+            visitUsing(node);
+            break;
+        case NODE_MODULE:
+            visitModule(node);
+            break;
+        case NODE_FUNCTION_DECLARATION:
+            visitFunctionDecl(node);
+            break;
+        case NODE_EXTERN_FUNCTION:
+            visitExternFuncDecl(node);
+            break;
+        case NODE_VAR_DECLARATION:
+            visitVarDecl(node);
+            break;
+        case NODE_STRUCT_DECLARATION:
+            visitStructDecl(node);
+            break;
+        case NODE_CLASS:
+            visitClassDecl(node);
+            break;
+        case NODE_ENUM:
+            visitEnumDecl(node);
+            break;
+        case NODE_GENERIC_DECL:
+            visitGenericDecl(node);
+            break;
+        case NODE_LITERAL_EXPR:
+            visitLiteralExpr(node);
+            break;
+        case NODE_VAR_NAME:
+            visitVarName(node);
+            break;
+        case NODE_BINARY_EXPR:
+            visitBinaryExpr(node);
+            break;
+        case NODE_UNARY_EXPR:
+            visitUnaryExpr(node);
+            break;
+        case NODE_FUNCTION_CALL:
+            visitFunctionCall(node);
+            break;
+        case NODE_METHOD_CALL:
+            visitMethodCall(node);
+            break;
+        case NODE_ARRAY_LITERAL:
+            visitArrayLiteral(node);
+            break;
+        case NODE_INDEX_EXPR:
+            visitIndexExpr(node);
+            break;
+        case NODE_TYPEOF:
+            visitTypeofExpr(node);
+            break;
+        case NODE_BLOCK:
+            visitBlock(node);
+            break;
+        case NODE_IF_STATEMENT:
+            visitIfStatement(node);
+            break;
+        case NODE_FOR_STATEMENT:
+            visitForStatement(node);
+            break;
+        case NODE_WHILE_STATEMENT:
+            visitWhileStatement(node);
+            break;
+        case NODE_RETURN_STATEMENT:
+            visitReturnStatement(node);
+            break;
+        case NODE_PROPERTY:
+            visitProperty(node);
+            break;
+        case NODE_METHOD:
+            visitMethod(node);
+            break;
+        case NODE_STRUCT_CONSTRUCTOR:
+        case NODE_CLASS_CONSTRUCTOR:
+            visitConstructor(node);
+            break;
+        case NODE_PROPERTY_ACCESS:
+            visitPropertyAccess(node);
+            break;
+        case NODE_PROPERTY_REASSIGN:
+            visitPropertyReassignment(node);
+            break;
+        case NODE_THIS:
+            visitThis(node);
+            break;
+        default:
+            // Handle unknown node types or provide a default behavior
+            break;
+        }
+    }
+
     void CodeGenVisitor::visitLiteralExpr(ASTNode *node)
     {
         if (!node || !node->data.literal)

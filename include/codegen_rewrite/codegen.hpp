@@ -60,11 +60,11 @@
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 
-#include "visitor.hpp"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
 #include "tools/macros/printMacros.h"
 #include "linker/linker.hpp"
+#include "codegen_rewrite/visitor.hpp"
 #include "codegen_rewrite/symTable/IRSymbolTable.hpp"
 #include "tools/logger/logger_config.h"
 
@@ -76,6 +76,7 @@ namespace Cryo
 
     class CodegenContext;
     class IRSymbolTable;
+    class CodeGenVisitor;
 
     // ======================================================================== //
     //                            Codegen Context                               //
@@ -92,10 +93,12 @@ namespace Cryo
         CodegenContext(CodegenContext const &) = delete;
         void operator=(CodegenContext const &) = delete;
 
+        friend class CodeGenVisitor;
+
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
         std::unique_ptr<llvm::Module> module;
-        std::unique_ptr<Cryo::CodeGenVisitor> visitor;
+        std::unique_ptr<CodeGenVisitor> visitor;
         std::unique_ptr<IRSymbolTable> symbolTable;
 
         Linker *getLinker() { return GetCXXLinker(); }

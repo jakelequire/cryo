@@ -1,3 +1,19 @@
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
 #ifndef VISITOR_H
 #define VISITOR_H
 
@@ -6,15 +22,6 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
-
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Function.h>
-#include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/Verifier.h>
-#include <llvm/IR/Type.h>
-#include <llvm/IR/Value.h>
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
@@ -27,11 +34,11 @@ typedef struct ASTNode ASTNode;
 namespace Cryo
 {
     // Forward declarations
-    class CodegenContext;
     class IRSymbolTable;
     class Visitor;
     class DefaultVisitor;
     class CodeGenVisitor;
+    class CodegenContext;
 
     // Base Visitor class
     class Visitor
@@ -82,115 +89,7 @@ namespace Cryo
         virtual void visitThis(ASTNode *node) = 0;
 
         // Common entry point for visiting any node
-        virtual void visit(ASTNode *node)
-        {
-            if (!node)
-                return;
-
-            switch (node->metaData->type)
-            {
-            case NODE_PROGRAM:
-                visitProgram(node);
-                break;
-            case NODE_NAMESPACE:
-                visitNamespace(node);
-                break;
-            case NODE_IMPORT_STATEMENT:
-                visitImport(node);
-                break;
-            case NODE_USING:
-                visitUsing(node);
-                break;
-            case NODE_MODULE:
-                visitModule(node);
-                break;
-            case NODE_FUNCTION_DECLARATION:
-                visitFunctionDecl(node);
-                break;
-            case NODE_EXTERN_FUNCTION:
-                visitExternFuncDecl(node);
-                break;
-            case NODE_VAR_DECLARATION:
-                visitVarDecl(node);
-                break;
-            case NODE_STRUCT_DECLARATION:
-                visitStructDecl(node);
-                break;
-            case NODE_CLASS:
-                visitClassDecl(node);
-                break;
-            case NODE_ENUM:
-                visitEnumDecl(node);
-                break;
-            case NODE_GENERIC_DECL:
-                visitGenericDecl(node);
-                break;
-            case NODE_LITERAL_EXPR:
-                visitLiteralExpr(node);
-                break;
-            case NODE_VAR_NAME:
-                visitVarName(node);
-                break;
-            case NODE_BINARY_EXPR:
-                visitBinaryExpr(node);
-                break;
-            case NODE_UNARY_EXPR:
-                visitUnaryExpr(node);
-                break;
-            case NODE_FUNCTION_CALL:
-                visitFunctionCall(node);
-                break;
-            case NODE_METHOD_CALL:
-                visitMethodCall(node);
-                break;
-            case NODE_ARRAY_LITERAL:
-                visitArrayLiteral(node);
-                break;
-            case NODE_INDEX_EXPR:
-                visitIndexExpr(node);
-                break;
-            case NODE_TYPEOF:
-                visitTypeofExpr(node);
-                break;
-            case NODE_BLOCK:
-                visitBlock(node);
-                break;
-            case NODE_IF_STATEMENT:
-                visitIfStatement(node);
-                break;
-            case NODE_FOR_STATEMENT:
-                visitForStatement(node);
-                break;
-            case NODE_WHILE_STATEMENT:
-                visitWhileStatement(node);
-                break;
-            case NODE_RETURN_STATEMENT:
-                visitReturnStatement(node);
-                break;
-            case NODE_PROPERTY:
-                visitProperty(node);
-                break;
-            case NODE_METHOD:
-                visitMethod(node);
-                break;
-            case NODE_STRUCT_CONSTRUCTOR:
-            case NODE_CLASS_CONSTRUCTOR:
-                visitConstructor(node);
-                break;
-            case NODE_PROPERTY_ACCESS:
-                visitPropertyAccess(node);
-                break;
-            case NODE_PROPERTY_REASSIGN:
-                visitPropertyReassignment(node);
-                break;
-            case NODE_THIS:
-                visitThis(node);
-                break;
-            default:
-                // Handle unknown node types or provide a default behavior
-                break;
-            }
-        }
+        virtual void visit(ASTNode *node);
     };
 
     // Default empty implementation of Visitor
@@ -245,6 +144,8 @@ namespace Cryo
     // Code Generation Visitor
     class CodeGenVisitor : public DefaultVisitor
     {
+        friend class CodegenContext;
+
     private:
         CodegenContext &context;
         llvm::IRBuilder<> &builder;
@@ -252,8 +153,7 @@ namespace Cryo
         llvm::Value *lastValue;
 
     public:
-        CodeGenVisitor(CodegenContext &ctx)
-            : context(ctx), builder(ctx.builder), symbolTable(ctx.symbolTable), lastValue(nullptr) {}
+        CodeGenVisitor(CodegenContext &ctx);
 
         // Get the last generated value
         llvm::Value *getValue() const { return lastValue; }
@@ -264,6 +164,7 @@ namespace Cryo
         void visitBinaryExpr(ASTNode *node) override;
         void visitFunctionCall(ASTNode *node) override;
         void visitReturnStatement(ASTNode *node) override;
+        void visitASTNode(ASTNode *node);
 
     private:
         llvm::Value *getLLVMValue(ASTNode *node);
