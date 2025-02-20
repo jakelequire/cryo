@@ -19,9 +19,27 @@
 namespace Cryo
 {
     // Statements
-    void Visitor::visitBlock(ASTNode *node) {}
-    void Visitor::visitIfStatement(ASTNode *node) {}
-    void Visitor::visitForStatement(ASTNode *node) {}
-    void Visitor::visitWhileStatement(ASTNode *node) {}
-    void Visitor::visitReturnStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitIfStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitForStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitWhileStatement(ASTNode *node) {}
+
+    void CodeGenVisitor::visitReturnStatement(ASTNode *node)
+    {
+        if (!node || !node->data.returnStatement)
+            return;
+
+        // Visit the return value expression
+        visit(node->data.returnStatement->returnValue);
+
+        // Get the generated value
+        llvm::Value *retVal = getLLVMValue(node->data.returnStatement->returnValue);
+        if (retVal)
+        {
+            builder.CreateRet(retVal);
+        }
+        else
+        {
+            builder.CreateRetVoid();
+        }
+    }
 } // namespace Cryo

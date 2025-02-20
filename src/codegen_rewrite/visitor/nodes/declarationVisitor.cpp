@@ -19,43 +19,51 @@
 namespace Cryo
 {
     // Declarations
-    void Visitor::visitFunctionDecl(ASTNode *node)
+    void CodeGenVisitor::visitFunctionDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting function declaration...");
+        assert(node);
+
+        std::string funcName = node->data.functionDecl->name;
+        logMessage(LMI, "INFO", "Visitor", "Function Name: %s", funcName.c_str());
+
+        // Visit the function body
+        visit(node->data.functionDecl->body);
+
         return;
     }
 
-    void Visitor::visitExternFuncDecl(ASTNode *node)
+    void CodeGenVisitor::visitExternFuncDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting extern function declaration...");
         return;
     }
 
-    void Visitor::visitVarDecl(ASTNode *node)
+    void CodeGenVisitor::visitVarDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting variable declaration...");
         return;
     }
 
-    void Visitor::visitStructDecl(ASTNode *node)
+    void CodeGenVisitor::visitStructDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting struct declaration...");
         return;
     }
 
-    void Visitor::visitClassDecl(ASTNode *node)
+    void CodeGenVisitor::visitClassDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting class declaration...");
         return;
     }
 
-    void Visitor::visitEnumDecl(ASTNode *node)
+    void CodeGenVisitor::visitEnumDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting enum declaration...");
         return;
     }
 
-    void Visitor::visitGenericDecl(ASTNode *node)
+    void CodeGenVisitor::visitGenericDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting generic declaration...");
         return;

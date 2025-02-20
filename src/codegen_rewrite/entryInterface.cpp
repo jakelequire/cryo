@@ -25,6 +25,8 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
         return 1;
     }
 
+    logMessage(LMI, "INFO", "Compiler", "[new_codegen] Generating IR from AST...");
+
     // Initialize the context
     Cryo::CodegenContext &context = Cryo::CodegenContext::getInstance();
     context.initializeCodegenContext();
@@ -33,9 +35,11 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     bool isCompilingMain = unit->type == CRYO_MAIN;
     if (isCompilingMain)
     {
+        logMessage(LMI, "INFO", "Compiler", "Compiling main file...");
         context.preInitMain();
     }
 
+    logMessage(LMI, "INFO", "Compiler", "Generating IR from AST...");
     // Create IR Generator and Visitor
     Cryo::IRGeneration irGen(context);
 
@@ -43,6 +47,7 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     try
     {
         // [1]: Step 1. Generate IR from the AST
+        logMessage(LMI, "INFO", "Compiler", "Generating IR...");
         irGen.generateIR(unit->ast);
         return 0;
     }

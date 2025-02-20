@@ -19,10 +19,10 @@
 namespace Cryo
 {
     // Object-oriented features
-    void Visitor::visitProperty(ASTNode *node) {}
-    void Visitor::visitMethod(ASTNode *node) {}
-    void Visitor::visitConstructor(ASTNode *node) {}
-    void Visitor::visitPropertyAccess(ASTNode *node) {}
-    void Visitor::visitPropertyReassignment(ASTNode *node) {}
-    void Visitor::visitThis(ASTNode *node) {}
+    void CodeGenVisitor::visitProperty(ASTNode *node) {}
+    void CodeGenVisitor::visitMethod(ASTNode *node) {}
+    void CodeGenVisitor::visitConstructor(ASTNode *node) {}
+    void CodeGenVisitor::visitPropertyAccess(ASTNode *node) {}
+    void CodeGenVisitor::visitPropertyReassignment(ASTNode *node) {}
+    void CodeGenVisitor::visitThis(ASTNode *node) {}
 } // namespace Cryo

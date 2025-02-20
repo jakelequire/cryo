@@ -47,6 +47,8 @@ namespace Cryo
 
         // Program structure
         virtual void visitProgram(ASTNode *node) = 0;
+        virtual void visitFunctionBlock(ASTNode *node) = 0;
+        virtual void visitBlock(ASTNode *node) = 0;
         virtual void visitNamespace(ASTNode *node) = 0;
         virtual void visitImport(ASTNode *node) = 0;
         virtual void visitUsing(ASTNode *node) = 0;
@@ -73,7 +75,6 @@ namespace Cryo
         virtual void visitTypeofExpr(ASTNode *node) = 0;
 
         // Statements
-        virtual void visitBlock(ASTNode *node) = 0;
         virtual void visitIfStatement(ASTNode *node) = 0;
         virtual void visitForStatement(ASTNode *node) = 0;
         virtual void visitWhileStatement(ASTNode *node) = 0;
@@ -91,57 +92,8 @@ namespace Cryo
         virtual void visit(ASTNode *node);
     };
 
-    // Default empty implementation of Visitor
-    class DefaultVisitor : public Visitor
-    {
-    public:
-        virtual ~DefaultVisitor() = default;
-
-        // Program structure
-        void visitProgram(ASTNode *node) override {}
-        void visitNamespace(ASTNode *node) override {}
-        void visitImport(ASTNode *node) override {}
-        void visitUsing(ASTNode *node) override {}
-        void visitModule(ASTNode *node) override {}
-
-        // Declarations
-        void visitFunctionDecl(ASTNode *node) override {}
-        void visitExternFuncDecl(ASTNode *node) override {}
-        void visitVarDecl(ASTNode *node) override {}
-        void visitStructDecl(ASTNode *node) override {}
-        void visitClassDecl(ASTNode *node) override {}
-        void visitEnumDecl(ASTNode *node) override {}
-        void visitGenericDecl(ASTNode *node) override {}
-
-        // Expressions
-        void visitLiteralExpr(ASTNode *node) override {}
-        void visitVarName(ASTNode *node) override {}
-        void visitBinaryExpr(ASTNode *node) override {}
-        void visitUnaryExpr(ASTNode *node) override {}
-        void visitFunctionCall(ASTNode *node) override {}
-        void visitMethodCall(ASTNode *node) override {}
-        void visitArrayLiteral(ASTNode *node) override {}
-        void visitIndexExpr(ASTNode *node) override {}
-        void visitTypeofExpr(ASTNode *node) override {}
-
-        // Statements
-        void visitBlock(ASTNode *node) override {}
-        void visitIfStatement(ASTNode *node) override {}
-        void visitForStatement(ASTNode *node) override {}
-        void visitWhileStatement(ASTNode *node) override {}
-        void visitReturnStatement(ASTNode *node) override {}
-
-        // Object-oriented features
-        void visitProperty(ASTNode *node) override {}
-        void visitMethod(ASTNode *node) override {}
-        void visitConstructor(ASTNode *node) override {}
-        void visitPropertyAccess(ASTNode *node) override {}
-        void visitPropertyReassignment(ASTNode *node) override {}
-        void visitThis(ASTNode *node) override {}
-    };
-
     // Code Generation Visitor
-    class CodeGenVisitor : public DefaultVisitor
+    class CodeGenVisitor : public Visitor
     {
         friend class CodegenContext;
 
@@ -157,13 +109,48 @@ namespace Cryo
         // Get the last generated value
         llvm::Value *getValue() const { return lastValue; }
 
-        // Override only the methods you want to implement for code generation
+        // Program structure
+        void visitProgram(ASTNode *node) override;
+        void visitFunctionBlock(ASTNode *node) override;
+        void visitBlock(ASTNode *node) override;
+        void visitNamespace(ASTNode *node) override;
+        void visitImport(ASTNode *node) override;
+        void visitUsing(ASTNode *node) override;
+        void visitModule(ASTNode *node) override;
+
+        // Declarations
+        void visitFunctionDecl(ASTNode *node) override;
+        void visitExternFuncDecl(ASTNode *node) override;
+        void visitVarDecl(ASTNode *node) override;
+        void visitStructDecl(ASTNode *node) override;
+        void visitClassDecl(ASTNode *node) override;
+        void visitEnumDecl(ASTNode *node) override;
+        void visitGenericDecl(ASTNode *node) override;
+
+        // Expressions
         void visitLiteralExpr(ASTNode *node) override;
         void visitVarName(ASTNode *node) override;
         void visitBinaryExpr(ASTNode *node) override;
+        void visitUnaryExpr(ASTNode *node) override;
         void visitFunctionCall(ASTNode *node) override;
+        void visitMethodCall(ASTNode *node) override;
+        void visitArrayLiteral(ASTNode *node) override;
+        void visitIndexExpr(ASTNode *node) override;
+        void visitTypeofExpr(ASTNode *node) override;
+
+        // Statements
+        void visitIfStatement(ASTNode *node) override;
+        void visitForStatement(ASTNode *node) override;
+        void visitWhileStatement(ASTNode *node) override;
         void visitReturnStatement(ASTNode *node) override;
-        void visitASTNode(ASTNode *node);
+
+        // Object-oriented features
+        void visitProperty(ASTNode *node) override;
+        void visitMethod(ASTNode *node) override;
+        void visitConstructor(ASTNode *node) override;
+        void visitPropertyAccess(ASTNode *node) override;
+        void visitPropertyReassignment(ASTNode *node) override;
+        void visitThis(ASTNode *node) override;
 
     private:
         llvm::Value *getLLVMValue(ASTNode *node);

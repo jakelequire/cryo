@@ -28,6 +28,7 @@ namespace Cryo
         }
 
         // Process declarations first (hoisting) [3]
+        logMessage(LMI, "INFO", "IRGeneration", "Processing declarations...");
         processDeclarations(root);
 
         // Start visiting nodes
@@ -51,11 +52,14 @@ namespace Cryo
     void Cryo::IRGeneration::generateIRForNode(ASTNode *node)
     {
         if (!node)
+        {
+            logMessage(LMI, "ERROR", "IRGeneration", "Node is null");
             return;
-
+        }
         // Use the visitor through the context
         if (!context.visitor)
         {
+            logMessage(LMI, "ERROR", "IRGeneration", "Visitor is null, creating new visitor...");
             context.visitor = std::make_unique<CodeGenVisitor>(context);
         }
 

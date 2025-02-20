@@ -21,7 +21,9 @@ namespace Cryo
     void CodegenContext::preInitMain(void)
     {
         llvm::Module *depMod = this->getLinker()->initMainModule();
-        this->DONOTUSEYET_mergeModule(depMod);
+        // this->DONOTUSEYET_mergeModule(depMod);
+
+        return;
     }
 
     void CodegenContext::initializeCodegenContext(void)
@@ -30,19 +32,25 @@ namespace Cryo
         module = std::make_unique<llvm::Module>(moduleName, context);
         symbolTable = std::make_unique<IRSymbolTable>(module.get());
         visitor = std::make_unique<CodeGenVisitor>(*this);
+
+        return;
     }
     void CodegenContext::setModuleIdentifier(std::string name)
     {
         module->setModuleIdentifier(name);
         module->setSourceFileName(name);
+
+        return;
     }
 
     void CodegenContext::setCurrentFunction(llvm::Function *function)
     {
         this->currentFunction = function;
+        return;
     }
     void CodegenContext::clearCurrentFunction(void)
     {
         this->currentFunction = nullptr;
+        return;
     }
 } // namespace Cryo
