@@ -45,7 +45,6 @@
 #include "llvm/IR/ValueSymbolTable.h"
 #include "llvm/IR/ValueMap.h"
 #include "llvm/IR/ValueHandle.h"
-#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"

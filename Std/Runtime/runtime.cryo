@@ -3,6 +3,7 @@ namespace Runtime;
 extern function __c_printInt(i: int) -> void;
 extern function __c_printI64(inum: i64) -> void;
 extern function __c_printI64Hex(inum: i64) -> void;
+extern function __c_printPointer(addr: any) -> void;
 
 extern function __c_printStr(s: string) -> void;
 extern function __c_println(s: string) -> void;
@@ -29,6 +30,11 @@ function printI64(inum: i64) -> void {
 
 function printI64Hex(inum: i64) -> void {
     __c_printI64Hex(inum);
+    return;
+}
+
+function printAddress(addr: i64) -> void {
+    __c_printPointer(addr);
     return;
 }
 

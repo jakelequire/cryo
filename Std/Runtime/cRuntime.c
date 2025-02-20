@@ -111,7 +111,7 @@ void __c_printIntAddr(int *ptr)
 
 void __c_printPointer(void *ptr)
 {
-    printf("[DEBUG] printPtr: \t%p\n", ptr);
+    printf("%p\n", ptr);
 }
 
 // ======================================================= //

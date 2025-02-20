@@ -51,7 +51,7 @@ namespace Cryo
         fs->createNewEmptyFileWpath(outputPath);
         logMessage(LMI, "INFO", "Linker", "Starting IR Generation...");
         std::error_code EC;
-        llvm::raw_fd_ostream fileStream(outputPath, EC, llvm::sys::fs::OF_Text);
+        llvm::raw_fd_ostream fileStream(outputPath, EC);
         if (EC)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to open file!");

@@ -26,6 +26,9 @@ namespace Cryo
         if (!node)
             return;
 
+        std::string nodeTypeStr = CryoNodeTypeToString(node->metaData->type);
+        logMessage(LMI, "INFO", "Visitor", "Visiting node: %s", nodeTypeStr.c_str());
+
         switch (node->metaData->type)
         {
         case NODE_PROGRAM:
@@ -126,7 +129,7 @@ namespace Cryo
             visitThis(node);
             break;
         default:
-            // Handle unknown node types or provide a default behavior
+            logMessage(LMI, "ERROR", "Visitor", "Unhandled node type: %s", nodeTypeStr.c_str());
             break;
         }
     }
@@ -141,16 +144,43 @@ namespace Cryo
 
         switch (literal->type->container->baseType)
         {
+        // Integer literals
         case PRIM_INT:
             value = llvm::ConstantInt::get(builder.getInt32Ty(), literal->value.intValue);
+            break;
+        case PRIM_I8:
+            value = llvm::ConstantInt::get(builder.getInt8Ty(), literal->value.intValue);
+            break;
+        case PRIM_I16:
+            value = llvm::ConstantInt::get(builder.getInt16Ty(), literal->value.intValue);
+            break;
+        case PRIM_I32:
+            value = llvm::ConstantInt::get(builder.getInt32Ty(), literal->value.intValue);
+            break;
+        case PRIM_I64:
+            value = llvm::ConstantInt::get(builder.getInt64Ty(), literal->value.intValue);
+            break;
+        case PRIM_I128:
+            value = llvm::ConstantInt::get(builder.getInt128Ty(), literal->value.intValue);
             break;
         case PRIM_FLOAT:
             value = llvm::ConstantFP::get(builder.getDoubleTy(), literal->value.floatValue);
             break;
+        // Boolean literals
         case PRIM_BOOLEAN:
             value = llvm::ConstantInt::get(builder.getInt1Ty(), literal->value.booleanValue);
             break;
-            // Add other literal types as needed
+        // String literals
+        case PRIM_STRING:
+            value = builder.CreateGlobalStringPtr(literal->value.stringValue);
+            break;
+        // Null & Void literals
+        case PRIM_NULL:
+            value = llvm::ConstantPointerNull::get(builder.getInt8Ty()->getPointerTo());
+            break;
+        case PRIM_VOID:
+            value = nullptr;
+            break;
         }
 
         // Store the generated value in the current node's context

@@ -14,48 +14,15 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen_rewrite/codegen.hpp"
+#include "codegen_rewrite/visitor.hpp"
 
 namespace Cryo
 {
-    // [3]: Step 3. Process declarations
-    void IRGeneration::processDeclarations(ASTNode *node)
-    {
-        if (!node)
-        {
-            logMessage(LMI, "ERROR", "IRGeneration", "Root node is null");
-            return;
-        }
-
-        // Handle function declarations
-        if (node->metaData->type == NODE_FUNCTION_DECLARATION)
-        {
-            processFunctionDeclaration(node);
-        }
-
-        // Handle type declarations (structs, classes)
-        if (node->metaData->type == NODE_STRUCT_DECLARATION ||
-            node->metaData->type == NODE_CLASS)
-        {
-            processTypeDeclaration(node);
-        }
-
-        // Recurse through the tree
-        if (node->firstChild)
-        {
-            processDeclarations(node->firstChild);
-        }
-    }
-
-    void IRGeneration::processFunctionDeclaration(ASTNode *node)
-    {
-        logMessage(LMI, "INFO", "IRGeneration", "Processing function declaration...");
-        return;
-    }
-    void IRGeneration::processTypeDeclaration(ASTNode *node)
-    {
-        logMessage(LMI, "INFO", "IRGeneration", "Processing type declaration...");
-        return;
-    }
-
+    // Object-oriented features
+    void Visitor::visitProperty(ASTNode *node) {}
+    void Visitor::visitMethod(ASTNode *node) {}
+    void Visitor::visitConstructor(ASTNode *node) {}
+    void Visitor::visitPropertyAccess(ASTNode *node) {}
+    void Visitor::visitPropertyReassignment(ASTNode *node) {}
+    void Visitor::visitThis(ASTNode *node) {}
 } // namespace Cryo

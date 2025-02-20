@@ -14,47 +14,50 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen_rewrite/codegen.hpp"
+#include "codegen_rewrite/visitor.hpp"
 
 namespace Cryo
 {
-    // [3]: Step 3. Process declarations
-    void IRGeneration::processDeclarations(ASTNode *node)
+    // Declarations
+    void Visitor::visitFunctionDecl(ASTNode *node)
     {
-        if (!node)
-        {
-            logMessage(LMI, "ERROR", "IRGeneration", "Root node is null");
-            return;
-        }
-
-        // Handle function declarations
-        if (node->metaData->type == NODE_FUNCTION_DECLARATION)
-        {
-            processFunctionDeclaration(node);
-        }
-
-        // Handle type declarations (structs, classes)
-        if (node->metaData->type == NODE_STRUCT_DECLARATION ||
-            node->metaData->type == NODE_CLASS)
-        {
-            processTypeDeclaration(node);
-        }
-
-        // Recurse through the tree
-        if (node->firstChild)
-        {
-            processDeclarations(node->firstChild);
-        }
-    }
-
-    void IRGeneration::processFunctionDeclaration(ASTNode *node)
-    {
-        logMessage(LMI, "INFO", "IRGeneration", "Processing function declaration...");
+        logMessage(LMI, "INFO", "Visitor", "Visiting function declaration...");
         return;
     }
-    void IRGeneration::processTypeDeclaration(ASTNode *node)
+
+    void Visitor::visitExternFuncDecl(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "IRGeneration", "Processing type declaration...");
+        logMessage(LMI, "INFO", "Visitor", "Visiting extern function declaration...");
+        return;
+    }
+
+    void Visitor::visitVarDecl(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting variable declaration...");
+        return;
+    }
+
+    void Visitor::visitStructDecl(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting struct declaration...");
+        return;
+    }
+
+    void Visitor::visitClassDecl(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting class declaration...");
+        return;
+    }
+
+    void Visitor::visitEnumDecl(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting enum declaration...");
+        return;
+    }
+
+    void Visitor::visitGenericDecl(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting generic declaration...");
         return;
     }
 

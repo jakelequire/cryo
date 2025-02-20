@@ -18,7 +18,7 @@
 
 namespace Cryo
 {
-
+    // [2]: Step 2. Begin IR Generation
     void Cryo::IRGeneration::generateIR(ASTNode *root)
     {
         if (!root)
@@ -27,7 +27,7 @@ namespace Cryo
             return;
         }
 
-        // Process declarations first (hoisting)
+        // Process declarations first (hoisting) [3]
         processDeclarations(root);
 
         // Start visiting nodes
@@ -47,6 +47,7 @@ namespace Cryo
         logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
     }
 
+    // [4]: Step 4. Generate IR for each node
     void Cryo::IRGeneration::generateIRForNode(ASTNode *node)
     {
         if (!node)

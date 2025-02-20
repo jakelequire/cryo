@@ -94,7 +94,6 @@ extern "C"
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
 
-#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/SourceMgr.h"

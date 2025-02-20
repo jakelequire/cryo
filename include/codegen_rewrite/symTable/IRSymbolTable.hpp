@@ -28,7 +28,6 @@
 
 namespace Cryo
 {
-
     class IRSymbolTable
     {
     private:

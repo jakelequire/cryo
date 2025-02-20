@@ -42,6 +42,7 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     // Begin code generation
     try
     {
+        // [1]: Step 1. Generate IR from the AST
         irGen.generateIR(unit->ast);
         return 0;
     }

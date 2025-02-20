@@ -14,48 +14,55 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen_rewrite/codegen.hpp"
+#include "codegen_rewrite/visitor.hpp"
 
 namespace Cryo
 {
-    // [3]: Step 3. Process declarations
-    void IRGeneration::processDeclarations(ASTNode *node)
+    // Program structure
+    void Visitor::visitProgram(ASTNode *node)
     {
+        logMessage(LMI, "INFO", "Visitor", "Visiting program...");
         if (!node)
         {
-            logMessage(LMI, "ERROR", "IRGeneration", "Root node is null");
+            logMessage(LMI, "ERROR", "Visitor", "Root node is null");
             return;
         }
 
-        // Handle function declarations
-        if (node->metaData->type == NODE_FUNCTION_DECLARATION)
+        for (size_t i = 0; i < node->data.program->statementCount; i++)
         {
-            processFunctionDeclaration(node);
+            visit(node->data.program->statements[i]);
         }
 
-        // Handle type declarations (structs, classes)
-        if (node->metaData->type == NODE_STRUCT_DECLARATION ||
-            node->metaData->type == NODE_CLASS)
-        {
-            processTypeDeclaration(node);
-        }
-
-        // Recurse through the tree
-        if (node->firstChild)
-        {
-            processDeclarations(node->firstChild);
-        }
-    }
-
-    void IRGeneration::processFunctionDeclaration(ASTNode *node)
-    {
-        logMessage(LMI, "INFO", "IRGeneration", "Processing function declaration...");
-        return;
-    }
-    void IRGeneration::processTypeDeclaration(ASTNode *node)
-    {
-        logMessage(LMI, "INFO", "IRGeneration", "Processing type declaration...");
+        logMessage(LMI, "INFO", "Visitor", "Visiting program complete!");
         return;
     }
 
+    // Skip namespace nodes.
+    void Visitor::visitNamespace(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Skipping namespace node...");
+        return;
+    }
+
+    // Skip import nodes.
+    void Visitor::visitImport(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Skipping import node...");
+        return;
+    }
+
+    // Skip using nodes.
+    void Visitor::visitUsing(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Skipping using node...");
+        return;
+    }
+
+    // Skip module nodes.
+    void Visitor::visitModule(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Skipping module node...");
+        return;
+    }
+    
 } // namespace Cryo
