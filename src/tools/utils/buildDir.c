@@ -40,31 +40,31 @@ void init_build_dir(const char *rootDir)
     printf("Root Directory: %s\n", rootDir);
 
     // Create the build directory
-    String *buildDir = Str(rootDir);
+    String *buildDir = _Str(rootDir);
     buildDir->append(buildDir, "/");
     buildDir->append(buildDir, BUILD_DIR);
     printf("Build Directory: %s\n", buildDir->c_str(buildDir));
 
     // Create the out directory
-    String *outDir = Str(buildDir->c_str(buildDir));
+    String *outDir = _Str(buildDir->c_str(buildDir));
     outDir->append(outDir, "/");
     outDir->append(outDir, OUT_DIR);
     printf("Out Directory: %s\n", outDir->c_str(outDir));
 
     // Create the obj directory
-    String *objDir = Str(buildDir->c_str(outDir));
+    String *objDir = _Str(buildDir->c_str(outDir));
     objDir->append(objDir, "/");
     objDir->append(objDir, OBJ_DIR);
     printf("Obj Directory: %s\n", objDir->c_str(objDir));
 
     // Create the runtime directory
-    String *runtimeDir = Str(outDir->c_str(outDir));
+    String *runtimeDir = _Str(outDir->c_str(outDir));
     runtimeDir->append(runtimeDir, "/");
     runtimeDir->append(runtimeDir, RUNTIME_DIR);
     printf("Runtime Directory: %s\n", runtimeDir->c_str(runtimeDir));
 
     // Create the deps directory
-    String *depsDir = Str(outDir->c_str(outDir));
+    String *depsDir = _Str(outDir->c_str(outDir));
     depsDir->append(depsDir, "/");
     depsDir->append(depsDir, DEPS_DIR);
     printf("Deps Directory: %s\n", depsDir->c_str(depsDir));

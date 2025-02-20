@@ -71,7 +71,7 @@ void checkForCryoProject(CompilerSettings *settings)
 
         logProjectSettings(projectSettings);
 
-        String *projectName = Str(projectSettings->project_name);
+        String *projectName = _Str(projectSettings->project_name);
         if (projectName)
         {
             logMessage(LMI, "INFO", "CryoConfig", "Project Name: %s", projectName->c_str(projectName));

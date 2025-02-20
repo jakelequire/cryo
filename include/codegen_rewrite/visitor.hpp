@@ -25,7 +25,6 @@
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
-#include "frontend/dataTypes.h"
 #include "codegen_rewrite/symTable/IRSymbolTable.hpp"
 #include "codegen_rewrite/codegen.hpp"
 

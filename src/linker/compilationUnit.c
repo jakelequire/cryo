@@ -160,7 +160,7 @@ CompilationUnitDir createCompilationUnitDir(const char *inputFile, const char *b
         return dir;
     }
 
-    String *fullFileName = Str(fileName);
+    String *fullFileName = _Str(fileName);
     fullFileName->append(fullFileName, ".");
     fullFileName->append(fullFileName, (char *)fileExt);
 
@@ -186,7 +186,7 @@ CompilationUnitDir createCompilationUnitDir(const char *inputFile, const char *b
         // Set the output file extension
         dir.out_fileExt = ".ll";
 
-        String *fullFileName = Str(fileName);
+        String *fullFileName = _Str(fileName);
         fullFileName->append(fullFileName, (char *)dir.out_fileExt);
         dir.out_fullFileName = fullFileName->c_str(fullFileName);
         break;
@@ -201,7 +201,7 @@ CompilationUnitDir createCompilationUnitDir(const char *inputFile, const char *b
         // Set the output file extension
         dir.out_fileExt = ".ll";
 
-        String *fullFileName = Str("main");
+        String *fullFileName = _Str("main");
         fullFileName->append(fullFileName, (char *)dir.out_fileExt);
         dir.out_fullFileName = fullFileName->c_str(fullFileName);
         break;
@@ -216,7 +216,7 @@ CompilationUnitDir createCompilationUnitDir(const char *inputFile, const char *b
         // Set the output file extension
         dir.out_fileExt = ".ll";
 
-        String *fullFileName = Str(fileName);
+        String *fullFileName = _Str(fileName);
         fullFileName->append(fullFileName, (char *)dir.out_fileExt);
         dir.out_fullFileName = fullFileName->c_str(fullFileName);
         break;
@@ -231,7 +231,7 @@ CompilationUnitDir createCompilationUnitDir(const char *inputFile, const char *b
         // Set the output file extension
         dir.out_fileExt = ".ll";
 
-        String *fullFileName = Str(fileName);
+        String *fullFileName = _Str(fileName);
         fullFileName->append(fullFileName, (char *)dir.out_fileExt);
         dir.out_fullFileName = fullFileName->c_str(fullFileName);
 

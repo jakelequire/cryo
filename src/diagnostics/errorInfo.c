@@ -22,10 +22,10 @@ String *getErrorMessage(enum CryoErrorCode code)
     switch (code)
     {
     case CRYO_SUCCESS:
-        return Str("Success");
+        return _Str("Success");
     case CRYO_ERROR_UNKNOWN:
-        return Str("Unknown error");
+        return _Str("Unknown error");
     default:
-        return Str("Unknown error code: %d", code);
+        return _Str("Unknown error code: %d", code);
     }
 }

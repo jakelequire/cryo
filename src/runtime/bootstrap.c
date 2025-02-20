@@ -105,7 +105,7 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     // ===========================================
     // Create ASTNode for the runtime memory
 
-    String *runtimeMemoryPath = Str(fs->removeFileFromPath(runtimePath));
+    String *runtimeMemoryPath = _Str(fs->removeFileFromPath(runtimePath));
     runtimeMemoryPath->append(runtimeMemoryPath, "/memory.cryo");
     logMessage(LMI, "INFO", "Bootstrap", "Runtime Directory Path: %s", runtimeMemoryPath->c_str(runtimeMemoryPath));
 
