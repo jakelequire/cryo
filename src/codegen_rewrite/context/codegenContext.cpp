@@ -53,4 +53,16 @@ namespace Cryo
         this->currentFunction = nullptr;
         return;
     }
+
+    void CodegenContext::printModule(void)
+    {
+        std::string moduleName = module->getName().str();
+        std::cout << "\n\n";
+        std::cout << "----------------------- Module: " << moduleName << " -----------------------\n";
+        module->print(llvm::errs(), nullptr);
+        std::cout << "-----------------------------------------------------------\n";
+        std::cout << "\n\n";
+
+        return;
+    }
 } // namespace Cryo

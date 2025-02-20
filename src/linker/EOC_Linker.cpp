@@ -23,7 +23,7 @@ namespace Cryo
     {
         // Create the main object file
         createMainObject();
-
+        
         // Run the completed binary
         runCompletedBinary();
     }

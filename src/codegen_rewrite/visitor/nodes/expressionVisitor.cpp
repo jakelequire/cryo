@@ -64,7 +64,7 @@ namespace Cryo
             value = llvm::ConstantPointerNull::get(builder.getInt8Ty()->getPointerTo());
             break;
         case PRIM_VOID:
-            value = nullptr;
+            value = llvm::UndefValue::get(builder.getVoidTy());
             break;
         }
 
@@ -128,7 +128,6 @@ namespace Cryo
         storeValueInNode(node, result);
     }
 
-    void CodeGenVisitor::visitUnaryExpr(ASTNode *node) {}
 
     void CodeGenVisitor::visitFunctionCall(ASTNode *node)
     {
@@ -162,6 +161,7 @@ namespace Cryo
     }
 
     void CodeGenVisitor::visitMethodCall(ASTNode *node) {}
+    void CodeGenVisitor::visitUnaryExpr(ASTNode *node) {}
     void CodeGenVisitor::visitArrayLiteral(ASTNode *node) {}
     void CodeGenVisitor::visitIndexExpr(ASTNode *node) {}
     void CodeGenVisitor::visitTypeofExpr(ASTNode *node) {}

@@ -46,6 +46,7 @@ namespace Cryo
         }
 
         logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
+        this->context.printModule();
     }
 
     // [4]: Step 4. Generate IR for each node

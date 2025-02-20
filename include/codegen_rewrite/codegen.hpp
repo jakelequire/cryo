@@ -102,6 +102,7 @@ namespace Cryo
 
         Linker *getLinker() { return GetCXXLinker(); }
 
+        void printModule(void);
         void preInitMain(void);
 
         // Context Interface

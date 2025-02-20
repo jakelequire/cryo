@@ -24,7 +24,10 @@ namespace Cryo
     void Visitor::visit(ASTNode *node)
     {
         if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
             return;
+        }
 
         std::string nodeTypeStr = CryoNodeTypeToString(node->metaData->type);
         logMessage(LMI, "INFO", "Visitor", "Visiting node: %s", nodeTypeStr.c_str());
@@ -97,6 +100,9 @@ namespace Cryo
         case NODE_BLOCK:
             visitBlock(node);
             break;
+        case NODE_FUNCTION_BLOCK:
+            visitFunctionBlock(node);
+            break;
         case NODE_IF_STATEMENT:
             visitIfStatement(node);
             break;
@@ -139,9 +145,9 @@ namespace Cryo
 
     llvm::Value *CodeGenVisitor::getLLVMValue(ASTNode *node)
     {
-        // Helper to extract LLVM value from a node
-        // Implementation depends on how you store generated values
-        return nullptr; // Implement actual value retrieval
+        // Helper to get LLVM value from a node
+        // Implementation depends on your storage strategy
+        return nullptr;
     }
 
     void CodeGenVisitor::storeValueInNode(ASTNode *node, llvm::Value *value)
