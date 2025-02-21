@@ -73,9 +73,23 @@ namespace Cryo
 #define SYMBOL_MANAGER compiler.getContext().symbolTable->getSymbolManager()
 #define GetCXXLinker() reinterpret_cast<Cryo::Linker *>(globalLinker)
 
+#define ASSERT_NODE_VOID_RET(node)                           \
+    if (!node)                                               \
+    {                                                        \
+        logMessage(LMI, "ERROR", "Codegen", "Node is null"); \
+        return;                                              \
+    }
+#define ASSERT_NODE_NULLPTR_RET(node)                        \
+    if (!node)                                               \
+    {                                                        \
+        logMessage(LMI, "ERROR", "Codegen", "Node is null"); \
+        return nullptr;                                      \
+    }
     class CodegenContext;
     class IRSymbolTable;
     class CodeGenVisitor;
+    class IRGeneration;
+    class Initilizer;
 
     // ======================================================================== //
     //                            Codegen Context                               //
@@ -126,6 +140,8 @@ namespace Cryo
 
     class IRGeneration
     {
+        friend class Initilizer;
+
     public:
         IRGeneration(CodegenContext &context) : context(context) {}
         ~IRGeneration() {}
@@ -162,7 +178,7 @@ namespace Cryo
         llvm::Value *generateBinaryExpr(ASTNode *node);
         llvm::Value *generateFunctionCall(ASTNode *node);
         llvm::Value *generateReturnStatement(ASTNode *node);
-        // Add other generation methods as needed...
+        llvm::Value *generateUnaryExpr(ASTNode *node);
     };
 
 } // namespace Cryo
