@@ -22,7 +22,6 @@ namespace Cryo
     {
         llvm::Module *depMod = this->getLinker()->initMainModule();
         // this->DONOTUSEYET_mergeModule(depMod);
-
         return;
     }
 
@@ -35,6 +34,7 @@ namespace Cryo
 
         return;
     }
+
     void CodegenContext::setModuleIdentifier(std::string name)
     {
         module->setModuleIdentifier(name);
@@ -48,6 +48,7 @@ namespace Cryo
         this->currentFunction = function;
         return;
     }
+
     void CodegenContext::clearCurrentFunction(void)
     {
         this->currentFunction = nullptr;
@@ -58,11 +59,12 @@ namespace Cryo
     {
         std::string moduleName = module->getName().str();
         std::cout << "\n\n";
-        std::cout << "----------------------- Module: " << moduleName << " -----------------------\n";
-        module->print(llvm::errs(), nullptr);
-        std::cout << "-----------------------------------------------------------\n";
+        std::cout << "<!> [ NEW CODEGEN ] Printing Module: " << moduleName << "\n";
         std::cout << "\n\n";
-
+        std::cout << "<!> ===----------------------- Module: " << moduleName << " -----------------------=== <!>\n";
+        module->print(llvm::errs(), nullptr);
+        std::cout << "<!> ===------------------------------------------------------------=== <!>\n";
+        std::cout << "\n\n";
         return;
     }
 } // namespace Cryo

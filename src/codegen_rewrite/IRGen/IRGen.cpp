@@ -43,6 +43,9 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
         this->context.printModule();
+
+        // Complete the generation
+        completeGeneration();
     }
 
     // [4]: Step 4. Generate IR for each node
@@ -50,6 +53,7 @@ namespace Cryo
     {
         ASSERT_NODE_VOID_RET(node);
 
+        logMessage(LMI, "INFO", "IRGeneration", "Generating IR for node...");
         // Use the visitor through the context
         if (!context.visitor)
         {
@@ -57,9 +61,33 @@ namespace Cryo
             context.visitor = std::make_unique<CodeGenVisitor>(context);
         }
 
+        logMessage(LMI, "INFO", "IRGeneration", "Visiting node...");
         context.visitor->visit(node);
 
         return;
+    }
+
+    void Cryo::IRGeneration::completeGeneration(void)
+    {
+        // Verify the module
+        if (llvm::verifyModule(*context.module))
+        {
+            logMessage(LMI, "ERROR", "IRGeneration", "Module verification failed");
+            return;
+        }
+
+        // Optimize the module
+        llvm::legacy::PassManager passManager;
+        passManager.add(llvm::createInstructionCombiningPass());
+
+        // Run the optimization passes
+        passManager.run(*context.module);
+
+        // Print the module
+        context.printModule();
+
+        // Write the module to a file
+        std::string outputPath = "output.ll";
     }
 
 } // namespace Cryo

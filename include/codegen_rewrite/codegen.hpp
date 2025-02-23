@@ -146,7 +146,11 @@ namespace Cryo
         IRGeneration(CodegenContext &context) : context(context) {}
         ~IRGeneration() {}
 
+        std::string buildDir = "";
+        void setBuildDir(std::string dir) { buildDir = dir; }
+
         void generateIR(ASTNode *root);
+        void completeGeneration(void);
 
     private:
         CodegenContext &context;

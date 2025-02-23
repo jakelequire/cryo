@@ -42,6 +42,7 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     logMessage(LMI, "INFO", "Compiler", "Generating IR from AST...");
     // Create IR Generator and Visitor
     Cryo::IRGeneration irGen(context);
+    irGen.setBuildDir(unit->dir.out_filePath);
 
     // Begin code generation
     try

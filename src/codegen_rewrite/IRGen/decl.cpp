@@ -41,10 +41,10 @@ namespace Cryo
         }
 
         // Recurse through the tree
-        if (node->firstChild)
-        {
-            processDeclarations(node->firstChild);
-        }
+        // if (node->firstChild)
+        // {
+        //     processDeclarations(node->firstChild);
+        // }
     }
 
     void IRGeneration::processFunctionDeclaration(ASTNode *node)
