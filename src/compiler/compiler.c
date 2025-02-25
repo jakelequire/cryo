@@ -280,6 +280,66 @@ int exe_project_build(CompilerSettings *settings)
 }
 
 // ============================================================================= //
+//                           Compile for AST Node                                //
+// ============================================================================= //
+
+ASTNode *compileForASTNode(const char *filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    const char *source = readFile(filePath);
+    if (!source)
+    {
+        fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
+        return NULL;
+    }
+    const char *fileName = trimFilePath(filePath);
+
+    Lexer lexer;
+    initLexer(&lexer, source, fileName, state);
+
+    Arena *arena;
+    arena = createArena(ARENA_SIZE, ALIGNMENT);
+
+    const char *globalBuildDir = GetBuildDir(globalTable);
+    // Initialize the global symbol table (for reaping)
+    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create_Reaping(true, globalBuildDir);
+    if (!globalSymbolTable)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to create global symbol table");
+        CONDITION_FAILED;
+    }
+    logMessage(LMI, "INFO", "Compiler", "Global Symbol Table Initialized");
+
+    setGlobalSymbolTable(state, globalSymbolTable);
+
+    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
+    if (programNode == NULL)
+    {
+        fprintf(stderr, "Error: Failed to parse program node\n");
+        CONDITION_FAILED;
+    }
+
+    TypesTable *reapedTypes = GetReapedTypeTable(globalSymbolTable);
+    if (!reapedTypes)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to reap types");
+        CONDITION_FAILED;
+    }
+
+    TypesTable *copiedTypes = (TypesTable *)malloc(sizeof(TypesTable));
+    if (!copiedTypes)
+    {
+        logMessage(LMI, "ERROR", "Compiler", "Failed to allocate memory for copied types");
+        CONDITION_FAILED;
+    }
+    memcpy(copiedTypes, reapedTypes, sizeof(TypesTable));
+
+    ImportReapedTypesTable(globalTable, copiedTypes);
+
+    return programNode;
+}
+
+// ============================================================================= //
 //                             Source Text Build                                 //
 // ============================================================================= //
 

@@ -71,6 +71,14 @@ struct FunctionSymbol
 
     const char *parentScopeID;
     const char *functionScopeId;
+
+    bool isVariadic;
+    DataType *variadicElementType;
+
+    // For generic functions
+    bool isGenericFunction;
+    GenericType **genericParams;
+    int genericParamCount;
 };
 
 struct ExternSymbol
@@ -105,6 +113,17 @@ struct TypeSymbol
 
     const char *scopeId;
     const char *parentNameID;
+
+    // Add generic type parameters support
+    bool isGenericType;
+    struct
+    {
+        TypeSymbol **typeParameters; // For List<T>, this would contain T
+        int paramCount;
+        TypeSymbol **typeArguments; // For concrete instantiations
+        int argCount;
+        TypeSymbol *baseGenericType; // For instantiations, points to the original generic type
+    } generics;
 };
 
 struct PropertySymbol

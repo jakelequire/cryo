@@ -67,6 +67,49 @@ namespace Cryo
         return nullptr;
     }
 
+    TypeSymbol *GlobalSymbolTable::findTypeSymbol(std::string typeName)
+    {
+        __STACK_FRAME__
+        logMessage(LMI, "INFO", "Symbol Table", "Resolving Data Type, Type Name: %s", typeName.c_str());
+
+        // Print the type table
+        SymbolTableDebugger::logTypeTable(this->typeTable);
+
+        if (typeName.empty())
+        {
+            std::cerr << "Error: Failed to resolve data type, name is empty!" << std::endl;
+            return nullptr;
+        }
+
+        if (!typeTable || typeTable == nullptr)
+        {
+            std::cerr << "Error: Failed to resolve data type, types table is null!" << std::endl;
+            return nullptr;
+        }
+
+        size_t count = typeTable->count;
+        for (size_t i = 0; i < count; i++)
+        {
+            const char *typeSymbolName = typeTable->typeSymbols[i]->name;
+            TypeSymbol *typeSymbol = typeTable->typeSymbols[i];
+            if (!typeSymbol || typeSymbol == nullptr)
+            {
+                continue;
+            }
+            if (strcmp(typeSymbolName, typeName.c_str()) == 0)
+            {
+                logMessage(LMI, "INFO", "Symbol Table", "Resolved Data Type", "Type Name %s", typeSymbolName);
+                return typeSymbol;
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        return nullptr;
+    }
+
     void GlobalSymbolTable::parseSymbolTableForTypes(SymbolTable *symbolTable)
     {
         __STACK_FRAME__
@@ -278,6 +321,85 @@ namespace Cryo
             }
         }
         return;
+    }
+
+    DataType *GlobalSymbolTable::resolveGenericDataType(const char *baseName, DataType **typeArgs, int argCount)
+    {
+        // First find the base generic type
+        DataType *baseType = resolveDataType(baseName);
+        if (!baseType || !baseType->container->isGeneric)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Type %s is not a generic type", baseName);
+            return nullptr;
+        }
+
+        // Create a new instantiated type
+        return createGenericDataTypeInstance(baseType, typeArgs, argCount);
+    }
+
+    void GlobalSymbolTable::registerGenericType(const char *name, GenericType **params, int paramCount)
+    {
+        TypeSymbol *symbol = createIncompleteTypeSymbol(name, GENERIC_TYPE);
+        symbol->isGenericType = true;
+
+        // Store the generic parameters
+        symbol->generics.typeParameters = (TypeSymbol **)malloc(paramCount * sizeof(TypeSymbol *));
+        symbol->generics.paramCount = paramCount;
+
+        // Add to type table
+        addTypeToTable(symbol);
+    }
+
+    void GlobalSymbolTable::registerGenericInstantiation(const char *baseName, DataType **typeArgs, int argCount, DataType *resultType)
+    {
+        // Create a unique name for this instantiation
+        std::string instantiationName = createGenericInstantiationName(baseName, typeArgs, argCount);
+
+        TypeSymbol *symbol = createIncompleteTypeSymbol(instantiationName.c_str(), GENERIC_TYPE);
+        symbol->isGenericType = false; // It's a concrete instantiation
+        symbol->type = resultType;
+
+        // Reference the base generic type
+        TypeSymbol *baseSymbol = findTypeSymbol(baseName);
+        symbol->generics.baseGenericType = baseSymbol;
+
+        // Store the type arguments
+        symbol->generics.typeArguments = (TypeSymbol **)malloc(argCount * sizeof(TypeSymbol *));
+        symbol->generics.argCount = argCount;
+
+        // Add to type table
+        addTypeToTable(symbol);
+    }
+
+    std::string GlobalSymbolTable::createGenericInstantiationName(const char *baseName, DataType **typeArgs, int argCount)
+    {
+        // Start with the base name
+        std::string name = baseName;
+        name += "<";
+
+        // Add each type argument
+        for (int i = 0; i < argCount; i++)
+        {
+            // Add the type name
+            DataType *type = typeArgs[i];
+            name += DataTypeToString(type);
+
+            // Add comma if not the last argument
+            if (i < argCount - 1)
+            {
+                name += ", ";
+            }
+        }
+
+        name += ">";
+
+        // Add a hash to ensure uniqueness
+        std::hash<std::string> hasher;
+        size_t hash = hasher(name);
+        std::stringstream hashStr;
+        hashStr << "_" << std::hex << hash;
+
+        return name + hashStr.str();
     }
 
 } // namespace Cryo

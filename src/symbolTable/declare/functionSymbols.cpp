@@ -59,6 +59,48 @@ namespace Cryo
         return;
     }
 
+    void GlobalSymbolTable::initGenericFunctionDeclaration(const char *functionName, const char *parentScopeID, ASTNode **params, size_t paramCount, DataType *returnType, GenericType **genericParams, int genericParamCount)
+    {
+        // Create function symbol for standard functions
+        FunctionSymbol *funcSymbol = createIncompleteFunctionSymbol(functionName, parentScopeID, returnType, nullptr, paramCount);
+
+        // Add generic parameter information if this is a generic function
+        if (genericParamCount > 0)
+        {
+            funcSymbol->isGenericFunction = true;
+            funcSymbol->genericParams = genericParams;
+            funcSymbol->genericParamCount = genericParamCount;
+
+            // Register generic type parameters in the type table
+            for (int i = 0; i < genericParamCount; i++)
+            {
+                TypeSymbol *typeParam = createIncompleteTypeSymbol(genericParams[i]->name, GENERIC_TYPE);
+                typeParam->isGenericType = true;
+                addTypeToTable(typeParam);
+            }
+        }
+
+        // Handle variadic parameters
+        for (size_t i = 0; i < paramCount; i++)
+        {
+            if (params[i]->data.param->isVariadic && i == paramCount - 1)
+            {
+                funcSymbol->isVariadic = true;
+
+                // If it's a typed variadic parameter in a generic function,
+                // set up the association between array type and the element type
+                if (funcSymbol->isGenericFunction && params[i]->data.param->variadicElementType)
+                {
+                    funcSymbol->variadicElementType = params[i]->data.param->variadicElementType;
+                }
+            }
+        }
+
+        // Add to symbol table
+        Symbol *symbol = createSymbol(FUNCTION_SYMBOL, funcSymbol);
+        addSymbolToCurrentTable(symbol);
+    }
+
     void GlobalSymbolTable::completeFunctionDeclaration(ASTNode *functionNode, const char *scopeID, const char *parentScopeID)
     {
         __STACK_FRAME__

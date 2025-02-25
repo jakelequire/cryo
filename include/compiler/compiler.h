@@ -99,6 +99,9 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
 SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state, Arena *arena, CryoGlobalSymbolTable *globalTable);
 int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
 
+// Import AST Nodes
+ASTNode *compileForASTNode(const char *filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
 // C++ Accessable Functions
 #ifdef __cplusplus
 extern "C"

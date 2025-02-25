@@ -1330,6 +1330,16 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
 
     getNextToken(lexer, arena, state);
 
+    // Check for generic type parameters
+    bool isGeneric = false;
+    GenericType **genericParams = NULL;
+    int genericParamCount = 0;
+    if (lexer->currentToken.type == TOKEN_LESS)
+    {
+        isGeneric = true;
+        genericParams = parseGenericTypeParams(lexer, context, arena, state, globalTable, &genericParamCount);
+    }
+
     ASTNode **params = parseParameterList(lexer, context, arena, strdup(functionName), state, globalTable);
 
     for (int i = 0; params[i] != NULL; i++)
@@ -1361,7 +1371,14 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", DataTypeToString(returnType));
 
     // Initialize the function symbol
-    InitFunctionDeclaration(globalTable, functionName, namespaceScopeID, params, paramCount, returnType); // Global Symbol Table
+    if (isGeneric)
+    {
+        InitGenericFunctionDeclaration(globalTable, functionName, namespaceScopeID, params, paramCount, returnType, genericParams, genericParamCount); // Global Symbol Table
+    }
+    else
+    {
+        InitFunctionDeclaration(globalTable, functionName, namespaceScopeID, params, paramCount, returnType); // Global Symbol Table
+    }
 
     // Ensure the next token is `{` for the function block
     if (lexer->currentToken.type != TOKEN_LBRACE)
@@ -1398,7 +1415,25 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     functionNode->data.functionDecl->type = returnType;
     functionNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
 
-    (functionNode, arena);
+    // Set the generic parameters if they exist
+    if (genericParamCount > 0 && genericParams != NULL)
+    {
+        functionNode->data.functionDecl->genericParams = genericParams;
+        functionNode->data.functionDecl->genericParamCount = genericParamCount;
+    }
+
+    // Check if the function has variadic parameters
+    bool isVariadic = false;
+    int lastParamIndex = functionNode->data.functionDecl->paramCount - 1;
+    if (lastParamIndex >= 0)
+    {
+        ASTNode *lastParam = functionNode->data.functionDecl->params[lastParamIndex];
+        if (lastParam->data.param->isVariadic)
+        {
+            isVariadic = true;
+            functionNode->data.functionDecl->isVariadic = true;
+        }
+    }
 
     CompleteFunctionDeclaration(globalTable, functionNode, functionName, namespaceScopeID); // Global Symbol Table
 
@@ -1827,6 +1862,19 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
 /* ====================================================================== */
 /* @ASTNode_Parsing - Parameters                                          */
 
+void validateParameterList(ASTNode **params, int paramCount, Arena *arena, CompilerState *state)
+{
+    for (int i = 0; i < paramCount; i++)
+    {
+        if (params[i]->data.param->isVariadic && i != paramCount - 1)
+        {
+            // Error: variadic parameter must be the last parameter
+            logMessage(LMI, "ERROR", "Parser", "Variadic parameter must be the last parameter");
+            // Handle the error appropriately...
+        }
+    }
+}
+
 // <parseParameter>
 ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, char *functionName, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
@@ -1834,17 +1882,69 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
     logMessage(LMI, "INFO", "Parser", "Parsing parameter...");
     Token currentToken = lexer->currentToken;
 
+    // Handle ellipsis (varargs syntax)
+    if (currentToken.type == TOKEN_ELLIPSIS)
+    {
+        // Consume the ellipsis token
+        consume(__LINE__, lexer, TOKEN_ELLIPSIS, "Expected ellipsis.", "parseParameter", arena, state, context);
+
+        // Check if there's an identifier after the ellipsis
+        if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+        {
+            // This is a named variadic parameter (e.g., ...args: T[])
+            char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+            getNextToken(lexer, arena, state);
+
+            // Expect a colon for type annotation
+            consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after variadic parameter name.", "parseParameter", arena, state, context);
+
+            // Parse the element type (this should handle generic types too)
+            DataType *elementType = parseType(lexer, context, arena, state, globalTable);
+
+            // Verify it's an array type
+            if (!elementType->container->isArray)
+            {
+                parsingError("Variadic parameter must have array type.", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+                return NULL;
+            }
+
+            // Create array type for the variadic parameter
+            DataType *paramType = wrapArrayType(createArrayTypeContainer(elementType->container->custom.arrayDef->baseType,
+                                                                         NULL, 0, elementType->container->arrayDimensions));
+
+            // Create and set up the parameter node
+            ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena, state, lexer);
+            node->data.param->isVariadic = true;
+            node->data.param->variadicElementType = elementType->container->custom.arrayDef->baseType;
+
+            // Consume the parameter type token
+            getNextToken(lexer, arena, state);
+
+            return node;
+        }
+        else
+        {
+            // This is an unnamed variadic parameter (e.g., just ...)
+            ASTNode *node = createParamNode("...", functionName, createPrimitiveAnyType(), arena, state, lexer);
+            node->data.param->isVariadic = true;
+            return node;
+        }
+    }
+
     if (currentToken.type != TOKEN_IDENTIFIER &&
         currentToken.type != TOKEN_INT_LITERAL &&
         currentToken.type != TOKEN_STRING_LITERAL &&
         currentToken.type != TOKEN_BOOLEAN_LITERAL &&
         currentToken.type != TOKEN_KW_THIS)
     {
+        logMessage(LMI, "ERROR", "Parser", "Expected an identifier, received: %s",
+                   CryoTokenToString(currentToken.type));
         parsingError("Expected an identifier.", "parseParameter", arena, state, lexer, lexer->source, globalTable);
         return NULL;
     }
 
     char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage(LMI, "INFO", "Parser", "Parameter name: %s", paramName);
 
     getNextToken(lexer, arena, state);
 

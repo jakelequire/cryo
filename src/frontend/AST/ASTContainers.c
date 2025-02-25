@@ -406,6 +406,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *s
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
     node->returnType = wrapTypeContainer(createTypeContainer());
+    node->isVariadic = false;
 
     return node;
 }
@@ -674,6 +675,8 @@ CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *sta
     node->hasDefaultValue = false;
     node->isMutable = true;
     node->defaultValue = NULL;
+    node->isVariadic = false;
+    node->variadicElementType = wrapTypeContainer(createTypeContainer());
 
     return node;
 }

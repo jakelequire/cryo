@@ -50,6 +50,7 @@ typedef struct Position Position;
 typedef struct ConstructorMetaData ConstructorMetaData;
 
 typedef struct DataType DataType;
+typedef struct GenericType GenericType;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 typedef struct ScopeParsingContext
@@ -184,6 +185,7 @@ void addParameterToList(ASTNode *paramListNode, ASTNode *param, Arena *arena, Co
 void addArgumentToList(ASTNode *argListNode, ASTNode *arg, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 void addArgumentToFunctionCall(ASTNode *functionCall, ASTNode *arg, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 void addParameterToExternDecl(ASTNode *externDeclNode, ASTNode *param, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+void validateParameterList(ASTNode **params, int paramCount, Arena *arena, CompilerState *state);
 
 /* @ASTNode_Parsing - Modules & Externals */
 ASTNode *parseImport(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
@@ -381,5 +383,11 @@ int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlo
 const char *getModuleFile(const char **dirList, const char *moduleName);
 const char **getDirFileList(const char *dir);
 bool isValidCryoFile(const char *fileName);
+
+// # =========================================================================== #
+// # Generic Type Parsing
+// # =========================================================================== #
+
+GenericType **parseGenericTypeParams(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, int *paramCount);
 
 #endif // PARSER_H

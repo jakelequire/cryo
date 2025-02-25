@@ -154,6 +154,8 @@ typedef struct FunctionDeclNode
     const char *functionScopeID;
 
     bool isVariadic;
+    GenericType **genericParams;
+    int genericParamCount;
 } FunctionDeclNode;
 
 typedef struct FunctionCallNode
@@ -163,6 +165,7 @@ typedef struct FunctionCallNode
     int argCount;
     int argCapacity;
     DataType *returnType;
+    bool isVariadic;
 } FunctionCallNode;
 
 typedef struct LiteralNode
@@ -255,9 +258,14 @@ typedef struct CryoParameterNode
     DataType *type;
     const char *name;
     char *functionName;
-    bool hasDefaultValue;
-    bool isMutable;
+
     struct ASTNode *defaultValue;
+    bool hasDefaultValue;
+
+    bool isMutable;
+
+    bool isVariadic;
+    DataType *variadicElementType; // For typed varargs like T[]
 } CryoParameterNode;
 
 typedef struct ParamNode

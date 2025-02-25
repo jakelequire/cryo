@@ -492,6 +492,15 @@ extern "C"
         }
     }
 
+    void CryoGlobalSymbolTable_InitGenericFunctionDeclaration(CryoGlobalSymbolTable *symTable, const char *functionName, const char *parentScopeID, ASTNode **params, size_t paramCount, DataType *returnType, GenericType **genericParams, int genericParamCount)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->initGenericFunctionDeclaration(functionName, parentScopeID, params, paramCount, returnType, genericParams, genericParamCount);
+        }
+    }
+
     void CryoGlobalSymbolTable_CompleteFunctionDeclaration(CryoGlobalSymbolTable *symTable, ASTNode *functionNode, const char *functionName, const char *parentScopeID)
     {
         __STACK_FRAME__
