@@ -1894,12 +1894,14 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
             // This is a named variadic parameter (e.g., ...args: T[])
             char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
             getNextToken(lexer, arena, state);
+            logMessage(LMI, "INFO", "Parser", "Variadic parameter name: %s", paramName);
 
             // Expect a colon for type annotation
             consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after variadic parameter name.", "parseParameter", arena, state, context);
 
             // Parse the element type (this should handle generic types too)
             DataType *elementType = parseType(lexer, context, arena, state, globalTable);
+            logMessage(LMI, "INFO", "Parser", "Variadic parameter element type: %s", DataTypeToString(elementType));
 
             // Verify it's an array type
             if (!elementType->container->isArray)
@@ -1912,11 +1914,14 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
             DataType *paramType = wrapArrayType(createArrayTypeContainer(elementType->container->custom.arrayDef->baseType,
                                                                          NULL, 0, elementType->container->arrayDimensions));
 
+            logMessage(LMI, "INFO", "Parser", "Variadic parameter type: %s", DataTypeToString(paramType));
+
             // Create and set up the parameter node
             ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena, state, lexer);
             node->data.param->isVariadic = true;
             node->data.param->variadicElementType = elementType->container->custom.arrayDef->baseType;
 
+            node->print(node);
             // Consume the parameter type token
             getNextToken(lexer, arena, state);
 
@@ -1925,8 +1930,10 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
         else
         {
             // This is an unnamed variadic parameter (e.g., just ...)
+            logMessage(LMI, "INFO", "Parser", "Unnamed variadic parameter");
             ASTNode *node = createParamNode("...", functionName, createPrimitiveAnyType(), arena, state, lexer);
             node->data.param->isVariadic = true;
+            node->print(node);
             return node;
         }
     }
