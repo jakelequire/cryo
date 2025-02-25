@@ -152,6 +152,8 @@ typedef struct FunctionDeclNode
 
     const char *parentScopeID;
     const char *functionScopeID;
+
+    bool isVariadic;
 } FunctionDeclNode;
 
 typedef struct FunctionCallNode

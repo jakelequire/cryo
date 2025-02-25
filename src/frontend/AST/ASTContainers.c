@@ -373,6 +373,8 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->parentScopeID = (const char *)malloc(sizeof(char) * 65);
     node->functionScopeID = (const char *)malloc(sizeof(char) * 65);
 
+    node->isVariadic = false;
+
     return node;
 }
 

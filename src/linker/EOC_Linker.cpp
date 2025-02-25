@@ -175,14 +175,15 @@ namespace Cryo
         std::string exe_name = "main";
         std::string sys_cmd = exe_output + exe_name;
         int result = system(sys_cmd.c_str());
-        if (result != 0 || WEXITSTATUS(result) != 0)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to run main binary");
-            std::string error = "Error: " + std::to_string(result);
-            std::string errReason = std::strerror(errno);
-            logMessage(LMI, "ERROR", "Linker", error.c_str());
-            logMessage(LMI, "ERROR", "Linker", errReason.c_str());
-            CONDITION_FAILED;
-        }
+        // if (result != 0 || WEXITSTATUS(result) != 0)
+        // {
+        //     logMessage(LMI, "ERROR", "Linker", "Failed to run main binary");
+        //     std::string error = "Error: " + std::to_string(result);
+        //     std::string errReason = std::strerror(errno);
+        //     logMessage(LMI, "ERROR", "Linker", error.c_str());
+        //     logMessage(LMI, "ERROR", "Linker", errReason.c_str());
+        //     CONDITION_FAILED;
+        // }
+        return;
     }
 } // namespace Cryo

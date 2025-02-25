@@ -179,6 +179,7 @@ namespace Cryo
         std::vector<llvm::Module *> dependencies;
         DirectoryInfo *dirInfo;
         bool c_runtime_initialized = false;
+        bool auto_run_binary = false;
 
         llvm::LLVMContext &getLinkerContext() { return context; }
 

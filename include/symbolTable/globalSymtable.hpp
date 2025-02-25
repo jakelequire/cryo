@@ -390,6 +390,8 @@ namespace Cryo
             tableState = TABLE_INITIALIZED;
             this->typeTable = initTypeTable("global");
             this->dependencyTables = (SymbolTable **)malloc(sizeof(SymbolTable *) * MAX_DEPENDENCIES);
+            // Initialize the cryo built-ins
+            initCryoBuiltIns();
         };
         // This constructor is used for reaping the symbol table to a higher level symbol table manager.
         GlobalSymbolTable(bool isForReaping, const char *buildDir = nullptr, ScopeType scopeType = GLOBAL_SCOPE)
@@ -444,6 +446,7 @@ namespace Cryo
         SymbolTable *reapedTable = nullptr; // Reaped symbol table
 
         CryoLinker *linker = nullptr; // Linker for the symbol table
+
 
         //===================================================================
         // Table State Management
@@ -623,6 +626,13 @@ namespace Cryo
         TABLE_STATE tableState = TABLE_UNINITIALIZED;
         SymbolTableDebugger *debugger = new SymbolTableDebugger();
         std::vector<std::pair<std::string, std::string>> scopeLookup;
+
+        //===================================================================
+        // Cryo Built-In Functions
+        //===================================================================
+
+        void initCryoBuiltIns(void);
+        void initCryoBuiltInTypes(void);
 
         //===================================================================
         // Private Helper Functions
