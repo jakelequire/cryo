@@ -318,6 +318,7 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
         break;
 
     case TOKEN_IDENTIFIER:
+        logMessage(LMI, "INFO", "Parser", "Parsing custom type: %s", typeTokenStr);
         // type = getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
         return ResolveDataType(globalTable, typeTokenStr);
         break;
@@ -1338,6 +1339,20 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     {
         isGeneric = true;
         genericParams = parseGenericTypeParams(lexer, context, arena, state, globalTable, &genericParamCount);
+
+        // Register generic type parameters with the symbol table
+        for (int i = 0; i < genericParamCount; i++)
+        {
+            TypeSymbol *typeSymbol = CreateTypeSymbol(globalTable,
+                                                      genericParams[i]->name,
+                                                      NULL,
+                                                      NULL,
+                                                      GENERIC_TYPE,
+                                                      false,
+                                                      true,
+                                                      functionScopeID);
+            AddTypeToTable(globalTable, typeSymbol);
+        }
     }
 
     ASTNode **params = parseParameterList(lexer, context, arena, strdup(functionName), state, globalTable);
@@ -1902,6 +1917,8 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
             // Parse the element type (this should handle generic types too)
             DataType *elementType = parseType(lexer, context, arena, state, globalTable);
             logMessage(LMI, "INFO", "Parser", "Variadic parameter element type: %s", DataTypeToString(elementType));
+
+            PrintTypeTable(globalTable);
 
             // Verify it's an array type
             if (!elementType->container->isArray)

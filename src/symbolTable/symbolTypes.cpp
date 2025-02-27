@@ -23,48 +23,55 @@ namespace Cryo
 {
     DataType *GlobalSymbolTable::resolveDataType(const char *name)
     {
-        __STACK_FRAME__
-        // No need for strdup here - std::string will make its own copy
-        std::string cxxTypeNameStr(name); // Direct construction from const char*
+        // Check if it's an array type
+        std::string typeName(name);
+        bool isArray = false;
+        std::string baseTypeName = typeName;
 
-        logMessage(LMI, "INFO", "Symbol Table", "Resolving Data Type, Type Name: %s", name);
+        std::cout << "=================== [ Resolve Data Type ] ===================" << std::endl;
+        std::cout << "Type Name: " << typeName << std::endl;
+        std::cout << "============================================================" << std::endl;
 
-        // Print the type table
-        SymbolTableDebugger::logTypeTable(this->typeTable);
-
-        if (cxxTypeNameStr.empty())
+        // Check for array notation
+        if (typeName.length() >= 2 && typeName.substr(typeName.length() - 2) == "[]")
         {
-            std::cerr << "Error: Failed to resolve data type, name is empty!" << std::endl;
+            logMessage(LMI, "INFO", "Symbol Table", "Resolving Array Type", "Type Name: %s", typeName.c_str());
+            isArray = true;
+            baseTypeName = typeName.substr(0, typeName.length() - 2);
+        }
+
+        // First try to find the base type
+        DataType *baseType = nullptr;
+
+        // Check in the type table
+        for (size_t i = 0; i < typeTable->count; i++)
+        {
+            if (strcmp(typeTable->typeSymbols[i]->name, baseTypeName.c_str()) == 0)
+            {
+                logMessage(LMI, "INFO", "Symbol Table", "Found Base Type", "Type Name: %s", baseTypeName.c_str());
+                baseType = typeTable->typeSymbols[i]->type;
+                break;
+            }
+        }
+
+        if (!baseType)
+        {
+            // Could not find the base type
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to resolve base type", "Type Name: %s", baseTypeName.c_str());
             return nullptr;
         }
 
-        if (!typeTable || typeTable == nullptr)
+        // If it's an array type, wrap it in an array container
+        if (isArray)
         {
-            std::cerr << "Error: Failed to resolve data type, types table is null!" << std::endl;
-            return nullptr;
+            logMessage(LMI, "INFO", "Symbol Table", "Creating Array Type", "Base Type Name: %s", baseTypeName.c_str());
+            TypeContainer *container = createArrayType(baseType->container, 1);
+            return wrapTypeContainer(container);
         }
 
-        size_t count = typeTable->count;
-        for (size_t i = 0; i < count; i++)
-        {
-            const char *typeName = typeTable->typeSymbols[i]->name;
-            DataType *dataType = typeTable->typeSymbols[i]->type;
-            if (!dataType || dataType == nullptr)
-            {
-                continue;
-            }
-            if (strcmp(typeName, cxxTypeNameStr.c_str()) == 0)
-            {
-                logMessage(LMI, "INFO", "Symbol Table", "Resolved Data Type", "Type Name", typeName);
-                return dataType;
-            }
-            else
-            {
-                continue;
-            }
-        }
+        logDataType(baseType);
 
-        return nullptr;
+        return baseType;
     }
 
     TypeSymbol *GlobalSymbolTable::findTypeSymbol(std::string typeName)
@@ -211,17 +218,49 @@ namespace Cryo
         }
 
         const char *typeName = typeSymbol->name;
+        if (!typeName)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Type Symbol has null name");
+            return;
+        }
+
+        std::cout << "=================== [ Add Type To Table ] ===================" << std::endl;
+        std::cout << "Type Name: " << typeName << std::endl;
+        std::cout << "============================================================" << std::endl;
+
+        // Check if type already exists
         if (doesTypeExist(typeName))
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Type already exists in table", "Type Name", typeName);
             return;
         }
 
-        typeTable->typeSymbols[typeTable->count] = typeSymbol;
-        typeTable->count++;
+        // Check if we need to resize the type table
+        if (typeTable->count >= typeTable->capacity)
+        {
+            size_t newCapacity = typeTable->capacity * 2;
+            if (newCapacity == 0)
+                newCapacity = MAX_TYPE_SYMBOLS; // Initial capacity if 0
 
-        logMessage(LMI, "INFO", "Symbol Table", "Added Type to Table", "Type Name", typeName);
-        return;
+            TypeSymbol **newSymbols = (TypeSymbol **)realloc(typeTable->typeSymbols,
+                                                             newCapacity * sizeof(TypeSymbol *));
+            if (!newSymbols)
+            {
+                logMessage(LMI, "ERROR", "Symbol Table", "Failed to resize type table");
+                return;
+            }
+
+            typeTable->typeSymbols = newSymbols;
+            typeTable->capacity = newCapacity;
+            logMessage(LMI, "INFO", "Symbol Table", "Resized type table", "New Capacity",
+                       std::to_string(newCapacity).c_str());
+        }
+
+        // Add the type symbol to the table
+        typeTable->typeSymbols[typeTable->count++] = typeSymbol;
+
+        logMessage(LMI, "INFO", "Symbol Table", "Added Type to Table", "Type Name", typeName,
+                   "Count", std::to_string(typeTable->count).c_str());
     }
 
     // -------------------------------------------------------

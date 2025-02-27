@@ -133,6 +133,10 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 
 #define ResolveDataType(symTable, name) \
     CryoGlobalSymbolTable_ResolveDataType(symTable, name)
+#define AddTypeToTable(symTable, typeSymbol) \
+    CryoGlobalSymbolTable_AddTypeToTable(symTable, typeSymbol)
+#define CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId) \
+    CryoGlobalSymbolTable_CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId)
 
 #define CleanupAndDestroySymbolTable(symTable) \
     CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)
@@ -175,6 +179,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_GetDependencyDirStr(symTable)
 #define PrintSymbolTable(symTable, symbolTable) \
     CryoGlobalSymbolTable_PrintSymbolTable(symTable, symbolTable)
+#define PrintTypeTable(symTable) \
+    CryoGlobalSymbolTable_PrintTypeTable(symTable)
 
 // Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \

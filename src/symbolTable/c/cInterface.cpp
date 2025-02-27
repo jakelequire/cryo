@@ -298,6 +298,25 @@ extern "C"
         return nullptr;
     }
 
+    void CryoGlobalSymbolTable_AddTypeToTable(CryoGlobalSymbolTable *symTable, TypeSymbol *typeSymbol)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->addTypeToTable(typeSymbol);
+        }
+    }
+
+    TypeSymbol *CryoGlobalSymbolTable_CreateTypeSymbol(CryoGlobalSymbolTable *symTable, const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->createTypeSymbol(name, node, type, typeOf, isStatic, isGeneric, scopeId);
+        }
+        return nullptr;
+    }
+
     const char *CryoGlobalSymbolTable_GetBuildDir(CryoGlobalSymbolTable *symTable)
     {
         __STACK_FRAME__
@@ -380,6 +399,15 @@ extern "C"
         if (symTable)
         {
             reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->logSymbolTable(symbolTable);
+        }
+    }
+
+    void CryoGlobalSymbolTable_PrintTypeTable(CryoGlobalSymbolTable *symTable)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->printTypeTable();
         }
     }
 

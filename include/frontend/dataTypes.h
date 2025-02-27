@@ -288,6 +288,7 @@ extern "C"
     TypeContainer *createTypeContainer(void);
 
     DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable);
+    DataType *parseGenericArrayType(const char *typeStr, CryoGlobalSymbolTable *globalTable);
     DataType *wrapTypeContainer(TypeContainer *container);
 
     DataType *createPointerType(DataType *operandType);

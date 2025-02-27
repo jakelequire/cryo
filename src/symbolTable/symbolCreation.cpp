@@ -14,7 +14,9 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
 namespace Cryo
@@ -90,27 +92,56 @@ namespace Cryo
         return symbol;
     }
 
-    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId)
+    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, ASTNode *node, DataType *type,
+                                                    TypeofDataType typeOf, bool isStatic, bool isGeneric,
+                                                    const char *scopeId)
     {
         __STACK_FRAME__
-        TypeSymbol *symbol = new TypeSymbol();
-        symbol->name = name;
+        if (!name)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Cannot create type symbol with null name");
+            return nullptr;
+        }
+
+        TypeSymbol *symbol = (TypeSymbol *)malloc(sizeof(TypeSymbol));
+        if (!symbol)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to allocate memory for type symbol");
+            return nullptr;
+        }
+
+        // Initialize all fields to avoid undefined behavior
+        symbol->name = strdup(name);
+        symbol->node = node;
         symbol->type = type;
         symbol->typeOf = typeOf;
         symbol->isStatic = isStatic;
         symbol->isGeneric = isGeneric;
-        symbol->scopeId = scopeId;
-        symbol->node = node;
-
-        symbol->propertyCapacity = MAX_PROPERTY_COUNT;
-        symbol->methodCapacity = MAX_METHOD_COUNT;
-        symbol->propertyCount = 0;
-        symbol->methodCount = 0;
-        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
-        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
-
+        symbol->scopeId = scopeId ? strdup(scopeId) : nullptr;
         symbol->parentNameID = nullptr;
 
+        // Initialize property and method arrays
+        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * PROPERTY_CAPACITY);
+        symbol->propertyCount = 0;
+        symbol->propertyCapacity = PROPERTY_CAPACITY;
+
+        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * METHOD_CAPACITY);
+        symbol->methodCount = 0;
+        symbol->methodCapacity = METHOD_CAPACITY;
+
+        // Initialize generic type information
+        symbol->isGenericType = isGeneric;
+        if (isGeneric)
+        {
+            symbol->generics.typeParameters = nullptr;
+            symbol->generics.paramCount = 0;
+            symbol->generics.typeArguments = nullptr;
+            symbol->generics.argCount = 0;
+            symbol->generics.baseGenericType = nullptr;
+        }
+
+        logMessage(LMI, "INFO", "Symbol Table", "Created type symbol", "Name", name,
+                   "Type", TypeofDataTypeToString(typeOf));
         return symbol;
     }
 

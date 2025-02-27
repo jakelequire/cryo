@@ -166,6 +166,32 @@ DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable)
     return dataType;
 }
 
+DataType *parseGenericArrayType(const char *typeStr, CryoGlobalSymbolTable *globalTable)
+{
+    // Extract the base type name (without [])
+    char *baseTypeName = strdup(typeStr);
+    size_t len = strlen(baseTypeName);
+    if (len >= 2 && baseTypeName[len - 2] == '[' && baseTypeName[len - 1] == ']')
+    {
+        baseTypeName[len - 2] = '\0';
+    }
+
+    // Resolve the base type
+    DataType *baseType = ResolveDataType(globalTable, baseTypeName);
+    if (!baseType)
+    {
+        // Handle error: base type not found
+        return NULL;
+    }
+
+    // Create array type
+    TypeContainer *container = createArrayType(baseType->container, 1);
+    DataType *arrayType = wrapTypeContainer(container);
+
+    free(baseTypeName);
+    return arrayType;
+}
+
 // Create DataType wrapper
 DataType *wrapTypeContainer(TypeContainer *container)
 {
