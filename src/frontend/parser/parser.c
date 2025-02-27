@@ -1910,6 +1910,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
                 return NULL;
             }
 
+            logMessage(LMI, "INFO", "Parser", "Variadic parameter element type: %s", DataTypeToString(elementType));
             // Create array type for the variadic parameter
             DataType *paramType = wrapArrayType(createArrayTypeContainer(elementType->container->custom.arrayDef->baseType,
                                                                          NULL, 0, elementType->container->arrayDimensions));
