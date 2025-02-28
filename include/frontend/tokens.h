@@ -51,6 +51,8 @@ extern "C"
         TOKEN_TYPE_STRING_LITERAL, // `'Hello, World!'`, `'Hello, ' + 'World!'`, etc
         TOKEN_TYPE_BOOLEAN,        // `true`, `false`
         TOKEN_TYPE_VOID,           // `void`
+        TOKEN_TYPE_NULL,           // `null`
+        TOKEN_TYPE_ANY,            // `any`
         TOKEN_TYPE_INT_ARRAY,      // `int[]`
         TOKEN_TYPE_FLOAT_ARRAY,    // `float[]`
         TOKEN_TYPE_STRING_ARRAY,   // `string[]`
@@ -221,6 +223,9 @@ extern "C"
         TOKEN_ITER_VAR,    // `$`
         TOKEN_ITER_STEP,   // `..`
         TOKEN_EMPTY_ARRAY, // `[]`
+
+        TOKEN_ADDRESS_OF,  // `&`
+        TOKEN_DEREFERENCE, // `*`
     } CryoTokenType;
 
     typedef enum
@@ -368,6 +373,7 @@ extern "C"
         int column;         // Column number where the token is found
         const char *style;  // Style of the token
         TokenValue value;   // Token value
+        bool isOperator;    // Whether the token is an operator
     } Token;
 
     //

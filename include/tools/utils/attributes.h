@@ -26,6 +26,7 @@
 
 #define __C_CONSTRUCTOR__ \
     __attribute__((constructor))
+    
 #define __C_DESTRUCTOR__ \
     __attribute__((destructor))
 

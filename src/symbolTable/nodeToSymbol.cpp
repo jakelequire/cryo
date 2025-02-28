@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/globalSymtable.hpp"
+#include "diagnostics/diagnostics.h"
 
 #define MAX_SYMBOLS 1024
 
@@ -22,6 +23,7 @@ namespace Cryo
 {
     Symbol *GlobalSymbolTable::ASTNodeToSymbol(ASTNode *node)
     {
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             std::cout << "ASTNodeToSymbol: Node is null" << std::endl;
@@ -206,6 +208,7 @@ namespace Cryo
 
     const char *GlobalSymbolTable::getRootNamespace(ASTNode *root)
     {
+        __STACK_FRAME__
         if (!root || root == nullptr)
         {
             std::cout << "getRootNamespace: Node is null" << std::endl;

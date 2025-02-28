@@ -67,18 +67,6 @@ namespace Cryo
         }
     }
 
-    llvm::Function *Functions::getFunction(std::string functionName)
-    {
-        CryoContext &context = compiler.getContext();
-        llvm::Function *function = context.module->getFunction(functionName);
-        if (!function)
-        {
-            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: " + functionName);
-            CONDITION_FAILED;
-        }
-        return function;
-    }
-
     // -----------------------------------------------------------------------------------------------
 
     void Functions::createFunctionDeclaration(ASTNode *node)
@@ -282,12 +270,29 @@ namespace Cryo
                         compiler.getContext().builder.CreateRet(returnValue);
                         break;
                     }
+                    case NODE_FUNCTION_CALL:
+                    {
+                        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning Function Call with type int");
+                        llvm::Value *returnValue = createFunctionCall(statement);
+                        compiler.getContext().builder.CreateRet(returnValue);
+                        break;
+                    }
                     default:
                     {
                         DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
                         CONDITION_FAILED;
                     }
                     }
+                    break;
+                }
+                case PRIM_I8:
+                case PRIM_I16:
+                case PRIM_I32:
+                case PRIM_I64:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i64");
+                    llvm::Value *returnValue = generator.getInitilizerValue(statement);
+                    compiler.getContext().builder.CreateRet(returnValue);
                     break;
                 }
                 case PRIM_STRING:
@@ -566,6 +571,43 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
+        if (returnExpression->metaData->type == NODE_VAR_NAME)
+        {
+            // Create a load instruction for the variable
+            std::string varName = returnExpression->data.varName->varName;
+            STVariable *stVarNode = compiler.getSymTable().getVariable(compiler.getContext().currentNamespace, varName);
+            if (!stVarNode)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to get variable node");
+                CONDITION_FAILED;
+            }
+
+            llvm::Value *varValue = stVarNode->LLVMValue;
+            if (!varValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to get variable value");
+                CONDITION_FAILED;
+            }
+
+            DataType *varDataType = getDataTypeFromASTNode(returnExpression);
+            if (!varDataType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable data type not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::Type *llvmTy = compiler.getTypes().getType(varDataType, 0);
+            // Create a load instruction for the variable
+            llvm::Value *loadedValue = compiler.getContext().builder.CreateLoad(llvmTy, varValue, varName + ".load");
+            if (!loadedValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Failed to load variable value");
+                CONDITION_FAILED;
+            }
+
+            returnValue = loadedValue;
+        }
+
         return returnValue;
     }
 
@@ -603,6 +645,41 @@ namespace Cryo
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning int");
                     llvm::Type *retType = types.getType(createPrimitiveIntType(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I8:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i8");
+                    llvm::Type *retType = types.getType(createPrimitiveI8Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I16:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i16");
+                    llvm::Type *retType = types.getType(createPrimitiveI16Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I32:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i32");
+                    llvm::Type *retType = types.getType(createPrimitiveI32Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I64:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i64");
+                    llvm::Type *retType = types.getType(createPrimitiveI64Type(), 0);
+                    DevDebugger::logLLVMType(retType);
+                    return retType;
+                }
+                case PRIM_I128:
+                {
+                    DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning i128");
+                    llvm::Type *retType = types.getType(createPrimitiveI128Type(), 0);
                     DevDebugger::logLLVMType(retType);
                     return retType;
                 }
@@ -675,9 +752,11 @@ namespace Cryo
         std::vector<llvm::Type *> argTypes;
         for (int i = 0; i < argCount; ++i)
         {
+            logASTNode(functionNode->params[i]);
             CryoParameterNode *argNode = functionNode->params[i]->data.param;
             assert(argNode != nullptr);
             DataType *_argType = argNode->type;
+            logDataType(_argType);
 
             if (_argType->container->baseType == PRIM_STRING)
             {
@@ -857,14 +936,8 @@ namespace Cryo
 
         for (int i = 0; i < argCount; ++i)
         {
-            std::string paramName = callee->getArg(i)->getName().str();
-            STParameter *paramNode = compiler.getSymTable().getParameter(namespaceName, paramName);
-            if (!paramNode)
-            {
-                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Parameter not found");
-                CONDITION_FAILED;
-            }
-
+            std::string paramName = argValues[i]->getName().str();
+            std::cout << "@verifyCalleeArguments Parameter Name: " << paramName << std::endl;
             llvm::Value *argValue = argValues[i];
             llvm::Type *expectedType = expectedTypes[i];
 

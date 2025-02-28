@@ -108,4 +108,17 @@ namespace Cryo
         });
     }
 
+    void GlobalSymbolTable::printTypeTable(void)
+    {
+        DEBUG_PRINT_FILTER({
+            std::cout << "\n";
+            std::cout << "+-------------------------<Type Table Log>-------------------------+" << std::endl;
+            debugger->logTypeTable(typeTable);
+            std::cout << "+------------------------------------------------------------------+" << std::endl;
+            std::cout << "\n";
+
+            return;
+        });
+    }
+
 } // namespace Cryo

@@ -133,6 +133,10 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 
 #define ResolveDataType(symTable, name) \
     CryoGlobalSymbolTable_ResolveDataType(symTable, name)
+#define AddTypeToTable(symTable, typeSymbol) \
+    CryoGlobalSymbolTable_AddTypeToTable(symTable, typeSymbol)
+#define CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId) \
+    CryoGlobalSymbolTable_CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId)
 
 #define CleanupAndDestroySymbolTable(symTable) \
     CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)
@@ -175,6 +179,8 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_GetDependencyDirStr(symTable)
 #define PrintSymbolTable(symTable, symbolTable) \
     CryoGlobalSymbolTable_PrintSymbolTable(symTable, symbolTable)
+#define PrintTypeTable(symTable) \
+    CryoGlobalSymbolTable_PrintTypeTable(symTable)
 
 // Declaration Functions (Classes)
 #define InitClassDeclaration(symTable, className) \
@@ -187,8 +193,10 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_CompleteClassDeclaration(symTable, classNode, className)
 
 // Declaration Functions (Structs)
-#define InitStructDeclaration(symTable, structName, parentNameID) \
-    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID)
+#define InitStructDeclaration(symTable, structName, parentNameID, structPtr) \
+    CryoGlobalSymbolTable_InitStructDeclaration(symTable, structName, parentNameID, structPtr)
+#define InitGenericStructDeclaration(symTable, structName, parentID) \
+    CryoGlobalSymbolTable_InitGenericStructDeclaration(symTable, structName, parentID)
 #define AddPropertyToStruct(symTable, structName, property) \
     CryoGlobalSymbolTable_AddPropertyToStruct(symTable, structName, property)
 #define AddMethodToStruct(symTable, structName, method) \
@@ -196,9 +204,14 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
 #define CompleteStructDeclaration(symTable, structNode, structName) \
     CryoGlobalSymbolTable_CompleteStructDeclaration(symTable, structNode, structName)
 
+#define IsStructSymbol(symTable, name) \
+    CryoGlobalSymbolTable_IsStructSymbol(symTable, name)
+
 // Declaration Functions (Functions)
 #define InitFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType) \
     CryoGlobalSymbolTable_InitFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType)
+#define InitGenericFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType, genericParams, genericParamCount) \
+    CryoGlobalSymbolTable_InitGenericFunctionDeclaration(symTable, functionName, parentScopeID, params, paramCount, returnType, genericParams, genericParamCount)
 #define CompleteFunctionDeclaration(symTable, functionNode, functionName, parentScopeID) \
     CryoGlobalSymbolTable_CompleteFunctionDeclaration(symTable, functionNode, functionName, parentScopeID)
 #define AddExternFunctionToTable(symTable, externNode, namespaceScopeID) \

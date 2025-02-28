@@ -29,6 +29,8 @@
 #include "tools/utils/utility.h"
 #include "tools/utils/c_logger.h"
 #include "common/common.h"
+#include "tools/utils/cWrappers.h"
+#include "tools/utils/cTypes.h"
 
 typedef struct CompilerState CompilerState;
 
@@ -45,6 +47,9 @@ typedef struct Lexer
     Token lookahead;
     bool hasPeeked;
     const char *fileName;
+
+    _NEW_METHOD(int, getLPos, Lexer *self); // Get the current line position
+    _NEW_METHOD(int, getCPos, Lexer *self); // Get the current column position
 } Lexer;
 
 /* @Util_Functions */
@@ -96,5 +101,6 @@ bool isAlpha(char c);
 bool isAlphaNumeric(char c);
 bool isDigit(char c);
 bool isType(char c);
+bool isOperatorToken(CryoTokenType type);
 
 #endif // LEXER_H

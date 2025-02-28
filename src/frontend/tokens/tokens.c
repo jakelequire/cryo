@@ -278,6 +278,10 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_TYPE_BOOLEAN";
     case TOKEN_TYPE_VOID:
         return "TOKEN_TYPE_VOID";
+    case TOKEN_TYPE_NULL:
+        return "TOKEN_TYPE_NULL";
+    case TOKEN_TYPE_ANY:
+        return "TOKEN_TYPE_ANY";
     case TOKEN_TYPE_INT_ARRAY:
         return "TOKEN_TYPE_INT_ARRAY";
     case TOKEN_TYPE_FLOAT_ARRAY:
@@ -595,6 +599,11 @@ char *CryoTokenToString(CryoTokenType node)
     case TOKEN_DOUBLE_COLON:
         return "TOKEN_DOUBLE_COLON";
 
+    case TOKEN_ADDRESS_OF:
+        return "TOKEN_ADDRESS_OF";
+    case TOKEN_DEREFERENCE:
+        return "TOKEN_DEREFERENCE";
+
     default:
         return "<TOKEN UNKNOWN>";
     }
@@ -662,6 +671,7 @@ char *CryoOperatorTypeToString(CryoOperatorType op)
         return "OPERATOR_INCREMENT";
     case OPERATOR_DECREMENT:
         return "OPERATOR_DECREMENT";
+
     case OPERATOR_NA:
         return "OPERATOR_NA";
     default:

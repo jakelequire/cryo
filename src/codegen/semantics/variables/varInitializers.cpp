@@ -85,7 +85,7 @@ namespace Cryo
             varName + ".load");
 
         // Register in symbol table
-        compiler.getContext().namedValues[varName] = propertyValue;
+        compiler.getContext().addNamedValue(varName, loadedValue);
         compiler.getSymTable().updateVariableNode(
             compiler.getContext().currentNamespace,
             varName,
@@ -257,7 +257,7 @@ namespace Cryo
         std::cout << "\n\n === Variable Created === \n\n";
 
         // Register in symbol table
-        compiler.getContext().namedValues[varName] = variablePtr;
+        compiler.getContext().addNamedValue(varName, variablePtr);
         compiler.getSymTable().updateVariableNode(
             namespaceName,
             varName,
@@ -283,7 +283,7 @@ namespace Cryo
         llvm::Value *structPtr = structs.createStructInstance(varDecl);
 
         // Register in symbol table
-        compiler.getContext().namedValues[varName] = structPtr;
+        compiler.getContext().addNamedValue(varName, structPtr);
         compiler.getSymTable().updateVariableNode(
             namespaceName,
             varName,
@@ -406,7 +406,7 @@ namespace Cryo
             llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(varValue, ptrValue);
             storeInst->setAlignment(llvm::Align(8));
 
-            compiler.getContext().namedValues[varName] = ptrValue;
+            compiler.getContext().addNamedValue(varName, ptrValue);
 
             symTable.updateVariableNode(namespaceName, varName, ptrValue, ty);
             symTable.addStoreInstToVar(namespaceName, varName, storeInst);
@@ -470,7 +470,7 @@ namespace Cryo
 
             llvm::Type *strType = types.getType(createPrimitiveStringType(strLen), strLen);
             symTable.updateVariableNode(namespaceName, varName, strPtr, strType);
-            compiler.getContext().namedValues[varName] = strPtr;
+            compiler.getContext().addNamedValue(varName, strPtr);
 
             return strPtr;
         }
@@ -553,7 +553,7 @@ namespace Cryo
                 llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadInst, ptrValue);
                 storeValue->setAlignment(llvm::Align(8));
                 // Add the variable to the named values map & symbol table
-                compiler.getContext().namedValues[varName] = ptrValue;
+                compiler.getContext().addNamedValue(varName, ptrValue);
                 symTable.updateVariableNode(namespaceName, varName, ptrValue, llvmType);
                 symTable.addStoreInstToVar(namespaceName, varName, storeValue);
                 symTable.addLoadInstToVar(namespaceName, varName, loadInst);
@@ -602,7 +602,7 @@ namespace Cryo
                 storeValue->setAlignment(llvm::Align(8));
 
                 // Add the variable to the named values map & symbol table
-                compiler.getContext().namedValues[varName] = ptrValue;
+                compiler.getContext().addNamedValue(varName, ptrValue);
                 symTable.updateVariableNode(namespaceName, varName, ptrValue, storeType);
                 symTable.addStoreInstToVar(namespaceName, varName, storeInst);
                 symTable.addLoadInstToVar(namespaceName, varName, loadValue);
@@ -625,9 +625,8 @@ namespace Cryo
         }
         }
         }
-
         // Add the variable to the named values map & symbol table
-        compiler.getContext().namedValues[varName] = llvmValue;
+        compiler.getContext().addNamedValue(varName, llvmValue);
         symTable.updateVariableNode(namespaceName, varName, llvmValue, llvmType);
 
         return llvmValue;
@@ -689,7 +688,7 @@ namespace Cryo
         }
 
         // Add the variable to the named values map & symbol table
-        compiler.getContext().namedValues[varName] = llvmValue;
+        compiler.getContext().addNamedValue(varName, llvmValue);
         compiler.getSymTable().updateVariableNode(
             compiler.getContext().currentNamespace,
             varName,
@@ -788,7 +787,7 @@ namespace Cryo
 
         // Update the symbol table
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
-        compiler.getContext().namedValues[varName] = loadedArr;
+        compiler.getContext().addNamedValue(varName, loadedArr);
         compiler.getSymTable().updateVariableNode(
             compiler.getContext().currentNamespace,
             varName,
@@ -880,7 +879,7 @@ namespace Cryo
 
         // Update the symbol table
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating symbol table with index expr: varName: " + varName);
-        compiler.getContext().namedValues[varName] = charValue;
+        compiler.getContext().addNamedValue(varName, charValue);
         compiler.getSymTable().updateVariableNode(
             compiler.getContext().currentNamespace,
             varName,
@@ -954,12 +953,12 @@ namespace Cryo
         }
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Function Call Created, Storing in Variable");
 
-        // Store the call into the variable
+        // Load the function call into the variable
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(functionCall, varValue);
         storeInst->setAlignment(llvm::Align(8));
 
         // Add the variable to the named values map & symbol table
-        compiler.getContext().namedValues[varName] = varValue;
+        compiler.getContext().addNamedValue(varName, varValue);
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating Symbol Table with Function Call for: " + varName);
         symTable.updateVariableNode(moduleName, varName, varValue, varType);
         symTable.addStoreInstToVar(moduleName, varName, storeInst);
@@ -988,7 +987,7 @@ namespace Cryo
         if (isStringOp)
         {
             // Early return. The initValue will be a pointer to the string
-            compiler.getContext().namedValues[varName] = initValue;
+            compiler.getContext().addNamedValue(varName, initValue);
             symTable.updateVariableNode(namespaceName, varName, initValue, initValue->getType());
             return initValue;
         }
@@ -997,7 +996,7 @@ namespace Cryo
         llvm::StoreInst *storeInst = compiler.getContext().builder.CreateStore(initValue, initializer);
         storeInst->setAlignment(llvm::Align(8));
 
-        compiler.getContext().namedValues[varName] = initializer;
+        compiler.getContext().addNamedValue(varName, initializer);
 
         symTable.updateVariableNode(namespaceName, varName, initializer, initValue->getType());
         symTable.addStoreInstToVar(namespaceName, varName, storeInst);
@@ -1028,7 +1027,7 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Object Instance Created");
 
         // Register in symbol table
-        compiler.getContext().namedValues[varName] = objectPtr;
+        compiler.getContext().addNamedValue(varName, objectPtr);
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating Symbol Table with Object Instance");
         compiler.getSymTable().updateVariableNode(
             namespaceName,

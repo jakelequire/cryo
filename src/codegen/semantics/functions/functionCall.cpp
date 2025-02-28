@@ -63,9 +63,19 @@ namespace Cryo
             if (!calleeF)
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Function not found: @" + funcName);
+                std::cout << "Module Name: " << moduleName << std::endl;
                 DEBUG_PRINT_FILTER({
                     // compiler.getContext().module->print(llvm::errs(), nullptr);
+                    // Dump LLVM's function list
+                    for (auto &F : compiler.getContext().module->functions())
+                    {
+                        std::string funcName = F.getName().str();
+                        std::cout << "--------------------------------------------" << std::endl;
+                        std::cout << "Function Name: " << funcName << std::endl;
+                        std::cout << "--------------------------------------------" << std::endl;
+                    }
                 });
+                compiler.dumpModule();
                 CONDITION_FAILED;
             }
 
@@ -218,6 +228,23 @@ namespace Cryo
                 assert(typeofNode != nullptr);
 
                 llvm::Value *argNode = createTypeofCall(typeofNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
+            case NODE_UNARY_EXPR:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a unary expression");
+                CryoUnaryOpNode *unaryNode = argNode->data.unary_op;
+                assert(unaryNode != nullptr);
+                ASTNode *_unaryNode = argNode;
+
+                llvm::Value *argNode = createUnaryExprCall(_unaryNode);
                 if (!argNode)
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
@@ -506,6 +533,7 @@ namespace Cryo
                 if (param)
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Parameter found");
+                    param->ASTNode->print(param->ASTNode);
                     varValue = param->LLVMValue;
                 }
                 else
@@ -515,13 +543,15 @@ namespace Cryo
                     CONDITION_FAILED;
                 }
             }
-            std::cout << "Named Value: " << std::endl;
+            std::cout << "Named Value: " << namedValue->getName().str() << std::endl;
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Named value found");
             varValue = namedValue;
         }
 
+        DevDebugger::logLLVMValue(varValue);
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Variable Value Found");
         llvm::Type *varType = varValue->getType();
+        DevDebugger::logLLVMType(varType);
 
         if (varDataType->container->baseType == STRUCT_TYPE)
         {
@@ -531,7 +561,8 @@ namespace Cryo
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Struct type not found");
                 CONDITION_FAILED;
             }
-
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Struct Type Found");
+            logDataType(varDataType);
             varType = structType;
         }
 
@@ -684,6 +715,126 @@ namespace Cryo
                 // Create the integer literal
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
                 llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I8:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI8Type(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I16:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI16Type(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I32:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI32Type(), 0);
+                int literalValue = literalNode->value.intValue;
+                llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
+                llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
+                if (!literalVarPtr)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not created");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *literalVarStore = compiler.getContext().builder.CreateStore(literalInt, literalVarPtr);
+
+                llvm::LoadInst *literalVar = compiler.getContext().builder.CreateLoad(literalType, literalVarPtr, "lit.int.load.funcCall");
+                if (!literalVar)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Literal variable not loaded");
+                    CONDITION_FAILED;
+                }
+                literalVar->setAlignment(llvm::Align(8));
+
+                // Add the literal to the named values
+                std::string literalName = literalVarPtr->getName().str();
+                compiler.getContext().namedValues[literalName] = literalVarPtr;
+
+                return literalVar;
+            }
+            case PRIM_I64:
+            {
+                // Create the integer literal
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
+                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI64Type(), 0);
                 int literalValue = literalNode->value.intValue;
                 llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
@@ -1283,6 +1434,99 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Typeof Call Created");
         return typeValue;
+    }
+
+    llvm::Value *Functions::createUnaryExprCall(ASTNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Unary Expression Call");
+        CryoUnaryOpNode *unaryNode = node->data.unary_op;
+        node->print(node);
+
+        std::string varName;
+        ASTNode *exprNode = unaryNode->expression;
+        exprNode->print(exprNode);
+        if (exprNode->metaData->type == NODE_VAR_NAME)
+        {
+            varName = std::string(exprNode->data.varName->varName);
+        }
+
+        llvm::Value *exprValue = compiler.getGenerator().getInitilizerValue(exprNode);
+        if (!exprValue)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Expression value not found");
+            CONDITION_FAILED;
+        }
+
+        DevDebugger::logLLVMValue(exprValue);
+
+        std::string exprName = exprValue->getName().str();
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Expression Name: " + exprName);
+
+        llvm::Value *unaryValue = nullptr;
+        switch (unaryNode->op)
+        {
+        case TOKEN_ADDRESS_OF:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Address Of Call");
+
+            // If exprValue is an AllocaInst, that's already the address
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(exprValue))
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Using alloca directly as address");
+                return allocaInst;
+            }
+
+            // If exprValue is a LoadInst, get its operand (the address being loaded from)
+            if (llvm::LoadInst *loadInst = llvm::dyn_cast<llvm::LoadInst>(exprValue))
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Using load operand as address");
+                return loadInst->getOperand(0);
+            }
+
+            // If we have the variable in namedValues, use that
+            if (auto it = compiler.getContext().namedValues.find(varName);
+                it != compiler.getContext().namedValues.end())
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Found address in namedValues");
+                return it->second;
+            }
+
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions",
+                                    "Could not determine address of expression");
+            CONDITION_FAILED;
+        }
+        case TOKEN_DEREFERENCE:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Dereference Call");
+            llvm::Value *varValue = compiler.getContext().namedValues.find(varName)->second;
+            if (!varValue)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable value not found: " + exprName);
+                CONDITION_FAILED;
+            }
+
+            llvm::Type *varInstType = varValue->getType();
+            if (!varInstType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Variable instance type not found");
+                CONDITION_FAILED;
+            }
+
+            llvm::AllocaInst *varPtr = compiler.getContext().builder.CreateAlloca(varInstType, nullptr, "var.ptr");
+            llvm::Value *varStore = compiler.getContext().builder.CreateStore(varValue, varPtr);
+            llvm::LoadInst *varLoad = compiler.getContext().builder.CreateLoad(varInstType, varPtr, "var.load");
+
+            DevDebugger::logMessage("INFO", __LINE__, "Functions", "Dereference Call Created");
+            return varLoad;
+        }
+        default:
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown unary operator");
+            CONDITION_FAILED;
+        }
+        }
+
+        DEBUG_BREAKPOINT;
     }
 
 } // namespace Cryo

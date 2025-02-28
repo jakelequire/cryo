@@ -17,18 +17,20 @@
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 // The `using` keyword is used to import a STD Library module only.
 // Syntax: `using <module>::<?scope/fn>::<?scope/fn>;`
 // Eventually, you will be able to import specific functions or scopes from a module.
 // Like this: `using Std::Types::{Int, Float};`
 ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
-                           Arena *arena, CompilerState *state, TypeTable *typeTable,
+                           Arena *arena, CompilerState *state,
                            CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing using keyword...");
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
-            "parseUsingKeyword", arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, context);
 
     setPrimaryTableStatus(globalTable, false);
 
@@ -38,14 +40,14 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
     logMessage(LMI, "INFO", "Parser", "Primary module: %s", primaryModule);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
-            "parseUsingKeyword", arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, context);
     consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected `::` after primary module.",
-            "parseUsingKeyword", arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, context);
 
     // Parse module chain
     struct ModuleChainEntry moduleChain[MAX_MODULE_CHAIN];
     size_t chainLength = 0;
-    parseModuleChain(lexer, moduleChain, &chainLength, context, arena, state, typeTable);
+    parseModuleChain(lexer, moduleChain, &chainLength, context, arena, state);
     logMessage(LMI, "INFO", "Parser", "Module chain parsed successfully.");
 
     // Handle type list if present
@@ -53,7 +55,7 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
     {
         const char *lastModule = moduleChain[chainLength - 1].name;
         parseTypeList(lexer, lastModule, context, arena,
-                      state, typeTable, globalTable);
+                      state, globalTable);
     }
 
     // Import the module chain
@@ -70,11 +72,11 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
 
     setPrimaryTableStatus(globalTable, true);
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
-            "parseUsingKeyword", arena, state, typeTable, context);
+            "parseUsingKeyword", arena, state, context);
 
     logMessage(LMI, "INFO", "Parser", "Finished parsing using keyword.");
 
-    ASTNode *usingNode = createUsingNode(primaryModule, moduleChainStr, chainLength, arena, state, typeTable, lexer);
+    ASTNode *usingNode = createUsingNode(primaryModule, moduleChainStr, chainLength, arena, state, lexer);
 
     return usingNode;
 }
@@ -82,6 +84,7 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
 // Helper function implementations
 static void cleanupModuleChain(char **names, size_t length)
 {
+    __STACK_FRAME__
     for (size_t i = 0; i < length; i++)
     {
         free(names[i]);
@@ -90,8 +93,9 @@ static void cleanupModuleChain(char **names, size_t length)
 
 static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain, size_t *chainLength,
                              ParsingContext *context, Arena *arena,
-                             CompilerState *state, TypeTable *typeTable)
+                             CompilerState *state)
 {
+    __STACK_FRAME__
     const char *namespaces[] = {0};
     while (true)
     {
@@ -121,7 +125,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
 
         // Must be an identifier followed by either :: or ; or {
         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
-                "parseModuleChain", arena, state, typeTable, context);
+                "parseModuleChain", arena, state, context);
 
         // After an identifier, we should either see :: or end of chain
         if (lexer->currentToken.type == TOKEN_LBRACE ||
@@ -141,7 +145,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
         }
 
         consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected `::` after identifier.",
-                "parseModuleChain", arena, state, typeTable, context);
+                "parseModuleChain", arena, state, context);
     }
 
     // DEBUG -------------------------------------
@@ -162,11 +166,12 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
 
 static void parseTypeList(Lexer *lexer, const char *lastModule,
                           ParsingContext *context, Arena *arena, CompilerState *state,
-                          TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+                          CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing specific types within braces...");
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` after `::`.",
-            "parseTypeList", arena, state, typeTable, context);
+            "parseTypeList", arena, state, context);
 
     struct TypeEntry typeNames[MAX_MODULE_CHAIN];
     size_t typeCount = 0;
@@ -188,7 +193,7 @@ static void parseTypeList(Lexer *lexer, const char *lastModule,
         }
 
         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected type identifier.",
-                "parseTypeList", arena, state, typeTable, context);
+                "parseTypeList", arena, state, context);
 
         if (lexer->currentToken.type == TOKEN_RBRACE)
         {
@@ -196,11 +201,11 @@ static void parseTypeList(Lexer *lexer, const char *lastModule,
         }
 
         consume(__LINE__, lexer, TOKEN_COMMA, "Expected `,` after type identifier.",
-                "parseTypeList", arena, state, typeTable, context);
+                "parseTypeList", arena, state, context);
     } while (true);
 
     consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` after type list.",
-            "parseTypeList", arena, state, typeTable, context);
+            "parseTypeList", arena, state, context);
 
     // Convert to array for import
     const char *typeArray[MAX_MODULE_CHAIN];
@@ -219,6 +224,7 @@ static void parseTypeList(Lexer *lexer, const char *lastModule,
 void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount,
                        CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     // Import the module and scope or function
     // This will allow the module to be used in the current scope.
 
@@ -290,6 +296,7 @@ void importUsingModule(const char *primaryModule, const char *moduleChain[], siz
 
 const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state)
 {
+    __STACK_FRAME__
     // Get the path to the STD Library module
     // This will be used to import the module into the current scope.
     // Root Directory: {CRYO_ROOT}/std/
@@ -323,6 +330,7 @@ const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state
 // If the `using` keyword is used to import a whole module, this function will return all files in the module directory.
 const char **getFilesInModuleDir(const char *modulePath)
 {
+    __STACK_FRAME__
     // Get all files in the module directory
     // This will be used to import the module into the current scope.
     DIR *dir;
@@ -373,6 +381,7 @@ const char **getFilesInModuleDir(const char *modulePath)
 
 bool nonCryoFileCheck(const char *fullPath)
 {
+    __STACK_FRAME__
     // Check if the file is a Cryo file
     // This will be used to import the module into the current scope.
     const char *needle = ".cryo";
@@ -389,6 +398,7 @@ bool nonCryoFileCheck(const char *fullPath)
 // If the module file is not found, this function will return NULL.
 const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const char *moduleName)
 {
+    __STACK_FRAME__
     char *needle = (char *)malloc(strlen(moduleName) + 6);
     strcpy(needle, moduleName);
     strcat(needle, ".mod.cryo");
@@ -420,6 +430,7 @@ const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const c
 
 const char *findRegularFile(const char **moduleFiles, size_t moduleCount, const char *fileName)
 {
+    __STACK_FRAME__
     for (size_t i = 0; i < moduleCount; i++)
     {
         const char *currentFilePath = moduleFiles[i];
@@ -449,6 +460,7 @@ const char *findRegularFile(const char **moduleFiles, size_t moduleCount, const 
 
 int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     // Compile the module file definitions
     // This will be used to import the module into the current scope.
     logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");
@@ -476,6 +488,7 @@ int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *
 void importSpecificNamespaces(const char *primaryModule, const char *namespaces[], size_t namespaceCount,
                               CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     printf("DEBUG: Importing Specific Namespaces... Primary Module: %s\n", primaryModule);
     const char *rootTypeDir = getSTDLibraryModulePath(primaryModule, state);
     if (rootTypeDir == NULL)
@@ -588,6 +601,7 @@ void importSpecificNamespaces(const char *primaryModule, const char *namespaces[
 
 ASTNode *compileModuleFileDefinitions(const char *modulePath, CryoGlobalSymbolTable *globalTable, CompilerState *state)
 {
+    __STACK_FRAME__
     // Compile the module file definitions
     // This will be used to import the module into the current scope.
     logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");

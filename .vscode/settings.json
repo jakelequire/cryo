@@ -310,7 +310,11 @@
     "projectdir.h": "c",
     "cryoconfig.h": "c",
     "ctypes.h": "c",
-    "diagnostics.h": "c"
+    "diagnostics.h": "c",
+    "idgen.hpp": "c",
+    "builddir.h": "c",
+    "compilationunit.h": "c",
+    "cwrappers.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",
@@ -358,5 +362,8 @@
 },
 "[rust]": {
   "editor.defaultFormatter": "rust-lang.rust-analyzer"
+},
+"[cpp]": {
+  "editor.defaultFormatter": "ms-vscode.cpptools"
 }
 }

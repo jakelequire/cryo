@@ -16,6 +16,16 @@
  ********************************************************************************/
 #include "diagnostics/diagnostics.h"
 
+// =============================================================================
+
+FrontendState *newFrontendState(void)
+{
+    FrontendState *state = (FrontendState *)malloc(sizeof(FrontendState));
+    state->lexer = NULL;
+    state->isLexerSet = false;
+    return state;
+}
+
 CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code)
 {
     CryoError *error = (CryoError *)malloc(sizeof(CryoError));
@@ -38,12 +48,12 @@ DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *i
     return entry;
 }
 
-CompilerInternalError *newCompilerInternalError(char *filename, int line, int column, char *message)
+CompilerInternalError *newCompilerInternalError(char *function, char *filename, int line, int column, char *message)
 {
     CompilerInternalError *error = (CompilerInternalError *)malloc(sizeof(CompilerInternalError));
     error->filename = filename;
+    error->function = function;
     error->line = line;
-    error->column = column;
     error->message = message;
 
     return error;
@@ -60,13 +70,12 @@ CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column, char *mess
     return info;
 }
 
-StackFrame *newStackFrame(char *functionName, char *filename, int line, int column)
+StackFrame *newStackFrame(char *functionName, char *filename, int line)
 {
     StackFrame *frame = (StackFrame *)malloc(sizeof(StackFrame));
     frame->functionName = functionName;
     frame->filename = filename;
     frame->line = line;
-    frame->column = column;
 
     return frame;
 }
@@ -74,9 +83,11 @@ StackFrame *newStackFrame(char *functionName, char *filename, int line, int colu
 StackTrace *newStackTrace(void)
 {
     StackTrace *trace = (StackTrace *)malloc(sizeof(StackTrace));
-    trace->frames = NULL;
+    trace->frames = (StackFrame **)malloc(sizeof(StackFrame *) * STACK_TRACE_CAPACITY);
     trace->frameCount = 0;
-    trace->frameCapacity = 0;
+    trace->frameCapacity = STACK_TRACE_CAPACITY;
+
+    trace->push = dyn_stackframe_push;
 
     return trace;
 }

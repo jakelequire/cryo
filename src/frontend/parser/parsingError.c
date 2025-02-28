@@ -17,6 +17,7 @@
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/misc/syntaxHighlighter.h"
+#include "diagnostics/diagnostics.h"
 
 void parsingError(
     char *message,
@@ -25,13 +26,15 @@ void parsingError(
     CompilerState *state,
     Lexer *lexer,
     const char *source,
-    TypeTable *typeTable,
     CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
 
     const char *curModule = GetNamespace(globalTable);
+
+    printGlobalSymbolTable(globalTable);
 
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);
@@ -108,14 +111,12 @@ void parsingError(
 
     // Bottom border
     printf("%s╚══════════════════════════════════════════════════════════════════════════════╝%s\n\n", LIGHT_RED, COLOR_RESET);
-
-    // printSymbolTable(table);
-    printGlobalSymbolTable(globalTable);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 {
+    __STACK_FRAME__
     const char *start = source;
     for (int i = 1; i < line; i++)
     {
@@ -145,6 +146,7 @@ void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 
 void printHorizontalLine(int width)
 {
+    __STACK_FRAME__
     for (int i = 0; i < width; i++)
     {
         printf(GRAY "%s" COLOR_RESET, HORIZONTAL);
@@ -154,6 +156,7 @@ void printHorizontalLine(int width)
 
 Position getPosition(Lexer *lexer)
 {
+    __STACK_FRAME__
     // Set the position of the lexer
     Position position;
     position.line = lexer->line;
@@ -163,11 +166,13 @@ Position getPosition(Lexer *lexer)
 
 void printPosition(Position position)
 {
+    __STACK_FRAME__
     printf("Line: %d, Column: %d\n", position.line, position.column);
 }
 
-void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state, TypeTable *typeTable)
+void debugCurrentToken(Lexer *lexer, Arena *arena, CompilerState *state)
 {
+    __STACK_FRAME__
     // printf("[Parser DEBUG] Current Token: %s, Lexeme: %.*s\n",
     //        CryoTokenToString(lexer->currentToken.type), lexer->currentToken.length, lexer->currentToken.start);
     logMessage(LMI, "INFO", "Parser", "Current Token: %s, Lexeme: %.*s",

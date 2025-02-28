@@ -17,6 +17,7 @@
 #include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
@@ -25,6 +26,7 @@ namespace Cryo
 
     void GlobalSymbolTable::initFunctionDeclaration(const char *functionName, const char *parentScopeID, ASTNode **params, size_t paramCount, DataType *returnType)
     {
+        __STACK_FRAME__
         if (!functionName || functionName == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Function Name is null");
@@ -57,8 +59,51 @@ namespace Cryo
         return;
     }
 
+    void GlobalSymbolTable::initGenericFunctionDeclaration(const char *functionName, const char *parentScopeID, ASTNode **params, size_t paramCount, DataType *returnType, GenericType **genericParams, int genericParamCount)
+    {
+        // Create function symbol for standard functions
+        FunctionSymbol *funcSymbol = createIncompleteFunctionSymbol(functionName, parentScopeID, returnType, nullptr, paramCount);
+
+        // Add generic parameter information if this is a generic function
+        if (genericParamCount > 0)
+        {
+            funcSymbol->isGenericFunction = true;
+            funcSymbol->genericParams = genericParams;
+            funcSymbol->genericParamCount = genericParamCount;
+
+            // Register generic type parameters in the type table
+            for (int i = 0; i < genericParamCount; i++)
+            {
+                TypeSymbol *typeParam = createIncompleteTypeSymbol(genericParams[i]->name, GENERIC_TYPE);
+                typeParam->isGenericType = true;
+                addTypeToTable(typeParam);
+            }
+        }
+
+        // Handle variadic parameters
+        for (size_t i = 0; i < paramCount; i++)
+        {
+            if (params[i]->data.param->isVariadic && i == paramCount - 1)
+            {
+                funcSymbol->isVariadic = true;
+
+                // If it's a typed variadic parameter in a generic function,
+                // set up the association between array type and the element type
+                if (funcSymbol->isGenericFunction && params[i]->data.param->variadicElementType)
+                {
+                    funcSymbol->variadicElementType = params[i]->data.param->variadicElementType;
+                }
+            }
+        }
+
+        // Add to symbol table
+        Symbol *symbol = createSymbol(FUNCTION_SYMBOL, funcSymbol);
+        addSymbolToCurrentTable(symbol);
+    }
+
     void GlobalSymbolTable::completeFunctionDeclaration(ASTNode *functionNode, const char *scopeID, const char *parentScopeID)
     {
+        __STACK_FRAME__
         if (!functionNode || functionNode == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Function Node is null");
@@ -100,6 +145,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addExternFunctionToTable(ASTNode *externNode, const char *namespaceScopeID)
     {
+        __STACK_FRAME__
         if (!externNode || externNode == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Extern Node is null");
@@ -137,8 +183,10 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::seekFunctionSymbolInAllTables(const char *symbolName)
     {
+        __STACK_FRAME__
         if (!symbolName || symbolName == nullptr)
         {
+            logMessage(LMI, "ERROR", "SymbolTable", "Symbol Name is null");
             return nullptr;
         }
 
@@ -187,6 +235,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::resolveFunctionSymbol(const char *symbolName, const char *scopeID, TypeOfSymbol symbolType)
     {
+        __STACK_FRAME__
         if (!symbolName || symbolName == nullptr)
         {
             return nullptr;
@@ -257,6 +306,7 @@ namespace Cryo
 
     FunctionSymbol *GlobalSymbolTable::resolveScopedFunctionCall(const char *scopeID, const char *functionName)
     {
+        __STACK_FRAME__
         if (!scopeID || scopeID == nullptr)
         {
             return nullptr;
@@ -303,6 +353,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addParamToSymbolTable(ASTNode *node, const char *functionScopeID)
     {
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Node is null");
@@ -321,6 +372,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateFunctionSymbol(Symbol *functionSymbol, SymbolTable *table)
     {
+        __STACK_FRAME__
         for (int i = 0; i < table->count; i++)
         {
             if (table->symbols[i] == functionSymbol)

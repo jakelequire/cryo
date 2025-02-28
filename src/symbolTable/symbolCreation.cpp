@@ -14,13 +14,17 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
 
     ScopeBlock *GlobalSymbolTable::createScopeBlock(const char *name, size_t depth)
     {
+        __STACK_FRAME__
         ScopeBlock *block = new ScopeBlock();
         block->name = name;
         block->depth = depth;
@@ -34,6 +38,7 @@ namespace Cryo
 
     VariableSymbol *GlobalSymbolTable::createVariableSymbol(const char *name, DataType *type, ASTNode *node, const char *scopeId)
     {
+        __STACK_FRAME__
         VariableSymbol *symbol = new VariableSymbol();
         symbol->name = name;
         symbol->type = type;
@@ -45,6 +50,7 @@ namespace Cryo
 
     FunctionSymbol *GlobalSymbolTable::createFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoVisibilityType visibility, ASTNode *node)
     {
+        __STACK_FRAME__
         FunctionSymbol *symbol = new FunctionSymbol();
         symbol->name = name;
         symbol->returnType = returnType;
@@ -59,6 +65,7 @@ namespace Cryo
 
     FunctionSymbol *GlobalSymbolTable::createIncompleteFunctionSymbol(const char *name, const char *parentScopeID, DataType *returnType, DataType **paramTypes, size_t paramCount)
     {
+        __STACK_FRAME__
         FunctionSymbol *symbol = new FunctionSymbol();
         symbol->name = name;
         symbol->returnType = returnType;
@@ -73,6 +80,7 @@ namespace Cryo
 
     ExternSymbol *GlobalSymbolTable::createExternSymbol(const char *name, DataType *returnType, DataType **paramTypes, size_t paramCount, CryoNodeType nodeType, CryoVisibilityType visibility, const char *scopeId)
     {
+        __STACK_FRAME__
         ExternSymbol *symbol = new ExternSymbol();
         symbol->name = name;
         symbol->returnType = returnType;
@@ -84,34 +92,65 @@ namespace Cryo
         return symbol;
     }
 
-    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId)
+    TypeSymbol *GlobalSymbolTable::createTypeSymbol(const char *name, ASTNode *node, DataType *type,
+                                                    TypeofDataType typeOf, bool isStatic, bool isGeneric,
+                                                    const char *scopeId)
     {
-        TypeSymbol *symbol = new TypeSymbol();
-        symbol->name = name;
+        __STACK_FRAME__
+        if (!name)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Cannot create type symbol with null name");
+            return nullptr;
+        }
+
+        TypeSymbol *symbol = (TypeSymbol *)malloc(sizeof(TypeSymbol));
+        if (!symbol)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Failed to allocate memory for type symbol");
+            return nullptr;
+        }
+
+        // Initialize all fields to avoid undefined behavior
+        symbol->name = strdup(name);
+        symbol->node = node;
         symbol->type = type;
         symbol->typeOf = typeOf;
         symbol->isStatic = isStatic;
         symbol->isGeneric = isGeneric;
-        symbol->scopeId = scopeId;
-        symbol->node = node;
-
-        symbol->propertyCapacity = MAX_PROPERTY_COUNT;
-        symbol->methodCapacity = MAX_METHOD_COUNT;
-        symbol->propertyCount = 0;
-        symbol->methodCount = 0;
-        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
-        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
-
+        symbol->scopeId = scopeId ? strdup(scopeId) : nullptr;
         symbol->parentNameID = nullptr;
 
+        // Initialize property and method arrays
+        symbol->properties = (Symbol **)malloc(sizeof(Symbol *) * PROPERTY_CAPACITY);
+        symbol->propertyCount = 0;
+        symbol->propertyCapacity = PROPERTY_CAPACITY;
+
+        symbol->methods = (Symbol **)malloc(sizeof(Symbol *) * METHOD_CAPACITY);
+        symbol->methodCount = 0;
+        symbol->methodCapacity = METHOD_CAPACITY;
+
+        // Initialize generic type information
+        symbol->isGenericType = isGeneric;
+        if (isGeneric)
+        {
+            symbol->generics.typeParameters = nullptr;
+            symbol->generics.paramCount = 0;
+            symbol->generics.typeArguments = nullptr;
+            symbol->generics.argCount = 0;
+            symbol->generics.baseGenericType = nullptr;
+        }
+
+        logMessage(LMI, "INFO", "Symbol Table", "Created type symbol", "Name", name,
+                   "Type", TypeofDataTypeToString(typeOf));
         return symbol;
     }
 
     TypeSymbol *GlobalSymbolTable::createIncompleteTypeSymbol(const char *name, TypeofDataType typeOf)
     {
+        __STACK_FRAME__
         TypeSymbol *symbol = new TypeSymbol();
         symbol->name = name;
-        symbol->type = nullptr;
+        symbol->type = nullptr; // Need to put a temp DataType here
         symbol->typeOf = typeOf;
         symbol->isStatic = false;
         symbol->isGeneric = false;
@@ -131,6 +170,7 @@ namespace Cryo
 
     PropertySymbol *GlobalSymbolTable::createPropertySymbol(ASTNode *propNode)
     {
+        __STACK_FRAME__
         if (propNode->metaData->type != NODE_PROPERTY)
         {
             std::cout << "Error: Failed to create Property Symbol, typeof node mismatch." << std::endl;
@@ -151,6 +191,7 @@ namespace Cryo
 
     MethodSymbol *GlobalSymbolTable::createMethodSymbol(ASTNode *methodNode)
     {
+        __STACK_FRAME__
         if (methodNode->metaData->type != NODE_METHOD)
         {
             std::cout << "Error: Failed to create Method Symbol, typeof node mismatch" << std::endl;
@@ -178,6 +219,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::createSymbol(TypeOfSymbol symbolType, void *symbol)
     {
+        __STACK_FRAME__
         Symbol *symbolNode = new Symbol();
         symbolNode->symbolType = symbolType;
         switch (symbolType)
@@ -208,6 +250,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::createSymbolTable(const char *namespaceName)
     {
+        __STACK_FRAME__
         SymbolTable *table = new SymbolTable();
         table->namespaceName = namespaceName;
         table->count = 0;
@@ -221,6 +264,7 @@ namespace Cryo
 
     TypesTable *GlobalSymbolTable::createTypeTable(const char *namespaceName)
     {
+        __STACK_FRAME__
         TypesTable *table = new TypesTable();
         table->namespaceName = namespaceName;
         table->count = 0;
@@ -235,6 +279,7 @@ namespace Cryo
 
     bool GlobalSymbolTable::isParamSymbol(ASTNode *node)
     {
+        __STACK_FRAME__
         CryoNodeType nodeType = node->metaData->type;
         if (nodeType == NODE_PARAM)
         {

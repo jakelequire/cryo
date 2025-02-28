@@ -15,8 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
-
-#define C_RUNTIME_FILENAME "cRuntime"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
@@ -31,6 +30,7 @@ namespace Cryo
     /// @note this function is called from the C++ CodeGen API before code generation.
     llvm::Module *Linker::initMainModule(void)
     {
+        __STACK_FRAME__
         std::cout << "Initializing Main Module before CodeGen..." << std::endl;
 
         // At this step of the compilation process, this module being passed is the newly created
@@ -42,503 +42,172 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
             return nullptr;
         }
-
         std::cout << "Cryo Linker is not undefined" << std::endl;
-        // Add the dependencies to the root module
 
-        // init the C runtime module
-        cLinker->createCRuntimeFile();
+        // Return the runtime module for now
+        llvm::Module *runtimeModule = cLinker->mergeRuntimeToModule();
+        if (!runtimeModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Runtime Module is null");
+            return nullptr;
+        }
 
-        llvm::Module *runtimeMod = cLinker->getCryoRuntimeModule();
-        return runtimeMod;
+        logMessage(LMI, "INFO", "Linker", "Runtime Module created successfully");
+
+        return runtimeModule;
     }
 
-    /// @brief This function will seek for the `cryo_runtime.ll` file that should have been created
-    /// at an earlier stage in the compiler. This function is called to parse this file and returns
-    /// the `llvm::Module *`.
-    /// @param
-    /// @return The Cryo Runtime Module
-    llvm::Module *Linker::getCryoRuntimeModule(void)
+    // This function will take the build directory, seek into the `runtime` folder,
+    // and compile and combine all `.ll` files under this directory. The resulting
+    // module will be the Cryo Runtime Module.
+    llvm::Module *Linker::mergeRuntimeToModule(void)
     {
+        __STACK_FRAME__
+        std::cout << "Merging Runtime Module to Main Module..." << std::endl;
+
+        // At this step of the compilation process, this module being passed is the newly created
+        // module from the Cryo Compiler. We will add the required dependencies to this module before
+        // it is passed to the LLVM backend code generator.
         Cryo::Linker *cLinker = GetCXXLinker();
         if (!cLinker)
         {
             logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
-            return nullptr;
-        }
-
-        std::string cryoRuntimefile = cLinker->getDirInfo()->runtimeDir + "/cryo_runtime.ll";
-        if (cryoRuntimefile.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file is empty");
-            return nullptr;
-        }
-
-        // Parse the cryo runtime file
-        llvm::SMDiagnostic err;
-        llvm::Module *cryoRuntimeModule = llvm::parseIRFile(cryoRuntimefile, err, getLinkerContext()).release();
-        if (!cryoRuntimeModule)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to parse Cryo Runtime file");
-            std::cout << "Runtime File: " << cryoRuntimefile << std::endl;
-            CONDITION_FAILED;
-            return nullptr;
-        }
-        if (err.getMessage().str().size() > 0)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Error parsing Cryo Runtime file");
-            std::cout << "Error: " << err.getMessage().str() << std::endl;
             CONDITION_FAILED;
             return nullptr;
         }
 
-        // Safely clone the module from LLVM's API
-        logMessage(LMI, "INFO", "Linker", "Cryo Runtime Module Parsed Successfully");
-
-        return cryoRuntimeModule;
-    }
-
-    /// @brief This function is called after the cryo runtime module has been parsed and
-    /// and at the end of the code generation process. This will create the `cryo_runtime.ll`
-    /// file that will be used in the final compilation process and used in a later stage.
-    ///
-    /// @param mod The module to be used to create the IR file (runtime.cryo)
-    void Linker::addPreprocessingModule(llvm::Module *mod)
-    {
-        logMessage(LMI, "INFO", "Linker", "Adding Preprocessing Module...");
-
-        if (!mod)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Module is null");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Creating Preprocessing Module...");
-
-        DirectoryInfo *dirInfo = getDirInfo();
-        if (!dirInfo)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Directory Info is null");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Directory Info is not null");
-
-        std::string runtimeDir = dirInfo->runtimeDir;
+        std::string runtimeDir = cLinker->dirInfo->runtimeDir;
         if (runtimeDir.empty())
         {
-            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Runtime Directory is not empty");
-
-        std::string cRuntimePath = getCRuntimePath();
-        if (cRuntimePath.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "C Runtime Path is not empty");
-
-        // Create the IR for the mod first and output it to the runtime directory
-        std::string modIR = createIRFromModule(mod, runtimeDir);
-        if (modIR.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to create IR from module");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Module IR is not empty");
-
-        // Then, convert the C runtime to IR
-        std::string cRuntimeIR = covertCRuntimeToLLVMIR(cRuntimePath, runtimeDir);
-        if (cRuntimeIR.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "C Runtime IR is not empty");
-
-        // Now that the `runtime.ll` and `cRuntime.ll` files are generated, we will
-        // merge them into one file and set that as the `preprocessedModule`.
-        std::string outputFilePath = mergeTwoIRFiles(modIR, cRuntimeIR, "cryo_runtime");
-        if (outputFilePath.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to merge IR files");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "IR Files Merged Successfully");
-
-        // Parse the merged IR file
-        llvm::SMDiagnostic err;
-        llvm::Module *mergedModule = llvm::parseIRFile(outputFilePath, err, context).get();
-        if (!mergedModule)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to parse merged IR file");
+            logMessage(LMI, "ERROR", "Linker", "Runtime Directory is empty");
             CONDITION_FAILED;
-            return;
+            return nullptr;
         }
 
-        logMessage(LMI, "INFO", "Linker", "Merged IR File Parsed Successfully");
-
-        // Now that we have the merged module, we can set it as the preprocessed module
-        GetCXXLinker()->setPreprocessedModule(mergedModule);
-
-        logMessage(LMI, "INFO", "Linker", "Preprocessed Module Set Successfully");
-
-        return;
-    }
-
-    void Linker::createCRuntimeFile(void)
-    {
-        DirectoryInfo *dirInfo = getDirInfo();
-        if (!dirInfo)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Directory Info is null");
-            return;
-        }
-
-        std::string runtimeDir =dirInfo->runtimeDir + "/";
-        if (runtimeDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
-            return;
-        }
-
-        std::string cRuntimePath = getCRuntimePath();
-        if (cRuntimePath.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
-            return;
-        }
-
-        // Then, convert the C runtime to IR
-        std::string cRuntimeIR = covertCRuntimeToLLVMIR(cRuntimePath, runtimeDir);
-        if (cRuntimeIR.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "C Runtime IR is not empty");
-
-        return;
-    }
-
-    /// @brief Create a `.ll` file from the given module and output directory.
-    /// @param module The module to create the IR from.
-    /// @param outDir The output directory to write the IR file to.
-    /// @return The path to the created IR file.
-    std::string Linker::createIRFromModule(llvm::Module *module, std::string outDir)
-    {
-        if (!module)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Module is null");
-            CONDITION_FAILED;
-        }
-
-        if (outDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Output directory is empty");
-            CONDITION_FAILED;
-        }
-        logMessage(LMI, "INFO", "Linker", "Creating IR from module...");
-
-        logMessage(LMI, "INFO", "Linker", "Module is not null");
-        std::string moduleName = module->getName().str();
-        if (moduleName.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Module name is empty");
-            CONDITION_FAILED;
-        }
-
-        std::string outPath = outDir + "/" + moduleName + ".ll";
-
-        fs->createNewEmptyFile(moduleName.c_str(), ".ll", outDir.c_str());
-
-        logMessage(LMI, "INFO", "Linker", "IR file created: %s", outPath.c_str());
-
-        std::error_code error;
-        llvm::raw_fd_ostream out(outPath, error, llvm::sys::fs::OF_None);
-        module->print(out, nullptr);
-        logMessage(LMI, "INFO", "Linker", "IR file created: %s", outPath.c_str());
-
-        return outPath;
-    }
-
-    // ================================================================ //
-
-    /// @brief This function will return the path to the Cryo Runtime file path.
-    /// @return The path to the Cryo Runtime file path.
-    std::string Linker::getCRuntimePath()
-    {
-        std::string cryoRoot = getCryoRootPath();
-        if (cryoRoot.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Cryo Root is empty");
-            return "";
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Cryo Root is not empty");
-        std::string fullPath = cryoRoot + "/Std/Runtime";
-        logMessage(LMI, "INFO", "Linker", "C Runtime Path: %s", fullPath.c_str());
-
-        return fullPath;
-    }
-
-    std::string Linker::covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir)
-    {
-        if (cRuntimePath.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "C Runtime path is empty");
-            return "";
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Converting C Runtime to IR...");
-        // Check and see if the `cRuntime.c` file exists
-        std::string cRuntimeFile =  cRuntimePath + "/" + C_RUNTIME_FILENAME + ".c";
-        if (!fileExists(cRuntimeFile.c_str()))
-        {
-            logMessage(LMI, "ERROR", "Linker", "C Runtime file does not exist: %s", cRuntimeFile.c_str());
-            return "";
-        }
-
-        // Create the output directory if it doesn't exist
-        if (!dirExists(outDir.c_str()))
-        {
-            if (mkdir(outDir.c_str(), 0777) != 0)
-            {
-                logMessage(LMI, "ERROR", "Linker", "Failed to create output directory: %s", outDir.c_str());
-                return "";
-            }
-        }
-
-        // Now that we have the file, we can convert it to IR
-        std::string outPath = outDir + "/" + C_RUNTIME_FILENAME + ".ll";
-        std::string cmd = "clang -S -emit-llvm " + cRuntimeFile + " -o " + outPath;
-        int result = system(cmd.c_str());
-        if (result != 0)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to convert C Runtime to IR");
-            return "";
-        }
-
-        logMessage(LMI, "INFO", "Linker", "C Runtime converted to IR: %s", outPath.c_str());
-
-        return outPath;
-    }
-
-    // This function is going to be used to merge all of the runtime files into one.
-    // It will look into the `DirectoryInfo` struct and find the runtime directory.
-    // It will then look for all of the `.ll` files in that directory and merge them
-    // Into one file.
-    // It will return `false` if there are no files in the runtime directory.
-    bool Linker::mergeAllRuntimeFiles()
-    {
-        logMessage(LMI, "INFO", "Linker", "Merging all runtime files...");
-
-        DirectoryInfo *dirInfo = getDirInfo();
-        if (!dirInfo)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Directory Info is null");
-            return false;
-        }
-
-        std::string runtimeDir = dirInfo->runtimeDir;
-        if (runtimeDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
-            return false;
-        }
-
-        // Get all of the files in the runtime directory
+        // List the files in the runtime directory
         std::vector<std::string> files = listDir(runtimeDir.c_str());
         if (files.empty())
         {
             logMessage(LMI, "ERROR", "Linker", "No files found in runtime directory");
-            return false;
+            CONDITION_FAILED;
+            return nullptr;
         }
+        int fileCount = files.size();
 
-        // Now we need to merge all of the files into one
-        for (auto file : files)
+        // Print out the files
+        std::cout << "\n=============== {Files } ===============\n";
+        for (int i = 0; i < fileCount; i++)
         {
-            std::string filePath = runtimeDir + "/" + file;
-            logMessage(LMI, "INFO", "Linker", "Merging file: %s", filePath.c_str());
+            std::cout << "File: " << files[i] << std::endl;
+        }
+        std::cout << "========================================\n\n";
+
+        // Create the runtime module
+        llvm::Module *runtimeModule = new llvm::Module("CryoRuntime", cLinker->context);
+
+        // Merge all the files into the runtime module
+        for (int i = 0; i < fileCount; i++)
+        {
+            std::string filePath = runtimeDir + "/" + files[i];
+            std::cout << "File Path: " << filePath << std::endl;
+            if (!fs->fileExists(filePath.c_str()))
+            {
+                logMessage(LMI, "ERROR", "Linker", "File does not exist: %s", filePath.c_str());
+                CONDITION_FAILED;
+            }
+            else
+            {
+                // Print out the file contents
+                std::string fileContents = fs->readFile(filePath.c_str());
+                std::cout << "File Contents: \n"
+                          << fileContents << std::endl;
+            }
+            llvm::SMDiagnostic err;
+            llvm::LLVMContext &context = cLinker->context;
+            llvm::Module *mod = llvm::parseIRFile(filePath, err, context).release();
+            if (!mod)
+            {
+                logMessage(LMI, "ERROR", "Linker", "Failed to parse IR file: %s", filePath.c_str());
+                std::string errMsg;
+                llvm::raw_string_ostream rso(errMsg);
+                err.print("Linker", rso);
+                logMessage(LMI, "ERROR", "Linker", "Error: %s", errMsg.c_str());
+                CONDITION_FAILED;
+                return nullptr;
+            }
+
+            // Merge the module into the runtime module
+            cLinker->mergeInModule(runtimeModule, mod);
         }
 
-        return true;
+        return runtimeModule;
     }
 
-    std::vector<std::string> Linker::listDir(const char *path)
+    // This function will merge the source module into the destination module
+    void Linker::mergeInModule(llvm::Module *destModule, llvm::Module *srcModule)
     {
+        __STACK_FRAME__
+        if (!destModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Destination Module is null");
+            CONDITION_FAILED;
+            return;
+        }
+        if (!srcModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Source Module is null");
+            CONDITION_FAILED;
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Linker", "Merging modules");
+        logMessage(LMI, "INFO", "Linker", "Destination Module: %s", destModule->getName().str().c_str());
+
+        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
+        bool result = llvm::Linker::linkModules(
+            *destModule,
+            llvm::CloneModule(*srcModule),
+            linkerFlags);
+        if (result)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to merge modules");
+            CONDITION_FAILED;
+            return;
+        }
+
+        std::cout << "@mergeModule Module merged successfully" << std::endl;
+    }
+
+    // ======================================================================
+    // Supporting Functions
+
+    // This function will list the files in a directory and return a vector of strings
+    // It will ignore `.`, `..`, and hidden files.
+    std::vector<std::string> Linker::listDir(const char *dirPath)
+    {
+        __STACK_FRAME__
         std::vector<std::string> files;
         DIR *dir;
         struct dirent *ent;
-        if ((dir = opendir(path)) != NULL)
+        if ((dir = opendir(dirPath)) != NULL)
         {
             while ((ent = readdir(dir)) != NULL)
             {
-                files.push_back(ent->d_name);
+                std::string fileName = ent->d_name;
+                if (fileName == "." || fileName == ".." || fileName[0] == '.')
+                {
+                    continue;
+                }
+                files.push_back(fileName);
             }
             closedir(dir);
         }
         else
         {
-            logMessage(LMI, "ERROR", "Linker", "Failed to open directory: %s", path);
+            logMessage(LMI, "ERROR", "Linker", "Failed to open directory: %s", dirPath);
         }
 
         return files;
     }
-
-    // This function will be used to merge two IR files together.
-    // This function will return the full path to where the file was created.
-    std::string Linker::mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName)
-    {
-        logMessage(LMI, "INFO", "Linker", "Merging two IR files...");
-
-        if (file1.empty() || file2.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "One or both files are empty");
-            CONDITION_FAILED;
-            return "";
-        }
-
-        std::string outDir = file1.substr(0, file1.find_last_of("/"));
-        std::string outPath = outDir + "/" + fileName + ".ll";
-
-        std::string cmd = "llvm-link-18 " + file1 + " " + file2 + " -S -o " + outPath;
-        int result = system(cmd.c_str());
-        if (result != 0)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to merge IR files");
-            CONDITION_FAILED;
-            return "";
-        }
-
-        logMessage(LMI, "INFO", "Linker", "IR files merged");
-
-        std::string fullPathToFile = file1.substr(0, file1.find_last_of("/")) + "/" + fileName + ".ll";
-        logMessage(LMI, "INFO", "Linker", "Merged IR file: %s", fullPathToFile.c_str());
-
-        llvm::LLVMContext context;
-        llvm::SMDiagnostic err;
-        std::unique_ptr<llvm::Module> mergedModule = llvm::parseIRFile(fullPathToFile, err, context);
-        if (!mergedModule)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to parse merged IR file");
-            CONDITION_FAILED;
-            return "";
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Merged IR file parsed successfully");
-        return fullPathToFile;
-    }
-
-    std::string Linker::getCryoRuntimeFilePath(void)
-    {
-        std::string runtimeDir = dirInfo->runtimeDir;
-        if (runtimeDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Runtime directory is empty");
-            return "";
-        }
-
-        std::string cryoRuntimeFile = runtimeDir + "/cryo_runtime.ll";
-        if (!fileExists(cryoRuntimeFile.c_str()))
-        {
-            logMessage(LMI, "ERROR", "Linker", "Cryo Runtime file does not exist: %s", cryoRuntimeFile.c_str());
-            return "";
-        }
-
-        return cryoRuntimeFile;
-    }
-
-    void Linker::mergeTwoModules(llvm::Module *destMod, std::unique_ptr<llvm::Module> srcMod)
-    {
-        if (!destMod)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Destination module is null");
-            CONDITION_FAILED;
-        }
-
-        if (!srcMod)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Source module is null");
-            CONDITION_FAILED;
-        }
-
-        bool result = llvm::Linker::linkModules(*destMod, std::move(srcMod));
-        if (result)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to merge modules");
-            CONDITION_FAILED;
-        }
-        logMessage(LMI, "INFO", "Linker", "Modules merged successfully");
-    }
-
-    // ================================================================ //
-    // End of Compilation API
-
-    void Linker::completeCodeGeneration(void)
-    {
-        std::cout << "End of Compilation Signal Received..." << std::endl;
-
-        // Look for the `main.ll` file that should be under {buildDir}/out/main.ll
-        std::string buildDir = GetCXXLinker()->getDirInfo()->buildDir;
-        if (buildDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Build directory is empty");
-            return;
-        }
-        std::string exe_output = buildDir + "/";
-        std::string exe_name = "main";
-        std::string mainFile = buildDir + "/out/main.ll";
-        std::string sys_cmd = "clang-18 -o " + exe_output + exe_name + " " + mainFile;
-        int result = system(sys_cmd.c_str());
-        if (result != 0 || WEXITSTATUS(result) != 0)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to compile main.ll");
-            std::string error = "Error: " + std::to_string(result);
-            std::string errReason = std::strerror(errno);
-            logMessage(LMI, "ERROR", "Linker", error.c_str());
-            logMessage(LMI, "ERROR", "Linker", errReason.c_str());
-            CONDITION_FAILED;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Main Binary Compiled Successfully");
-        // Run the binary
-        // runCompletedBinary();
-    }
-
-    void Linker::runCompletedBinary()
-    {
-        std::string buildDir = GetCXXLinker()->getDirInfo()->buildDir;
-        if (buildDir.empty())
-        {
-            logMessage(LMI, "ERROR", "Linker", "Build directory is empty");
-            return;
-        }
-        // In the future, the binary name may change. Seek the only bianry
-        // file within the build directory and run it.
-
-        logMessage(LMI, "INFO", "Linker", "Running main binary...");
-        std::string exe_output = buildDir + "/";
-        std::string exe_name = "main";
-        std::string sys_cmd = exe_output + exe_name;
-        int result = system(sys_cmd.c_str());
-        if (result != 0 || WEXITSTATUS(result) != 0)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Failed to run main binary");
-            std::string error = "Error: " + std::to_string(result);
-            std::string errReason = std::strerror(errno);
-            logMessage(LMI, "ERROR", "Linker", error.c_str());
-            logMessage(LMI, "ERROR", "Linker", errReason.c_str());
-            CONDITION_FAILED;
-        }
-    }    
 
 } // namespace Cryo

@@ -15,11 +15,14 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
-#include "symbolTable/cInterfaceTable.h"
+#include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
+#include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "Compiler", "Compiling module file: %s", filePath);
 
     char *source = readFile(filePath);
@@ -32,16 +35,13 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    // Initialize the type table
-    TypeTable *typeTable = initTypeTable();
-
     // Initialize the lexer
     Lexer lexer;
     initLexer(&lexer, source, filePath, state);
 
     state->isModuleFile = true;
 
-    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, globalTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, globalTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
@@ -62,7 +62,7 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
     CryoLinker *cLinker = GetGSTLinker(globalTable);
 
     // Generate the IR code
-    processNodeToIRObject(programNode, state, completeFilePath, cLinker);
+    processNodeToIRObject(programNode, state, completeFilePath, cLinker, globalTable);
 
     return programNode;
 }
@@ -79,10 +79,6 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     }
 
     logMessage(LMI, "INFO", "Compiler", "File Read. File Path: %s", filePath);
-
-    // Initialize the type table
-    TypeTable *typeTable = initTypeTable();
-    logMessage(LMI, "INFO", "Compiler", "Type Table Initialized");
 
     // Initialize the lexer
     Lexer lexer;
@@ -101,7 +97,7 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     setGlobalSymbolTable(state, globalSymbolTable);
 
-    ASTNode *programNode = parseProgram(&lexer, arena, state, typeTable, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
@@ -143,7 +139,7 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
 
     CryoLinker *cLinker = GetGSTLinker(globalTable);
 
-    int resultObj = processNodeToIRObject(programNode, state, outputPath, cLinker);
+    int resultObj = processNodeToIRObject(programNode, state, outputPath, cLinker, globalTable);
     if (resultObj != 0)
     {
         logMessage(LMI, "ERROR", "Compiler", "Failed to process node to IR object");
@@ -160,17 +156,18 @@ SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, 
     return copiedTable;
 }
 
-int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker)
+int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Compiler", "Processing node to IR object...");
+    logMessage(LMI, "INFO", "Compiler", "Output Path: %s", outputPath);
 
     // Generate code
-    int result = preprocessRuntimeIR(node, state, outputPath, cLinker);
-    if (result != 0)
-    {
-        CONDITION_FAILED;
-        return result;
-    }
+    // int result = generateImportCode(node, state, cLinker, outputPath, globalTable);
+    // if (result != 0)
+    // {
+    //     CONDITION_FAILED;
+    //     return result;
+    // }
 
     return 0;
 }

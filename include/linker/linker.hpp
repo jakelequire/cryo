@@ -31,9 +31,16 @@ extern "C"
     // Constructors & Destructors
     CryoLinker *CryoLinker_Create(const char *buildDir);
 
+    // Linker Functions
+    void CryoLinker_InitCRuntime(CryoLinker *linker);
+    void CryoLinker_LinkAll(CryoLinker *linker);
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Macros
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#define INIT_LINKER_C_RUNTIME(linker) CryoLinker_InitCRuntime(linker)
+#define LINK_ALL_MODULES(linker) CryoLinker_LinkAll(linker)
 
 #define CreateCryoLinker(buildDir) CryoLinker_Create(buildDir)
 
@@ -87,7 +94,6 @@ extern "C"
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
 
-#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/SourceMgr.h"
@@ -121,6 +127,7 @@ extern "C"
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/env.h"
+#include "linker/compilationUnit.h"
 
 struct DirectoryInfo
 {
@@ -136,6 +143,7 @@ namespace Cryo
     class Linker;
     extern CryoLinker *globalLinker; // Global Linker Object
 #define GetCXXLinker() reinterpret_cast<Cryo::Linker *>(globalLinker)
+#define GetCLinker() globalLinker
 
     // ================================================================ //
     //                        Linker Manager                            //
@@ -161,42 +169,66 @@ namespace Cryo
         Cryo::Linker *getCXXLinker() { return reinterpret_cast<Cryo::Linker *>(globalLinker); }
         CryoLinker *getCLinker() { return globalLinker; }
 
+        // ================================================================ //
+        // Linker Properties
+
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
         llvm::Module *preprocessedModule;
         void setPreprocessedModule(llvm::Module *mod) { preprocessedModule = mod; }
         std::vector<llvm::Module *> dependencies;
+        DirectoryInfo *dirInfo;
+        bool c_runtime_initialized = false;
+        bool auto_run_binary = false;
 
         llvm::LLVMContext &getLinkerContext() { return context; }
 
-        DirectoryInfo *dirInfo;
+        // ================================================================ //
+        // Linker Functions
 
         llvm::Module *initMainModule(void);
 
-        void addPreprocessingModule(llvm::Module *mod);
+        llvm::Module *mergeRuntimeToModule(void);
 
-        std::string createIRFromModule(llvm::Module *module, std::string outDir);
-        llvm::Module *getCryoRuntimeModule(void);
+        void mergeInModule(llvm::Module *destModule, llvm::Module *srcModule);
+
+        // ================================================================ //
+        // CodeGen Interface for Linker
+
+        /// @brief After running the ASTNode through the code generation process, this function will
+        /// compile the module and output the IR to a file given the `CompilationUnit` object.
+        /// @param unit The compilation unit object that contains the module and the output path.
+        void compileModule(CompilationUnit *unit, llvm::Module *mod);
+
+        void generateIRFromCodegen(llvm::Module *mod, const char *outputPath);
+
+        // ================================================================ //
+        // C Runtime Initialization
+
+        std::string getCRuntimePath();
+        void initCRuntime(void);
         void createCRuntimeFile(void);
 
+        // ================================================================ //
+        // End of Compilation (EOC)
+
+        void linkAll(void);
         void completeCodeGeneration(void);
+        void runCompletedBinary();
+        void createMainObject(void);
+        void combineAllObjectsToMainExe(void);
+
+        // ================================================================ //
+        // Supporting Functions
+
+        std::vector<std::string> listDir(const char *dirPath);
 
     private:
         DirectoryInfo *createDirectoryInfo(std::string rootDir);
         DirectoryInfo *getDirInfo() { return dirInfo; }
         void logDirectoryInfo(DirectoryInfo *dirInfo);
 
-        std::string getCRuntimePath();
-        std::string covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
-        bool mergeAllRuntimeFiles();
-        std::string mergeTwoIRFiles(std::string file1, std::string file2, std::string fileName);
-
-        std::vector<std::string> listDir(const char *path);
-        void runCompletedBinary();
-
-    public:
-        std::string getCryoRuntimeFilePath(void);
-        void mergeTwoModules(llvm::Module *destMod, std::unique_ptr<llvm::Module> srcMod);
+        int covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
     };
 
     // ================================================================ //
@@ -214,6 +246,12 @@ namespace Cryo
         {
             return nullptr;
         }
+    }
+
+    inline void CryoLinker_InitCRuntime(CryoLinker *linker)
+    {
+        auto _linker = reinterpret_cast<Linker *>(linker);
+        _linker->initCRuntime();
     }
 } // namespace Cryo
 

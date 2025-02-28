@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
 // # ========================================================= #
 // # Structs
@@ -22,6 +23,7 @@
 // Create an empty struct definition
 DataType *createStructDefinition(const char *structName)
 {
+    __STACK_FRAME__
     StructType *structDef = (StructType *)malloc(sizeof(StructType));
     if (!structDef)
     {
@@ -31,12 +33,17 @@ DataType *createStructDefinition(const char *structName)
 
     structDef->name = structName;
     structDef->size = 0;
+    structDef->properties = (ASTNode **)malloc(sizeof(ASTNode *) * PROPERTY_CAPACITY);
     structDef->propertyCount = 0;
+    structDef->propertyCapacity = PROPERTY_CAPACITY;
+    structDef->methods = (ASTNode **)malloc(sizeof(ASTNode *) * METHOD_CAPACITY);
     structDef->methodCount = 0;
-    structDef->properties = NULL;
-    structDef->methods = NULL;
+    structDef->methodCapacity = METHOD_CAPACITY;
     structDef->hasDefaultValue = false;
     structDef->hasConstructor = false;
+
+    structDef->addProperty = _add_struct_property;
+    structDef->addMethod = _add_struct_method;
 
     return wrapStructType(structDef);
 }
@@ -44,21 +51,28 @@ DataType *createStructDefinition(const char *structName)
 // Create struct type
 TypeContainer *createStructType(const char *name, StructType *structDef)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     if (!container)
         return NULL;
 
     container->baseType = STRUCT_TYPE;
     container->custom.name = name;
-    container->custom.structDef = structDef;
     container->primitive = PRIM_CUSTOM;
+    container->isGeneric = false;
+
+    container->custom.structDef = structDef;
+
+    container->custom.structDef->addProperty = _add_struct_property;
+    container->custom.structDef->addMethod = _add_struct_method;
 
     return container;
 }
 
 // Creates a struct type from an ASTNode.
-StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable)
+StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state)
 {
+    __STACK_FRAME__
     StructType *structType = (StructType *)malloc(sizeof(StructType));
     if (!structType)
     {
@@ -77,7 +91,7 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
     structType->hasConstructor = structNode->data.structNode->hasConstructor;
     structType->ctorParamCount = structNode->data.structNode->ctorArgCount;
     structType->ctorParamCapacity = structNode->data.structNode->ctorArgCapacity;
-    // structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs);
+    structType->ctorParams = getTypeArrayFromASTNode(structNode->data.structNode->ctorArgs, structType->ctorParamCount);
     structType->ctorParams = NULL;
 
     return structType;
@@ -86,10 +100,11 @@ StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *s
 DataType *createDataTypeFromStructNode(
     ASTNode *structNode, ASTNode **properties, int propCount,
     ASTNode **methods, int methodCount,
-    CompilerState *state, TypeTable *typeTable)
+    CompilerState *state)
 {
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structNode->data.structNode->name);
-    StructType *structType = createStructTypeFromStructNode(structNode, state, typeTable);
+    StructType *structType = createStructTypeFromStructNode(structNode, state);
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Failed to create struct type from node.\n");
@@ -105,19 +120,22 @@ DataType *createDataTypeFromStructNode(
 
     logMessage(LMI, "INFO", "DataTypes", "Creating data type from struct node: %s", structType->name);
     const char *typeName = structType->name;
+
     logMessage(LMI, "INFO", "DataTypes", "Type name: %s", typeName);
+
     TypeContainer *structContainer = createStructType(typeName, structType);
     logMessage(LMI, "INFO", "DataTypes", "Created struct type: %s", structType->name);
+    structContainer->baseType = STRUCT_TYPE;
+    structContainer->primitive = PRIM_CUSTOM;
 
     DataType *dataType = wrapTypeContainer(structContainer);
-    dataType->container->baseType = STRUCT_TYPE;
-    dataType->container->primitive = PRIM_CUSTOM;
 
     return dataType;
 }
 
 void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *structType)
 {
+    __STACK_FRAME__
     if (!properties || propCount <= 0)
     {
         logMessage(LMI, "INFO", "DataTypes", "No properties to add to struct: %s", structType->name);
@@ -152,6 +170,7 @@ void addPropertiesToStruct(ASTNode **properties, int propCount, StructType *stru
 
 void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structType)
 {
+    __STACK_FRAME__
     if (!methods || methodCount <= 0)
         return;
 
@@ -176,6 +195,7 @@ void addMethodsToStruct(ASTNode **methods, int methodCount, StructType *structTy
 
 int getPropertyAccessIndex(DataType *type, const char *propertyName)
 {
+    __STACK_FRAME__
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type.\n");
@@ -212,6 +232,7 @@ int getPropertyAccessIndex(DataType *type, const char *propertyName)
 
 int calculateStructSize(StructType *structType)
 {
+    __STACK_FRAME__
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
@@ -237,6 +258,7 @@ int calculateStructSize(StructType *structType)
 
 DataType *wrapStructType(StructType *structDef)
 {
+    __STACK_FRAME__
     TypeContainer *container = createStructType(structDef->name, structDef);
     if (!container)
     {
@@ -244,19 +266,73 @@ DataType *wrapStructType(StructType *structDef)
         return NULL;
     }
 
+    container->primitive = PRIM_CUSTOM;
+    container->baseType = STRUCT_TYPE;
+
     return wrapTypeContainer(container);
 }
 
-bool isStructDeclaration(TypeTable *table, const char *name)
+bool isStructDeclaration(const char *name)
 {
-    DataType *type = lookupType(table, name);
-    if (!type)
-        return false;
-
-    return type->container->baseType == STRUCT_TYPE;
+    __STACK_FRAME__
+    DEBUG_BREAKPOINT;
 }
 
 bool isStructType(DataType *type)
 {
+    __STACK_FRAME__
     return type->container->baseType == STRUCT_TYPE;
+}
+
+void _add_struct_property(StructType *self, ASTNode *property)
+{
+    __STACK_FRAME__
+    if (!self || !property)
+    {
+        fprintf(stderr, "[AST] Error: Invalid struct node or property.\n");
+        return;
+    }
+
+    if (self->propertyCount + 1 >= self->propertyCapacity)
+    {
+        // Grow properties array
+        logMessage(LMI, "INFO", "DataTypes", "Growing properties array for struct: %s", self->name);
+        int newCapacity = self->propertyCapacity * 2;
+        ASTNode **newProperties = (ASTNode **)realloc(self->properties, newCapacity * sizeof(ASTNode *));
+        if (!newProperties)
+            return;
+
+        self->properties = newProperties;
+        self->propertyCapacity = newCapacity;
+    }
+    logMessage(LMI, "INFO", "DataTypes", "Adding property to struct: %s", property->data.property->name);
+
+    // Add property to struct
+    self->properties[self->propertyCount++] = property;
+}
+
+void _add_struct_method(StructType *self, ASTNode *method)
+{
+    __STACK_FRAME__
+    if (!self || !method)
+    {
+        fprintf(stderr, "[AST] Error: Invalid struct node or method.\n");
+        return;
+    }
+
+    if (self->methodCount + 1 >= self->methodCapacity)
+    {
+        // Grow methods array
+        logMessage(LMI, "INFO", "DataTypes", "Growing methods array for struct: %s", self->name);
+        int newCapacity = self->methodCapacity * 2;
+        ASTNode **newMethods = (ASTNode **)realloc(self->methods, newCapacity * sizeof(ASTNode *));
+        if (!newMethods)
+            return;
+
+        self->methods = newMethods;
+        self->methodCapacity = newCapacity;
+    }
+    logMessage(LMI, "INFO", "DataTypes", "Adding method to struct: %s", method->data.method->name);
+    // Add method to struct
+    self->methods[self->methodCount++] = method;
 }

@@ -45,7 +45,6 @@
 #include "llvm/IR/ValueSymbolTable.h"
 #include "llvm/IR/ValueMap.h"
 #include "llvm/IR/ValueHandle.h"
-#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"
@@ -127,7 +126,10 @@ namespace Cryo
         std::unique_ptr<std::vector<llvm::Module *>> modules;
 
         std::unordered_map<std::string, llvm::Value *> namedValues;
+        void addNamedValue(std::string name, llvm::Value *value);
+        void printNamedValues();
         std::unordered_map<std::string, llvm::StructType *> structTypes = {};
+        void printStructTypesMap(void);
         std::unordered_map<std::string, llvm::StructType *> classTypes = {};
 
         std::unordered_map<std::string, DataType *> structDataTypes;
@@ -145,114 +147,23 @@ namespace Cryo
         std::unordered_map<std::string, llvm::GlobalVariable *> stringTable;
         size_t stringCounter = 0;
 
-        void mergeModule(llvm::Module *srcModule)
-        {
-            if (!module)
-            {
-                logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-                return;
-            }
+        void mergeModule(llvm::Module *srcModule);
 
-            if (!srcModule)
-            {
-                logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-                return;
-            }
+        llvm::GlobalVariable *getOrCreateGlobalString(const std::string &content);
+        void initializeContext();
+        void setModuleIdentifier(std::string name);
+        void addCompiledFileInfo(CompiledFile file);
+        void addStructToInstance(std::string name, llvm::StructType *structType);
+        llvm::StructType *getStruct(std::string name);
+        void addClassToInstance(std::string name, llvm::StructType *classType);
+        llvm::StructType *getClass(std::string name);
+        void addStructDataType(std::string name, DataType *dataType);
+        void addClassDataType(std::string name, DataType *dataType);
 
-            logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-            logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
+        void setCurrentFunction(llvm::Function *function);
+        void clearCurrentFunction();
 
-            llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::OverrideFromSrc;
-            bool result = llvm::Linker::linkModules(
-                *module,
-                llvm::CloneModule(*srcModule),
-                linkerFlags);
-            if (result)
-            {
-                logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-                return;
-            }
-
-            std::cout << "@mergeModule Module merged successfully" << std::endl;
-        }
-
-        llvm::GlobalVariable *getOrCreateGlobalString(const std::string &content)
-        {
-            // First check if we already have this string
-            auto it = stringTable.find(content);
-            if (it != stringTable.end())
-            {
-                return it->second;
-            }
-
-            // Create a new global string constant
-            llvm::Constant *stringConstant = llvm::ConstantDataArray::getString(context, content);
-
-            // Generate a unique name for this string
-            std::string globalName = "str." + std::to_string(stringCounter++);
-
-            // Create the global variable
-            llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(
-                *module,
-                stringConstant->getType(),
-                true, // isConstant
-                llvm::GlobalValue::PrivateLinkage,
-                stringConstant,
-                globalName);
-
-            // Store in our table
-            stringTable[content] = globalStr;
-
-            return globalStr;
-        }
-
-        void initializeContext()
-        {
-            // Get the filename from the CompilerState
-            std::string moduleName = "CryoModuleDefaulted";
-            module = std::make_unique<llvm::Module>(moduleName, context);
-        }
-
-        void setModuleIdentifier(std::string name)
-        {
-            module->setModuleIdentifier(name);
-            module->setSourceFileName(name);
-        }
-
-        void addCompiledFileInfo(CompiledFile file)
-        {
-            compiledFiles.push_back(file);
-        }
-
-        void addStructToInstance(std::string name, llvm::StructType *structType)
-        {
-            structTypes[name] = structType;
-        }
-
-        llvm::StructType *getStruct(std::string name)
-        {
-            return structTypes[name];
-        }
-
-        void addClassToInstance(std::string name, llvm::StructType *classType)
-        {
-            classTypes[name] = classType;
-        }
-
-        llvm::StructType *getClass(std::string name)
-        {
-            return classTypes[name];
-        }
-
-        void addStructDataType(std::string name, DataType *dataType)
-        {
-            structDataTypes[name] = dataType;
-        }
-
-        void addClassDataType(std::string name, DataType *dataType)
-        {
-            classDataTypes[name] = dataType;
-        }
+        llvm::Value *getVariableAddress(std::string name);
 
     private:
         CryoContext() : builder(context) {}
@@ -293,36 +204,26 @@ namespace Cryo
 
         Linker *getLinker() { return GetCXXLinker(); }
 
+        std::string outputFile = "";
+        std::string buildDir = "";
         std::string customOutputPath = "";
         bool isPreprocessing = false;
+        bool isImporting = false;
+
+        void preInitMain(void);
 
         void compile(ASTNode *root);
+        void compileIRFile(ASTNode *root, std::string outputPath);
         void dumpModule(void);
 
-        void setModuleIdentifier(std::string name)
-        {
-            CryoContext::getInstance().setModuleIdentifier(name);
-        }
-
-        void setCustomOutputPath(std::string path)
-        {
-            customOutputPath = path;
-            isPreprocessing = true;
-        }
-
-        void initDependencies()
-        {
-            // Get the dependency module
-            std::cout << "@initDependencies Initializing Dependencies" << std::endl;
-            CryoContext::getInstance().mergeModule(GetCXXLinker()->initMainModule());
-        }
-
-        void linkDependencies(void)
-        {
-            std::cout << "@linkDependencies Linking Dependencies" << std::endl;
-            // CryoContext::getInstance().mergeModule(std::move(GetCXXLinker()->appendDependenciesToRoot()));
-            DEBUG_BREAKPOINT;
-        }
+        void setBuildDir(std::string dir);
+        void setOutputFile(std::string file);
+        void setModuleIdentifier(std::string name);
+        void setCustomOutputPath(std::string path);
+        void setCustomOutputPath(std::string path, bool isImport);
+        void setPreprocessOutputPath(std::string path);
+        void initDependencies();
+        void linkDependencies(void);
 
     private:
         CryoContext &context;
@@ -362,6 +263,8 @@ namespace Cryo
          * @brief Destructs the CodeGen object and cleans up the code generation process.
          */
         //~CodeGen() = default;
+
+        void compileIRFile(ASTNode *root, std::string outputPath);
 
         /**
          * @brief The Entry Point to the generation process.
@@ -602,7 +505,7 @@ namespace Cryo
                                          const std::string &fieldName);
         llvm::Value *createStringIndexExpr(IndexExprNode *indexExprNode, std::string varName);
 
-        void processConstVariable(CryoVariableNode *varNode);
+        void processConstVariable(ASTNode *node);
         void createMutableVariable(ASTNode *node);
 
         llvm::Value *createStringVariable(ASTNode *node);
@@ -713,6 +616,7 @@ namespace Cryo
         llvm::Value *createIndexExprCall(IndexExprNode *indexNode);
         llvm::Value *createArrayCall(CryoArrayNode *arrayNode);
         llvm::Value *createTypeofCall(TypeofNode *node);
+        llvm::Value *createUnaryExprCall(ASTNode *node);
 
         // -----------------------------------
         // Cryo entry point functions
@@ -889,31 +793,6 @@ namespace Cryo
 
     // -----------------------------------------------------------------------------------------------
 
-    class Compilation
-    {
-    public:
-        Compilation(CryoCompiler &compiler) : compiler(compiler) {}
-
-        void compileIRFile(void);
-        llvm::Module *compileAndMergeModule(std::string inputFile);
-
-        void DumpModuleToDebugFile(void);
-
-    private:
-        CryoCompiler &compiler;
-        void outputFailedIR(void);
-
-        std::string getErrorMessage(void);
-        void isValidDir(std::string dirPath);
-        void isValidFile(std::string filePath);
-        void makeOutputDir(std::string dirPath);
-        void compile(std::string inputFile, std::string outputPath);
-        void compileUniquePath(std::string outputPath);
-        void cleanErrorDir(void);
-    };
-
-    // -----------------------------------------------------------------------------------------------
-
     class ErrorHandler
     {
     public:
@@ -1016,6 +895,11 @@ namespace Cryo
     inline void CryoCompiler::compile(ASTNode *root)
     {
         codeGen->executeCodeGeneration(root);
+    }
+
+    inline void CryoCompiler::compileIRFile(ASTNode *root, std::string outputPath)
+    {
+        codeGen->compileIRFile(root, outputPath);
     }
 
     inline void CryoCompiler::dumpModule(void)

@@ -19,12 +19,20 @@
 
 GlobalDiagnosticsManager *g_diagnosticsManager = NULL;
 
+__C_CONSTRUCTOR__
 void initGlobalDiagnosticsManager(void)
 {
     if (g_diagnosticsManager == NULL)
     {
         g_diagnosticsManager = (GlobalDiagnosticsManager *)malloc(sizeof(GlobalDiagnosticsManager));
-        g_diagnosticsManager->errorCount = 0;
-        g_diagnosticsManager->errors = NULL;
+        GDM->errorCount = 0;
+        GDM->errors = NULL;
+        GDM->stackTrace = newStackTrace();
+        GDM->frontendState = newFrontendState();
+
+        // Methods
+        GDM->addLexer = addLexer;
+        GDM->printStackTrace = print_stack_trace;
+        GDM->createStackFrame = create_stack_frame;
     }
 }

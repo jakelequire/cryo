@@ -15,12 +15,14 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/globalSymtable.hpp"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
 
     void GlobalSymbolTable::handleRootNodeImport(ASTNode *node)
     {
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             std::cerr << "handleRootNodeImport: Node is null" << std::endl;
@@ -60,6 +62,7 @@ namespace Cryo
 
     SymbolTable *GlobalSymbolTable::createNewImportTable(const char *namespaceName)
     {
+        __STACK_FRAME__
         SymbolTable *table = createSymbolTable(namespaceName);
         if (!table)
         {
@@ -72,6 +75,7 @@ namespace Cryo
 
     void GlobalSymbolTable::loopRootNode(ASTNode *node, SymbolTable *table, char *currentScopeID)
     {
+        __STACK_FRAME__
         if (!node || node == nullptr)
         {
             std::cerr << "loopRootNode: Node is null" << std::endl;

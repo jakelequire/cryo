@@ -16,36 +16,13 @@
  ********************************************************************************/
 #include "frontend/dataTypes.h"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
-void printTypeTable(TypeTable *table)
-{
-    DEBUG_PRINT_FILTER({
-        printf("\n");
-        printf(BOLD CYAN "╓────────────────────────── Type Table ──────────────────────────╖\n" COLOR_RESET);
-        printf("  Type Table: %p\n", (void *)table);
-        printf("  Type Count: %d\n", table->count);
-        printf("  Type Capacity: %d\n", table->capacity);
-        printf(BOLD CYAN "╟────────────────────────────────────────────────────────────────╢\n" COLOR_RESET);
-
-        for (int i = 0; i < table->count; i++)
-        {
-            DataType *type = table->types[i];
-            printFormattedType(type);
-        }
-        printf("   ────────────────────────────────────────────────────────────\n");
-        printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-        printf("\n");
-        if (table->count == 0)
-        {
-            printf("  No types in the type table.\n");
-            printf(BOLD CYAN "╙────────────────────────────────────────────────────────────────╜\n" COLOR_RESET);
-            printf("\n");
-        }
-    });
-}
+#define MAX_CHAR_LENGTH 128 * 4 // 512
 
 char *TypeofDataTypeToString(TypeofDataType type)
 {
+    __STACK_FRAME__
     switch (type)
     {
     case PRIMITIVE_TYPE:
@@ -71,6 +48,7 @@ char *TypeofDataTypeToString(TypeofDataType type)
 
 char *PrimitiveDataTypeToString(PrimitiveDataType type)
 {
+    __STACK_FRAME__
     switch (type)
     {
     case PRIM_INT:
@@ -111,6 +89,7 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
 
 char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
 {
+    __STACK_FRAME__
     switch (type)
     {
     case PRIM_INT:
@@ -151,6 +130,7 @@ char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
 
 char *DataTypeToStringUnformatted(DataType *type)
 {
+    __STACK_FRAME__
     if (!type)
         return "<NULL DATATYPE>";
 
@@ -184,6 +164,10 @@ char *DataTypeToStringUnformatted(DataType *type)
         sprintf(typeString, "%s", getFunctionTypeStr_UF(type->container->custom.funcDef));
         break;
 
+    case GENERIC_TYPE:
+        sprintf(typeString, "%s", type->container->custom.generic.declaration->genericDef->name);
+        break;
+
     default:
         sprintf(typeString, "<?>");
         break;
@@ -196,10 +180,11 @@ char *DataTypeToStringUnformatted(DataType *type)
 
 char *DataTypeToString(DataType *dataType)
 {
+    __STACK_FRAME__
     if (!dataType)
         return "<NULL DATATYPE>";
 
-    char *typeString = (char *)malloc(128);
+    char *typeString = (char *)malloc(MAX_CHAR_LENGTH);
     if (!typeString)
     {
         fprintf(stderr, "[DataTypes] Error: Failed to allocate memory for type string.\n");
@@ -263,6 +248,9 @@ char *DataTypeToString(DataType *dataType)
         sprintf(typeString, "%s" COLOR_RESET, typeString);
         break;
     }
+    case GENERIC_TYPE:
+        sprintf(typeString, LIGHT_CYAN BOLD "%s" COLOR_RESET, dataType->container->custom.generic.declaration->genericDef->name);
+        break;
     default:
         sprintf(typeString, LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET);
         break;
@@ -273,6 +261,7 @@ char *DataTypeToString(DataType *dataType)
 
 char *VerboseDataTypeToString(DataType *dataType)
 {
+    __STACK_FRAME__
     if (!dataType)
         return "<NULL DATATYPE>";
 
@@ -350,6 +339,7 @@ char *VerboseDataTypeToString(DataType *dataType)
 
 char *VerboseStructTypeToString(StructType *type)
 {
+    __STACK_FRAME__
     if (!type)
         return "<NULL STRUCT>";
 
@@ -396,6 +386,7 @@ char *VerboseStructTypeToString(StructType *type)
 
 char *VerboseClassTypeToString(ClassType *type)
 {
+    __STACK_FRAME__
     if (!type)
         return "<NULL CLASS>";
 
@@ -433,6 +424,7 @@ char *VerboseClassTypeToString(ClassType *type)
 
 char *VerboseFunctionTypeToString(FunctionType *type)
 {
+    __STACK_FRAME__
     if (!type)
         return "<NULL FUNCTION>";
 
@@ -464,9 +456,13 @@ char *VerboseFunctionTypeToString(FunctionType *type)
 
 void logDataType(DataType *type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         if (!type)
+        {
+            printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | <NULL>\n");
             return;
+        }
 
         printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
         printf(BOLD GREEN "   DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
@@ -478,12 +474,14 @@ void logDataType(DataType *type)
 
 void logVerboseDataType(DataType *type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         if (!type)
             return;
 
         printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
-        printf(BOLD GREEN "   (v)DATATYPE" COLOR_RESET " | Const: %s | Ref: %s\n", type->isConst ? "true" : "false", type->isReference ? "true" : "false");
+        printf(BOLD GREEN "   (v)DATATYPE" COLOR_RESET " | Const: %s | Ref: %s | Generic: %s\n",
+               type->isConst ? "true" : "false", type->isReference ? "true" : "false", type->container->isGeneric ? "true" : "false");
         printVerboseTypeContainer(type->container);
         printf(BOLD CYAN "───────────────────────────────────────────────────────────────\n" COLOR_RESET);
         printf(COLOR_RESET);
@@ -492,6 +490,7 @@ void logVerboseDataType(DataType *type)
 
 void logStructType(StructType *type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         if (!type)
         {
@@ -514,6 +513,7 @@ void logStructType(StructType *type)
 
 void printFormattedStructType(StructType *type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         printf("   ────────────────────────────────────────────────────────────\n");
         printf(BOLD GREEN "   STRUCT_TYPE" COLOR_RESET " | Size: %d | Prop Count: %d | Method Count: %d\n", type->size, type->propertyCount, type->methodCount);
@@ -553,6 +553,7 @@ void printFormattedStructType(StructType *type)
 
 void printFormattedPrimitiveType(PrimitiveDataType type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         printf("   ────────────────────────────────────────────────────────────\n");
         printf(BOLD GREEN "   PRIMITIVE_TYPE" COLOR_RESET " | %s\n", PrimitiveDataTypeToString(type));
@@ -562,6 +563,7 @@ void printFormattedPrimitiveType(PrimitiveDataType type)
 
 void printFormattedType(DataType *type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         if (!type)
             return;
@@ -603,6 +605,7 @@ void printFormattedType(DataType *type)
 
 void printTypeContainer(TypeContainer *type)
 {
+    __STACK_FRAME__
     if (!type)
         return;
 
@@ -639,6 +642,7 @@ void printTypeContainer(TypeContainer *type)
 
 void printVerboseTypeContainer(TypeContainer *type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         if (!type)
         {
@@ -669,6 +673,9 @@ void printVerboseTypeContainer(TypeContainer *type)
         case FUNCTION_TYPE:
             printf(" (%s)", VerboseFunctionTypeToString(type->custom.funcDef));
             break;
+        case GENERIC_TYPE:
+            printf(" (%s)", type->custom.generic.declaration->genericDef->name);
+            break;
         default:
             printf(" <UNKNOWN>");
             break;
@@ -696,6 +703,7 @@ void printVerboseTypeContainer(TypeContainer *type)
     }
 void printClassType(ClassType *type)
 {
+    __STACK_FRAME__
     DEBUG_PRINT_FILTER({
         if (!type)
         {
@@ -724,6 +732,7 @@ void printClassType(ClassType *type)
 
 void printFunctionType(FunctionType *funcType)
 {
+    __STACK_FRAME__
     // Make it look like a function signature (e.g., `function (int, float) -> string`)
 
     // (param1Type, param2Type, ...) → returnType
@@ -750,6 +759,7 @@ void printFunctionType(FunctionType *funcType)
 
 void printFunctionType_UF(FunctionType *funcType)
 {
+    __STACK_FRAME__
     // Make it look like a function signature (e.g., `function (int, float) -> string`)
 
     // (param1Type, param2Type, ...) → returnType
@@ -774,6 +784,7 @@ void printFunctionType_UF(FunctionType *funcType)
 
 char *getFunctionTypeStr_UF(FunctionType *funcType)
 {
+    __STACK_FRAME__
     // Make it look like a function signature (e.g., `function (int, float) -> string`)
 
     // (param1Type, param2Type, ...) → returnType
@@ -798,6 +809,7 @@ char *getFunctionTypeStr_UF(FunctionType *funcType)
 
 char *getFunctionArgTypeArrayStr(ASTNode *functionNode)
 {
+    __STACK_FRAME__
     if (!functionNode)
         return NULL;
 

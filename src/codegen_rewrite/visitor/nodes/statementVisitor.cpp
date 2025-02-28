@@ -14,4 +14,32 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#pragma once
+#include "codegen_rewrite/visitor.hpp"
+
+namespace Cryo
+{
+    // Statements
+    void CodeGenVisitor::visitIfStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitForStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitWhileStatement(ASTNode *node) {}
+
+    void CodeGenVisitor::visitReturnStatement(ASTNode *node)
+    {
+        if (!node || !node->data.returnStatement)
+            return;
+
+        // Visit the return value expression
+        visit(node->data.returnStatement->returnValue);
+
+        // Get the generated value
+        llvm::Value *retVal = getLLVMValue(node->data.returnStatement->returnValue);
+        if (retVal)
+        {
+            builder.CreateRet(retVal);
+        }
+        else
+        {
+            builder.CreateRetVoid();
+        }
+    }
+} // namespace Cryo

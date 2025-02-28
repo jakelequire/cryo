@@ -43,7 +43,6 @@ void logMessage(
 
 const char *getParentDirOfFile(const char *file);
 char *stringShortener(const char *string, int length, int addDots);
-char *getFileName(const char *file);
 const char *typeBufferFormatter(const char *type);
 
 void initLoggerCompilerSettings(CompilerSettings *settings);

@@ -17,15 +17,34 @@
 #include "tools/utils/c_logger.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
 
-    void GlobalSymbolTable::initStructDeclaration(const char *structName, const char *parentNameID)
+    void GlobalSymbolTable::initStructDeclaration(const char *structName, const char *parentNameID, DataType *structPtr)
     {
+        __STACK_FRAME__
+        TypeSymbol *structType = createStructDeclType(structName, parentNameID, structPtr);
+        if (structType)
+        {
+            addOrUpdateType(structType);
+            return;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "SymbolTable", "Failed to create struct declaration symbol");
+            return;
+        }
+    }
+
+    void GlobalSymbolTable::initGenericStructDeclaration(const char *structName, const char *parentNameID)
+    {
+        __STACK_FRAME__
         Symbol *structSymbol = createStructDeclarationSymbol(structName, parentNameID);
         if (structSymbol)
         {
+            structSymbol->type->isGeneric = true;
             addSymbolToCurrentTable(structSymbol);
             initTypeDefinition(structSymbol);
             return;
@@ -39,6 +58,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::createStructDeclarationSymbol(const char *structName, const char *parentNameID)
     {
+        __STACK_FRAME__
         if (!structName || structName == nullptr)
         {
             return nullptr;
@@ -61,8 +81,31 @@ namespace Cryo
         return structSymbol;
     }
 
+    TypeSymbol *GlobalSymbolTable::createStructDeclType(const char *structName, const char *parentNameID, DataType *structType)
+    {
+        __STACK_FRAME__
+        TypeSymbol *typeSymbol = new TypeSymbol();
+        typeSymbol->name = structName;
+        typeSymbol->type = structType;
+        typeSymbol->typeOf = STRUCT_TYPE;
+        typeSymbol->isStatic = false;
+        typeSymbol->isGeneric = false;
+        typeSymbol->node = nullptr;
+        typeSymbol->properties = (Symbol **)malloc(sizeof(Symbol *) * MAX_PROPERTY_COUNT);
+        typeSymbol->methods = (Symbol **)malloc(sizeof(Symbol *) * MAX_METHOD_COUNT);
+        typeSymbol->propertyCapacity = MAX_PROPERTY_COUNT;
+        typeSymbol->methodCapacity = MAX_METHOD_COUNT;
+        typeSymbol->propertyCount = 0;
+        typeSymbol->methodCount = 0;
+        typeSymbol->scopeId = IDGen::generate64BitHashID(structName);
+        typeSymbol->parentNameID = parentNameID;
+
+        return typeSymbol;
+    }
+
     void GlobalSymbolTable::addPropertyToStruct(const char *structName, ASTNode *property)
     {
+        __STACK_FRAME__
         Symbol *structSymbol = getStructSymbol(structName);
         if (!structSymbol)
         {
@@ -80,6 +123,7 @@ namespace Cryo
 
     void GlobalSymbolTable::addMethodToStruct(const char *structName, ASTNode *method)
     {
+        __STACK_FRAME__
         Symbol *structSymbol = getStructSymbol(structName);
         if (!structSymbol)
         {
@@ -96,6 +140,7 @@ namespace Cryo
 
     Symbol *GlobalSymbolTable::getStructSymbol(const char *structName)
     {
+        __STACK_FRAME__
         // Find the Struct in the symbol table from the hash
         const char *structHashName = IDGen::generate64BitHashID(structName);
 
@@ -112,6 +157,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateStructSymbolMethods(Symbol *structSymbol, MethodSymbol *method, size_t methodCount)
     {
+        __STACK_FRAME__
         Symbol *methodSymbol = createSymbol(METHOD_SYMBOL, method);
         size_t methodCap = structSymbol->type->methodCapacity;
 
@@ -141,6 +187,7 @@ namespace Cryo
 
     void GlobalSymbolTable::updateStructSymbolProperties(Symbol *structSymbol, PropertySymbol *property, size_t propertyCount)
     {
+        __STACK_FRAME__
         Symbol *propertySymbol = createSymbol(PROPERTY_SYMBOL, property);
         size_t propCapacity = structSymbol->type->propertyCapacity;
 
@@ -167,6 +214,7 @@ namespace Cryo
 
     void GlobalSymbolTable::completeStructDeclaration(ASTNode *structNode, const char *structName)
     {
+        __STACK_FRAME__
         if (!structNode || structNode == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Struct Node is null");
@@ -195,6 +243,7 @@ namespace Cryo
         // Add the node to the Struct symbol
         structSymbol->type->node = structNode;
         structSymbol->type->type = structNode->data.structNode->type;
+        structSymbol->type->isGeneric = structNode->data.structNode->type->container->isGeneric;
 
         // Update the Struct symbol in the table
         updateStructSymbol(structSymbol, table);
@@ -209,11 +258,13 @@ namespace Cryo
 
     void GlobalSymbolTable::addStructDeclarationToTable(Symbol *structSymbol, SymbolTable *table)
     {
+        __STACK_FRAME__
         table->symbols[table->count++] = structSymbol;
     }
 
     void GlobalSymbolTable::updateStructSymbol(Symbol *structSymbol, SymbolTable *table)
     {
+        __STACK_FRAME__
         for (int i = 0; i < table->count; i++)
         {
             if (table->symbols[i] == structSymbol)
@@ -227,6 +278,7 @@ namespace Cryo
 
     bool GlobalSymbolTable::doesStructSymbolExist(const char *name, SymbolTable *table)
     {
+        __STACK_FRAME__
         if (!name || name == nullptr)
         {
             logMessage(LMI, "ERROR", "SymbolTable", "Struct Name is null");
@@ -253,4 +305,32 @@ namespace Cryo
         return false;
     }
 
-} // namespace Cryo
+    bool GlobalSymbolTable::isStructSymbol(const char *name)
+    {
+        __STACK_FRAME__
+        if (!name || name == nullptr)
+        {
+            logMessage(LMI, "ERROR", "SymbolTable", "Struct Name is null");
+            return false;
+        }
+        TypesTable *typeTable = this->typeTable;
+        if (!typeTable || typeTable == nullptr)
+        {
+            logMessage(LMI, "ERROR", "SymbolTable", "Type Table is null");
+            return false;
+        }
+        size_t count = typeTable->count;
+        for (size_t i = 0; i < count; i++)
+        {
+            if (typeTable->typeSymbols[i]->typeOf == STRUCT_TYPE)
+            {
+                if (strcmp(typeTable->typeSymbols[i]->name, name) == 0)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+} // namespace Cryos

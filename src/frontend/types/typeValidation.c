@@ -15,23 +15,18 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
-bool typeAlreadyExists(TypeTable *table, const char *name)
+bool typeAlreadyExists(const char *name)
 {
-    for (int i = 0; i < table->count; i++)
-    {
-        DataType *type = table->types[i];
-        if (type->container->custom.name &&
-            strcmp(type->container->custom.name, name) == 0)
-        {
-            return true;
-        }
-    }
+    __STACK_FRAME__
+    DEBUG_BREAKPOINT;
     return false;
 }
 
 bool isValidType(DataType *type)
 {
+    __STACK_FRAME__
     if (!type)
     {
         logMessage(LMI, "ERROR", "TypeTable", "Type is null");
@@ -94,6 +89,7 @@ bool isValidType(DataType *type)
 
 bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
 {
+    __STACK_FRAME__
     if (!left || !right)
         return false;
 
@@ -116,15 +112,71 @@ bool areTypesCompatible(TypeContainer *left, TypeContainer *right)
     case STRUCT_TYPE:
         return strcmp(left->custom.name, right->custom.name) == 0;
 
+    case FUNCTION_TYPE:
+        return left->custom.funcDef == right->custom.funcDef;
+
+    case CLASS_TYPE:
+        return strcmp(left->custom.name, right->custom.name) == 0;
+
     default:
         return false;
     }
 }
 
-// This function is used to determine if a DataType is a string type
-// and not a string array type.
+bool isSameType(DataType *left, DataType *right)
+{
+    __STACK_FRAME__
+    if (!left || !right)
+    {
+        logMessage(LMI, "ERROR", "TypeTable", "Type is null");
+        return false;
+    }
+
+    if (left->container->baseType != right->container->baseType)
+        return false;
+
+    if (left->container->baseType == PRIMITIVE_TYPE)
+    {
+        if (left->container->primitive != right->container->primitive)
+            return false;
+    }
+
+    if (left->container->baseType == STRUCT_TYPE)
+    {
+        if (strcmp(left->container->custom.name, right->container->custom.name) != 0)
+            return false;
+    }
+
+    if (left->container->baseType == FUNCTION_TYPE)
+    {
+        if (left->container->custom.funcDef != right->container->custom.funcDef)
+            return false;
+    }
+
+    if (left->container->baseType == CLASS_TYPE)
+    {
+        if (strcmp(left->container->custom.name, right->container->custom.name) != 0)
+            return false;
+    }
+
+    return true;
+}
+
+bool isNumericDataType(DataType *type)
+{
+    __STACK_FRAME__
+    return type->container->primitive == PRIM_INT ||
+           type->container->primitive == PRIM_I8 ||
+           type->container->primitive == PRIM_I16 ||
+           type->container->primitive == PRIM_I32 ||
+           type->container->primitive == PRIM_I64 ||
+           type->container->primitive == PRIM_I128 ||
+           type->container->primitive == PRIM_FLOAT;
+}
+
 bool isStringDataType(DataType *type)
 {
+    __STACK_FRAME__
     if (!type)
     {
         logMessage(LMI, "ERROR", "TypeTable", "Type is null");
@@ -140,5 +192,31 @@ bool isStringDataType(DataType *type)
     }
 
     logMessage(LMI, "INFO", "TypeTable", "Type is not a string type");
+    return false;
+}
+
+bool binOpEligible(DataType *lhs, DataType *rhs)
+{
+    __STACK_FRAME__
+    if (!lhs || !rhs)
+    {
+        logMessage(LMI, "ERROR", "DataTypes", "Invalid data types for binary operation");
+        return false;
+    }
+
+    // Check for numeric types for arithmetic operations
+    if (isNumericDataType(lhs) && isNumericDataType(rhs))
+    {
+        return true;
+    }
+
+    // Check for string types for the '+' operation
+    if (isStringType(lhs) && isStringDataType(rhs))
+    {
+        return true;
+    }
+
+    logMessage(LMI, "ERROR", "DataTypes", "Incompatible data types for binary operation: %s and %s",
+               DataTypeToString(lhs), DataTypeToString(rhs));
     return false;
 }

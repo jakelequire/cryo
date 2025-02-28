@@ -24,6 +24,12 @@
 #include "errorCodes.h"
 #include "tools/utils/cTypes.h"
 #include "tools/utils/cWrappers.h"
+#include "tools/utils/attributes.h"
+#include "tools/macros/consoleColors.h"
+
+#include "frontend/lexer.h"
+#include "frontend/parser.h"
+#include "frontend/AST.h"
 
 /*
 Error Code Template:
@@ -42,6 +48,16 @@ Error Code Template:
     000000 = Error Number
 */
 
+typedef struct ASTNode ASTNode;
+typedef struct Lexer Lexer;
+
+typedef struct FrontendState
+{
+    Lexer *lexer;
+    bool isLexerSet;
+} FrontendState;
+
+#define STACK_TRACE_CAPACITY 16
 #define ERROR_CAPACITY 100
 
 // =============================================================================
@@ -62,14 +78,25 @@ typedef struct GlobalDiagnosticsManager
     // -----------------------------------
     // Public Properties
 
-    DiagnosticEntry **errors;
-    size_t errorCount;
-    size_t errorCapacity;
+    DiagnosticEntry **errors; // Array of error entries
+    size_t errorCount;        // Number of errors
+    size_t errorCapacity;     // Capacity of the error array
 
-    StackTrace *stackTrace;
+    StackTrace *stackTrace; // The current stack trace
+
+    FrontendState *frontendState; // The current frontend state
 
     // -----------------------------------
     // Public Methods
+
+    // `void newStackFrame(*self, char *functionName, char *filename, int line, int column)`
+    _NEW_METHOD(void, createStackFrame, GlobalDiagnosticsManager *self, char *functionName, char *filename, int line);
+
+    // `void printStackTrace(*self)`
+    _NEW_METHOD(void, printStackTrace, GlobalDiagnosticsManager *self);
+
+    // `void addLexer(*self, Lexer *lexer)`
+    _NEW_METHOD(void, addLexer, GlobalDiagnosticsManager *self, Lexer *lexer);
 
 } GlobalDiagnosticsManager;
 
@@ -86,8 +113,8 @@ typedef struct CompilerInternalError
 {
     char *message;
     char *filename;
+    char *function;
     int line;
-    int column;
 } CompilerInternalError;
 
 typedef struct CryoErrorInfo
@@ -103,7 +130,6 @@ typedef struct StackFrame
     char *functionName;
     char *filename;
     int line;
-    int column;
 } StackFrame;
 
 typedef struct StackTrace
@@ -111,19 +137,37 @@ typedef struct StackTrace
     StackFrame **frames;
     size_t frameCount;
     size_t frameCapacity;
+
+    // `void push(*self, StackFrame *frame)` - Push a new stack frame onto the stack trace
+    _NEW_METHOD(void, push, StackFrame *frame);
 } StackTrace;
 
 // =============================================================================
 // Initialization & Cleanup
 
+__C_CONSTRUCTOR__
 void initGlobalDiagnosticsManager(void);
+
 CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code);
 DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo);
-CompilerInternalError *newCompilerInternalError(char *filename, int line, int column, char *message);
+CompilerInternalError *newCompilerInternalError(char *function, char *filename, int line, char *message);
 CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column, char *message);
+FrontendState *newFrontendState(void);
 
-StackFrame *newStackFrame(char *functionName, char *filename, int line, int column);
+StackFrame *newStackFrame(char *functionName, char *filename, int line);
 StackTrace *newStackTrace(void);
+
+// =============================================================================
+// Implementation Methods
+
+void addLexer(GlobalDiagnosticsManager *self, Lexer *lexer);
+void create_stack_frame(GlobalDiagnosticsManager *self, char *functionName, char *filename, int line);
+void print_stack_trace(GlobalDiagnosticsManager *self);
+
+// =============================================================================
+// Helper Functions
+
+void dyn_stackframe_push(StackFrame *frame);
 
 // =============================================================================
 // Macros
@@ -133,85 +177,16 @@ StackTrace *newStackTrace(void);
 #define INIT_GDM() initGlobalDiagnosticsManager();
 // GDM - Global Diagnostics Manager.
 #define GDM g_diagnosticsManager
-// FLC - File, Line, Column
-#define FLC __FILE__, __LINE__, __COLUMN__
-// FFLC - Function, File, Line, Column
-#define FFLC __FUNCTION__, __FILE__, __LINE__, __COLUMN__
+// _FL_ - File, Line
+#define _FL_ __FILE__, __LINE__
+// _FFL_ - Function, File, Line
+#define _FFL_ (char *)__func__, (char *)__FILE__, (int)__LINE__
+// ------------------------------------------------------------------
+
+#define NEW_STACK_FRAME(FN, F, L) \
+    GDM->createStackFrame(GDM, FN, F, L);
+#define __STACK_FRAME__ GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
+#define __DUMP_STACK_TRACE__ GDM->printStackTrace(GDM);
 
 #endif // GLOBAL_DIAGNOSTICS_MANAGER_H
 // =============================================================================
-// =============================================================================
-
-/*
-namespace Cryo
-{
-
-    // Forward declarations
-    class DiagnosticEntry;
-
-    class GlobalDiagnosticsManager
-    {
-    public:
-        GlobalDiagnosticsManager(const char *buildDir);
-        ~GlobalDiagnosticsManager();
-
-        // Error reporting methods
-        void reportError(CryoErrorCode code,
-                         CryoErrorSeverity severity,
-                         const std::string &message,
-                         const std::string &filename = "",
-                         int line = -1,
-                         int column = -1);
-
-        // Error callback registration
-        using ErrorCallback = std::function<void(const DiagnosticEntry &)>;
-        void registerErrorCallback(ErrorCallback callback);
-
-        // Query methods
-        bool hasErrors() const;
-        size_t getErrorCount() const;
-        void clearErrors();
-
-        // Format and output methods
-        std::string formatError(const DiagnosticEntry &entry) const;
-        void printErrors() const;
-
-    private:
-        struct Impl;
-        std::unique_ptr<Impl> pImpl; // PIMPL idiom to hide implementation details
-
-        // Disable copy and assignment
-        GlobalDiagnosticsManager(const GlobalDiagnosticsManager &) = delete;
-        GlobalDiagnosticsManager &operator=(const GlobalDiagnosticsManager &) = delete;
-    };
-
-    // Represents a single diagnostic entry
-    class DiagnosticEntry
-    {
-    public:
-        DiagnosticEntry(CryoErrorCode code,
-                        CryoErrorSeverity severity,
-                        std::string message,
-                        std::string filename = "",
-                        int line = -1,
-                        int column = -1);
-
-        CryoErrorCode getCode() const { return code; }
-        CryoErrorSeverity getSeverity() const { return severity; }
-        const std::string &getMessage() const { return message; }
-        const std::string &getFilename() const { return filename; }
-        int getLine() const { return line; }
-        int getColumn() const { return column; }
-
-    private:
-        CryoErrorCode code;
-        CryoErrorSeverity severity;
-        std::string message;
-        std::string filename;
-        int line;
-        int column;
-    };
-
-} // namespace Cryo
-
-*/

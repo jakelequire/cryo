@@ -1,0 +1,23 @@
+namespace Error;
+
+struct Error_Internal_ {
+    message: string;
+    file: string;
+    line: int;
+    func: string;
+    stack: string;
+
+    toString() -> string  {
+        return message;
+    }
+
+    toFullString() -> string {
+        return message + " at " + file + ":" + line + " in " + function + "\n" + stack;
+    }
+
+    print() -> void {
+        print(toFullString());
+    }
+}
+
+struct Error extends Error_Internal_{}

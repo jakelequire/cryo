@@ -25,11 +25,24 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#include "./c_support/print_support.c"
+
 extern void *getCryoNullValue();
 
 void __c_printInt(int value)
 {
     printf("%d\n", value);
+}
+
+void __c_printI64(int64_t value)
+{
+    printf("%ld\n", value);
+}
+
+void __c_printI64Hex(int64_t value)
+{
+    // Turn the `value` into a hex string `0x...`
+    printf("0x%lx\n", value);
 }
 
 void __c_printIntPtr(int *value)
@@ -42,10 +55,10 @@ void __c_printStr(char *value)
     printf("%s\n", (char *)value);
 }
 
-//  void printStr(char *value)
-// {
-//     printf("%s\n", value);
-// }
+void __c_println(char *value)
+{
+    printf("%s", value);
+}
 
 char *__c_intToString(int value)
 {
@@ -63,6 +76,47 @@ void __c_sys_exit(int code)
 {
     exit(code);
 }
+
+void __c_memset(void *ptr, int value, size_t num)
+{
+    memset(ptr, value, num);
+}
+
+void *__c_malloc(size_t size)
+{
+    printf("Allocating %ld bytes\n", size);
+    void *ptr = (void *)malloc(size);
+    return ptr;
+}
+
+void __c_free(void *ptr)
+{
+    free(ptr);
+}
+
+void __c_printAddr(void *ptr)
+{
+    printf("%p\n", ptr);
+}
+
+intptr_t __c_getAddr(void *ptr)
+{
+    return (intptr_t)ptr;
+}
+
+void __c_printIntAddr(int *ptr)
+{
+    printf("[DEBUG] IntAddr: \t%p\n", ptr);
+}
+
+void __c_printPointer(void *ptr)
+{
+    printf("%p\n", ptr);
+}
+
+// ======================================================= //
+//                      FS Operations                      //
+// ======================================================= //
 
 // For the FS Class in Cryo
 int __c_fs_mkdir(const char *path)

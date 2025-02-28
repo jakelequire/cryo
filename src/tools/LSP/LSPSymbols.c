@@ -20,6 +20,7 @@
 #include <sys/select.h>
 #include <signal.h>
 #include <netinet/tcp.h>
+#include "diagnostics/diagnostics.h"
 
 // Global array to store symbols
 LSPSymbol *symbolTable[MAX_SYMBOLS];
@@ -31,11 +32,13 @@ volatile sig_atomic_t keep_running = 1;
 // Add signal handler
 void handle_shutdown(int signum)
 {
+    __STACK_FRAME__
     keep_running = 0;
 }
 
 void check_port_status(int port)
 {
+    __STACK_FRAME__
     int test_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (test_socket < 0)
     {
@@ -77,6 +80,7 @@ void check_port_status(int port)
 
 bool check_proxy_running(void)
 {
+    __STACK_FRAME__
     // Try to connect to the debug proxy port
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
@@ -103,6 +107,7 @@ bool check_proxy_running(void)
 
 int get_server_port(void)
 {
+    __STACK_FRAME__
     // First check if debug proxy is running
     if (check_proxy_running())
     {
@@ -117,6 +122,7 @@ int get_server_port(void)
 
 void runLSPSymbols(ASTNode *programNode)
 {
+    __STACK_FRAME__
     // Process AST and collect symbols
     processNode(programNode);
 
@@ -133,6 +139,7 @@ void runLSPSymbols(ASTNode *programNode)
 
 LSPSymbol *createLSPSymbol(void)
 {
+    __STACK_FRAME__
     LSPSymbol *symbol = (LSPSymbol *)malloc(sizeof(LSPSymbol));
     if (!symbol)
     {
@@ -153,6 +160,7 @@ LSPSymbol *createLSPSymbol(void)
 }
 bool sendSymbol(int client_fd, LSPSymbol *symbol)
 {
+    __STACK_FRAME__
     if (!symbol)
     {
         fprintf(stderr, "<Compiler> ERROR: Attempted to send NULL symbol\n");
@@ -197,6 +205,7 @@ bool sendSymbol(int client_fd, LSPSymbol *symbol)
 // Use this function in startLSPServer when sending symbols:
 void sendAllSymbols(int client_fd)
 {
+    __STACK_FRAME__
     int successful = 0;
     int failed = 0;
 
@@ -222,6 +231,7 @@ void sendAllSymbols(int client_fd)
 // Start LSP server and send symbols
 void startLSPServer(void)
 {
+    __STACK_FRAME__
     fprintf(stderr, "<Compiler> INFO: Starting LSP server...\n");
 
     // Setup signal handling
@@ -407,6 +417,7 @@ void startLSPServer(void)
 // Format symbol as JSON string
 char *formatSymbol(LSPSymbol *symbol)
 {
+    __STACK_FRAME__
     if (!symbol)
     {
         return NULL;
@@ -459,6 +470,7 @@ char *formatSymbol(LSPSymbol *symbol)
 // Process AST node and create symbol
 void processNode(ASTNode *node)
 {
+    __STACK_FRAME__
     if (!node || symbolCount >= MAX_SYMBOLS)
         return;
 

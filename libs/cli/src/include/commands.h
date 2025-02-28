@@ -52,6 +52,9 @@ void exe_CLI_help_options(HelpOptions *options);
 void helpcmd_build(void);
 void helpcmd_build_compiler(void);
 void helpcmd_clean_compiler(void);
+void helpcmd_init(void);
+void helpcmd_version(void);
+void helpcmd_devserver(void);
 
 // =============================================================================
 // Env Command (./commands/env.c)

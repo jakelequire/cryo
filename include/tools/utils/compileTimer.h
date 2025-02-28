@@ -25,6 +25,16 @@
 
 #include "tools/macros/consoleColors.h"
 
+#define STOP_COMPILER_TIMER                   \
+    double elapsed = stopTimer(compileTimer); \
+    getSystemInfo(buildStats);                \
+    addElapsedTime(buildStats, elapsed);      \
+    printBuildStats(buildStats);
+
+#define START_COMPILER_TIMER                           \
+    CompileTimer *compileTimer = createCompileTimer(); \
+    startTimer(compileTimer);
+
 typedef struct CompileTimer
 {
     clock_t start;

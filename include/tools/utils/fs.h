@@ -60,6 +60,7 @@ char *readFile(const char *path);
 bool fileExists(const char *path);
 int dirExists(const char *path);
 int createDir(const char *path);
+int createDirectory(const char *path);
 void removeFile(const char *filePath);
 const char *getSTDFilePath(const char *subModule);
 const char *trimFilePath(const char *filePath);
@@ -82,6 +83,10 @@ char *getCompilerBinPath(void);
 char *getCompilerRootPath(void);
 
 void createNewEmptyFile(const char *fileName, const char *ext, const char *path);
+int createNewEmptyFileWpath(const char *fileWithPath);
+const char *cleanFilePath(char *filePath);
+const char *getFileName(const char *filePath);
+const char *getFileExt(const char *filePath);
 
 typedef struct jFS
 {
@@ -93,6 +98,8 @@ typedef struct jFS
     _NEW_METHOD(int, dirExists, const char *path);
     // `createDir` creates a directory at the given path.
     _NEW_METHOD(int, createDir, const char *path);
+    // `createDirectory` creates a directory at the given path.
+    _NEW_METHOD(int, createDirectory, const char *path);
     // `removeFile` removes a file at the given path.
     _NEW_METHOD(void, removeFile, const char *filePath);
     // `getSTDFilePath` gets the path to a standard file.
@@ -129,6 +136,14 @@ typedef struct jFS
     _NEW_METHOD(char *, getCompilerRootPath, void);
     // `createNewEmptyFile` creates a new empty file.
     _NEW_METHOD(void, createNewEmptyFile, const char *fileName, const char *ext, const char *path);
+    // `createNewEmptyFileWpath` creates a new empty file with a path.
+    _NEW_METHOD(int, createNewEmptyFileWpath, const char *fileWithPath);
+    // `cleanFilePath` cleans the file path.
+    _NEW_METHOD(const char *, cleanFilePath, char *filePath);
+    // `getFileName` gets the file name.
+    _NEW_METHOD(const char *, getFileName, const char *filePath);
+    // `getFileExt` gets the file extension.
+    _NEW_METHOD(const char *, getFileExt, const char *filePath);
 } jFS;
 
 jFS *initFS(void);

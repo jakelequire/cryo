@@ -14,18 +14,15 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include <iostream>
-#include <string>
-#include <vector>
+#ifndef BUILD_DIR_H
+#define BUILD_DIR_H
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <cstring>
-#include <fstream>
-#include <dirent.h>
-#include <fcntl.h>
+#include <string.h>
 
-#define __EXTERN_C__ extern "C"
+#include "tools/utils/cTypes.h"
+#include "tools/utils/fs.h"
+
+void init_build_dir(const char *rootDir);
+
+#endif // BUILD_DIR_H

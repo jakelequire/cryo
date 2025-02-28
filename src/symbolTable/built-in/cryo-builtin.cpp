@@ -14,4 +14,24 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "common/errorCodes.h"
+#include "tools/utils/c_logger.h"
+#include "symbolTable/globalSymtable.hpp"
+#include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
+
+namespace Cryo
+{
+    void GlobalSymbolTable::initCryoBuiltIns(void)
+    {
+        __STACK_FRAME__
+
+        // Initialize the built-in types
+        initCryoBuiltInTypes();
+    }
+
+    void GlobalSymbolTable::initCryoBuiltInTypes(void)
+    {
+        __STACK_FRAME__
+        // Initialize VA Args
+    }
+} // namespace Cryo

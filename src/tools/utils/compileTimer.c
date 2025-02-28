@@ -15,9 +15,11 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/utils/compileTimer.h"
+#include "diagnostics/diagnostics.h"
 
 CompileTimer *createCompileTimer()
 {
+    __STACK_FRAME__
     CompileTimer *timer = (CompileTimer *)malloc(sizeof(CompileTimer));
     if (!timer)
     {
@@ -29,11 +31,13 @@ CompileTimer *createCompileTimer()
 
 void startTimer(CompileTimer *timer)
 {
+    __STACK_FRAME__
     timer->start = clock();
 }
 
 double stopTimer(CompileTimer *timer)
 {
+    __STACK_FRAME__
     timer->end = clock();
     timer->elapsed = ((double)(timer->end - timer->start)) / CLOCKS_PER_SEC;
     return timer->elapsed;

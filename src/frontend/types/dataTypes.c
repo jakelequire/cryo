@@ -16,32 +16,12 @@
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/dataTypes.h"
-
-TypeTable *initTypeTable(void)
-{
-    TypeTable *table = (TypeTable *)malloc(sizeof(TypeTable));
-    if (!table)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type table.\n");
-        CONDITION_FAILED;
-    }
-
-    table->types = (DataType **)malloc(sizeof(DataType *) * 64);
-    if (!table->types)
-    {
-        fprintf(stderr, "[TypeTable] Error: Failed to allocate memory for type table types.\n");
-        CONDITION_FAILED;
-    }
-
-    table->count = 0;
-    table->capacity = 64;
-
-    return table;
-}
+#include "diagnostics/diagnostics.h"
 
 // Create new TypeContainer
 TypeContainer *createTypeContainer(void)
 {
+    __STACK_FRAME__
     TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
     if (!container)
     {
@@ -60,14 +40,16 @@ TypeContainer *createTypeContainer(void)
     container->custom.structDef = NULL;
     container->custom.funcDef = NULL;
     container->custom.structDef = NULL;
-    container->custom.generic.declaration = NULL;
-    container->custom.generic.instantiation = NULL;
+    container->custom.arrayDef = NULL;
+    container->isPointer = false;
+    container->isReference = false;
 
     return container;
 }
 
-DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable)
+DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
     logMessage(LMI, "INFO", "DataTypes", "Parsing data type '%s'", typeStr);
     // Check if `[]` is at the end of the type string
     size_t len = strlen(typeStr);
@@ -146,6 +128,7 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSym
     }
     else if (strcmp(baseTypeStr, "any") == 0)
     {
+        logMessage(LMI, "INFO", "DataTypes", "Resolving `any` type!");
         container->baseType = PRIMITIVE_TYPE;
         container->primitive = PRIM_ANY;
     }
@@ -162,6 +145,8 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSym
             free(baseTypeStr);
             CONDITION_FAILED;
         }
+
+        fprintf(stdout, "Resolved type: %s\n", resolvedType->container->custom.name);
 
         return resolvedType;
     }
@@ -181,9 +166,36 @@ DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSym
     return dataType;
 }
 
+DataType *parseGenericArrayType(const char *typeStr, CryoGlobalSymbolTable *globalTable)
+{
+    // Extract the base type name (without [])
+    char *baseTypeName = strdup(typeStr);
+    size_t len = strlen(baseTypeName);
+    if (len >= 2 && baseTypeName[len - 2] == '[' && baseTypeName[len - 1] == ']')
+    {
+        baseTypeName[len - 2] = '\0';
+    }
+
+    // Resolve the base type
+    DataType *baseType = ResolveDataType(globalTable, baseTypeName);
+    if (!baseType)
+    {
+        // Handle error: base type not found
+        return NULL;
+    }
+
+    // Create array type
+    TypeContainer *container = createArrayType(baseType->container, 1);
+    DataType *arrayType = wrapTypeContainer(container);
+
+    free(baseTypeName);
+    return arrayType;
+}
+
 // Create DataType wrapper
 DataType *wrapTypeContainer(TypeContainer *container)
 {
+    __STACK_FRAME__
     DataType *type = (DataType *)malloc(sizeof(DataType));
     if (!type)
     {
@@ -200,65 +212,37 @@ DataType *wrapTypeContainer(TypeContainer *container)
     return type;
 }
 
-DataType *lookupType(TypeTable *table, const char *name)
+DataType *createPointerType(DataType *operandType)
 {
-    for (int i = 0; i < table->count; i++)
+    __STACK_FRAME__
+    if (!operandType)
     {
-        DataType *type = table->types[i];
-        if (type->container->custom.name &&
-            strcmp(type->container->custom.name, name) == 0)
-        {
-            logMessage(LMI, "INFO", "DataTypes", "Found type '%s' in type table", name);
-            return type;
-        }
+        fprintf(stderr, "[TypeTable] Error: Invalid operand type\n");
+        CONDITION_FAILED;
     }
 
-    logMessage(LMI, "INFO", "DataTypes", "Type '%s' not found in type table", name);
-    return NULL;
+    TypeContainer *container = createTypeContainer();
+    container->baseType = operandType->container->baseType;
+    container->primitive = operandType->container->primitive;
+    container->size = operandType->container->size;
+    container->length = operandType->container->length;
+    container->isArray = operandType->container->isArray;
+    container->arrayDimensions = operandType->container->arrayDimensions;
+    container->boolValue = operandType->container->boolValue;
+    container->isGeneric = operandType->container->isGeneric;
+    container->isConst = operandType->container->isConst;
+    container->isReference = true;
+    container->isPointer = true;
+
+    DataType *type = wrapTypeContainer(container);
+    type->next = operandType;
+
+    return type;
 }
 
-// # =========================================================================== #
-// # Add Type to Type Table
-
-void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type)
+ASTNode *findStructProperty(StructType *structType, const char *propertyName)
 {
-    if (!name || !type)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid name or type in addTypeToTypeTable\n");
-        return;
-    }
-
-    // Check if the type already exists
-    logMessage(LMI, "INFO", "DataTypes", "Looking up type '%s' in type table", name);
-    DataType *existingType = lookupType(table, name);
-    if (existingType)
-    {
-        logMessage(LMI, "INFO", "DataTypes", "Type '%s' already exists in type table", name);
-        // Update the existing type
-        updateTypeInTypeTable(table, name, type);
-        return;
-    }
-
-    logMessage(LMI, "INFO", "DataTypes", "Adding type '%s' to type table", name);
-    // Add the type to the table
-    if (table->count >= table->capacity)
-    {
-        table->capacity *= 2;
-        table->types = (DataType **)realloc(table->types, table->capacity * sizeof(DataType *));
-        if (!table->types)
-        {
-            fprintf(stderr, "[TypeTable] Error: Failed to reallocate memory for type table\n");
-            return;
-        }
-    }
-
-    logMessage(LMI, "INFO", "DataTypes", "Adding type '%s' to type table, count: %d", name, table->count);
-    table->types[table->count++] = type;
-    logMessage(LMI, "INFO", "DataTypes", "Added type '%s' to type table", name);
-}
-
-ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable)
-{
+    __STACK_FRAME__
     if (!structType)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid struct type.\n");
@@ -278,7 +262,6 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName, Ty
     }
 
     fprintf(stderr, "[TypeTable] Error: Failed to find property '%s' in struct '%s'.\n", propertyName, structType->name);
-    printTypeTable(typeTable);
     CONDITION_FAILED;
 }
 
@@ -287,6 +270,7 @@ ASTNode *findStructProperty(StructType *structType, const char *propertyName, Ty
 
 DataType *CryoDataTypeStringToType(const char *typeStr)
 {
+    __STACK_FRAME__
     if (strcmp(typeStr, "int") == 0)
     {
         return createPrimitiveIntType();
@@ -319,6 +303,7 @@ DataType *CryoDataTypeStringToType(const char *typeStr)
 
 DataType *DataTypeFromNode(ASTNode *node)
 {
+    __STACK_FRAME__
     CryoNodeType nodeType = node->metaData->type;
 
     switch (nodeType)
@@ -360,6 +345,7 @@ DataType *DataTypeFromNode(ASTNode *node)
 
 const char *getDataTypeName(DataType *type)
 {
+    __STACK_FRAME__
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type. @getDataTypeName\n");
@@ -390,6 +376,7 @@ const char *getDataTypeName(DataType *type)
 
 DataType **getTypeArrayFromASTNode(ASTNode **node, int size)
 {
+    __STACK_FRAME__
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -420,6 +407,7 @@ DataType **getTypeArrayFromASTNode(ASTNode **node, int size)
 
 DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount)
 {
+    __STACK_FRAME__
     if (!params)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -454,6 +442,7 @@ DataType **getTypeFromParamList(CryoVariableNode **params, int paramCount)
 /// @return
 DataType **getDataTypeArrayFromASTNode(ASTNode *node)
 {
+    __STACK_FRAME__
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -495,6 +484,7 @@ DataType **getDataTypeArrayFromASTNode(ASTNode *node)
 
 DataType *getDataTypeFromASTNode(ASTNode *node)
 {
+    __STACK_FRAME__
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid AST node.\n");
@@ -530,14 +520,28 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
     case NODE_FUNCTION_CALL:
         logMessage(LMI, "INFO", "DataTypes", "Getting data type from function call");
         return node->data.functionCall->returnType;
+    case NODE_ARRAY_LITERAL:
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from array literal");
+        return node->data.array->type;
+    case NODE_INDEX_EXPR:
+    {
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from index expression");
+        ASTNode *arr = node->data.indexExpr->array;
+        return getDataTypeFromASTNode(arr);
+    }
+    case NODE_OBJECT_INST:
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from object instantiation");
+        return node->data.objectNode->objType;
     case NODE_PROPERTY_ACCESS:
     {
         logMessage(LMI, "INFO", "DataTypes", "Getting data type from property access");
         // Get the object type
         DataType *objectType = getDataTypeFromASTNode(node->data.propertyAccess->object);
         if (!objectType)
+        {
+            logMessage(LMI, "ERROR", "DataTypes", "Failed to get object type from property access.");
             CONDITION_FAILED;
-
+        }
         // Get the property name
         const char *propertyName = node->data.propertyAccess->propertyName;
 
@@ -570,6 +574,16 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
             CONDITION_FAILED;
         }
     }
+    case NODE_BINARY_EXPR:
+    {
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from binary expression");
+        ASTNode *lhs = node->data.bin_op->left;
+        ASTNode *rhs = node->data.bin_op->right;
+        DataType *lhsType = getDataTypeFromASTNode(lhs);
+        DataType *rhsType = getDataTypeFromASTNode(rhs);
+        // TODO: Implement type checking for binary expressions
+        return lhsType;
+    }
     default:
         logMessage(LMI, "ERROR", "DataTypes", "Failed to get data type from AST node, received node type: %s",
                    CryoNodeTypeToString(node->metaData->type));
@@ -579,6 +593,7 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
 
 void setNewDataTypeForNode(ASTNode *node, DataType *type)
 {
+    __STACK_FRAME__
     if (!node || !type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid node or type.\n");
@@ -617,6 +632,7 @@ void setNewDataTypeForNode(ASTNode *node, DataType *type)
 
 DataType *cloneDataType(DataType *type)
 {
+    __STACK_FRAME__
     if (!type)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid data type. @cloneDataType\n");
@@ -662,98 +678,9 @@ DataType *cloneDataType(DataType *type)
     return newType;
 }
 
-void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type)
-{
-    if (!table || !name || !type)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid table, name, or type.\n");
-        return;
-    }
-
-    for (int i = 0; i < table->count; i++)
-    {
-        DataType *existingType = table->types[i];
-        if (strcmp(existingType->container->custom.name, name) == 0)
-        {
-            table->types[i] = type;
-            return;
-        }
-    }
-
-    fprintf(stderr, "[TypeTable] Error: Type '%s' not found in type table.\n", name);
-}
-
-void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root)
-{
-    if (!root)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid root node.\n");
-        return;
-    }
-
-    if (root->metaData->type != NODE_PROGRAM)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid root node type.\n");
-        return;
-    }
-
-    for (int i = 0; i < root->data.program->statementCount; i++)
-    {
-        ASTNode *node = root->data.program->statements[i];
-        if (node->metaData->type == NODE_STRUCT_DECLARATION)
-        {
-            const char *name = node->data.structNode->name;
-            DataType *type = node->data.structNode->type;
-        }
-        if (node->metaData->type == NODE_CLASS)
-        {
-            const char *name = node->data.classNode->name;
-            DataType *type = node->data.classNode->type;
-        }
-    }
-}
-
-DataType *findClassType(ASTNode *node, TypeTable *typeTable)
-{
-    if (!node || !typeTable)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid node or type table.\n");
-        CONDITION_FAILED;
-    }
-
-    if (node->metaData->type != NODE_CLASS)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid node type.\n");
-        CONDITION_FAILED;
-    }
-
-    const char *name = node->data.classNode->name;
-    DataType *type = lookupType(typeTable, name);
-
-    return type;
-}
-
-DataType *findClassTypeFromName(const char *name, TypeTable *typeTable)
-{
-    if (!name || !typeTable)
-    {
-        fprintf(stderr, "[TypeTable] Error: Invalid name or type table.\n");
-        CONDITION_FAILED;
-    }
-
-    DataType *type = lookupType(typeTable, name);
-
-    if (type->container->baseType != CLASS_TYPE)
-    {
-        fprintf(stderr, "[TypeTable] Error: Type '%s' is not a class type.\n", name);
-        CONDITION_FAILED;
-    }
-
-    return type;
-}
-
 DataType **getParamTypeArray(ASTNode **node)
 {
+    __STACK_FRAME__
     if (!node)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid node.\n");
@@ -785,6 +712,7 @@ DataType **getParamTypeArray(ASTNode **node)
 
 ASTNode **getAllClassMethods(ASTNode *classNode)
 {
+    __STACK_FRAME__
     if (!classNode)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class node.\n");
@@ -837,6 +765,7 @@ ASTNode **getAllClassMethods(ASTNode *classNode)
 
 ASTNode **getAllClassPropsFromDataType(DataType *classType)
 {
+    __STACK_FRAME__
     if (!classType)
     {
         fprintf(stderr, "[TypeTable] Error: Invalid class type.\n");

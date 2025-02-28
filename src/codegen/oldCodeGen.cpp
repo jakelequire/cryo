@@ -17,55 +17,10 @@
 #include "codegen/oldCodeGen.hpp"
 #include "tools/logger/logger_config.h"
 
-int generateCodeWrapper(ASTNode *node, CompilerState *state, CryoLinker *cLinker)
-{
-    DEBUG_PRINT_FILTER({
-        std::cout << ">===------------- CPP Code Generation -------------===<\n"
-                  << std::endl;
-    });
-
-    Cryo::CryoCompiler compiler;
-    compiler.setCompilerState(state);
-    compiler.setCompilerSettings(state->settings);
-    compiler.isPreprocessing = false;
-
-    std::string moduleName = state->fileName;
-    compiler.setModuleIdentifier(moduleName);
-
-    // Convert C opaque pointer back to C++ type
-    std::cout << "Setting linker..." << std::endl;
-    compiler.initDependencies();
-
-    compiler.compile(node);
-
-    return 0;
-}
-
-int preprocessRuntimeIR(ASTNode *runtimeNode, CompilerState *state, const char *outputPath, CryoLinker *cLinker)
-{
-    DEBUG_PRINT_FILTER({
-        std::cout << ">===------------- CPP Runtime Generation -------------===<\n"
-                  << std::endl;
-        std::cout << "Output Path: " << outputPath << std::endl;
-    });
-
-    std::string moduleName = "runtime";
-    Cryo::CryoCompiler compiler;
-
-    compiler.setCompilerState(state);
-    compiler.setCompilerSettings(state->settings);
-    compiler.setModuleIdentifier(moduleName);
-
-    // Set the output path for the runtime
-    compiler.setCustomOutputPath(outputPath);
-    // Compile Runtime Node
-    compiler.compile(runtimeNode);
-
-    return 0;
-}
-
 namespace Cryo
 {
+
+    // ---------------------------------------------------------------------------------------------------
 
     /**
      * @brief The entry point to the generation process (passed from the top-level compiler).
@@ -90,14 +45,6 @@ namespace Cryo
         compiler.getSymTable().initModule(root, namespaceName);
         compiler.getContext().currentNamespace = namespaceName;
 
-        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Linting Tree");
-        bool validateTree = DevDebugger::lintTree(root);
-        if (validateTree == false)
-        {
-            std::cerr << "[CPP] Tree is invalid!" << std::endl;
-            CONDITION_FAILED;
-        }
-
         // Declare all functions in the AST tree
         // declarations.preprocessDeclare(root); <- TODO: Implement this function
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Preprocessing Complete");
@@ -112,7 +59,6 @@ namespace Cryo
     void Generator::generateCode(ASTNode *root)
     {
         CryoContext &cryoContext = compiler.getContext();
-        Compilation compileCode = Compilation(compiler);
 
         // Check if the module is initialized
         assert(cryoContext.module != nullptr);
@@ -124,10 +70,6 @@ namespace Cryo
         // Parse the AST tree
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Parsing Tree");
         parseTree(root);
-
-        // Compile the IR file
-        DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Compiling IR File");
-        compileCode.compileIRFile();
 
         DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Code CodeGen Complete");
         return;

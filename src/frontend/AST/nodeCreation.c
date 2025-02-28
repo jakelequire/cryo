@@ -16,9 +16,11 @@
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/AST.h"
+#include "diagnostics/diagnostics.h"
 
-ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, TypeTable *typeTable, Lexer *lexer)
+ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
+    __STACK_FRAME__
     ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     if (!node)
     {
@@ -40,8 +42,12 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
     }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);
-    node->metaData->line = lexer->line;
-    node->metaData->column = lexer->column;
+    node->metaData->line = lexer->currentToken.line;
+    node->metaData->column = lexer->currentToken.column;
+    node->print = logASTNode;
+
+    node->firstChild = NULL;
+    node->nextSibling = NULL;
 
     switch (type)
     {
@@ -183,24 +189,31 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Ty
 // <addChildNode>
 void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *state)
 {
+    __STACK_FRAME__
+    printf("Adding child node\n");
     if (!parent || !child)
     {
         logMessage(LMI, "ERROR", "AST", "Parent or child node is NULL");
         return;
     }
 
-    if (!parent->metaData->firstChild)
+    // Make sure the child node's nextSibling is NULL
+    child->nextSibling = NULL;
+
+    if (!parent->firstChild)
     {
-        parent->metaData->firstChild = child;
+        printf("Parent has no children\n");
+        parent->firstChild = child;
     }
     else
     {
-        ASTNode *current = parent->metaData->firstChild;
-        while (current->metaData->nextSibling)
+        ASTNode *current = parent->firstChild;
+        while (current->nextSibling)
         {
-            current = current->metaData->nextSibling;
+            printf("Iterating through siblings\n");
+            current = current->nextSibling;
         }
-        current->metaData->nextSibling = child;
+        current->nextSibling = child;
     }
 }
 // </addChildNode>
@@ -208,6 +221,7 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
 // <addStatementToBlock>
 void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
+    __STACK_FRAME__
     if (blockNode->metaData->type != NODE_BLOCK && blockNode->metaData->type != NODE_FUNCTION_BLOCK)
     {
         logMessage(LMI, "ERROR", "AST", "Invalid block node");
@@ -242,6 +256,7 @@ void addStatementToBlock(ASTNode *blockNode, ASTNode *statement, Arena *arena, C
 
 void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Arena *arena, CompilerState *state, Lexer *lexer)
 {
+    __STACK_FRAME__
     if (!functionBlock || !statement || !functionBlock->metaData || functionBlock->metaData->type != NODE_FUNCTION_BLOCK)
     {
         logMessage(LMI, "ERROR", "AST", "Invalid function block node");
@@ -294,6 +309,7 @@ void addStatementToFunctionBlock(ASTNode *functionBlock, ASTNode *statement, Are
 // <addFunctionToProgram>
 void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, CompilerState *state, Lexer *lexer)
 {
+    __STACK_FRAME__
     if (!program || !function)
     {
         logMessage(LMI, "ERROR", "AST", "Program or function node is NULL");
@@ -323,3 +339,167 @@ void addFunctionToProgram(ASTNode *program, ASTNode *function, Arena *arena, Com
     addChildNode(program, function, arena, state);
 }
 // </addFunctionToProgram>
+
+void buildASTTreeLinks(ASTNode *root)
+{
+    if (!root)
+        return;
+
+    // Handle program nodes specially since they use a statements array
+    if (root->metaData->type == NODE_PROGRAM)
+    {
+        CryoProgram *program = root->data.program;
+        ASTNode *lastChild = NULL;
+
+        // Link all statements as children
+        for (int i = 0; i < program->statementCount; i++)
+        {
+            ASTNode *statement = program->statements[i];
+            if (!root->firstChild)
+            {
+                root->firstChild = statement;
+            }
+            if (lastChild)
+            {
+                lastChild->nextSibling = statement;
+            }
+            lastChild = statement;
+
+            // Recursively build links for the statement
+            buildASTTreeLinks(statement);
+        }
+    }
+    // Handle block nodes
+    else if (root->metaData->type == NODE_BLOCK)
+    {
+        CryoBlockNode *block = root->data.block;
+        ASTNode *lastChild = NULL;
+
+        for (int i = 0; i < block->statementCount; i++)
+        {
+            ASTNode *statement = block->statements[i];
+            if (!root->firstChild)
+            {
+                root->firstChild = statement;
+            }
+            if (lastChild)
+            {
+                lastChild->nextSibling = statement;
+            }
+            lastChild = statement;
+
+            buildASTTreeLinks(statement);
+        }
+    }
+    // Handle function nodes
+    else if (root->metaData->type == NODE_FUNCTION_DECLARATION)
+    {
+        FunctionDeclNode *func = root->data.functionDecl;
+
+        // Link parameters as children
+        ASTNode *lastChild = NULL;
+        for (int i = 0; i < func->paramCount; i++)
+        {
+            ASTNode *param = func->params[i];
+            if (!root->firstChild)
+            {
+                root->firstChild = param;
+            }
+            if (lastChild)
+            {
+                lastChild->nextSibling = param;
+            }
+            lastChild = param;
+
+            buildASTTreeLinks(param);
+        }
+
+        // Link function body
+        if (func->body)
+        {
+            if (lastChild)
+            {
+                lastChild->nextSibling = func->body;
+            }
+            else
+            {
+                root->firstChild = func->body;
+            }
+            buildASTTreeLinks(func->body);
+        }
+    }
+    // Handle other node types appropriately
+    else
+    {
+        // Binary expressions
+        if (root->metaData->type == NODE_BINARY_EXPR)
+        {
+            CryoBinaryOpNode *binOp = root->data.bin_op;
+            if (binOp->left)
+            {
+                root->firstChild = binOp->left;
+                buildASTTreeLinks(binOp->left);
+            }
+            if (binOp->right)
+            {
+                if (binOp->left)
+                {
+                    binOp->left->nextSibling = binOp->right;
+                }
+                else
+                {
+                    root->firstChild = binOp->right;
+                }
+                buildASTTreeLinks(binOp->right);
+            }
+        }
+        // Add similar handling for other node types...
+    }
+}
+
+void addChildToNode(ASTNode *parent, ASTNode *child)
+{
+    if (!parent || !child)
+        return;
+
+    if (!parent->firstChild)
+    {
+        parent->firstChild = child;
+    }
+    else
+    {
+        ASTNode *sibling = parent->firstChild;
+        while (sibling->nextSibling)
+        {
+            sibling = sibling->nextSibling;
+        }
+        sibling->nextSibling = child;
+    }
+}
+
+ASTNode *getFirstChild(ASTNode *node)
+{
+    return node ? node->firstChild : NULL;
+}
+
+ASTNode *getNextSibling(ASTNode *node)
+{
+    return node ? node->nextSibling : NULL;
+}
+
+void traverseAST(ASTNode *node, void (*visitor)(ASTNode *))
+{
+    if (!node)
+        return;
+
+    // Visit the current node
+    visitor(node);
+
+    // Visit all children
+    ASTNode *child = node->firstChild;
+    while (child)
+    {
+        traverseAST(child, visitor);
+        child = child->nextSibling;
+    }
+}

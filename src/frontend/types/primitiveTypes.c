@@ -15,10 +15,12 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "diagnostics/diagnostics.h"
 
 // Primitive int Type `(default/baseline)`
 DataType *createPrimitiveIntType(void)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_INT;
@@ -26,9 +28,60 @@ DataType *createPrimitiveIntType(void)
     return wrapTypeContainer(container);
 }
 
+DataType *createPrimitiveI8Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I8;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI16Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I16;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI32Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I32;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI64Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I64;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *createPrimitiveI128Type(void)
+{
+    __STACK_FRAME__
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_I128;
+
+    return wrapTypeContainer(container);
+}
+
 // Primitive float Type creation `(default/baseline)`
 DataType *createPrimitiveFloatType(void)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_FLOAT;
@@ -39,6 +92,7 @@ DataType *createPrimitiveFloatType(void)
 // Primitive string Type creation `(default/baseline)`
 DataType *createPrimitiveStringType(int length)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_STRING;
@@ -50,6 +104,7 @@ DataType *createPrimitiveStringType(int length)
 // Primitive boolean Type creation `(default/baseline)`
 DataType *createPrimitiveBooleanType(bool booleanValue)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_BOOLEAN;
@@ -61,6 +116,7 @@ DataType *createPrimitiveBooleanType(bool booleanValue)
 // Primitive void Type creation `(default/baseline)`
 DataType *createPrimitiveVoidType(void)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_VOID;
@@ -71,6 +127,7 @@ DataType *createPrimitiveVoidType(void)
 // Primitive null Type creation `(default/baseline)`
 DataType *createPrimitiveNullType(void)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_NULL;
@@ -81,6 +138,7 @@ DataType *createPrimitiveNullType(void)
 // Primitive any Type creation `(default/baseline)`
 DataType *createPrimitiveAnyType(void)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_ANY;
@@ -91,6 +149,7 @@ DataType *createPrimitiveAnyType(void)
 // Unknown Type `(will be resolved later in the compiler)`
 DataType *createUnknownType(void)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     container->baseType = UNKNOWN_TYPE;
 
@@ -100,6 +159,7 @@ DataType *createUnknownType(void)
 // Create primitive type
 TypeContainer *createPrimitiveType(PrimitiveDataType primType)
 {
+    __STACK_FRAME__
     TypeContainer *container = createTypeContainer();
     if (!container)
         return NULL;
@@ -112,6 +172,7 @@ TypeContainer *createPrimitiveType(PrimitiveDataType primType)
 
 PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
 {
+    __STACK_FRAME__
     if (strcmp(typeStr, "int") == 0)
     {
         return PRIM_INT;
@@ -144,10 +205,12 @@ PrimitiveDataType getPrimativeTypeFromString(const char *typeStr)
 
 bool isPrimitiveType(const char *typeStr)
 {
+    __STACK_FRAME__
     return getPrimativeTypeFromString(typeStr) != PRIM_UNKNOWN;
 }
 
 bool isStringType(DataType *type)
 {
+    __STACK_FRAME__
     return type->container->baseType == PRIMITIVE_TYPE && type->container->primitive == PRIM_STRING;
 }

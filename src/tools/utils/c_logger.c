@@ -20,6 +20,7 @@
 #include <malloc.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include "diagnostics/diagnostics.h"
 
 extern void logCompilerSettings(CompilerSettings *settings);
 
@@ -46,6 +47,7 @@ typedef struct LoggerMessage
 
 LoggerMessage *createLoggerMessage(int line, const char *file, const char *func, const char *type, const char *module, const char *message)
 {
+
     LoggerMessage *loggerMessage = (LoggerMessage *)malloc(sizeof(LoggerMessage));
     if (!loggerMessage)
     {
@@ -69,6 +71,7 @@ void outputNewLogBuffer(int line,
                         const char *module,
                         const char *message, ...)
 {
+
     if (!compilerSettings)
     {
         fprintf(stderr, "Compiler settings not found\n");
@@ -134,6 +137,7 @@ void outputNewLogBuffer(int line,
 
 void initLoggerCompilerSettings(CompilerSettings *settings)
 {
+
     compilerSettings = settings;
     printf("Found compiler settings\n");
 
@@ -145,6 +149,7 @@ void initLoggerCompilerSettings(CompilerSettings *settings)
 
 char *stringShortener(const char *string, int length, int addDots)
 {
+
     char *shortened = (char *)malloc(length + 1 + (addDots ? 3 : 0));
     if (!shortened)
     {
@@ -165,22 +170,9 @@ char *stringShortener(const char *string, int length, int addDots)
     return shortened;
 }
 
-char *getFileName(const char *file)
-{
-    const char *lastSlash = strrchr(file, '/');
-    const char *filename = lastSlash ? lastSlash + 1 : file;
-
-    char *trimmed = strdup(filename);
-    char *dot = strrchr(trimmed, '.');
-    if (dot)
-    {
-        *dot = '\0';
-    }
-    return trimmed;
-}
-
 const char *getParentDirOfFile(const char *file)
 {
+
     const char *lastSlash = strrchr(file, '/');
     if (!lastSlash)
     {
@@ -196,6 +188,7 @@ const char *getParentDirOfFile(const char *file)
 
 const char *typeBufferFormatter(const char *type)
 {
+
     char *buffer = (char *)malloc(sizeof(char) * 1024);
 
     if (strcmp(type, "INFO") == 0)
@@ -240,6 +233,7 @@ void logMessage(
     const char *module,
     const char *message, ...)
 {
+
     DEBUG_PRINT_FILTER({
         char *shortFile = stringShortener(getFileName(file), FILE_NAME_LENGTH, 0);
         char *shortModule = stringShortener(module, MODULE_NAME_LENGTH, 0);

@@ -29,6 +29,7 @@
 #include "settings/compilerSettings.h"
 #include "common/common.h"
 #include "frontend/AST.h"
+#include "tools/utils/cWrappers.h"
 
 // Define each token mapping
 #define DECLARE_TOKEN(str, type) {str, type}
@@ -39,6 +40,8 @@
     X("string", TOKEN_TYPE_STRING)           \
     X("boolean", TOKEN_TYPE_BOOLEAN)         \
     X("void", TOKEN_TYPE_VOID)               \
+    X("null", TOKEN_TYPE_NULL)               \
+    X("any", TOKEN_TYPE_ANY)                 \
     X("int[]", TOKEN_TYPE_INT_ARRAY)         \
     X("string[]", TOKEN_TYPE_STRING_ARRAY)   \
     X("boolean[]", TOKEN_TYPE_BOOLEAN_ARRAY) \
@@ -152,6 +155,9 @@ typedef struct StructType
         DataType **typeArgs;    // Concrete type arguments (for instantiations)
     } generic;
 
+    _NEW_METHOD(void, addProperty, struct StructType *self, ASTNode *property);
+    _NEW_METHOD(void, addMethod, struct StructType *self, ASTNode *method);
+
 } StructType;
 
 typedef struct FunctionType
@@ -235,6 +241,10 @@ typedef struct TypeContainer
     bool isArray;                // Array flag
     int arrayDimensions;         // Number of array dimensions
     bool boolValue;              // Boolean value
+    bool isGeneric;              // Generic type flag
+    bool isConst;                // Const modifier
+    bool isReference;            // Reference type
+    bool isPointer;              // Is this a pointer type?
     struct custom
     {
         const char *name; // Type identifier name
@@ -259,26 +269,10 @@ typedef struct DataType
     TypeContainer *container;      // Type container
     bool isConst;                  // Const modifier
     bool isReference;              // Reference type
+    bool isPointer;                // Is this a pointer type?
     struct DataType *next;         // For linked types (e.g. generics)
     struct DataType *genericParam; // For generic type parameters
 } DataType;
-
-// This is the global symbol table specifically for types.
-// This is how we will handle type checking and type inference.
-typedef struct TypeTable
-{
-    DataType **types;
-    int count;
-    int capacity;
-    char *namespaceName;
-} TypeTable;
-
-// Helper macros for type checking
-#define IS_GENERIC_DECLARATION(type) \
-    ((type)->baseType == GENERIC_TYPE && (type)->custom.generic.declaration.genericDef != NULL)
-
-#define IS_GENERIC_INSTANTIATION(type) \
-    ((type)->baseType == STRUCT_TYPE && (type)->custom.generic.instantiation.baseDef != NULL)
 
 #ifdef __cplusplus
 extern "C"
@@ -291,16 +285,15 @@ extern "C"
     // # (datatypes.c)
     // # =========================================================================== #
 
-    TypeTable *initTypeTable(void);
     TypeContainer *createTypeContainer(void);
 
-    DataType *parseDataType(const char *typeStr, TypeTable *typeTable, CryoGlobalSymbolTable *globalTable);
+    DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable);
+    DataType *parseGenericArrayType(const char *typeStr, CryoGlobalSymbolTable *globalTable);
     DataType *wrapTypeContainer(TypeContainer *container);
 
-    DataType *lookupType(TypeTable *table, const char *name);
-    void addTypeToTypeTable(TypeTable *table, const char *name, DataType *type);
+    DataType *createPointerType(DataType *operandType);
 
-    ASTNode *findStructProperty(StructType *structType, const char *propertyName, TypeTable *typeTable);
+    ASTNode *findStructProperty(StructType *structType, const char *propertyName);
     DataType *CryoDataTypeStringToType(const char *typeStr);
     DataType *DataTypeFromNode(ASTNode *node);
     const char *getDataTypeName(DataType *type);
@@ -314,12 +307,6 @@ extern "C"
     void setNewDataTypeForNode(ASTNode *node, DataType *type);
     DataType *cloneDataType(DataType *type);
 
-    void updateTypeInTypeTable(TypeTable *table, const char *name, DataType *type);
-    void importTypesFromRootNode(TypeTable *typeTable, ASTNode *root);
-
-    DataType *findClassType(ASTNode *node, TypeTable *typeTable);
-    DataType *findClassTypeFromName(const char *name, TypeTable *typeTable);
-
     ASTNode **getAllClassMethods(ASTNode *classNode);
     ASTNode **getAllClassPropsFromDataType(DataType *classType);
 
@@ -329,6 +316,11 @@ extern "C"
     // # =========================================================================== #
 
     DataType *createPrimitiveIntType(void);
+    DataType *createPrimitiveI8Type(void);
+    DataType *createPrimitiveI16Type(void);
+    DataType *createPrimitiveI32Type(void);
+    DataType *createPrimitiveI64Type(void);
+    DataType *createPrimitiveI128Type(void);
     DataType *createPrimitiveFloatType(void);
     DataType *createPrimitiveStringType(int length);
     DataType *createPrimitiveBooleanType(bool booleanValue);
@@ -351,11 +343,11 @@ extern "C"
     // # =========================================================================== #
 
     DataType *createStructDefinition(const char *structName);
-    StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state, TypeTable *typeTable);
+    StructType *createStructTypeFromStructNode(ASTNode *structNode, CompilerState *state);
     DataType *createDataTypeFromStructNode(
         ASTNode *structNode, ASTNode **properties, int propCount,
         ASTNode **methods, int methodCount,
-        CompilerState *state, TypeTable *typeTable);
+        CompilerState *state);
 
     int getPropertyAccessIndex(DataType *type, const char *propertyName);
 
@@ -364,8 +356,14 @@ extern "C"
     int calculateStructSize(StructType *structType);
 
     DataType *wrapStructType(StructType *structDef);
-    bool isStructDeclaration(TypeTable *table, const char *name);
+    bool isStructDeclaration(const char *name);
     bool isStructType(DataType *type);
+
+    // --------------------------
+    // Method Prototypes
+
+    void _add_struct_method(StructType *self, ASTNode *method);
+    void _add_struct_property(StructType *self, ASTNode *property);
 
     // # =========================================================================== #
     // # Array Type Functions
@@ -383,12 +381,19 @@ extern "C"
 
     bool areTypesCompatible(TypeContainer *left, TypeContainer *right);
     bool isValidType(DataType *type);
+    bool isSameType(DataType *left, DataType *right);
+
+    bool isNumericDataType(DataType *type);
     bool isStringDataType(DataType *type);
+
+    bool binOpEligible(DataType *lhs, DataType *rhs);
 
     // # =========================================================================== #
     // # Generic Type Functions
     // # (generics.c)
     // # =========================================================================== #
+
+    TypeContainer *createGenericTypeContainer(void);
 
     void initGenericType(GenericType *type, const char *name);
     GenericType *createGenericParameter(const char *name);
@@ -416,6 +421,9 @@ extern "C"
     ASTNode *cloneAndSubstituteGenericParam(ASTNode *param, DataType *concreteType);
     ASTNode *cloneAndSubstituteGenericBody(ASTNode *body, DataType *concreteType);
     ASTNode *cloneAndSubstituteGenericStatement(ASTNode *statement, DataType *concreteType);
+
+    void addGenericTypeParam(TypeContainer *container, DataType *param);
+    DataType *createGenericDataTypeInstance(DataType *genericType, DataType **concreteTypes, int paramCount);
 
     // # =========================================================================== #
     // # Class Type Functions
@@ -450,9 +458,9 @@ extern "C"
 
     FunctionType *createFunctionTypeContainer(void);
     DataType *createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount,
-                               Arena *arena, CompilerState *state, TypeTable *typeTable);
+                               Arena *arena, CompilerState *state);
     DataType *createFunctionType(const char *functionName, DataType *returnType, DataType **paramTypes, int paramCount,
-                                 Arena *arena, CompilerState *state, TypeTable *typeTable);
+                                 Arena *arena, CompilerState *state);
 
     // # =========================================================================== #
     // # Print Functions
@@ -480,14 +488,11 @@ extern "C"
     char *getFunctionTypeStr_UF(FunctionType *funcType);
     char *getFunctionArgTypeArrayStr(ASTNode *functionNode);
 
-    void printTypeTable(TypeTable *table);
     void printTypeContainer(TypeContainer *type);
     void printVerboseTypeContainer(TypeContainer *type);
 
     char *DataTypeToString(DataType *dataType);
     char *DataTypeToStringUnformatted(DataType *type);
-
-    bool typeAlreadyExists(TypeTable *table, const char *name);
 
     // # =============================================================================================== #
 

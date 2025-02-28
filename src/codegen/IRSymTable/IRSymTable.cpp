@@ -41,6 +41,13 @@ namespace Cryo
         module.namespaceName = namespaceName;
     }
 
+    void IRSymTable::importExternalASTRoot(ASTNode *root)
+    {
+        std::string nodeNamespace = root->metaData->moduleName;
+        SymTableNode module = traverseModule(root, nodeNamespace);
+        symTable.namespaces[nodeNamespace] = module;
+    }
+
     // -----------------------------------------------------------------------------------------------
     ///
     /// Getters
@@ -111,9 +118,17 @@ namespace Cryo
     STParameter *IRSymTable::getParameter(std::string namespaceName, std::string paramName)
     {
         // Find the namespace in the SymTable
+        std::cout << "@getParameter Namespace Name: " << namespaceName << std::endl;
         SymTableNode symNode = getSymTableNode(namespaceName);
+        symNode.print(symNode);
+        std::cout << "\n\n";
+        std::cout << "@getParameter Param Name: " << paramName << std::endl;
         // Find the parameter in the SymTable
-        STParameter *paramNode = &symNode.parameterNode[paramName];
+        STParameter *paramNode = &symNode.parameterNode.at(paramName);
+        if (!paramNode)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Parameter Node not found");
+        }
         return paramNode;
     }
 
@@ -281,6 +296,8 @@ namespace Cryo
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Variable to SymTable");
+        std::cout << "Namespace Name: " << namespaceName << std::endl;
+        std::cout << "Variable Name: " << varName << std::endl;
         // Add the variable to the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
         // Create the variable container
@@ -336,8 +353,28 @@ namespace Cryo
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Adding Parameter to SymTable");
+        if (paramNode->metaData->type != NODE_PARAM)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Invalid Node Type");
+            return;
+        }
+        if (paramName.empty())
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Parameter Name is Empty");
+            return;
+        }
+        if (namespaceName.empty())
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Namespace Name is Empty");
+            return;
+        }
         // Add the parameter to the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
+        if (symNode.parameterNode.find(paramName) != symNode.parameterNode.end())
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "IRSymTable", "Parameter already exists");
+            return;
+        }
         // Create the parameter container
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Creating Parameter Container");
         STParameter paramContainer = createParamContainer();
@@ -383,6 +420,8 @@ namespace Cryo
     {
 
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Updating Variable Node");
+        std::cout << "@updateVariableNode Namespace Name: " << namespaceName << std::endl;
+        std::cout << "@updateVariableNode Variable Name: " << varName << std::endl;
         // Find the namespace in the SymTable
         SymTableNode symNode = getSymTableNode(namespaceName);
         // Find the variable in the SymTable
