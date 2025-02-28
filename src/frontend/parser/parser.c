@@ -1343,6 +1343,15 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
         // Register generic type parameters with the symbol table
         for (int i = 0; i < genericParamCount; i++)
         {
+            logMessage(LMI, "INFO", "Parser", "Generic Type Parameter: %s", genericParams[i]->name);
+            if (genericParams[i]->isType)
+            {
+                logMessage(LMI, "INFO", "Parser", "Generic Type Parameter is a type.");
+            }
+            else
+            {
+                logMessage(LMI, "INFO", "Parser", "Generic Type Parameter is not a type.");
+            }
             TypeSymbol *typeSymbol = CreateTypeSymbol(globalTable,
                                                       genericParams[i]->name,
                                                       NULL,

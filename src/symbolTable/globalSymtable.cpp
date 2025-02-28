@@ -47,6 +47,7 @@ namespace Cryo
         __STACK_FRAME__
         return tableContext.isPrimary;
     }
+
     bool GlobalSymbolTable::getIsDependencyTable(void)
     {
         __STACK_FRAME__
@@ -72,6 +73,7 @@ namespace Cryo
         tableContext.isDependency = !isPrimary;
         tableState = TABLE_IN_PROGRESS;
     }
+
     void GlobalSymbolTable::setIsDependencyTable(bool isDependency)
     {
         __STACK_FRAME__
@@ -79,32 +81,38 @@ namespace Cryo
         tableContext.isPrimary = !isDependency;
         tableState = TABLE_IN_PROGRESS;
     }
+
     void GlobalSymbolTable::resetCurrentDepsTable(void)
     {
         __STACK_FRAME__
         currentDependencyTable = nullptr;
     }
+
     void GlobalSymbolTable::setCurrentDependencyTable(SymbolTable *table)
     {
         __STACK_FRAME__
         resetCurrentDepsTable();
         currentDependencyTable = table;
     }
+
     void GlobalSymbolTable::setPrimaryTable(SymbolTable *table)
     {
         __STACK_FRAME__
         symbolTable = table;
     }
+
     void GlobalSymbolTable::addGlobalFunctionToTable(FunctionSymbol *function)
     {
         __STACK_FRAME__
         globalFunctions.push_back(function);
     }
+
     void GlobalSymbolTable::addExternFunctionToTable(ExternSymbol *function)
     {
         __STACK_FRAME__
         externFunctions.push_back(function);
     }
+
     void GlobalSymbolTable::mergeDBChunks(void)
     {
         __STACK_FRAME__
@@ -117,16 +125,19 @@ namespace Cryo
             // db->createScopedDB();
         }
     }
+
     const char *GlobalSymbolTable::getDependencyDirStr(void)
     {
         __STACK_FRAME__
         return debugInfo.dependencyDir.c_str();
     }
+
     const char *GlobalSymbolTable::getNamespace(void)
     {
         __STACK_FRAME__
         return this->currentNamespace;
     }
+
     void GlobalSymbolTable::addSymbolToTable(Symbol *symbol, SymbolTable *table)
     {
         __STACK_FRAME__
