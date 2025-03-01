@@ -58,6 +58,7 @@ typedef struct DataType DataType;
 typedef struct TypeContainer TypeContainer;
 typedef struct ClassNode ClassNode;
 typedef struct CryoVariableNode CryoVariableNode;
+typedef struct ParsingContext ParsingContext;
 
 typedef struct PublicMembers PublicMembers;
 typedef struct PrivateMembers PrivateMembers;
@@ -393,6 +394,8 @@ extern "C"
     // # (generics.c)
     // # =========================================================================== #
 
+    void registerGenericType(const char *name, GenericType **params, int paramCount, ParsingContext *context, CryoGlobalSymbolTable *globalTable);
+
     TypeContainer *createGenericTypeContainer(void);
 
     void initGenericType(GenericType *type, const char *name);
@@ -424,6 +427,8 @@ extern "C"
 
     void addGenericTypeParam(TypeContainer *container, DataType *param);
     DataType *createGenericDataTypeInstance(DataType *genericType, DataType **concreteTypes, int paramCount);
+
+    DataType *resolveGenericArrayType(DataType *genericParam, int dimensions);
 
     // # =========================================================================== #
     // # Class Type Functions

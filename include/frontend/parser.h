@@ -110,6 +110,10 @@ typedef struct ParsingContext
     // Context Flags
     bool isParsingModuleFile;
     bool isParsingIfCondition;
+    bool inGenericContext;
+
+    GenericType **currentGenericParams; // Current generic parameters in scope
+    int currentGenericParamCount;       // Number of current generic parameters
 } ParsingContext;
 
 /* =========================================================== */

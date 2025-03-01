@@ -640,4 +640,13 @@ extern "C"
         return nullptr;
     }
 
+    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->registerGenericType(name, params, paramCount);
+        }
+    }
+
 } // C API ----------------------------------------------------------

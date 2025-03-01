@@ -1338,9 +1338,11 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     if (lexer->currentToken.type == TOKEN_LESS)
     {
         isGeneric = true;
+        context->inGenericContext = true; // Set generic context flag in ParsingContext
         genericParams = parseGenericTypeParams(lexer, context, arena, state, globalTable, &genericParamCount);
-
         // Register generic type parameters with the symbol table
+
+        // Also register the generic parameters in the current scope
         for (int i = 0; i < genericParamCount; i++)
         {
             logMessage(LMI, "INFO", "Parser", "Generic Type Parameter: %s", genericParams[i]->name);
@@ -1363,6 +1365,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
             AddTypeToTable(globalTable, typeSymbol);
         }
     }
+
+    RegisterGenericType(globalTable, functionName, genericParams, genericParamCount);
 
     ASTNode **params = parseParameterList(lexer, context, arena, strdup(functionName), state, globalTable);
 
@@ -1460,8 +1464,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     }
 
     CompleteFunctionDeclaration(globalTable, functionNode, functionName, namespaceScopeID); // Global Symbol Table
-
-    resetCurrentFunction(context); // Context Manager
+    context->inGenericContext = false;                                                      // Reset generic context flag in ParsingContext
+    resetCurrentFunction(context);                                                          // Context Manager
 
     return functionNode;
 }
@@ -1925,32 +1929,71 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
 
             // Parse the element type (this should handle generic types too)
             DataType *elementType = parseType(lexer, context, arena, state, globalTable);
-            logMessage(LMI, "INFO", "Parser", "Variadic parameter element type: %s", DataTypeToString(elementType));
-
-            PrintTypeTable(globalTable);
-
-            // Verify it's an array type
-            if (!elementType->container->isArray)
+            if (!elementType)
             {
-                parsingError("Variadic parameter must have array type.", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+                logMessage(LMI, "ERROR", "Parser", "Failed to parse element type for variadic parameter");
+                parsingError("Failed to parse element type for variadic parameter", "parseParameter", arena, state, lexer, lexer->source, globalTable);
                 return NULL;
             }
 
             logMessage(LMI, "INFO", "Parser", "Variadic parameter element type: %s", DataTypeToString(elementType));
-            // Create array type for the variadic parameter
-            DataType *paramType = wrapArrayType(createArrayTypeContainer(elementType->container->custom.arrayDef->baseType,
-                                                                         NULL, 0, elementType->container->arrayDimensions));
 
-            logMessage(LMI, "INFO", "Parser", "Variadic parameter type: %s", DataTypeToString(paramType));
-
-            // Create and set up the parameter node
-            ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena, state, lexer);
+            // Create parameter node first
+            ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), NULL, arena, state, lexer);
             node->data.param->isVariadic = true;
-            node->data.param->variadicElementType = elementType->container->custom.arrayDef->baseType;
 
-            node->print(node);
+            // Handle generic array type if we're in a generic context
+            if (context->inGenericContext && elementType->container->isGeneric)
+            {
+                logMessage(LMI, "INFO", "Parser", "Processing generic variadic parameter");
+
+                // Create array type for the variadic parameter (based on the generic type)
+                DataType *paramType;
+
+                if (elementType->container->isArray)
+                {
+                    // Already an array type (like T[])
+                    paramType = elementType;
+                    node->data.param->variadicElementType = elementType->container->custom.arrayDef->baseType;
+                }
+                else
+                {
+                    // Need to create array type (T becomes T[])
+                    TypeContainer *arrayContainer = createArrayType(elementType->container, 1);
+                    arrayContainer->isGeneric = true;
+
+                    // Create array type container
+                    ArrayType *arrayType = createArrayTypeContainer(elementType, NULL, 0, 1);
+
+                    // Wrap as DataType
+                    paramType = wrapArrayType(arrayType);
+                    node->data.param->variadicElementType = elementType;
+                }
+
+                // Set the parameter type
+                node->data.param->type = paramType;
+            }
+            else if (elementType->container->isArray)
+            {
+                // Regular array type for variadic parameter
+                node->data.param->type = elementType;
+                node->data.param->variadicElementType = elementType->container->custom.arrayDef->baseType;
+            }
+            else
+            {
+                // Error: variadic parameter must have array type
+                logMessage(LMI, "ERROR", "Parser", "Variadic parameter must have array type");
+                parsingError("Variadic parameter must have array type.", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+                return NULL;
+            }
+
+            logMessage(LMI, "INFO", "Parser", "Variadic parameter type: %s", DataTypeToString(node->data.param->type));
+
             // Consume the parameter type token
             getNextToken(lexer, arena, state);
+
+            // Debug output
+            node->print(node);
 
             return node;
         }
@@ -1985,11 +2028,22 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
     consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after parameter name.", "parseParameter", arena, state, context);
 
     DataType *paramType = parseType(lexer, context, arena, state, globalTable);
+    if (!paramType)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse parameter type");
+        parsingError("Failed to parse parameter type", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
     const char *paramTypeStr = DataTypeToString(paramType);
     logMessage(LMI, "INFO", "Parser", "<!> Parameter type: %s", paramTypeStr);
-    // consume data type:
+
+    // Consume data type token
     getNextToken(lexer, arena, state);
+
+    // Create parameter node
     ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena, state, lexer);
+
     return node;
 }
 // </parseParameter>

@@ -33,6 +33,10 @@ ParsingContext *createParsingContext(void)
 
     context->isParsingIfCondition = false;
     context->isParsingModuleFile = false;
+    context->inGenericContext = false;
+
+    context->currentGenericParamCount = 0;
+    context->currentGenericParams = (GenericType **)malloc(sizeof(GenericType *) * 16);
 
     return context;
 }

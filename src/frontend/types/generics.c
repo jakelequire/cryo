@@ -15,7 +15,42 @@
  *                                                                              *
  ********************************************************************************/
 #include "frontend/dataTypes.h"
+#include "symbolTable/cInterfaceTable.h"
 #include "diagnostics/diagnostics.h"
+
+void registerGenericType(const char *name, GenericType **params, int paramCount, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
+{
+    TypeSymbol *typeSymbol = CreateTypeSymbol(globalTable, name, NULL, NULL, GENERIC_TYPE, false, true, getCurrentScopeID(context));
+    // Set up the generic parameters
+    typeSymbol->isGenericType = true;
+    typeSymbol->generics.typeParameters = (TypeSymbol **)malloc(sizeof(TypeSymbol *) * paramCount);
+    typeSymbol->generics.paramCount = paramCount;
+
+    // Convert GenericType to TypeSymbol
+    for (int i = 0; i < paramCount; i++)
+    {
+        typeSymbol->generics.typeParameters[i] = CreateTypeSymbol(globalTable,
+                                                                  params[i]->name, NULL, NULL, GENERIC_TYPE, false, true, getCurrentScopeID(context));
+    }
+
+    AddTypeToTable(globalTable, typeSymbol);
+}
+
+const char *generateGenericName(const char *name, GenericType **params, int paramCount)
+{
+    char *genericName = (char *)malloc(sizeof(char) * 128);
+    sprintf(genericName, "%s<", name);
+    for (int i = 0; i < paramCount; i++)
+    {
+        strcat(genericName, params[i]->name);
+        if (i < paramCount - 1)
+        {
+            strcat(genericName, ",");
+        }
+    }
+    strcat(genericName, ">");
+    return genericName;
+}
 
 TypeContainer *createGenericTypeContainer(void)
 {
@@ -592,4 +627,20 @@ DataType *createGenericDataTypeInstance(DataType *genericType, DataType **concre
         genericType->container);
 
     return wrapTypeContainer(container);
+}
+
+// In typeValidation.c or generics.c
+DataType *resolveGenericArrayType(DataType *genericParam, int dimensions)
+{
+    // Create a new array type based on the generic parameter
+    TypeContainer *arrayContainer = createArrayType(genericParam->container, dimensions);
+
+    // Mark it as generic
+    arrayContainer->isGeneric = true;
+
+    // Set up relationship to base generic type
+    arrayContainer->custom.generic.declaration = createGenericDeclarationContainer(
+        NULL, &genericParam, 1);
+
+    return wrapTypeContainer(arrayContainer);
 }
