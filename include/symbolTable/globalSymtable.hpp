@@ -693,6 +693,7 @@ namespace Cryo
                                      TypeofDataType typeOf, bool isStatic, bool isGeneric,
                                      const char *scopeId);
         TypeSymbol *resolveTypeByName(const char *name);
+        std::string generateGenericName(const char *functionName, const char *genericName);
 
     protected:
         //===================================================================

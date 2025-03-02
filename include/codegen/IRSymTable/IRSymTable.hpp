@@ -33,7 +33,7 @@
 
 #include "codegen/devDebugger/devDebugger.hpp"
 #include "frontend/AST.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 
 namespace Cryo
 {

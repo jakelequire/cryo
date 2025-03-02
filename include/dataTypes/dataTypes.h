@@ -14,8 +14,8 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#ifndef TYPE_TABLE_H
-#define TYPE_TABLE_H
+#ifndef DATA_TYPES_H
+#define DATA_TYPES_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -515,4 +515,4 @@ extern "C"
 }
 #endif
 
-#endif // TYPE_TABLE_H
+#endif // DATA_TYPES_H

@@ -15,7 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "diagnostics/diagnostics.h"
 
 // Create new TypeContainer

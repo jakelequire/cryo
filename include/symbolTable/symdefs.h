@@ -17,7 +17,7 @@
 #pragma once
 
 #include "frontend/AST.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 
 #define MAX_SYMBOLS 1024
 

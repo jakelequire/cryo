@@ -28,7 +28,7 @@
 #include <arpa/inet.h>
 
 #include "frontend/AST.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "tools/utils/c_logger.h"
 
 #define LSP_PORT 9000

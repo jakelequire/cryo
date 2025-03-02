@@ -30,7 +30,7 @@
 #include "tools/arena/arena.h"
 #include "tools/utils/c_logger.h"
 #include "tools/macros/consoleColors.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "common/common.h"
 #include "tools/utils/cWrappers.h"
 

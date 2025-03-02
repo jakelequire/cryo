@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "diagnostics/diagnostics.h"
 
 TypeContainer *createArrayType(TypeContainer *baseType, int dimensions)

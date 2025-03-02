@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 

@@ -32,7 +32,7 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/GlobalVariable.h"
 
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "frontend/AST.h"
 
 namespace Cryo
@@ -427,7 +427,7 @@ namespace Cryo
 
         void createAlloca(llvm::IRBuilder<> &builder);
 
-        } IRVariableSymbol;
+    } IRVariableSymbol;
 
     struct IRTypeSymbol
     {

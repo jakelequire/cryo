@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "symbolTable/cInterfaceTable.h"
 #include "diagnostics/diagnostics.h"
 

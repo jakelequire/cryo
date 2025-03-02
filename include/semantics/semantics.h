@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "frontend/AST.h"
 #include "frontend/tokens.h"
 #include "tools/utils/cWrappers.h"

@@ -18,6 +18,7 @@
 #include "frontend/AST.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
+#include "dataTypes/dataTypeManager.h"
 
 /* ====================================================================== */
 // @Global_Variables
@@ -224,7 +225,7 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Lex
     logMessage(LMI, "INFO", "AST", "Created integer literal node with value: %d", value);
 
     node->data.literal->value.intValue = value;
-    node->data.literal->type = createPrimitiveIntType();
+    node->data.literal->type = DTM->primitives->createInt();
 
     return node;
 }

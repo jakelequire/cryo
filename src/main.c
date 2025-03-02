@@ -28,6 +28,7 @@
 #include "tools/cryoconfig/cryoconfig.h"
 #include "tools/utils/buildDir.h"
 #include "tools/utils/fs.h"
+#include "dataTypes/dataTypeManager.h"
 
 #define MAX_PATH_SIZE 1024 * 10
 
@@ -37,7 +38,9 @@
     /* Initialize the global diagnostics manager */   \
     INIT_GDM();                                       \
     /* Initialize the global file system utilities */ \
-    INIT_FS();
+    INIT_FS();                                        \
+    /* Initialize the global data type manager */     \
+    INIT_DTM();
 
 #define CLEANUP_COMPILATION() \
     /* Logs Destructor */     \

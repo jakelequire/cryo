@@ -25,7 +25,7 @@
 #include "frontend/AST.h"
 #include "frontend/lexer.h"
 #include "frontend/parser.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 
 #include "tools/utils/fs.h"
 

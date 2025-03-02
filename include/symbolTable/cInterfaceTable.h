@@ -24,7 +24,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "frontend/AST.h"
 #include "symbolTable/globalSymtable.hpp"
 #include "symbolTable/symdefs.h"

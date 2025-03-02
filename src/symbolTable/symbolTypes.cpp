@@ -377,10 +377,10 @@ namespace Cryo
         return createGenericDataTypeInstance(baseType, typeArgs, argCount);
     }
 
-    void GlobalSymbolTable::registerGenericType(const char *name, GenericType **params, int paramCount, DataType *type)
+    void GlobalSymbolTable::registerGenericType(const char *functionName, GenericType **params, int paramCount, DataType *type)
     {
         __STACK_FRAME__
-        logMessage(LMI, "INFO", "Symbol Table", "Registering Generic Type", "Type Name", name);
+        logMessage(LMI, "INFO", "Symbol Table", "Registering Generic Type, Function Name: ", functionName);
 
         for (int i = 0; i < paramCount; i++)
         {
@@ -388,9 +388,44 @@ namespace Cryo
             logMessage(LMI, "INFO", "Symbol Table", "Generic Type Parameter", "Type Name", param->name);
 
             // Create a new type symbol for the generic parameter
-            TypeSymbol *typeSymbol = createTypeSymbol(param->name, nullptr, nullptr, GENERIC_TYPE, false, true, nullptr);
+            std::string genericName = generateGenericName(functionName, param->name);
+            TypeSymbol *typeSymbol = createTypeSymbol(genericName.c_str(), nullptr, type, GENERIC_TYPE, false, true, nullptr);
             addTypeToTable(typeSymbol);
         }
+    }
+
+    std::string GlobalSymbolTable::generateGenericName(const char *functionName, const char *genericName)
+    {
+        __STACK_FRAME__
+        // Validate inputs
+        if (!functionName || !genericName)
+        {
+            logMessage(LMI, "ERROR", "Symbol Table", "Invalid parameters for generateGenericName");
+            return "";
+        }
+
+        // Create a name in the format "functionName<genericName>"
+        std::string result = functionName;
+
+        // Check if the generic name already includes angle brackets (might be a nested generic)
+        bool hasAngleBrackets = (strchr(genericName, '<') != nullptr && strchr(genericName, '>') != nullptr);
+
+        // Only add angle brackets if they're not already present in the generic name
+        if (!hasAngleBrackets)
+        {
+            result += "<";
+            result += genericName;
+            result += ">";
+        }
+        else
+        {
+            // If the generic name already has angle brackets, just append it
+            result += genericName;
+        }
+
+        logMessage(LMI, "INFO", "Symbol Table", "Generated generic name: %s", result.c_str());
+
+        return result;
     }
 
     void GlobalSymbolTable::registerGenericInstantiation(const char *baseName, DataType **typeArgs, int argCount, DataType *resultType)
