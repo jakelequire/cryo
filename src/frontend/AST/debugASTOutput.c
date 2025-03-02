@@ -1200,7 +1200,7 @@ char *formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
     // <IntLiteral> [VALUE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<IntLiteral> [%i] <%i:%i>", node->nodeName, node->line, node->column);
+    sprintf(buffer, "<IntLiteral> [%s] <%i:%i>", node->nodeName, node->line, node->column);
     return buffer;
 }
 char *CONSOLE_formatIntLiteralNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -1755,7 +1755,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         case PRIM_INT:
         {
             int intValue = node->data.literal->value.intValue;
-            char *literalValue = intToSafeString(intValue);
+            printf("int value: %i\n", intValue);
+            size_t _safe_int_cpy = (size_t)malloc(sizeof(int));
+            memcpy(&_safe_int_cpy, &intValue, sizeof(int));
+            printf("safe int value: %i\n", _safe_int_cpy);
+            char *literalValue = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
+            snprintf(literalValue, BUFFER_CHAR_SIZE, "%i", intValue);
+            printf("literal value: %s\n", strdup(literalValue));
             if (literalValue == NULL)
             {
                 logMessage(LMI, "ERROR", "AST", "Failed to convert int to string");

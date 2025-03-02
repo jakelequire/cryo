@@ -772,7 +772,9 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
     {
         logMessage(LMI, "INFO", "Parser", "Parsing integer literal");
         char *intStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        node = createIntLiteralNode(atoi(intStr), arena, state, lexer);
+        int intVal = charToInt(intStr);
+        printf("Int Value: %d\n", intVal);
+        node = createIntLiteralNode(intVal, arena, state, lexer);
         getNextToken(lexer, arena, state);
         return node;
     }

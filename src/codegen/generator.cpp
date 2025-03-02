@@ -169,6 +169,7 @@ namespace Cryo
 
         assert(literalNode != nullptr);
         DevDebugger::logMessage("INFO", __LINE__, "Generator", "Literal Node Found");
+        node->print(node);
 
         DataType *dataType = literalNode->type;
         switch (dataType->container->primitive)
