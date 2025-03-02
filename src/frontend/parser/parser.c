@@ -301,6 +301,12 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     DataType *type = NULL;
     const char *typeTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
 
+    if (context->inGenericContext)
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing generic type: %s", typeTokenStr);
+        return getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
+    }
+
     switch (lexer->currentToken.type)
     {
     case TOKEN_KW_VOID:
@@ -1363,6 +1369,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
                                                       true,
                                                       functionScopeID);
             AddTypeToTable(globalTable, typeSymbol);
+            context->addGenericParam(context, genericParams[i]->name, genericParams[i]);
         }
     }
 

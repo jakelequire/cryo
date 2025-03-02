@@ -35,10 +35,28 @@ ParsingContext *createParsingContext(void)
     context->isParsingModuleFile = false;
     context->inGenericContext = false;
 
+    context->currentGenericParamCapacity = 16;
     context->currentGenericParamCount = 0;
     context->currentGenericParams = (GenericType **)malloc(sizeof(GenericType *) * 16);
 
+    context->addGenericParam = ParsingContext_addGenericParam;
+
     return context;
+}
+
+void ParsingContext_addGenericParam(ParsingContext *context, const char *name, GenericType *param)
+{
+    __STACK_FRAME__
+    if (context->currentGenericParamCount >= context->currentGenericParamCapacity)
+    {
+        context->currentGenericParamCapacity *= 2;
+        context->currentGenericParams = (GenericType **)realloc(context->currentGenericParams, sizeof(GenericType *) * context->currentGenericParamCapacity);
+    }
+
+    context->currentGenericParams[context->currentGenericParamCount] = param;
+    context->currentGenericParamCount++;
+
+    return;
 }
 
 void setDefaultThisContext(const char *currentNamespace, ParsingContext *context)

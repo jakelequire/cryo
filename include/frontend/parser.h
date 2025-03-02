@@ -113,8 +113,12 @@ typedef struct ParsingContext
     bool inGenericContext;
 
     GenericType **currentGenericParams; // Current generic parameters in scope
-    int currentGenericParamCount;       // Number of current generic parameters
+    int currentGenericParamCount;       // Number of current generic parameter
+    int currentGenericParamCapacity;    // Capacity of the current generic parameter array
+    void (*addGenericParam)(ParsingContext *context, const char *name, GenericType *param);
 } ParsingContext;
+
+void ParsingContext_addGenericParam(ParsingContext *context, const char *name, GenericType *param);
 
 /* =========================================================== */
 /* @Function_Prototypes                                        */
