@@ -21,6 +21,30 @@
 
 namespace Cryo
 {
+    TypeSymbol *GlobalSymbolTable::resolveTypeByName(const char *name)
+    {
+        __STACK_FRAME__
+        if (!name || name == nullptr)
+        {
+            return nullptr;
+        }
+
+        for (size_t i = 0; i < typeTable->count; i++)
+        {
+            if (strcmp(typeTable->typeSymbols[i]->name, name) == 0)
+            {
+                logMessage(LMI, "INFO", "Symbol Table", "Resolved Data Type", "Type Name %s", name);
+                return typeTable->typeSymbols[i];
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        return nullptr;
+    }
+
     VariableSymbol *GlobalSymbolTable::getFrontendVariableSymbol(const char *name, const char *scopeID)
     {
         __STACK_FRAME__

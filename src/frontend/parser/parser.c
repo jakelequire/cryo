@@ -1371,9 +1371,9 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
             AddTypeToTable(globalTable, typeSymbol);
             context->addGenericParam(context, genericParams[i]->name, genericParams[i]);
         }
+        DataType *genericDataType = createGenericDataType(functionName, genericParams, genericParamCount, globalTable);
+        RegisterGenericType(globalTable, functionName, genericParams, genericParamCount, genericDataType);
     }
-
-    RegisterGenericType(globalTable, functionName, genericParams, genericParamCount);
 
     ASTNode **params = parseParameterList(lexer, context, arena, strdup(functionName), state, globalTable);
 

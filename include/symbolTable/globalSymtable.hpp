@@ -80,7 +80,8 @@ extern "C"
     DataType *CryoGlobalSymbolTable_ResolveDataType(CryoGlobalSymbolTable *symTable, const char *name);
     void CryoGlobalSymbolTable_AddTypeToTable(CryoGlobalSymbolTable *symTable, TypeSymbol *typeSymbol);
     TypeSymbol *CryoGlobalSymbolTable_CreateTypeSymbol(CryoGlobalSymbolTable *symTable, const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId);
-    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount);
+    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount, DataType *type);
+    TypeSymbol *CryoGlobalSymbolTable_ResolveTypeByName(CryoGlobalSymbolTable *symTable, const char *name);
 
     void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable);
 
@@ -207,8 +208,10 @@ extern "C"
     CryoGlobalSymbolTable_AddTypeToTable(symTable, typeSymbol)
 #define CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId) \
     CryoGlobalSymbolTable_CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId)
-#define RegisterGenericType(symTable, name, params, paramCount) \
-    CryoGlobalSymbolTable_RegisterGenericType(symTable, name, params, paramCount)
+#define RegisterGenericType(symTable, name, params, paramCount, type) \
+    CryoGlobalSymbolTable_RegisterGenericType(symTable, name, params, paramCount, type)
+#define ResolveTypeByName(symTable, name) \
+    CryoGlobalSymbolTable_ResolveTypeByName(symTable, name)
 
 #define CleanupAndDestroySymbolTable(symTable) \
     CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)
@@ -528,7 +531,7 @@ namespace Cryo
         void completeTypeDefinition(Symbol *typeSymbol, const char *typeName);
 
         DataType *resolveGenericDataType(const char *baseName, DataType **typeArgs, int argCount);
-        void registerGenericType(const char *name, GenericType **params, int paramCount);
+        void registerGenericType(const char *name, GenericType **params, int paramCount, DataType *resultType);
         void registerGenericInstantiation(const char *baseName, DataType **typeArgs, int argCount, DataType *resultType);
         std::string createGenericInstantiationName(const char *baseName, DataType **typeArgs, int argCount);
 
@@ -689,6 +692,7 @@ namespace Cryo
         TypeSymbol *createTypeSymbol(const char *name, ASTNode *node, DataType *type,
                                      TypeofDataType typeOf, bool isStatic, bool isGeneric,
                                      const char *scopeId);
+        TypeSymbol *resolveTypeByName(const char *name);
 
     protected:
         //===================================================================
@@ -1081,11 +1085,11 @@ namespace Cryo
         return nullptr;
     }
 
-    inline void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount)
+    inline void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount, DataType *type)
     {
         if (symTable)
         {
-            reinterpret_cast<GlobalSymbolTable *>(symTable)->registerGenericType(name, params, paramCount);
+            reinterpret_cast<GlobalSymbolTable *>(symTable)->registerGenericType(name, params, paramCount, type);
         }
     }
 
@@ -1275,6 +1279,15 @@ namespace Cryo
         if (symTable)
         {
             return reinterpret_cast<GlobalSymbolTable *>(symTable)->getNamespace();
+        }
+        return nullptr;
+    }
+
+    inline TypeSymbol *CryoGlobalSymbolTable_ResolveTypeByName(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        if (symTable)
+        {
+            return reinterpret_cast<GlobalSymbolTable *>(symTable)->resolveTypeByName(name);
         }
         return nullptr;
     }

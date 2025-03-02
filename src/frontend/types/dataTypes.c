@@ -143,6 +143,7 @@ DataType *parseDataType(const char *typeStr, CryoGlobalSymbolTable *globalTable)
             fprintf(stderr, "[DataTypes] Error: Failed to resolve data type '%s'\n", baseTypeStr);
             free(container);
             free(baseTypeStr);
+            PrintTypeTable(globalTable);
             CONDITION_FAILED;
         }
 

@@ -48,7 +48,7 @@ namespace Cryo
         {
             if (strcmp(typeTable->typeSymbols[i]->name, baseTypeName.c_str()) == 0)
             {
-                logMessage(LMI, "INFO", "Symbol Table", "Found Base Type", "Type Name: %s", baseTypeName.c_str());
+                logMessage(LMI, "INFO", "Symbol Table", "Found Base Type, Type Name: %s", baseTypeName.c_str());
                 baseType = typeTable->typeSymbols[i]->type;
                 break;
             }
@@ -261,6 +261,7 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Symbol Table", "Added Type to Table", "Type Name", typeName,
                    "Count", std::to_string(typeTable->count).c_str());
+        printTypeTable();
     }
 
     // -------------------------------------------------------
@@ -376,17 +377,20 @@ namespace Cryo
         return createGenericDataTypeInstance(baseType, typeArgs, argCount);
     }
 
-    void GlobalSymbolTable::registerGenericType(const char *name, GenericType **params, int paramCount)
+    void GlobalSymbolTable::registerGenericType(const char *name, GenericType **params, int paramCount, DataType *type)
     {
-        TypeSymbol *symbol = createIncompleteTypeSymbol(name, GENERIC_TYPE);
-        symbol->isGenericType = true;
+        __STACK_FRAME__
+        logMessage(LMI, "INFO", "Symbol Table", "Registering Generic Type", "Type Name", name);
 
-        // Store the generic parameters
-        symbol->generics.typeParameters = (TypeSymbol **)malloc(paramCount * sizeof(TypeSymbol *));
-        symbol->generics.paramCount = paramCount;
+        for (int i = 0; i < paramCount; i++)
+        {
+            GenericType *param = params[i];
+            logMessage(LMI, "INFO", "Symbol Table", "Generic Type Parameter", "Type Name", param->name);
 
-        // Add to type table
-        addTypeToTable(symbol);
+            // Create a new type symbol for the generic parameter
+            TypeSymbol *typeSymbol = createTypeSymbol(param->name, nullptr, nullptr, GENERIC_TYPE, false, true, nullptr);
+            addTypeToTable(typeSymbol);
+        }
     }
 
     void GlobalSymbolTable::registerGenericInstantiation(const char *baseName, DataType **typeArgs, int argCount, DataType *resultType)

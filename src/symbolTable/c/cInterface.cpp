@@ -298,6 +298,16 @@ extern "C"
         return nullptr;
     }
 
+    TypeSymbol *CryoGlobalSymbolTable_ResolveTypeByName(CryoGlobalSymbolTable *symTable, const char *name)
+    {
+        __STACK_FRAME__
+        if (symTable)
+        {
+            return reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->resolveTypeByName(name);
+        }
+        return nullptr;
+    }
+
     void CryoGlobalSymbolTable_AddTypeToTable(CryoGlobalSymbolTable *symTable, TypeSymbol *typeSymbol)
     {
         __STACK_FRAME__
@@ -640,12 +650,12 @@ extern "C"
         return nullptr;
     }
 
-    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount)
+    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount, DataType *type)
     {
         __STACK_FRAME__
         if (symTable)
         {
-            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->registerGenericType(name, params, paramCount);
+            reinterpret_cast<Cryo::GlobalSymbolTable *>(symTable)->registerGenericType(name, params, paramCount, type);
         }
     }
 

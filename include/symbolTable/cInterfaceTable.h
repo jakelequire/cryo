@@ -137,8 +137,10 @@ const char *CryoGlobalSymbolTable_GetScopeID(CryoGlobalSymbolTable *symTable, co
     CryoGlobalSymbolTable_AddTypeToTable(symTable, typeSymbol)
 #define CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId) \
     CryoGlobalSymbolTable_CreateTypeSymbol(symTable, name, node, type, typeOf, isStatic, isGeneric, scopeId)
-#define RegisterGenericType(symTable, name, params, paramCount) \
-    CryoGlobalSymbolTable_RegisterGenericType(symTable, name, params, paramCount)
+#define RegisterGenericType(symTable, name, params, paramCount, type) \
+    CryoGlobalSymbolTable_RegisterGenericType(symTable, name, params, paramCount, type)
+#define ResolveTypeByName(symTable, name) \
+    CryoGlobalSymbolTable_ResolveTypeByName(symTable, name)
 
 #define CleanupAndDestroySymbolTable(symTable) \
     CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(symTable)

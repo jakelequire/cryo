@@ -397,6 +397,7 @@ extern "C"
     void registerGenericType(const char *name, GenericType **params, int paramCount, ParsingContext *context, CryoGlobalSymbolTable *globalTable);
 
     TypeContainer *createGenericTypeContainer(void);
+    DataType *createGenericDataType(const char *name, GenericType **params, int paramCount, CryoGlobalSymbolTable *globalTable);
 
     void initGenericType(GenericType *type, const char *name);
     GenericType *createGenericParameter(const char *name);
@@ -417,6 +418,7 @@ extern "C"
     bool isTypeCompatible(DataType *type, DataType *other);
 
     const char *getGenericTypeName(DataType *type);
+    const char *generateGenericName(const char *name, GenericType **params, int paramCount);
     int getGenericParameterCount(TypeContainer *type);
 
     StructType *substituteGenericType(StructType *structDef, DataType *genericParam, DataType *concreteType);

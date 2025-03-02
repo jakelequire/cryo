@@ -18,6 +18,35 @@
 #include "symbolTable/cInterfaceTable.h"
 #include "diagnostics/diagnostics.h"
 
+DataType *createGenericDataType(const char *name, GenericType **params, int paramCount, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    // Generate the generic type name
+    const char *genericName = generateGenericName(name, params, paramCount);
+
+    // Check if the generic type already exists
+    TypeSymbol *typeSymbol = ResolveTypeByName(globalTable, genericName);
+    if (typeSymbol)
+    {
+        if (typeSymbol->type != NULL)
+        {
+            return typeSymbol->type;
+        }
+    }
+
+    // Register the generic type
+    registerGenericType(genericName, params, paramCount, NULL, globalTable);
+
+    // Create a new type container for the generic type
+    TypeContainer *container = createGenericTypeContainer();
+    container->custom.generic.instantiation = createGenericInstanceContainer(NULL, (DataType **)params, paramCount, NULL);
+
+    // Wrap the type container in a DataType
+    DataType *dataType = wrapTypeContainer(container);
+
+    return dataType;
+}
+
 void registerGenericType(const char *name, GenericType **params, int paramCount, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
 {
     TypeSymbol *typeSymbol = CreateTypeSymbol(globalTable, name, NULL, NULL, GENERIC_TYPE, false, true, getCurrentScopeID(context));
