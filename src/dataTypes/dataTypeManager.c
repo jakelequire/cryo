@@ -20,9 +20,9 @@
 // This is initialized in the `main` function of the compiler.
 DataTypeManager *globalDataTypeManager = NULL;
 
-// ----------------- Data Type Manager Implementation ----------------- //
-
-// ------------------ DTM Primitives Implementation ------------------ //
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Primitive Data Types ---------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
 
 DataType *DTMPrimitives_createI8(void)
 {
@@ -133,65 +133,6 @@ DataType *DTMPrimitives_createAny(void)
     return wrapTypeContainer(container);
 }
 
-// --------------------- DTM Debug Implementation --------------------- //
-
-void DTMDebug_printDataType(DataType *type)
-{
-    if (!type)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
-        CONDITION_FAILED;
-    }
-
-    printf("Data Type: %s\n", type->container->custom.name);
-}
-
-// -------------------- Function Implementations --------------------- //
-
-void initGlobalDataTypeManagerInstance(void)
-{
-    globalDataTypeManager = createDataTypeManager();
-}
-
-DataTypeManager *createDataTypeManager(void)
-{
-    DataTypeManager *manager = (DataTypeManager *)malloc(sizeof(DataTypeManager));
-    if (!manager)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Data Type Manager\n");
-        CONDITION_FAILED;
-    }
-
-    // ===================== [ Property Assignments ] ===================== //
-
-    manager->symbolTable = createDTMSymbolTable();
-    manager->primitives = createDTMPrimitives();
-    manager->debug = createDTMDebug();
-    manager->structTypes = createDTMStructTypes();
-    manager->classTypes = createDTMClassTypes();
-    manager->functionTypes = createDTMFunctionTypes();
-    manager->generics = createDTMGenerics();
-    manager->enums = createDTMEnums();
-
-    return manager;
-}
-
-DTMDebug *createDTMDebug(void)
-{
-    DTMDebug *debug = (DTMDebug *)malloc(sizeof(DTMDebug));
-    if (!debug)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Debug\n");
-        CONDITION_FAILED;
-    }
-
-    // ==================== [ Function Assignments ] ==================== //
-
-    debug->printDataType = DTMDebug_printDataType;
-
-    return debug;
-}
-
 DTMPrimitives *createDTMPrimitives(void)
 {
     DTMPrimitives *primitives = (DTMPrimitives *)malloc(sizeof(DTMPrimitives));
@@ -219,6 +160,45 @@ DTMPrimitives *createDTMPrimitives(void)
     return primitives;
 }
 
+// --------------------------------------------------------------------------------------------------- //
+// ----------------------------------- Debugging Functions ------------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+void DTMDebug_printDataType(DataType *type)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
+        CONDITION_FAILED;
+    }
+
+    printf("Data Type: %s\n", type->container->custom.name);
+}
+
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Struct Data Types ------------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+DTMDebug *createDTMDebug(void)
+{
+    DTMDebug *debug = (DTMDebug *)malloc(sizeof(DTMDebug));
+    if (!debug)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Debug\n");
+        CONDITION_FAILED;
+    }
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    debug->printDataType = DTMDebug_printDataType;
+
+    return debug;
+}
+
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Struct Data Types ------------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
 DTMStructTypes *createDTMStructTypes(void)
 {
     DTMStructTypes *structTypes = (DTMStructTypes *)malloc(sizeof(DTMStructTypes));
@@ -232,6 +212,10 @@ DTMStructTypes *createDTMStructTypes(void)
 
     return structTypes;
 }
+
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Class Data Types -------------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
 
 DTMClassTypes *createDTMClassTypes(void)
 {
@@ -247,6 +231,10 @@ DTMClassTypes *createDTMClassTypes(void)
     return classTypes;
 }
 
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Function Data Types ----------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
 DTMFunctionTypes *createDTMFunctionTypes(void)
 {
     DTMFunctionTypes *functionTypes = (DTMFunctionTypes *)malloc(sizeof(DTMFunctionTypes));
@@ -260,6 +248,10 @@ DTMFunctionTypes *createDTMFunctionTypes(void)
 
     return functionTypes;
 }
+
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Generic Data Types ------------------------------------------ //
+// --------------------------------------------------------------------------------------------------- //
 
 DTMGenerics *createDTMGenerics(void)
 {
@@ -275,6 +267,10 @@ DTMGenerics *createDTMGenerics(void)
     return generics;
 }
 
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Enum Data Types --------------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
 DTMEnums *createDTMEnums(void)
 {
     DTMEnums *enums = (DTMEnums *)malloc(sizeof(DTMEnums));
@@ -287,4 +283,162 @@ DTMEnums *createDTMEnums(void)
     // ==================== [ Function Assignments ] ==================== //
 
     return enums;
+}
+
+// --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Symbol Table Implementation --------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *name)
+{
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        if (strcmp(table->entries[i]->name, name) == 0)
+        {
+            return table->entries[i]->type;
+        }
+    }
+
+    return NULL;
+}
+
+void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *name, DataType *type)
+{
+    if (table->entryCount >= table->entryCapacity)
+    {
+        table->resizeTable(table);
+    }
+
+    DTMSymbolTableEntry *entry = createDTMSymbolTableEntry(name, type);
+    table->entries[table->entryCount++] = entry;
+}
+
+void DTMSymbolTable_removeEntry(DTMSymbolTable *table, const char *name)
+{
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        if (strcmp(table->entries[i]->name, name) == 0)
+        {
+            free(table->entries[i]);
+            table->entries[i] = NULL;
+            table->entryCount--;
+            break;
+        }
+    }
+}
+
+void DTMSymbolTable_updateEntry(DTMSymbolTable *table, const char *name, DataType *type)
+{
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        if (strcmp(table->entries[i]->name, name) == 0)
+        {
+            table->entries[i]->type = type;
+            break;
+        }
+    }
+}
+
+void DTMSymbolTable_resizeTable(DTMSymbolTable *table)
+{
+    table->entryCapacity *= 2;
+    table->entries = (DTMSymbolTableEntry **)realloc(table->entries, sizeof(DTMSymbolTableEntry *) * table->entryCapacity);
+    if (!table->entries)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTM Symbol Table\n");
+        CONDITION_FAILED;
+    }
+}
+
+void DTMSymbolTable_printTable(DTMSymbolTable *table)
+{
+    printf("\n\n");
+    printf("=================================================================\n");
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        printf("Name: %s, Type: %s\n", table->entries[i]->name, DataTypeToString(table->entries[i]->type));
+    }
+    printf("=================================================================\n");
+}
+
+DTMSymbolTable *createDTMSymbolTable(void)
+{
+    DTMSymbolTable *symbolTable = (DTMSymbolTable *)malloc(sizeof(DTMSymbolTable));
+    if (!symbolTable)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Symbol Table\n");
+        CONDITION_FAILED;
+    }
+
+    // ==================== [ Property Assignments ] ==================== //
+
+    symbolTable->entries = (DTMSymbolTableEntry **)malloc(sizeof(DTMSymbolTableEntry *) * SYMBOL_TABLE_INITIAL_CAPACITY);
+    if (!symbolTable->entries)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Symbol Table Entries\n");
+        CONDITION_FAILED;
+    }
+
+    symbolTable->entryCount = 0;
+    symbolTable->entryCapacity = SYMBOL_TABLE_INITIAL_CAPACITY;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    symbolTable->getEntry = DTMSymbolTable_getEntry;
+    symbolTable->addEntry = DTMSymbolTable_addEntry;
+    symbolTable->removeEntry = DTMSymbolTable_removeEntry;
+    symbolTable->updateEntry = DTMSymbolTable_updateEntry;
+    symbolTable->resizeTable = DTMSymbolTable_resizeTable;
+    symbolTable->printTable = DTMSymbolTable_printTable;
+
+    return symbolTable;
+}
+
+DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
+{
+    DTMSymbolTableEntry *entry = (DTMSymbolTableEntry *)malloc(sizeof(DTMSymbolTableEntry));
+    if (!entry)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Symbol Table Entry\n");
+        CONDITION_FAILED;
+    }
+
+    // ==================== [ Property Assignments ] ==================== //
+
+    entry->name = name;
+    entry->type = type;
+
+    return entry;
+}
+
+// --------------------------------------------------------------------------------------------------- //
+// ---------------------------------- Data Type Manager Implementation ------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+void initGlobalDataTypeManagerInstance(void)
+{
+    globalDataTypeManager = createDataTypeManager();
+}
+
+DataTypeManager *createDataTypeManager(void)
+{
+    DataTypeManager *manager = (DataTypeManager *)malloc(sizeof(DataTypeManager));
+    if (!manager)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Data Type Manager\n");
+        CONDITION_FAILED;
+    }
+
+    // ===================== [ Property Assignments ] ===================== //
+
+    manager->symbolTable = createDTMSymbolTable();
+    manager->primitives = createDTMPrimitives();
+    manager->debug = createDTMDebug();
+    manager->structTypes = createDTMStructTypes();
+    manager->classTypes = createDTMClassTypes();
+    manager->functionTypes = createDTMFunctionTypes();
+    manager->generics = createDTMGenerics();
+    manager->enums = createDTMEnums();
+
+    return manager;
 }

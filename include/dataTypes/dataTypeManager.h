@@ -26,10 +26,14 @@
 
 #include "frontend/tokens.h"
 #include "frontend/AST.h"
+#include "dataTypes/dataTypes.h"
+
+#define SYMBOL_TABLE_INITIAL_CAPACITY 32
 
 // ---------------------- Forward Declarations ---------------------- //
 
 typedef struct DataTypeManager_t DataTypeManager;
+typedef struct DataType DataType;
 
 extern DataTypeManager *globalDataTypeManager;
 #define DTM globalDataTypeManager
@@ -111,9 +115,24 @@ typedef struct DTMDebug_t
 
 // ------------------------ Symbol Table Interfaces ------------------------ //
 
+typedef struct DTMSymbolTableEntry_t
+{
+    const char *name;
+    DataType *type;
+} DTMSymbolTableEntry;
+
 typedef struct DTMSymbolTable_t
 {
-    // TODO
+    DTMSymbolTableEntry **entries;
+    int entryCount;
+    int entryCapacity;
+
+    DataType *(*getEntry)(struct DTMSymbolTable_t *table, const char *name);
+    void (*addEntry)(struct DTMSymbolTable_t *table, const char *name, DataType *type);
+    void (*removeEntry)(struct DTMSymbolTable_t *table, const char *name);
+    void (*updateEntry)(struct DTMSymbolTable_t *table, const char *name, DataType *type);
+    void (*resizeTable)(struct DTMSymbolTable_t *table);
+    void (*printTable)(struct DTMSymbolTable_t *table);
 } DTMSymbolTable;
 
 // -------------------------- Data Type Manager -------------------------- //
@@ -152,8 +171,6 @@ void initGlobalDataTypeManagerInstance(void);
 // Create a new Data Type Manager instance.
 DataTypeManager *createDataTypeManager(void);
 
-DTMSymbolTable *createDTMSymbolTable(void);
-
 DTMDebug *createDTMDebug(void);
 DTMPrimitives *createDTMPrimitives(void);
 DTMStructTypes *createDTMStructTypes(void);
@@ -161,5 +178,8 @@ DTMClassTypes *createDTMClassTypes(void);
 DTMFunctionTypes *createDTMFunctionTypes(void);
 DTMGenerics *createDTMGenerics(void);
 DTMEnums *createDTMEnums(void);
+
+DTMSymbolTable *createDTMSymbolTable(void);
+DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type);
 
 #endif // DATA_TYPE_MANAGER_H
