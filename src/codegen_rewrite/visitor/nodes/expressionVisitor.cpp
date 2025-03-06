@@ -70,7 +70,7 @@ namespace Cryo
 
         // Store the generated value in the current node's context
         // This will be used by parent nodes
-        node->data.literal->value.intValue = reinterpret_cast<intptr_t>(value);
+        // node->data.literal->value.intValue = reinterpret_cast<intptr_t>(value);
     }
 
     void CodeGenVisitor::visitVarName(ASTNode *node)
@@ -127,7 +127,6 @@ namespace Cryo
         // Store the result for parent nodes
         storeValueInNode(node, result);
     }
-
 
     void CodeGenVisitor::visitFunctionCall(ASTNode *node)
     {

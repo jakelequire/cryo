@@ -177,7 +177,7 @@ int exe_single_file_build(CompilerSettings *settings)
 int exe_project_build(CompilerSettings *settings)
 {
     __STACK_FRAME__
-    char *filePath = (char *)malloc(strlen(settings->projectDir) + 16);
+    char *filePath = (char *)malloc(strlen(settings->projectDir) + 64);
     strcpy(filePath, settings->projectDir);
     strcat(filePath, "/src/main.cryo");
     if (!filePath)
@@ -235,7 +235,7 @@ int exe_project_build(CompilerSettings *settings)
     }
 
     // Outputs the SymTable into a file in the build directory.
-    initASTDebugOutput(programNode, settings);
+    initASTDebugOutput(programCopy, settings);
 
     printGlobalSymbolTable(globalSymbolTable);
 
