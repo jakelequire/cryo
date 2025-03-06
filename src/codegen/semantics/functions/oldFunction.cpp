@@ -423,7 +423,7 @@ namespace Cryo
         case NODE_LITERAL_EXPR:
         {
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Literal Expression");
-            llvm::Value *returnValue = generator.getInitilizerValue(node);
+            llvm::Value *returnValue = generator.getInitilizerValue(returnNode->expression);
             cryoContext.builder.CreateRet(returnValue);
             break;
         }

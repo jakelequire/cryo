@@ -178,6 +178,7 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "Generator", "Creating Int Constant");
             int intValue = literalNode->value.intValue;
+            std::cout << "Int Value: " << intValue << std::endl;
             llvm::Type *ty = compiler.getTypes().getType(dataType, 0);
             llvmConstant = llvm::ConstantInt::get(ty, intValue);
             std::cout << "\n";

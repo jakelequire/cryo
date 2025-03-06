@@ -766,8 +766,8 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->returnValue = NULL;
-    node->expression = NULL;
+    node->returnValue = (ASTNode *)malloc(sizeof(ASTNode));
+    node->expression = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = wrapTypeContainer(createTypeContainer());
 
     return node;

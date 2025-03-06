@@ -19,7 +19,7 @@
 
 #define AST_OUTPUT_EXT ".txt"
 #define AST_OUTPUT_FILENAME "ast_debug"
-#define AST_DEBUG_VIEW_NODE_COUNT 1024
+#define AST_DEBUG_VIEW_NODE_COUNT 1024 * 32
 #define __LINE_AND_COLUMN__          \
     int line = node->metaData->line; \
     int column = node->metaData->column;
@@ -1756,21 +1756,35 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         {
             int intValue = node->data.literal->value.intValue;
             printf("int value: %i\n", intValue);
-            size_t _safe_int_cpy = (size_t)malloc(sizeof(int));
-            memcpy(&_safe_int_cpy, &intValue, sizeof(int));
-            printf("safe int value: %i\n", _safe_int_cpy);
-            char *literalValue = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
-            snprintf(literalValue, BUFFER_CHAR_SIZE, "%i", intValue);
-            printf("literal value: %s\n", strdup(literalValue));
-            if (literalValue == NULL)
+
+            // Allocate memory for the safe copy of int
+            int *safeIntCpy = (int *)malloc(sizeof(int));
+            if (safeIntCpy == NULL)
             {
-                logMessage(LMI, "ERROR", "AST", "Failed to convert int to string");
+                logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for safe int copy");
                 return;
             }
-            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", strdup(literalValue), dataType, line, column, indentLevel, node);
+            *safeIntCpy = intValue;
+            printf("safe int value: %i\n", *safeIntCpy);
+
+            // Allocate memory for the literal value string
+            char literalValue[BUFFER_CHAR_SIZE];
+            snprintf(literalValue, BUFFER_CHAR_SIZE, "%i", intValue);
+            printf("literal value: %s\n", literalValue);
+
+            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
+            if (intLiteralNode == NULL)
+            {
+                logMessage(LMI, "ERROR", "AST", "Failed to create AST debug node");
+                free(safeIntCpy);
+                return;
+            }
+
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
-            free(literalValue);
+
+            // Free allocated memory
+            free(safeIntCpy);
             break;
         }
 
@@ -1787,7 +1801,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 logMessage(LMI, "ERROR", "AST", "Failed to convert int to string");
                 return;
             }
-            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
+            ASTDebugNode *intLiteralNode = createASTDebugNode("UniqueIntLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
             free(literalValue);
@@ -1843,7 +1857,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         output->nodes[output->nodeCount] = *returnNode;
         output->nodeCount++;
 
-        if (node->data.returnStatement->expression != NULL)
+        if (node->data.returnStatement->returnValue != NULL)
         {
             ASTNode *expr = node->data.returnStatement->expression;
             createASTDebugView(expr, output, indentLevel + 1);
@@ -2125,8 +2139,10 @@ char *ASTNodeValueBuffer(ASTNode *node)
         case PRIM_INT:
         {
             char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
-            sprintf(buffer, "%d", node->data.literal->value.intValue);
-            return buffer;
+            sprintf(buffer, "%s", node->data.literal->value.intValue);
+            char *copyBuffer = strdup(buffer);
+            free(buffer);
+            return copyBuffer;
         }
         case PRIM_FLOAT:
         {

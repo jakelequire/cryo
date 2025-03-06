@@ -1865,18 +1865,30 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
         logMessage(LMI, "INFO", "Parser", "Return expression: %s", CryoNodeTypeToString(expression->metaData->type));
         if (expression->metaData->type == NODE_LITERAL_EXPR)
         {
+            logMessage(LMI, "INFO", "Parser", "Return Expression: Literal");
+            expression->print(expression);
+            expression->print(expression);
             returnType = expression->data.literal->type;
             logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
         }
-        if (expression->metaData->type == NODE_BINARY_EXPR)
+        else if (expression->metaData->type == NODE_BINARY_EXPR)
         {
+            logMessage(LMI, "INFO", "Parser", "Return Expression: Binary");
+            expression->print(expression);
             returnType = createPrimitiveIntType();
             logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
         }
-        if (expression->metaData->type == NODE_FUNCTION_CALL)
+        else if (expression->metaData->type == NODE_FUNCTION_CALL)
         {
+            logMessage(LMI, "INFO", "Parser", "Return Expression: Function Call");
+            expression->print(expression);
             returnType = expression->data.functionCall->returnType;
             logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Invalid return expression.");
+            DEBUG_BREAKPOINT;
         }
     }
     else
