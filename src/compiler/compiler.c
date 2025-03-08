@@ -208,6 +208,7 @@ int exe_project_build(CompilerSettings *settings)
     Lexer lexer;
     CompilerState *state;
     INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
+    state->setFilePath(state, filePath);
 
     // Initialize the parser
     ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);

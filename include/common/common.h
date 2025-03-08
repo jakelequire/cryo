@@ -87,16 +87,15 @@ typedef struct CompilerState
     CryoGlobalSymbolTable *globalTable;
 
     const char *fileName;
+    const char *filePath;
     int lineNumber;
     int columnNumber;
     bool isActiveBuild;
     bool isModuleFile;
     int errorCount;
 
-    // Functions for debugging
-    void (*errorReport)(struct CompilerState);
-    void (*logCompilerError)(CompilerError *);
-    void (*dumpCompilerState)(struct CompilerState);
+    void (*setFilePath)(struct CompilerState *state, const char *filePath);
+    const char *(*getFilePath)(struct CompilerState *state);
 } CompilerState;
 
 #define GET_SOURCE_INFO \

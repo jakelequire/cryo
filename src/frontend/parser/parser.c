@@ -494,7 +494,7 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         return parseForLoop(lexer, context, arena, state, globalTable);
 
     case TOKEN_KW_IMPORT:
-        return parseImport(lexer, context, arena, state, globalTable);
+        return handleImportParsing(lexer, context, arena, state, globalTable);
 
     case TOKEN_KW_EXTERN:
         return parseExtern(lexer, context, arena, state, globalTable);
@@ -2640,58 +2640,6 @@ void addParameterToExternDecl(ASTNode *externDeclNode, ASTNode *param, Arena *ar
 
 /* ====================================================================== */
 /* @ASTNode_Parsing - Modules & Externals                                 */
-
-// <parseImport>
-ASTNode *parseImport(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
-{
-    __STACK_FRAME__
-    logMessage(LMI, "INFO", "Parser", "Parsing import...");
-    consume(__LINE__, lexer, TOKEN_KW_IMPORT, "Expected `import` keyword.", "parseImport", arena, state, context);
-
-    if (lexer->currentToken.type != TOKEN_IDENTIFIER)
-    {
-        parsingError("Expected an identifier.", "parseImport", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
-    }
-
-    char *moduleName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseImport", arena, state, context);
-
-    if (lexer->currentToken.type == TOKEN_DOUBLE_COLON)
-    {
-        getNextToken(lexer, arena, state);
-        if (lexer->currentToken.type != TOKEN_IDENTIFIER)
-        {
-            parsingError("Expected an identifier.", "parseImport", arena, state, lexer, lexer->source, globalTable);
-            CONDITION_FAILED;
-        }
-
-        char *subModuleName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseImport", arena, state, context);
-
-        ASTNode *importNode = createImportNode(strdup(moduleName), strdup(subModuleName), arena, state, lexer);
-        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", arena, state, context);
-
-        if (strcmp(strdup(moduleName), "std") == 0)
-        {
-            importNode->data.import->isStdModule = true;
-        }
-
-        (importNode, arena);
-        return importNode;
-    }
-
-    ASTNode *importNode = createImportNode(moduleName, NULL, arena, state, lexer);
-    (importNode, arena);
-    if (strcmp(moduleName, "std") == 0)
-    {
-        importNode->data.import->isStdModule = true;
-    }
-
-    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImport", arena, state, context);
-    return importNode;
-}
-// </parseImport>
 
 // <importTypeDefinitions>
 void importTypeDefinitions(const char *module, const char *subModule, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)

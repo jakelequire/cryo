@@ -2139,7 +2139,15 @@ char *ASTNodeValueBuffer(ASTNode *node)
         case PRIM_INT:
         {
             char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
-            sprintf(buffer, "%s", node->data.literal->value.intValue);
+            if (!buffer)
+            {
+                logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for buffer");
+                return NULL;
+            }
+            int intValue = node->data.literal->value.intValue;
+            printf("int value: %i\n", intValue);
+            strcat(buffer, intToSafeString(intValue));
+
             char *copyBuffer = strdup(buffer);
             free(buffer);
             return copyBuffer;

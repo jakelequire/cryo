@@ -197,7 +197,6 @@ void addParameterToExternDecl(ASTNode *externDeclNode, ASTNode *param, Arena *ar
 void validateParameterList(ASTNode **params, int paramCount, Arena *arena, CompilerState *state);
 
 /* @ASTNode_Parsing - Modules & Externals */
-ASTNode *parseImport(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 void importTypeDefinitions(const char *module, const char *subModule, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseExtern(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
@@ -392,6 +391,14 @@ int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlo
 const char *getModuleFile(const char **dirList, const char *moduleName);
 const char **getDirFileList(const char *dir);
 bool isValidCryoFile(const char *fileName);
+
+// # =========================================================================== #
+// # `import` Keyword Parsing
+// # =========================================================================== #
+
+ASTNode *handleImportParsing(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+ASTNode *handleRelativeImport(const char *modulePath,
+                              Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 // # =========================================================================== #
 // # Generic Type Parsing

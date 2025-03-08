@@ -16,8 +16,15 @@
  ********************************************************************************/
 #include "common/common.h"
 
-// -------------------------------------------------------------------
-// @Compiler Errors
+void CompilerState_setFilePath(CompilerState *state, const char *filePath)
+{
+    state->filePath = filePath;
+}
+
+const char *CompilerState_getFilePath(CompilerState *state)
+{
+    return state->filePath;
+}
 
 CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileName)
 {
@@ -26,7 +33,9 @@ CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileNam
     state->lexer = lexer;
     state->programNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     state->currentNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+
     state->fileName = fileName;
+    state->filePath = NULL;
     state->lineNumber = 0;
     state->columnNumber = 0;
     state->errorCount = 0;
@@ -36,6 +45,11 @@ CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileNam
 
     state->isActiveBuild = false;
     state->isModuleFile = false;
+
+    // =================================
+    // Functions
+    state->setFilePath = CompilerState_setFilePath;
+    state->getFilePath = CompilerState_getFilePath;
 
     logMessage(LMI, "INFO", "CompilerState", "Compiler state initialized");
     return state;

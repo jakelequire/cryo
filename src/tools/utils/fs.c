@@ -59,6 +59,8 @@ jFS *initFS(void)
     fs->cleanFilePath = cleanFilePath;
     fs->getFileName = getFileName;
     fs->getFileExt = getFileExt;
+    fs->getRealPath = getRealPath;
+    fs->trimStringQuotes = trimStringQuotes;
     return fs;
 }
 
@@ -913,4 +915,76 @@ const char *getFileExt(const char *file)
 {
     const char *lastDot = strrchr(file, '.');
     return lastDot ? lastDot + 1 : NULL;
+}
+
+const char *getRealPath(const char *path)
+{
+    printf("Getting real path for: %s\n", path);
+    char *realPath = realpath(path, NULL);
+    if (!realPath)
+    {
+        switch (errno)
+        {
+        case EACCES:
+            logMessage(LMI, "ERROR", "FS", "Permission denied while getting real path for: %s", path);
+            break;
+        case EINVAL:
+            logMessage(LMI, "ERROR", "FS", "Invalid path: %s", path);
+            break;
+        case EIO:
+            logMessage(LMI, "ERROR", "FS", "I/O error occurred while getting real path for: %s", path);
+            break;
+        case ELOOP:
+            logMessage(LMI, "ERROR", "FS", "Too many symbolic links encountered while getting real path for: %s", path);
+            break;
+        case ENAMETOOLONG:
+            logMessage(LMI, "ERROR", "FS", "Path name too long: %s", path);
+            break;
+        case ENOENT:
+            logMessage(LMI, "ERROR", "FS", "Path does not exist: %s", path);
+            break;
+        case ENOMEM:
+            logMessage(LMI, "ERROR", "FS", "Out of memory while getting real path for: %s", path);
+            break;
+        case ENOTDIR:
+            logMessage(LMI, "ERROR", "FS", "A component of the path is not a directory: %s", path);
+            break;
+        default:
+            logMessage(LMI, "ERROR", "FS", "Unknown error occurred while getting real path for: %s", path);
+            break;
+        }
+        return NULL;
+    }
+
+    return realPath;
+}
+
+// Removes " from the beginning and end of a string
+const char *trimStringQuotes(const char *str)
+{
+    if (!str)
+    {
+        return NULL;
+    }
+
+    size_t len = strlen(str);
+    if (len < 2)
+    {
+        return str;
+    }
+
+    if (str[0] == '"' && str[len - 1] == '"')
+    {
+        char *trimmed = (char *)malloc(len - 1);
+        if (!trimmed)
+        {
+            return NULL;
+        }
+
+        strncpy(trimmed, str + 1, len - 2);
+        trimmed[len - 2] = '\0';
+        return trimmed;
+    }
+
+    return str;
 }
