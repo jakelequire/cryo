@@ -1794,6 +1794,13 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
                 break;
             }
 
+            case TOKEN_SEMICOLON:
+            {
+                consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after function call.",
+                        "parseFunctionCall", arena, state, context);
+                break;
+            }
+
             default:
             {
                 const char *tokenStr = CryoTokenToString(token);
@@ -1823,8 +1830,12 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     // Final tokens
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected ')' after arguments.",
             "parseFunctionCall", arena, state, context);
-    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after function call.",
-            "parseFunctionCall", arena, state, context);
+
+    if (lexer->currentToken.type == TOKEN_SEMICOLON)
+    {
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after function call.",
+                "parseFunctionCall", arena, state, context);
+    }
 
     // Validate argument count
     if (functionCallNode->data.functionCall->argCount != _paramCount)

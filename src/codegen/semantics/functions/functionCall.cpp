@@ -254,6 +254,22 @@ namespace Cryo
                 argValues.push_back(argNode);
                 break;
             }
+            case NODE_FUNCTION_CALL:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Argument is a function call");
+                ASTNode *funcNode = argNode;
+                assert(funcNode != nullptr);
+
+                llvm::Value *argNode = createFunctionCall(funcNode);
+                if (!argNode)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Argument value not found");
+                    CONDITION_FAILED;
+                }
+
+                argValues.push_back(argNode);
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown argument type");
