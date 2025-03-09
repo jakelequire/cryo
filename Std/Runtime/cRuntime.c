@@ -84,8 +84,8 @@ void __c_memset(void *ptr, int value, size_t num)
 
 void *__c_malloc(size_t size)
 {
-    printf("Allocating %ld bytes\n", size);
     void *ptr = (void *)malloc(size);
+    printf("[DEBUG] Malloc Addr: \t%p | Size: %ld\n", ptr, size);
     return ptr;
 }
 

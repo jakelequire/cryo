@@ -585,6 +585,12 @@ DataType *getDataTypeFromASTNode(ASTNode *node)
         // TODO: Implement type checking for binary expressions
         return lhsType;
     }
+    case NODE_UNARY_EXPR:
+    {
+        logMessage(LMI, "INFO", "DataTypes", "Getting data type from unary expression");
+        ASTNode *operand = node->data.unary_op->operand;
+        return getDataTypeFromASTNode(operand);
+    }
     default:
         logMessage(LMI, "ERROR", "DataTypes", "Failed to get data type from AST node, received node type: %s",
                    CryoNodeTypeToString(node->metaData->type));

@@ -91,6 +91,7 @@ namespace Cryo
     class ErrorHandler;
     class Classes;
     class Objects;
+    class UnaryExpressions;
 
 #define DUMP_COMPILER_STATE                            \
     CompilerState state = compiler.getCompilerState(); \
@@ -199,6 +200,7 @@ namespace Cryo
         ErrorHandler &getErrorHandler() { return *errorHandler; }
         Classes &getClasses() { return *classes; }
         Objects &getObjects() { return *objects; }
+        UnaryExpressions &getUnaryExpressions() { return *unaryExpressions; }
 
         llvm::Module &getModule() { return *CryoContext::getInstance().module; }
 
@@ -244,6 +246,7 @@ namespace Cryo
         std::unique_ptr<ErrorHandler> errorHandler;
         std::unique_ptr<Classes> classes;
         std::unique_ptr<Objects> objects;
+        std::unique_ptr<UnaryExpressions> unaryExpressions;
     };
 
     /**
@@ -864,6 +867,30 @@ namespace Cryo
     };
 
     // -----------------------------------------------------------------------------------------------
+
+    class UnaryExpressions
+    {
+    public:
+        UnaryExpressions(CryoCompiler &compiler) : compiler(compiler) {}
+
+        // Prototypes
+
+        /**
+         * @brief Handles unary expressions in the AST.
+         */
+        llvm::Value *handleUnaryExpression(ASTNode *node);
+
+        /**
+         * @brief Creates a unary expression in the IR.
+         */
+        llvm::Value *createUnaryExpression(ASTNode *node);
+
+    private:
+        CryoCompiler &compiler;
+    };
+
+    // -----------------------------------------------------------------------------------------------
+
     inline CryoCompiler::CryoCompiler()
         : context(CryoContext::getInstance()),
           codeGen(std::make_unique<CodeGen>(*this)),
@@ -882,6 +909,7 @@ namespace Cryo
           errorHandler(std::make_unique<ErrorHandler>(*this)),
           classes(std::make_unique<Classes>(*this)),
           objects(std::make_unique<Objects>(*this)),
+          unaryExpressions(std::make_unique<UnaryExpressions>(*this)),
           symTable(std::make_unique<IRSymTable>())
     {
         context.initializeContext();

@@ -361,6 +361,12 @@ namespace Cryo
             llvmValue = llvm::ConstantInt::get(llvm::Type::getInt1Ty(cryoContext.context), boolValue, true);
             break;
         }
+        case NODE_UNARY_EXPR:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Unary Expression");
+            llvmValue = compiler.getUnaryExpressions().handleUnaryExpression(node);
+            break;
+        }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown node type");
             std::cout << "Received: " << CryoNodeTypeToString(nodeType) << std::endl;

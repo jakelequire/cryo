@@ -609,9 +609,49 @@ namespace Cryo
 
                 break;
             }
+            case PRIM_ANY:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating Any Variable");
+                llvmValue = compiler.getContext().namedValues[refVarName];
+                if (!llvmValue)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                    CONDITION_FAILED;
+                }
+
+                STVariable *var = symTable.getVariable(namespaceName, refVarName);
+                if (!var)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable not found");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Value *ST_Value = var->LLVMValue;
+                if (!ST_Value)
+                {
+                    DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Variable value not found");
+                    CONDITION_FAILED;
+                }
+
+                llvm::Type *storeType = compiler.getContext().builder.getPtrTy();
+
+                llvm::Value *ptrValue = compiler.getContext().builder.CreateAlloca(storeType, nullptr, varName);
+                llvm::LoadInst *loadValue = compiler.getContext().builder.CreateLoad(storeType, llvmValue, varName + ".load.var");
+                llvm::StoreInst *storeValue = compiler.getContext().builder.CreateStore(loadValue, ptrValue);
+                storeValue->setAlignment(llvm::Align(8));
+
+                // Add the variable to the named values map & symbol table
+                compiler.getContext().addNamedValue(varName, ptrValue);
+                symTable.updateVariableNode(namespaceName, varName, ptrValue, storeType);
+                symTable.addLoadInstToVar(namespaceName, varName, loadValue);
+
+                break;
+            }
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
+                std::string _dataTypeStr = VerboseDataTypeToString(nodeDataType);
+                std::cout << "Data Type: " << _dataTypeStr << std::endl;
                 CONDITION_FAILED;
             }
             }
@@ -959,6 +999,7 @@ namespace Cryo
 
         // Add the variable to the named values map & symbol table
         compiler.getContext().addNamedValue(varName, varValue);
+        compiler.getContext().printNamedValues();
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Updating Symbol Table with Function Call for: " + varName);
         symTable.updateVariableNode(moduleName, varName, varValue, varType);
         symTable.addStoreInstToVar(moduleName, varName, storeInst);

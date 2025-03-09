@@ -828,6 +828,8 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
     case TOKEN_DECREMENT:
     case TOKEN_MINUS:
     case TOKEN_BANG:
+    case TOKEN_STAR:
+    case TOKEN_AMPERSAND:
     {
         logMessage(LMI, "INFO", "Parser", "Parsing unary expression");
         return parseUnaryExpression(lexer, context, arena, state, globalTable);

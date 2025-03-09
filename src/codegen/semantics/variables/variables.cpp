@@ -81,6 +81,8 @@ namespace Cryo
         // Get the new value
         ASTNode *newValue = node->data.varReassignment->newVarNode;
         CryoNodeType newVarType = newValue->metaData->type;
+        DataType *newVarDataType = nullptr;
+
         switch (newVarType)
         {
         case NODE_LITERAL_EXPR:
@@ -92,6 +94,16 @@ namespace Cryo
                 DevDebugger::logMessage("ERROR", __LINE__, "Variables", "New Variable value not found");
                 CONDITION_FAILED;
             }
+
+            DataType *literalType = getDataTypeFromASTNode(newValue);
+            if (!literalType)
+            {
+                DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Literal Type not found");
+                CONDITION_FAILED;
+            }
+
+            // Check if the types are the same
+            newVarDataType = literalType;
 
             // Store the new value in the existing variable
             compiler.getContext().builder.CreateStore(newVarValue, varValue);
@@ -160,6 +172,11 @@ namespace Cryo
             break;
         }
         }
+
+        // Set the new data type
+        symTable.addDataTypeToVar(currentModuleName, existingVarName, newVarDataType);
+        // Override the AST Node Data Type with the new data type
+        node->data.varReassignment->existingVarNode->data.varDecl->type = newVarDataType;
 
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Reassignment Handled");
 
@@ -267,6 +284,11 @@ namespace Cryo
                 compiler.getContext().namedValues[varName] = var;
             }
         }
+
+        // Add the variable to the named values map & symbol table
+        compiler.getContext().addNamedValue(varName, llvmValue);
+        compiler.getContext().printNamedValues();
+
         DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable Created");
 
         return;
@@ -486,11 +508,14 @@ namespace Cryo
                 std::string refVarName = std::string(initializer->data.varName->varName);
                 VariableNameNode *varNameNode = initializer->data.varName;
                 initValue = createVarNameInitializer(varNameNode, varDeclName, refVarName);
+                break;
             }
 
             case NODE_ARRAY_LITERAL:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating array variable");
+                initializer->print(initializer);
+
                 initValue = compiler.getArrays().createArrayLiteral(initializer->data.array, varName);
                 break;
             }
@@ -535,6 +560,13 @@ namespace Cryo
                 break;
             }
 
+            case NODE_UNARY_EXPR:
+            {
+                DevDebugger::logMessage("INFO", __LINE__, "Variables", "Creating unary expression variable");
+                initValue = compiler.getUnaryExpressions().createUnaryExpression(initializer);
+                break;
+            }
+
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Variables",
@@ -555,6 +587,8 @@ namespace Cryo
             namespaceName, varName, node);
         compiler.getSymTable().updateVariableNode(
             namespaceName, varName, initValue, llvmType);
+
+        compiler.getContext().addNamedValue(varName, initValue);
 
         if (node->data.varDecl->initializer)
         {
