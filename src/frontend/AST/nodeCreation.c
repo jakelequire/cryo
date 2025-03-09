@@ -177,6 +177,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     case NODE_MODULE:
         node->data.moduleNode = createModuleNodeContainer(arena, state);
         break;
+    case NODE_ANNOTATION:
+        node->data.annotation = createAnnotationNodeContainer(arena, state);
+        break;
     default:
         logMessage(LMI, "ERROR", "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
         return NULL;

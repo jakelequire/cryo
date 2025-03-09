@@ -77,7 +77,6 @@ extern int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *st
         printGlobalSymbolTable(globalSymbolTable);                                                            \
         linker = CreateCryoLinker(buildDir);                                                                  \
         arena = createArena(ARENA_SIZE, ALIGNMENT);                                                           \
-        boostrapRuntimeDefinitions(globalSymbolTable, linker);                                                \
         printGlobalSymbolTable(globalSymbolTable);                                                            \
         setPrimaryTableStatus(globalSymbolTable, true);                                                       \
         lexer = (Lexer){};                                                                                    \

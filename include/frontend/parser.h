@@ -132,6 +132,8 @@ void printLine(const char *source, int line, Arena *arena, CompilerState *state)
 /* @Entry_Point | Lexer passes tokens to the entry point to be processed. */
 ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
+ASTNode *parseAnnotation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
 /* @Helper_Functions | Debugging, Errors, Walkers */
 void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, Arena *arena, CompilerState *state, ParsingContext *context);
 void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state);

@@ -65,7 +65,6 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
         ASTNode *statement = parseStatement(lexer, context, arena, state, globalTable);
         if (statement)
         {
-            // traverseAST(statement, table);
             addStatementToProgram(program, statement, arena, state, globalTable);
             logMessage(LMI, "INFO", "Parser", "Statement parsed successfully");
 
@@ -545,6 +544,9 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     case TOKEN_KW_WHILE:
         return parseWhileStatement(lexer, context, arena, state, globalTable);
 
+    case TOKEN_AT:
+        return parseAnnotation(lexer, context, arena, state, globalTable);
+
     case TOKEN_EOF:
         return NULL;
 
@@ -554,6 +556,38 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     }
 }
 // </parseStatement>
+
+ASTNode *parseAnnotation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing annotation...");
+    switch (lexer->currentToken.type)
+    {
+    case TOKEN_AT:
+    {
+        consume(__LINE__, lexer, TOKEN_AT, "Expected '@' symbol", "parseAnnotation", arena, state, context);
+        char *annotationName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+
+        getNextToken(lexer, arena, state);
+
+        char *annotationValue = NULL;
+        if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
+        {
+            annotationValue = strndup(lexer->currentToken.start, lexer->currentToken.length);
+            getNextToken(lexer, arena, state);
+        }
+
+        return createAnnotationNode(annotationName, annotationValue, arena, state, lexer);
+    }
+    default:
+    {
+        parsingError("Expected '@' symbol", "parseAnnotation", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+    }
+
+    return NULL;
+}
 
 ASTNode *parseStaticKeyword(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {

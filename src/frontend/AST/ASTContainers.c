@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "frontend/AST.h"
 #include "diagnostics/diagnostics.h"
+#include "dataTypes/dataTypeManager.h"
 
 /// ---
 /// ### Structure
@@ -1559,6 +1560,22 @@ ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state)
     node->moduleDir = (char *)calloc(1, sizeof(char));
     node->modulePath = (char *)calloc(1, sizeof(char));
     node->moduleFile = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    AnnotationNode *node = (AnnotationNode *)ARENA_ALLOC(arena, sizeof(AnnotationNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate AnnotationNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->value = (char *)calloc(1, sizeof(char));
 
     return node;
 }

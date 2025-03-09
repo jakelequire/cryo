@@ -133,6 +133,24 @@ DataType *DTMPrimitives_createAny(void)
     return wrapTypeContainer(container);
 }
 
+DataType *DTMPrimitives_createUndefined(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_UNDEFINED;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *DTMPrimitives_createAutoTy(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->baseType = PRIMITIVE_TYPE;
+    container->primitive = PRIM_AUTO;
+
+    return wrapTypeContainer(container);
+}
+
 DTMPrimitives *createDTMPrimitives(void)
 {
     DTMPrimitives *primitives = (DTMPrimitives *)malloc(sizeof(DTMPrimitives));
@@ -156,6 +174,8 @@ DTMPrimitives *createDTMPrimitives(void)
     primitives->createVoid = DTMPrimitives_createVoid;
     primitives->createNull = DTMPrimitives_createNull;
     primitives->createAny = DTMPrimitives_createAny;
+    primitives->createUndefined = DTMPrimitives_createUndefined;
+    primitives->createAutoTy = DTMPrimitives_createAutoTy;
 
     return primitives;
 }
@@ -420,6 +440,11 @@ void initGlobalDataTypeManagerInstance(void)
     globalDataTypeManager = createDataTypeManager();
 }
 
+void DataTypeManager_initDefinitions(void)
+{
+    return;
+}
+
 DataTypeManager *createDataTypeManager(void)
 {
     DataTypeManager *manager = (DataTypeManager *)malloc(sizeof(DataTypeManager));
@@ -439,6 +464,10 @@ DataTypeManager *createDataTypeManager(void)
     manager->functionTypes = createDTMFunctionTypes();
     manager->generics = createDTMGenerics();
     manager->enums = createDTMEnums();
+
+    // ===================== [ Function Assignments ] ===================== //
+
+    manager->initDefinitions = DataTypeManager_initDefinitions;
 
     return manager;
 }

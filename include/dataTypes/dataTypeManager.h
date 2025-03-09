@@ -57,6 +57,8 @@ typedef struct DTMPrimitives_t
     DataType *(*createVoid)(void);      // type `void` is a void type
     DataType *(*createNull)(void);      // type `null` is a null type
     DataType *(*createAny)(void);       // type `any` is equivalent to `void *`
+    DataType *(*createUndefined)(void); // type `undefined` is an undefined type
+    DataType *(*createAutoTy)(void);    // type `auto` is an auto type
 } DTMPrimitives;
 
 // ----------------------- Struct Data Type Interface ------------------------ //
@@ -83,7 +85,7 @@ typedef struct DTMClassTypes_t
 // This is used to create function data types such as `function (...) -> ...`.
 typedef struct DTMFunctionTypes_t
 {
-    // TODO
+    DataType *(*createFunctionTemplate)(void);
 } DTMFunctionTypes;
 
 // ---------------------- Generics Data Type Interface ---------------------- //
@@ -159,6 +161,11 @@ typedef struct DataTypeManager_t
 
     // Handles all debugging functions for the Data Type Manager.
     DTMDebug *debug;
+
+    // -----------------------------
+    // Function Prototypes
+
+    void (*initDefinitions)(void);
 } DataTypeManager;
 
 // ------------------------ Function Prototypes ------------------------- //

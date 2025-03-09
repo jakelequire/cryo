@@ -76,8 +76,12 @@ char *PrimitiveDataTypeToString(PrimitiveDataType type)
         return LIGHT_CYAN BOLD "null" COLOR_RESET;
     case PRIM_ANY:
         return LIGHT_CYAN BOLD "any" COLOR_RESET;
-    case PRIM_CUSTOM:
-        return LIGHT_CYAN BOLD "Custom Type" COLOR_RESET;
+    case PRIM_OBJECT:
+        return LIGHT_CYAN BOLD "Object" COLOR_RESET;
+    case PRIM_AUTO:
+        return LIGHT_CYAN BOLD "auto" COLOR_RESET;
+    case PRIM_UNDEFINED:
+        return LIGHT_CYAN BOLD "undefined" COLOR_RESET;
     case PRIM_UNKNOWN:
         return LIGHT_RED BOLD "<UNKNOWN>" COLOR_RESET;
     default:
@@ -117,12 +121,16 @@ char *PrimitiveDataTypeToString_UF(PrimitiveDataType type)
         return "null";
     case PRIM_ANY:
         return "any";
-    case PRIM_CUSTOM:
-        return "Custom Type";
+    case PRIM_OBJECT:
+        return "Object";
+    case PRIM_AUTO:
+        return "auto";
+    case PRIM_UNDEFINED:
+        return "undefined";
     case PRIM_UNKNOWN:
         return "<UNKNOWN>";
     default:
-        return "<PRIMITIVE UNKNOWN>";
+        return "<PRIMITIVE ERROR>";
     }
 
     return "<UNKNOWN>";

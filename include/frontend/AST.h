@@ -577,6 +577,12 @@ typedef struct ModuleNode
     const char *moduleFile;
 } ModuleNode;
 
+typedef struct AnnotationNode
+{
+    const char *name;
+    const char *value;
+} AnnotationNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -674,6 +680,10 @@ typedef struct ASTNode
         UsingNode *usingNode;
         // For Module Declarations
         ModuleNode *moduleNode;
+        // For Annotations
+        AnnotationNode *annotation;
+
+        void *discard;
     } data;
 
     _NEW_METHOD(void, print, struct ASTNode *self);
@@ -1087,6 +1097,8 @@ extern "C"
     ASTNode *createModuleNode(const char *moduleName,
                               Arena *arena, CompilerState *state, Lexer *lexer);
 
+    ASTNode *createAnnotationNode(const char *annotationName, const char *annotationValue,
+                                  Arena *arena, CompilerState *state, Lexer *lexer);
     /**
      * String Utility Functions
      */
@@ -1149,6 +1161,7 @@ NullNode *createNullNodeContainer(Arena *arena, CompilerState *state);
 TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state);
 UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state);
 ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state);
+AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

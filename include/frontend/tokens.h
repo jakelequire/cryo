@@ -167,7 +167,9 @@ extern "C"
         TOKEN_KW_CONSTRUCTOR,  // `constructor`
         TOKEN_KW_THIS,         // `this`
         TOKEN_KW_USING,        // `using`
-                               // Add more keywords as needed
+        TOKEN_KW_AUTO,         // `auto`
+        TOKEN_KW_UNDEFINED,    // `undefined`
+        TOKEN_KW_PRAGMA,       // `pragma`
 
         // Operators and punctuations
         TOKEN_BANG,           // `!`
@@ -319,7 +321,8 @@ extern "C"
         NODE_TYPEOF,               // 52
         NODE_USING,                // 53
         NODE_MODULE,               // 54
-        NODE_UNKNOWN,              // 55
+        NODE_ANNOTATION,           // 55
+        NODE_UNKNOWN,              // 56
     } CryoNodeType;
 
     typedef enum CryoVisibilityType

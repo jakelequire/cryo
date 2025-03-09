@@ -1195,3 +1195,19 @@ ASTNode *createModuleNode(const char *moduleName, Arena *arena, CompilerState *s
 
     return node;
 }
+
+ASTNode *createAnnotationNode(const char *annotationName, const char *annotationValue, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_ANNOTATION, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create annotation node");
+        return NULL;
+    }
+
+    node->data.annotation->name = strdup(annotationName);
+    node->data.annotation->value = strdup(annotationValue);
+
+    return node;
+}

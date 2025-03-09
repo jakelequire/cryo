@@ -70,7 +70,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
     }
     classNode->data.classNode->type = classType;
     classNode->data.classNode->type->container->custom.name = strdup(className);
-    classNode->data.classNode->type->container->primitive = PRIM_CUSTOM;
+    classNode->data.classNode->type->container->primitive = PRIM_OBJECT;
     classNode->data.classNode->type->container->custom.classDef->classNode = classNode;
 
     CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table

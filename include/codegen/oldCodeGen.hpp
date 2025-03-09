@@ -873,8 +873,6 @@ namespace Cryo
     public:
         UnaryExpressions(CryoCompiler &compiler) : compiler(compiler) {}
 
-        // Prototypes
-
         /**
          * @brief Handles unary expressions in the AST.
          */

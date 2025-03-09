@@ -210,6 +210,12 @@ int exe_project_build(CompilerSettings *settings)
     INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
     state->setFilePath(state, filePath);
 
+    // Initialize the Type Definitions before parsing
+    DTM->initDefinitions();
+
+    // Initialize runtime definitions
+    boostrapRuntimeDefinitions(globalSymbolTable, linker);
+
     // Initialize the parser
     ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
     if (programNode == NULL)

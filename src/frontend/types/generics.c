@@ -92,7 +92,7 @@ TypeContainer *createGenericTypeContainer(void)
     }
 
     container->baseType = GENERIC_TYPE;
-    container->primitive = PRIM_CUSTOM;
+    container->primitive = PRIM_OBJECT;
     container->size = 0;
     container->length = 0;
     container->isArray = false;

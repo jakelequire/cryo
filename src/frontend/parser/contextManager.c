@@ -125,8 +125,14 @@ void resetCurrentFunction(ParsingContext *context)
 const char *getCurrentScopeID(ParsingContext *context)
 {
     __STACK_FRAME__
+    if (!context)
+    {
+        fprintf(stderr, "getCurrentScopeID: Parsing Context is NULL\n");
+        return NULL;
+    }
     if (context->scopeContext)
     {
+        logMessage(LMI, "INFO", "Parser", "Scope ID: %s", context->scopeContext->scopeID);
         return context->scopeContext->scopeID;
     }
 

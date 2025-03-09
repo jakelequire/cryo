@@ -210,7 +210,7 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
                                                             methods, methodCount,
                                                             state);
     structNode->data.structNode->type = structDataType;
-    structNode->data.structNode->type->container->primitive = PRIM_CUSTOM;
+    structNode->data.structNode->type->container->primitive = PRIM_OBJECT;
 
     StructType *structDef = structNode->data.structNode->type->container->custom.structDef;
     structDef->ctorParamCount = ctorArgCount;

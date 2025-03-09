@@ -9,6 +9,7 @@ extern function __c_println(s: string) -> void;
 extern function __c_sys_exit(code: int) -> void;
 extern function __c_intToString(num: int) -> string;
 extern function __c_strLen(s: string) -> int;
+extern function __c_printAny(anyAddr: any) -> void;
 
 function sys_exit(code: int) -> void {
     __c_sys_exit(code);
@@ -47,20 +48,4 @@ function println(s: string) -> void {
 
 function intToString(i: int) -> string {
     return __c_intToString(i);
-}
-
-function outOfBoundsError() -> void {
-    printStr("Array index out of bounds error");
-    return;
-}
-
-function print(anystr: any) -> void {
-    if (anystr == null) {
-        printStr("null");
-        return;
-    }
-    mut __str: string = "";
-    __str = anystr;
-    printStr(__str);
-    return;
 }

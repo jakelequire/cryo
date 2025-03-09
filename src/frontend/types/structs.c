@@ -58,7 +58,7 @@ TypeContainer *createStructType(const char *name, StructType *structDef)
 
     container->baseType = STRUCT_TYPE;
     container->custom.name = name;
-    container->primitive = PRIM_CUSTOM;
+    container->primitive = PRIM_OBJECT;
     container->isGeneric = false;
 
     container->custom.structDef = structDef;
@@ -126,7 +126,7 @@ DataType *createDataTypeFromStructNode(
     TypeContainer *structContainer = createStructType(typeName, structType);
     logMessage(LMI, "INFO", "DataTypes", "Created struct type: %s", structType->name);
     structContainer->baseType = STRUCT_TYPE;
-    structContainer->primitive = PRIM_CUSTOM;
+    structContainer->primitive = PRIM_OBJECT;
 
     DataType *dataType = wrapTypeContainer(structContainer);
 
@@ -266,7 +266,7 @@ DataType *wrapStructType(StructType *structDef)
         return NULL;
     }
 
-    container->primitive = PRIM_CUSTOM;
+    container->primitive = PRIM_OBJECT;
     container->baseType = STRUCT_TYPE;
 
     return wrapTypeContainer(container);

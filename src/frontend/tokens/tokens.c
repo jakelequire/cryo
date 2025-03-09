@@ -196,6 +196,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "USING";
     case NODE_MODULE:
         return "MODULE";
+    case NODE_ANNOTATION:
+        return "ANNOTATION";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -499,6 +501,12 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_USING";
     case TOKEN_KW_MODULE:
         return "TOKEN_KW_MODULE";
+    case TOKEN_KW_AUTO:
+        return "TOKEN_KW_AUTO";
+    case TOKEN_KW_UNDEFINED:
+        return "TOKEN_KW_UNDEFINED";
+    case TOKEN_KW_PRAGMA:
+        return "TOKEN_KW_PRAAGMA";
 
     case TOKEN_BANG:
         return "TOKEN_BANG";

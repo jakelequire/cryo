@@ -114,6 +114,49 @@ void __c_printPointer(void *ptr)
     printf("%p\n", ptr);
 }
 
+void __c_printAny(void *ptr)
+{
+    // First try to interpret as string
+    int is_valid_string = 1;
+    char *str_ptr = (char *)ptr;
+
+    // Check if it looks like a valid string
+    // A valid string should have printable characters followed by a null terminator
+    // within a reasonable length
+    for (int i = 0; i < 20; i++)
+    {
+        char c = str_ptr[i];
+
+        // Found null terminator - good sign it's a string
+        if (c == '\0')
+        {
+            break;
+        }
+
+        // If we find unprintable characters or very high values,
+        // it's probably not a string
+        if (c < 32 || c > 126)
+        {
+            is_valid_string = 0;
+            break;
+        }
+    }
+
+    // If we found a null terminator within the first 20 chars AND all chars were printable
+    if (is_valid_string)
+    {
+        printf("%s\n", (char *)ptr);
+    }
+    else
+    {
+        // Try to interpret as various numeric types
+        int int_val = *(int *)ptr;
+
+        // Print as integer
+        printf("%d\n", int_val);
+    }
+}
+
 // ======================================================= //
 //                      FS Operations                      //
 // ======================================================= //

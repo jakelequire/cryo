@@ -75,14 +75,16 @@ typedef enum PrimitiveDataType
     PRIM_I64,  // `i64`
     PRIM_I128, // `i128`
 
-    PRIM_FLOAT,   // `float`
-    PRIM_STRING,  // `string`
-    PRIM_BOOLEAN, // `boolean`
-    PRIM_VOID,    // `void`
-    PRIM_NULL,    // `null`
-    PRIM_ANY,     // `any`
-    PRIM_CUSTOM,  // Custom type
-    PRIM_UNKNOWN  // `<UNKNOWN>`
+    PRIM_FLOAT,     // `float`
+    PRIM_STRING,    // `string`
+    PRIM_BOOLEAN,   // `boolean`
+    PRIM_VOID,      // `void`
+    PRIM_NULL,      // `null`
+    PRIM_ANY,       // `any`
+    PRIM_OBJECT,    // Object type
+    PRIM_AUTO,      // `auto`
+    PRIM_UNDEFINED, // `undefined`
+    PRIM_UNKNOWN    // `<UNKNOWN>`
 } PrimitiveDataType;
 
 typedef enum TypeofDataType
@@ -236,7 +238,7 @@ typedef struct ClassType
 typedef struct TypeContainer
 {
     TypeofDataType baseType;     // Base type (primitive, struct, etc)
-    PrimitiveDataType primitive; // All types have a primitive type (PRIM_NT, PRIM_CUSTOM, etc)
+    PrimitiveDataType primitive; // All types have a primitive type (PRIM_NT, PRIM_OBJECT, etc)
     int size;                    // Size of the type
     int length;                  // Length of the type
     bool isArray;                // Array flag
@@ -472,7 +474,7 @@ extern "C"
     // # =========================================================================== #
     // # Print Functions
     // # (printFunctions.c)
-    // # =========================================================================== #
+    // # =============  E============================================================== #
 
     char *TypeofDataTypeToString(TypeofDataType type);
     char *PrimitiveDataTypeToString(PrimitiveDataType type);
