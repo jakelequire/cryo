@@ -36,6 +36,7 @@ typedef struct DataTypeManager_t DataTypeManager;
 typedef struct DataType DataType;
 
 extern DataTypeManager *globalDataTypeManager;
+// The Global Data Type Manager
 #define DTM globalDataTypeManager
 #define INIT_DTM() initGlobalDataTypeManagerInstance();
 
@@ -53,6 +54,8 @@ typedef struct DTMDynamicTypeArray_t
     void (*reset)(struct DTMDynamicTypeArray_t *array);
     void (*free)(struct DTMDynamicTypeArray_t *array);
     void (*freeData)(struct DTMDynamicTypeArray_t *array);
+
+    void (*printArray)(struct DTMDynamicTypeArray_t *array);
 } DTMDynamicTypeArray;
 
 typedef struct DTMHelpers_t
@@ -107,6 +110,7 @@ typedef struct DTMClassTypes_t
 typedef struct DTMFunctionTypes_t
 {
     DataType *(*createFunctionTemplate)(void);
+    DataType *(*createFunctionType)(DataType **paramTypes, int paramCount, DataType *returnType);
 } DTMFunctionTypes;
 
 // ---------------------- Generics Data Type Interface ---------------------- //

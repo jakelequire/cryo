@@ -962,7 +962,51 @@ DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena,
 
     consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start function type.", "parseFunctionType", arena, state, context);
 
-    DEBUG_BREAKPOINT;
+    DTMDynamicTypeArray *argArray = DTM->helpers->dynTypeArray;
+
+    // Parse function arguments
+    while (lexer->currentToken.type != TOKEN_RPAREN)
+    {
+        DataType *argType = parseType(lexer, context, arena, state, globalTable);
+        if (!argType)
+        {
+            parsingError("Failed to parse function argument type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+            return NULL;
+        }
+        argArray->add(argArray, argType);
+
+        getNextToken(lexer, arena, state);
+
+        if (lexer->currentToken.type == TOKEN_COMMA)
+        {
+            getNextToken(lexer, arena, state);
+            continue;
+        }
+
+        if (lexer->currentToken.type != TOKEN_RPAREN)
+        {
+            parsingError("Expected ',' or ')' in function argument list.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+            return NULL;
+        }
+    }
+    argArray->printArray(argArray);
+
+    consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end function argument list.", "parseFunctionType", arena, state, context);
+    consume(__LINE__, lexer, TOKEN_RESULT_ARROW, "Expected `->` for return type.", "parseFunctionType", arena, state, context);
+
+    DataType *returnType = parseType(lexer, context, arena, state, globalTable);
+    if (!returnType)
+    {
+        parsingError("Failed to parse function return type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+    char *curTok = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    getNextToken(lexer, arena, state);
+
+    DataType *functionType = DTM->functionTypes->createFunctionType(argArray->data, argArray->count, returnType);
+    logDataType(functionType);
+
+    return functionType;
 }
 
 DataType *parseStructType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)

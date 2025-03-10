@@ -759,11 +759,29 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Type definition");
             llvm::Type *typeType = getType(type, 0);
-            CryoContext::getInstance().structTypes[typeName] = typeType;
+            CryoContext::getInstance().structTypes[typeName] = llvm::dyn_cast<llvm::StructType>(typeType);
+        }
+        else if (type->container->baseType == PRIMITIVE_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Primitive type");
+            llvm::Type *typeType = getType(type, 0);
+            CryoContext::getInstance().structTypes[typeName] = llvm::dyn_cast<llvm::StructType>(typeType);
+        }
+        else if (type->container->baseType == FUNCTION_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Function type");
+            llvm::Type *typeType = getType(type, 0);
+            CryoContext::getInstance().structTypes[typeName] = llvm::dyn_cast<llvm::StructType>(typeType);
         }
         else
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
+            std::string typeofStr = DataTypeToString(type);
+            std::string typeOfStr = TypeofDataTypeToString(type->container->baseType);
+            std::cerr << "Type: " << typeofStr << std::endl;
+            std::cerr << "TypeOf: " << typeOfStr << std::endl;
             CONDITION_FAILED;
         }
-    } // namespace Cryo
+    }
+
+} // namespace Cryo

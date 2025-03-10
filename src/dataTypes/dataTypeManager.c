@@ -89,6 +89,29 @@ void DTMDynamicTypeArray_free(DTMDynamicTypeArray *array)
     free(array);
 }
 
+void DTMDynamicTypeArray_printArray(DTMDynamicTypeArray *array)
+{
+    char *typeStr = (char *)malloc(1024);
+    if (!typeStr)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for type string\n");
+        CONDITION_FAILED;
+    }
+
+    for (int i = 0; i < array->count; i++)
+    {
+        DataType *type = array->data[i];
+        sprintf(typeStr, "%s%s", typeStr, DataTypeToString(type));
+        if (i < array->count - 1)
+        {
+            sprintf(typeStr, "%s, ", typeStr);
+        }
+    }
+
+    printf("%s\n", typeStr);
+    free(typeStr);
+}
+
 DTMDynamicTypeArray *createDTMDynamicTypeArray(void)
 {
     DTMDynamicTypeArray *array = (DTMDynamicTypeArray *)malloc(sizeof(DTMDynamicTypeArray));
@@ -114,6 +137,8 @@ DTMDynamicTypeArray *createDTMDynamicTypeArray(void)
     array->reset = DTMDynamicTypeArray_reset;
     array->free = DTMDynamicTypeArray_freeData;
     array->freeData = DTMDynamicTypeArray_free;
+
+    array->printArray = DTMDynamicTypeArray_printArray;
 
     return array;
 }
@@ -366,6 +391,35 @@ DTMClassTypes *createDTMClassTypes(void)
 // ------------------------------------- Function Data Types ----------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
+DataType *DTMFunctionTypes_createFunctionTemplate(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->baseType = FUNCTION_TYPE;
+
+    return wrapTypeContainer(container);
+}
+
+DataType *DTMFunctionTypes_createFunctionType(DataType **paramTypes, int paramCount, DataType *returnType)
+{
+    TypeContainer *container = createTypeContainer();
+    container->baseType = FUNCTION_TYPE;
+
+    FunctionType *funcDef = (FunctionType *)malloc(sizeof(FunctionType));
+    if (!funcDef)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate FunctionType\n");
+        CONDITION_FAILED;
+    }
+
+    funcDef->paramTypes = paramTypes;
+    funcDef->paramCount = paramCount;
+    funcDef->returnType = returnType;
+
+    container->custom.funcDef = funcDef;
+
+    return wrapTypeContainer(container);
+}
+
 DTMFunctionTypes *createDTMFunctionTypes(void)
 {
     DTMFunctionTypes *functionTypes = (DTMFunctionTypes *)malloc(sizeof(DTMFunctionTypes));
@@ -376,6 +430,9 @@ DTMFunctionTypes *createDTMFunctionTypes(void)
     }
 
     // ==================== [ Function Assignments ] ==================== //
+
+    functionTypes->createFunctionTemplate = DTMFunctionTypes_createFunctionTemplate;
+    functionTypes->createFunctionType = DTMFunctionTypes_createFunctionType;
 
     return functionTypes;
 }

@@ -223,7 +223,7 @@ namespace Cryo
         case NODE_TYPE:
         {
             DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Type");
-            compiler.getTypes().handleTypeDeclaration(root);
+            // compiler.getTypes().handleTypeDeclaration(root);
             break;
         }
         case NODE_USING:
