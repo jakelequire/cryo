@@ -808,3 +808,8 @@ ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeT
     metaData->hasDefaultFlag = hasDefaultFlag;
     return metaData;
 }
+
+ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    DEBUG_BREAKPOINT;
+}

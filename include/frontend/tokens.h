@@ -322,7 +322,8 @@ extern "C"
         NODE_USING,                // 53
         NODE_MODULE,               // 54
         NODE_ANNOTATION,           // 55
-        NODE_UNKNOWN,              // 56
+        NODE_TYPE_CAST,            // 56
+        NODE_UNKNOWN,              // 57
     } CryoNodeType;
 
     typedef enum CryoVisibilityType

@@ -198,6 +198,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "MODULE";
     case NODE_ANNOTATION:
         return "ANNOTATION";
+    case NODE_TYPE_CAST:
+        return "TYPE_CAST";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

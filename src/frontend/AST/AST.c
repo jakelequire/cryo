@@ -1211,3 +1211,36 @@ ASTNode *createAnnotationNode(const char *annotationName, const char *annotation
 
     return node;
 }
+
+ASTNode *createTypeDeclNode(const char *typeName, DataType *type, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_TYPE, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create type declaration node");
+        return NULL;
+    }
+
+    node->data.typeDecl->name = strdup(typeName);
+    node->data.typeDecl->type = type;
+
+    return node;
+}
+
+
+ASTNode *createTypeCastNode(DataType *type, ASTNode *expression, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_TYPE_CAST, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create type cast node");
+        return NULL;
+    }
+
+    node->data.typeCast->type = type;
+    node->data.typeCast->expression = expression;
+
+    return node;
+}

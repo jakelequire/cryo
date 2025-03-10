@@ -583,6 +583,18 @@ typedef struct AnnotationNode
     const char *value;
 } AnnotationNode;
 
+typedef struct TypeDecl
+{
+    const char *name;
+    DataType *type;
+} TypeDecl;
+
+typedef struct TypeCast
+{
+    DataType *type;
+    ASTNode *expression;
+} TypeCast;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -682,7 +694,10 @@ typedef struct ASTNode
         ModuleNode *moduleNode;
         // For Annotations
         AnnotationNode *annotation;
-
+        // For Type Declarations
+        TypeDecl *typeDecl;
+        // For Type Casts
+        TypeCast *typeCast;
         void *discard;
     } data;
 
@@ -995,6 +1010,11 @@ extern "C"
         bool isStatic,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
+    ASTNode *createTypeDeclNode(const char *typeName,
+                                DataType *type, Arena *arena, CompilerState *state, Lexer *lexer);
+
+    ASTNode *createTypeCastNode(DataType *type, ASTNode *expression,
+                                Arena *arena, CompilerState *state, Lexer *lexer);
     /**
      * Generic Type Nodes
      * Nodes for generic type definitions and instantiations
@@ -1162,6 +1182,8 @@ TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state);
 UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state);
 ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state);
 AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state);
+TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state);
+TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

@@ -1579,3 +1579,35 @@ AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state
 
     return node;
 }
+
+TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    TypeDecl *node = (TypeDecl *)ARENA_ALLOC(arena, sizeof(TypeDecl));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate TypeDecl node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->name = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    TypeCast *node = (TypeCast *)ARENA_ALLOC(arena, sizeof(TypeCast));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate TypeCast node.");
+        return NULL;
+    }
+
+    node->type = wrapTypeContainer(createTypeContainer());
+    node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
+
+    return node;
+}

@@ -517,6 +517,9 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     case TOKEN_KW_CLASS:
         return parseClassDeclaration(false, lexer, context, arena, state, globalTable);
 
+    case TOKEN_KW_TYPE:
+        return parseTypeDeclaration(lexer, context, arena, state, globalTable);
+
     case TOKEN_IDENTIFIER:
         if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LPAREN)
         {
