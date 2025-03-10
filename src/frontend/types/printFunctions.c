@@ -39,6 +39,8 @@ char *TypeofDataTypeToString(TypeofDataType type)
         return "GENERIC_TYPE";
     case CLASS_TYPE:
         return "CLASS_TYPE";
+    case TYPE_DEF:
+        return "TYPE_DEF";
     case UNKNOWN_TYPE:
         return "UNKNOWN_TYPE";
     default:

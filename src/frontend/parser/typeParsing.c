@@ -18,6 +18,7 @@
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "diagnostics/diagnostics.h"
+#include "dataTypes/dataTypeManager.h"
 
 /* ====================================================================== */
 /* @ASTNode_Parsing - Structures                                          */
@@ -811,5 +812,163 @@ ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeT
 
 ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing type declaration...");
+    consume(__LINE__, lexer, TOKEN_KW_TYPE, "Expected `type` keyword.", "parseTypeDeclaration", arena, state, context);
+
+    if (lexer->currentToken.type != TOKEN_IDENTIFIER)
+    {
+        parsingError("Expected an identifier.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    // The name of the type definition
+    char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage(LMI, "INFO", "Parser", "Type name: %s", typeName);
+
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected type name.", "parseTypeDeclaration", arena, state, context);
+
+    consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` after type name.", "parseTypeDeclaration", arena, state, context);
+
+    DataType *typeDefinition = parseTypeDefinition(lexer, context, arena, state, globalTable);
+    if (!typeDefinition)
+    {
+        parsingError("Failed to parse type definition.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    // Create the type declaration node
+    ASTNode *typeDeclNode = createTypeDeclNode(typeName, typeDefinition, arena, state, lexer);
+    if (!typeDeclNode)
+    {
+        parsingError("Failed to create type declaration node.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after type declaration.", "parseTypeDeclaration", arena, state, context);
+
+    return typeDeclNode;
+}
+
+// This function should be responsible for parsing a type definition
+//
+// type {TYPE_NAME} <?TypeParams...> = {TYPE_DEFINITION}
+// ------------------------------------------- ^ This is the part that should be parsed
+//
+// Type Definition Syntax:
+// - Primitive Type:    int, i8-i128, float, boolean, string
+// - Struct Type:       struct {STRUCT_NAME}
+// - Class Type:        class {CLASS_NAME}
+// - Function Type:     (?args...) -> returnType
+//
+DataType *parseTypeDefinition(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing type definition...");
+
+    // Check if the current token is a primitive type
+    DataType *primitiveType = parseForPrimitive(lexer, context, arena, state, globalTable);
+    if (primitiveType)
+    {
+        return primitiveType;
+    }
+
+    // Check if the definition is a function type
+    if (lexer->currentToken.type == TOKEN_LPAREN)
+    {
+        return parseFunctionType(lexer, context, arena, state, globalTable);
+    }
+
     DEBUG_BREAKPOINT;
+}
+
+// This function looks at the current token and determines if it is a primitive type.
+// If not, then it will return NULL.
+DataType *parseForPrimitive(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Parsing for primitive type...");
+
+    const char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Type name: %s", typeName);
+
+    if (cStringCompare("int", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_KW_INT, "Expected `int` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createInt();
+    }
+    else if (cStringCompare("i8", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_TYPE_I8, "Expected `i8` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createI8();
+    }
+    else if (cStringCompare("i16", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_TYPE_I16, "Expected `i16` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createI16();
+    }
+    else if (cStringCompare("i32", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_TYPE_I32, "Expected `i32` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createI32();
+    }
+    else if (cStringCompare("i64", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_TYPE_I64, "Expected `i64` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createI64();
+    }
+    else if (cStringCompare("i128", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_TYPE_I128, "Expected `i128` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createI128();
+    }
+    else if (cStringCompare("float", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_KW_FLOAT, "Expected `float` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createFloat();
+    }
+    else if (cStringCompare("boolean", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_KW_BOOLEAN, "Expected `boolean` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createBoolean();
+    }
+    else if (cStringCompare("string", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_KW_STRING, "Expected `string` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createString();
+    }
+    else if (cStringCompare("void", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_KW_VOID, "Expected `void` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createVoid();
+    }
+    else if (cStringCompare("null", typeName))
+    {
+        consume(__LINE__, lexer, TOKEN_KW_NULL, "Expected `null` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createNull();
+    }
+    else
+    {
+        return NULL;
+    }
+
+    return NULL;
+}
+
+DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing function type...");
+
+    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start function type.", "parseFunctionType", arena, state, context);
+
+    DEBUG_BREAKPOINT;
+}
+
+DataType *parseStructType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+}
+
+DataType *parseClassType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
 }

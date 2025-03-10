@@ -21,6 +21,118 @@
 DataTypeManager *globalDataTypeManager = NULL;
 
 // --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- Data Type Helpers ------------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+#define MAX_DYNAMIC_ARRAY_CAPACITY 16
+
+void DTMDynamicTypeArray_add(DTMDynamicTypeArray *array, DataType *type)
+{
+    if (array->count >= array->capacity)
+    {
+        array->resize(array);
+    }
+
+    array->data[array->count++] = type;
+}
+
+void DTMDynamicTypeArray_remove(DTMDynamicTypeArray *array, DataType *type)
+{
+    for (int i = 0; i < array->count; i++)
+    {
+        if (array->data[i] == type)
+        {
+            for (int j = i; j < array->count - 1; j++)
+            {
+                array->data[j] = array->data[j + 1];
+            }
+
+            array->count--;
+            break;
+        }
+    }
+}
+
+void DTMDynamicTypeArray_resize(DTMDynamicTypeArray *array)
+{
+    array->capacity *= 2;
+    array->data = (DataType **)realloc(array->data, sizeof(DataType *) * array->capacity);
+    if (!array->data)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTMDynamicTypeArray\n");
+        CONDITION_FAILED;
+    }
+}
+
+void DTMDynamicTypeArray_reset(DTMDynamicTypeArray *array)
+{
+    array->count = 0;
+    array->capacity = MAX_DYNAMIC_ARRAY_CAPACITY;
+
+    array->freeData(array);
+    array->data = (DataType **)malloc(sizeof(DataType *) * array->capacity);
+    if (!array->data)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTypeArray data\n");
+        CONDITION_FAILED;
+    }
+}
+
+void DTMDynamicTypeArray_freeData(DTMDynamicTypeArray *array)
+{
+    free(array->data);
+}
+
+void DTMDynamicTypeArray_free(DTMDynamicTypeArray *array)
+{
+    free(array->data);
+    free(array);
+}
+
+DTMDynamicTypeArray *createDTMDynamicTypeArray(void)
+{
+    DTMDynamicTypeArray *array = (DTMDynamicTypeArray *)malloc(sizeof(DTMDynamicTypeArray));
+    if (!array)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTypeArray\n");
+        CONDITION_FAILED;
+    }
+
+    array->data = (DataType **)malloc(sizeof(DataType *) * 16);
+    if (!array->data)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTypeArray data\n");
+        CONDITION_FAILED;
+    }
+
+    array->count = 0;
+    array->capacity = MAX_DYNAMIC_ARRAY_CAPACITY;
+
+    array->add = DTMDynamicTypeArray_add;
+    array->remove = DTMDynamicTypeArray_remove;
+    array->resize = DTMDynamicTypeArray_resize;
+    array->reset = DTMDynamicTypeArray_reset;
+    array->free = DTMDynamicTypeArray_freeData;
+    array->freeData = DTMDynamicTypeArray_free;
+
+    return array;
+}
+
+DTMHelpers *createDTMHelpers(void)
+{
+    DTMHelpers *helpers = (DTMHelpers *)malloc(sizeof(DTMHelpers));
+    if (!helpers)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Helpers\n");
+        CONDITION_FAILED;
+    }
+
+    helpers->dynTypeArray = createDTMDynamicTypeArray();
+
+    return helpers;
+}
+
+// --------------------------------------------------------------------------------------------------- //
 // ------------------------------------- Primitive Data Types ---------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
@@ -96,12 +208,11 @@ DataType *DTMPrimitives_createString(void)
     return wrapTypeContainer(container);
 }
 
-DataType *DTMPrimitives_createBoolean(bool b)
+DataType *DTMPrimitives_createBoolean(void)
 {
     TypeContainer *container = createTypeContainer();
     container->baseType = PRIMITIVE_TYPE;
     container->primitive = PRIM_BOOLEAN;
-    container->boolValue = b;
 
     return wrapTypeContainer(container);
 }
@@ -438,6 +549,7 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
 void initGlobalDataTypeManagerInstance(void)
 {
     globalDataTypeManager = createDataTypeManager();
+    globalDataTypeManager->initialized = true;
 }
 
 void DataTypeManager_initDefinitions(void)
@@ -456,6 +568,9 @@ DataTypeManager *createDataTypeManager(void)
 
     // ===================== [ Property Assignments ] ===================== //
 
+    manager->initialized = false;
+    manager->defsInitialized = false;
+
     manager->symbolTable = createDTMSymbolTable();
     manager->primitives = createDTMPrimitives();
     manager->debug = createDTMDebug();
@@ -464,6 +579,8 @@ DataTypeManager *createDataTypeManager(void)
     manager->functionTypes = createDTMFunctionTypes();
     manager->generics = createDTMGenerics();
     manager->enums = createDTMEnums();
+
+    manager->helpers = createDTMHelpers();
 
     // ===================== [ Function Assignments ] ===================== //
 

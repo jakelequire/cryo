@@ -220,6 +220,12 @@ namespace Cryo
             compiler.getClasses().handleClassDeclaration(root);
             break;
         }
+        case NODE_TYPE:
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "CodeGen", "Handling Type");
+            compiler.getTypes().handleTypeDeclaration(root);
+            break;
+        }
         case NODE_USING:
         {
             // Skip the using statement

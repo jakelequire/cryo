@@ -472,6 +472,8 @@ namespace Cryo
          */
         bool isLLVMStringType(llvm::Value *val);
 
+        void handleTypeDeclaration(ASTNode *node);
+
     private:
         CryoCompiler &compiler;
 

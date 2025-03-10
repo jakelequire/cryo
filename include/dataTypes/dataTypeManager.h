@@ -39,6 +39,27 @@ extern DataTypeManager *globalDataTypeManager;
 #define DTM globalDataTypeManager
 #define INIT_DTM() initGlobalDataTypeManagerInstance();
 
+// ----------------------------- Data Type Helpers ----------------------------- //
+
+typedef struct DTMDynamicTypeArray_t
+{
+    DataType **data;
+    int count;
+    int capacity;
+
+    void (*add)(struct DTMDynamicTypeArray_t *array, DataType *type);
+    void (*remove)(struct DTMDynamicTypeArray_t *array, DataType *type);
+    void (*resize)(struct DTMDynamicTypeArray_t *array);
+    void (*reset)(struct DTMDynamicTypeArray_t *array);
+    void (*free)(struct DTMDynamicTypeArray_t *array);
+    void (*freeData)(struct DTMDynamicTypeArray_t *array);
+} DTMDynamicTypeArray;
+
+typedef struct DTMHelpers_t
+{
+    DTMDynamicTypeArray *dynTypeArray;
+} DTMHelpers;
+
 // ----------------------- Primitive Data Type Interface ----------------------- //
 
 // This structure is an interface for creating primitive data types in the compiler.
@@ -53,7 +74,7 @@ typedef struct DTMPrimitives_t
     DataType *(*createInt)(void);       // type `int` is a 32-bit integer
     DataType *(*createFloat)(void);     // type `float` is a 32-bit floating-point number
     DataType *(*createString)(void);    // type `string` is a string
-    DataType *(*createBoolean)(bool b); // type `boolean` is a boolean
+    DataType *(*createBoolean)(void);   // type `boolean` is a boolean
     DataType *(*createVoid)(void);      // type `void` is a void type
     DataType *(*createNull)(void);      // type `null` is a null type
     DataType *(*createAny)(void);       // type `any` is equivalent to `void *`
@@ -143,6 +164,9 @@ typedef struct DTMSymbolTable_t
 // This manager is responsible for creating, accessing, and modifying data types in the compiler.
 typedef struct DataTypeManager_t
 {
+    bool initialized;
+    bool defsInitialized;
+
     // The symbol table for the Data Type Manager.
     DTMSymbolTable *symbolTable;
 
@@ -158,6 +182,9 @@ typedef struct DataTypeManager_t
     DTMGenerics *generics;
     // Handles Enum data types in the compiler.
     DTMEnums *enums;
+
+    // Data Type Helpers
+    DTMHelpers *helpers;
 
     // Handles all debugging functions for the Data Type Manager.
     DTMDebug *debug;
@@ -188,5 +215,8 @@ DTMEnums *createDTMEnums(void);
 
 DTMSymbolTable *createDTMSymbolTable(void);
 DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type);
+
+DTMDynamicTypeArray *createDTMDynamicTypeArray(void);
+DTMHelpers *createDTMHelpers(void);
 
 #endif // DATA_TYPE_MANAGER_H

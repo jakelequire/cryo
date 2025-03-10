@@ -735,4 +735,35 @@ namespace Cryo
         DevDebugger::logLLVMValue(val);
         return false;
     }
-} // namespace Cryo
+
+    void OldTypes::handleTypeDeclaration(ASTNode *node)
+    {
+        DevDebugger::logMessage("INFO", __LINE__, "Types", "Handling type declaration");
+
+        if (node->metaData->type != NODE_TYPE)
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid node type");
+            CONDITION_FAILED;
+        }
+
+        DataType *type = node->data.typeDecl->type;
+        std::string typeName = node->data.typeDecl->name;
+
+        if (type->container->baseType == STRUCT_TYPE)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct type");
+            llvm::StructType *structType = llvm::dyn_cast<llvm::StructType>(getStructType(type));
+            CryoContext::getInstance().structTypes[typeName] = structType;
+        }
+        else if (type->container->baseType == TYPE_DEF)
+        {
+            DevDebugger::logMessage("INFO", __LINE__, "Types", "Type definition");
+            llvm::Type *typeType = getType(type, 0);
+            CryoContext::getInstance().structTypes[typeName] = typeType;
+        }
+        else
+        {
+            DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
+            CONDITION_FAILED;
+        }
+    } // namespace Cryo
