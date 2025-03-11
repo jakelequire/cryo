@@ -42,6 +42,29 @@ typedef struct SymbolTable SymbolTable;
 typedef struct TypesTable TypesTable;
 typedef struct CompilationUnit_t CompilationUnit;
 
+typedef struct CCTXPragma_t
+{
+    bool internal;
+} CCTXPragma;
+
+typedef struct CCTXFile_t
+{
+    char *fileName;
+    char *filePath;
+} CCTXFile;
+
+typedef struct CompilerContext_t
+{
+    CCTXPragma *pragma;
+    CCTXFile *file;
+} CompilerContext;
+
+CompilerContext *initCompilerContext(void);
+CCTXPragma *initCCTXPragma(void);
+CCTXFile *initCCTXFile(void);
+
+extern CompilerContext *compilerCtx;
+
 // C++ headers
 #ifdef __cplusplus
 extern "C"

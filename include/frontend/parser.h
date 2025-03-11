@@ -307,6 +307,7 @@ DataType *parseForPrimitive(Lexer *lexer, ParsingContext *context, Arena *arena,
 DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 DataType *parseStructType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 DataType *parseClassType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+DataType *parseObjectType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 // # =========================================================================== #
 // # Class Parsing

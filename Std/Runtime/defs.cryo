@@ -1,3 +1,4 @@
 @pragma "internal"
 
 type Function = () -> void;
+type Object = {};

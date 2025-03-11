@@ -878,6 +878,11 @@ DataType *parseTypeDefinition(Lexer *lexer, ParsingContext *context, Arena *aren
     {
         return parseFunctionType(lexer, context, arena, state, globalTable);
     }
+    else if (lexer->currentToken.type == TOKEN_LBRACE)
+    {
+        // This is an object type
+        return parseObjectType(lexer, context, arena, state, globalTable);
+    }
 
     DEBUG_BREAKPOINT;
 }
@@ -1007,6 +1012,49 @@ DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena,
     logDataType(functionType);
 
     return functionType;
+}
+
+DataType *parseObjectType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing object type...");
+
+    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start object type.", "parseObjectType", arena, state, context);
+
+    DTMDynamicTuple *tuple = DTM->helpers->dynTuple;
+
+    // Parse object properties
+    while (lexer->currentToken.type != TOKEN_RBRACE)
+    {
+        DataType *propertyType = parseType(lexer, context, arena, state, globalTable);
+        if (!propertyType)
+        {
+            parsingError("Failed to parse object property type.", "parseObjectType", arena, state, lexer, lexer->source, globalTable);
+            return NULL;
+        }
+
+        getNextToken(lexer, arena, state);
+
+        if (lexer->currentToken.type != TOKEN_IDENTIFIER)
+        {
+            parsingError("Expected an identifier for object property.", "parseObjectType", arena, state, lexer, lexer->source, globalTable);
+            return NULL;
+        }
+
+        char *propertyName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "INFO", "Parser", "Object property name: %s", propertyName);
+
+        getNextToken(lexer, arena, state);
+
+        consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after object property name.", "parseObjectType", arena, state, context);
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after object property type.", "parseObjectType", arena, state, context);
+        
+        tuple->add(tuple, propertyName, propertyType);
+    }
+
+    consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` to end object type.", "parseObjectType", arena, state, context);
+
+    return NULL;
 }
 
 DataType *parseStructType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)

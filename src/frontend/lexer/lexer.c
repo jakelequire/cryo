@@ -589,6 +589,10 @@ Token symbolChar(Lexer *lexer, char symbol, CompilerState *state)
         return makeToken(lexer, TOKEN_DOLLAR, state);
     case '/':
         return makeToken(lexer, TOKEN_SLASH, state);
+    case '@':
+        return makeToken(lexer, TOKEN_AT, state);
+    case '#':
+        return makeToken(lexer, TOKEN_HASH, state);
     case '.':
     {
         if (peek(lexer, state) == '.')

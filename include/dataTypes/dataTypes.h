@@ -163,6 +163,15 @@ typedef struct StructType
 
 } StructType;
 
+typedef struct ObjectType_t
+{
+    const char *name;
+    DataType **properties;
+    int propertyCount;
+    int propertyCapacity;
+    DataType **methods;
+} ObjectType;
+
 typedef struct FunctionType
 {
     const char *name;
@@ -263,6 +272,7 @@ typedef struct TypeContainer
         ArrayType *arrayDef;   // For array types
         EnumType *enumDef;     // For enum types
         ClassType *classDef;   // For class types
+        ObjectType *objectDef; // For object types
     } custom;
 
 } TypeContainer;

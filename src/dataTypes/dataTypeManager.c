@@ -143,6 +143,141 @@ DTMDynamicTypeArray *createDTMDynamicTypeArray(void)
     return array;
 }
 
+void DTMDynamicTuple_add(DTMDynamicTuple *tuple, const char *key, DataType *value)
+{
+    if (tuple->count >= tuple->capacity)
+    {
+        tuple->resize(tuple);
+    }
+
+    tuple->keys[tuple->count] = key;
+    tuple->values[tuple->count++] = value;
+}
+
+void DTMDynamicTuple_remove(DTMDynamicTuple *tuple, const char *key)
+{
+    for (int i = 0; i < tuple->count; i++)
+    {
+        if (strcmp(tuple->keys[i], key) == 0)
+        {
+            for (int j = i; j < tuple->count - 1; j++)
+            {
+                tuple->keys[j] = tuple->keys[j + 1];
+                tuple->values[j] = tuple->values[j + 1];
+            }
+
+            tuple->count--;
+            break;
+        }
+    }
+}
+
+void DTMDynamicTuple_resize(DTMDynamicTuple *tuple)
+{
+    tuple->capacity *= 2;
+    tuple->values = (DataType **)realloc(tuple->values, sizeof(DataType *) * tuple->capacity);
+    if (!tuple->values)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTMDynamicTuple values\n");
+        CONDITION_FAILED;
+    }
+
+    tuple->keys = (const char **)realloc(tuple->keys, sizeof(const char *) * tuple->capacity);
+    if (!tuple->keys)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTMDynamicTuple keys\n");
+        CONDITION_FAILED;
+    }
+}
+
+void DTMDynamicTuple_reset(DTMDynamicTuple *tuple)
+{
+    tuple->count = 0;
+    tuple->capacity = MAX_DYNAMIC_ARRAY_CAPACITY;
+
+    tuple->free(tuple);
+    tuple->values = (DataType **)malloc(sizeof(DataType *) * tuple->capacity);
+    if (!tuple->values)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTuple values\n");
+        CONDITION_FAILED;
+    }
+
+    tuple->keys = (const char **)malloc(sizeof(const char *) * tuple->capacity);
+    if (!tuple->keys)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTuple keys\n");
+        CONDITION_FAILED;
+    }
+}
+
+void DTMDynamicTuple_free(DTMDynamicTuple *tuple)
+{
+    free(tuple->values);
+    free(tuple->keys);
+    free(tuple);
+}
+
+void DTMDynamicTuple_printTuple(DTMDynamicTuple *tuple)
+{
+    char *typeStr = (char *)malloc(1024);
+    if (!typeStr)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for type string\n");
+        CONDITION_FAILED;
+    }
+
+    for (int i = 0; i < tuple->count; i++)
+    {
+        DataType *type = tuple->values[i];
+        sprintf(typeStr, "%s%s: %s", typeStr, tuple->keys[i], DataTypeToString(type));
+        if (i < tuple->count - 1)
+        {
+            sprintf(typeStr, "%s, ", typeStr);
+        }
+    }
+
+    printf("%s\n", typeStr);
+    free(typeStr);
+}
+
+DTMDynamicTuple *createDTMDynamicTuple(void)
+{
+    DTMDynamicTuple *tuple = (DTMDynamicTuple *)malloc(sizeof(DTMDynamicTuple));
+    if (!tuple)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTuple\n");
+        CONDITION_FAILED;
+    }
+
+    tuple->values = (DataType **)malloc(sizeof(DataType *) * MAX_DYNAMIC_ARRAY_CAPACITY);
+    if (!tuple->values)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTuple values\n");
+        CONDITION_FAILED;
+    }
+
+    tuple->keys = (const char **)malloc(sizeof(const char *) * MAX_DYNAMIC_ARRAY_CAPACITY);
+    if (!tuple->keys)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTMDynamicTuple keys\n");
+        CONDITION_FAILED;
+    }
+
+    tuple->count = 0;
+    tuple->capacity = MAX_DYNAMIC_ARRAY_CAPACITY;
+
+    tuple->add = DTMDynamicTuple_add;
+    tuple->remove = DTMDynamicTuple_remove;
+    tuple->resize = DTMDynamicTuple_resize;
+    tuple->reset = DTMDynamicTuple_reset;
+    tuple->free = DTMDynamicTuple_free;
+
+    tuple->printTuple = DTMDynamicTuple_printTuple;
+
+    return tuple;
+}
+
 DTMHelpers *createDTMHelpers(void)
 {
     DTMHelpers *helpers = (DTMHelpers *)malloc(sizeof(DTMHelpers));
@@ -153,6 +288,7 @@ DTMHelpers *createDTMHelpers(void)
     }
 
     helpers->dynTypeArray = createDTMDynamicTypeArray();
+    helpers->dynTuple = createDTMDynamicTuple();
 
     return helpers;
 }
@@ -600,6 +736,53 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
 }
 
 // --------------------------------------------------------------------------------------------------- //
+// ---------------------------------- Data Types Implementation -------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+TypeContainer *DTMDataTypes_createTypeContainer(void)
+{
+    TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
+    if (!container)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Type Container\n");
+        CONDITION_FAILED;
+    }
+
+    return container;
+}
+
+DataType *DTMDataTypes_wrapTypeContainer(TypeContainer *container)
+{
+    DataType *type = (DataType *)malloc(sizeof(DataType));
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Data Type\n");
+        CONDITION_FAILED;
+    }
+
+    type->container = container;
+
+    return type;
+}
+
+DTMDataTypes *createDTMDataTypes(void)
+{
+    DTMDataTypes *dataTypes = (DTMDataTypes *)malloc(sizeof(DTMDataTypes));
+    if (!dataTypes)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Data Types\n");
+        CONDITION_FAILED;
+    }
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    dataTypes->createTypeContainer = DTMDataTypes_createTypeContainer;
+    dataTypes->wrapTypeContainer = DTMDataTypes_wrapTypeContainer;
+
+    return dataTypes;
+}
+
+// --------------------------------------------------------------------------------------------------- //
 // ---------------------------------- Data Type Manager Implementation ------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
@@ -609,8 +792,25 @@ void initGlobalDataTypeManagerInstance(void)
     globalDataTypeManager->initialized = true;
 }
 
-void DataTypeManager_initDefinitions(void)
+void DataTypeManager_initDefinitions(const char *compilerRootPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    const char *defsPath = fs->appendStrings(compilerRootPath, "/Std/Runtime/defs.cryo");
+    if (!defsPath)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for definitions path\n");
+        CONDITION_FAILED;
+    }
+
+    ASTNode *defsNode = compileForASTNode(defsPath, state, globalTable);
+    if (!defsNode)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to compile definitions\n");
+        CONDITION_FAILED;
+    }
+
+    defsNode->print(defsNode);
+
+    DEBUG_BREAKPOINT;
     return;
 }
 
@@ -629,6 +829,8 @@ DataTypeManager *createDataTypeManager(void)
     manager->defsInitialized = false;
 
     manager->symbolTable = createDTMSymbolTable();
+    manager->dataTypes = createDTMDataTypes();
+
     manager->primitives = createDTMPrimitives();
     manager->debug = createDTMDebug();
     manager->structTypes = createDTMStructTypes();
