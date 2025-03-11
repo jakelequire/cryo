@@ -96,8 +96,9 @@ typedef enum TypeofDataType
     FUNCTION_TYPE,  // `function (...) -> ...`
     GENERIC_TYPE,   // `T`, `U`, `V`, etc.
     CLASS_TYPE,     // `class ... { ... }`
+    OBJECT_TYPE,    // `{ ... }`
     TYPE_DEF,       // `type ... = ...`
-    UNKNOWN_TYPE // `<UNKNOWN>`
+    UNKNOWN_TYPE    // `<UNKNOWN>`
 } TypeofDataType;
 
 typedef struct GenericType
@@ -484,7 +485,7 @@ extern "C"
     // # =========================================================================== #
     // # Print Functions
     // # (printFunctions.c)
-    // # =============  E============================================================== #
+    // # =========================================================================== #
 
     char *TypeofDataTypeToString(TypeofDataType type);
     char *PrimitiveDataTypeToString(PrimitiveDataType type);

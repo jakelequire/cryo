@@ -41,6 +41,8 @@ char *TypeofDataTypeToString(TypeofDataType type)
         return "CLASS_TYPE";
     case TYPE_DEF:
         return "TYPE_DEF";
+    case OBJECT_TYPE:
+        return "OBJECT_TYPE";
     case UNKNOWN_TYPE:
         return "UNKNOWN_TYPE";
     default:
