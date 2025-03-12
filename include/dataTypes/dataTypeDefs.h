@@ -24,6 +24,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+typedef struct DataType_t DataType;
+
 typedef enum PrimitiveDataType
 {
     PRIM_INT,  // `int` (32-bit default)
@@ -47,29 +49,37 @@ typedef enum PrimitiveDataType
 
 typedef enum TypeofDataType
 {
-    PRIMITIVE_TYPE, // `int`, `float`, `string`, `boolean`, `void`
-    ARRAY_TYPE,     // `int[]`, `float[]`, `string[]`, `boolean[]`
-    ENUM_TYPE,      // `enum ... { ... }`
-    FUNCTION_TYPE,  // `function (...) -> ...`
-    GENERIC_TYPE,   // `T`, `U`, `V`, etc.
-    OBJECT_TYPE,    // `struct | class { ... }`
-    TYPE_DEF,       // `type ... = ...`
-    UNKNOWN_TYPE    // `<UNKNOWN>`
+    PRIM_TYPE,     // `int`, `float`, `string`, `boolean`, `void`
+    ARRAY_TYPE,    // `int[]`, `float[]`, `string[]`, `boolean[]`
+    ENUM_TYPE,     // `enum ... { ... }`
+    FUNCTION_TYPE, // `function (...) -> ...`
+    GENERIC_TYPE,  // `T`, `U`, `V`, etc.
+    OBJECT_TYPE,   // `struct | class { ... }`
+    TYPE_DEF,      // `type ... = ...`
+    UNKNOWN_TYPE   // `<UNKNOWN>`
 } TypeofDataType;
 
 // =============================== Structs =============================== //
 
 typedef struct DTDebug_t
 {
-    void (*print)(NEW_DataType *type);
-    const char *(*toString)(NEW_DataType *type);
+    void (*printType)(struct DataType_t *type);
+    void (*printVerbosType)(struct DataType_t *type);
+    const char *(*typeToString)(struct DataType_t *type);
 } DTDebug;
+
+typedef struct DTSimpleTy_t
+{
+    PrimitiveDataType primitive;
+    TypeofDataType baseType;
+    bool isGeneric;
+} DTSimpleTy;
 
 typedef struct DTArrayTy_t
 {
     int elementCount;
     int dimensions;
-    struct NEW_DataType_t *elementType;
+    struct DataType_t *elementType;
 } DTArrayTy;
 
 typedef struct DTEnumTy_t
@@ -82,33 +92,30 @@ typedef struct DTEnumTy_t
 
 typedef struct DTFunctionTy_t
 {
-    struct NEW_DataType_t *returnType;
-    struct NEW_DataType_t **paramTypes;
+    struct DataType_t *returnType;
+    struct DataType_t **paramTypes;
     int paramCount;
     int paramCapacity;
-} DTFunctionTy;
 
-typedef struct DTSimpleTy_t
-{
-    PrimitiveDataType primitive;
-    TypeofDataType baseType;
-    bool isGeneric;
-} DTSimpleTy;
+    void (*addParam)(struct DTFunctionTy_t *self, struct DataType_t *param);
+    void (*setParams)(struct DTFunctionTy_t *self, struct DataType_t **params, int paramCount);
+    void (*setReturnType)(struct DTFunctionTy_t *self, struct DataType_t *returnType);
+} DTFunctionTy;
 
 typedef struct DTStructTy_t
 {
     const char *name;
 
-    struct NEW_DataType_t **properties;
+    struct DataType_t **properties;
     int propertyCount;
     int propertyCapacity;
 
-    struct NEW_DataType_t **methods;
+    struct DataType_t **methods;
     int methodCount;
     int methodCapacity;
 
     bool hasConstructor;
-    struct NEW_DataType_t **ctorParams;
+    struct DataType_t **ctorParams;
     int ctorParamCount;
     int ctorParamCapacity;
 
@@ -120,21 +127,21 @@ typedef struct DTStructTy_t
         struct GenericType_t **params;
         int paramCount;
         struct StructType_t *baseStruct;
-        struct NEW_DataType_t **typeArgs;
+        struct DataType_t **typeArgs;
     } generic;
 
     // Regular Struct Methods
 
     void (*addProperty)(struct DTStructTy_t *self, struct ASTNode_t *property);
     void (*addMethod)(struct DTStructTy_t *self, struct ASTNode_t *method);
-    void (*addCtorParam)(struct DTStructTy_t *self, struct NEW_DataType_t *param);
+    void (*addCtorParam)(struct DTStructTy_t *self, struct DataType_t *param);
 
     // Generic Struct Methods
 
     void (*addGenericParam)(struct DTStructTy_t *self, struct GenericType_t *param);
-    struct StructType_t *(*substituteGenericType)(struct StructType_t *structDef, struct NEW_DataType_t *genericParam, struct NEW_DataType_t *concreteType);
-    struct ASTNode_t *(*cloneAndSubstituteGenericMethod)(struct ASTNode_t *method, struct NEW_DataType_t *concreteType);
-    struct ASTNode_t *(*cloneAndSubstituteGenericParam)(struct ASTNode_t *param, struct NEW_DataType_t *concreteType);
+    struct StructType_t *(*substituteGenericType)(struct StructType_t *structDef, struct DataType_t *genericParam, struct DataType_t *concreteType);
+    struct ASTNode_t *(*cloneAndSubstituteGenericMethod)(struct ASTNode_t *method, struct DataType_t *concreteType);
+    struct ASTNode_t *(*cloneAndSubstituteGenericParam)(struct ASTNode_t *param, struct DataType_t *concreteType);
 
 } DTStructTy;
 
@@ -142,16 +149,16 @@ typedef struct DTClassTy_t
 {
     const char *name;
 
-    NEW_DataType **properties;
+    DataType **properties;
     int propertyCount;
     int propertyCapacity;
 
-    NEW_DataType **methods;
+    DataType **methods;
     int methodCount;
     int methodCapacity;
 
     bool hasConstructor;
-    struct NEW_DataType_t **ctorParams;
+    struct DataType_t **ctorParams;
     int ctorParamCount;
     int ctorParamCapacity;
 
@@ -173,11 +180,11 @@ typedef struct DTObjectType_t
 {
     const char *name;
 
-    NEW_DataType **properties;
+    DataType **properties;
     int propertyCount;
     int propertyCapacity;
 
-    NEW_DataType **methods;
+    DataType **methods;
     int methodCount;
     int methodCapacity;
 } DTObjectType;
@@ -188,19 +195,19 @@ typedef struct TypeContainer_t
     TypeofDataType baseType;
     union
     {
-        DTSimpleTy      *simpleType;
-        DTArrayTy       *arrayType;
-        DTEnumTy        *enumType;
-        DTFunctionTy    *functionType;
-        DTStructTy      *structType;
-        DTClassTy       *classType;
-        DTObjectType    *objectType;
+        DTSimpleTy *simpleType;
+        DTArrayTy *arrayType;
+        DTEnumTy *enumType;
+        DTFunctionTy *functionType;
+        DTStructTy *structType;
+        DTClassTy *classType;
+        DTObjectType *objectType;
     } type;
 } TypeContainer;
 
-typedef struct NEW_DataType_t
+typedef struct DataType_t
 {
-    TypeContainer *typeContainer;
+    TypeContainer *container;
     const char *typeName;
     bool isConst;
     bool isPointer;
@@ -210,11 +217,20 @@ typedef struct NEW_DataType_t
 
     // ============================
 
-    void (*cast)(NEW_DataType *type, NEW_DataType *toType);
-} NEW_DataType;
+    void (*cast)(DataType *fromType, DataType *toType);
+} DataType;
 
 // =========================== Function Prototypes =========================== //
 
 DTDebug *createDTDebug(void);
+
+DTArrayTy *createDTArrayTy(void);
+DTEnumTy *createDTEnumTy(void);
+DTFunctionTy *createDTFunctionTy(void);
+DTSimpleTy *createDTSimpleTy(void);
+DTStructTy *createDTStructTy(void);
+DTClassTy *createDTClassTy(void);
+DTObjectType *createDTObjectType(void);
+TypeContainer *createTypeContainer(void);
 
 #endif // DATA_TYPE_DEFS_H

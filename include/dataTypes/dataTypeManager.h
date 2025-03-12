@@ -26,7 +26,7 @@
 
 #include "frontend/tokens.h"
 #include "frontend/AST.h"
-#include "dataTypes/dataTypes.h"
+#include "dataTypes/dataTypeDefs.h"
 
 #define SYMBOL_TABLE_INITIAL_CAPACITY 32
 
@@ -226,6 +226,8 @@ typedef struct DataTypeManager_t
     // Function Prototypes
 
     void (*initDefinitions)(const char *compilerRootPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+    DataType *(*getTypeofASTNode)(ASTNode *node);
 } DataTypeManager;
 
 // ------------------------ Function Prototypes ------------------------- //
