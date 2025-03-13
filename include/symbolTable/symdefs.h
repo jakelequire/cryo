@@ -22,7 +22,7 @@
 #define MAX_SYMBOLS 1024
 
 typedef struct ASTNode ASTNode;
-typedef struct DataType DataType;
+typedef struct DataType_t DataType;
 typedef struct Symbol Symbol;
 
 typedef enum TypeOfSymbol

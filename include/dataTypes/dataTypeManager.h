@@ -26,7 +26,6 @@
 
 #include "frontend/tokens.h"
 #include "frontend/AST.h"
-#include "frontend/lexer.h"
 #include "dataTypes/dataTypeDefs.h"
 
 #define SYMBOL_TABLE_INITIAL_CAPACITY 32
@@ -34,7 +33,7 @@
 // ---------------------- Forward Declarations ---------------------- //
 
 typedef struct DataTypeManager_t DataTypeManager;
-typedef struct DataType DataType;
+typedef struct DataType_t DataType;
 typedef struct CompilerState CompilerState;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 

@@ -27,7 +27,7 @@
 #include "common/common.h"
 #include "settings/compilerArgs.h"
 #include "tools/cryoconfig/cryoconfig.h"
-#include "version.h"
+#include "../../version.h"
 
 #define COMPILER_VERSION _COMPILER_VERSION_
 #define CURRENT_DEBUG_LEVEL DEBUG_LEVEL

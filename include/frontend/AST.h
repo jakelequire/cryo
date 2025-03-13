@@ -34,9 +34,11 @@
 #include "common/common.h"
 #include "tools/utils/cWrappers.h"
 
-typedef struct DataType DataType;
+typedef struct DataType_t DataType;
 typedef struct GenericType GenericType;
 typedef struct ParsingContext ParsingContext;
+typedef struct CompilerState CompilerState;
+typedef struct Lexer Lexer;
 
 typedef struct ASTNode ASTNode;
 typedef struct CompilerSettings CompilerSettings;

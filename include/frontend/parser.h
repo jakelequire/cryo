@@ -50,7 +50,7 @@ typedef struct CompilerState CompilerState;
 typedef struct Position Position;
 typedef struct ConstructorMetaData ConstructorMetaData;
 
-typedef struct DataType DataType;
+typedef struct DataType_t DataType;
 typedef struct GenericType GenericType;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 

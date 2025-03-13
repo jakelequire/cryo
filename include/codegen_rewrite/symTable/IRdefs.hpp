@@ -44,7 +44,7 @@ namespace Cryo
     typedef struct IRPropertySymbol IRPropertySymbol;
     typedef struct IRMethodSymbol IRMethodSymbol;
     typedef struct ASTNode ASTnode;
-    typedef struct DataType DataType;
+    typedef struct DataType_t DataType;
 
     enum class AllocaType
     {

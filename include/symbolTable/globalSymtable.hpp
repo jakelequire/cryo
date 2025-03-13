@@ -26,7 +26,7 @@ extern "C"
 #include "tools/utils/c_logger.h"
 
     typedef struct ASTNode ASTNode;
-    typedef struct DataType DataType;
+    typedef struct DataType_t DataType;
     typedef struct SymbolTable SymbolTable;
     typedef struct VariableSymbol VariableSymbol;
     typedef struct FunctionSymbol FunctionSymbol;
@@ -334,7 +334,7 @@ extern "C"
 #include "tools/utils/c_logger.h"
 
 typedef struct ASTNode ASTNode;
-typedef struct DataType DataType;
+typedef struct DataType_t DataType;
 
 #define MAX_SYMBOLS 1024
 #define MAX_DEPENDENCIES 1024
