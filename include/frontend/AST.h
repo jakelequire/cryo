@@ -522,11 +522,11 @@ typedef struct ClassNode
     bool hasDefaultValue;
     bool isStatic;
     // For Private Members
-    PrivateMembers *privateMembers;
+    struct PrivateMembers *privateMembers;
     // For Public Members
-    PublicMembers *publicMembers;
+    struct PublicMembers *publicMembers;
     // For Protected Members
-    ProtectedMembers *protectedMembers;
+    struct ProtectedMembers *protectedMembers;
 } ClassNode;
 
 typedef struct ObjectNode

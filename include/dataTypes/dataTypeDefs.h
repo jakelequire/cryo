@@ -289,8 +289,8 @@ typedef struct DTObjectType_t
     void (*addProperty)(struct DTObjectType_t *self, struct ASTNode_t *property);
     void (*addMethod)(struct DTObjectType_t *self, struct ASTNode_t *method);
 
-    void (*_resizeProperties)(struct DTObjectType_t *self); // Private method
-    void (*_resizeMethods)(struct DTObjectType_t *self);    // Private method
+    void (*_resizeProperties)(struct DTObjectType_t *self); // Private method, do not use outside DTM internals
+    void (*_resizeMethods)(struct DTObjectType_t *self);    // Private method, do not use outside DTM internals
 
 } DTObjectType;
 

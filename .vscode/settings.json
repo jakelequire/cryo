@@ -316,7 +316,8 @@
     "compilationunit.h": "c",
     "cwrappers.h": "c",
     "datatypemanager.h": "c",
-    "parsetypes.h": "c"
+    "parsetypes.h": "c",
+    "datatypedefs.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",
