@@ -315,7 +315,8 @@
     "builddir.h": "c",
     "compilationunit.h": "c",
     "cwrappers.h": "c",
-    "datatypemanager.h": "c"
+    "datatypemanager.h": "c",
+    "parsetypes.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

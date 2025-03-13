@@ -23,7 +23,7 @@
 DataType *DTMPrimitives_createI8(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_I8;
 
     return wrapTypeContainer(container);
@@ -32,7 +32,7 @@ DataType *DTMPrimitives_createI8(void)
 DataType *DTMPrimitives_createI16(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_I16;
 
     return wrapTypeContainer(container);
@@ -41,7 +41,7 @@ DataType *DTMPrimitives_createI16(void)
 DataType *DTMPrimitives_createI32(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_I32;
 
     return wrapTypeContainer(container);
@@ -50,7 +50,7 @@ DataType *DTMPrimitives_createI32(void)
 DataType *DTMPrimitives_createI64(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_I64;
 
     return wrapTypeContainer(container);
@@ -59,7 +59,7 @@ DataType *DTMPrimitives_createI64(void)
 DataType *DTMPrimitives_createI128(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_I128;
 
     return wrapTypeContainer(container);
@@ -68,7 +68,7 @@ DataType *DTMPrimitives_createI128(void)
 DataType *DTMPrimitives_createInt(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_INT;
 
     return wrapTypeContainer(container);
@@ -77,7 +77,7 @@ DataType *DTMPrimitives_createInt(void)
 DataType *DTMPrimitives_createFloat(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_FLOAT;
 
     return wrapTypeContainer(container);
@@ -86,7 +86,7 @@ DataType *DTMPrimitives_createFloat(void)
 DataType *DTMPrimitives_createString(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_STRING;
 
     return wrapTypeContainer(container);
@@ -95,7 +95,7 @@ DataType *DTMPrimitives_createString(void)
 DataType *DTMPrimitives_createBoolean(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_BOOLEAN;
 
     return wrapTypeContainer(container);
@@ -104,7 +104,7 @@ DataType *DTMPrimitives_createBoolean(void)
 DataType *DTMPrimitives_createVoid(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_VOID;
 
     return wrapTypeContainer(container);
@@ -113,7 +113,7 @@ DataType *DTMPrimitives_createVoid(void)
 DataType *DTMPrimitives_createNull(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_NULL;
 
     return wrapTypeContainer(container);
@@ -122,7 +122,7 @@ DataType *DTMPrimitives_createNull(void)
 DataType *DTMPrimitives_createAny(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_ANY;
 
     return wrapTypeContainer(container);
@@ -131,7 +131,7 @@ DataType *DTMPrimitives_createAny(void)
 DataType *DTMPrimitives_createUndefined(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_UNDEFINED;
 
     return wrapTypeContainer(container);
@@ -140,7 +140,7 @@ DataType *DTMPrimitives_createUndefined(void)
 DataType *DTMPrimitives_createAutoTy(void)
 {
     TypeContainer *container = createTypeContainer();
-    container->baseType = PRIMITIVE_TYPE;
+    container->typeOf = PRIMITIVE_TYPE;
     container->primitive = PRIM_AUTO;
 
     return wrapTypeContainer(container);

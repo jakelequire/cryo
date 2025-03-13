@@ -68,42 +68,93 @@ typedef struct DTDebug_t
     const char *(*typeToString)(struct DataType_t *type);
 } DTDebug;
 
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------ Simple Data Type ------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
+
 typedef struct DTSimpleTy_t
 {
+    // ==================== [ Property Assignments ] ==================== //
+
     PrimitiveDataType primitive;
     TypeofDataType baseType;
-    bool isGeneric;
+
 } DTSimpleTy;
+
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------ Array Data Type -------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
 
 typedef struct DTArrayTy_t
 {
+    // ==================== [ Property Assignments ] ==================== //
+
+    struct DataType_t **elements;
     int elementCount;
+    int elementCapacity;
     int dimensions;
-    struct DataType_t *elementType;
+    struct DataType_t *baseType;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    void (*addElement)(struct DTDynArrayTy_t *self, struct DataType_t *element);
+    void (*removeElement)(struct DTDynArrayTy_t *self, struct DataType_t *element);
+    void (*resize)(struct DTDynArrayTy_t *self);
+    void (*reset)(struct DTDynArrayTy_t *self);
+    void (*free)(struct DTDynArrayTy_t *self);
+    void (*freeData)(struct DTDynArrayTy_t *self);
+    void (*printArray)(struct DTDynArrayTy_t *self);
 } DTArrayTy;
+
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------ Enum Data Type --------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
 
 typedef struct DTEnumTy_t
 {
+    // ==================== [ Property Assignments ] ==================== //
+
     const char *name;
     struct ASTNode_t **values;
     int valueCount;
     int valueCapacity;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    void (*addValue)(struct DTEnumTy_t *self, struct ASTNode_t *value);
+    void (*setValues)(struct DTEnumTy_t *self, struct ASTNode_t **values, int valueCount);
+
 } DTEnumTy;
+
+// ------------------------------------------------------------------------------------------- //
+// ----------------------------------- Function Data Type ------------------------------------ //
+// ------------------------------------------------------------------------------------------- //
 
 typedef struct DTFunctionTy_t
 {
+    // ==================== [ Property Assignments ] ==================== //
+
     struct DataType_t *returnType;
     struct DataType_t **paramTypes;
     int paramCount;
     int paramCapacity;
 
+    // ==================== [ Function Assignments ] ==================== //
+
     void (*addParam)(struct DTFunctionTy_t *self, struct DataType_t *param);
     void (*setParams)(struct DTFunctionTy_t *self, struct DataType_t **params, int paramCount);
     void (*setReturnType)(struct DTFunctionTy_t *self, struct DataType_t *returnType);
+
 } DTFunctionTy;
+
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------ Struct Data Type ------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
 
 typedef struct DTStructTy_t
 {
+    // ==================== [ Property Assignments ] ==================== //
+
     const char *name;
 
     struct DataType_t **properties;
@@ -126,11 +177,12 @@ typedef struct DTStructTy_t
         bool isGeneric;
         struct GenericType_t **params;
         int paramCount;
+        int paramCapacity;
         struct StructType_t *baseStruct;
         struct DataType_t **typeArgs;
     } generic;
 
-    // Regular Struct Methods
+    // ==================== [ Function Assignments ] ==================== //
 
     void (*addProperty)(struct DTStructTy_t *self, struct ASTNode_t *property);
     void (*addMethod)(struct DTStructTy_t *self, struct ASTNode_t *method);
@@ -144,6 +196,43 @@ typedef struct DTStructTy_t
     struct ASTNode_t *(*cloneAndSubstituteGenericParam)(struct ASTNode_t *param, struct DataType_t *concreteType);
 
 } DTStructTy;
+
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------- Class Data Type ------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
+
+typedef struct DTPublicMembersTypes_t
+{
+    DataType **properties;
+    int propertyCount;
+    int propertyCapacity;
+
+    DataType **methods;
+    int methodCount;
+    int methodCapacity;
+} DTPublicMembersTypes;
+
+typedef struct DTPrivateMembersTypes_t
+{
+    DataType **properties;
+    int propertyCount;
+    int propertyCapacity;
+
+    DataType **methods;
+    int methodCount;
+    int methodCapacity;
+} DTPrivateMembersTypes;
+
+typedef struct DTProtectedMembersTypes_t
+{
+    DataType **properties;
+    int propertyCount;
+    int propertyCapacity;
+
+    DataType **methods;
+    int methodCount;
+    int methodCapacity;
+} DTProtectedMembersTypes;
 
 typedef struct DTClassTy_t
 {
@@ -162,19 +251,26 @@ typedef struct DTClassTy_t
     int ctorParamCount;
     int ctorParamCapacity;
 
-    struct PublicMembersTypes_t *publicMembers;
-    struct PrivateMembersTypes_t *privateMembers;
-    struct ProtectedMembersTypes_t *protectedMembers;
+    struct DTPublicMembersTypes_t *publicMembers;
+    struct DTPrivateMembersTypes_t *privateMembers;
+    struct DTProtectedMembersTypes_t *protectedMembers;
 
-    // Regular Class Methods
+    // ==================== [ Function Assignments ] ==================== //
 
     void (*addPublicProperty)(struct DTClassTy_t *self, struct ASTNode_t *property);
     void (*addPublicMethod)(struct DTClassTy_t *self, struct ASTNode_t *method);
+
     void (*addPrivateProperty)(struct DTClassTy_t *self, struct ASTNode_t *property);
     void (*addPrivateMethod)(struct DTClassTy_t *self, struct ASTNode_t *method);
+
     void (*addProtectedProperty)(struct DTClassTy_t *self, struct ASTNode_t *property);
     void (*addProtectedMethod)(struct DTClassTy_t *self, struct ASTNode_t *method);
+
 } DTClassTy;
+
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------ Object Data Type ------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
 
 typedef struct DTObjectType_t
 {
@@ -187,12 +283,37 @@ typedef struct DTObjectType_t
     DataType **methods;
     int methodCount;
     int methodCapacity;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    void (*addProperty)(struct DTObjectType_t *self, struct ASTNode_t *property);
+    void (*addMethod)(struct DTObjectType_t *self, struct ASTNode_t *method);
+
+    void (*_resizeProperties)(struct DTObjectType_t *self); // Private method
+    void (*_resizeMethods)(struct DTObjectType_t *self);    // Private method
+
 } DTObjectType;
+
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------ Generic Data Type ------------------------------------ //
+// ------------------------------------------------------------------------------------------- //
+
+typedef struct DTGenericType_t
+{
+    const char *name;
+    DataType *constraint;
+    int dimensions;
+    struct GenericType_t *next;
+} DTGenericType;
+
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------- Type Container -------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
 
 typedef struct TypeContainer_t
 {
     PrimitiveDataType primitive;
-    TypeofDataType baseType;
+    TypeofDataType typeOf;
     union
     {
         DTSimpleTy *simpleType;
@@ -202,8 +323,13 @@ typedef struct TypeContainer_t
         DTStructTy *structType;
         DTClassTy *classType;
         DTObjectType *objectType;
+        DTGenericType *genericType;
     } type;
 } TypeContainer;
+
+// ------------------------------------------------------------------------------------------- //
+// ---------------------------------------- Data Type ---------------------------------------- //
+// ------------------------------------------------------------------------------------------- //
 
 typedef struct DataType_t
 {
@@ -213,14 +339,19 @@ typedef struct DataType_t
     bool isPointer;
     bool isReference;
 
-    DTDebug *debug;
+    DTDebug *debug; // This is the debug Object for development purposes
 
-    // ============================
+    // ==================== [ Function Assignments ] ==================== //
 
     void (*cast)(DataType *fromType, DataType *toType);
+    void (*setConst)(DataType *type);
+    void (*setPointer)(DataType *type);
+    void (*setReference)(DataType *type);
+    void (*setTypeName)(DataType *type, const char *name);
+    void (*free)(DataType *type);
 } DataType;
 
-// =========================== Function Prototypes =========================== //
+// ----------------------------------- Function Prototypes ----------------------------------- //
 
 DTDebug *createDTDebug(void);
 
@@ -231,6 +362,7 @@ DTSimpleTy *createDTSimpleTy(void);
 DTStructTy *createDTStructTy(void);
 DTClassTy *createDTClassTy(void);
 DTObjectType *createDTObjectType(void);
+
 TypeContainer *createTypeContainer(void);
 
 #endif // DATA_TYPE_DEFS_H

@@ -26,6 +26,7 @@
 
 #include "frontend/tokens.h"
 #include "frontend/AST.h"
+#include "frontend/lexer.h"
 #include "dataTypes/dataTypeDefs.h"
 
 #define SYMBOL_TABLE_INITIAL_CAPACITY 32
@@ -38,6 +39,7 @@ typedef struct CompilerState CompilerState;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 extern DataTypeManager *globalDataTypeManager;
+
 // The Global Data Type Manager
 #define DTM globalDataTypeManager
 #define INIT_DTM() initGlobalDataTypeManagerInstance();
@@ -76,10 +78,16 @@ typedef struct DTMDynamicTuple_t
     void (*printTuple)(struct DTMDynamicTuple_t *tuple);
 } DTMDynamicTuple;
 
+typedef struct DTMTypeContainerWrappers_t
+{
+
+} DTMTypeContainerWrappers;
+
 typedef struct DTMHelpers_t
 {
     DTMDynamicTypeArray *dynTypeArray;
     DTMDynamicTuple *dynTuple;
+    DTMTypeContainerWrappers *typeWrappers;
 } DTMHelpers;
 
 // ----------------------- Primitive Data Type Interface ----------------------- //
@@ -187,6 +195,14 @@ typedef struct DTMDataTypes_t
 {
     TypeContainer *(*createTypeContainer)(void);
     DataType *(*wrapTypeContainer)(TypeContainer *container);
+    DataType *(*wrapFunctionType)(DTFunctionTy *functionType);
+    DataType *(*wrapArrayType)(DTArrayTy *arrayType);
+    DataType *(*wrapEnumType)(DTEnumTy *enumType);
+    DataType *(*wrapSimpleType)(DTSimpleTy *simpleType);
+    DataType *(*wrapObjectType)(DTObjectType *objectType);
+    DataType *(*wrapGenericType)(DTGenericType *genericType);
+    DataType *(*wrapStructType)(DTStructTy *structType);
+    DataType *(*wrapClassType)(DTClassTy *classType);
 } DTMDataTypes;
 
 // -------------------------- Data Type Manager -------------------------- //
@@ -225,15 +241,19 @@ typedef struct DataTypeManager_t
     // -----------------------------
     // Function Prototypes
 
+    // Initialize the type definitions for the Data Type Manager.
     void (*initDefinitions)(const char *compilerRootPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
     DataType *(*getTypeofASTNode)(ASTNode *node);
+    DataType *(*parseType)(const char *typeStr);
 } DataTypeManager;
 
 // ------------------------ Function Prototypes ------------------------- //
 
 // Initialize the global Data Type Manager instance.
 void initGlobalDataTypeManagerInstance(void);
+
+DataType *DTMParseType(const char *typeStr);
 
 // ----------------------- Constructor Prototypes ----------------------- //
 
@@ -253,6 +273,7 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
 
 DTMDynamicTypeArray *createDTMDynamicTypeArray(void);
 DTMDynamicTuple *createDTMDynamicTuple(void);
+DTMTypeContainerWrappers *createDTMTypeContainerWrappers(void);
 DTMHelpers *createDTMHelpers(void);
 
 DTMDataTypes *createDTMDataTypes(void);

@@ -20,42 +20,6 @@
 // This is initialized in the `main` function of the compiler.
 DataTypeManager *globalDataTypeManager = NULL;
 
-
-// --------------------------------------------------------------------------------------------------- //
-// ----------------------------------- Debugging Functions ------------------------------------------- //
-// --------------------------------------------------------------------------------------------------- //
-
-void DTMDebug_printDataType(DataType *type)
-{
-    if (!type)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
-        CONDITION_FAILED;
-    }
-
-    printf("Data Type: %s\n", type->container->custom.name);
-}
-
-// --------------------------------------------------------------------------------------------------- //
-// ------------------------------------- Struct Data Types ------------------------------------------- //
-// --------------------------------------------------------------------------------------------------- //
-
-DTMDebug *createDTMDebug(void)
-{
-    DTMDebug *debug = (DTMDebug *)malloc(sizeof(DTMDebug));
-    if (!debug)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Debug\n");
-        CONDITION_FAILED;
-    }
-
-    // ==================== [ Function Assignments ] ==================== //
-
-    debug->printDataType = DTMDebug_printDataType;
-
-    return debug;
-}
-
 // --------------------------------------------------------------------------------------------------- //
 // ------------------------------------- Struct Data Types ------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
@@ -98,31 +62,16 @@ DTMClassTypes *createDTMClassTypes(void)
 
 DataType *DTMFunctionTypes_createFunctionTemplate(void)
 {
-    TypeContainer *container = createTypeContainer();
-    container->baseType = FUNCTION_TYPE;
-
-    return wrapTypeContainer(container);
+    DTFunctionTy *function = createDTFunctionTy();
+    return DTM->dataTypes->wrapFunctionType(function);
 }
 
 DataType *DTMFunctionTypes_createFunctionType(DataType **paramTypes, int paramCount, DataType *returnType)
 {
-    TypeContainer *container = createTypeContainer();
-    container->baseType = FUNCTION_TYPE;
-
-    FunctionType *funcDef = (FunctionType *)malloc(sizeof(FunctionType));
-    if (!funcDef)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate FunctionType\n");
-        CONDITION_FAILED;
-    }
-
-    funcDef->paramTypes = paramTypes;
-    funcDef->paramCount = paramCount;
-    funcDef->returnType = returnType;
-
-    container->custom.funcDef = funcDef;
-
-    return wrapTypeContainer(container);
+    DTFunctionTy *function = createDTFunctionTy();
+    function->setParams(function, paramTypes, paramCount);
+    function->setReturnType(function, returnType);
+    return DTM->dataTypes->wrapFunctionType(function);
 }
 
 DTMFunctionTypes *createDTMFunctionTypes(void)
@@ -308,30 +257,102 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
 // ---------------------------------- Data Types Implementation -------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
-DTTypeContainer *DTMDataTypes_createTypeContainer(void)
+TypeContainer *DTMTypeContainerWrappers_createTypeContainer(void)
 {
-    DTTypeContainer *container = (DTTypeContainer *)malloc(sizeof(DTTypeContainer));
+    TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
     if (!container)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Type Container\n");
+        fprintf(stderr, "[Data Type Manager] Error: Failed to create Type Container\n");
         CONDITION_FAILED;
     }
 
     return container;
 }
 
-NEW_DataType *DTMDataTypes_wrapTypeContainer(DTTypeContainer *container)
+DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
 {
-    NEW_DataType *type = (NEW_DataType *)malloc(sizeof(NEW_DataType));
+    DataType *type = (DataType *)malloc(sizeof(DataType));
     if (!type)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Data Type\n");
+        fprintf(stderr, "[Data Type Manager] Error: Failed to wrap Type Container\n");
         CONDITION_FAILED;
     }
 
-    type->typeContainer = container;
+    type->container = container;
 
     return type;
+}
+
+DataType *DTMTypeContainerWrappers_wrapSimpleType(DTSimpleTy *simpleTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = PRIMITIVE_TYPE;
+    container->type.simpleType = simpleTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapArrayType(DTArrayTy *arrayTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = ARRAY_TYPE;
+    container->type.arrayType = arrayTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapEnumType(DTEnumTy *enumTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = ENUM_TYPE;
+    container->type.enumType = enumTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapFunctionType(DTFunctionTy *functionTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = FUNCTION_TYPE;
+    container->type.functionType = functionTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapStructType(DTStructTy *structTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = STRUCT_TYPE;
+    container->type.structType = structTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapClassType(DTClassTy *classTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = CLASS_TYPE;
+    container->type.classType = classTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapObjectType(DTObjectType *objectTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = OBJECT_TYPE;
+    container->type.objectType = objectTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapGenericType(DTGenericType *genericTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = GENERIC_TYPE;
+    container->type.genericType = genericTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
 DTMDataTypes *createDTMDataTypes(void)
@@ -345,8 +366,16 @@ DTMDataTypes *createDTMDataTypes(void)
 
     // ==================== [ Function Assignments ] ==================== //
 
-    dataTypes->createTypeContainer = DTMDataTypes_createTypeContainer;
-    dataTypes->wrapTypeContainer = DTMDataTypes_wrapTypeContainer;
+    dataTypes->createTypeContainer = DTMTypeContainerWrappers_createTypeContainer;
+    dataTypes->wrapTypeContainer = DTMTypeContainerWrappers_wrapTypeContainer;
+    dataTypes->wrapSimpleType = DTMTypeContainerWrappers_wrapSimpleType;
+    dataTypes->wrapArrayType = DTMTypeContainerWrappers_wrapArrayType;
+    dataTypes->wrapEnumType = DTMTypeContainerWrappers_wrapEnumType;
+    dataTypes->wrapFunctionType = DTMTypeContainerWrappers_wrapFunctionType;
+    dataTypes->wrapStructType = DTMTypeContainerWrappers_wrapStructType;
+    dataTypes->wrapClassType = DTMTypeContainerWrappers_wrapClassType;
+    dataTypes->wrapObjectType = DTMTypeContainerWrappers_wrapObjectType;
+    dataTypes->wrapGenericType = DTMTypeContainerWrappers_wrapGenericType;
 
     return dataTypes;
 }
@@ -363,6 +392,13 @@ void initGlobalDataTypeManagerInstance(void)
 
 void DataTypeManager_initDefinitions(const char *compilerRootPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    if (DTM->defsInitialized)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Definitions already initialized\n");
+        CONDITION_FAILED;
+        return;
+    }
+
     const char *defsPath = fs->appendStrings(compilerRootPath, "/Std/Runtime/defs.cryo");
     if (!defsPath)
     {
@@ -413,6 +449,7 @@ DataTypeManager *createDataTypeManager(void)
     // ===================== [ Function Assignments ] ===================== //
 
     manager->initDefinitions = DataTypeManager_initDefinitions;
+    manager->parseType = DTMParseType;
 
     return manager;
 }
