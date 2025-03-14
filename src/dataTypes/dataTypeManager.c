@@ -315,7 +315,7 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
     return type;
 }
 
-DataType *DTMTypeContainerWrappers_wrapSimpleType(DTSimpleTy *simpleTy)
+DataType *DTMTypeContainerWrappers_wrapSimpleType(struct DTSimpleTy_t *simpleTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = PRIM_TYPE;
@@ -324,7 +324,7 @@ DataType *DTMTypeContainerWrappers_wrapSimpleType(DTSimpleTy *simpleTy)
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
-DataType *DTMTypeContainerWrappers_wrapArrayType(DTArrayTy *arrayTy)
+DataType *DTMTypeContainerWrappers_wrapArrayType(struct DTArrayTy_t *arrayTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = ARRAY_TYPE;
@@ -333,7 +333,7 @@ DataType *DTMTypeContainerWrappers_wrapArrayType(DTArrayTy *arrayTy)
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
-DataType *DTMTypeContainerWrappers_wrapEnumType(DTEnumTy *enumTy)
+DataType *DTMTypeContainerWrappers_wrapEnumType(struct DTEnumTy_t *enumTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = ENUM_TYPE;
@@ -342,7 +342,7 @@ DataType *DTMTypeContainerWrappers_wrapEnumType(DTEnumTy *enumTy)
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
-DataType *DTMTypeContainerWrappers_wrapFunctionType(DTFunctionTy *functionTy)
+DataType *DTMTypeContainerWrappers_wrapFunctionType(struct DTFunctionTy_t *functionTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = FUNCTION_TYPE;
@@ -351,7 +351,7 @@ DataType *DTMTypeContainerWrappers_wrapFunctionType(DTFunctionTy *functionTy)
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
-DataType *DTMTypeContainerWrappers_wrapStructType(DTStructTy *structTy)
+DataType *DTMTypeContainerWrappers_wrapStructType(struct DTStructTy_t *structTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
@@ -360,7 +360,7 @@ DataType *DTMTypeContainerWrappers_wrapStructType(DTStructTy *structTy)
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
-DataType *DTMTypeContainerWrappers_wrapClassType(DTClassTy *classTy)
+DataType *DTMTypeContainerWrappers_wrapClassType(struct DTClassTy_t *classTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
@@ -369,7 +369,7 @@ DataType *DTMTypeContainerWrappers_wrapClassType(DTClassTy *classTy)
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
-DataType *DTMTypeContainerWrappers_wrapObjectType(DTObjectType *objectTy)
+DataType *DTMTypeContainerWrappers_wrapObjectType(struct DTObjectTy_t *objectTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
@@ -378,7 +378,7 @@ DataType *DTMTypeContainerWrappers_wrapObjectType(DTObjectType *objectTy)
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
-DataType *DTMTypeContainerWrappers_wrapGenericType(DTGenericType *genericTy)
+DataType *DTMTypeContainerWrappers_wrapGenericType(struct DTGenericTy_t *genericTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = GENERIC_TYPE;
@@ -400,6 +400,7 @@ DTMDataTypes *createDTMDataTypes(void)
 
     dataTypes->createTypeContainer = DTMTypeContainerWrappers_createTypeContainer;
     dataTypes->wrapTypeContainer = DTMTypeContainerWrappers_wrapTypeContainer;
+
     dataTypes->wrapSimpleType = DTMTypeContainerWrappers_wrapSimpleType;
     dataTypes->wrapArrayType = DTMTypeContainerWrappers_wrapArrayType;
     dataTypes->wrapEnumType = DTMTypeContainerWrappers_wrapEnumType;

@@ -175,7 +175,7 @@ typedef struct DTStructTy_t
     struct
     {
         bool isGeneric;
-        struct DTGenericType_t **params;
+        struct DTGenericTy_t **params;
         int paramCount;
         int paramCapacity;
         struct StructType_t *baseStruct;
@@ -184,16 +184,16 @@ typedef struct DTStructTy_t
 
     // ==================== [ Function Assignments ] ==================== //
 
-    void (*addProperty)(struct DTStructTy_t *self, struct ASTNode *property);
-    void (*addMethod)(struct DTStructTy_t *self, struct ASTNode *method);
+    void (*addProperty)(struct DTStructTy_t *self, struct DataType_t *property);
+    void (*addMethod)(struct DTStructTy_t *self, struct DataType_t *method);
     void (*addCtorParam)(struct DTStructTy_t *self, struct DataType_t *param);
 
     // Generic Struct Methods
 
-    void (*addGenericParam)(struct DTStructTy_t *self, struct GenericType_t *param);
-    struct StructType_t *(*substituteGenericType)(struct StructType_t *structDef, struct DataType_t *genericParam, struct DataType_t *concreteType);
-    struct ASTNode *(*cloneAndSubstituteGenericMethod)(struct ASTNode *method, struct DataType_t *concreteType);
-    struct ASTNode *(*cloneAndSubstituteGenericParam)(struct ASTNode *param, struct DataType_t *concreteType);
+    void (*addGenericParam)(struct DTStructTy_t *self, struct DTGenericTy_t *param);
+    struct DTStructTy_t *(*substituteGenericType)(struct DTStructTy_t *structDef, struct DTGenericTy_t *genericParam, struct DataType_t *concreteType);
+    struct DTStructTy_t *(*cloneAndSubstituteGenericMethod)(struct DTStructTy_t *structType, struct DTGenericTy_t *DTGenericType, struct DataType_t *substituteType);
+    struct DTStructTy_t *(*cloneAndSubstituteGenericParam)(struct DTStructTy_t *structType, struct DTGenericTy_t *DTGenericType, struct DataType_t *substituteType);
 
 } DTStructTy;
 
@@ -257,14 +257,14 @@ typedef struct DTClassTy_t
 
     // ==================== [ Function Assignments ] ==================== //
 
-    void (*addPublicProperty)(struct DTClassTy_t *self, struct ASTNode *property);
-    void (*addPublicMethod)(struct DTClassTy_t *self, struct ASTNode *method);
+    void (*addPublicProperty)(struct DTClassTy_t *self, struct DataType_t *property);
+    void (*addPublicMethod)(struct DTClassTy_t *self, struct DataType_t *method);
 
-    void (*addPrivateProperty)(struct DTClassTy_t *self, struct ASTNode *property);
-    void (*addPrivateMethod)(struct DTClassTy_t *self, struct ASTNode *method);
+    void (*addPrivateProperty)(struct DTClassTy_t *self, struct DataType_t *property);
+    void (*addPrivateMethod)(struct DTClassTy_t *self, struct DataType_t *method);
 
-    void (*addProtectedProperty)(struct DTClassTy_t *self, struct ASTNode *property);
-    void (*addProtectedMethod)(struct DTClassTy_t *self, struct ASTNode *method);
+    void (*addProtectedProperty)(struct DTClassTy_t *self, struct DataType_t *property);
+    void (*addProtectedMethod)(struct DTClassTy_t *self, struct DataType_t *method);
 
 } DTClassTy;
 
@@ -272,7 +272,7 @@ typedef struct DTClassTy_t
 // ------------------------------------ Object Data Type ------------------------------------- //
 // ------------------------------------------------------------------------------------------- //
 
-typedef struct DTObjectType_t
+typedef struct DTObjectTy_t
 {
     const char *name;
 
@@ -286,25 +286,25 @@ typedef struct DTObjectType_t
 
     // ==================== [ Function Assignments ] ==================== //
 
-    void (*addProperty)(struct DTObjectType_t *self, struct ASTNode *property);
-    void (*addMethod)(struct DTObjectType_t *self, struct ASTNode *method);
+    void (*addProperty)(struct DTObjectTy_t *self, struct DataType_t *property);
+    void (*addMethod)(struct DTObjectTy_t *self, struct DataType_t *method);
 
-    void (*_resizeProperties)(struct DTObjectType_t *self); // Private method, do not use outside DTM internals
-    void (*_resizeMethods)(struct DTObjectType_t *self);    // Private method, do not use outside DTM internals
+    void (*_resizeProperties)(struct DTObjectTy_t *self); // Private method, do not use outside DTM internals
+    void (*_resizeMethods)(struct DTObjectTy_t *self);    // Private method, do not use outside DTM internals
 
-} DTObjectType;
+} DTObjectTy;
 
 // ------------------------------------------------------------------------------------------- //
 // ------------------------------------ Generic Data Type ------------------------------------ //
 // ------------------------------------------------------------------------------------------- //
 
-typedef struct DTGenericType_t
+typedef struct DTGenericTy_t
 {
     const char *name;
     DataType *constraint;
     int dimensions;
     struct GenericType_t *next;
-} DTGenericType;
+} DTGenericTy;
 
 // ------------------------------------------------------------------------------------------- //
 // ------------------------------------- Type Container -------------------------------------- //
@@ -316,14 +316,14 @@ typedef struct TypeContainer_t
     TypeofDataType typeOf;
     union
     {
-        DTSimpleTy *simpleType;
-        DTArrayTy *arrayType;
-        DTEnumTy *enumType;
-        DTFunctionTy *functionType;
-        DTStructTy *structType;
-        DTClassTy *classType;
-        DTObjectType *objectType;
-        DTGenericType *genericType;
+        struct DTSimpleTy_t *simpleType;
+        struct DTArrayTy_t *arrayType;
+        struct DTEnumTy_t *enumType;
+        struct DTFunctionTy_t *functionType;
+        struct DTStructTy_t *structType;
+        struct DTClassTy_t *classType;
+        struct DTObjectTy_t *objectType;
+        struct DTGenericTy_t *genericType;
     } type;
 } TypeContainer;
 
@@ -361,7 +361,7 @@ DTFunctionTy *createDTFunctionTy(void);
 DTSimpleTy *createDTSimpleTy(void);
 DTStructTy *createDTStructTy(void);
 DTClassTy *createDTClassTy(void);
-DTObjectType *createDTObjectType(void);
+DTObjectTy *createDTObjectType(void);
 
 TypeContainer *createTypeContainer(void);
 

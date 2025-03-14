@@ -37,13 +37,13 @@ typedef struct DataType_t DataType;
 typedef struct CompilerState CompilerState;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
-typedef struct DTGenericType_t DTGenericType;
+typedef struct DTGenericTy_t DTGenericTy;
 typedef struct DTArrayTy_t DTArrayTy;
 typedef struct DTEnumTy_t DTEnumTy;
 typedef struct DTFunctionTy_t DTFunctionTy;
 typedef struct DTStructTy_t DTStructTy;
 typedef struct DTClassTy_t DTClassTy;
-typedef struct DTObjectType_t DTObjectType;
+typedef struct DTObjectTy_t DTObjectTy;
 typedef struct DTSimpleTy_t DTSimpleTy;
 
 extern DataTypeManager *globalDataTypeManager;
@@ -201,8 +201,8 @@ typedef struct DTMDataTypes_t
     DataType *(*wrapArrayType)(struct DTArrayTy_t *arrayType);
     DataType *(*wrapEnumType)(struct DTEnumTy_t *enumType);
     DataType *(*wrapSimpleType)(struct DTSimpleTy_t *simpleType);
-    DataType *(*wrapObjectType)(struct DTObjectType_t *objectType);
-    DataType *(*wrapGenericType)(struct DTGenericType_t *genericType);
+    DataType *(*wrapObjectType)(struct DTObjectTy_t *objectType);
+    DataType *(*wrapGenericType)(struct DTGenericTy_t *genericType);
     DataType *(*wrapStructType)(struct DTStructTy_t *structType);
     DataType *(*wrapClassType)(struct DTClassTy_t *classType);
 } DTMDataTypes;

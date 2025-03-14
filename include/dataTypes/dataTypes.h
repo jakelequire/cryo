@@ -39,7 +39,7 @@ typedef struct DTEnumTy_t DTEnumTy;
 typedef struct DTFunctionTy_t DTFunctionTy;
 typedef struct DTStructTy_t DTStructTy;
 typedef struct DTClassTy_t DTClassTy;
-typedef struct DTObjectType_t DTObjectType;
-typedef struct DTGenericType_t DTGenericType;
+typedef struct DTObjectTy_t DTObjectTy;
+typedef struct DTGenericTy_t DTGenericTy;
 
 #endif // DATA_TYPES_H

@@ -340,12 +340,12 @@ void DTStructTy_addCtorParam(DTStructTy *structType, DataType *param)
     structType->ctorParams[structType->ctorParamCount++] = param;
 }
 
-void DTStructTy_addGenericParam(DTStructTy *structType, struct DTGenericType_t *param)
+void DTStructTy_addGenericParam(DTStructTy *structType, struct DTGenericTy_t *param)
 {
     if (structType->generic.paramCount >= structType->generic.paramCapacity)
     {
         structType->generic.paramCapacity *= DYN_GROWTH_FACTOR;
-        structType->generic.params = (struct DTGenericType_t **)realloc(structType->generic.params, sizeof(struct DTGenericType_t *) * structType->generic.paramCapacity);
+        structType->generic.params = (struct DTGenericTy_t **)realloc(structType->generic.params, sizeof(struct DTGenericTy_t *) * structType->generic.paramCapacity);
         if (!structType->generic.params)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTStructTy generic params\n");
@@ -356,13 +356,13 @@ void DTStructTy_addGenericParam(DTStructTy *structType, struct DTGenericType_t *
     structType->generic.params[structType->generic.paramCount++] = param;
 }
 
-void DTStructTy_substituteGenericType(DTStructTy *structType, struct DTGenericType_t *DTGenericType, DataType *substituteType)
+struct DTStructTy_t *DTStructTy_substituteGenericType(struct DTStructTy_t *structType, struct DTGenericTy_t *DTGenericType, struct DataType_t *substituteType)
 {
     for (int i = 0; i < structType->propertyCount; i++)
     {
         if (structType->properties[i]->container->typeOf == GENERIC_TYPE)
         {
-            struct DTGenericType_t *generic = structType->properties[i]->container->type.genericType;
+            struct DTGenericTy_t *generic = structType->properties[i]->container->type.genericType;
             if (generic == DTGenericType)
             {
                 structType->properties[i] = substituteType;
@@ -374,43 +374,49 @@ void DTStructTy_substituteGenericType(DTStructTy *structType, struct DTGenericTy
     {
         if (structType->methods[i]->container->typeOf == GENERIC_TYPE)
         {
-            struct DTGenericType_t *generic = structType->methods[i]->container->type.genericType;
+            struct DTGenericTy_t *generic = structType->methods[i]->container->type.genericType;
             if (generic == DTGenericType)
             {
                 structType->methods[i] = substituteType;
             }
         }
     }
+
+    return structType;
 }
 
-void DTStructTy_cloneAndSubstituteGenericMethod(DTStructTy *structType, struct DTGenericType_t *DTGenericType, DataType *substituteType)
+struct DTStructTy_t *DTStructTy_cloneAndSubstituteGenericMethod(struct DTStructTy_t *structType, struct DTGenericTy_t *DTGenericType, struct DataType_t *substituteType)
 {
     for (int i = 0; i < structType->methodCount; i++)
     {
         if (structType->methods[i]->container->typeOf == GENERIC_TYPE)
         {
-            struct DTGenericType_t *generic = structType->methods[i]->container->type.genericType;
+            struct DTGenericTy_t *generic = structType->methods[i]->container->type.genericType;
             if (generic == DTGenericType)
             {
                 structType->methods[i] = substituteType;
             }
         }
     }
+
+    return structType;
 }
 
-void DTStructTy_cloneAndSubstituteGenericParam(DTStructTy *structType, struct DTGenericType_t *DTGenericType, DataType *substituteType)
+struct DTStructTy_t *DTStructTy_cloneAndSubstituteGenericParam(struct DTStructTy_t *structType, struct DTGenericTy_t *DTGenericType, struct DataType_t *substituteType)
 {
     for (int i = 0; i < structType->propertyCount; i++)
     {
         if (structType->properties[i]->container->typeOf == GENERIC_TYPE)
         {
-            struct DTGenericType_t *generic = structType->properties[i]->container->type.genericType;
+            struct DTGenericTy_t *generic = structType->properties[i]->container->type.genericType;
             if (generic == DTGenericType)
             {
                 structType->properties[i] = substituteType;
             }
         }
     }
+
+    return structType;
 }
 
 DTStructTy *createDTStructTy(void)
@@ -452,7 +458,7 @@ DTStructTy *createDTStructTy(void)
 // ------------------------------------ Class Data Types --------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
-void DTClassTy_addPublicProperty(DTClassTy *classType, ASTNode *property)
+void DTClassTy_addPublicProperty(DTClassTy *classType, DataType *property)
 {
     if (classType->publicMembers->propertyCount >= classType->publicMembers->propertyCapacity)
     {
@@ -468,7 +474,7 @@ void DTClassTy_addPublicProperty(DTClassTy *classType, ASTNode *property)
     classType->publicMembers->properties[classType->publicMembers->propertyCount++] = property;
 }
 
-void DTClassTy_addPublicMethod(DTClassTy *classType, ASTNode *method)
+void DTClassTy_addPublicMethod(DTClassTy *classType, DataType *method)
 {
     if (classType->publicMembers->methodCount >= classType->publicMembers->methodCapacity)
     {
@@ -484,7 +490,7 @@ void DTClassTy_addPublicMethod(DTClassTy *classType, ASTNode *method)
     classType->publicMembers->methods[classType->publicMembers->methodCount++] = method;
 }
 
-void DTClassTy_addPrivateProperty(DTClassTy *classType, ASTNode *property)
+void DTClassTy_addPrivateProperty(DTClassTy *classType, DataType *property)
 {
     if (classType->privateMembers->propertyCount >= classType->privateMembers->propertyCapacity)
     {
@@ -500,7 +506,7 @@ void DTClassTy_addPrivateProperty(DTClassTy *classType, ASTNode *property)
     classType->privateMembers->properties[classType->privateMembers->propertyCount++] = property;
 }
 
-void DTClassTy_addPrivateMethod(DTClassTy *classType, ASTNode *method)
+void DTClassTy_addPrivateMethod(DTClassTy *classType, DataType *method)
 {
     if (classType->privateMembers->methodCount >= classType->privateMembers->methodCapacity)
     {
@@ -516,7 +522,7 @@ void DTClassTy_addPrivateMethod(DTClassTy *classType, ASTNode *method)
     classType->privateMembers->methods[classType->privateMembers->methodCount++] = method;
 }
 
-void DTClassTy_addProtectedProperty(DTClassTy *classType, ASTNode *property)
+void DTClassTy_addProtectedProperty(DTClassTy *classType, DataType *property)
 {
     if (classType->protectedMembers->propertyCount >= classType->protectedMembers->propertyCapacity)
     {
@@ -532,7 +538,7 @@ void DTClassTy_addProtectedProperty(DTClassTy *classType, ASTNode *property)
     classType->protectedMembers->properties[classType->protectedMembers->propertyCount++] = property;
 }
 
-void DTClassTy_addProtectedMethod(DTClassTy *classType, ASTNode *method)
+void DTClassTy_addProtectedMethod(DTClassTy *classType, DataType *method)
 {
     if (classType->protectedMembers->methodCount >= classType->protectedMembers->methodCapacity)
     {
@@ -638,7 +644,7 @@ DTClassTy *createDTClassTy(void)
 // ------------------------------------ Object Data Types -------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
-void DTObjectType_addProperty(DTObjectType *objectType, DataType *property)
+void DTObjectType_addProperty(struct DTObjectTy_t *objectType, DataType *property)
 {
     if (objectType->propertyCount >= objectType->propertyCapacity)
     {
@@ -648,7 +654,7 @@ void DTObjectType_addProperty(DTObjectType *objectType, DataType *property)
     objectType->properties[objectType->propertyCount++] = property;
 }
 
-void DTObjectType_addMethod(DTObjectType *objectType, DataType *method)
+void DTObjectType_addMethod(struct DTObjectTy_t *objectType, DataType *method)
 {
     if (objectType->methodCount >= objectType->methodCapacity)
     {
@@ -658,7 +664,7 @@ void DTObjectType_addMethod(DTObjectType *objectType, DataType *method)
     objectType->methods[objectType->methodCount++] = method;
 }
 
-void DTObjectType_resizeMethods(DTObjectType *objectType)
+void DTObjectType_resizeMethods(struct DTObjectTy_t *objectType)
 {
     objectType->methodCapacity *= DYN_GROWTH_FACTOR;
     objectType->methods = (DataType **)realloc(objectType->methods, sizeof(DataType *) * objectType->methodCapacity);
@@ -669,7 +675,7 @@ void DTObjectType_resizeMethods(DTObjectType *objectType)
     }
 }
 
-void DTObjectType_resizeProperties(DTObjectType *objectType)
+void DTObjectType_resizeProperties(struct DTObjectTy_t *objectType)
 {
     objectType->propertyCapacity *= DYN_GROWTH_FACTOR;
     objectType->properties = (DataType **)realloc(objectType->properties, sizeof(DataType *) * objectType->propertyCapacity);
@@ -680,9 +686,9 @@ void DTObjectType_resizeProperties(DTObjectType *objectType)
     }
 }
 
-DTObjectType *createDTObjectType(void)
+struct DTObjectTy_t *createDTObjectType(void)
 {
-    DTObjectType *objectType = (DTObjectType *)malloc(sizeof(DTObjectType));
+    struct DTObjectTy_t *objectType = (struct DTObjectTy_t *)malloc(sizeof(struct DTObjectTy_t));
     if (!objectType)
     {
         fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTObjectType\n");
