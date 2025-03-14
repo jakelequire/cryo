@@ -21,6 +21,37 @@
 DataTypeManager *globalDataTypeManager = NULL;
 
 // --------------------------------------------------------------------------------------------------- //
+// ------------------------------------- DTM Debug Functions ----------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+void DTMDebug_printDataType(DataType *type)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
+        CONDITION_FAILED;
+    }
+
+    printf("Data Type: %s\n", type->typeName);
+}
+
+DTMDebug *createDTMDebug(void)
+{
+    DTMDebug *debug = (DTMDebug *)malloc(sizeof(DTMDebug));
+    if (!debug)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Debug\n");
+        CONDITION_FAILED;
+    }
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    debug->printDataType = DTMDebug_printDataType;
+
+    return debug;
+}
+
+// --------------------------------------------------------------------------------------------------- //
 // ------------------------------------- Struct Data Types ------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
@@ -198,7 +229,8 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
     printf("=================================================================\n");
     for (int i = 0; i < table->entryCount; i++)
     {
-        printf("Name: %s, Type: %s\n", table->entries[i]->name, DataTypeToString(table->entries[i]->type));
+        DataType *type = table->entries[i]->type;
+        printf("Name: %s, Type: %s\n", table->entries[i]->name, type->debug->toString(type));
     }
     printf("=================================================================\n");
 }
@@ -286,7 +318,7 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
 DataType *DTMTypeContainerWrappers_wrapSimpleType(DTSimpleTy *simpleTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = PRIMITIVE_TYPE;
+    container->typeOf = PRIM_TYPE;
     container->type.simpleType = simpleTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -322,7 +354,7 @@ DataType *DTMTypeContainerWrappers_wrapFunctionType(DTFunctionTy *functionTy)
 DataType *DTMTypeContainerWrappers_wrapStructType(DTStructTy *structTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = STRUCT_TYPE;
+    container->typeOf = OBJECT_TYPE;
     container->type.structType = structTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -331,7 +363,7 @@ DataType *DTMTypeContainerWrappers_wrapStructType(DTStructTy *structTy)
 DataType *DTMTypeContainerWrappers_wrapClassType(DTClassTy *classTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = CLASS_TYPE;
+    container->typeOf = OBJECT_TYPE;
     container->type.classType = classTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -378,6 +410,32 @@ DTMDataTypes *createDTMDataTypes(void)
     dataTypes->wrapGenericType = DTMTypeContainerWrappers_wrapGenericType;
 
     return dataTypes;
+}
+
+// --------------------------------------------------------------------------------------------------- //
+// ---------------------------------- AST Interface Implementation ----------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
+{
+
+    return NULL;
+}
+
+DTMastInterface *createDTMAstInterface(void)
+{
+    DTMastInterface *astInterface = (DTMastInterface *)malloc(sizeof(DTMastInterface));
+    if (!astInterface)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM AST Interface\n");
+        CONDITION_FAILED;
+    }
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    astInterface->getTypeofASTNode = DTMastInterface_getTypeofASTNode;
+
+    return astInterface;
 }
 
 // --------------------------------------------------------------------------------------------------- //

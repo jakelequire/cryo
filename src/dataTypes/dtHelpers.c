@@ -97,7 +97,7 @@ void DTMDynamicTypeArray_printArray(DTMDynamicTypeArray *array)
     for (int i = 0; i < array->count; i++)
     {
         DataType *type = array->data[i];
-        sprintf(typeStr, "%s%s", typeStr, DataTypeToString(type));
+        sprintf(typeStr, "%s%s", typeStr, type->debug->toString(type));
         if (i < array->count - 1)
         {
             sprintf(typeStr, "%s, ", typeStr);
@@ -230,7 +230,7 @@ void DTMDynamicTuple_printTuple(DTMDynamicTuple *tuple)
     for (int i = 0; i < tuple->count; i++)
     {
         DataType *type = tuple->values[i];
-        sprintf(typeStr, "%s%s: %s", typeStr, tuple->keys[i], DataTypeToString(type));
+        sprintf(typeStr, "%s%s: %s", typeStr, tuple->keys[i], type->debug->toString(type));
         if (i < tuple->count - 1)
         {
             sprintf(typeStr, "%s, ", typeStr);
@@ -278,35 +278,6 @@ DTMDynamicTuple *createDTMDynamicTuple(void)
     return tuple;
 }
 
-// --------------------------------------------------------------------------------------------------- //
-// ---------------------------------- Type Container Wrappers ---------------------------------------- //
-// --------------------------------------------------------------------------------------------------- //
-
-
-
-DTMTypeContainerWrappers *createDTMTypeContainerWrappers(void)
-{
-    DTMTypeContainerWrappers *wrappers = (DTMTypeContainerWrappers *)malloc(sizeof(DTMTypeContainerWrappers));
-    if (!wrappers)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Type Container Wrappers\n");
-        CONDITION_FAILED;
-    }
-
-    wrappers->createTypeContainer = DTMTypeContainerWrappers_createTypeContainer;
-    wrappers->wrapTypeContainer = DTMTypeContainerWrappers_wrapTypeContainer;
-    wrappers->wrapSimpleType = DTMTypeContainerWrappers_wrapSimpleType;
-    wrappers->wrapArrayType = DTMTypeContainerWrappers_wrapArrayType;
-    wrappers->wrapEnumType = DTMTypeContainerWrappers_wrapEnumType;
-    wrappers->wrapFunctionType = DTMTypeContainerWrappers_wrapFunctionType;
-    wrappers->wrapStructType = DTMTypeContainerWrappers_wrapStructType;
-    wrappers->wrapClassType = DTMTypeContainerWrappers_wrapClassType;
-    wrappers->wrapObjectType = DTMTypeContainerWrappers_wrapObjectType;
-    wrappers->wrapGenericType = DTMTypeContainerWrappers_wrapGenericType;
-
-    return wrappers;
-}
-
 DTMHelpers *createDTMHelpers(void)
 {
     DTMHelpers *helpers = (DTMHelpers *)malloc(sizeof(DTMHelpers));
@@ -318,7 +289,6 @@ DTMHelpers *createDTMHelpers(void)
 
     helpers->dynTypeArray = createDTMDynamicTypeArray();
     helpers->dynTuple = createDTMDynamicTuple();
-    helpers->typeWrappers = createDTMTypeContainerWrappers();
 
     return helpers;
 }

@@ -20,6 +20,7 @@
 // This is a forward declaration file for the data types in the compiler.
 // Please see the `dataTypeDefs.h` file for the actual data type definitions.
 // For using the Data Type Manager, please make sure to ` #include "dataTypes/dataTypeManager.h" ` in your source files.
+
 #ifndef DATA_TYPES_H
 #define DATA_TYPES_H
 #include <stdio.h>

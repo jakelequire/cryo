@@ -37,6 +37,15 @@ typedef struct DataType_t DataType;
 typedef struct CompilerState CompilerState;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
+typedef struct DTGenericType_t DTGenericType;
+typedef struct DTArrayTy_t DTArrayTy;
+typedef struct DTEnumTy_t DTEnumTy;
+typedef struct DTFunctionTy_t DTFunctionTy;
+typedef struct DTStructTy_t DTStructTy;
+typedef struct DTClassTy_t DTClassTy;
+typedef struct DTObjectType_t DTObjectType;
+typedef struct DTSimpleTy_t DTSimpleTy;
+
 extern DataTypeManager *globalDataTypeManager;
 
 // The Global Data Type Manager
@@ -77,16 +86,10 @@ typedef struct DTMDynamicTuple_t
     void (*printTuple)(struct DTMDynamicTuple_t *tuple);
 } DTMDynamicTuple;
 
-typedef struct DTMTypeContainerWrappers_t
-{
-
-} DTMTypeContainerWrappers;
-
 typedef struct DTMHelpers_t
 {
     DTMDynamicTypeArray *dynTypeArray;
     DTMDynamicTuple *dynTuple;
-    DTMTypeContainerWrappers *typeWrappers;
 } DTMHelpers;
 
 // ----------------------- Primitive Data Type Interface ----------------------- //
@@ -193,16 +196,21 @@ typedef struct DTMSymbolTable_t
 typedef struct DTMDataTypes_t
 {
     TypeContainer *(*createTypeContainer)(void);
-    DataType *(*wrapTypeContainer)(TypeContainer *container);
-    DataType *(*wrapFunctionType)(DTFunctionTy *functionType);
-    DataType *(*wrapArrayType)(DTArrayTy *arrayType);
-    DataType *(*wrapEnumType)(DTEnumTy *enumType);
-    DataType *(*wrapSimpleType)(DTSimpleTy *simpleType);
-    DataType *(*wrapObjectType)(DTObjectType *objectType);
-    DataType *(*wrapGenericType)(DTGenericType *genericType);
-    DataType *(*wrapStructType)(DTStructTy *structType);
-    DataType *(*wrapClassType)(DTClassTy *classType);
+    DataType *(*wrapTypeContainer)(struct TypeContainer_t *container);
+    DataType *(*wrapFunctionType)(struct DTFunctionTy_t *functionType);
+    DataType *(*wrapArrayType)(struct DTArrayTy_t *arrayType);
+    DataType *(*wrapEnumType)(struct DTEnumTy_t *enumType);
+    DataType *(*wrapSimpleType)(struct DTSimpleTy_t *simpleType);
+    DataType *(*wrapObjectType)(struct DTObjectType_t *objectType);
+    DataType *(*wrapGenericType)(struct DTGenericType_t *genericType);
+    DataType *(*wrapStructType)(struct DTStructTy_t *structType);
+    DataType *(*wrapClassType)(struct DTClassTy_t *classType);
 } DTMDataTypes;
+
+typedef struct DTMastInterface_t
+{
+    DataType *(*getTypeofASTNode)(ASTNode *node);
+} DTMastInterface;
 
 // -------------------------- Data Type Manager -------------------------- //
 
@@ -217,6 +225,8 @@ typedef struct DataTypeManager_t
     DTMSymbolTable *symbolTable;
     // The data types for the Data Type Manager.
     DTMDataTypes *dataTypes;
+    // The AST interface for the Data Type Manager.
+    DTMastInterface *astInterface;
 
     // Handles all Cryo primitive data types.
     DTMPrimitives *primitives;
@@ -256,10 +266,11 @@ DataType *DTMParseType(const char *typeStr);
 
 // ----------------------- Constructor Prototypes ----------------------- //
 
+DTMDebug *createDTMDebug(void);
+
 // Create a new Data Type Manager instance.
 DataTypeManager *createDataTypeManager(void);
 
-DTMDebug *createDTMDebug(void);
 DTMPrimitives *createDTMPrimitives(void);
 DTMStructTypes *createDTMStructTypes(void);
 DTMClassTypes *createDTMClassTypes(void);
@@ -272,9 +283,10 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
 
 DTMDynamicTypeArray *createDTMDynamicTypeArray(void);
 DTMDynamicTuple *createDTMDynamicTuple(void);
-DTMTypeContainerWrappers *createDTMTypeContainerWrappers(void);
 DTMHelpers *createDTMHelpers(void);
 
 DTMDataTypes *createDTMDataTypes(void);
+DTMastInterface *createDTMAstInterface(void);
+DTMastInterface *createDTMAstInterface(void);
 
 #endif // DATA_TYPE_MANAGER_H

@@ -31,6 +31,31 @@ void DTDebug_printType(struct DataType_t *type)
     printf("Data Type: %s\n", type->typeName);
 }
 
+void DTDebug_printVerbosType(struct DataType_t *type)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
+        CONDITION_FAILED;
+    }
+
+    printf("Data Type: %s\n", type->typeName);
+    printf("Const: %s\n", type->isConst ? "true" : "false");
+    printf("Pointer: %s\n", type->isPointer ? "true" : "false");
+    printf("Reference: %s\n", type->isReference ? "true" : "false");
+}
+
+const char *DTDebug_toString(struct DataType_t *type)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
+        CONDITION_FAILED;
+    }
+
+    return type->typeName;
+}
+
 DTDebug *createDTDebug(void)
 {
     DTDebug *debug = (DTDebug *)malloc(sizeof(DTDebug));
@@ -40,8 +65,11 @@ DTDebug *createDTDebug(void)
         CONDITION_FAILED;
     }
 
-    debug->printType = NULL;
-    debug->typeToString = NULL;
+    // ==================== [ Function Assignments ] ==================== //
+
+    debug->printType = DTDebug_printType;
+    debug->printVerbosType = DTDebug_printVerbosType;
+    debug->toString = DTDebug_toString;
 
     return debug;
 }

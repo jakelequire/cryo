@@ -45,7 +45,7 @@ DTSimpleTy *createDTSimpleTy(void)
 // ------------------------------------ Array Data Types --------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
-void DTArrayTy_addElement(DTArrayTy *arrayType, DataType *element)
+void DTArrayTy_addElement(struct DTArrayTy_t *arrayType, DataType *element)
 {
     if (arrayType->elementCount >= arrayType->elementCapacity)
     {
@@ -61,7 +61,7 @@ void DTArrayTy_addElement(DTArrayTy *arrayType, DataType *element)
     arrayType->elements[arrayType->elementCount++] = element;
 }
 
-void DTArrayTy_removeElement(DTArrayTy *arrayType, DataType *element)
+void DTArrayTy_removeElement(struct DTArrayTy_t *arrayType, DataType *element)
 {
     for (int i = 0; i < arrayType->elementCount; i++)
     {
@@ -78,7 +78,7 @@ void DTArrayTy_removeElement(DTArrayTy *arrayType, DataType *element)
     }
 }
 
-void DTArrayTy_resize(DTArrayTy *arrayType)
+void DTArrayTy_resize(struct DTArrayTy_t *arrayType)
 {
     arrayType->elementCapacity *= DYN_GROWTH_FACTOR;
     arrayType->elements = (DataType **)realloc(arrayType->elements, sizeof(DataType *) * arrayType->elementCapacity);
@@ -89,7 +89,7 @@ void DTArrayTy_resize(DTArrayTy *arrayType)
     }
 }
 
-void DTArrayTy_reset(DTArrayTy *arrayType)
+void DTArrayTy_reset(struct DTArrayTy_t *arrayType)
 {
     arrayType->elementCount = 0;
     arrayType->elementCapacity = MAX_FIELD_CAPACITY;
@@ -103,13 +103,13 @@ void DTArrayTy_reset(DTArrayTy *arrayType)
     }
 }
 
-void DTArrayTy_free(DTArrayTy *arrayType)
+void DTArrayTy_free(struct DTArrayTy_t *arrayType)
 {
     free(arrayType->elements);
     free(arrayType);
 }
 
-void DTArrayTy_freeData(DTArrayTy *arrayType)
+void DTArrayTy_freeData(struct DTArrayTy_t *arrayType)
 {
     for (int i = 0; i < arrayType->elementCount; i++)
     {
@@ -117,7 +117,7 @@ void DTArrayTy_freeData(DTArrayTy *arrayType)
     }
 }
 
-void DTArrayTy_printArray(DTArrayTy *arrayType)
+void DTArrayTy_printArray(struct DTArrayTy_t *arrayType)
 {
     printf("[");
     for (int i = 0; i < arrayType->elementCount; i++)
@@ -340,12 +340,12 @@ void DTStructTy_addCtorParam(DTStructTy *structType, DataType *param)
     structType->ctorParams[structType->ctorParamCount++] = param;
 }
 
-void DTStructTy_addGenericParam(DTStructTy *structType, GenericType *param)
+void DTStructTy_addGenericParam(DTStructTy *structType, struct DTGenericType_t *param)
 {
     if (structType->generic.paramCount >= structType->generic.paramCapacity)
     {
         structType->generic.paramCapacity *= DYN_GROWTH_FACTOR;
-        structType->generic.params = (GenericType **)realloc(structType->generic.params, sizeof(GenericType *) * structType->generic.paramCapacity);
+        structType->generic.params = (struct DTGenericType_t **)realloc(structType->generic.params, sizeof(struct DTGenericType_t *) * structType->generic.paramCapacity);
         if (!structType->generic.params)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTStructTy generic params\n");
@@ -356,14 +356,14 @@ void DTStructTy_addGenericParam(DTStructTy *structType, GenericType *param)
     structType->generic.params[structType->generic.paramCount++] = param;
 }
 
-void DTStructTy_substituteGenericType(DTStructTy *structType, GenericType *genericType, DataType *substituteType)
+void DTStructTy_substituteGenericType(DTStructTy *structType, struct DTGenericType_t *DTGenericType, DataType *substituteType)
 {
     for (int i = 0; i < structType->propertyCount; i++)
     {
         if (structType->properties[i]->container->typeOf == GENERIC_TYPE)
         {
-            DTGenericType *generic = structType->properties[i]->container->type.genericType;
-            if (generic == genericType)
+            struct DTGenericType_t *generic = structType->properties[i]->container->type.genericType;
+            if (generic == DTGenericType)
             {
                 structType->properties[i] = substituteType;
             }
@@ -374,8 +374,8 @@ void DTStructTy_substituteGenericType(DTStructTy *structType, GenericType *gener
     {
         if (structType->methods[i]->container->typeOf == GENERIC_TYPE)
         {
-            DTGenericType *generic = structType->methods[i]->container->type.genericType;
-            if (generic == genericType)
+            struct DTGenericType_t *generic = structType->methods[i]->container->type.genericType;
+            if (generic == DTGenericType)
             {
                 structType->methods[i] = substituteType;
             }
@@ -383,14 +383,14 @@ void DTStructTy_substituteGenericType(DTStructTy *structType, GenericType *gener
     }
 }
 
-void DTStructTy_cloneAndSubstituteGenericMethod(DTStructTy *structType, GenericType *genericType, DataType *substituteType)
+void DTStructTy_cloneAndSubstituteGenericMethod(DTStructTy *structType, struct DTGenericType_t *DTGenericType, DataType *substituteType)
 {
     for (int i = 0; i < structType->methodCount; i++)
     {
         if (structType->methods[i]->container->typeOf == GENERIC_TYPE)
         {
-            DTGenericType *generic = structType->methods[i]->container->type.genericType;
-            if (generic == genericType)
+            struct DTGenericType_t *generic = structType->methods[i]->container->type.genericType;
+            if (generic == DTGenericType)
             {
                 structType->methods[i] = substituteType;
             }
@@ -398,14 +398,14 @@ void DTStructTy_cloneAndSubstituteGenericMethod(DTStructTy *structType, GenericT
     }
 }
 
-void DTStructTy_cloneAndSubstituteGenericParam(DTStructTy *structType, GenericType *genericType, DataType *substituteType)
+void DTStructTy_cloneAndSubstituteGenericParam(DTStructTy *structType, struct DTGenericType_t *DTGenericType, DataType *substituteType)
 {
     for (int i = 0; i < structType->propertyCount; i++)
     {
         if (structType->properties[i]->container->typeOf == GENERIC_TYPE)
         {
-            DTGenericType *generic = structType->properties[i]->container->type.genericType;
-            if (generic == genericType)
+            struct DTGenericType_t *generic = structType->properties[i]->container->type.genericType;
+            if (generic == DTGenericType)
             {
                 structType->properties[i] = substituteType;
             }
@@ -715,7 +715,7 @@ DTObjectType *createDTObjectType(void)
 
     objectType->addProperty = DTObjectType_addProperty;
     objectType->addMethod = DTObjectType_addMethod;
-    
+
     objectType->_resizeMethods = DTObjectType_resizeMethods;
     objectType->_resizeProperties = DTObjectType_resizeProperties;
 
