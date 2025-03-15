@@ -213,7 +213,7 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Getting data type for: %s", typeStr);
-    DataType *type = parseDataType(typeStr, globalTable);
+    DataType *type = DTM->parseType(typeStr);
     if (!type)
     {
         parsingError("Unknown data type", "getCryoDataType", arena, state, lexer, lexer->source, globalTable);
@@ -228,7 +228,7 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
         type = parseGenericDataTypeInstantiation(type, lexer, arena, state, globalTable);
     }
 
-    logMessage(LMI, "INFO", "Parser", "Data type: %s", DataTypeToString(type));
+    logMessage(LMI, "INFO", "Parser", "Data type: %s", type->typeName);
     return type;
 }
 // </getCryoDataType>
@@ -239,16 +239,16 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
     consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` in generic type instantiation", "parseGenericDataTypeInstantiation", arena, state, NULL);
 
     // Find the generic type definition
-    DataType *genericType = ResolveDataType(globalTable, type->container->custom.name);
-    if (!genericType || !isGenericType(genericType))
+    DataType *genericType = ResolveDataType(globalTable, type->typeName);
+    if (!genericType)
     {
         parsingError("Type is not generic", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, globalTable);
         return NULL;
     }
 
-    logMessage(LMI, "INFO", "Parser", "Generic type found: %s", DataTypeToString(genericType));
+    logMessage(LMI, "INFO", "Parser", "Generic type found: %s", genericType->typeName);
 
-    int expectedParamCount = genericType->container->custom.generic.instantiation->argCount;
+    int expectedParamCount = genericType->container->type.genericType->paramCount;
     DataType **concreteTypes = (DataType **)malloc(expectedParamCount * sizeof(DataType *));
     int paramCount = 0;
 
@@ -264,7 +264,7 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
         }
 
         DataType *concreteType = parseType(lexer, NULL, arena, state, globalTable);
-        logMessage(LMI, "INFO", "Parser", "Concrete type: %s", DataTypeToString(concreteType));
+        logMessage(LMI, "INFO", "Parser", "Concrete type: %s", concreteType->typeName);
         concreteTypes[paramCount++] = concreteType;
 
         if (lexer->currentToken.type == TOKEN_COMMA)
@@ -288,7 +288,7 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
     logMessage(LMI, "INFO", "Parser", "Generic type instantiation parsed successfully");
     // Create the generic type instantiation
     DataType *instantiatedType = createGenericDataTypeInstance(genericType, concreteTypes, paramCount);
-    logMessage(LMI, "INFO", "Parser", "Instantiated type: %s", DataTypeToString(instantiatedType));
+    logMessage(LMI, "INFO", "Parser", "Instantiated type: %s", instantiatedType->typeName);
     return instantiatedType;
 }
 
@@ -342,23 +342,20 @@ TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, Arena 
 {
     __STACK_FRAME__
     TypeContainer *type = (TypeContainer *)ARENA_ALLOC(arena, sizeof(TypeContainer));
-    type->isArray = false;
-    type->arrayDimensions = 0;
 
     // Get the base type name
     char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
 
     // Check if it's a primitive type
-    if (isPrimitiveType(typeName))
+    if (type->typeOf == PRIM_TYPE)
     {
-        type->baseType = PRIMITIVE_TYPE;
-        type->primitive = getPrimativeTypeFromString(typeName);
+        type->typeOf = PRIM_TYPE;
+        type->primitive = DTM->primitives->getPrimitiveType(typeName);
     }
     else
     {
         // Look up custom type
-        type->baseType = STRUCT_TYPE; // or other custom type
-        type->custom.name = typeName;
+        type->typeOf = OBJECT_TYPE; // or other custom type
 
         // TODO: Implement `lookupStructType` function
         // type->custom.structDef = lookupStructType( typeName);
@@ -367,9 +364,6 @@ TypeContainer *parseTypeIdentifier(Lexer *lexer, ParsingContext *context, Arena 
     // Handle array dimensions
     while (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LBRACKET)
     {
-        type->isArray = true;
-        type->arrayDimensions++;
-
         // Skip '[' and ']'
         getNextToken(lexer, arena, state);
         getNextToken(lexer, arena, state);
@@ -641,7 +635,7 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     logMessage(LMI, "INFO", "Parser", "Symbol Type: %s", symTypeStr);
 
     TypeofDataType typeOfDataType = GetTypeOfDataTypeFromName(globalTable, scopeName);
-    const char *typeOfDataTypeStr = TypeofDataTypeToString(typeOfDataType);
+    const char *typeOfDataTypeStr = DTM->debug->typeofDataTypeToString(typeOfDataType);
     logMessage(LMI, "INFO", "Parser", "Type of Data Type: %s", typeOfDataTypeStr);
 
     Symbol *sym = NULL;
@@ -729,7 +723,7 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, ParsingContext *context, Arena *a
         for (i = 0; i < argList->data.argList->argCount; i++)
         {
             args[i] = argList->data.argList->args[i];
-            argTypes[i] = getDataTypeFromASTNode(args[i]);
+            argTypes[i] = DTM->astInterface->getTypeofASTNode(args[i]);
             argCount++;
         }
     }
@@ -1072,7 +1066,7 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
         ASTNode *node = createUnaryExpr(TOKEN_AMPERSAND, operand, arena, state, lexer);
 
         // Set the result type to be a pointer to operand's type
-        DataType *operandType = getDataTypeFromASTNode(operand);
+        DataType *operandType = DTM->astInterface->getTypeofASTNode(operand);
         node->data.unary_op->resultType = createPointerType(operandType);
         node->data.unary_op->op = TOKEN_ADDRESS_OF;
         node->data.unary_op->expression = operand;
@@ -1090,7 +1084,7 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
         ASTNode *node = createUnaryExpr(TOKEN_STAR, operand, arena, state, lexer);
 
         // Set the result type to be the type pointed to by operand's type
-        DataType *operandType = getDataTypeFromASTNode(operand);
+        DataType *operandType = DTM->astInterface->getTypeofASTNode(operand);
         // TODO: implement the code below. Need to fully implement the pointer type system
         // if (!operandType->isPointer)
         // {
@@ -1386,34 +1380,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     {
         isGeneric = true;
         context->inGenericContext = true; // Set generic context flag in ParsingContext
-        genericParams = parseGenericTypeParams(lexer, context, arena, state, globalTable, &genericParamCount);
-        // Register generic type parameters with the symbol table
 
-        // Also register the generic parameters in the current scope
-        for (int i = 0; i < genericParamCount; i++)
-        {
-            logMessage(LMI, "INFO", "Parser", "Generic Type Parameter: %s", genericParams[i]->name);
-            if (genericParams[i]->isType)
-            {
-                logMessage(LMI, "INFO", "Parser", "Generic Type Parameter is a type.");
-            }
-            else
-            {
-                logMessage(LMI, "INFO", "Parser", "Generic Type Parameter is not a type.");
-            }
-            TypeSymbol *typeSymbol = CreateTypeSymbol(globalTable,
-                                                      genericParams[i]->name,
-                                                      NULL,
-                                                      NULL,
-                                                      GENERIC_TYPE,
-                                                      false,
-                                                      true,
-                                                      functionScopeID);
-            AddTypeToTable(globalTable, typeSymbol);
-            context->addGenericParam(context, genericParams[i]->name, genericParams[i]);
-        }
-        DataType *genericDataType = createGenericDataType(functionName, genericParams, genericParamCount, globalTable);
-        RegisterGenericType(globalTable, functionName, genericParams, genericParamCount, genericDataType);
+        // TODO: Implement generic type parameters
     }
 
     ASTNode **params = parseParameterList(lexer, context, arena, strdup(functionName), state, globalTable);
@@ -1426,7 +1394,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     DataType **paramTypes = (DataType **)malloc(sizeof(DataType *) * 64);
     for (int i = 0; params[i] != NULL; i++)
     {
-        logMessage(LMI, "INFO", "Parser", "Parameter type: %s", DataTypeToString(params[i]->data.param->type));
+        DataType *paramType = params[i]->data.varDecl->type;
+        logMessage(LMI, "INFO", "Parser", "Parameter type: %s", paramType->debug->toString(paramType));
         paramTypes[i] = params[i]->data.param->type;
         paramCount++;
     }
@@ -1444,7 +1413,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
         parsingError("Expected `->` for return type.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
     }
 
-    logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", DataTypeToString(returnType));
+    logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", returnType->debug->toString(returnType));
 
     // Initialize the function symbol
     if (isGeneric)
@@ -1558,7 +1527,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
         parsingError("Expected `->` for return type.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
     }
 
-    logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", DataTypeToString(returnType));
+    logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", returnType->debug->toString(returnType));
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", arena, state, context);
 
     ASTNode *externFunc = createExternFuncNode(functionName, params, returnType, arena, state, lexer);
@@ -1716,7 +1685,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
             {
             case TOKEN_INT_LITERAL:
             {
-                DataType *expectedType = createPrimitiveIntType();
+                DataType *expectedType = DTM->primitives->createInt();
                 ASTNode *arg = parsePrimaryExpression(lexer, context, arena, state, globalTable);
                 addArgumentToFunctionCall(functionCallNode, arg, arena, state, globalTable);
                 break;
@@ -1726,7 +1695,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
             {
                 char *stringLiteral = strndup(lexer->currentToken.start, lexer->currentToken.length);
                 int stringLength = strlen(stringLiteral);
-                DataType *expectedType = createPrimitiveStringType(stringLength);
+                DataType *expectedType = DTM->primitives->createString();
                 ASTNode *arg = parsePrimaryExpression(lexer, context, arena, state, globalTable);
                 addArgumentToFunctionCall(functionCallNode, arg, arena, state, globalTable);
                 break;
@@ -1735,7 +1704,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
             case TOKEN_BOOLEAN_LITERAL:
             {
                 bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
-                DataType *expectedType = createPrimitiveBooleanType(booleanValue);
+                DataType *expectedType = DTM->primitives->createBoolean();
                 ASTNode *arg = parsePrimaryExpression(lexer, context, arena, state, globalTable);
                 addArgumentToFunctionCall(functionCallNode, arg, arena, state, globalTable);
                 break;
@@ -1805,7 +1774,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
                         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
                                 "parseFunctionCall", arena, state, context);
                         DataType *expectedType = contextProp->type;
-                        logDataType(expectedType);
+                        expectedType->debug->printType(expectedType);
                         ASTNode *arg = contextNode;
                         addArgumentToFunctionCall(functionCallNode, arg, arena, state, globalTable);
                         break;
@@ -1902,7 +1871,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
         consume(__LINE__, lexer, TOKEN_KW_RETURN, "Expected `return` keyword.", "parseReturnStatement", arena, state, context);
     }
 
-    DataType *returnType = createPrimitiveVoidType();
+    DataType *returnType = DTM->primitives->createVoid();
     ASTNode *expression = NULL;
     if (lexer->currentToken.type != TOKEN_SEMICOLON)
     {
@@ -1919,21 +1888,21 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
             expression->print(expression);
             expression->print(expression);
             returnType = expression->data.literal->type;
-            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", returnType->debug->toString(returnType));
         }
         else if (expression->metaData->type == NODE_BINARY_EXPR)
         {
             logMessage(LMI, "INFO", "Parser", "Return Expression: Binary");
             expression->print(expression);
-            returnType = createPrimitiveIntType();
-            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
+            returnType = DTM->primitives->createInt();
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", returnType->debug->toString(returnType));
         }
         else if (expression->metaData->type == NODE_FUNCTION_CALL)
         {
             logMessage(LMI, "INFO", "Parser", "Return Expression: Function Call");
             expression->print(expression);
             returnType = expression->data.functionCall->returnType;
-            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", DataTypeToString(returnType));
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", returnType->debug->toString(returnType));
         }
         else
         {
@@ -1944,7 +1913,7 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
     else
     {
         logMessage(LMI, "INFO", "Parser", "No return expression.");
-        returnType = createPrimitiveVoidType();
+        returnType = DTM->primitives->createVoid();
     }
 
     if (lexer->currentToken.type == TOKEN_SEMICOLON)
@@ -2007,48 +1976,17 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
                 return NULL;
             }
 
-            logMessage(LMI, "INFO", "Parser", "Variadic parameter element type: %s", DataTypeToString(elementType));
+            logMessage(LMI, "INFO", "Parser", "Variadic parameter element type: %s", elementType->debug->toString(elementType));
 
             // Create parameter node first
             ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), NULL, arena, state, lexer);
             node->data.param->isVariadic = true;
 
-            // Handle generic array type if we're in a generic context
-            if (context->inGenericContext && elementType->container->isGeneric)
-            {
-                logMessage(LMI, "INFO", "Parser", "Processing generic variadic parameter");
-
-                // Create array type for the variadic parameter (based on the generic type)
-                DataType *paramType;
-
-                if (elementType->container->isArray)
-                {
-                    // Already an array type (like T[])
-                    paramType = elementType;
-                    node->data.param->variadicElementType = elementType->container->custom.arrayDef->baseType;
-                }
-                else
-                {
-                    // Need to create array type (T becomes T[])
-                    TypeContainer *arrayContainer = createArrayType(elementType->container, 1);
-                    arrayContainer->isGeneric = true;
-
-                    // Create array type container
-                    ArrayType *arrayType = createArrayTypeContainer(elementType, NULL, 0, 1);
-
-                    // Wrap as DataType
-                    paramType = wrapArrayType(arrayType);
-                    node->data.param->variadicElementType = elementType;
-                }
-
-                // Set the parameter type
-                node->data.param->type = paramType;
-            }
-            else if (elementType->container->isArray)
+            if (elementType->isArray)
             {
                 // Regular array type for variadic parameter
                 node->data.param->type = elementType;
-                node->data.param->variadicElementType = elementType->container->custom.arrayDef->baseType;
+                node->data.param->variadicElementType = elementType;
             }
             else
             {
@@ -2057,8 +1995,8 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
                 parsingError("Variadic parameter must have array type.", "parseParameter", arena, state, lexer, lexer->source, globalTable);
                 return NULL;
             }
-
-            logMessage(LMI, "INFO", "Parser", "Variadic parameter type: %s", DataTypeToString(node->data.param->type));
+            DataType *paramType = node->data.param->type;
+            logMessage(LMI, "INFO", "Parser", "Variadic parameter type: %s", paramType->debug->toString(paramType));
 
             // Consume the parameter type token
             getNextToken(lexer, arena, state);
@@ -2072,7 +2010,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
         {
             // This is an unnamed variadic parameter (e.g., just ...)
             logMessage(LMI, "INFO", "Parser", "Unnamed variadic parameter");
-            ASTNode *node = createParamNode("...", functionName, createPrimitiveAnyType(), arena, state, lexer);
+            ASTNode *node = createParamNode("...", functionName, DTM->primitives->createAny(), arena, state, lexer);
             node->data.param->isVariadic = true;
             node->print(node);
             return node;
@@ -2106,7 +2044,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
         return NULL;
     }
 
-    const char *paramTypeStr = DataTypeToString(paramType);
+    const char *paramTypeStr = paramType->debug->toString(paramType);
     logMessage(LMI, "INFO", "Parser", "<!> Parameter type: %s", paramTypeStr);
 
     // Consume data type token
@@ -2204,14 +2142,14 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         logMessage(LMI, "INFO", "Parser", "Argument is an integer literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
-        argType = createPrimitiveIntType();
+        argType = DTM->primitives->createInt();
     }
     else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
     {
         logMessage(LMI, "INFO", "Parser", "Argument is a string literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
-        argType = createPrimitiveStringType(lexer->currentToken.length);
+        argType = DTM->primitives->createPrimString
     }
     else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
     {
@@ -2219,7 +2157,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
         bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
-        argType = createPrimitiveBooleanType(booleanValue);
+        argType = DTM->primitives->createPrimBoolean(booleanValue);
     }
     else if (lexer->currentToken.type == TOKEN_KW_THIS)
     {
@@ -2236,7 +2174,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         }
         logMessage(LMI, "INFO", "Parser", "Argument is an identifier");
         nodeType = NODE_VAR_DECLARATION;
-        argType = createPrimitiveVoidType();
+        argType = DTM->primitives->createVoid();
     }
     else
     {
@@ -2265,18 +2203,18 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     {
         if (lexer->currentToken.type == TOKEN_INT_LITERAL)
         {
-            argType = createPrimitiveIntType();
+            argType = DTM->primitives->createInt();
         }
         else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
         {
             char *stringLiteral = strndup(lexer->currentToken.start, lexer->currentToken.length);
             int stringLength = strlen(stringLiteral);
-            argType = createPrimitiveStringType(stringLength);
+            argType = DTM->primitives->createPrimString(stringLiteral);
         }
         else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
         {
             bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
-            argType = createPrimitiveBooleanType(booleanValue);
+            argType = DTM->primitives->createPrimBoolean(booleanValue);
         }
     }
 
@@ -2359,7 +2297,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
     if (lexer->currentToken.type == TOKEN_INT_LITERAL)
     {
         logMessage(LMI, "INFO", "Parser", "Argument is an integer literal");
-        expectedType = createPrimitiveIntType();
+        expectedType = DTM->primitives->createInt();
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
     }
@@ -2368,7 +2306,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         logMessage(LMI, "INFO", "Parser", "Argument is a string literal");
         char *stringLiteral = strndup(lexer->currentToken.start, lexer->currentToken.length);
         int stringLength = strlen(stringLiteral);
-        expectedType = createPrimitiveStringType(stringLength);
+        expectedType = DTM->primitives->createString();
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
 
@@ -2379,7 +2317,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
     {
         logMessage(LMI, "INFO", "Parser", "Argument is a boolean literal");
         bool booleanValue = lexer->currentToken.type == TOKEN_KW_TRUE ? true : false;
-        expectedType = createPrimitiveBooleanType(booleanValue);
+        expectedType = DTM->primitives->createBoolean();
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
     }
@@ -2465,14 +2403,14 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
             return NULL;
         }
         expectedType = symbolType;
-        logMessage(LMI, "INFO", "Parser", "Argument type: %s", DataTypeToString(expectedType));
+        logMessage(LMI, "INFO", "Parser", "Argument type: %s", expectedType->debug->toString(expectedType));
         isLiteral = false;
     }
 
     // Consume the argument name
     getNextToken(lexer, arena, state);
 
-    logMessage(LMI, "INFO", "Parser", "Creating argument node with expected type: %s", DataTypeToString(expectedType));
+    logMessage(LMI, "INFO", "Parser", "Creating argument node with expected type: %s", expectedType->debug->toString(expectedType));
     logMessage(LMI, "INFO", "Parser", "Argument name: %s", strdup(argName));
 
     return createArgsNode(argName, expectedType, nodeType, isLiteral, arena, state, lexer);
@@ -2852,7 +2790,7 @@ ASTNode *parseArrayLiteral(Lexer *lexer, ParsingContext *context, Arena *arena, 
 
             DataType *elType = DataTypeFromNode(element);
             elementTypes[elementCount] = elType;
-            logMessage(LMI, "INFO", "Parser", "Element type: %s", DataTypeToString(elType));
+            logMessage(LMI, "INFO", "Parser", "Element type: %s", elType->debug->toString(elType));
 
             elementCount++;
         }
@@ -3200,14 +3138,14 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseDotNotationWithType", arena, state, context);
 
-    if (typeOfNode->container->baseType == STRUCT_TYPE)
+    if (typeOfNode->container->typeOf == OBJECT_TYPE)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a struct.");
         VALIDATE_TYPE(typeOfNode);
 
-        StructType *structType = typeOfNode->container->custom.structDef;
+        DTStructTy *structType = typeOfNode->container->type.structType;
         logStructType(structType);
-        const char *structName = typeOfNode->container->custom.structDef->name;
+        const char *structName = typeOfNode->typeName;
         Token nextToken = peekNextUnconsumedToken(lexer, arena, state);
         Token currentToken = lexer->currentToken;
 
@@ -3236,14 +3174,13 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         }
     }
     // Return the property access node for *CLASS TYPES*.
-    else if (typeOfNode->container->baseType == CLASS_TYPE)
+    else if (typeOfNode->container->typeOf == OBJECT_TYPE)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a class.");
         VALIDATE_TYPE(typeOfNode);
 
-        ClassType *classType = typeOfNode->container->custom.classDef;
-        logDataType(typeOfNode);
-        const char *className = typeOfNode->container->custom.classDef->name;
+        DTClassTy *classType = typeOfNode->container->type.classType;
+        const char *className = typeOfNode->typeName;
         Token nextToken = peekNextUnconsumedToken(lexer, arena, state);
         Token currentToken = lexer->currentToken;
 
@@ -3358,7 +3295,7 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
     }
 
     logMessage(LMI, "INFO", "Parser", "Type found.");
-    logDataType(type);
+    type->debug->printType(type);
 
     ASTNode *args = parseArgumentList(lexer, context, arena, state, globalTable);
     if (!args)
@@ -3371,11 +3308,10 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
     logASTNode(args);
 
     // We need to check if the type is a struct or a class
-    if (type->container->baseType == STRUCT_TYPE)
+    if (type->container->typeOf == OBJECT_TYPE)
     {
         logMessage(LMI, "INFO", "Parser", "Type is a struct.");
-        StructType *structType = type->container->custom.structDef;
-        logStructType(structType);
+        DTStructTy *structType = type->container->type.structType;
 
         int ctorArgCount = structType->ctorParamCount;
         logMessage(LMI, "INFO", "Parser", "Constructor argument count: %d", ctorArgCount);

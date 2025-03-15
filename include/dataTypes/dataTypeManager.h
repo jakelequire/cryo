@@ -112,6 +112,11 @@ typedef struct DTMPrimitives_t
     DataType *(*createAny)(void);       // type `any` is equivalent to `void *`
     DataType *(*createUndefined)(void); // type `undefined` is an undefined type
     DataType *(*createAutoTy)(void);    // type `auto` is an auto type
+
+    DataType *(*createPrimString)(const char *str);
+    DataType *(*createPrimBoolean)(bool value);
+
+    PrimitiveDataType (*getPrimitiveType)(const char *typeStr);
 } DTMPrimitives;
 
 // ----------------------- Struct Data Type Interface ------------------------ //
@@ -120,7 +125,8 @@ typedef struct DTMPrimitives_t
 // This is used to create struct data types such as `struct ... { ... }`.
 typedef struct DTMStructTypes_t
 {
-    // TODO
+    DataType *(*createStructTemplate)(void);
+    DataType *(*createCompleteStructType)(const char *structName, DataType **properties, int propertyCount, DataType **methods, int methodCount, bool hasConstructor, DataType **ctorArgs, int *ctorArgCount);
 } DTMStructTypes;
 
 // ------------------------ Class Data Type Interface ------------------------ //
@@ -140,6 +146,7 @@ typedef struct DTMFunctionTypes_t
 {
     DataType *(*createFunctionTemplate)(void);
     DataType *(*createFunctionType)(DataType **paramTypes, int paramCount, DataType *returnType);
+    DataType *(*createMethodType)(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount);
 } DTMFunctionTypes;
 
 // ---------------------- Generics Data Type Interface ---------------------- //
@@ -167,6 +174,11 @@ typedef struct DTMEnums_t
 typedef struct DTMDebug_t
 {
     void (*printDataType)(DataType *type);
+
+    const char *(*typeofDataTypeToString)(TypeofDataType type);
+    const char *(*typeofObjectTypeToString)(TypeofObjectType type);
+    const char *(*primitiveDataTypeToString)(PrimitiveDataType type);
+    const char *(*primitiveDataTypeToCType)(PrimitiveDataType type);
 } DTMDebug;
 
 // ------------------------ Symbol Table Interfaces ------------------------ //
@@ -207,9 +219,17 @@ typedef struct DTMDataTypes_t
     DataType *(*wrapClassType)(struct DTClassTy_t *classType);
 } DTMDataTypes;
 
+typedef struct DTMTypeValidation_t
+{
+    bool (*isSameType)(DataType *type1, DataType *type2);
+    bool (*isCompatibleType)(DataType *type1, DataType *type2);
+} DTMTypeValidation;
+
 typedef struct DTMastInterface_t
 {
     DataType *(*getTypeofASTNode)(ASTNode *node);
+    DataType **(*createTypeArrayFromAST)(ASTNode *node);
+    DataType **(*createTypeArrayFromASTArray)(ASTNode **nodes, int count);
 } DTMastInterface;
 
 // -------------------------- Data Type Manager -------------------------- //
@@ -227,6 +247,8 @@ typedef struct DataTypeManager_t
     DTMDataTypes *dataTypes;
     // The AST interface for the Data Type Manager.
     DTMastInterface *astInterface;
+    // The type validation for the Data Type Manager.
+    DTMTypeValidation *validation;
 
     // Handles all Cryo primitive data types.
     DTMPrimitives *primitives;
@@ -287,6 +309,6 @@ DTMHelpers *createDTMHelpers(void);
 
 DTMDataTypes *createDTMDataTypes(void);
 DTMastInterface *createDTMAstInterface(void);
-DTMastInterface *createDTMAstInterface(void);
+DTMTypeValidation *createDTMTypeValidation(void);
 
 #endif // DATA_TYPE_MANAGER_H

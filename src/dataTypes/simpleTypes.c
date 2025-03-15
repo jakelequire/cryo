@@ -146,6 +146,89 @@ DataType *DTMPrimitives_createAutoTy(void)
     return DTM->dataTypes->wrapTypeContainer(container);
 }
 
+PrimitiveDataType DTMPrimitives_getPrimitiveType(const char *typeStr)
+{
+    if (cStringCompare(typeStr, "i8"))
+    {
+        return PRIM_I8;
+    }
+    else if (cStringCompare(typeStr, "i16"))
+    {
+        return PRIM_I16;
+    }
+    else if (cStringCompare(typeStr, "i32"))
+    {
+        return PRIM_I32;
+    }
+    else if (cStringCompare(typeStr, "i64"))
+    {
+        return PRIM_I64;
+    }
+    else if (cStringCompare(typeStr, "i128"))
+    {
+        return PRIM_I128;
+    }
+    else if (cStringCompare(typeStr, "int"))
+    {
+        return PRIM_INT;
+    }
+    else if (cStringCompare(typeStr, "float"))
+    {
+        return PRIM_FLOAT;
+    }
+    else if (cStringCompare(typeStr, "string"))
+    {
+        return PRIM_STRING;
+    }
+    else if (cStringCompare(typeStr, "boolean"))
+    {
+        return PRIM_BOOLEAN;
+    }
+    else if (cStringCompare(typeStr, "void"))
+    {
+        return PRIM_VOID;
+    }
+    else if (cStringCompare(typeStr, "null"))
+    {
+        return PRIM_NULL;
+    }
+    else if (cStringCompare(typeStr, "any"))
+    {
+        return PRIM_ANY;
+    }
+    else if (cStringCompare(typeStr, "undefined"))
+    {
+        return PRIM_UNDEFINED;
+    }
+    else if (cStringCompare(typeStr, "auto"))
+    {
+        return PRIM_AUTO;
+    }
+    else
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type '%s'\n", typeStr);
+        CONDITION_FAILED;
+    }
+}
+
+DataType *DTMPrimitives_createPrimString(const char *str)
+{
+    TypeContainer *container = createTypeContainer();
+    container->typeOf = PRIM_TYPE;
+    container->primitive = PRIM_STRING;
+
+    return DTM->dataTypes->wrapTypeContainer(container);
+}
+
+DataType *DTMPrimitives_createPrimBoolean(bool value)
+{
+    TypeContainer *container = createTypeContainer();
+    container->typeOf = PRIM_TYPE;
+    container->primitive = PRIM_BOOLEAN;
+
+    return DTM->dataTypes->wrapTypeContainer(container);
+}
+
 DTMPrimitives *createDTMPrimitives(void)
 {
     DTMPrimitives *primitives = (DTMPrimitives *)malloc(sizeof(DTMPrimitives));
@@ -171,6 +254,11 @@ DTMPrimitives *createDTMPrimitives(void)
     primitives->createAny = DTMPrimitives_createAny;
     primitives->createUndefined = DTMPrimitives_createUndefined;
     primitives->createAutoTy = DTMPrimitives_createAutoTy;
+
+    primitives->createPrimString = DTMPrimitives_createPrimString;
+    primitives->createPrimBoolean = DTMPrimitives_createPrimBoolean;
+
+    primitives->getPrimitiveType = DTMPrimitives_getPrimitiveType;
 
     return primitives;
 }

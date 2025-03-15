@@ -446,6 +446,8 @@ DTStructTy *createDTStructTy(void)
     structType->addProperty = DTStructTy_addProperty;
     structType->addMethod = DTStructTy_addMethod;
     structType->addCtorParam = DTStructTy_addCtorParam;
+
+    // Generic Struct Methods
     structType->addGenericParam = DTStructTy_addGenericParam;
     structType->substituteGenericType = DTStructTy_substituteGenericType;
     structType->cloneAndSubstituteGenericMethod = DTStructTy_cloneAndSubstituteGenericMethod;

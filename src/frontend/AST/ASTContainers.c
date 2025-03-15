@@ -330,7 +330,7 @@ ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerStat
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->functionTypes->createFunctionTemplate();
 
     return node;
 }
@@ -365,8 +365,8 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->params = NULL;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
-    node->type = wrapTypeContainer(createTypeContainer());
-    node->functionType = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->functionTypes->createFunctionTemplate();
+    node->functionType = DTM->functionTypes->createFunctionTemplate();
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
     node->paramTypes = NULL;
@@ -406,7 +406,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *s
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
-    node->returnType = wrapTypeContainer(createTypeContainer());
+    node->returnType = DTM->primitives->createVoid();
     node->isVariadic = false;
 
     return node;
@@ -438,7 +438,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->length = 0;
     node->value.intValue = 0;
     node->value.floatValue = 0;
@@ -557,7 +557,7 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *s
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     ;
     node->data.varNameNode = NULL;
     node->data.literalNode = NULL;
@@ -595,8 +595,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
-    ;
+    node->type = DTM->primitives->createUndefined();
     node->varNameNode = NULL;
     node->name = (char *)calloc(1, sizeof(char));
     node->isGlobal = false;
@@ -636,7 +635,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->isRef = false;
     node->varName = strdup(varName);
     node->scopeID = (char *)calloc(1, sizeof(char));
@@ -670,14 +669,14 @@ CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *sta
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->functionName = (char *)calloc(1, sizeof(char));
     node->hasDefaultValue = false;
     node->isMutable = true;
     node->defaultValue = NULL;
     node->isVariadic = false;
-    node->variadicElementType = wrapTypeContainer(createTypeContainer());
+    node->variadicElementType = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -769,7 +768,7 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state)
 
     node->returnValue = (ASTNode *)malloc(sizeof(ASTNode));
     node->expression = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -825,7 +824,7 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state)
     node->op = TOKEN_UNKNOWN;
     node->operand = NULL;
     node->expression = (ASTNode *)malloc(sizeof(ASTNode));
-    node->resultType = wrapTypeContainer(createTypeContainer());
+    node->resultType = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -862,7 +861,7 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
 
     node->elementCount = 0;
     node->elementCapacity = initialCapacity;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->elementTypes = (DataType **)calloc(initialCapacity, sizeof(DataType *));
 
     return node;
@@ -920,8 +919,7 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
 
     node->existingVarName = (char *)calloc(1, sizeof(char));
     node->existingVarNode = NULL;
-    node->existingVarType = wrapTypeContainer(createTypeContainer());
-    ;
+    node->existingVarType = DTM->primitives->createUndefined();
     node->newVarNode = NULL;
 
     logMessage(LMI, "INFO", "Containers", "Created VariableReassignmentNode");
@@ -977,7 +975,7 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     node->hasConstructor = false;
     node->hasDefaultValue = false;
     node->isStatic = false;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -1008,7 +1006,7 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
 
     node->name = (char *)calloc(1, sizeof(char));
     node->value = NULL;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->defaultProperty = false;
     node->parentName = (char *)calloc(1, sizeof(char));
     node->parentNodeType = NODE_UNKNOWN;
@@ -1130,7 +1128,7 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
         return NULL;
     }
 
-    node->objType = wrapTypeContainer(createTypeContainer());
+    node->objType = DTM->primitives->createUndefined();
     node->object = NULL;
     node->propertyName = (char *)calloc(1, sizeof(char));
     node->property = NULL;
@@ -1224,8 +1222,8 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
     node->paramTypes = NULL;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
-    node->type = wrapTypeContainer(createTypeContainer());
-    node->functionType = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
+    node->functionType = DTM->primitives->createUndefined();
     node->isStatic = false;
     node->parentName = (char *)calloc(1, sizeof(char));
 
@@ -1259,8 +1257,8 @@ MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state
         return NULL;
     }
 
-    node->instanceType = wrapTypeContainer(createTypeContainer());
-    node->returnType = wrapTypeContainer(createTypeContainer());
+    node->instanceType = DTM->primitives->createUndefined();
+    node->returnType = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->instanceName = (char *)calloc(1, sizeof(char));
     node->accessorObj = NULL;
@@ -1296,7 +1294,7 @@ GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *sta
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->properties = NULL;
     node->propertyCount = 0;
@@ -1331,7 +1329,7 @@ GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *sta
     node->baseName = (char *)calloc(1, sizeof(char));
     node->typeArguments = NULL;
     node->argumentCount = 0;
-    node->resultType = wrapTypeContainer(createTypeContainer());
+    node->resultType = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -1433,7 +1431,7 @@ ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->constructor = NULL;
     node->propertyCount = 0;
@@ -1480,7 +1478,7 @@ ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->objType = wrapTypeContainer(createTypeContainer());
+    node->objType = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->isNewInstance = false;
 
@@ -1520,7 +1518,7 @@ TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
 
     return node;
@@ -1590,7 +1588,7 @@ TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
 
     return node;
@@ -1606,7 +1604,7 @@ TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
 
     return node;

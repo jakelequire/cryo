@@ -83,14 +83,14 @@ ASTNode *parseNonGenericStructDeclaration(Lexer *lexer, ParsingContext *context,
     ASTNode *constructorNode = NULL;
 
     // Add the struct name to the type table
-    DataType *structDefinition = createStructDefinition(structName);
+    DataType *structDefinition = DTM->structTypes->createStructTemplate();
     InitStructDeclaration(globalTable, structName, parentNamespaceNameID, structDefinition); // GlobalSymbolTable
 
-    int propertyCount = structDefinition->container->custom.structDef->propertyCount;
-    int methodCount = structDefinition->container->custom.structDef->methodCount;
+    int propertyCount = structDefinition->container->type.structType->propertyCount;
+    int methodCount = structDefinition->container->type.structType->methodCount;
     bool hasDefaultProperty = false;
     bool hasConstructor = false;
-    int ctorArgCount = structDefinition->container->custom.structDef->ctorParamCount;
+    int ctorArgCount = structDefinition->container->type.structType->ctorParamCount;
     DataType **ctorArgs = (DataType **)malloc(sizeof(DataType *) * ARG_CAPACITY);
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
@@ -115,7 +115,8 @@ bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *
             properties[*propertyCount] = field;
             (*propertyCount)++;
             addPropertyToThisContext(context, field);
-            dataType->container->custom.structDef->addProperty(dataType->container->custom.structDef, field);
+            DataType *fieldType = DTM->astInterface->getTypeofASTNode(field);
+            dataType->container->type.structType->addProperty(dataType->container->type.structType, fieldType);
 
             if (parsePropertyForDefaultFlag(field) && !(*hasDefaultProperty))
             {
@@ -135,7 +136,8 @@ bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *
             methods[*methodCount] = field;
             (*methodCount)++;
             addMethodToThisContext(context, field);
-            dataType->container->custom.structDef->addMethod(dataType->container->custom.structDef, field);
+            DataType *methodType = DTM->astInterface->getTypeofASTNode(field);
+            dataType->container->type.structType->addMethod(dataType->container->type.structType, methodType);
             return true;
         }
         else
@@ -162,10 +164,10 @@ bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *
                 if (arg)
                 {
                     logMessage(LMI, "INFO", "Parser", "Adding constructor argument to struct data type.");
-                    ctorArgs[argCount] = getDataTypeFromASTNode(arg);
+                    ctorArgs[argCount] = DTM->astInterface->getTypeofASTNode(arg);
                 }
             }
-            dataType->container->custom.structDef->ctorParamCount = argCount;
+            dataType->container->type.structType->ctorParamCount = argCount;
             ctorArgCount = &argCount;
         }
         return true;
@@ -181,7 +183,8 @@ bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *
             methods[*methodCount] = method;
             (*methodCount)++;
             addMethodToThisContext(context, method);
-            dataType->container->custom.structDef->addMethod(dataType->container->custom.structDef, method);
+            DataType *methodType = DTM->astInterface->getTypeofASTNode(method);
+            dataType->container->type.structType->addMethod(dataType->container->type.structType, methodType);
         }
         return true;
     }
@@ -207,20 +210,13 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
     structNode->data.structNode->hasConstructor = hasConstructor;
 
-    DataType *structDataType = createDataTypeFromStructNode(structNode, properties, propertyCount,
-                                                            methods, methodCount,
-                                                            state);
-    structNode->data.structNode->type = structDataType;
-    structNode->data.structNode->type->container->primitive = PRIM_OBJECT;
-
-    StructType *structDef = structNode->data.structNode->type->container->custom.structDef;
-    structDef->ctorParamCount = ctorArgCount;
-    structDef->ctorParams = ctorArgs;
-    structNode->data.structNode->type = structDataType;
+    DataType **propertyTypes = DTM->astInterface->createTypeArrayFromASTArray(properties, propertyCount);
+    DataType **methodTypes = DTM->astInterface->createTypeArrayFromASTArray(methods, methodCount);
+    DataType *structDataType = DTM->structTypes->createCompleteStructType(structName, propertyTypes, propertyCount, methodTypes, methodCount, hasConstructor, ctorArgs, &ctorArgCount);
 
     logMessage(LMI, "INFO", "Parser::TypeParsing", "Created struct data type:");
 
-    logVerboseDataType(structDataType);
+    structDataType->debug->printType(structDataType);
 
     CompleteStructDeclaration(globalTable, structNode, structName);
 
@@ -256,7 +252,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
         return NULL;
     }
 
-    bool isGenericType = parentDataType->container->isGeneric;
+    bool isGenericType = parentDataType->container->type.structType->generic.isGeneric;
     if (isGenericType)
     {
         logMessage(LMI, "INFO", "Parser", "Parent data type is generic.");
@@ -387,7 +383,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     // Get the return type `-> <type>`
     consume(__LINE__, lexer, TOKEN_RESULT_ARROW, "Expected `->` for return type.", "parseMethodDeclaration", arena, state, context);
     DataType *returnType = parseType(lexer, context, arena, state, globalTable);
-    returnType->container->custom.name = strdup(methodName);
+    returnType->typeName = strdup(methodName);
     getNextToken(lexer, arena, state);
 
     // Create the method body
@@ -403,7 +399,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     }
 
     // Create the method type
-    DataType *methodType = createMethodType(strdup(methodName), returnType, paramTypes, paramCount, arena, state);
+    DataType *methodType = DTM->functionTypes->createMethodType(methodName, returnType, paramTypes, paramCount);
     methodNode->data.method->type = methodType;
     methodNode->data.method->paramTypes = paramTypes;
 
@@ -451,7 +447,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
         const char *className = accessorObj->data.classNode->name;
         logMessage(LMI, "INFO", "Parser", "Class name: %s", strdup(className));
         strcpy(instanceTypeName, className);
-        typeOfSymbol = CLASS_TYPE;
+        typeOfSymbol = OBJECT_TYPE;
         break;
     }
     case NODE_STRUCT_DECLARATION:
@@ -466,26 +462,26 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
         // This is a variable that is of a class or struct type (e.g., const obj: MyClass = new MyClass())
         // and accessing member methods. We need to get the DataType * from the ASTNode
         DataType *varType = accessorObj->data.varDecl->type;
-        if (varType->container->baseType == CLASS_TYPE)
+        if (varType->container->typeOf == OBJECT_TYPE)
         {
             logMessage(LMI, "INFO", "Parser", "Found class type.");
-            logDataType(varType);
-            const char *className = varType->container->custom.name;
+            varType->debug->printType(varType);
+            const char *className = varType->typeName;
             logMessage(LMI, "INFO", "Parser", "Class name: %s", strdup(className));
             strcpy(instanceTypeName, className);
         }
-        else if (varType->container->baseType == STRUCT_TYPE)
+        else if (varType->container->typeOf == OBJECT_TYPE)
         {
             logMessage(LMI, "INFO", "Parser", "Found struct type.");
-            logDataType(varType);
-            const char *structName = varType->container->custom.name;
-            const char *__structName = getDataTypeName(varType);
+            varType->debug->printType(varType);
+            const char *structName = varType->typeName;
+            const char *__structName = varType->typeName;
             logMessage(LMI, "INFO", "Parser", "Struct name: %s", __structName);
             strcpy(instanceTypeName, __structName);
         }
         else
         {
-            logMessage(LMI, "ERROR", "Parser", "Invalid instance type, received: %s", DataTypeToString(varType));
+            logMessage(LMI, "ERROR", "Parser", "Invalid instance type, received: %s", varType->debug->toString(varType));
             parsingError("Invalid instance type.", "parseMethodCall", arena, state, lexer, lexer->source, globalTable);
             CONDITION_FAILED;
         }
@@ -509,7 +505,6 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *insta
     logMessage(LMI, "INFO", "Parser", "Found instance symbol.");
     ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
     DataType *returnType = GetDataTypeFromSymbol(globalTable, sym);
-    VALIDATE_TYPE(returnType);
 
     bool isStatic = symbolNode->data.method->isStatic;
     ASTNode *methodCall = createMethodCallNode(accessorObj, returnType, instanceType, methodName,
@@ -533,126 +528,125 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
                           CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
-    __DUMP_STACK_TRACE__
-    logMessage(LMI, "INFO", "Parser", "Parsing generic declaration...");
-
-    // Create a list to store generic parameters
-    int genericParamCapacity = 8;
-    GenericType **genericParams = (GenericType **)malloc(genericParamCapacity * sizeof(GenericType *));
-    int genericParamCount = 0;
-
-    consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` to start generic declaration.",
-            "parseGenericDecl", arena, state, context);
-
-    logMessage(LMI, "INFO", "Parser", "Parsing generic declaration...");
-
-    // Parse generic parameters
-    while (lexer->currentToken.type != TOKEN_GREATER)
-    {
-        if (lexer->currentToken.type != TOKEN_IDENTIFIER)
-        {
-            parsingError("Expected generic type identifier.",
-                         "parseGenericDecl", arena, state, lexer,
-                         lexer->source, globalTable);
-            return NULL;
-        }
-
-        logMessage(LMI, "INFO", "Parser", "Parsing generic parameter...");
-
-        // Get generic parameter name
-        char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        getNextToken(lexer, arena, state);
-
-        logMessage(LMI, "INFO", "Parser", "Generic parameter name: %s", paramName);
-
-        // Create generic parameter
-        GenericType *genericParam = createGenericParameter(paramName);
-
-        logMessage(LMI, "INFO", "Parser", "Generic parameter created.");
-
-        // Check for constraints (e.g., T extends Number)
-        if (lexer->currentToken.type == TOKEN_KW_EXTENDS)
-        {
-            getNextToken(lexer, arena, state);
-
-            // Parse constraint type
-            DataType *constraint = parseType(lexer, context, arena, state, globalTable);
-            addGenericConstraint(genericParam, constraint);
-            getNextToken(lexer, arena, state);
-            logMessage(LMI, "INFO", "Parser", "Generic parameter constraint added.");
-        }
-
-        // Add to generic parameters list
-        genericParams[genericParamCount++] = genericParam;
-
-        logMessage(LMI, "INFO", "Parser", "Generic parameter added to list.");
-
-        // Handle comma-separated list
-        if (lexer->currentToken.type == TOKEN_COMMA)
-        {
-            logMessage(LMI, "INFO", "Parser", "Parsing next generic parameter...");
-            getNextToken(lexer, arena, state);
-            continue;
-        }
-
-        logMessage(LMI, "INFO", "Parser", "Checking for end of generic declaration...");
-
-        if (lexer->currentToken.type != TOKEN_GREATER)
-        {
-            parsingError("Expected ',' or '>' in generic parameter list.",
-                         "parseGenericDecl", arena, state, lexer,
-                         lexer->source, globalTable);
-            return NULL;
-        }
-    }
-    logMessage(LMI, "INFO", "Parser", "End of generic declaration.");
-    consume(__LINE__, lexer, TOKEN_GREATER, "Expected `>` to end generic declaration.",
-            "parseGenericDecl", arena, state, context);
-
-    logMessage(LMI, "INFO", "Parser", "Creating generic type...");
+    // __DUMP_STACK_TRACE__
+    // logMessage(LMI, "INFO", "Parser", "Parsing generic declaration...");
+    //
+    // // Create a list to store generic parameters
+    // int genericParamCapacity = 8;
+    // GenericType **genericParams = (GenericType **)malloc(genericParamCapacity * sizeof(GenericType *));
+    // int genericParamCount = 0;
+    //
+    // consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` to start generic declaration.",
+    //         "parseGenericDecl", arena, state, context);
+    //
+    // logMessage(LMI, "INFO", "Parser", "Parsing generic declaration...");
+    //
+    // // Parse generic parameters
+    // while (lexer->currentToken.type != TOKEN_GREATER)
+    // {
+    //     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
+    //     {
+    //         parsingError("Expected generic type identifier.",
+    //                      "parseGenericDecl", arena, state, lexer,
+    //                      lexer->source, globalTable);
+    //         return NULL;
+    //     }
+    //
+    //     logMessage(LMI, "INFO", "Parser", "Parsing generic parameter...");
+    //
+    //     // Get generic parameter name
+    //     char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    //     getNextToken(lexer, arena, state);
+    //
+    //     logMessage(LMI, "INFO", "Parser", "Generic parameter name: %s", paramName);
+    //
+    //     // Create generic parameter
+    //     GenericType *genericParam = createGenericParameter(paramName);
+    //
+    //     logMessage(LMI, "INFO", "Parser", "Generic parameter created.");
+    //
+    //     // Check for constraints (e.g., T extends Number)
+    //     if (lexer->currentToken.type == TOKEN_KW_EXTENDS)
+    //     {
+    //         getNextToken(lexer, arena, state);
+    //
+    //         // Parse constraint type
+    //         DataType *constraint = parseType(lexer, context, arena, state, globalTable);
+    //         addGenericConstraint(genericParam, constraint);
+    //         getNextToken(lexer, arena, state);
+    //         logMessage(LMI, "INFO", "Parser", "Generic parameter constraint added.");
+    //     }
+    //
+    //     // Add to generic parameters list
+    //     genericParams[genericParamCount++] = genericParam;
+    //
+    //     logMessage(LMI, "INFO", "Parser", "Generic parameter added to list.");
+    //
+    //     // Handle comma-separated list
+    //     if (lexer->currentToken.type == TOKEN_COMMA)
+    //     {
+    //         logMessage(LMI, "INFO", "Parser", "Parsing next generic parameter...");
+    //         getNextToken(lexer, arena, state);
+    //         continue;
+    //     }
+    //
+    //     logMessage(LMI, "INFO", "Parser", "Checking for end of generic declaration...");
+    //
+    //     if (lexer->currentToken.type != TOKEN_GREATER)
+    //     {
+    //         parsingError("Expected ',' or '>' in generic parameter list.",
+    //                      "parseGenericDecl", arena, state, lexer,
+    //                      lexer->source, globalTable);
+    //         return NULL;
+    //     }
+    // }
+    // logMessage(LMI, "INFO", "Parser", "End of generic declaration.");
+    // consume(__LINE__, lexer, TOKEN_GREATER, "Expected `>` to end generic declaration.",
+    //         "parseGenericDecl", arena, state, context);
 
     // Create generic type container
-    TypeContainer *container = createGenericTypeContainer();
-    logMessage(LMI, "INFO", "Parser", "Empty Generic type container created.");
-    container->baseType = GENERIC_TYPE;
-    logMessage(LMI, "INFO", "Parser", "Generic type base type set.");
-    container->custom.name = strdup(typeName);
-    logMessage(LMI, "INFO", "Parser", "Generic type name set.");
-    container->custom.generic.declaration->genericDef = NULL;
-    logMessage(LMI, "INFO", "Parser", "Generic type declaration set.");
-    container->custom.generic.declaration->paramCount = genericParamCount;
-    logMessage(LMI, "INFO", "Parser", "Generic type parameter count set.");
+    // TypeContainer *container = createGenericTypeContainer();
+    // logMessage(LMI, "INFO", "Parser", "Empty Generic type container created.");
+    // container->typeOf = GENERIC_TYPE;
+    // logMessage(LMI, "INFO", "Parser", "Generic type base type set.");
+    // container->typeName = strdup(typeName);
+    // logMessage(LMI, "INFO", "Parser", "Generic type name set.");
+    // container->custom.generic.declaration->genericDef = NULL;
+    // logMessage(LMI, "INFO", "Parser", "Generic type declaration set.");
+    // container->custom.generic.declaration->paramCount = genericParamCount;
+    // logMessage(LMI, "INFO", "Parser", "Generic type parameter count set.");
+    //
+    // logMessage(LMI, "INFO", "Parser", "Generic type container created.");
+    //
+    // // Convert GenericType to DataType for each parameter
+    // for (int i = 0; i < genericParamCount; i++)
+    // {
+    //     logMessage(LMI, "INFO", "Parser", "Converting generic parameter to DataType...");
+    //     DataType *paramType = (DataType *)malloc(sizeof(DataType));
+    //     paramType->container = createTypeContainer();
+    //     paramType->container->baseType = GENERIC_TYPE;
+    //     paramType->container->custom.name = strdup(genericParams[i]->name);
+    //     // Transfer constraints if any
+    //     if (genericParams[i]->constraint)
+    //     {
+    //         logMessage(LMI, "INFO", "Parser", "Transferring generic parameter constraint...");
+    //         paramType->genericParam = genericParams[i]->constraint;
+    //     }
+    //     logMessage(LMI, "INFO", "Parser", "Generic parameter converted to DataType.");
+    //     addGenericTypeParam(container, paramType);
+    //     logMessage(LMI, "INFO", "Parser", "Generic parameter added to container.");
+    // }
+    //
+    // logMessage(LMI, "INFO", "Parser", "Creating generic type...");
+    // DataType *genericType = wrapTypeContainer(container);
+    // logMessage(LMI, "INFO", "Parser", "Generic type created.");
+    // ASTNode *genericDeclNode = createGenericDeclNode(genericType, typeName, genericParams, genericParamCount, NULL, false,
+    //                                                  arena, state, lexer);
+    //
+    // logMessage(LMI, "INFO", "Parser", "Generic declaration node created.");
 
-    logMessage(LMI, "INFO", "Parser", "Generic type container created.");
-
-    // Convert GenericType to DataType for each parameter
-    for (int i = 0; i < genericParamCount; i++)
-    {
-        logMessage(LMI, "INFO", "Parser", "Converting generic parameter to DataType...");
-        DataType *paramType = (DataType *)malloc(sizeof(DataType));
-        paramType->container = createTypeContainer();
-        paramType->container->baseType = GENERIC_TYPE;
-        paramType->container->custom.name = strdup(genericParams[i]->name);
-        // Transfer constraints if any
-        if (genericParams[i]->constraint)
-        {
-            logMessage(LMI, "INFO", "Parser", "Transferring generic parameter constraint...");
-            paramType->genericParam = genericParams[i]->constraint;
-        }
-        logMessage(LMI, "INFO", "Parser", "Generic parameter converted to DataType.");
-        addGenericTypeParam(container, paramType);
-        logMessage(LMI, "INFO", "Parser", "Generic parameter added to container.");
-    }
-
-    logMessage(LMI, "INFO", "Parser", "Creating generic type...");
-    DataType *genericType = wrapTypeContainer(container);
-    logMessage(LMI, "INFO", "Parser", "Generic type created.");
-    ASTNode *genericDeclNode = createGenericDeclNode(genericType, typeName, genericParams, genericParamCount, NULL, false,
-                                                     arena, state, lexer);
-
-    logMessage(LMI, "INFO", "Parser", "Generic declaration node created.");
-
-    return genericDeclNode;
+    // return genericDeclNode;
+    return NULL;
 }
 
 // Helper function to parse generic type instantiation
@@ -669,7 +663,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
     DataType *baseType = NULL;
     DEBUG_BREAKPOINT;
 
-    int expectedParamCount = baseType->container->custom.generic.instantiation->argCount;
+    int expectedParamCount = baseType->container->type.genericType->paramCount;
     DataType **concreteTypes = (DataType **)malloc(expectedParamCount * sizeof(DataType *));
     int paramCount = 0;
 
@@ -712,14 +706,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
     consume(__LINE__, lexer, TOKEN_GREATER, "Expected `>` after type arguments.",
             "parseGenericInstantiation", arena, state, context);
 
-    // Create instantiated type
-    TypeContainer *instantiatedContainer = createGenericStructInstance(baseType->container,
-                                                                       concreteTypes[0]);
-
-    ASTNode *genericInstNode = createGenericInstNode(baseName, concreteTypes, paramCount,
-                                                     wrapTypeContainer(instantiatedContainer), arena, state, lexer);
-
-    return genericInstNode;
+    return NULL;
 }
 
 ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
@@ -1009,7 +996,7 @@ DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena,
     getNextToken(lexer, arena, state);
 
     DataType *functionType = DTM->functionTypes->createFunctionType(argArray->data, argArray->count, returnType);
-    logDataType(functionType);
+    functionType->debug->printType(functionType);
 
     return functionType;
 }
@@ -1048,7 +1035,7 @@ DataType *parseObjectType(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
         consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after object property name.", "parseObjectType", arena, state, context);
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after object property type.", "parseObjectType", arena, state, context);
-        
+
         tuple->add(tuple, propertyName, propertyType);
     }
 

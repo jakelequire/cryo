@@ -35,6 +35,98 @@ void DTMDebug_printDataType(DataType *type)
     printf("Data Type: %s\n", type->typeName);
 }
 
+const char *DTMDebug_typeofDataTypeToString(TypeofDataType type)
+{
+    switch (type)
+    {
+    case PRIM_TYPE:
+        return "Primitive Type";
+    case ARRAY_TYPE:
+        return "Array Type";
+    case ENUM_TYPE:
+        return "Enum Type";
+    case FUNCTION_TYPE:
+        return "Function Type";
+    case GENERIC_TYPE:
+        return "Generic Type";
+    case OBJECT_TYPE:
+        return "Object Type";
+    case TYPE_DEF:
+        return "Type Definition";
+    case UNKNOWN_TYPE:
+        return "<UNKNOWN>";
+    default:
+        return "<UNKNOWN>";
+    }
+}
+
+const char *DTMDebug_typeofObjectTypeToString(TypeofObjectType type)
+{
+    switch (type)
+    {
+    case STRUCT_OBJ:
+        return "Struct Object";
+    case CLASS_OBJ:
+        return "Class Object";
+    case INTERFACE_OBJ:
+        return "Interface Object";
+    case TRAIT_OBJ:
+        return "Trait Object";
+    case MODULE_OBJ:
+        return "Module Object";
+    case OBJECT_OBJ:
+        return "Object Object";
+    case NON_OBJECT:
+        return "Non-Object";
+    case UNKNOWN_OBJECT:
+        return "<UNKNOWN>";
+    default:
+        return "<UNKNOWN>";
+    }
+}
+
+const char *DTMDebug_primitiveDataTypeToString(PrimitiveDataType type)
+{
+    switch (type)
+    {
+    case PRIM_INT:
+        return "int";
+    case PRIM_FLOAT:
+        return "float";
+    case PRIM_STRING:
+        return "string";
+    case PRIM_BOOLEAN:
+        return "boolean";
+    case PRIM_VOID:
+        return "void";
+    case PRIM_UNKNOWN:
+        return "<UNKNOWN>";
+    default:
+        return "<UNKNOWN>";
+    }
+}
+
+const char *DTMDebug_primitiveDataTypeToCType(PrimitiveDataType type)
+{
+    switch (type)
+    {
+    case PRIM_INT:
+        return "int";
+    case PRIM_FLOAT:
+        return "float";
+    case PRIM_STRING:
+        return "char *";
+    case PRIM_BOOLEAN:
+        return "bool";
+    case PRIM_VOID:
+        return "void";
+    case PRIM_UNKNOWN:
+        return "<UNKNOWN>";
+    default:
+        return "<UNKNOWN>";
+    }
+}
+
 DTMDebug *createDTMDebug(void)
 {
     DTMDebug *debug = (DTMDebug *)malloc(sizeof(DTMDebug));
@@ -48,12 +140,23 @@ DTMDebug *createDTMDebug(void)
 
     debug->printDataType = DTMDebug_printDataType;
 
+    debug->typeofDataTypeToString = DTMDebug_typeofDataTypeToString;
+    debug->typeofObjectTypeToString = DTMDebug_typeofObjectTypeToString;
+    debug->primitiveDataTypeToString = DTMDebug_primitiveDataTypeToString;
+    debug->primitiveDataTypeToCType = DTMDebug_primitiveDataTypeToCType;
+
     return debug;
 }
 
 // --------------------------------------------------------------------------------------------------- //
 // ------------------------------------- Struct Data Types ------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
+
+DataType *DTMStructTypes_createStructTemplate(void)
+{
+    DTStructTy *structType = createDTStructTy();
+    return DTM->dataTypes->wrapStructType(structType);
+}
 
 DTMStructTypes *createDTMStructTypes(void)
 {
@@ -65,6 +168,8 @@ DTMStructTypes *createDTMStructTypes(void)
     }
 
     // ==================== [ Function Assignments ] ==================== //
+
+    structTypes->createStructTemplate = DTMStructTypes_createStructTemplate;
 
     return structTypes;
 }
@@ -105,6 +210,14 @@ DataType *DTMFunctionTypes_createFunctionType(DataType **paramTypes, int paramCo
     return DTM->dataTypes->wrapFunctionType(function);
 }
 
+DataType *DTMFunctionTypes_createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount)
+{
+    DTFunctionTy *function = createDTFunctionTy();
+    function->setParams(function, paramTypes, paramCount);
+    function->setReturnType(function, returnType);
+    return DTM->dataTypes->wrapFunctionType(function);
+}
+
 DTMFunctionTypes *createDTMFunctionTypes(void)
 {
     DTMFunctionTypes *functionTypes = (DTMFunctionTypes *)malloc(sizeof(DTMFunctionTypes));
@@ -118,6 +231,7 @@ DTMFunctionTypes *createDTMFunctionTypes(void)
 
     functionTypes->createFunctionTemplate = DTMFunctionTypes_createFunctionTemplate;
     functionTypes->createFunctionType = DTMFunctionTypes_createFunctionType;
+    functionTypes->createMethodType = DTMFunctionTypes_createMethodType;
 
     return functionTypes;
 }
@@ -319,6 +433,7 @@ DataType *DTMTypeContainerWrappers_wrapSimpleType(struct DTSimpleTy_t *simpleTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = PRIM_TYPE;
+    container->objectType = NON_OBJECT;
     container->type.simpleType = simpleTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -328,6 +443,7 @@ DataType *DTMTypeContainerWrappers_wrapArrayType(struct DTArrayTy_t *arrayTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = ARRAY_TYPE;
+    container->objectType = NON_OBJECT;
     container->type.arrayType = arrayTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -337,6 +453,7 @@ DataType *DTMTypeContainerWrappers_wrapEnumType(struct DTEnumTy_t *enumTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = ENUM_TYPE;
+    container->objectType = NON_OBJECT;
     container->type.enumType = enumTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -346,6 +463,7 @@ DataType *DTMTypeContainerWrappers_wrapFunctionType(struct DTFunctionTy_t *funct
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = FUNCTION_TYPE;
+    container->objectType = NON_OBJECT;
     container->type.functionType = functionTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -355,6 +473,7 @@ DataType *DTMTypeContainerWrappers_wrapStructType(struct DTStructTy_t *structTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
+    container->objectType = STRUCT_OBJ;
     container->type.structType = structTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -364,6 +483,7 @@ DataType *DTMTypeContainerWrappers_wrapClassType(struct DTClassTy_t *classTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
+    container->objectType = CLASS_OBJ;
     container->type.classType = classTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -373,6 +493,7 @@ DataType *DTMTypeContainerWrappers_wrapObjectType(struct DTObjectTy_t *objectTy)
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
+    container->objectType = OBJECT_OBJ;
     container->type.objectType = objectTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -419,7 +540,19 @@ DTMDataTypes *createDTMDataTypes(void)
 
 DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
 {
+    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
+    return NULL;
+}
 
+DataType **DTMastInterface_createTypeArrayFromAST(ASTNode *node)
+{
+    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
+    return NULL;
+}
+
+DataType **DTMastInterface_createTypeArrayFromASTArray(ASTNode **nodes, int count)
+{
+    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
     return NULL;
 }
 
@@ -435,6 +568,8 @@ DTMastInterface *createDTMAstInterface(void)
     // ==================== [ Function Assignments ] ==================== //
 
     astInterface->getTypeofASTNode = DTMastInterface_getTypeofASTNode;
+    astInterface->createTypeArrayFromAST = DTMastInterface_createTypeArrayFromAST;
+    astInterface->createTypeArrayFromASTArray = DTMastInterface_createTypeArrayFromASTArray;
 
     return astInterface;
 }
@@ -494,6 +629,7 @@ DataTypeManager *createDataTypeManager(void)
 
     manager->symbolTable = createDTMSymbolTable();
     manager->dataTypes = createDTMDataTypes();
+    manager->validation = createDTMTypeValidation();
 
     manager->primitives = createDTMPrimitives();
     manager->debug = createDTMDebug();

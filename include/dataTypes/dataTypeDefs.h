@@ -59,6 +59,18 @@ typedef enum TypeofDataType
     UNKNOWN_TYPE   // `<UNKNOWN>`
 } TypeofDataType;
 
+typedef enum TypeofObjectType
+{
+    STRUCT_OBJ, // `struct { ... }`
+    CLASS_OBJ,  // `class { ... }`
+    INTERFACE_OBJ,
+    TRAIT_OBJ,
+    MODULE_OBJ,
+    OBJECT_OBJ,
+    NON_OBJECT,
+    UNKNOWN_OBJECT
+} TypeofObjectType;
+
 // =============================== Structs =============================== //
 
 typedef struct DTDebug_t
@@ -66,6 +78,7 @@ typedef struct DTDebug_t
     void (*printType)(struct DataType_t *type);
     void (*printVerbosType)(struct DataType_t *type);
     const char *(*toString)(struct DataType_t *type);
+
 } DTDebug;
 
 // ------------------------------------------------------------------------------------------- //
@@ -303,6 +316,7 @@ typedef struct DTGenericTy_t
     const char *name;
     DataType *constraint;
     int dimensions;
+    int paramCount;
     struct GenericType_t *next;
 } DTGenericTy;
 
@@ -314,6 +328,7 @@ typedef struct TypeContainer_t
 {
     PrimitiveDataType primitive;
     TypeofDataType typeOf;
+    TypeofObjectType objectType;
     union
     {
         struct DTSimpleTy_t *simpleType;
@@ -338,6 +353,7 @@ typedef struct DataType_t
     bool isConst;
     bool isPointer;
     bool isReference;
+    bool isArray;
 
     DTDebug *debug; // This is the debug Object for development purposes
 

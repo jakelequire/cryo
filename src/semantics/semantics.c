@@ -249,9 +249,9 @@ void analyzeVariableDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node
 
     logMessage(LMI, "INFO", "Semantic Analysis", "Analyzing variable declaration node...");
 
-    DataType *varType = node->data.varDecl->type;               // The declared type of the variable
-    ASTNode *varInitilizer = node->data.varDecl->initializer;   // The initializer for the variable
-    DataType *initType = getDataTypeFromASTNode(varInitilizer); // The type of the initializer
+    DataType *varType = node->data.varDecl->type;                            // The declared type of the variable
+    ASTNode *varInitilizer = node->data.varDecl->initializer;                // The initializer for the variable
+    DataType *initType = DTM->astInterface->getTypeofASTNode(varInitilizer); // The type of the initializer
     if (!varType || !varInitilizer || !initType)
     {
         logMessage(LMI, "ERROR", "Semantic Analysis", "Variable declaration node is missing type or initializer");
@@ -261,7 +261,7 @@ void analyzeVariableDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node
     }
 
     // Check if the initializer type matches the declared type
-    bool typesMatch = isSameType(varType, initType);
+    bool typesMatch = DTM->validation->isSameType(varType, initType);
     if (!typesMatch)
     {
         logMessage(LMI, "ERROR", "Semantic Analysis", "Variable type does not match initializer type");
