@@ -287,7 +287,7 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
     }
     logMessage(LMI, "INFO", "Parser", "Generic type instantiation parsed successfully");
     // Create the generic type instantiation
-    DataType *instantiatedType = createGenericDataTypeInstance(genericType, concreteTypes, paramCount);
+    DataType *instantiatedType = DTM->generics->createGenericTypeInstance(genericType, concreteTypes, paramCount);
     logMessage(LMI, "INFO", "Parser", "Instantiated type: %s", instantiatedType->typeName);
     return instantiatedType;
 }
@@ -1067,7 +1067,9 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
 
         // Set the result type to be a pointer to operand's type
         DataType *operandType = DTM->astInterface->getTypeofASTNode(operand);
-        node->data.unary_op->resultType = createPointerType(operandType);
+        operandType->setPointer(operandType, true);
+
+        node->data.unary_op->resultType = operandType;
         node->data.unary_op->op = TOKEN_ADDRESS_OF;
         node->data.unary_op->expression = operand;
 
@@ -1455,10 +1457,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     }
 
     ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, returnType, arena, state, lexer);
-    DataType *functionType = createFunctionType(strdup(functionName), returnType, paramTypes, paramCount, arena, state);
-    functionNode->data.functionDecl->functionType = functionType;
-    functionNode->data.functionDecl->type = returnType;
-    functionNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
+    DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
 
     // Set the generic parameters if they exist
     if (genericParamCount > 0 && genericParams != NULL)
@@ -2149,7 +2148,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         logMessage(LMI, "INFO", "Parser", "Argument is a string literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
-        argType = DTM->primitives->createPrimString
+        argType = DTM->primitives->createPrimString(strndup(lexer->currentToken.start, lexer->currentToken.length));
     }
     else if (lexer->currentToken.type == TOKEN_BOOLEAN_LITERAL)
     {
@@ -2285,8 +2284,6 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         return NULL;
     }
 
-    VALIDATE_TYPE(expectedType);
-
     char *argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     bool usingDotNotation = false;
     bool isLiteral = false;
@@ -2338,7 +2335,6 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         {
             logMessage(LMI, "INFO", "Parser", "Dot notation detected.");
             // Parse through the dot notation
-            printFormattedType(expectedType);
             ASTNode *dotExpr = parseDotNotation(lexer, context, arena, state, globalTable);
             if (!dotExpr)
             {
@@ -2484,8 +2480,6 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
             parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
             CONDITION_FAILED;
         }
-
-        VALIDATE_TYPE(expectedType);
 
         return propAccessNode;
     }
@@ -2788,7 +2782,7 @@ ASTNode *parseArrayLiteral(Lexer *lexer, ParsingContext *context, Arena *arena, 
             addElementToArrayLiteral(elements, element, arena, state, globalTable);
             logMessage(LMI, "INFO", "Parser", "Element added to array literal.");
 
-            DataType *elType = DataTypeFromNode(element);
+            DataType *elType = DTM->astInterface->getTypeofASTNode(element);
             elementTypes[elementCount] = elType;
             logMessage(LMI, "INFO", "Parser", "Element type: %s", elType->debug->toString(elType));
 
@@ -2809,7 +2803,6 @@ ASTNode *parseArrayLiteral(Lexer *lexer, ParsingContext *context, Arena *arena, 
     elements->data.array->elementTypes = elementTypes;
     elements->data.array->elementCount = elementCount;
     elements->data.array->elementCapacity = elementCount;
-    elements->data.array->type = wrapArrayType(createArrayTypeContainer(elementTypes[0], elementTypes, elementCount, 0));
 
     consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array literal.", "parseArrayLiteral", arena, state, context);
     return elements;
@@ -3006,8 +2999,6 @@ ASTNode *parseLHSIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena,
         return NULL;
     }
 
-    printFormattedType(typeOfNode);
-
     DEBUG_BREAKPOINT;
 }
 
@@ -3099,11 +3090,8 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
 
         ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
         ASTNode *identifierNode = symbolNode;
-        DataType *typeOfNode = DataTypeFromNode(identifierNode);
+        DataType *typeOfNode = DTM->astInterface->getTypeofASTNode(identifierNode);
         DataType *typeFromSymbol = GetDataTypeFromSymbol(globalTable, sym);
-
-        VALIDATE_TYPE(typeOfNode);
-        VALIDATE_TYPE(typeFromSymbol);
 
         if (lexer->currentToken.type == TOKEN_DOT)
         {
@@ -3141,10 +3129,8 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
     if (typeOfNode->container->typeOf == OBJECT_TYPE)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a struct.");
-        VALIDATE_TYPE(typeOfNode);
 
         DTStructTy *structType = typeOfNode->container->type.structType;
-        logStructType(structType);
         const char *structName = typeOfNode->typeName;
         Token nextToken = peekNextUnconsumedToken(lexer, arena, state);
         Token currentToken = lexer->currentToken;
@@ -3159,7 +3145,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         logMessage(LMI, "INFO", "Parser", "Struct name: %s", structName);
         logMessage(LMI, "INFO", "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
 
-        ASTNode *property = findStructProperty(structType, (const char *)propName);
+        ASTNode *property = DTM->propertyTypes->findStructPropertyNode(structType, propName);
         if (property)
         {
             logMessage(LMI, "INFO", "Parser", "Property found in struct, name: %s", propName);
@@ -3177,7 +3163,6 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
     else if (typeOfNode->container->typeOf == OBJECT_TYPE)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a class.");
-        VALIDATE_TYPE(typeOfNode);
 
         DTClassTy *classType = typeOfNode->container->type.classType;
         const char *className = typeOfNode->typeName;
@@ -3268,8 +3253,6 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
         parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
         CONDITION_FAILED;
     }
-
-    VALIDATE_TYPE(expectedType);
 
     return propAccessNode;
 }

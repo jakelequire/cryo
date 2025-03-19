@@ -161,6 +161,36 @@ typedef struct DTFunctionTy_t
 } DTFunctionTy;
 
 // ------------------------------------------------------------------------------------------- //
+// ----------------------------------- Property Data Type ------------------------------------ //
+// ------------------------------------------------------------------------------------------- //
+
+typedef struct DTPropertyTy_t
+{
+    // ==================== [ Property Assignments ] ==================== //
+
+    const char *name;
+    DataType *type;
+    ASTNode *node;
+
+    bool isStatic;
+    bool isConst;
+    bool isPublic;
+    bool isPrivate;
+    bool isProtected;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    void (*setStatic)(struct DTPropertyTy_t *self, bool isStatic);
+    void (*setConst)(struct DTPropertyTy_t *self, bool isConst);
+    void (*setPublic)(struct DTPropertyTy_t *self, bool isPublic);
+    void (*setPrivate)(struct DTPropertyTy_t *self, bool isPrivate);
+    void (*setProtected)(struct DTPropertyTy_t *self, bool isProtected);
+    void (*setType)(struct DTPropertyTy_t *self, DataType *type);
+    void (*setName)(struct DTPropertyTy_t *self, const char *name);
+
+} DTPropertyTy;
+
+// ------------------------------------------------------------------------------------------- //
 // ------------------------------------ Struct Data Type ------------------------------------- //
 // ------------------------------------------------------------------------------------------- //
 
@@ -170,7 +200,7 @@ typedef struct DTStructTy_t
 
     const char *name;
 
-    struct DataType_t **properties;
+    struct DTPropertyTy_t **properties;
     int propertyCount;
     int propertyCapacity;
 
@@ -197,7 +227,7 @@ typedef struct DTStructTy_t
 
     // ==================== [ Function Assignments ] ==================== //
 
-    void (*addProperty)(struct DTStructTy_t *self, struct DataType_t *property);
+    void (*addProperty)(struct DTStructTy_t *self, DTPropertyTy *property);
     void (*addMethod)(struct DTStructTy_t *self, struct DataType_t *method);
     void (*addCtorParam)(struct DTStructTy_t *self, struct DataType_t *param);
 
@@ -216,7 +246,7 @@ typedef struct DTStructTy_t
 
 typedef struct DTPublicMembersTypes_t
 {
-    DataType **properties;
+    DTPropertyTy **properties;
     int propertyCount;
     int propertyCapacity;
 
@@ -227,7 +257,7 @@ typedef struct DTPublicMembersTypes_t
 
 typedef struct DTPrivateMembersTypes_t
 {
-    DataType **properties;
+    DTPropertyTy **properties;
     int propertyCount;
     int propertyCapacity;
 
@@ -238,7 +268,7 @@ typedef struct DTPrivateMembersTypes_t
 
 typedef struct DTProtectedMembersTypes_t
 {
-    DataType **properties;
+    DTPropertyTy **properties;
     int propertyCount;
     int propertyCapacity;
 
@@ -251,7 +281,7 @@ typedef struct DTClassTy_t
 {
     const char *name;
 
-    DataType **properties;
+    DTPropertyTy **properties;
     int propertyCount;
     int propertyCapacity;
 
@@ -270,14 +300,20 @@ typedef struct DTClassTy_t
 
     // ==================== [ Function Assignments ] ==================== //
 
-    void (*addPublicProperty)(struct DTClassTy_t *self, struct DataType_t *property);
+    void (*addPublicProperty)(struct DTClassTy_t *self, DTPropertyTy *property);
+    void (*addPublicProperties)(struct DTClassTy_t *self, DTPropertyTy **properties, int propertyCount);
     void (*addPublicMethod)(struct DTClassTy_t *self, struct DataType_t *method);
+    void (*addPublicMethods)(struct DTClassTy_t *self, struct DataType_t **methods, int methodCount);
 
-    void (*addPrivateProperty)(struct DTClassTy_t *self, struct DataType_t *property);
+    void (*addPrivateProperty)(struct DTClassTy_t *self, DTPropertyTy *property);
+    void (*addPrivateProperties)(struct DTClassTy_t *self, DTPropertyTy **properties, int propertyCount);
     void (*addPrivateMethod)(struct DTClassTy_t *self, struct DataType_t *method);
+    void (*addPrivateMethods)(struct DTClassTy_t *self, struct DataType_t **methods, int methodCount);
 
-    void (*addProtectedProperty)(struct DTClassTy_t *self, struct DataType_t *property);
+    void (*addProtectedProperty)(struct DTClassTy_t *self, DTPropertyTy *property);
+    void (*addProtectedProperties)(struct DTClassTy_t *self, DTPropertyTy **properties, int propertyCount);
     void (*addProtectedMethod)(struct DTClassTy_t *self, struct DataType_t *method);
+    void (*addProtectedMethods)(struct DTClassTy_t *self, struct DataType_t **methods, int methodCount);
 
 } DTClassTy;
 
@@ -339,6 +375,7 @@ typedef struct TypeContainer_t
         struct DTClassTy_t *classType;
         struct DTObjectTy_t *objectType;
         struct DTGenericTy_t *genericType;
+        struct DTPropertyTy_t *propertyType;
     } type;
 } TypeContainer;
 
@@ -360,9 +397,9 @@ typedef struct DataType_t
     // ==================== [ Function Assignments ] ==================== //
 
     void (*cast)(DataType *fromType, DataType *toType);
-    void (*setConst)(DataType *type);
-    void (*setPointer)(DataType *type);
-    void (*setReference)(DataType *type);
+    void (*setConst)(DataType *type, bool isConst);
+    void (*setPointer)(DataType *type, bool isPointer);
+    void (*setReference)(DataType *type, bool isReference);
     void (*setTypeName)(DataType *type, const char *name);
     void (*free)(DataType *type);
 } DataType;
@@ -378,6 +415,7 @@ DTSimpleTy *createDTSimpleTy(void);
 DTStructTy *createDTStructTy(void);
 DTClassTy *createDTClassTy(void);
 DTObjectTy *createDTObjectType(void);
+DTPropertyTy *createDTProperty(void);
 
 TypeContainer *createTypeContainer(void);
 

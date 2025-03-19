@@ -288,16 +288,85 @@ DTFunctionTy *createDTFunctionTy(void)
     return function;
 }
 
+// ------------------------------------------------------------------------------------------- //
+// ----------------------------------- Property Data Type ------------------------------------ //
+// ------------------------------------------------------------------------------------------- //
+
+void DTProperty_setStatic(DTPropertyTy *property, bool isStatic)
+{
+    property->isStatic = isStatic;
+}
+
+void DTProperty_setConst(DTPropertyTy *property, bool isConst)
+{
+    property->isConst = isConst;
+}
+
+void DTProperty_setPublic(DTPropertyTy *property, bool isPublic)
+{
+    property->isPublic = isPublic;
+}
+
+void DTProperty_setPrivate(DTPropertyTy *property, bool isPrivate)
+{
+    property->isPrivate = isPrivate;
+}
+
+void DTProperty_setProtected(DTPropertyTy *property, bool isProtected)
+{
+    property->isProtected = isProtected;
+}
+
+void DTProperty_setType(DTPropertyTy *property, DataType *type)
+{
+    property->type = type;
+}
+
+void DTProperty_setName(DTPropertyTy *property, const char *name)
+{
+    property->name = name;
+}
+
+DTPropertyTy *createDTProperty(void)
+{
+    DTPropertyTy *property = (DTPropertyTy *)malloc(sizeof(DTPropertyTy));
+    if (!property)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTProperty\n");
+        CONDITION_FAILED;
+    }
+
+    property->name = NULL;
+    property->type = NULL;
+    property->isStatic = false;
+    property->isConst = false;
+    property->isPublic = false;
+    property->isPrivate = false;
+    property->isProtected = false;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    property->setStatic = DTProperty_setStatic;
+    property->setConst = DTProperty_setConst;
+    property->setPublic = DTProperty_setPublic;
+    property->setPrivate = DTProperty_setPrivate;
+    property->setProtected = DTProperty_setProtected;
+    property->setType = DTProperty_setType;
+    property->setName = DTProperty_setName;
+
+    return property;
+}
+
 // --------------------------------------------------------------------------------------------------- //
 // ------------------------------------ Struct Data Types -------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
-void DTStructTy_addProperty(DTStructTy *structType, DataType *property)
+void DTStructTy_addProperty(DTStructTy *structType, DTPropertyTy *property)
 {
     if (structType->propertyCount >= structType->propertyCapacity)
     {
         structType->propertyCapacity *= DYN_GROWTH_FACTOR;
-        structType->properties = (DataType **)realloc(structType->properties, sizeof(DataType *) * structType->propertyCapacity);
+        structType->properties = (struct DTPropertyTy_t **)realloc(structType->properties, sizeof(struct DTPropertyTy_t *) * structType->propertyCapacity);
         if (!structType->properties)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTStructTy properties\n");
@@ -360,12 +429,12 @@ struct DTStructTy_t *DTStructTy_substituteGenericType(struct DTStructTy_t *struc
 {
     for (int i = 0; i < structType->propertyCount; i++)
     {
-        if (structType->properties[i]->container->typeOf == GENERIC_TYPE)
+        if (structType->properties[i]->type->container->typeOf == GENERIC_TYPE)
         {
-            struct DTGenericTy_t *generic = structType->properties[i]->container->type.genericType;
+            struct DTGenericTy_t *generic = structType->properties[i]->type->container->type.genericType;
             if (generic == DTGenericType)
             {
-                structType->properties[i] = substituteType;
+                structType->properties[i]->type = substituteType;
             }
         }
     }
@@ -406,12 +475,12 @@ struct DTStructTy_t *DTStructTy_cloneAndSubstituteGenericParam(struct DTStructTy
 {
     for (int i = 0; i < structType->propertyCount; i++)
     {
-        if (structType->properties[i]->container->typeOf == GENERIC_TYPE)
+        if (structType->properties[i]->type->container->typeOf == GENERIC_TYPE)
         {
-            struct DTGenericTy_t *generic = structType->properties[i]->container->type.genericType;
+            struct DTGenericTy_t *generic = structType->properties[i]->type->container->type.genericType;
             if (generic == DTGenericType)
             {
-                structType->properties[i] = substituteType;
+                structType->properties[i]->type = substituteType;
             }
         }
     }
@@ -428,7 +497,7 @@ DTStructTy *createDTStructTy(void)
         CONDITION_FAILED;
     }
 
-    structType->properties = (DataType **)malloc(sizeof(DataType *) * MAX_FIELD_CAPACITY);
+    structType->properties = (DTPropertyTy **)malloc(sizeof(DTPropertyTy *) * MAX_FIELD_CAPACITY);
     if (!structType->properties)
     {
         fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTStructTy properties\n");
@@ -460,12 +529,12 @@ DTStructTy *createDTStructTy(void)
 // ------------------------------------ Class Data Types --------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
-void DTClassTy_addPublicProperty(DTClassTy *classType, DataType *property)
+void DTClassTy_addPublicProperty(DTClassTy *classType, DTPropertyTy *property)
 {
     if (classType->publicMembers->propertyCount >= classType->publicMembers->propertyCapacity)
     {
         classType->publicMembers->propertyCapacity *= DYN_GROWTH_FACTOR;
-        classType->publicMembers->properties = (DataType **)realloc(classType->publicMembers->properties, sizeof(DataType *) * classType->publicMembers->propertyCapacity);
+        classType->publicMembers->properties = (DTPropertyTy **)realloc(classType->publicMembers->properties, sizeof(DTPropertyTy *) * classType->publicMembers->propertyCapacity);
         if (!classType->publicMembers->properties)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTClassTy public properties\n");
@@ -492,12 +561,12 @@ void DTClassTy_addPublicMethod(DTClassTy *classType, DataType *method)
     classType->publicMembers->methods[classType->publicMembers->methodCount++] = method;
 }
 
-void DTClassTy_addPrivateProperty(DTClassTy *classType, DataType *property)
+void DTClassTy_addPrivateProperty(DTClassTy *classType, DTPropertyTy *property)
 {
     if (classType->privateMembers->propertyCount >= classType->privateMembers->propertyCapacity)
     {
         classType->privateMembers->propertyCapacity *= DYN_GROWTH_FACTOR;
-        classType->privateMembers->properties = (DataType **)realloc(classType->privateMembers->properties, sizeof(DataType *) * classType->privateMembers->propertyCapacity);
+        classType->privateMembers->properties = (DTPropertyTy **)realloc(classType->privateMembers->properties, sizeof(DTPropertyTy *) * classType->privateMembers->propertyCapacity);
         if (!classType->privateMembers->properties)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTClassTy private properties\n");
@@ -524,12 +593,12 @@ void DTClassTy_addPrivateMethod(DTClassTy *classType, DataType *method)
     classType->privateMembers->methods[classType->privateMembers->methodCount++] = method;
 }
 
-void DTClassTy_addProtectedProperty(DTClassTy *classType, DataType *property)
+void DTClassTy_addProtectedProperty(DTClassTy *classType, DTPropertyTy *property)
 {
     if (classType->protectedMembers->propertyCount >= classType->protectedMembers->propertyCapacity)
     {
         classType->protectedMembers->propertyCapacity *= DYN_GROWTH_FACTOR;
-        classType->protectedMembers->properties = (DataType **)realloc(classType->protectedMembers->properties, sizeof(DataType *) * classType->protectedMembers->propertyCapacity);
+        classType->protectedMembers->properties = (DTPropertyTy **)realloc(classType->protectedMembers->properties, sizeof(DTPropertyTy *) * classType->protectedMembers->propertyCapacity);
         if (!classType->protectedMembers->properties)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTClassTy protected properties\n");
@@ -554,6 +623,54 @@ void DTClassTy_addProtectedMethod(DTClassTy *classType, DataType *method)
     }
 
     classType->protectedMembers->methods[classType->protectedMembers->methodCount++] = method;
+}
+
+void DTClassTy_addPublicProperties(DTClassTy *classType, DTPropertyTy **properties, int propertyCount)
+{
+    for (int i = 0; i < propertyCount; i++)
+    {
+        DTClassTy_addPublicProperty(classType, properties[i]);
+    }
+}
+
+void DTClassTy_addPublicMethods(DTClassTy *classType, DataType **methods, int methodCount)
+{
+    for (int i = 0; i < methodCount; i++)
+    {
+        DTClassTy_addPublicMethod(classType, methods[i]);
+    }
+}
+
+void DTClassTy_addPrivateProperties(DTClassTy *classType, DTPropertyTy **properties, int propertyCount)
+{
+    for (int i = 0; i < propertyCount; i++)
+    {
+        DTClassTy_addPrivateProperty(classType, properties[i]);
+    }
+}
+
+void DTClassTy_addPrivateMethods(DTClassTy *classType, DataType **methods, int methodCount)
+{
+    for (int i = 0; i < methodCount; i++)
+    {
+        DTClassTy_addPrivateMethod(classType, methods[i]);
+    }
+}
+
+void DTClassTy_addProtectedProperties(DTClassTy *classType, DTPropertyTy **properties, int propertyCount)
+{
+    for (int i = 0; i < propertyCount; i++)
+    {
+        DTClassTy_addProtectedProperty(classType, properties[i]);
+    }
+}
+
+void DTClassTy_addProtectedMethods(DTClassTy *classType, DataType **methods, int methodCount)
+{
+    for (int i = 0; i < methodCount; i++)
+    {
+        DTClassTy_addProtectedMethod(classType, methods[i]);
+    }
 }
 
 DTPublicMembersTypes *createDTPublicMembersType(void)
@@ -605,7 +722,7 @@ DTClassTy *createDTClassTy(void)
     classType->privateMembers = createDTPrivateMembersType();
     classType->protectedMembers = createDTProtectedMembersType();
 
-    classType->properties = (DataType **)malloc(sizeof(DataType *) * MAX_FIELD_CAPACITY);
+    classType->properties = (DTPropertyTy **)malloc(sizeof(DTPropertyTy *) * MAX_FIELD_CAPACITY);
     if (!classType->properties)
     {
         fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTClassTy properties\n");
@@ -633,11 +750,19 @@ DTClassTy *createDTClassTy(void)
     // ==================== [ Function Assignments ] ==================== //
 
     classType->addPublicProperty = DTClassTy_addPublicProperty;
+    classType->addPublicProperties = DTClassTy_addPublicProperties;
     classType->addPublicMethod = DTClassTy_addPublicMethod;
+    classType->addPublicMethods = DTClassTy_addPublicMethods;
+
     classType->addPrivateProperty = DTClassTy_addPrivateProperty;
+    classType->addPrivateProperties = DTClassTy_addPrivateProperties;
     classType->addPrivateMethod = DTClassTy_addPrivateMethod;
+    classType->addPrivateMethods = DTClassTy_addPrivateMethods;
+
     classType->addProtectedProperty = DTClassTy_addProtectedProperty;
+    classType->addProtectedProperties = DTClassTy_addProtectedProperties;
     classType->addProtectedMethod = DTClassTy_addProtectedMethod;
+    classType->addProtectedMethods = DTClassTy_addProtectedMethods;
 
     return classType;
 }

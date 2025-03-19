@@ -1503,7 +1503,7 @@ NullNode *createNullNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = createPrimitiveNullType();
+    node->type = DTM->primitives->createNull();
 
     return node;
 }

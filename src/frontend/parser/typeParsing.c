@@ -116,7 +116,8 @@ bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *
             (*propertyCount)++;
             addPropertyToThisContext(context, field);
             DataType *fieldType = DTM->astInterface->getTypeofASTNode(field);
-            dataType->container->type.structType->addProperty(dataType->container->type.structType, fieldType);
+            DTPropertyTy *propertyTy = field->data.property->type->container->type.propertyType;
+            dataType->container->type.structType->addProperty(dataType->container->type.structType, propertyTy);
 
             if (parsePropertyForDefaultFlag(field) && !(*hasDefaultProperty))
             {
@@ -210,7 +211,7 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     structNode->data.structNode->hasDefaultValue = hasDefaultProperty;
     structNode->data.structNode->hasConstructor = hasConstructor;
 
-    DataType **propertyTypes = DTM->astInterface->createTypeArrayFromASTArray(properties, propertyCount);
+    DTPropertyTy **propertyTypes = DTM->astInterface->createPropertyArrayFromAST(properties, propertyCount);
     DataType **methodTypes = DTM->astInterface->createTypeArrayFromASTArray(methods, methodCount);
     DataType *structDataType = DTM->structTypes->createCompleteStructType(structName, propertyTypes, propertyCount, methodTypes, methodCount, hasConstructor, ctorArgs, &ctorArgCount);
 

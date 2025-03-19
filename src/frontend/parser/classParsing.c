@@ -61,17 +61,29 @@ ASTNode *parseClassDeclaration(bool isStatic,
         CONDITION_FAILED;
     }
 
-    DataType *classType = createClassDataType(className, classNode->data.classNode);
+    DataType *classType = DTM->classTypes->createClassTemplate();
     if (!classType)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create class data type.");
         parsingError("Failed to create class data type.", "parseclassNodearation", arena, state, lexer, lexer->source, globalTable);
         CONDITION_FAILED;
     }
+    classType->setTypeName(classType, className);
+
+    DTClassTy *classTy = classType->container->type.classType;
+    ClassNode *classBodyNode = classBody->data.classNode;
+    DataType **publicMethods = DTM->astInterface->createTypeArrayFromASTArray(
+        classBodyNode->publicMembers->methods, classBodyNode->publicMembers->methodCount);
+    DataType **privateMethods = DTM->astInterface->createTypeArrayFromASTArray(
+        classBodyNode->privateMembers->methods, classBodyNode->privateMembers->methodCount);
+    DataType **protectedMethods = DTM->astInterface->createTypeArrayFromASTArray(
+        classBodyNode->protectedMembers->methods, classBodyNode->protectedMembers->methodCount);
+
+    classTy->addPublicMethods(classTy, publicMethods, classBody->data.classNode->publicMembers->methodCount);
+    classTy->addPrivateMethods(classTy, privateMethods, classBody->data.classNode->privateMembers->methodCount);
+    classTy->addProtectedMethods(classTy, protectedMethods, classBody->data.classNode->protectedMembers->methodCount);
+
     classNode->data.classNode->type = classType;
-    classNode->data.classNode->type->container->custom.name = strdup(className);
-    classNode->data.classNode->type->container->primitive = PRIM_OBJECT;
-    classNode->data.classNode->type->container->custom.classDef->classNode = classNode;
 
     CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
 
@@ -161,7 +173,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 
                     logMessage(LMI, "INFO", "Parser", "Parsing property declaration...");
                     DataType *type = parseType(lexer, context, arena, state, globalTable);
-                    type->container->custom.name = strdup(identifier);
+                    type->typeName = strdup(identifier);
 
                     // Move past the data type token
                     getNextToken(lexer, arena, state);
@@ -253,7 +265,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
 
                     logMessage(LMI, "INFO", "Parser", "Parsing static property declaration...");
                     DataType *type = parseType(lexer, context, arena, state, globalTable);
-                    type->container->custom.name = strdup(identifier);
+                    type->typeName = strdup(identifier);
 
                     // Move past the data type token
                     getNextToken(lexer, arena, state);
@@ -622,7 +634,7 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
 
     logMessage(LMI, "INFO", "Parser", "Method name: %s", methodName);
 
-    Symbol *symbol = FindMethodSymbol(globalTable, methodName, strdup(scopeName), CLASS_TYPE);
+    Symbol *symbol = FindMethodSymbol(globalTable, methodName, strdup(scopeName), OBJECT_TYPE);
     if (!symbol)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to find method symbol.");

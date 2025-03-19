@@ -125,7 +125,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, Lexer 
 
     logMessage(LMI, "DEBUG", "AST", "Created literal expression node with value: %d", value);
     int intCpy = value;
-    node->data.literal->type = createPrimitiveIntType();
+    node->data.literal->type = DTM->primitives->createInt();
     node->data.literal->value.intValue = value;
     // convert from int to string
     char *buffer = (char *)ARENA_ALLOC(arena, sizeof(char));
@@ -239,7 +239,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
 
     logMessage(LMI, "INFO", "AST", "Created float literal node with value: %f", value);
 
-    node->data.literal->type = createPrimitiveFloatType();
+    node->data.literal->type = DTM->primitives->createFloat();
     node->data.literal->value.floatValue = value;
     return node;
 }
@@ -265,7 +265,7 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
     });
 
     int length = getStringLength(trimmedString);
-    node->data.literal->type = createPrimitiveStringType(length);
+    node->data.literal->type = DTM->primitives->createString();
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
 
@@ -333,7 +333,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
 
     logMessage(LMI, "INFO", "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
 
-    node->data.literal->type = createPrimitiveBooleanType(value);
+    node->data.literal->type = DTM->primitives->createPrimBoolean(value);
     node->data.literal->value.booleanValue = value;
 
     return node;
@@ -366,7 +366,7 @@ ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Le
         logMessage(LMI, "INFO", "AST", "Symbol not found in global symbol table: %s", varName);
         node->data.varName->varName = strdup(varName);
         node->data.varName->isRef = true;
-        node->data.varName->type = createUnknownType();
+        node->data.varName->type = DTM->primitives->createUndefined();
     }
 
     return node;
@@ -449,7 +449,7 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, Lexer *
     if (!node)
         return NULL;
     int length = strlen(str);
-    node->data.literal->type = createPrimitiveStringType(length);
+    node->data.literal->type = DTM->primitives->createString();
     node->data.literal->value.stringValue = strdup(str);
     return node;
 }
@@ -519,7 +519,7 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     node->data.functionDecl->paramCapacity = paramCapacity;
     node->data.functionDecl->body = function_body;
     node->data.functionDecl->type = returnType;
-    node->data.functionDecl->functionType = createFunctionType(strdup(function_name), returnType, NULL, 0, arena, state);
+    node->data.functionDecl->functionType = NULL;
 
     return node;
 }
@@ -658,7 +658,7 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
         case PRIM_VOID:
             break;
         default:
-            logMessage(LMI, "ERROR", "AST", "Unknown data type: %s", DataTypeToString(type));
+            logMessage(LMI, "ERROR", "AST", "Unknown data type: %s", DTM->debug->dataTypeToString(type));
             CONDITION_FAILED;
         }
         break;
@@ -957,7 +957,7 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
     node->data.propertyAccess->object = object;
     node->data.propertyAccess->property = property;
     node->data.propertyAccess->propertyName = strdup(propertyName);
-    node->data.propertyAccess->propertyIndex = getPropertyAccessIndex(type, propertyName);
+    node->data.propertyAccess->propertyIndex = NULL; // Need to find a replacement for `getPropertyAccessIndex(type, propertyName);`
 
     return node;
 }
@@ -1003,7 +1003,7 @@ ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataTy
     node->data.methodCall->name = strdup(methodName);
     node->data.methodCall->args = args;
     node->data.methodCall->argCount = argCount;
-    node->data.methodCall->instanceName = getDataTypeName(instanceType);
+    node->data.methodCall->instanceName = DTM->debug->dataTypeToString(instanceType);
     node->data.methodCall->isStatic = isStatic;
 
     return node;
@@ -1227,7 +1227,6 @@ ASTNode *createTypeDeclNode(const char *typeName, DataType *type, Arena *arena, 
 
     return node;
 }
-
 
 ASTNode *createTypeCastNode(DataType *type, ASTNode *expression, Arena *arena, CompilerState *state, Lexer *lexer)
 {

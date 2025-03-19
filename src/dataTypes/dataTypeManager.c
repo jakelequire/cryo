@@ -149,12 +149,91 @@ DTMDebug *createDTMDebug(void)
 }
 
 // --------------------------------------------------------------------------------------------------- //
+// -------------------------------------- Property Data Types ---------------------------------------- //
+// --------------------------------------------------------------------------------------------------- //
+
+DTPropertyTy *DTMPropertyTypes_createPropertyTemplate(void)
+{
+    DTPropertyTy *property = createDTProperty();
+    return property;
+}
+
+DTPropertyTy *DTMPropertyTypes_createPropertyType(const char *name, DataType *type, ASTNode *node, bool isStatic, bool isConst, bool isPublic, bool isPrivate, bool isProtected)
+{
+    DTPropertyTy *property = createDTProperty();
+    property->node = node;
+    property->setName(property, name);
+    property->setType(property, type);
+    property->setStatic(property, isStatic);
+    property->setConst(property, isConst);
+    property->setPublic(property, isPublic);
+    property->setPrivate(property, isPrivate);
+    property->setProtected(property, isProtected);
+    return property;
+}
+
+ASTNode *DTMPropertyTypes_findStructPropertyNode(DTStructTy *structNode, const char *propertyName)
+{
+    for (int i = 0; i < structNode->propertyCount; i++)
+    {
+        if (strcmp(structNode->properties[i]->name, propertyName) == 0)
+        {
+            return structNode->properties[i]->node;
+        }
+    }
+    return NULL;
+}
+
+DTMPropertyTypes *createDTMPropertyTypes(void)
+{
+    DTMPropertyTypes *propertyTypes = (DTMPropertyTypes *)malloc(sizeof(DTMPropertyTypes));
+    if (!propertyTypes)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Property Types\n");
+        CONDITION_FAILED;
+    }
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    propertyTypes->createPropertyTemplate = DTMPropertyTypes_createPropertyTemplate;
+    propertyTypes->createPropertyType = DTMPropertyTypes_createPropertyType;
+    propertyTypes->findStructPropertyNode = DTMPropertyTypes_findStructPropertyNode;
+
+    return propertyTypes;
+}
+
+// --------------------------------------------------------------------------------------------------- //
 // ------------------------------------- Struct Data Types ------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
 DataType *DTMStructTypes_createStructTemplate(void)
 {
     DTStructTy *structType = createDTStructTy();
+    return DTM->dataTypes->wrapStructType(structType);
+}
+
+DataType *DTMStructTypes_createCompleteStructType(const char *structName, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount, bool hasConstructor, DataType **ctorArgs, int *ctorArgCount)
+{
+    DTStructTy *structType = createDTStructTy();
+    structType->name = structName;
+    structType->properties = properties;
+    structType->propertyCount = propertyCount;
+    structType->methods = methods;
+    structType->methodCount = methodCount;
+    structType->hasConstructor = hasConstructor;
+    structType->ctorParams = ctorArgs;
+    structType->ctorParamCount = *ctorArgCount;
+    return DTM->dataTypes->wrapStructType(structType);
+}
+
+DataType *DTMStructTypes_createStructType(const char *structName, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount)
+{
+    DTStructTy *structType = createDTStructTy();
+    structType->name = structName;
+    structType->properties = properties;
+    structType->propertyCount = propertyCount;
+    structType->methods = methods;
+    structType->methodCount = methodCount;
     return DTM->dataTypes->wrapStructType(structType);
 }
 
@@ -170,6 +249,8 @@ DTMStructTypes *createDTMStructTypes(void)
     // ==================== [ Function Assignments ] ==================== //
 
     structTypes->createStructTemplate = DTMStructTypes_createStructTemplate;
+    structTypes->createCompleteStructType = DTMStructTypes_createCompleteStructType;
+    structTypes->createStructType = DTMStructTypes_createStructType;
 
     return structTypes;
 }
@@ -240,6 +321,27 @@ DTMFunctionTypes *createDTMFunctionTypes(void)
 // ------------------------------------- Generic Data Types ------------------------------------------ //
 // --------------------------------------------------------------------------------------------------- //
 
+DataType *DTMGenerics_createGenericTypeInstance(DataType *genericType, DataType **paramTypes, int paramCount)
+{
+    DTGenericTy *generic = DTM->generics->createEmptyGenericType();
+    generic->paramCount = paramCount;
+    generic->dimensions = 0;
+    generic->constraint = NULL;
+    generic->next = NULL;
+    return DTM->dataTypes->wrapGenericType(generic);
+}
+
+DTGenericTy *DTMGenerics_createEmptyGenericType(void)
+{
+    DTGenericTy *generic = (DTGenericTy *)malloc(sizeof(DTGenericTy));
+    if (!generic)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Generic Type\n");
+        CONDITION_FAILED;
+    }
+    return generic;
+}
+
 DTMGenerics *createDTMGenerics(void)
 {
     DTMGenerics *generics = (DTMGenerics *)malloc(sizeof(DTMGenerics));
@@ -250,6 +352,9 @@ DTMGenerics *createDTMGenerics(void)
     }
 
     // ==================== [ Function Assignments ] ==================== //
+
+    generics->createGenericTypeInstance = DTMGenerics_createGenericTypeInstance;
+    generics->createEmptyGenericType = DTMGenerics_createEmptyGenericType;
 
     return generics;
 }
@@ -403,6 +508,21 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
 // ---------------------------------- Data Types Implementation -------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
+void DataTypes_isConst(DataType *type, bool isConst)
+{
+    type->isConst = isConst;
+}
+
+void DataTypes_isPointer(DataType *type, bool isPointer)
+{
+    type->isPointer = isPointer;
+}
+
+void DataTypes_isReference(DataType *type, bool isReference)
+{
+    type->isReference = isReference;
+}
+
 TypeContainer *DTMTypeContainerWrappers_createTypeContainer(void)
 {
     TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
@@ -425,6 +545,10 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
     }
 
     type->container = container;
+
+    type->setConst = DataTypes_isConst;
+    type->setPointer = DataTypes_isPointer;
+    type->setReference = DataTypes_isReference;
 
     return type;
 }
@@ -556,6 +680,12 @@ DataType **DTMastInterface_createTypeArrayFromASTArray(ASTNode **nodes, int coun
     return NULL;
 }
 
+DTPropertyTy **DTMastInterface_createPropertyArrayFromAST(ASTNode **nodes, int count)
+{
+    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
+    return NULL;
+}
+
 DTMastInterface *createDTMAstInterface(void)
 {
     DTMastInterface *astInterface = (DTMastInterface *)malloc(sizeof(DTMastInterface));
@@ -570,6 +700,7 @@ DTMastInterface *createDTMAstInterface(void)
     astInterface->getTypeofASTNode = DTMastInterface_getTypeofASTNode;
     astInterface->createTypeArrayFromAST = DTMastInterface_createTypeArrayFromAST;
     astInterface->createTypeArrayFromASTArray = DTMastInterface_createTypeArrayFromASTArray;
+    astInterface->createPropertyArrayFromAST = DTMastInterface_createPropertyArrayFromAST;
 
     return astInterface;
 }
@@ -632,7 +763,8 @@ DataTypeManager *createDataTypeManager(void)
     manager->validation = createDTMTypeValidation();
 
     manager->primitives = createDTMPrimitives();
-    manager->debug = createDTMDebug();
+    manager->propertyTypes = createDTMPropertyTypes();
+    manager->astInterface = createDTMAstInterface();
     manager->structTypes = createDTMStructTypes();
     manager->classTypes = createDTMClassTypes();
     manager->functionTypes = createDTMFunctionTypes();
@@ -640,6 +772,7 @@ DataTypeManager *createDataTypeManager(void)
     manager->enums = createDTMEnums();
 
     manager->helpers = createDTMHelpers();
+    manager->debug = createDTMDebug();
 
     // ===================== [ Function Assignments ] ===================== //
 

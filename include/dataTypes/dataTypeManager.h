@@ -30,6 +30,26 @@
 
 #define SYMBOL_TABLE_INITIAL_CAPACITY 32
 
+// Define each token mapping
+#define DECLARE_TOKEN(str, type) {str, type}
+
+// Define the data types table with X-Macros
+#define DATA_TYPE_TABLE                      \
+    X("int", TOKEN_TYPE_INT)                 \
+    X("string", TOKEN_TYPE_STRING)           \
+    X("boolean", TOKEN_TYPE_BOOLEAN)         \
+    X("void", TOKEN_TYPE_VOID)               \
+    X("null", TOKEN_TYPE_NULL)               \
+    X("any", TOKEN_TYPE_ANY)                 \
+    X("int[]", TOKEN_TYPE_INT_ARRAY)         \
+    X("string[]", TOKEN_TYPE_STRING_ARRAY)   \
+    X("boolean[]", TOKEN_TYPE_BOOLEAN_ARRAY) \
+    X("i8", TOKEN_TYPE_I8)                   \
+    X("i16", TOKEN_TYPE_I16)                 \
+    X("i32", TOKEN_TYPE_I32)                 \
+    X("i64", TOKEN_TYPE_I64)                 \
+    X("i128", TOKEN_TYPE_I128)
+
 // ---------------------- Forward Declarations ---------------------- //
 
 typedef struct DataTypeManager_t DataTypeManager;
@@ -45,6 +65,7 @@ typedef struct DTStructTy_t DTStructTy;
 typedef struct DTClassTy_t DTClassTy;
 typedef struct DTObjectTy_t DTObjectTy;
 typedef struct DTSimpleTy_t DTSimpleTy;
+typedef struct DTPropertyTy_t DTPropertyTy;
 
 extern DataTypeManager *globalDataTypeManager;
 
@@ -119,6 +140,13 @@ typedef struct DTMPrimitives_t
     PrimitiveDataType (*getPrimitiveType)(const char *typeStr);
 } DTMPrimitives;
 
+typedef struct DTMPropertyTypes_t
+{
+    DTPropertyTy *(*createPropertyTemplate)(void);
+    DTPropertyTy *(*createPropertyType)(const char *propertyName, DataType *propertyType, ASTNode *node, bool isStatic, bool isConst, bool isPublic, bool isPrivate, bool isProtected);
+    ASTNode *(*findStructPropertyNode)(DTStructTy *structNode, const char *propertyName);
+} DTMPropertyTypes;
+
 // ----------------------- Struct Data Type Interface ------------------------ //
 
 // This structure is an interface for creating struct data types in the compiler.
@@ -126,7 +154,8 @@ typedef struct DTMPrimitives_t
 typedef struct DTMStructTypes_t
 {
     DataType *(*createStructTemplate)(void);
-    DataType *(*createCompleteStructType)(const char *structName, DataType **properties, int propertyCount, DataType **methods, int methodCount, bool hasConstructor, DataType **ctorArgs, int *ctorArgCount);
+    DataType *(*createCompleteStructType)(const char *structName, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount, bool hasConstructor, DataType **ctorArgs, int *ctorArgCount);
+    DataType *(*createStructType)(const char *structName, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount);
 } DTMStructTypes;
 
 // ------------------------ Class Data Type Interface ------------------------ //
@@ -135,7 +164,7 @@ typedef struct DTMStructTypes_t
 // This is used to create class data types such as `class ... { ... }`.
 typedef struct DTMClassTypes_t
 {
-    // TODO
+    DataType *(*createClassTemplate)(void);
 } DTMClassTypes;
 
 // ---------------------- Function Data Type Interface ---------------------- //
@@ -151,11 +180,12 @@ typedef struct DTMFunctionTypes_t
 
 // ---------------------- Generics Data Type Interface ---------------------- //
 
-// This structure is an interface for creating array data types in the compiler.
-// This is used to create array data types such as `int[]`, `float[]`, `string[]`, `boolean[]`, etc.
+// This structure is an interface for creating Generics data types in the compiler.
+// This is used to create Generics data types such as `T`, `U`, `V`, etc.
 typedef struct DTMGenerics_t
 {
-    // TODO
+    DataType *(*createGenericTypeInstance)(DataType *genericType, DataType **paramTypes, int paramCount);
+    DTGenericTy *(*createEmptyGenericType)();
 } DTMGenerics;
 
 // ------------------------ Enum Data Type Interface ----------------------- //
@@ -174,6 +204,7 @@ typedef struct DTMEnums_t
 typedef struct DTMDebug_t
 {
     void (*printDataType)(DataType *type);
+    const char *(*dataTypeToString)(DataType *type);
 
     const char *(*typeofDataTypeToString)(TypeofDataType type);
     const char *(*typeofObjectTypeToString)(TypeofObjectType type);
@@ -230,6 +261,7 @@ typedef struct DTMastInterface_t
     DataType *(*getTypeofASTNode)(ASTNode *node);
     DataType **(*createTypeArrayFromAST)(ASTNode *node);
     DataType **(*createTypeArrayFromASTArray)(ASTNode **nodes, int count);
+    DTPropertyTy **(*createPropertyArrayFromAST)(ASTNode **nodes, int count);
 } DTMastInterface;
 
 // -------------------------- Data Type Manager -------------------------- //
@@ -252,6 +284,8 @@ typedef struct DataTypeManager_t
 
     // Handles all Cryo primitive data types.
     DTMPrimitives *primitives;
+    // Handles Property data types in the compiler.
+    DTMPropertyTypes *propertyTypes;
     // Handles Struct data types in the compiler.
     DTMStructTypes *structTypes;
     // Handles Class data types in the compiler.
@@ -294,6 +328,7 @@ DTMDebug *createDTMDebug(void);
 DataTypeManager *createDataTypeManager(void);
 
 DTMPrimitives *createDTMPrimitives(void);
+DTMPropertyTypes *createDTMPropertyTypes(void);
 DTMStructTypes *createDTMStructTypes(void);
 DTMClassTypes *createDTMClassTypes(void);
 DTMFunctionTypes *createDTMFunctionTypes(void);

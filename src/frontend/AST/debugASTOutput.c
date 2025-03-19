@@ -708,7 +708,7 @@ char *formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<FunctionDecl> [%s]: %s <%i:%i>",
             node->nodeName,
-            DataTypeToString(node->dataType),
+            DTM->debug->dataTypeToString(node->dataType),
             node->line, node->column);
     return buffer;
 }
@@ -718,7 +718,7 @@ char *CONSOLE_formatFunctionDeclNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "%s%s<FunctionDecl>%s %s[%s]:%s %s%s%s%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET, YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
 
     return buffer;
@@ -778,7 +778,7 @@ char *formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<VarDecl> [%s] { Type: %s } <%i:%i>",
             node->nodeName,
-            DataTypeToString(node->dataType),
+            DTM->debug->dataTypeToString(node->dataType),
             node->line, node->column);
 
     if (node->value)
@@ -800,7 +800,7 @@ char *CONSOLE_formatVarDeclNode(ASTDebugNode *node, DebugASTOutput *output)
     sprintf(buffer, "%s%s<VarDecl>%s %s[%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
 
     if (node->value)
@@ -907,7 +907,7 @@ char *formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<FunctionCall> [%s] →  %s <%i:%i>",
             node->nodeName,
-            DataTypeToString(node->dataType),
+            DTM->debug->dataTypeToString(node->dataType),
             node->line, node->column);
     return buffer;
 }
@@ -919,7 +919,7 @@ char *CONSOLE_formatFunctionCallNode(ASTDebugNode *node, DebugASTOutput *output)
     sprintf(buffer, "%s%s<FunctionCall>%s %s[%s] → %s%s%s %s %s%s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
 
     if (node->args)
@@ -946,7 +946,7 @@ char *formatParamNode(ASTDebugNode *node, DebugASTOutput *output)
     // <Param> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<Param> { Type: %s } <%i:%i>", DataTypeToString(node->dataType), node->line, node->column);
+    sprintf(buffer, "<Param> { Type: %s } <%i:%i>", DTM->debug->dataTypeToString(node->dataType), node->line, node->column);
     return buffer;
 }
 char *CONSOLE_formatParamNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -956,7 +956,7 @@ char *CONSOLE_formatParamNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "%s%s<Param>%s %s%s{ %s }%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
-            BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -969,7 +969,7 @@ char *formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
     // <Property> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<Property> [%s] { Type: %s } <0:0>", node->nodeName, DataTypeToString(node->dataType));
+    sprintf(buffer, "<Property> [%s] { Type: %s } <0:0>", node->nodeName, DTM->debug->dataTypeToString(node->dataType));
     return buffer;
 }
 char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -980,7 +980,7 @@ char *CONSOLE_formatPropertyNode(ASTDebugNode *node, DebugASTOutput *output)
 
     sprintf(buffer, "%s%s<Property>%s %s[%s]%s %s%s{ %s }%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET, YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, LIGHT_CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -1039,7 +1039,7 @@ char *formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output)
     // <ExternFunction> [NAME] [RETURN_TYPE] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "<ExternFunction> [%s] →   %s <%i:%i>", node->nodeName, DataTypeToString(node->dataType), node->line, node->column);
+    sprintf(buffer, "<ExternFunction> [%s] →   %s <%i:%i>", node->nodeName, DTM->debug->dataTypeToString(node->dataType), node->line, node->column);
     return buffer;
 }
 char *CONSOLE_formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -1050,7 +1050,7 @@ char *CONSOLE_formatExternFunctionNode(ASTDebugNode *node, DebugASTOutput *outpu
     sprintf(buffer, "%s%s<ExternFunction>%s %s[%s] →%s  %s%s%s%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -1176,7 +1176,7 @@ char *formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<Method> [%s]:  %s <0:0>",
             node->nodeName,
-            DataTypeToString(node->dataType));
+            DTM->debug->dataTypeToString(node->dataType));
     return buffer;
 }
 char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -1187,7 +1187,7 @@ char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
     sprintf(buffer, "%s%s<Method>%s %s[%s]:%s%s%s %s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -1271,7 +1271,7 @@ char *formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<MethodCall> [%s]: %s <0:0>",
             node->nodeName,
-            DataTypeToString(node->dataType));
+            DTM->debug->dataTypeToString(node->dataType));
     return buffer;
 }
 char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -1282,7 +1282,7 @@ char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
     sprintf(buffer, "%s%s<MethodCall>%s %s[%s]:%s%s%s %s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, CYAN, DataTypeToString(node->dataType), COLOR_RESET,
+            BOLD, CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -1365,7 +1365,7 @@ char *formatClassNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<Class> [%s] <0:0>",
             node->nodeName,
-            DataTypeToString(node->dataType));
+            DTM->debug->dataTypeToString(node->dataType));
     return buffer;
 }
 
@@ -1425,8 +1425,8 @@ char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output)
     for (int i = 0; i < node->argCount; i++)
     {
         ASTNode *argNode = argsNode[i];
-        DataType *argType = getDataTypeFromASTNode(argNode);
-        char *argTypeString = DataTypeToString(argType);
+        DataType *argType = DTM->astInterface->getTypeofASTNode(argNode);
+        const char *argTypeString = DTM->debug->dataTypeToString(argType);
 
         if (i == node->argCount - 1)
         {
@@ -1455,7 +1455,7 @@ char *formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output)
     BUFFER_FAILED_ALLOCA_CATCH
     sprintf(buffer, "<ObjectInst> [%s] <0:0>",
             node->nodeName,
-            DataTypeToString(node->dataType));
+            DTM->debug->dataTypeToString(node->dataType));
     return buffer;
 }
 char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output)
@@ -1471,8 +1471,8 @@ char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output)
     DataType **argumentTypes = (DataType **)malloc(sizeof(DataType *) * argCount);
     for (int i = 0; i < argCount; i++)
     {
-        argumentTypes[i] = getDataTypeFromASTNode(args[i]);
-        logDataType(argumentTypes[i]);
+        argumentTypes[i] = DTM->astInterface->getTypeofASTNode(args[i]);
+        DTM->debug->printDataType(argumentTypes[i]);
     }
     char *argTypeArray = printFormattedDataTypeArray(argumentTypes, argCount);
 
@@ -1539,7 +1539,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PROGRAM:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *programNode = createASTDebugNode("Program", "Program", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *programNode = createASTDebugNode("Program", "Program", DTM->primitives->createVoid(), line, column, indentLevel, node);
         char *namespaceName = seekNamespaceName(node);
         programNode->namespaceName = (const char *)namespaceName;
         output->nodes[output->nodeCount] = *programNode;
@@ -1606,7 +1606,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         {
             sprintf(blockName, "Block");
         }
-        ASTDebugNode *blockNode = createASTDebugNode("Block", blockName, createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *blockNode = createASTDebugNode("Block", blockName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *blockNode;
         output->nodeCount++;
         for (int i = 0; i < node->data.block->statementCount; i++)
@@ -1621,7 +1621,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_FUNCTION_BLOCK:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *functionBlockNode = createASTDebugNode("FunctionBlock", "FunctionBlock", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *functionBlockNode = createASTDebugNode("FunctionBlock", "FunctionBlock", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *functionBlockNode;
         output->nodeCount++;
         for (int i = 0; i < node->data.functionBlock->statementCount; i++)
@@ -1637,7 +1637,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         char *structName = strdup(node->data.structNode->name);
-        ASTDebugNode *structNode = createASTDebugNode("StructDecl", structName, createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *structNode = createASTDebugNode("StructDecl", structName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *structNode;
         output->nodeCount++;
         for (int i = 0; i < node->data.structNode->propertyCount; i++)
@@ -1664,7 +1664,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PARAM_LIST:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *paramListNode = createASTDebugNode("ParamList", "ParamList", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *paramListNode = createASTDebugNode("ParamList", "ParamList", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *paramListNode;
         output->nodeCount++;
         for (int i = 0; i < node->data.paramList->paramCount; i++)
@@ -1679,7 +1679,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_STRUCT_CONSTRUCTOR:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *structConstructorNode = createASTDebugNode("StructConstructor", "StructConstructor", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *structConstructorNode = createASTDebugNode("StructConstructor", "StructConstructor", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *structConstructorNode;
         output->nodeCount++;
         for (int i = 0; i < node->data.structConstructor->argCount; i++)
@@ -1718,7 +1718,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         char *namespaceName = strdup(node->data.cryoNamespace->name);
-        ASTDebugNode *namespaceNode = createASTDebugNode("Namespace", namespaceName, createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *namespaceNode = createASTDebugNode("Namespace", namespaceName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *namespaceNode;
         output->nodeCount++;
         namespaceNode->indent = indentLevel;
@@ -1740,7 +1740,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_EXPRESSION:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *expressionNode = createASTDebugNode("Expression", "Expression", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *expressionNode = createASTDebugNode("Expression", "Expression", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *expressionNode;
         output->nodeCount++;
         break;
@@ -1853,7 +1853,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_RETURN_STATEMENT:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *returnNode = createASTDebugNode("ReturnStatement", "ReturnStatement", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *returnNode = createASTDebugNode("ReturnStatement", "ReturnStatement", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *returnNode;
         output->nodeCount++;
 
@@ -1870,7 +1870,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         char *funcName = strdup(node->data.functionCall->name);
-        ASTDebugNode *functionCallNode = createASTDebugNode("FunctionCall", funcName, createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *functionCallNode = createASTDebugNode("FunctionCall", funcName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         functionCallNode->args = node->data.functionCall->args;
         functionCallNode->argCount = node->data.functionCall->argCount;
         output->nodes[output->nodeCount] = *functionCallNode;
@@ -1907,7 +1907,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         char *varName = strdup(node->data.varName->varName);
-        ASTDebugNode *varNameNode = createASTDebugNode("VarName", varName, createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *varNameNode = createASTDebugNode("VarName", varName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *varNameNode;
         output->nodeCount++;
         break;
@@ -1916,7 +1916,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_ARG_LIST:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *argListNode = createASTDebugNode("ArgList", "ArgList", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *argListNode = createASTDebugNode("ArgList", "ArgList", DTM->primitives->createVoid(), line, column, indentLevel, node);
         ASTNode **args = node->data.argList->args;
         argListNode->args = args;
         argListNode->argCount = node->data.argList->argCount;
@@ -1929,7 +1929,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_THIS:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *thisNode = createASTDebugNode("This", "This", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *thisNode = createASTDebugNode("This", "This", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *thisNode;
         output->nodeCount++;
         break;
@@ -1938,7 +1938,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_THIS_ASSIGNMENT:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *thisReassignNode = createASTDebugNode("ThisAssign", "ThisAssign", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *thisReassignNode = createASTDebugNode("ThisAssign", "ThisAssign", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *thisReassignNode;
         output->nodeCount++;
         break;
@@ -1947,7 +1947,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PROPERTY_REASSIGN:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *propertyReassignNode = createASTDebugNode("PropertyReassign", "PropertyReassign", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *propertyReassignNode = createASTDebugNode("PropertyReassign", "PropertyReassign", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *propertyReassignNode;
         output->nodeCount++;
         break;
@@ -1969,7 +1969,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_BINARY_EXPR:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *binaryExprNode = createASTDebugNode("BinOp", "BinOp", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *binaryExprNode = createASTDebugNode("BinOp", "BinOp", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *binaryExprNode;
         output->nodeCount++;
         createASTDebugView(node->data.bin_op->left, output, indentLevel + 1);
@@ -1997,7 +1997,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         // Handle public members
         if (node->data.classNode->publicMembers)
         {
-            ASTDebugNode *publicNode = createASTDebugNode("AccessControl", "Public", createPrimitiveVoidType(), 0, 0, indentLevel + 1, NULL);
+            ASTDebugNode *publicNode = createASTDebugNode("AccessControl", "Public", DTM->primitives->createVoid(), 0, 0, indentLevel + 1, NULL);
             output->nodes[output->nodeCount] = *publicNode;
             output->nodeCount++;
 
@@ -2028,7 +2028,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         // Handle private members
         if (node->data.classNode->privateMembers)
         {
-            ASTDebugNode *privateNode = createASTDebugNode("AccessControl", "Private", createPrimitiveVoidType(), 0, 0, indentLevel + 1, NULL);
+            ASTDebugNode *privateNode = createASTDebugNode("AccessControl", "Private", DTM->primitives->createVoid(), 0, 0, indentLevel + 1, NULL);
             output->nodes[output->nodeCount] = *privateNode;
             output->nodeCount++;
 
@@ -2059,7 +2059,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         // Handle protected members
         if (node->data.classNode->protectedMembers)
         {
-            ASTDebugNode *protectedNode = createASTDebugNode("AccessControl", "Protected", createPrimitiveVoidType(), 0, 0, indentLevel + 1, NULL);
+            ASTDebugNode *protectedNode = createASTDebugNode("AccessControl", "Protected", DTM->primitives->createVoid(), 0, 0, indentLevel + 1, NULL);
             output->nodes[output->nodeCount] = *protectedNode;
             output->nodeCount++;
 
@@ -2103,7 +2103,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_UNARY_EXPR:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *unaryExprNode = createASTDebugNode("UnaryOp", "UnaryOp", createPrimitiveVoidType(), line, column, indentLevel, node);
+        ASTDebugNode *unaryExprNode = createASTDebugNode("UnaryOp", "UnaryOp", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *unaryExprNode;
         output->nodeCount++;
         createASTDebugView(node->data.unary_op->expression, output, indentLevel + 1);
@@ -2227,7 +2227,7 @@ char *printFormattedDataTypeArray(DataType **typeArray, int typeCount)
     for (int i = 0; i < typeCount; i++)
     {
         DataType *type = typeArray[i];
-        char *typeString = DataTypeToString(type);
+        const char *typeString = DTM->debug->dataTypeToString(type);
         if (i == typeCount - 1)
         {
             sprintf(buffer, "%s%s%s", buffer, typeString, COLOR_RESET);
