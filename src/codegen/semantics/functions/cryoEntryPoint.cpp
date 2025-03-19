@@ -43,7 +43,8 @@ namespace Cryo
         // Get the return type
         DataType *returnType = functionNode->type;
         llvm::Type *returnLLVMType = types.getReturnType(returnType);
-        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
+        std::string returnTypeName = DTM->debug->dataTypeToString(returnType);
+        DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + returnTypeName);
 
         // Get the function arguments
         int argCount = functionNode->paramCount;
@@ -56,7 +57,7 @@ namespace Cryo
             assert(argNode != nullptr);
 
             DataType *_argType = argNode->type;
-            if (_argType->container->baseType == PRIM_STRING)
+            if (_argType->container->primitive == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting string to LLVM type");
                 // int _len = types.getLiteralValLength(argNode->initializer);
@@ -66,7 +67,7 @@ namespace Cryo
                 continue;
             }
 
-            if (_argType->container->baseType == PRIM_INT)
+            if (_argType->container->primitive == PRIM_INT)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Converting int to LLVM type");
                 llvm::Type *argType = types.getType(_argType, 0);
@@ -153,7 +154,8 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
                 llvm::Type *returnLLVMType = types.getReturnType(returnType);
-                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DataTypeToString(returnType)));
+                std::string returnTypeName = DTM->debug->dataTypeToString(returnType);
+                DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + returnTypeName);
 
                 switch (returnType->container->primitive)
                 {
@@ -217,7 +219,7 @@ namespace Cryo
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Functions", "Returning string");
                     int _len = types.getLiteralValLength(statement);
-                    llvm::Type *returnType = types.getType(createPrimitiveStringType(_len), _len);
+                    llvm::Type *returnType = types.getType(DTM->primitives->createString(), 0);
                     llvm::Value *returnValue = generator.getInitilizerValue(statement);
                     compiler.getContext().builder.CreateRet(returnValue);
 
@@ -226,7 +228,7 @@ namespace Cryo
                 default:
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Unknown return type");
-                    std::cout << "Received: " << DataTypeToString(returnType) << std::endl;
+                    std::cout << "Received: " << DTM->debug->dataTypeToString(returnType) << std::endl;
                     CONDITION_FAILED;
                 }
                 }

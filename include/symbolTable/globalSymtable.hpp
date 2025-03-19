@@ -80,7 +80,7 @@ extern "C"
     DataType *CryoGlobalSymbolTable_ResolveDataType(CryoGlobalSymbolTable *symTable, const char *name);
     void CryoGlobalSymbolTable_AddTypeToTable(CryoGlobalSymbolTable *symTable, TypeSymbol *typeSymbol);
     TypeSymbol *CryoGlobalSymbolTable_CreateTypeSymbol(CryoGlobalSymbolTable *symTable, const char *name, ASTNode *node, DataType *type, TypeofDataType typeOf, bool isStatic, bool isGeneric, const char *scopeId);
-    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount, DataType *type);
+    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, DTGenericTy **params, int paramCount, DataType *type);
     TypeSymbol *CryoGlobalSymbolTable_ResolveTypeByName(CryoGlobalSymbolTable *symTable, const char *name);
 
     void CryoGlobalSymbolTable_CleanupAndDestroySymbolTable(CryoGlobalSymbolTable *symTable);
@@ -531,7 +531,7 @@ namespace Cryo
         void completeTypeDefinition(Symbol *typeSymbol, const char *typeName);
 
         DataType *resolveGenericDataType(const char *baseName, DataType **typeArgs, int argCount);
-        void registerGenericType(const char *name, GenericType **params, int paramCount, DataType *resultType);
+        void registerGenericType(const char *name, DTGenericTy **params, int paramCount, DataType *resultType);
         void registerGenericInstantiation(const char *baseName, DataType **typeArgs, int argCount, DataType *resultType);
         std::string createGenericInstantiationName(const char *baseName, DataType **typeArgs, int argCount);
 
@@ -1086,7 +1086,7 @@ namespace Cryo
         return nullptr;
     }
 
-    inline void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount, DataType *type)
+    inline void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, DTGenericTy **params, int paramCount, DataType *type)
     {
         if (symTable)
         {

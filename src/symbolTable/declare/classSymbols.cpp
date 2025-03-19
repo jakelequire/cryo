@@ -86,7 +86,7 @@ namespace Cryo
     Symbol *GlobalSymbolTable::createClassDeclarationSymbol(const char *className)
     {
         __STACK_FRAME__
-        TypeSymbol *typeSymbol = createIncompleteTypeSymbol(className, CLASS_TYPE);
+        TypeSymbol *typeSymbol = createIncompleteTypeSymbol(className, OBJECT_TYPE);
         Symbol *classSymbol = new Symbol();
         classSymbol->symbolType = TYPE_SYMBOL;
         classSymbol->type = typeSymbol;

@@ -51,7 +51,7 @@ namespace Cryo
         ASSERT_NODE_NULLPTR_RET(node);
 
         DataType *literalDataType = node->data.literal->type;
-        TypeofDataType typeofDataType = literalDataType->container->baseType;
+        TypeofDataType typeofDataType = literalDataType->container->typeOf;
         switch (typeofDataType)
         {
         case PRIM_INT:
@@ -73,7 +73,7 @@ namespace Cryo
         case PRIM_STRING:
             return context.builder.CreateGlobalStringPtr(node->data.literal->value.stringValue);
         default:
-            logMessage(LMI, "ERROR", "Initilizer", "Unhandled literal type: %s", DataTypeToString(literalDataType));
+            logMessage(LMI, "ERROR", "Initilizer", "Unhandled literal type: %s",DTM->debug->dataTypeToString(literalDataType));
             return nullptr;
         }
     }

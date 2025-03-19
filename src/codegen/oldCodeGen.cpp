@@ -391,7 +391,7 @@ namespace Cryo
         llvm::Constant *llvmConstant = nullptr;
 
         DataType *dataType = literalNode->type;
-        if (dataType->container->baseType == PRIMITIVE_TYPE)
+        if (dataType->container->typeOf == PRIM_TYPE)
         {
             switch (dataType->container->primitive)
             {
@@ -437,7 +437,7 @@ namespace Cryo
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "CodeGen", "Unknown data type");
-                std::cout << "Received: " << DataTypeToString(dataType) << std::endl;
+                std::cout << "Received: " << DTM->debug->dataTypeToString(dataType) << std::endl;
                 exit(1);
             }
             }

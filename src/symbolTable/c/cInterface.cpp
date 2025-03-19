@@ -650,7 +650,7 @@ extern "C"
         return nullptr;
     }
 
-    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, GenericType **params, int paramCount, DataType *type)
+    void CryoGlobalSymbolTable_RegisterGenericType(CryoGlobalSymbolTable *symTable, const char *name, DTGenericTy **params, int paramCount, DataType *type)
     {
         __STACK_FRAME__
         if (symTable)

@@ -70,7 +70,7 @@ namespace Cryo
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": %s",
                           getColoredSymbolType(VARIABLE_SYMBOL).c_str(),
                           symbol->name,
-                          symbol->type ? DataTypeToString(symbol->type) : "unknown");
+                          symbol->type ? DTM->debug->dataTypeToString(symbol->type) : "unknown");
         logger->debugNode("ID: %s | Param: %s",
                           symbol->scopeId,
                           paramStr);
@@ -88,7 +88,7 @@ namespace Cryo
         logger->debugNode("%s | %s: %s",
                           getColoredSymbolType(FUNCTION_SYMBOL).c_str(),
                           symbol->name,
-                          symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
+                          symbol->returnType ? DTM->debug->dataTypeToString(symbol->returnType) : "void");
         logger->debugNode("Parent ID: %s | Function ID: %s",
                           symbol->functionScopeId,
                           symbol->functionScopeId);
@@ -107,7 +107,7 @@ namespace Cryo
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": %s",
                           getColoredSymbolType(EXTERN_SYMBOL).c_str(),
                           symbol->name,
-                          symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
+                          symbol->returnType ? DTM->debug->dataTypeToString(symbol->returnType) : "unknown");
         logger->debugNode("ID: %s | Visibility: %s",
                           symbol->scopeId,
                           CryoVisibilityTypeToString(symbol->visibility));
@@ -122,7 +122,7 @@ namespace Cryo
             logger->debugNode("NULL type symbol");
             return;
         }
-        if (symbol->typeOf == CLASS_TYPE)
+        if (symbol->typeOf == OBJECT_TYPE)
         {
             logClassTypeSymbol(symbol);
             return;
@@ -131,8 +131,8 @@ namespace Cryo
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ":" BOLD MAGENTA " %s" COLOR_RESET,
                           getColoredSymbolType(TYPE_SYMBOL).c_str(),
                           symbol->name,
-                          TypeofDataTypeToString(symbol->typeOf));
-        const char *dataTypeStr = symbol->type ? DataTypeToString(symbol->type) : "TYPE_UNDEFINED";
+                          DTM->debug->typeofDataTypeToString(symbol->typeOf));
+        const char *dataTypeStr = symbol->type ? DTM->debug->dataTypeToString(symbol->type) : "unknown";
         logger->debugNode("DataType: %s", dataTypeStr);
         logger->debugNode("ID: %s | Static: %s Generic: %s",
                           symbol->scopeId,
@@ -142,7 +142,7 @@ namespace Cryo
         //
         // Struct type symbol
         //
-        if (symbol->typeOf == STRUCT_TYPE)
+        if (symbol->typeOf == OBJECT_TYPE)
         {
             logger->debugNode("Properties: %d | Methods: %d",
                               symbol->propertyCount,
@@ -180,7 +180,7 @@ namespace Cryo
         //
         // Class type symbol
         //
-        if (symbol->typeOf == CLASS_TYPE)
+        if (symbol->typeOf == OBJECT_TYPE)
         {
             logger->debugNode("Properties: %d | Methods: %d",
                               symbol->propertyCount,
@@ -221,12 +221,12 @@ namespace Cryo
             return;
         }
 
-        const char *dataTypeStr = symbol->type ? DataTypeToString(symbol->type) : "unknown";
+        const char *dataTypeStr = symbol->type ? DTM->debug->dataTypeToString(symbol->type) : "unknown";
 
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ":" BOLD MAGENTA " %s" COLOR_RESET,
                           getColoredSymbolType(TYPE_SYMBOL).c_str(),
                           symbol->name,
-                          TypeofDataTypeToString(symbol->typeOf));
+                          DTM->debug->typeofDataTypeToString(symbol->typeOf));
         logger->debugNode("DataType: %s", dataTypeStr);
         logger->debugNode("ID: %s | Static: %s Generic: %s",
                           symbol->scopeId,
@@ -278,7 +278,7 @@ namespace Cryo
 
         const char *symbolTypeStr = getColoredSymbolType(PROPERTY_SYMBOL).c_str();
         const char *nameStr = symbol->name ? symbol->name : "<anonymous>";
-        const char *typeStr = symbol->type ? DataTypeToString(symbol->type) : "unknown";
+        const char *typeStr = symbol->type ? DTM->debug->dataTypeToString(symbol->type) : "unknown";
 
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": Type: %s",
                           symbolTypeStr,
@@ -301,7 +301,7 @@ namespace Cryo
 
         const char *symbolTypeStr = getColoredSymbolType(METHOD_SYMBOL).c_str();
         const char *nameStr = symbol->name ? symbol->name : "<anonymous>";
-        const char *returnTypeStr = symbol->returnType ? DataTypeToString(symbol->returnType) : "void";
+        const char *returnTypeStr = symbol->returnType ? DTM->debug->dataTypeToString(symbol->returnType) : "void";
 
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": ReturnType: %s",
                           symbolTypeStr,
@@ -342,7 +342,7 @@ namespace Cryo
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": Type: %s",
                           getColoredSymbolType(PROPERTY_SYMBOL).c_str(),
                           symbol->name,
-                          symbol->type ? DataTypeToString(symbol->type) : "unknown");
+                          symbol->type ? DTM->debug->dataTypeToString(symbol->type) : "unknown");
         logger->debugNode("ID: %s | Static: %s HasDefault: %s",
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",
@@ -361,7 +361,7 @@ namespace Cryo
         logger->debugNode("%s | " BOLD WHITE "%s" COLOR_RESET ": ReturnType: %s",
                           getColoredSymbolType(METHOD_SYMBOL).c_str(),
                           symbol->name,
-                          symbol->returnType ? DataTypeToString(symbol->returnType) : "void");
+                          symbol->returnType ? DTM->debug->dataTypeToString(symbol->returnType) : "void");
         logger->debugNode("ID: %s | Static: %s Visibility: %d",
                           symbol->scopeId,
                           symbol->isStatic ? "true" : "false",
@@ -374,7 +374,7 @@ namespace Cryo
             for (size_t i = 0; i < symbol->paramCount; i++)
             {
                 logger->debugNode("  Param %zu: %s", i,
-                                  symbol->paramTypes[i] ? DataTypeToString(symbol->paramTypes[i]) : "unknown");
+                                  symbol->paramTypes[i] ? DTM->debug->dataTypeToString(symbol->paramTypes[i]) : "unknown");
             }
         }
         logger->debugNode(HEAVY_SEPARATOR);

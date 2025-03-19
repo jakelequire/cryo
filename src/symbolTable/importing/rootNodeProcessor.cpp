@@ -160,7 +160,7 @@ namespace Cryo
             ExternSymbol *externSymbol = createExternSymbol(
                 node->data.externFunction->name,
                 node->data.externFunction->type,
-                getTypeArrayFromASTNode(node->data.externFunction->params, node->data.externFunction->paramCount),
+                DTM->astInterface->createTypeArrayFromASTArray(node->data.externFunction->params, node->data.externFunction->paramCount),
                 node->data.externFunction->paramCount,
                 node->metaData->type,
                 VISIBILITY_PUBLIC,
@@ -182,7 +182,7 @@ namespace Cryo
                 node->data.structNode->name,
                 node,
                 node->data.structNode->type,
-                STRUCT_TYPE,
+                OBJECT_TYPE,
                 false,
                 false,
                 currentScopeID);
@@ -232,7 +232,7 @@ namespace Cryo
                 node->data.classNode->name,
                 node,
                 node->data.classNode->type,
-                CLASS_TYPE,
+                OBJECT_TYPE,
                 false,
                 false,
                 currentScopeID);

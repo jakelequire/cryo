@@ -46,7 +46,7 @@ namespace Cryo
         int i = 0;
         for (i = 0; i < paramCount; i++)
         {
-            paramTypes[i] = getDataTypeFromASTNode(params[i]);
+            paramTypes[i] = DTM->astInterface->getTypeofASTNode(params[i]);
             addParamToSymbolTable(params[i], parentScopeID);
         }
 
@@ -68,13 +68,14 @@ namespace Cryo
         if (genericParamCount > 0)
         {
             funcSymbol->isGenericFunction = true;
-            funcSymbol->genericParams = genericParams;
+            funcSymbol->genericParams = (DTGenericTy **)genericParams;
             funcSymbol->genericParamCount = genericParamCount;
 
             // Register generic type parameters in the type table
             for (int i = 0; i < genericParamCount; i++)
             {
-                TypeSymbol *typeParam = createIncompleteTypeSymbol(genericParams[i]->name, GENERIC_TYPE);
+                std::string typeName = funcSymbol->genericParams[i]->name;
+                TypeSymbol *typeParam = createIncompleteTypeSymbol(typeName.c_str(), GENERIC_TYPE);
                 typeParam->isGenericType = true;
                 addTypeToTable(typeParam);
             }
@@ -158,7 +159,7 @@ namespace Cryo
         int i = 0;
         for (i = 0; i < paramCount; i++)
         {
-            paramTypes[i] = getDataTypeFromASTNode(params[i]);
+            paramTypes[i] = DTM->astInterface->getTypeofASTNode(params[i]);
         }
 
         const char *externName = externNode->data.externFunction->name;

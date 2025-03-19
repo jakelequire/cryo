@@ -735,8 +735,6 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, ParsingContext *context, Arena *a
     node->data.scopedFunctionCall->argCount = argCount;
     node->data.scopedFunctionCall->scopeName = strdup(scopeName);
 
-    printAST(node, 0, arena);
-
     logMessage(LMI, "INFO", "Parser", "Scoped function call parsed.");
 
     return node;

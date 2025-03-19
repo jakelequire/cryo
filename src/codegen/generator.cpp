@@ -219,7 +219,7 @@ namespace Cryo
         }
         default:
             DevDebugger::logMessage("ERROR", __LINE__, "Generator", "Unknown type");
-            std::cout << "Received: " << DataTypeToString(literalNode->type) << std::endl;
+            std::cout << "Received: " << DTM->debug->dataTypeToString(dataType) << std::endl;
             exit(1);
             break;
         }

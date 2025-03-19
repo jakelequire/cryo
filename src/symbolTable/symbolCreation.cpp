@@ -141,7 +141,7 @@ namespace Cryo
         }
 
         logMessage(LMI, "INFO", "Symbol Table", "Created type symbol", "Name", name,
-                   "Type", TypeofDataTypeToString(typeOf));
+                   "Type", DTM->debug->dataTypeToString(type));
         return symbol;
     }
 

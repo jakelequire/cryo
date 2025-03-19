@@ -513,17 +513,16 @@ namespace Cryo
             // Check data type characteristics
             if (varDecl->type)
             {
-                if (varDecl->type->container->isArray)
+                if (varDecl->type->isArray)
                 {
-                    return varDecl->type->container->custom.arrayDef->dimensions > 0
-                               ? AllocaType::DynamicArray
-                               : AllocaType::Aggregate;
+                    // return varDecl->type->container->custom.arrayDef->dimensions > 0
+                    //            ? AllocaType::DynamicArray
+                    //            : AllocaType::Aggregate;
                 }
 
-                switch (varDecl->type->container->baseType)
+                switch (varDecl->type->container->typeOf)
                 {
-                case STRUCT_TYPE:
-                case CLASS_TYPE:
+                case OBJECT_TYPE:
                     return AllocaType::Aggregate;
                 default:
                     break;
@@ -566,7 +565,7 @@ namespace Cryo
                 return AllocaType::None;
 
             // Check if it's a dynamic array
-            if (array->type && array->type->container->isArray)
+            if (array->type && array->type->isArray)
             {
                 return AllocaType::DynamicArray;
             }
@@ -617,7 +616,7 @@ namespace Cryo
                 return AllocaType::None;
 
             // Special handling for strings since they're effectively arrays
-            if (literal->type && isStringDataType(literal->type))
+            if (literal->type && DTM->validation->isStringType(literal->type))
             {
                 return AllocaType::Aggregate;
             }
@@ -631,16 +630,15 @@ namespace Cryo
         {
             if (!type)
                 return false;
-            return type->container->baseType == STRUCT_TYPE ||
-                   type->container->baseType == CLASS_TYPE ||
-                   (type->container->isArray && !type->container->custom.arrayDef->dimensions);
+            return type->container->typeOf == OBJECT_TYPE ||
+                   (type->isArray);
         }
 
         static bool isDynamicArray(DataType *type)
         {
             if (!type)
                 return false;
-            return type->container->isArray && type->container->custom.arrayDef->dimensions == 0;
+            return type->isArray;
         }
     };
 

@@ -27,7 +27,7 @@ namespace Cryo
         LiteralNode *literal = node->data.literal;
         llvm::Value *value = nullptr;
 
-        switch (literal->type->container->baseType)
+        switch (literal->type->container->typeOf)
         {
         // Integer literals
         case PRIM_INT:

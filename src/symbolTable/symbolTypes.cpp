@@ -61,16 +61,6 @@ namespace Cryo
             return nullptr;
         }
 
-        // If it's an array type, wrap it in an array container
-        if (isArray)
-        {
-            logMessage(LMI, "INFO", "Symbol Table", "Creating Array Type", "Base Type Name: %s", baseTypeName.c_str());
-            TypeContainer *container = createArrayType(baseType->container, 1);
-            return wrapTypeContainer(container);
-        }
-
-        logDataType(baseType);
-
         return baseType;
     }
 
@@ -367,24 +357,24 @@ namespace Cryo
     {
         // First find the base generic type
         DataType *baseType = resolveDataType(baseName);
-        if (!baseType || !baseType->container->isGeneric)
+        if (!baseType)
         {
             logMessage(LMI, "ERROR", "Symbol Table", "Type %s is not a generic type", baseName);
             return nullptr;
         }
 
         // Create a new instantiated type
-        return createGenericDataTypeInstance(baseType, typeArgs, argCount);
+        return nullptr;
     }
 
-    void GlobalSymbolTable::registerGenericType(const char *functionName, GenericType **params, int paramCount, DataType *type)
+    void GlobalSymbolTable::registerGenericType(const char *functionName, DTGenericTy **params, int paramCount, DataType *type)
     {
         __STACK_FRAME__
         logMessage(LMI, "INFO", "Symbol Table", "Registering Generic Type, Function Name: ", functionName);
 
         for (int i = 0; i < paramCount; i++)
         {
-            GenericType *param = params[i];
+            DTGenericTy *param = params[i];
             logMessage(LMI, "INFO", "Symbol Table", "Generic Type Parameter", "Type Name", param->name);
 
             // Create a new type symbol for the generic parameter
@@ -460,7 +450,7 @@ namespace Cryo
         {
             // Add the type name
             DataType *type = typeArgs[i];
-            name += DataTypeToString(type);
+            name += DTM->debug->dataTypeToString(type);
 
             // Add comma if not the last argument
             if (i < argCount - 1)

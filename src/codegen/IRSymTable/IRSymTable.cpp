@@ -215,7 +215,7 @@ namespace Cryo
         paramContainer.paramName = "NULL";
         paramContainer.functionName = "NULL";
         paramContainer.nodeType = NODE_UNKNOWN;
-        paramContainer.dataType = createUnknownType();
+        paramContainer.dataType = DTM->primitives->createUndefined();
         DevDebugger::logMessage("INFO", __LINE__, "IRSymTable", "Parameter Container Created");
         return paramContainer;
     }

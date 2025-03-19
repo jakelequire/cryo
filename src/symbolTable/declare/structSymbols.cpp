@@ -64,7 +64,7 @@ namespace Cryo
             return nullptr;
         }
 
-        TypeSymbol *typeSymbol = createIncompleteTypeSymbol(structName, STRUCT_TYPE);
+        TypeSymbol *typeSymbol = createIncompleteTypeSymbol(structName, OBJECT_TYPE);
         Symbol *structSymbol = new Symbol();
         structSymbol->symbolType = TYPE_SYMBOL;
         structSymbol->type = typeSymbol;
@@ -87,7 +87,7 @@ namespace Cryo
         TypeSymbol *typeSymbol = new TypeSymbol();
         typeSymbol->name = structName;
         typeSymbol->type = structType;
-        typeSymbol->typeOf = STRUCT_TYPE;
+        typeSymbol->typeOf = OBJECT_TYPE;
         typeSymbol->isStatic = false;
         typeSymbol->isGeneric = false;
         typeSymbol->node = nullptr;
@@ -243,7 +243,7 @@ namespace Cryo
         // Add the node to the Struct symbol
         structSymbol->type->node = structNode;
         structSymbol->type->type = structNode->data.structNode->type;
-        structSymbol->type->isGeneric = structNode->data.structNode->type->container->isGeneric;
+        structSymbol->type->isGeneric = false;
 
         // Update the Struct symbol in the table
         updateStructSymbol(structSymbol, table);
@@ -322,7 +322,7 @@ namespace Cryo
         size_t count = typeTable->count;
         for (size_t i = 0; i < count; i++)
         {
-            if (typeTable->typeSymbols[i]->typeOf == STRUCT_TYPE)
+            if (typeTable->typeSymbols[i]->typeOf == OBJECT_TYPE)
             {
                 if (strcmp(typeTable->typeSymbols[i]->name, name) == 0)
                 {

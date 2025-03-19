@@ -346,16 +346,15 @@ namespace Cryo
         }
 
         DataType *structDataType = compiler.getContext().structDataTypes[parentName];
-        logVerboseDataType(structDataType);
 
-        int propertyCount = structDataType->container->custom.structDef->propertyCount;
+        int propertyCount = structDataType->container->type.structType->propertyCount;
 
         // Find the property index
         int propertyIndex = -1;
         DataType *propertyType = nullptr;
         for (int i = 0; i < propertyCount; i++)
         {
-            PropertyNode *prop = structDataType->container->custom.structDef->properties[i]->data.property;
+            PropertyNode *prop = structDataType->container->type.structType->properties[i]->node->data.property;
             if (std::string(prop->name) == propertyName)
             {
                 propertyIndex = i;
@@ -465,8 +464,8 @@ namespace Cryo
         llvm::Value *structPtr = var->LLVMValue;
 
         DataType *structDataType = var->dataType;
-        StructType *structDef = structDataType->container->custom.structDef;
-        std::string structTypeName = std::string(structDataType->container->custom.structDef->name);
+        DTStructTy *structDef = structDataType->container->type.structType;
+        std::string structTypeName = std::string(structDef->name);
         llvm::StructType *structType = compiler.getContext().getStruct(structTypeName);
         if (!structType)
         {
@@ -483,7 +482,7 @@ namespace Cryo
         int propertyCount = structDef->propertyCount;
         for (int i = 0; i < propertyCount; i++)
         {
-            PropertyNode *prop = structDef->properties[i]->data.property;
+            PropertyNode *prop = structDef->properties[i]->node->data.property;
             if (std::string(prop->name) == fieldName)
             {
                 fieldIndex = i;
@@ -534,7 +533,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        bool isStructType = varDataType->container->baseType == STRUCT_TYPE;
+        bool isStructType = varDataType->container->typeOf == OBJECT_TYPE;
 
         llvm::Value *varValue = var->LLVMValue;
         if (!varValue)
@@ -569,7 +568,7 @@ namespace Cryo
         llvm::Type *varType = varValue->getType();
         DevDebugger::logLLVMType(varType);
 
-        if (varDataType->container->baseType == STRUCT_TYPE)
+        if (varDataType->container->typeOf == OBJECT_TYPE)
         {
             llvm::Type *structType = compiler.getTypes().getType(varDataType, 0);
             if (!structType)
@@ -578,7 +577,6 @@ namespace Cryo
                 CONDITION_FAILED;
             }
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Struct Type Found");
-            logDataType(varDataType);
             varType = structType;
         }
 
@@ -693,7 +691,7 @@ namespace Cryo
             CryoNodeType nodeType = varDeclNode->initializer->metaData->type;
             std::cout << "Node Type of VarDecl: " << CryoNodeTypeToString(nodeType) << std::endl;
             DataType *dataType = varDeclNode->type;
-            std::cout << "Data Type of VarDecl: " << DataTypeToString(dataType) << std::endl;
+            std::cout << "Data Type of VarDecl: " << DTM->debug->dataTypeToString(dataType) << std::endl;
 
             if (nodeType == NODE_LITERAL_EXPR)
             {
@@ -722,7 +720,7 @@ namespace Cryo
         }
 
         DataType *dataType = literalNode->type;
-        if (dataType->container->baseType == PRIMITIVE_TYPE)
+        if (dataType->container->typeOf == PRIM_TYPE)
         {
             switch (dataType->container->primitive)
             {
@@ -730,7 +728,7 @@ namespace Cryo
             {
                 // Create the integer literal
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
+                llvm::Type *literalType = compiler.getTypes().getType(DTM->primitives->createInt(), 0);
                 int literalValue = literalNode->value.intValue;
                 llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
@@ -760,7 +758,7 @@ namespace Cryo
             {
                 // Create the integer literal
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI8Type(), 0);
+                llvm::Type *literalType = compiler.getTypes().getType(DTM->primitives->createI8(), 0);
                 int literalValue = literalNode->value.intValue;
                 llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
@@ -790,7 +788,7 @@ namespace Cryo
             {
                 // Create the integer literal
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI16Type(), 0);
+                llvm::Type *literalType = compiler.getTypes().getType(DTM->primitives->createI16(), 0);
                 int literalValue = literalNode->value.intValue;
                 llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
@@ -820,7 +818,7 @@ namespace Cryo
             {
                 // Create the integer literal
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI32Type(), 0);
+                llvm::Type *literalType = compiler.getTypes().getType(DTM->primitives->createI32(), 0);
                 int literalValue = literalNode->value.intValue;
                 llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
@@ -850,7 +848,7 @@ namespace Cryo
             {
                 // Create the integer literal
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Integer Literal");
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveI64Type(), 0);
+                llvm::Type *literalType = compiler.getTypes().getType(DTM->primitives->createI64(), 0);
                 int literalValue = literalNode->value.intValue;
                 llvm::Value *literalInt = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.int.ptr");
@@ -916,7 +914,7 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Boolean Literal");
                 bool literalValue = literalNode->value.booleanValue;
-                llvm::Type *literalType = compiler.getTypes().getType(createPrimitiveBooleanType(literalValue), 0);
+                llvm::Type *literalType = compiler.getTypes().getType(DTM->primitives->createPrimBoolean(literalValue), 0);
                 llvm::Value *literalBool = llvm::ConstantInt::get(literalType, literalValue, true);
                 llvm::Value *literalVarPtr = compiler.getContext().builder.CreateAlloca(literalType, nullptr, "literal.bool.ptr");
                 if (!literalVarPtr)
@@ -977,7 +975,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        bool isStringType = isStringDataType(varDataType);
+        bool isStringType = DTM->validation->isStringType(varDataType);
         if (isStringType)
         {
             // If the index expression is trying to index a string, we need to handle it differently.
@@ -1372,15 +1370,13 @@ namespace Cryo
             ASTNode *argNode = methodCallNode->args[i];
             DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Argument Value");
             DevDebugger::logNode(argNode);
-            DataType *nodeType = getDataTypeFromASTNode(argNode);
+            DataType *nodeType = DTM->astInterface->getTypeofASTNode(argNode);
             if (!nodeType)
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Node type not found");
                 CONDITION_FAILED;
             }
-            logDataType(nodeType);
-
-            bool isStringType = isStringDataType(nodeType);
+            bool isStringType = DTM->validation->isStringType(nodeType);
             if (isStringType)
             {
                 llvm::Value *argValue = compiler.getVariables().createStringVariable(argNode);
@@ -1436,13 +1432,13 @@ namespace Cryo
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Typeof Call");
 
         ASTNode *exprNode = node->expression;
-        DataType *exprType = getDataTypeFromASTNode(exprNode);
+        DataType *exprType = DTM->astInterface->getTypeofASTNode(exprNode);
         if (!exprType)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Functions", "Expression type not found");
             CONDITION_FAILED;
         }
-        std::string exprTypeStr = DataTypeToStringUnformatted(exprType);
+        std::string exprTypeStr = DTM->debug->dataTypeToString(exprType);
         std::cout << "Typeof Expression Type: " << exprTypeStr << std::endl;
 
         // Always return the type as a string

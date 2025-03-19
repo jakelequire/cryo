@@ -77,7 +77,7 @@ struct FunctionSymbol
 
     // For generic functions
     bool isGenericFunction;
-    GenericType **genericParams;
+    DTGenericTy **genericParams;
     int genericParamCount;
 };
 
