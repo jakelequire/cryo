@@ -38,7 +38,7 @@ namespace Cryo
             {
                 // Note to self, might need to get the length of each element
                 DataType *dataType = element->data.literal->type;
-                switch (dataType->container->baseType)
+                switch (dataType->container->typeOf)
                 {
                 case PRIM_INT:
                 {
@@ -61,7 +61,7 @@ namespace Cryo
                 default:
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Unknown primitive type");
-                    std::cout << "Received: " << DataTypeToString(dataType) << std::endl;
+                    std::cout << "Received: " << DTM->debug->dataTypeToString(dataType) << std::endl;
                     DEBUG_BREAKPOINT;
                 }
                 }
@@ -127,10 +127,10 @@ namespace Cryo
             {
                 // Note to self, might need to get the length of each element
                 DataType *dataType = element->data.literal->type;
-                std::cout << "Type of DataType: " << TypeofDataTypeToString(dataType->container->baseType) << std::endl;
-                switch (dataType->container->baseType)
+                std::cout << "Type of DataType: " << DTM->debug->typeofDataTypeToString(dataType->container->typeOf) << std::endl;
+                switch (dataType->container->typeOf)
                 {
-                case PRIMITIVE_TYPE:
+                case PRIM_TYPE:
                 {
                     DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating Primitive Literal");
                     switch (dataType->container->primitive)
@@ -139,7 +139,6 @@ namespace Cryo
                     {
                         DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Creating Int Literal");
                         DataType *litType = element->data.literal->type;
-                        logDataType(litType);
                         llvmType = compiler.getTypes().getType(litType, 0);
                         int index = element->data.literal->value.intValue;
                         llvm::Constant *llvmElement = llvm::ConstantInt::get(compiler.getContext().context, llvm::APInt(32, index, true));
@@ -168,7 +167,7 @@ namespace Cryo
                 default:
                 {
                     DevDebugger::logMessage("ERROR", __LINE__, "Arrays", "Unknown element type");
-                    std::cout << "Received: " << DataTypeToString(dataType) << std::endl;
+                    std::cout << "Received: " << DTM->debug->dataTypeToString(dataType) << std::endl;
                     DEBUG_BREAKPOINT;
                 }
                 }
@@ -237,7 +236,7 @@ namespace Cryo
             {
                 // Note to self, might need to get the length of each element
                 DataType *dataType = element->data.literal->type;
-                switch (dataType->container->baseType)
+                switch (dataType->container->typeOf)
                 {
                 case PRIM_INT:
                 {
@@ -296,7 +295,7 @@ namespace Cryo
         {
             DevDebugger::logMessage("INFO", __LINE__, "Arrays", "Converting array literal to LLVM type");
 
-            llvmType = compiler.getTypes().getType(createPrimitiveIntType(), 0);
+            llvmType = compiler.getTypes().getType(DTM->astInterface->getTypeofASTNode(node), 0);
             llvmArrayType = llvm::ArrayType::get(llvmType, getArrayLength(node));
             break;
         }
@@ -520,7 +519,7 @@ namespace Cryo
         }
         if (literalNode->metaData->type == NODE_LITERAL_EXPR)
         {
-            if (literalNode->data.literal->type->container->baseType == PRIM_INT)
+            if (literalNode->data.literal->type->container->primitive == PRIM_INT)
             {
                 int _indexValue = literalNode->data.literal->value.intValue;
                 ASTNode *element = array->data.array->elements[_indexValue];

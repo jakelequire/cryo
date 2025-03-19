@@ -91,7 +91,6 @@ typedef struct DTSimpleTy_t
 
     PrimitiveDataType primitive;
     TypeofDataType baseType;
-
 } DTSimpleTy;
 
 // ------------------------------------------------------------------------------------------- //

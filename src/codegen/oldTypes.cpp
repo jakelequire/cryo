@@ -21,16 +21,16 @@ namespace Cryo
     llvm::Type *OldTypes::getType(DataType *type, int length)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting type");
-        if (type->container->baseType == STRUCT_TYPE)
+        if (type->container->typeOf == OBJECT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct type");
             return this->getStructType(type);
         }
-        if (type->container->baseType == CLASS_TYPE)
-        {
-            DevDebugger::logMessage("INFO", __LINE__, "Types", "Class type");
-            return this->getClassType(type);
-        }
+        // if (type->container->typeOf == CLASS_TYPE)
+        // {
+        //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Class type");
+        //     return this->getClassType(type);
+        // }
         if (length == 0)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting simple type to LLVM type");
@@ -47,7 +47,7 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting literal type");
 
-        if (literal->type->container->baseType == UNKNOWN_TYPE)
+        if (literal->type->container->typeOf == UNKNOWN_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
             CONDITION_FAILED;
@@ -113,10 +113,9 @@ namespace Cryo
 
     llvm::Type *OldTypes::getReturnType(DataType *type)
     {
-        logDataType(type);
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting return type");
 
-        // if (type->container->baseType == UNKNOWN_TYPE)
+        // if (type->container->typeOf == UNKNOWN_TYPE)
         // {
         //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
         //     return nullptr;
@@ -168,7 +167,7 @@ namespace Cryo
             //    return llvm::ArrayType::get(llvm::Type::getInt32Ty(CryoContext::getInstance().context), 0);
         default:
         {
-            std::string typeStr = DataTypeToString(type);
+            std::string typeStr = DTM->debug->dataTypeToString(type);
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type, received: " + typeStr);
             return nullptr;
         }
@@ -228,29 +227,28 @@ namespace Cryo
 
         case PRIM_OBJECT:
         {
-            if (type->container->baseType == FUNCTION_TYPE)
+            if (type->container->typeOf == FUNCTION_TYPE)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting function to LLVM type");
-                DataType *returntype = type->container->custom.funcDef->returnType;
+                DataType *returntype = type->container->type.functionType->returnType;
 
                 return getFunctionReturnType(returntype);
             }
-            else if (type->container->baseType == STRUCT_TYPE)
+            else if (type->container->typeOf == OBJECT_TYPE)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting struct to LLVM type");
                 return getStructType(type);
             }
-            else if (type->container->baseType == CLASS_TYPE)
-            {
-                DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting class to LLVM type");
-                return getStructType(type);
-            }
+            // else if (type->container->typeOf == CLASS_TYPE)
+            // {
+            //     DevDebugger::logMessage("INFO", __LINE__, "Types", "Converting class to LLVM type");
+            //     return getStructType(type);
+            // }
             CONDITION_FAILED;
         }
 
         default:
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Unknown type");
-            logVerboseDataType(type);
             CONDITION_FAILED;
         }
     }
@@ -315,16 +313,15 @@ namespace Cryo
     llvm::Type *OldTypes::getFunctionReturnType(DataType *returnType)
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting function return type");
-        logDataType(returnType);
 
-        TypeofDataType baseType = returnType->container->baseType;
-        if (baseType == STRUCT_TYPE)
+        TypeofDataType baseType = returnType->container->typeOf;
+        if (baseType == OBJECT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning struct type");
             return getStructType(returnType);
         }
 
-        if (baseType == PRIMITIVE_TYPE)
+        if (baseType == PRIM_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Returning primitive type");
             return convertSimpleType(returnType);
@@ -384,7 +381,7 @@ namespace Cryo
 
         if (node->metaData->type == NODE_VAR_DECLARATION)
         {
-            if (node->data.varDecl->type->container->baseType == PRIM_STRING)
+            if (node->data.varDecl->type->container->typeOf == PRIM_STRING)
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting length of string variable");
                 return strlen(strdup(node->data.varDecl->initializer->data.literal->value.stringValue));
@@ -422,7 +419,7 @@ namespace Cryo
 
     int OldTypes::getLiteralIntValue(LiteralNode *node)
     {
-        if (node->type->container->baseType != PRIM_INT)
+        if (node->type->container->typeOf != PRIM_INT)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
             return 0;
@@ -582,15 +579,15 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting class type");
 
-        if (type->container->baseType != CLASS_TYPE)
+        if (type->container->typeOf != OBJECT_TYPE)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
             return nullptr;
         }
 
         // Check if the struct already exists
-        std::string structName = type->container->custom.classDef->name;
-        llvm::Type *structType = doesStructExist(type->container->custom.classDef->name);
+        std::string structName = type->container->type.classType->name;
+        llvm::Type *structType = doesStructExist(type->container->type.classType->name);
         if (structType)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct already exists: " + structName);
@@ -598,16 +595,16 @@ namespace Cryo
         }
 
         std::vector<llvm::Type *> structTypes;
-        ASTNode **properties = getAllClassPropsFromDataType(type);
+        DTPropertyTy **properties = type->container->type.classType->properties;
         if (!properties)
         {
             std::cerr << "Failed to get class properties" << std::endl;
             CONDITION_FAILED;
         }
 
-        for (int i = 0; i < type->container->custom.classDef->propertyCount; i++)
+        for (int i = 0; i < type->container->type.classType->propertyCount; i++)
         {
-            ASTNode *property = properties[i];
+            ASTNode *property = properties[i]->node;
             DataType *propertyType = property->data.property->type;
             llvm::Type *llvmType = this->getType(propertyType, 0);
             structTypes.push_back(llvmType);
@@ -624,15 +621,15 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Getting struct type");
 
-        if (type->container->baseType != STRUCT_TYPE)
+        if (type->container->typeOf != OBJECT_TYPE)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
             return nullptr;
         }
 
         // Check if the struct already exists
-        std::string structName = type->container->custom.structDef->name;
-        llvm::Type *structType = doesStructExist(type->container->custom.structDef->name);
+        std::string structName = type->container->type.structType->name;
+        llvm::Type *structType = doesStructExist(type->container->type.structType->name);
         if (structType)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct already exists: " + structName);
@@ -640,9 +637,9 @@ namespace Cryo
         }
 
         std::vector<llvm::Type *> structTypes;
-        for (int i = 0; i < type->container->custom.structDef->propertyCount; i++)
+        for (int i = 0; i < type->container->type.structType->propertyCount; i++)
         {
-            ASTNode *property = type->container->custom.structDef->properties[i];
+            ASTNode *property = type->container->type.structType->properties[i]->node;
             DataType *propertyType = property->data.property->type;
             llvm::Type *llvmType = this->getType(propertyType, 0);
             structTypes.push_back(llvmType);
@@ -692,7 +689,7 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Types", "Checking if type is custom");
 
-        if (type->container->baseType == STRUCT_TYPE)
+        if (type->container->typeOf == OBJECT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Type is custom");
             return true;
@@ -749,25 +746,25 @@ namespace Cryo
         DataType *type = node->data.typeDecl->type;
         std::string typeName = node->data.typeDecl->name;
 
-        if (type->container->baseType == STRUCT_TYPE)
+        if (type->container->typeOf == OBJECT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Struct type");
             llvm::StructType *structType = llvm::dyn_cast<llvm::StructType>(getStructType(type));
             CryoContext::getInstance().structTypes[typeName] = structType;
         }
-        else if (type->container->baseType == TYPE_DEF)
+        else if (type->container->typeOf == TYPE_DEF)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Type definition");
             llvm::Type *typeType = getType(type, 0);
             CryoContext::getInstance().structTypes[typeName] = llvm::dyn_cast<llvm::StructType>(typeType);
         }
-        else if (type->container->baseType == PRIMITIVE_TYPE)
+        else if (type->container->typeOf == PRIM_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Primitive type");
             llvm::Type *typeType = getType(type, 0);
             CryoContext::getInstance().structTypes[typeName] = llvm::dyn_cast<llvm::StructType>(typeType);
         }
-        else if (type->container->baseType == FUNCTION_TYPE)
+        else if (type->container->typeOf == FUNCTION_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Types", "Function type");
             llvm::Type *typeType = getType(type, 0);
@@ -776,8 +773,8 @@ namespace Cryo
         else
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Types", "Invalid data type");
-            std::string typeofStr = DataTypeToString(type);
-            std::string typeOfStr = TypeofDataTypeToString(type->container->baseType);
+            std::string typeofStr = DTM->debug->dataTypeToString(type);
+            std::string typeOfStr = DTM->debug->typeofDataTypeToString(type->container->typeOf);
             std::cerr << "Type: " << typeofStr << std::endl;
             std::cerr << "TypeOf: " << typeOfStr << std::endl;
             CONDITION_FAILED;

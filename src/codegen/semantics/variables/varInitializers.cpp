@@ -32,7 +32,6 @@ namespace Cryo
         std::string propertyName = std::string(propAccessNode->propertyName);
         ASTNode *objNode = propAccessNode->object;
         DataType *objType = nullptr;
-        logASTNode(objNode);
 
         std::string accessorName;
         if (objNode->metaData->type == NODE_VAR_DECLARATION)
@@ -63,7 +62,7 @@ namespace Cryo
         std::cout << "Property Index: " << propIndex << std::endl;
 
         llvm::Type *objIRType = compiler.getTypes().getType(objType, 0);
-        std::string structTypeName = objType->container->custom.structDef->name;
+        std::string structTypeName = objType->container->type.structType->name;
         llvm::StructType *structType = compiler.getContext().getStruct(structTypeName);
         if (!structType)
         {
@@ -108,10 +107,6 @@ namespace Cryo
 
         std::string instanceName = std::string(methodCall->instanceName);
         DataType *returnType = methodCall->returnType;
-        logDataType(instanceType);
-
-        std::cout << "\nReturn Type: " << std::endl;
-        logDataType(returnType);
 
         ASTNode *accessorNode = methodCall->accessorObj;
         logASTNode(accessorNode);
@@ -202,7 +197,7 @@ namespace Cryo
         {
             ASTNode *argNode = methodCall->args[i];
             DataType *argType = argNode->data.varDecl->type;
-            bool isStringType = isStringDataType(argType);
+            bool isStringType = DTM->validation->isStringType(argType);
 
             llvm::Value *argValue = compiler.getGenerator().getInitilizerValue(argNode);
             if (!argValue)
@@ -288,7 +283,7 @@ namespace Cryo
             namespaceName,
             varName,
             structPtr,
-            compiler.getContext().structTypes[varNode->type->container->custom.structDef->name]);
+            compiler.getContext().structTypes[varNode->type->container->type.structType->name]);
         compiler.getSymTable().addDataTypeToVar(namespaceName, varName, varNode->type);
 
         return structPtr;
@@ -327,11 +322,11 @@ namespace Cryo
             structType->getName().str());
 
         // Find field index
-        StructType *structDataType = structDef->structType->container->custom.structDef;
+        DTStructTy *structDataType = structDef->structType->container->type.structType;
         int fieldIndex = -1;
         for (int i = 0; i < structDataType->propertyCount; ++i)
         {
-            PropertyNode *prop = structDataType->properties[i]->data.property;
+            PropertyNode *prop = structDataType->properties[i]->node->data.property;
             if (std::string(prop->name) == fieldName)
             {
                 fieldIndex = i;
@@ -468,7 +463,7 @@ namespace Cryo
             int strLen = strContentRef.length();
             std::cout << "String Length: " << strLen << std::endl;
 
-            llvm::Type *strType = types.getType(createPrimitiveStringType(strLen), strLen);
+            llvm::Type *strType = types.getType(DTM->primitives->createString(), 0);
             symTable.updateVariableNode(namespaceName, varName, strPtr, strType);
             compiler.getContext().addNamedValue(varName, strPtr);
 
@@ -516,9 +511,9 @@ namespace Cryo
         llvm::Value *llvmValue = nullptr;
         llvm::Type *llvmType = nullptr;
 
-        switch (nodeDataType->container->baseType)
+        switch (nodeDataType->container->typeOf)
         {
-        case PRIMITIVE_TYPE:
+        case PRIM_TYPE:
         {
             switch (nodeDataType->container->primitive)
             {
@@ -650,7 +645,7 @@ namespace Cryo
             default:
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
-                std::string _dataTypeStr = VerboseDataTypeToString(nodeDataType);
+                std::string _dataTypeStr = DTM->debug->dataTypeToString(nodeDataType);
                 std::cout << "Data Type: " << _dataTypeStr << std::endl;
                 CONDITION_FAILED;
             }
@@ -659,7 +654,7 @@ namespace Cryo
         default:
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Unknown data type");
-            std::string typeStr = VerboseDataTypeToString(nodeDataType);
+            std::string typeStr = DTM->debug->dataTypeToString(nodeDataType);
             std::cout << "Data Type: " << typeStr << std::endl;
             CONDITION_FAILED;
         }
@@ -695,11 +690,11 @@ namespace Cryo
         llvm::Type *llvmType = nullptr;
         llvm::Constant *llvmConstant = nullptr;
 
-        if (dataType->container->isArray)
+        if (dataType->isArray)
         {
-            switch (dataType->container->baseType)
+            switch (dataType->container->typeOf)
             {
-            case PRIMITIVE_TYPE:
+            case PRIM_TYPE:
             {
                 switch (dataType->container->primitive)
                 {
@@ -790,7 +785,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        bool isStringType = isStringDataType(dataType);
+        bool isStringType = DTM->validation->isStringType(dataType);
         if (isStringType)
         {
             // If the index expression is trying to index a string, we need to handle it differently.
@@ -872,7 +867,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        bool isStringType = isStringDataType(dataType);
+        bool isStringType = DTM->validation->isStringType(dataType);
         if (!isStringType)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Array is not a string type");
@@ -956,7 +951,7 @@ namespace Cryo
         ASTNode *variable = node;
         assert(initializer != nullptr);
 
-        DataType *initType = getDataTypeFromASTNode(initializer);
+        DataType *initType = DTM->astInterface->getTypeofASTNode(initializer);
 
         std::string moduleName = compiler.getContext().currentNamespace;
 
@@ -1051,7 +1046,7 @@ namespace Cryo
 
         std::string namespaceName = compiler.getContext().currentNamespace;
         DataType *objectType = objectNode->objType;
-        std::string dataTypeName = getDataTypeName(objectType);
+        std::string dataTypeName = DTM->debug->dataTypeToString(objectType);
         llvm::Value *objectPtr = compiler.getObjects().createObjectInstance(objectNode, varName);
         if (!objectPtr)
         {

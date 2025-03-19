@@ -95,7 +95,7 @@ namespace Cryo
                 CONDITION_FAILED;
             }
 
-            DataType *literalType = getDataTypeFromASTNode(newValue);
+            DataType *literalType = DTM->astInterface->getTypeofASTNode(newValue);
             if (!literalType)
             {
                 DevDebugger::logMessage("ERROR", __LINE__, "Variables", "Literal Type not found");
@@ -227,7 +227,7 @@ namespace Cryo
                 int _len = types.getLiteralValLength(initializer);
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
                 llvmType = types.getType(type, _len);
-                char *typeNode = DataTypeToString(type);
+                const char *typeNode = DTM->debug->dataTypeToString(type);
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Type: " + std::string(typeNode));
 
                 switch (type->container->primitive)
@@ -308,7 +308,7 @@ namespace Cryo
 
         char *varName = varNode->name;
         DataType *type = varNode->type;
-        std::cout << "Variable Type: " << DataTypeToString(type) << std::endl;
+        std::cout << "Variable Type: " << DTM->debug->dataTypeToString(type) << std::endl;
         ASTNode *initializer = varNode->initializer;
 
         llvm::Type *llvmType = nullptr;
@@ -359,11 +359,11 @@ namespace Cryo
             else
             {
                 int _len = types.getLiteralValLength(initializer);
-                if (type->container->baseType == PRIM_STRING)
+                if (type->container->primitive == PRIM_STRING)
                     _len += 1; // Add one for the null terminator
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Length: " + std::to_string(_len));
                 llvmType = types.getType(type, _len);
-                char *typeNode = DataTypeToString(type);
+                const char *typeNode = DTM->debug->dataTypeToString(type);
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Varname: " + std::string(varName));
                 DevDebugger::logMessage("INFO", __LINE__, "Variables", "Data Type: " + std::string(typeNode));
 
@@ -445,7 +445,7 @@ namespace Cryo
         std::string namespaceName = compiler.getContext().currentNamespace;
 
         // Handle custom types (structs)
-        if (varType->container->baseType == STRUCT_TYPE)
+        if (varType->container->typeOf == OBJECT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Variables", "Variable is a struct");
             return createStructVariable(node);

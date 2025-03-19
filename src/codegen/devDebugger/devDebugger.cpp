@@ -477,14 +477,14 @@ namespace Cryo
                 logMessage("INFO", __LINE__, "Debugger", "Function name: " + std::string(node->data.functionDecl->name));
             }
 
-            if (node->data.functionDecl->type->container->baseType == UNKNOWN_TYPE)
+            if (node->data.functionDecl->type->container->typeOf == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Function has unknown return type");
                 return false;
             }
             else
             {
-                logMessage("INFO", __LINE__, "Debugger", "Function return type: " + std::string(DataTypeToString(node->data.functionDecl->type)));
+                logMessage("INFO", __LINE__, "Debugger", "Function return type: " + std::string(DTM->debug->dataTypeToString(node->data.functionDecl->type)));
             }
 
             if (node->data.functionDecl->body == nullptr)
@@ -542,7 +542,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Variable has no name");
                 return false;
             }
-            if (node->data.varDecl->type->container->baseType == UNKNOWN_TYPE)
+            if (node->data.varDecl->type->container->typeOf == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Variable has no type");
                 return false;
@@ -554,7 +554,7 @@ namespace Cryo
 
         case NODE_LITERAL_EXPR:
         {
-            if (node->data.literal->type->container->baseType == UNKNOWN_TYPE)
+            if (node->data.literal->type->container->typeOf == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Literal has no type");
                 return false;
@@ -680,7 +680,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Extern function has no name");
                 return false;
             }
-            if (node->data.externFunction->type->container->baseType == UNKNOWN_TYPE)
+            if (node->data.externFunction->type->container->typeOf == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Extern function has no return type");
                 return false;
@@ -827,7 +827,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no value");
                 return false;
             }
-            if (node->data.varReassignment->existingVarType->container->baseType == UNKNOWN_TYPE)
+            if (node->data.varReassignment->existingVarType->container->typeOf == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Variable reassign has no type");
                 return false;
@@ -854,7 +854,7 @@ namespace Cryo
                 logMessage("ERROR", __LINE__, "Debugger", "Parameter has no function name");
                 return false;
             }
-            if (node->data.param->type->container->baseType == UNKNOWN_TYPE)
+            if (node->data.param->type->container->typeOf == UNKNOWN_TYPE)
             {
                 logMessage("ERROR", __LINE__, "Debugger", "Parameter has no type");
                 return false;

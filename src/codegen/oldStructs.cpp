@@ -25,7 +25,6 @@ namespace Cryo
         StructNode *structNode = node->data.structNode;
         std::string structName = structNode->name;
         DataType *structDataType = structNode->type;
-        logVerboseDataType(structDataType);
 
         compiler.getContext().addStructDataType(structName, structDataType);
 
@@ -146,16 +145,14 @@ namespace Cryo
         {
             CryoParameterNode *param = method->params[i]->data.param;
             DataType *paramType = param->type;
-            logDataType(paramType);
             llvm::Type *paramLLVMType = compiler.getTypes().getType(paramType, 0);
             paramTypes.push_back(paramLLVMType);
         }
 
         // Get return type
         DataType *returnType = method->type;
-        logDataType(returnType);
         llvm::Type *returnLLVMType = compiler.getTypes().getType(returnType, 0);
-        if (method->type->container->baseType == PRIMITIVE_TYPE && method->type->container->primitive == PRIM_STRING)
+        if (method->type->container->typeOf == PRIM_TYPE && method->type->container->primitive == PRIM_STRING)
         {
             returnLLVMType = returnLLVMType->getPointerTo();
         }
@@ -209,7 +206,7 @@ namespace Cryo
         }
 
         DataType *dataType = property->type;
-        std::string dataTypeStr = DataTypeToString(dataType);
+        std::string dataTypeStr = DTM->debug->dataTypeToString(dataType);
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Data Type: " + dataTypeStr);
 
         std::string propertyName = property->name;
@@ -226,7 +223,7 @@ namespace Cryo
     {
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Creating Struct Instance");
         CryoVariableNode *varDecl = node->data.varDecl;
-        std::string structName = varDecl->type->container->custom.structDef->name;
+        std::string structName = varDecl->type->container->type.structType->name;
 
         DevDebugger::logMessage("INFO", __LINE__, "Structs", "Struct Name: " + structName);
         // Get struct type
@@ -249,8 +246,7 @@ namespace Cryo
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Structs", "Handling single value initializer");
                 DataType *initType = varDecl->initializer->data.literal->type;
-                logDataType(initType);
-                bool isString = isStringDataType(initType);
+                bool isString = DTM->validation->isStringType(initType);
 
                 if (isString)
                 {
@@ -298,7 +294,6 @@ namespace Cryo
 
                 // Get the object type
                 DataType *objectType = objectInit->data.objectNode->objType;
-                logDataType(objectType);
 
                 ASTNode **objArgs = objectInit->data.objectNode->args;
                 std::vector<llvm::Value *> args;

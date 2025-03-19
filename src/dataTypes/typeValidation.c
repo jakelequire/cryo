@@ -39,6 +39,17 @@ bool DTMTypeValidation_isCompatibleType(DataType *type1, DataType *type2)
     return type1->container->primitive == type2->container->primitive;
 }
 
+bool DTMTypeValidation_isStringType(DataType *type)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to compare NULL data type\n");
+        CONDITION_FAILED;
+    }
+
+    return type->container->primitive == PRIM_STRING;
+}
+
 DTMTypeValidation *createDTMTypeValidation(void)
 {
     DTMTypeValidation *validation = (DTMTypeValidation *)malloc(sizeof(DTMTypeValidation));
@@ -52,6 +63,7 @@ DTMTypeValidation *createDTMTypeValidation(void)
 
     validation->isSameType = DTMTypeValidation_isSameType;
     validation->isCompatibleType = DTMTypeValidation_isCompatibleType;
+    validation->isStringType = DTMTypeValidation_isStringType;
 
     return validation;
 }

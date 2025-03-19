@@ -33,7 +33,6 @@ namespace Cryo
             DevDebugger::logMessage("ERROR", __LINE__, "Classes", "Class Data Type is NULL");
             CONDITION_FAILED;
         }
-        logVerboseDataType(classDataType);
 
         compiler.getContext().addClassDataType(className, classDataType);
 
@@ -300,7 +299,7 @@ namespace Cryo
 
         // Get return type
         llvm::Type *returnType = compiler.getTypes().getType(method->type, 0);
-        if (method->type->container->baseType == PRIMITIVE_TYPE && method->type->container->primitive == PRIM_STRING)
+        if (method->type->container->typeOf == PRIM_TYPE && method->type->container->primitive == PRIM_STRING)
         {
             returnType = returnType->getPointerTo();
         }

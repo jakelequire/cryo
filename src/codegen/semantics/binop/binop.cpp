@@ -780,13 +780,13 @@ namespace Cryo
     bool BinaryExpressions::isStringOperation(ASTNode *lhs, ASTNode *rhs)
     {
         DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Checking if binary operation is a string operation");
-        DataType *lhsType = getDataTypeFromASTNode(lhs);
+        DataType *lhsType = DTM->astInterface->getTypeofASTNode(lhs);
         if (!lhsType)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get data type for left operand");
             CONDITION_FAILED;
         }
-        DataType *rhsType = getDataTypeFromASTNode(rhs);
+        DataType *rhsType = DTM->astInterface->getTypeofASTNode(rhs);
         if (!rhsType)
         {
             DevDebugger::logMessage("ERROR", __LINE__, "BinExp", "Failed to get data type for right operand");
@@ -795,11 +795,8 @@ namespace Cryo
 
         DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Checking data types");
 
-        logDataType(lhsType);
-        logDataType(rhsType);
-
-        bool isLhsString = isStringDataType(lhsType);
-        bool isRhsString = isStringDataType(rhsType);
+        bool isLhsString = DTM->validation->isStringType(lhsType);
+        bool isRhsString = DTM->validation->isStringType(rhsType);
 
         if (isLhsString && isRhsString)
         {
@@ -849,7 +846,7 @@ namespace Cryo
             return false;
         }
 
-        bool isString = isStringDataType(dataType);
+        bool isString = DTM->validation->isStringType(dataType);
         if (isString)
         {
             DevDebugger::logMessage("INFO", __LINE__, "BinExp", "Node is a string literal");

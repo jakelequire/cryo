@@ -28,18 +28,18 @@ namespace Cryo
 
         DataType *objectDataType = objectNode->objType;
         std::string objectName = objectNode->name;
-        std::string objectTypeName = getDataTypeName(objectDataType);
+        std::string objectTypeName = DTM->debug->dataTypeToString(objectDataType);
 
         DevDebugger::logMessage("INFO", __LINE__, "Objects", "Object Name: " + objectName);
         DevDebugger::logMessage("INFO", __LINE__, "Objects", "Object Type: " + objectTypeName);
 
         llvm::StructType *structType = nullptr;
-        if (objectDataType->container->baseType == STRUCT_TYPE)
+        if (objectDataType->container->typeOf == OBJECT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Objects", "Struct type");
             structType = compiler.getContext().getStruct(objectName);
         }
-        else if (objectDataType->container->baseType == CLASS_TYPE)
+        else if (objectDataType->container->typeOf == OBJECT_TYPE)
         {
             DevDebugger::logMessage("INFO", __LINE__, "Objects", "Class type");
             structType = compiler.getContext().getClass(objectName);
