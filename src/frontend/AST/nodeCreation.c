@@ -44,6 +44,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     node->metaData->position = getPosition(state->lexer);
     node->metaData->line = lexer->currentToken.line;
     node->metaData->column = lexer->currentToken.column;
+    node->metaData->lexeme = strndup(lexer->currentToken.start, lexer->currentToken.length);
     node->print = logASTNode;
 
     node->firstChild = NULL;

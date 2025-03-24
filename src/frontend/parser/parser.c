@@ -219,7 +219,7 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
         parsingError("Unknown data type", "getCryoDataType", arena, state, lexer, lexer->source, globalTable);
     }
 
-    logMessage(LMI, "INFO", "Parser", "Data type: %s", type->debug->toString(type));
+    logMessage(LMI, "INFO", "Parser", "Data Type Found");
     return type;
 }
 // </getCryoDataType>

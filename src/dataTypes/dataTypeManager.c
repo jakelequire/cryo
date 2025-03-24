@@ -425,133 +425,6 @@ DTMEnums *createDTMEnums(void)
 }
 
 // --------------------------------------------------------------------------------------------------- //
-// ------------------------------------- Symbol Table Implementation --------------------------------- //
-// --------------------------------------------------------------------------------------------------- //
-
-DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *name)
-{
-    for (int i = 0; i < table->entryCount; i++)
-    {
-        if (strcmp(table->entries[i]->name, name) == 0)
-        {
-            return table->entries[i]->type;
-        }
-    }
-
-    return NULL;
-}
-
-void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *name, DataType *type)
-{
-    if (table->entryCount >= table->entryCapacity)
-    {
-        table->resizeTable(table);
-    }
-
-    DTMSymbolTableEntry *entry = createDTMSymbolTableEntry(name, type);
-    table->entries[table->entryCount++] = entry;
-}
-
-void DTMSymbolTable_removeEntry(DTMSymbolTable *table, const char *name)
-{
-    for (int i = 0; i < table->entryCount; i++)
-    {
-        if (strcmp(table->entries[i]->name, name) == 0)
-        {
-            free(table->entries[i]);
-            table->entries[i] = NULL;
-            table->entryCount--;
-            break;
-        }
-    }
-}
-
-void DTMSymbolTable_updateEntry(DTMSymbolTable *table, const char *name, DataType *type)
-{
-    for (int i = 0; i < table->entryCount; i++)
-    {
-        if (strcmp(table->entries[i]->name, name) == 0)
-        {
-            table->entries[i]->type = type;
-            break;
-        }
-    }
-}
-
-void DTMSymbolTable_resizeTable(DTMSymbolTable *table)
-{
-    table->entryCapacity *= 2;
-    table->entries = (DTMSymbolTableEntry **)realloc(table->entries, sizeof(DTMSymbolTableEntry *) * table->entryCapacity);
-    if (!table->entries)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTM Symbol Table\n");
-        CONDITION_FAILED;
-    }
-}
-
-void DTMSymbolTable_printTable(DTMSymbolTable *table)
-{
-    printf("\n\n");
-    printf("=================================================================\n");
-    for (int i = 0; i < table->entryCount; i++)
-    {
-        DataType *type = table->entries[i]->type;
-        printf("Name: %s, Type: %s\n", table->entries[i]->name, type->debug->toString(type));
-    }
-    printf("=================================================================\n");
-}
-
-DTMSymbolTable *createDTMSymbolTable(void)
-{
-    DTMSymbolTable *symbolTable = (DTMSymbolTable *)malloc(sizeof(DTMSymbolTable));
-    if (!symbolTable)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Symbol Table\n");
-        CONDITION_FAILED;
-    }
-
-    // ==================== [ Property Assignments ] ==================== //
-
-    symbolTable->entries = (DTMSymbolTableEntry **)malloc(sizeof(DTMSymbolTableEntry *) * SYMBOL_TABLE_INITIAL_CAPACITY);
-    if (!symbolTable->entries)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Symbol Table Entries\n");
-        CONDITION_FAILED;
-    }
-
-    symbolTable->entryCount = 0;
-    symbolTable->entryCapacity = SYMBOL_TABLE_INITIAL_CAPACITY;
-
-    // ==================== [ Function Assignments ] ==================== //
-
-    symbolTable->getEntry = DTMSymbolTable_getEntry;
-    symbolTable->addEntry = DTMSymbolTable_addEntry;
-    symbolTable->removeEntry = DTMSymbolTable_removeEntry;
-    symbolTable->updateEntry = DTMSymbolTable_updateEntry;
-    symbolTable->resizeTable = DTMSymbolTable_resizeTable;
-    symbolTable->printTable = DTMSymbolTable_printTable;
-
-    return symbolTable;
-}
-
-DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type)
-{
-    DTMSymbolTableEntry *entry = (DTMSymbolTableEntry *)malloc(sizeof(DTMSymbolTableEntry));
-    if (!entry)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Symbol Table Entry\n");
-        CONDITION_FAILED;
-    }
-
-    // ==================== [ Property Assignments ] ==================== //
-
-    entry->name = name;
-    entry->type = type;
-
-    return entry;
-}
-
-// --------------------------------------------------------------------------------------------------- //
 // ---------------------------------- Data Types Implementation -------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
@@ -798,6 +671,8 @@ void DataTypeManager_initDefinitions(const char *compilerRootPath, CompilerState
     }
 
     defsNode->print(defsNode);
+
+    DTM->symbolTable->importRootNode(DTM->symbolTable, defsNode);
 
     DEBUG_BREAKPOINT;
     return;

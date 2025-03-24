@@ -508,7 +508,7 @@ char *CryoTokenToString(CryoTokenType node)
     case TOKEN_KW_UNDEFINED:
         return "TOKEN_KW_UNDEFINED";
     case TOKEN_KW_PRAGMA:
-        return "TOKEN_KW_PRAAGMA";
+        return "TOKEN_KW_PRAGMA";
 
     case TOKEN_BANG:
         return "TOKEN_BANG";

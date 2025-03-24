@@ -653,6 +653,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatUnaryOpNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "Type") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatTypeNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatTypeNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1517,6 +1528,28 @@ char *CONSOLE_formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output)
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
+// </UnaryOp>
+// ============================================================
+// ============================================================
+// <Type>
+char *formatTypeNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<Type> [%s] <0:0>",
+            node->nodeName);
+    return buffer;
+}
+char *CONSOLE_formatTypeNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Type>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -2107,6 +2140,23 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         output->nodes[output->nodeCount] = *unaryExprNode;
         output->nodeCount++;
         createASTDebugView(node->data.unary_op->expression, output, indentLevel + 1);
+        break;
+    }
+
+    case NODE_TYPE:
+    {
+        __LINE_AND_COLUMN__
+        char *typeName = strdup(node->data.typeDecl->name);
+        DataType *type = node->data.typeDecl->type;
+        ASTDebugNode *typeNode = createASTDebugNode("Type", typeName, type, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *typeNode;
+        output->nodeCount++;
+        break;
+    }
+
+    case NODE_ANNOTATION:
+    {
+        // We don't need to log annotations
         break;
     }
 

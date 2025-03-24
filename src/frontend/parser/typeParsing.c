@@ -755,7 +755,7 @@ ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingConte
                      arena, state, lexer, lexer->source, globalTable);
         return NULL;
     }
-    
+
     bool isNew = false;
     if (currentToken.type == TOKEN_KW_NEW)
     {
@@ -966,6 +966,7 @@ DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena,
             parsingError("Failed to parse function argument type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
             return NULL;
         }
+        logMessage(LMI, "INFO", "Parser", "Function argument completed");
         argArray->add(argArray, argType);
 
         getNextToken(lexer, arena, state);
@@ -982,22 +983,29 @@ DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena,
             return NULL;
         }
     }
+    logMessage(LMI, "INFO", "Parser", "Function arguments parsed.");
     argArray->printArray(argArray);
 
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end function argument list.", "parseFunctionType", arena, state, context);
     consume(__LINE__, lexer, TOKEN_RESULT_ARROW, "Expected `->` for return type.", "parseFunctionType", arena, state, context);
 
+    logMessage(LMI, "INFO", "Parser", "Parsing function return type...");
     DataType *returnType = parseType(lexer, context, arena, state, globalTable);
     if (!returnType)
     {
         parsingError("Failed to parse function return type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
         return NULL;
     }
+    logMessage(LMI, "INFO", "Parser", "Function return type parsed.");
+
     char *curTok = strndup(lexer->currentToken.start, lexer->currentToken.length);
     getNextToken(lexer, arena, state);
 
+    logMessage(LMI, "INFO", "Parser", "Creating Function Type...");
+
     DataType *functionType = DTM->functionTypes->createFunctionType(argArray->data, argArray->count, returnType);
-    functionType->debug->printType(functionType);
+
+    logMessage(LMI, "INFO", "Parser", "Function type created.");
 
     return functionType;
 }
@@ -1047,8 +1055,10 @@ DataType *parseObjectType(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
 DataType *parseStructType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    DEBUG_BREAKPOINT;
 }
 
 DataType *parseClassType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
+    DEBUG_BREAKPOINT;
 }

@@ -78,7 +78,6 @@ typedef struct DTDebug_t
     void (*printType)(struct DataType_t *type);
     void (*printVerbosType)(struct DataType_t *type);
     const char *(*toString)(struct DataType_t *type);
-
 } DTDebug;
 
 // ------------------------------------------------------------------------------------------- //

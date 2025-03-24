@@ -88,6 +88,7 @@ typedef struct CryoMetaData
     enum CryoNodeType type; // Node Type
     int line;               // Line number for error reporting
     int column;             // Column number for error reporting
+    const char *lexeme;     // Lexeme
 
     char *moduleName; // Current Module
     Position position;
@@ -1275,6 +1276,7 @@ char *formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1309,5 +1311,6 @@ char *CONSOLE_formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output
 char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

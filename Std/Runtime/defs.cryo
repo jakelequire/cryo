@@ -1,4 +1,6 @@
+namespace Internal;
 @pragma "internal"
 
 type Function = () -> void;
-type Object = {};
+type Function_One = () -> void;
+type Function_Two = () -> void;

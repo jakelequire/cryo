@@ -250,6 +250,13 @@ void DTFunctionTy_setParams(DTFunctionTy *function, DataType **paramTypes, int p
         function->paramTypes = paramTypes;
         function->paramCount = paramCount;
     }
+    else
+    {
+        for (int i = 0; i < paramCount; i++)
+        {
+            function->paramTypes[i] = paramTypes[i];
+        }
+    }
 }
 
 void DTFunctionTy_setReturnType(DTFunctionTy *function, DataType *returnType)

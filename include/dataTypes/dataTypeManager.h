@@ -217,6 +217,7 @@ typedef struct DTMDebug_t
 typedef struct DTMSymbolTableEntry_t
 {
     const char *name;
+    const char *scopeName;
     DataType *type;
 } DTMSymbolTableEntry;
 
@@ -226,12 +227,15 @@ typedef struct DTMSymbolTable_t
     int entryCount;
     int entryCapacity;
 
-    DataType *(*getEntry)(struct DTMSymbolTable_t *table, const char *name);
-    void (*addEntry)(struct DTMSymbolTable_t *table, const char *name, DataType *type);
-    void (*removeEntry)(struct DTMSymbolTable_t *table, const char *name);
-    void (*updateEntry)(struct DTMSymbolTable_t *table, const char *name, DataType *type);
+    DataType *(*getEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
+    void (*addEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
+    void (*removeEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
+    void (*updateEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
     void (*resizeTable)(struct DTMSymbolTable_t *table);
     void (*printTable)(struct DTMSymbolTable_t *table);
+
+    DTMSymbolTableEntry *(*createEntry)(const char *scopeName, const char *name, DataType *type);
+    void (*importRootNode)(struct DTMSymbolTable_t *table, ASTNode *rootNode);
 } DTMSymbolTable;
 
 // -------------------------- Data Types Interface -------------------------- //
@@ -339,7 +343,7 @@ DTMGenerics *createDTMGenerics(void);
 DTMEnums *createDTMEnums(void);
 
 DTMSymbolTable *createDTMSymbolTable(void);
-DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *name, DataType *type);
+DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *scopeName, const char *name, DataType *type);
 
 DTMDynamicTypeArray *createDTMDynamicTypeArray(void);
 DTMDynamicTuple *createDTMDynamicTuple(void);
