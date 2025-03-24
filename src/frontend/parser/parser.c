@@ -219,16 +219,7 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
         parsingError("Unknown data type", "getCryoDataType", arena, state, lexer, lexer->source, globalTable);
     }
 
-    // Now we need to check if the type is followed by a `<` character to determine if it is a generic type instantiation
-    if (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LESS)
-    {
-        // Consume the identifier
-        getNextToken(lexer, arena, state);
-        logMessage(LMI, "INFO", "Parser", "Parsing generic type instantiation...");
-        type = parseGenericDataTypeInstantiation(type, lexer, arena, state, globalTable);
-    }
-
-    logMessage(LMI, "INFO", "Parser", "Data type: %s", type->typeName);
+    logMessage(LMI, "INFO", "Parser", "Data type: %s", type->debug->toString(type));
     return type;
 }
 // </getCryoDataType>
@@ -325,7 +316,7 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     case TOKEN_IDENTIFIER:
         logMessage(LMI, "INFO", "Parser", "Parsing custom type: %s", typeTokenStr);
         // type = getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
-        return ResolveDataType(globalTable, typeTokenStr);
+        return DTM->resolveType(DTM, typeTokenStr);
         break;
 
     default:

@@ -28,6 +28,53 @@ void DTDebug_printType(struct DataType_t *type)
         CONDITION_FAILED;
     }
 
+    const char *typeName = type->typeName;
+    if (!typeName || typeName == NULL)
+    {
+        // Check to see if the DataType is a primitive type
+        if (type->container->typeOf == PRIM_TYPE)
+        {
+            switch (type->container->primitive)
+            {
+            case PRIM_INT:
+                typeName = "int";
+                break;
+            case PRIM_FLOAT:
+                typeName = "float";
+                break;
+            case PRIM_STRING:
+                typeName = "string";
+                break;
+            case PRIM_BOOLEAN:
+                typeName = "boolean";
+                break;
+            case PRIM_VOID:
+                typeName = "void";
+                break;
+            case PRIM_NULL:
+                typeName = "null";
+                break;
+            case PRIM_ANY:
+                typeName = "any";
+                break;
+            case PRIM_UNDEFINED:
+                typeName = "undefined";
+                break;
+            case PRIM_AUTO:
+                typeName = "auto";
+                break;
+            default:
+                fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type\n");
+                CONDITION_FAILED;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
+            CONDITION_FAILED;
+        }
+    }
+
     printf("Data Type: %s\n", type->typeName);
 }
 
@@ -39,10 +86,12 @@ void DTDebug_printVerbosType(struct DataType_t *type)
         CONDITION_FAILED;
     }
 
-    printf("Data Type: %s\n", type->typeName);
+    printf(">------------------------- [ Verbose Data Type ] -------------------------<\n");
+    printf("Data Type Name: %s\n", type->typeName);
     printf("Const: %s\n", type->isConst ? "true" : "false");
     printf("Pointer: %s\n", type->isPointer ? "true" : "false");
     printf("Reference: %s\n", type->isReference ? "true" : "false");
+    printf(">-------------------------------------------------------------------------<\n");
 }
 
 const char *DTDebug_toString(struct DataType_t *type)
@@ -53,7 +102,54 @@ const char *DTDebug_toString(struct DataType_t *type)
         CONDITION_FAILED;
     }
 
-    return type->typeName;
+    const char *typeName = type->typeName;
+    if (!typeName || typeName == NULL)
+    {
+        // Check to see if the DataType is a primitive type
+        if (type->container->typeOf == PRIM_TYPE)
+        {
+            switch (type->container->primitive)
+            {
+            case PRIM_INT:
+                typeName = "int";
+                break;
+            case PRIM_FLOAT:
+                typeName = "float";
+                break;
+            case PRIM_STRING:
+                typeName = "string";
+                break;
+            case PRIM_BOOLEAN:
+                typeName = "boolean";
+                break;
+            case PRIM_VOID:
+                typeName = "void";
+                break;
+            case PRIM_NULL:
+                typeName = "null";
+                break;
+            case PRIM_ANY:
+                typeName = "any";
+                break;
+            case PRIM_UNDEFINED:
+                typeName = "undefined";
+                break;
+            case PRIM_AUTO:
+                typeName = "auto";
+                break;
+            default:
+                fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type\n");
+                CONDITION_FAILED;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
+            CONDITION_FAILED;
+        }
+    }
+
+    return typeName;
 }
 
 DTDebug *createDTDebug(void)

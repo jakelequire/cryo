@@ -755,7 +755,7 @@ ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingConte
                      arena, state, lexer, lexer->source, globalTable);
         return NULL;
     }
-
+    
     bool isNew = false;
     if (currentToken.type == TOKEN_KW_NEW)
     {

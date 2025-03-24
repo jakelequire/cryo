@@ -312,6 +312,7 @@ typedef struct DataTypeManager_t
 
     DataType *(*getTypeofASTNode)(ASTNode *node);
     DataType *(*parseType)(const char *typeStr);
+    DataType *(*resolveType)(DataTypeManager *self, const char *typeStr);
 } DataTypeManager;
 
 // ------------------------ Function Prototypes ------------------------- //
@@ -320,6 +321,7 @@ typedef struct DataTypeManager_t
 void initGlobalDataTypeManagerInstance(void);
 
 DataType *DTMParseType(const char *typeStr);
+DataType *DTMResolveType(DataTypeManager *self, const char *typeStr);
 
 // ----------------------- Constructor Prototypes ----------------------- //
 

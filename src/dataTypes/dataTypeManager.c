@@ -32,7 +32,54 @@ void DTMDebug_printDataType(DataType *type)
         CONDITION_FAILED;
     }
 
-    printf("Data Type: %s\n", type->typeName);
+    const char *typeName = type->typeName;
+    if (!typeName || typeName == NULL)
+    {
+        // Check to see if the DataType is a primitive type
+        if (type->container->typeOf == PRIM_TYPE)
+        {
+            switch (type->container->primitive)
+            {
+            case PRIM_INT:
+                typeName = "int";
+                break;
+            case PRIM_FLOAT:
+                typeName = "float";
+                break;
+            case PRIM_STRING:
+                typeName = "string";
+                break;
+            case PRIM_BOOLEAN:
+                typeName = "boolean";
+                break;
+            case PRIM_VOID:
+                typeName = "void";
+                break;
+            case PRIM_NULL:
+                typeName = "null";
+                break;
+            case PRIM_ANY:
+                typeName = "any";
+                break;
+            case PRIM_UNDEFINED:
+                typeName = "undefined";
+                break;
+            case PRIM_AUTO:
+                typeName = "auto";
+                break;
+            default:
+                fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type\n");
+                CONDITION_FAILED;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
+            CONDITION_FAILED;
+        }
+    }
+
+    printf("%s\n", typeName);
 }
 
 const char *DTMDebug_typeofDataTypeToString(TypeofDataType type)
@@ -525,6 +572,7 @@ void DataTypes_isReference(DataType *type, bool isReference)
 
 TypeContainer *DTMTypeContainerWrappers_createTypeContainer(void)
 {
+    logMessage(LMI, "INFO", "DTM", "Creating Type Container...");
     TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
     if (!container)
     {
@@ -537,6 +585,7 @@ TypeContainer *DTMTypeContainerWrappers_createTypeContainer(void)
 
 DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
 {
+    logMessage(LMI, "INFO", "DTM", "Wrapping Type Container...");
     DataType *type = (DataType *)malloc(sizeof(DataType));
     if (!type)
     {
@@ -544,11 +593,21 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
         CONDITION_FAILED;
     }
 
+    type->container = (TypeContainer *)malloc(sizeof(TypeContainer));
+    if (!type->container)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to wrap Type Container\n");
+        CONDITION_FAILED;
+    }
     type->container = container;
+
+    logMessage(LMI, "INFO", "DTM", "Setting Type Properties...");
 
     type->setConst = DataTypes_isConst;
     type->setPointer = DataTypes_isPointer;
     type->setReference = DataTypes_isReference;
+
+    logMessage(LMI, "INFO", "DTM", "Returning Wrapped Type.");
 
     return type;
 }
@@ -778,6 +837,7 @@ DataTypeManager *createDataTypeManager(void)
 
     manager->initDefinitions = DataTypeManager_initDefinitions;
     manager->parseType = DTMParseType;
+    manager->resolveType = DTMResolveType;
 
     return manager;
 }
