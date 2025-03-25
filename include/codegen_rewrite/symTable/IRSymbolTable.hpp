@@ -28,6 +28,30 @@
 
 namespace Cryo
 {
+    // This struct is to preload all the LLVM types that are used in the IRSymbolTable
+    struct LLVMTypes
+    {
+        // Integer types
+        llvm::Type *i1Ty;
+        llvm::Type *i8Ty;
+        llvm::Type *i16Ty;
+        llvm::Type *i32Ty;
+        llvm::Type *i64Ty;
+        llvm::Type *i128Ty;
+
+        // Floating point types
+        llvm::Type *halfTy;
+        llvm::Type *floatTy;
+        llvm::Type *doubleTy;
+        llvm::Type *fp128Ty;
+        llvm::Type *x86_fp80;
+
+        // Void type
+        llvm::Type *voidTy;
+        // Pointer type
+        llvm::Type *ptrTy;
+    };
+
     class IRSymbolTable
     {
     private:
@@ -43,9 +67,12 @@ namespace Cryo
             std::cout << "Creating symbol table for module: " << module->getName().str() << std::endl;
             // Initialize with global scope
             scopeStack.push_back({});
+            // Initialize the LLVM types
+            initLLVMTypes();
         }
 
         friend class IRSymbolManager;
+
         IRSymbolManager *getSymbolManager() { return new IRSymbolManager(); }
         void setCurrentFunction(llvm::Function *function) { currentFunction = function; }
         void clearCurrentFunction() { currentFunction = nullptr; }
@@ -76,11 +103,21 @@ namespace Cryo
     private:
         llvm::Function *currentFunction;
 
+        llvm::Type *getLLVMType(DataType *dataType);
+        llvm::StructType *getLLVMObjectType(DataType *dataType);
+
         template <typename T>
         llvm::Type *getLLVMType();
 
         template <typename T>
         llvm::Value *createLLVMValue(const T &value);
+
+    protected:
+        bool typesInitialized = false;
+        void initLLVMTypes();
+
+    public:
+        LLVMTypes llvmTypes;
 
     public:
         template <typename T>

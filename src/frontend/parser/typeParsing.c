@@ -1067,4 +1067,3 @@ DataType *parseClassType(const char *typeName, Lexer *lexer, ParsingContext *con
 {
     DEBUG_BREAKPOINT;
 }
-
