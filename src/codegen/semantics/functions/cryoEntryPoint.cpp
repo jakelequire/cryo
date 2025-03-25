@@ -41,7 +41,7 @@ namespace Cryo
         std::string functionName = std::string(functionNode->name);
 
         // Get the return type
-        DataType *returnType = functionNode->type;
+        DataType *returnType = functionNode->type->container->type.functionType->returnType;
         llvm::Type *returnLLVMType = types.getReturnType(returnType);
         std::string returnTypeName = DTM->debug->dataTypeToString(returnType);
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + returnTypeName);
@@ -153,7 +153,7 @@ namespace Cryo
             case NODE_RETURN_STATEMENT:
             {
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Creating Return Statement");
-                llvm::Type *returnLLVMType = types.getReturnType(returnType);
+                llvm::Type *returnLLVMType = types.getType(returnType, 0);
                 std::string returnTypeName = DTM->debug->dataTypeToString(returnType);
                 DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + returnTypeName);
 

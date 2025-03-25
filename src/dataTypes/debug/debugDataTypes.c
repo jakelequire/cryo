@@ -29,8 +29,7 @@ void DTDebug_printVerbosType(struct DataType_t *type)
 {
     if (!type)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
-        CONDITION_FAILED;
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTDebug_printVerbosType)\n");
     }
 
     printf(">------------------------- [ Verbose Data Type ] -------------------------<\n");
@@ -45,8 +44,7 @@ const char *DTDebug_toString(struct DataType_t *type)
 {
     if (!type)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
-        CONDITION_FAILED;
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTDebug_toString)\n");
     }
 
     const char *typeStr = DTM->debug->dataTypeToString(type);

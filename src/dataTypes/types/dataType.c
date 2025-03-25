@@ -62,7 +62,6 @@ void DataTypes_cast(DataType *fromType, DataType *toType)
 
 void DataTypes_setTypeName(DataType *type, const char *name)
 {
-    logMessage(LMI, "INFO", "DTM", "Setting type name...");
     if (!type)
     {
         fprintf(stderr, "[Data Type Manager] Error: Attempted to set type name on NULL data type\n");

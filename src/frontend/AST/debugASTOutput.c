@@ -1588,7 +1588,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         const char *funcName = strdup(node->data.functionDecl->name);
-        DataType *returnType = node->data.functionDecl->functionType;
+        DataType *returnType = node->data.functionDecl->functionType->container->type.functionType->returnType;
         ASTDebugNode *functionNode = createASTDebugNode("FunctionDecl", funcName, returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *functionNode;
         output->nodeCount++;
@@ -1886,7 +1886,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_RETURN_STATEMENT:
     {
         __LINE_AND_COLUMN__
-        ASTDebugNode *returnNode = createASTDebugNode("ReturnStatement", "ReturnStatement", DTM->primitives->createVoid(), line, column, indentLevel, node);
+        DataType *returnType = node->data.returnStatement->type;
+        ASTDebugNode *returnNode = createASTDebugNode("ReturnStatement", "ReturnStatement", returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *returnNode;
         output->nodeCount++;
 

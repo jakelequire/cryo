@@ -24,8 +24,7 @@ void DTMDebug_printDataType(DataType *type)
 {
     if (!type)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
-        CONDITION_FAILED;
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTMDebug_printDataType)\n");
     }
 
     const char *typeName = type->typeName;
@@ -195,8 +194,7 @@ const char *DTMDebug_dataTypeToString(DataType *type)
 {
     if (!type)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
-        CONDITION_FAILED;
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTMDebug_dataTypeToString)\n");
     }
 
     const char *typeName = type->typeName;

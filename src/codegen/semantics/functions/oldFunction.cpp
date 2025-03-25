@@ -95,7 +95,7 @@ namespace Cryo
         }
 
         // Get the return type
-        DataType *returnType = functionNode->type;
+        DataType *returnType = functionNode->type->container->type.functionType->returnType;
         llvm::Type *returnLLVMType = types.getReturnType(returnType);
         DevDebugger::logMessage("INFO", __LINE__, "Functions", "Return Type: " + std::string(DTM->debug->dataTypeToString(returnType)));
 

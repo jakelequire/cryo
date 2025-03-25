@@ -1447,6 +1447,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
 
     ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, returnType, arena, state, lexer);
     DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
+    functionNode->data.functionDecl->type = functionType;
 
     // Set the generic parameters if they exist
     if (genericParamCount > 0 && genericParams != NULL)
@@ -1616,15 +1617,16 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
 
         break;
     }
+
     case FUNCTION_SYMBOL:
     {
         logMessage(LMI, "INFO", "Parser", "Arguments for function...");
         ASTNode *funcDeclNode = functionNode;
-        logASTNode(funcDeclNode);
         ASTNode **params = funcDeclNode->data.functionDecl->params;
         int paramCount = funcDeclNode->data.functionDecl->paramCount;
         for (int i = 0; i < paramCount; ++i)
         {
+            logMessage(LMI, "INFO", "Parser", "Parameter: %s", params[i]->data.param->name);
             DataType *expectedType = params[i]->data.param->type;
         }
 

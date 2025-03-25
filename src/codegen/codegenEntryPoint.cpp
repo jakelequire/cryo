@@ -48,7 +48,6 @@ int generateIRFromAST(CompilationUnit *unit,
         logMessage(LMI, "ERROR", "Compiler", "ASTNode is null");
         return 1;
     }
-    rootNode->print(rootNode);
 
     std::string moduleName = unit->dir.src_fileName;
     compiler.setModuleIdentifier(moduleName);

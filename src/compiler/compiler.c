@@ -242,7 +242,7 @@ int exe_project_build(CompilerSettings *settings)
     }
 
     // Outputs the SymTable into a file in the build directory.
-    initASTDebugOutput(programCopy, settings);
+    // initASTDebugOutput(programCopy, settings);
 
     printGlobalSymbolTable(globalSymbolTable);
 
@@ -280,7 +280,6 @@ int exe_project_build(CompilerSettings *settings)
         END_COMPILATION_MESSAGE;
 
         printGlobalSymbolTable(globalSymbolTable);
-        logASTNodeDebugView(programCopy);
     });
 
     return 0;

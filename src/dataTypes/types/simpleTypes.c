@@ -22,7 +22,6 @@
 
 DataType *DTMPrimitives_createI8(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'i8'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I8;
@@ -34,7 +33,6 @@ DataType *DTMPrimitives_createI8(void)
 
 DataType *DTMPrimitives_createI16(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'i16'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I16;
@@ -46,7 +44,6 @@ DataType *DTMPrimitives_createI16(void)
 
 DataType *DTMPrimitives_createI32(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'i32'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I32;
@@ -58,7 +55,6 @@ DataType *DTMPrimitives_createI32(void)
 
 DataType *DTMPrimitives_createI64(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'i64'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I64;
@@ -70,7 +66,6 @@ DataType *DTMPrimitives_createI64(void)
 
 DataType *DTMPrimitives_createI128(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'i128'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I128;
@@ -82,7 +77,6 @@ DataType *DTMPrimitives_createI128(void)
 
 DataType *DTMPrimitives_createInt(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'int'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_INT;
@@ -94,7 +88,6 @@ DataType *DTMPrimitives_createInt(void)
 
 DataType *DTMPrimitives_createFloat(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'float'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_FLOAT;
@@ -106,7 +99,6 @@ DataType *DTMPrimitives_createFloat(void)
 
 DataType *DTMPrimitives_createString(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'string'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_STRING;
@@ -118,7 +110,6 @@ DataType *DTMPrimitives_createString(void)
 
 DataType *DTMPrimitives_createBoolean(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'boolean'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_BOOLEAN;
@@ -130,7 +121,6 @@ DataType *DTMPrimitives_createBoolean(void)
 
 DataType *DTMPrimitives_createVoid(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'void'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_VOID;
@@ -142,7 +132,6 @@ DataType *DTMPrimitives_createVoid(void)
 
 DataType *DTMPrimitives_createNull(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'null'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_NULL;
@@ -154,7 +143,6 @@ DataType *DTMPrimitives_createNull(void)
 
 DataType *DTMPrimitives_createAny(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'any'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_ANY;
@@ -166,7 +154,6 @@ DataType *DTMPrimitives_createAny(void)
 
 DataType *DTMPrimitives_createUndefined(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'undefined'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_UNDEFINED;
@@ -178,7 +165,6 @@ DataType *DTMPrimitives_createUndefined(void)
 
 DataType *DTMPrimitives_createAutoTy(void)
 {
-    logMessage(LMI, "INFO", "DTM", "Creating primitive type 'auto'");
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_AUTO;
