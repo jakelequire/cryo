@@ -155,7 +155,7 @@ typedef struct DTFunctionTy_t
     void (*addParam)(struct DTFunctionTy_t *self, struct DataType_t *param);
     void (*setParams)(struct DTFunctionTy_t *self, struct DataType_t **params, int paramCount);
     void (*setReturnType)(struct DTFunctionTy_t *self, struct DataType_t *returnType);
-
+    const char *(*signatureToString)(struct DTFunctionTy_t *self);
 } DTFunctionTy;
 
 // ------------------------------------------------------------------------------------------- //

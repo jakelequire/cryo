@@ -21,181 +21,6 @@
 DataTypeManager *globalDataTypeManager = NULL;
 
 // --------------------------------------------------------------------------------------------------- //
-// ------------------------------------- DTM Debug Functions ----------------------------------------- //
-// --------------------------------------------------------------------------------------------------- //
-
-void DTMDebug_printDataType(DataType *type)
-{
-    if (!type)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type\n");
-        CONDITION_FAILED;
-    }
-
-    const char *typeName = type->typeName;
-    if (!typeName || typeName == NULL)
-    {
-        // Check to see if the DataType is a primitive type
-        if (type->container->typeOf == PRIM_TYPE)
-        {
-            switch (type->container->primitive)
-            {
-            case PRIM_INT:
-                typeName = "int";
-                break;
-            case PRIM_FLOAT:
-                typeName = "float";
-                break;
-            case PRIM_STRING:
-                typeName = "string";
-                break;
-            case PRIM_BOOLEAN:
-                typeName = "boolean";
-                break;
-            case PRIM_VOID:
-                typeName = "void";
-                break;
-            case PRIM_NULL:
-                typeName = "null";
-                break;
-            case PRIM_ANY:
-                typeName = "any";
-                break;
-            case PRIM_UNDEFINED:
-                typeName = "undefined";
-                break;
-            case PRIM_AUTO:
-                typeName = "auto";
-                break;
-            default:
-                fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type\n");
-                CONDITION_FAILED;
-            }
-        }
-        else
-        {
-            fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
-            CONDITION_FAILED;
-        }
-    }
-
-    printf("%s\n", typeName);
-}
-
-const char *DTMDebug_typeofDataTypeToString(TypeofDataType type)
-{
-    switch (type)
-    {
-    case PRIM_TYPE:
-        return "Primitive Type";
-    case ARRAY_TYPE:
-        return "Array Type";
-    case ENUM_TYPE:
-        return "Enum Type";
-    case FUNCTION_TYPE:
-        return "Function Type";
-    case GENERIC_TYPE:
-        return "Generic Type";
-    case OBJECT_TYPE:
-        return "Object Type";
-    case TYPE_DEF:
-        return "Type Definition";
-    case UNKNOWN_TYPE:
-        return "<UNKNOWN>";
-    default:
-        return "<UNKNOWN>";
-    }
-}
-
-const char *DTMDebug_typeofObjectTypeToString(TypeofObjectType type)
-{
-    switch (type)
-    {
-    case STRUCT_OBJ:
-        return "Struct Object";
-    case CLASS_OBJ:
-        return "Class Object";
-    case INTERFACE_OBJ:
-        return "Interface Object";
-    case TRAIT_OBJ:
-        return "Trait Object";
-    case MODULE_OBJ:
-        return "Module Object";
-    case OBJECT_OBJ:
-        return "Object Object";
-    case NON_OBJECT:
-        return "Non-Object";
-    case UNKNOWN_OBJECT:
-        return "<UNKNOWN>";
-    default:
-        return "<UNKNOWN>";
-    }
-}
-
-const char *DTMDebug_primitiveDataTypeToString(PrimitiveDataType type)
-{
-    switch (type)
-    {
-    case PRIM_INT:
-        return "int";
-    case PRIM_FLOAT:
-        return "float";
-    case PRIM_STRING:
-        return "string";
-    case PRIM_BOOLEAN:
-        return "boolean";
-    case PRIM_VOID:
-        return "void";
-    case PRIM_UNKNOWN:
-        return "<UNKNOWN>";
-    default:
-        return "<UNKNOWN>";
-    }
-}
-
-const char *DTMDebug_primitiveDataTypeToCType(PrimitiveDataType type)
-{
-    switch (type)
-    {
-    case PRIM_INT:
-        return "int";
-    case PRIM_FLOAT:
-        return "float";
-    case PRIM_STRING:
-        return "char *";
-    case PRIM_BOOLEAN:
-        return "bool";
-    case PRIM_VOID:
-        return "void";
-    case PRIM_UNKNOWN:
-        return "<UNKNOWN>";
-    default:
-        return "<UNKNOWN>";
-    }
-}
-
-DTMDebug *createDTMDebug(void)
-{
-    DTMDebug *debug = (DTMDebug *)malloc(sizeof(DTMDebug));
-    if (!debug)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Debug\n");
-        CONDITION_FAILED;
-    }
-
-    // ==================== [ Function Assignments ] ==================== //
-
-    debug->printDataType = DTMDebug_printDataType;
-
-    debug->typeofDataTypeToString = DTMDebug_typeofDataTypeToString;
-    debug->typeofObjectTypeToString = DTMDebug_typeofObjectTypeToString;
-    debug->primitiveDataTypeToString = DTMDebug_primitiveDataTypeToString;
-    debug->primitiveDataTypeToCType = DTMDebug_primitiveDataTypeToCType;
-
-    return debug;
-}
-
-// --------------------------------------------------------------------------------------------------- //
 // -------------------------------------- Property Data Types ---------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
@@ -425,179 +250,298 @@ DTMEnums *createDTMEnums(void)
 }
 
 // --------------------------------------------------------------------------------------------------- //
-// ---------------------------------- Data Types Implementation -------------------------------------- //
-// --------------------------------------------------------------------------------------------------- //
-
-void DataTypes_isConst(DataType *type, bool isConst)
-{
-    type->isConst = isConst;
-}
-
-void DataTypes_isPointer(DataType *type, bool isPointer)
-{
-    type->isPointer = isPointer;
-}
-
-void DataTypes_isReference(DataType *type, bool isReference)
-{
-    type->isReference = isReference;
-}
-
-TypeContainer *DTMTypeContainerWrappers_createTypeContainer(void)
-{
-    logMessage(LMI, "INFO", "DTM", "Creating Type Container...");
-    TypeContainer *container = (TypeContainer *)malloc(sizeof(TypeContainer));
-    if (!container)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to create Type Container\n");
-        CONDITION_FAILED;
-    }
-
-    return container;
-}
-
-DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
-{
-    logMessage(LMI, "INFO", "DTM", "Wrapping Type Container...");
-    DataType *type = (DataType *)malloc(sizeof(DataType));
-    if (!type)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to wrap Type Container\n");
-        CONDITION_FAILED;
-    }
-
-    type->container = (TypeContainer *)malloc(sizeof(TypeContainer));
-    if (!type->container)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to wrap Type Container\n");
-        CONDITION_FAILED;
-    }
-    type->container = container;
-
-    logMessage(LMI, "INFO", "DTM", "Setting Type Properties...");
-
-    type->setConst = DataTypes_isConst;
-    type->setPointer = DataTypes_isPointer;
-    type->setReference = DataTypes_isReference;
-
-    logMessage(LMI, "INFO", "DTM", "Returning Wrapped Type.");
-
-    return type;
-}
-
-DataType *DTMTypeContainerWrappers_wrapSimpleType(struct DTSimpleTy_t *simpleTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = PRIM_TYPE;
-    container->objectType = NON_OBJECT;
-    container->type.simpleType = simpleTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DataType *DTMTypeContainerWrappers_wrapArrayType(struct DTArrayTy_t *arrayTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = ARRAY_TYPE;
-    container->objectType = NON_OBJECT;
-    container->type.arrayType = arrayTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DataType *DTMTypeContainerWrappers_wrapEnumType(struct DTEnumTy_t *enumTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = ENUM_TYPE;
-    container->objectType = NON_OBJECT;
-    container->type.enumType = enumTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DataType *DTMTypeContainerWrappers_wrapFunctionType(struct DTFunctionTy_t *functionTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = FUNCTION_TYPE;
-    container->objectType = NON_OBJECT;
-    container->type.functionType = functionTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DataType *DTMTypeContainerWrappers_wrapStructType(struct DTStructTy_t *structTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = OBJECT_TYPE;
-    container->objectType = STRUCT_OBJ;
-    container->type.structType = structTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DataType *DTMTypeContainerWrappers_wrapClassType(struct DTClassTy_t *classTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = OBJECT_TYPE;
-    container->objectType = CLASS_OBJ;
-    container->type.classType = classTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DataType *DTMTypeContainerWrappers_wrapObjectType(struct DTObjectTy_t *objectTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = OBJECT_TYPE;
-    container->objectType = OBJECT_OBJ;
-    container->type.objectType = objectTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DataType *DTMTypeContainerWrappers_wrapGenericType(struct DTGenericTy_t *genericTy)
-{
-    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
-    container->typeOf = GENERIC_TYPE;
-    container->type.genericType = genericTy;
-
-    return DTMTypeContainerWrappers_wrapTypeContainer(container);
-}
-
-DTMDataTypes *createDTMDataTypes(void)
-{
-    DTMDataTypes *dataTypes = (DTMDataTypes *)malloc(sizeof(DTMDataTypes));
-    if (!dataTypes)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Data Types\n");
-        CONDITION_FAILED;
-    }
-
-    // ==================== [ Function Assignments ] ==================== //
-
-    dataTypes->createTypeContainer = DTMTypeContainerWrappers_createTypeContainer;
-    dataTypes->wrapTypeContainer = DTMTypeContainerWrappers_wrapTypeContainer;
-
-    dataTypes->wrapSimpleType = DTMTypeContainerWrappers_wrapSimpleType;
-    dataTypes->wrapArrayType = DTMTypeContainerWrappers_wrapArrayType;
-    dataTypes->wrapEnumType = DTMTypeContainerWrappers_wrapEnumType;
-    dataTypes->wrapFunctionType = DTMTypeContainerWrappers_wrapFunctionType;
-    dataTypes->wrapStructType = DTMTypeContainerWrappers_wrapStructType;
-    dataTypes->wrapClassType = DTMTypeContainerWrappers_wrapClassType;
-    dataTypes->wrapObjectType = DTMTypeContainerWrappers_wrapObjectType;
-    dataTypes->wrapGenericType = DTMTypeContainerWrappers_wrapGenericType;
-
-    return dataTypes;
-}
-
-// --------------------------------------------------------------------------------------------------- //
 // ---------------------------------- AST Interface Implementation ----------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
 DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
 {
-    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
-    return NULL;
+    if (!node || node == NULL)
+    {
+        logMessage(LMI, "ERROR", "DTM", "Node is Null or Undefined!");
+        fprintf(stderr, "Node is Null or Undefined!\n");
+        CONDITION_FAILED;
+    }
+
+    CryoNodeType nodeType = node->metaData->type;
+    switch (nodeType)
+    {
+    case NODE_PROGRAM:
+        fprintf(stderr, "Invalid Node Type! {Program}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_FUNCTION_DECLARATION:
+    {
+        DataType *functionType = node->data.functionDecl->type;
+        return functionType;
+        break;
+    }
+    case NODE_VAR_DECLARATION:
+    {
+        DataType *varType = node->data.varDecl->type;
+        return varType;
+        break;
+    }
+    case NODE_STATEMENT:
+        fprintf(stderr, "Invalid Node Type! {Statement}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_EXPRESSION:
+        fprintf(stderr, "Invalid Node Type! {Expression}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_BINARY_EXPR:
+        break;
+    case NODE_UNARY_EXPR:
+    {
+        DataType *exprType = DTMastInterface_getTypeofASTNode(node->data.unary_op->expression);
+        return exprType;
+        break;
+    }
+    case NODE_LITERAL_EXPR:
+    {
+        DataType *literalType = node->data.literal->type;
+        return literalType;
+        break;
+    }
+    case NODE_VAR_NAME:
+    {
+        DataType *varType = node->data.varName->type;
+        return varType;
+        break;
+    }
+    case NODE_FUNCTION_CALL:
+    {
+        DataType *functionType = node->data.functionCall->returnType;
+        return functionType;
+        break;
+    }
+    case NODE_IF_STATEMENT:
+        fprintf(stderr, "Invalid Node Type! {If Statement}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_WHILE_STATEMENT:
+        fprintf(stderr, "Invalid Node Type! {While Statement}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_FOR_STATEMENT:
+        fprintf(stderr, "Invalid Node Type! {For Statement}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_RETURN_STATEMENT:
+    {
+        DataType *returnType = DTMastInterface_getTypeofASTNode(node->data.returnStatement->expression);
+        return returnType;
+        break;
+    }
+    case NODE_BLOCK:
+        fprintf(stderr, "Invalid Node Type! {Block}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_FUNCTION_BLOCK:
+        fprintf(stderr, "Invalid Node Type! {Function Block}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_EXPRESSION_STATEMENT:
+        fprintf(stderr, "Invalid Node Type! {Expression Statement}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_ASSIGN:
+    {
+        DataType *assignType = DTMastInterface_getTypeofASTNode(node->data.propertyAccess->property);
+        return assignType;
+        break;
+    }
+    case NODE_PARAM_LIST:
+        fprintf(stderr, "Invalid Node Type! {Param List}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_PARAM:
+    {
+        DataType *paramType = node->data.param->type;
+        return paramType;
+        break;
+    }
+    case NODE_TYPE:
+    {
+        DataType *typeType = node->data.typeDecl->type;
+        return typeType;
+        break;
+    }
+    case NODE_STRING_LITERAL:
+    {
+        DataType *stringType = DTM->primitives->createString();
+        return stringType;
+        break;
+    }
+    case NODE_STRING_EXPRESSION:
+    {
+        DataType *stringType = DTM->primitives->createString();
+        return stringType;
+        break;
+    }
+    case NODE_BOOLEAN_LITERAL:
+    {
+        DataType *boolType = DTM->primitives->createBoolean();
+        return boolType;
+        break;
+    }
+    case NODE_ARRAY_LITERAL:
+        break;
+    case NODE_IMPORT_STATEMENT:
+        fprintf(stderr, "Invalid Node Type! {Import Statement}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_EXTERN_STATEMENT:
+        fprintf(stderr, "Invalid Node Type! {Extern Statement}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_EXTERN_FUNCTION:
+    {
+        DataType *functionType = node->data.externFunction->type;
+        return functionType;
+        break;
+    }
+    case NODE_ARG_LIST:
+        fprintf(stderr, "Invalid Node Type! {Arg List}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_NAMESPACE:
+        fprintf(stderr, "Invalid Node Type! {Namespace}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_INDEX_EXPR:
+    {
+        DataType *indexType = DTMastInterface_getTypeofASTNode(node->data.indexExpr->index);
+        return indexType;
+        break;
+    }
+    case NODE_VAR_REASSIGN:
+    {
+        DataType *reassignType = node->data.varReassignment->existingVarType;
+        return reassignType;
+        break;
+    }
+    case NODE_STRUCT_DECLARATION:
+    {
+        DataType *structType = node->data.structNode->type;
+        return structType;
+        break;
+    }
+    case NODE_PROPERTY:
+    {
+        DataType *propertyType = node->data.property->type;
+        return propertyType;
+        break;
+    }
+    case NODE_CUSTOM_TYPE:
+        break;
+    case NODE_SCOPED_FUNCTION_CALL:
+        break;
+    case NODE_EXTERNAL_SYMBOL:
+        fprintf(stderr, "Invalid Node Type! {External Symbol}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_STRUCT_CONSTRUCTOR:
+        fprintf(stderr, "Invalid Node Type! {Struct Constructor}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_PROPERTY_ACCESS:
+    {
+        DataType *propertyType = DTMastInterface_getTypeofASTNode(node->data.propertyAccess->property);
+        return propertyType;
+        break;
+    }
+    case NODE_THIS:
+        fprintf(stderr, "Invalid Node Type! {This}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_THIS_ASSIGNMENT:
+        fprintf(stderr, "Invalid Node Type! {This Assignment}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_PROPERTY_REASSIGN:
+        fprintf(stderr, "Invalid Node Type! {Property Reassignment}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_METHOD:
+    {
+        DataType *methodType = node->data.method->type;
+        return methodType;
+        break;
+    }
+    case NODE_IDENTIFIER:
+        fprintf(stderr, "Invalid Node Type! {Identifier}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_METHOD_CALL:
+    {
+        DataType *methodType = node->data.methodCall->returnType;
+        return methodType;
+        break;
+    }
+    case NODE_ENUM:
+    {
+        DataType *enumType = node->data.enumNode->type;
+        return enumType;
+        break;
+    }
+    case NODE_GENERIC_DECL:
+    {
+        DataType *genericType = node->data.genericDecl->type;
+        return genericType;
+        break;
+    }
+    case NODE_GENERIC_INST:
+    {
+        DataType *genericType = node->data.genericInst->resultType;
+        return genericType;
+        break;
+    }
+    case NODE_CLASS:
+    {
+        DataType *classType = node->data.classNode->type;
+        return classType;
+        break;
+    }
+    case NODE_CLASS_CONSTRUCTOR:
+        fprintf(stderr, "Invalid Node Type! {Class Constructor}\n");
+        CONDITION_FAILED;
+        break;
+    case NODE_OBJECT_INST:
+    {
+        DataType *objectType = node->data.objectNode->objType;
+        return objectType;
+        break;
+    }
+    case NODE_NULL_LITERAL:
+    {
+        DataType *nullType = DTM->primitives->createNull();
+        return nullType;
+        break;
+    }
+    case NODE_TYPE_CAST:
+        // TODO
+        break;
+    case NODE_TYPEOF:
+        // Skip
+        break;
+    case NODE_USING:
+        // Skip
+        break;
+    case NODE_MODULE:
+        // Skip
+        break;
+    case NODE_ANNOTATION:
+        // Skip
+        break;
+    case NODE_UNKNOWN:
+        break;
+    default:
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Unknown node type: %d\n", nodeType);
+        CONDITION_FAILED;
+    }
+    }
 }
 
 DataType **DTMastInterface_createTypeArrayFromAST(ASTNode *node)
@@ -672,9 +616,21 @@ void DataTypeManager_initDefinitions(const char *compilerRootPath, CompilerState
 
     defsNode->print(defsNode);
 
-    DTM->symbolTable->importRootNode(DTM->symbolTable, defsNode);
+    DTM->symbolTable->importASTnode(DTM->symbolTable, defsNode);
+    DTM->symbolTable->printTable(DTM->symbolTable);
 
-    DEBUG_BREAKPOINT;
+    // Generate the IR for the definitions
+    // TODO: Implement IR generation for definitions
+
+    logMessage(LMI, "INFO", "DTM", "Definitions initialized successfully");
+    DTM->defsInitialized = true;
+
+    printf("\n");
+    printf(BOLD GREEN "================================================================================\n" COLOR_RESET);
+    printf(BOLD GREEN "                            [ Definitions Initialized ]                         \n" COLOR_RESET);
+    printf(BOLD GREEN "================================================================================\n" COLOR_RESET);
+    printf("\n");
+
     return;
 }
 

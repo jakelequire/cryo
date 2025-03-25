@@ -39,6 +39,7 @@
     printf("\n<!> Line: %i, Function: %s", __LINE__, __FUNCTION__);                           \
     printf("\n<!> File: %s\n", __FILE__);                                                     \
     printf("\n#========================================================================#\n"); \
+    printf("\n");                                                                             \
     exit(2)
 
 #define __UNIMPLEMENTED_FUNCTION__(functionName)                                              \

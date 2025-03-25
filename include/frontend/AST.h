@@ -88,7 +88,6 @@ typedef struct CryoMetaData
     enum CryoNodeType type; // Node Type
     int line;               // Line number for error reporting
     int column;             // Column number for error reporting
-    const char *lexeme;     // Lexeme
 
     char *moduleName; // Current Module
     Position position;

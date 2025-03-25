@@ -29,6 +29,13 @@
 #include "dataTypes/dataTypeDefs.h"
 
 #define SYMBOL_TABLE_INITIAL_CAPACITY 32
+#define DYN_GROWTH_FACTOR 2
+#define MAX_PARAM_CAPACITY 16
+#define MAX_FIELD_CAPACITY 16
+#define MAX_METHOD_CAPACITY 16
+#define MAX_ENUM_CAPACITY 16
+#define MAX_GENERIC_CAPACITY 16
+#define MAX_TYPE_CAPACITY 16
 
 // Define each token mapping
 #define DECLARE_TOKEN(str, type) {str, type}
@@ -235,7 +242,7 @@ typedef struct DTMSymbolTable_t
     void (*printTable)(struct DTMSymbolTable_t *table);
 
     DTMSymbolTableEntry *(*createEntry)(const char *scopeName, const char *name, DataType *type);
-    void (*importRootNode)(struct DTMSymbolTable_t *table, ASTNode *rootNode);
+    void (*importASTnode)(struct DTMSymbolTable_t *table, ASTNode *rootNode);
 } DTMSymbolTable;
 
 // -------------------------- Data Types Interface -------------------------- //

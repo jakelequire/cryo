@@ -2032,7 +2032,10 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
         return NULL;
     }
 
+    logMessage(LMI, "INFO", "Parser", "Parameter Type Resolved...");
+
     const char *paramTypeStr = paramType->debug->toString(paramType);
+    printf("TEST\n");
     logMessage(LMI, "INFO", "Parser", "<!> Parameter type: %s", paramTypeStr);
 
     // Consume data type token

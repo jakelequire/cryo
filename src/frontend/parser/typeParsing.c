@@ -818,7 +818,7 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
 
     consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` after type name.", "parseTypeDeclaration", arena, state, context);
 
-    DataType *typeDefinition = parseTypeDefinition(lexer, context, arena, state, globalTable);
+    DataType *typeDefinition = parseTypeDefinition(typeName, lexer, context, arena, state, globalTable);
     if (!typeDefinition)
     {
         parsingError("Failed to parse type definition.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
@@ -849,13 +849,13 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
 // - Class Type:        class {CLASS_NAME}
 // - Function Type:     (?args...) -> returnType
 //
-DataType *parseTypeDefinition(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseTypeDefinition(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing type definition...");
 
     // Check if the current token is a primitive type
-    DataType *primitiveType = parseForPrimitive(lexer, context, arena, state, globalTable);
+    DataType *primitiveType = parseForPrimitive(typeName, lexer, context, arena, state, globalTable);
     if (primitiveType)
     {
         return primitiveType;
@@ -864,12 +864,12 @@ DataType *parseTypeDefinition(Lexer *lexer, ParsingContext *context, Arena *aren
     // Check if the definition is a function type
     if (lexer->currentToken.type == TOKEN_LPAREN)
     {
-        return parseFunctionType(lexer, context, arena, state, globalTable);
+        return parseFunctionType(typeName, lexer, context, arena, state, globalTable);
     }
     else if (lexer->currentToken.type == TOKEN_LBRACE)
     {
         // This is an object type
-        return parseObjectType(lexer, context, arena, state, globalTable);
+        return parseObjectType(typeName, lexer, context, arena, state, globalTable);
     }
 
     DEBUG_BREAKPOINT;
@@ -877,12 +877,10 @@ DataType *parseTypeDefinition(Lexer *lexer, ParsingContext *context, Arena *aren
 
 // This function looks at the current token and determines if it is a primitive type.
 // If not, then it will return NULL.
-DataType *parseForPrimitive(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseForPrimitive(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Parsing for primitive type...");
-
-    const char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Type name: %s", typeName);
 
     if (cStringCompare("int", typeName))
@@ -948,7 +946,7 @@ DataType *parseForPrimitive(Lexer *lexer, ParsingContext *context, Arena *arena,
     return NULL;
 }
 
-DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing function type...");
@@ -1004,13 +1002,20 @@ DataType *parseFunctionType(Lexer *lexer, ParsingContext *context, Arena *arena,
     logMessage(LMI, "INFO", "Parser", "Creating Function Type...");
 
     DataType *functionType = DTM->functionTypes->createFunctionType(argArray->data, argArray->count, returnType);
+    if (!functionType)
+    {
+        parsingError("Failed to create function type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    functionType->setTypeName(functionType, typeName);
 
     logMessage(LMI, "INFO", "Parser", "Function type created.");
 
     return functionType;
 }
 
-DataType *parseObjectType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseObjectType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing object type...");
@@ -1053,12 +1058,13 @@ DataType *parseObjectType(Lexer *lexer, ParsingContext *context, Arena *arena, C
     return NULL;
 }
 
-DataType *parseStructType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseStructType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     DEBUG_BREAKPOINT;
 }
 
-DataType *parseClassType(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseClassType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     DEBUG_BREAKPOINT;
 }
+
