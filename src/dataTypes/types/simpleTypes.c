@@ -25,6 +25,7 @@ DataType *DTMPrimitives_createI8(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I8;
+    container->objectType = NON_OBJECT;
 
     DataType *i8_ty = DTM->dataTypes->wrapTypeContainer(container);
     i8_ty->setTypeName(i8_ty, "i8");
@@ -36,6 +37,7 @@ DataType *DTMPrimitives_createI16(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I16;
+    container->objectType = NON_OBJECT;
 
     DataType *i16_ty = DTM->dataTypes->wrapTypeContainer(container);
     i16_ty->setTypeName(i16_ty, "i16");
@@ -47,6 +49,7 @@ DataType *DTMPrimitives_createI32(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I32;
+    container->objectType = NON_OBJECT;
 
     DataType *i32_ty = DTM->dataTypes->wrapTypeContainer(container);
     i32_ty->setTypeName(i32_ty, "i32");
@@ -58,6 +61,7 @@ DataType *DTMPrimitives_createI64(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I64;
+    container->objectType = NON_OBJECT;
 
     DataType *i64_ty = DTM->dataTypes->wrapTypeContainer(container);
     i64_ty->setTypeName(i64_ty, "i64");
@@ -69,6 +73,7 @@ DataType *DTMPrimitives_createI128(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_I128;
+    container->objectType = NON_OBJECT;
 
     DataType *i128_ty = DTM->dataTypes->wrapTypeContainer(container);
     i128_ty->setTypeName(i128_ty, "i128");
@@ -80,6 +85,7 @@ DataType *DTMPrimitives_createInt(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_INT;
+    container->objectType = NON_OBJECT;
 
     DataType *int_ty = DTM->dataTypes->wrapTypeContainer(container);
     int_ty->setTypeName(int_ty, "int");
@@ -91,6 +97,7 @@ DataType *DTMPrimitives_createFloat(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_FLOAT;
+    container->objectType = NON_OBJECT;
 
     DataType *float_ty = DTM->dataTypes->wrapTypeContainer(container);
     float_ty->setTypeName(float_ty, "float");
@@ -102,6 +109,7 @@ DataType *DTMPrimitives_createString(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_STRING;
+    container->objectType = NON_OBJECT;
 
     DataType *string_ty = DTM->dataTypes->wrapTypeContainer(container);
     string_ty->setTypeName(string_ty, "string");
@@ -113,6 +121,7 @@ DataType *DTMPrimitives_createBoolean(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_BOOLEAN;
+    container->objectType = NON_OBJECT;
 
     DataType *bool_ty = DTM->dataTypes->wrapTypeContainer(container);
     bool_ty->setTypeName(bool_ty, "boolean");
@@ -124,6 +133,7 @@ DataType *DTMPrimitives_createVoid(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_VOID;
+    container->objectType = NON_OBJECT;
 
     DataType *void_ty = DTM->dataTypes->wrapTypeContainer(container);
     void_ty->setTypeName(void_ty, "void");
@@ -135,6 +145,7 @@ DataType *DTMPrimitives_createNull(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_NULL;
+    container->objectType = NON_OBJECT;
 
     DataType *null_ty = DTM->dataTypes->wrapTypeContainer(container);
     null_ty->setTypeName(null_ty, "null");
@@ -146,6 +157,7 @@ DataType *DTMPrimitives_createAny(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_ANY;
+    container->objectType = NON_OBJECT;
 
     DataType *any_ty = DTM->dataTypes->wrapTypeContainer(container);
     any_ty->setTypeName(any_ty, "any");
@@ -157,6 +169,7 @@ DataType *DTMPrimitives_createUndefined(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_UNDEFINED;
+    container->objectType = NON_OBJECT;
 
     DataType *undefined_ty = DTM->dataTypes->wrapTypeContainer(container);
     undefined_ty->setTypeName(undefined_ty, "undefined");
@@ -168,6 +181,7 @@ DataType *DTMPrimitives_createAutoTy(void)
     TypeContainer *container = createTypeContainer();
     container->typeOf = PRIM_TYPE;
     container->primitive = PRIM_AUTO;
+    container->objectType = NON_OBJECT;
 
     DataType *auto_ty = DTM->dataTypes->wrapTypeContainer(container);
     auto_ty->setTypeName(auto_ty, "auto");

@@ -27,6 +27,7 @@
 #include "frontend/AST.h"
 #include "codegen_rewrite/symTable/IRSymbolTable.hpp"
 #include "codegen_rewrite/codegen.hpp"
+#include "codegen_rewrite/codegenDebug.hpp"
 
 typedef struct ASTNode ASTNode;
 
@@ -38,6 +39,7 @@ namespace Cryo
     class DefaultVisitor;
     class CodeGenVisitor;
     class CodegenContext;
+    class Initializer;
 
     // Base Visitor class
     class Visitor
@@ -96,11 +98,15 @@ namespace Cryo
     class CodeGenVisitor : public Visitor
     {
         friend class CodegenContext;
+        friend class IRSymbolTable;
+        friend class CodeGenDebug;
+        friend class Initializer;
 
     private:
         CodegenContext &context;
         llvm::IRBuilder<> &builder;
         std::unique_ptr<IRSymbolTable> &symbolTable;
+        std::unique_ptr<Initializer> &initializer;
         llvm::Value *lastValue;
 
     public:
@@ -154,7 +160,6 @@ namespace Cryo
 
     private:
         llvm::Value *getLLVMValue(ASTNode *node);
-        void storeValueInNode(ASTNode *node, llvm::Value *value);
     };
 
 } // namespace Cryo

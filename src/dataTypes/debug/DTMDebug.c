@@ -112,10 +112,6 @@ const char *DTMDebug_typeofObjectTypeToString(TypeofObjectType type)
         return "Class Object";
     case INTERFACE_OBJ:
         return "Interface Object";
-    case TRAIT_OBJ:
-        return "Trait Object";
-    case MODULE_OBJ:
-        return "Module Object";
     case OBJECT_OBJ:
         return "Object Object";
     case NON_OBJECT:
@@ -157,7 +153,9 @@ const char *DTMDebug_primitiveDataTypeToString(PrimitiveDataType type)
     case PRIM_ANY:
         return "any";
     case PRIM_OBJECT:
-        return "prim_object";
+        return "object";
+    case PRIM_FUNCTION:
+        return "function";
     case PRIM_AUTO:
         return "auto";
     case PRIM_UNDEFINED:
@@ -195,12 +193,6 @@ const char *DTMDebug_dataTypeToString(DataType *type)
     if (!type)
     {
         fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTMDebug_dataTypeToString)\n");
-    }
-
-    const char *typeName = type->typeName;
-    if (!typeName || typeName == NULL)
-    {
-        return "<ERROR>";
     }
 
     // Check to see if the DataType is a primitive type
@@ -284,15 +276,15 @@ const char *DTMDebug_dataTypeToString(DataType *type)
     }
     else if (type->container->typeOf == GENERIC_TYPE)
     {
-        typeName = "Generic";
+        return "Generic";
     }
     else if (type->container->typeOf == OBJECT_TYPE)
     {
-        typeName = "Object";
+        return "Object";
     }
     else if (type->container->typeOf == TYPE_DEF)
     {
-        typeName = "Type Definition";
+        return "Type Definition";
     }
     else
     {
@@ -300,7 +292,7 @@ const char *DTMDebug_dataTypeToString(DataType *type)
         CONDITION_FAILED;
     }
 
-    return typeName;
+    return "<UNKNOWN>";
 }
 
 DTMDebug *createDTMDebug(void)

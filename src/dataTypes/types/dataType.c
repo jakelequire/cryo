@@ -105,13 +105,6 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
         CONDITION_FAILED;
     }
 
-    type->container = (TypeContainer *)malloc(sizeof(TypeContainer));
-    if (!type->container)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to wrap Type Container\n");
-        CONDITION_FAILED;
-    }
-
     type->container = container;
     type->debug = createDTDebug();
 
@@ -159,6 +152,7 @@ DataType *DTMTypeContainerWrappers_wrapFunctionType(struct DTFunctionTy_t *funct
 {
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = FUNCTION_TYPE;
+    container->primitive = PRIM_FUNCTION;
     container->objectType = NON_OBJECT;
     container->type.functionType = functionTy;
 

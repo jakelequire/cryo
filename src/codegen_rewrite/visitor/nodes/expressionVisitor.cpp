@@ -123,9 +123,6 @@ namespace Cryo
             break;
             // Add other operators as needed
         }
-
-        // Store the result for parent nodes
-        storeValueInNode(node, result);
     }
 
     void CodeGenVisitor::visitFunctionCall(ASTNode *node)
@@ -156,7 +153,6 @@ namespace Cryo
 
         // Create the function call
         llvm::Value *result = builder.CreateCall(funcSymbol->function, args);
-        storeValueInNode(node, result);
     }
 
     void CodeGenVisitor::visitMethodCall(ASTNode *node) {}

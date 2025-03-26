@@ -27,6 +27,42 @@ namespace Cryo
         std::string funcName = node->data.functionDecl->name;
         logMessage(LMI, "INFO", "Visitor", "Function Name: %s", funcName.c_str());
 
+        // Create the function prototype
+        std::vector<llvm::Type *> argTypes;
+        for (size_t i = 0; i < node->data.functionDecl->paramCount; i++)
+        {
+            ASTNode *param = node->data.functionDecl->params[i];
+            llvm::Type *paramType = symbolTable->getLLVMType(param->data.param->type);
+            argTypes.push_back(paramType);
+        }
+        logMessage(LMI, "INFO", "Visitor", "Function has %d arguments", argTypes.size());
+
+        DataType *functionType = node->data.functionDecl->type;
+        DataType *returnType = functionType->container->type.functionType->returnType;
+
+        llvm::Type *returnTy = symbolTable->getLLVMType(returnType);
+        llvm::FunctionType *funcType = llvm::FunctionType::get(returnTy, argTypes, false);
+
+        logMessage(LMI, "INFO", "Visitor", "Creating function prototype...");
+        // The function signature
+        llvm::Function *function = llvm::Function::Create(
+            funcType,
+            llvm::Function::ExternalLinkage,
+            funcName,
+            context.module.get());
+
+        symbolTable->setCurrentFunction(function);
+
+        logMessage(LMI, "INFO", "Visitor", "Function prototype created");
+        // Create the entry block
+        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.context, "entry", function);
+        context.builder.SetInsertPoint(entryBlock);
+
+        // Add the function to the symbol table
+        IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(
+            function, funcName, returnTy, funcType, entryBlock, false, false);
+        symbolTable->addFunction(funcSymbol);
+
         // Visit the function body
         visit(node->data.functionDecl->body);
 
@@ -42,6 +78,25 @@ namespace Cryo
     void CodeGenVisitor::visitVarDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting variable declaration...");
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+
+        std::string varName = node->data.varDecl->name;
+        logMessage(LMI, "INFO", "Visitor", "Variable Name: %s", varName.c_str());
+
+        DataType *varType = node->data.varDecl->type;
+        llvm::Type *llvmType = symbolTable->getLLVMType(varType);
+
+        llvm::Value *initVal = nullptr;
+        if (node->data.varDecl->initializer)
+        {
+            logMessage(LMI, "INFO", "Visitor", "Variable has an initialization expression");
+            initVal = getLLVMValue(node->data.varDecl->initializer);
+        }
+
         return;
     }
 

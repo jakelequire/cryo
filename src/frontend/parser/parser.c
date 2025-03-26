@@ -97,6 +97,8 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
 
     buildASTTreeLinks(program);
 
+    DTM->symbolTable->printTable(DTM->symbolTable);
+
     CompleteFrontend(globalTable);
     return program;
 }
@@ -1445,8 +1447,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
         return NULL;
     }
 
-    ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, returnType, arena, state, lexer);
     DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
+    ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, functionType, arena, state, lexer);
     functionNode->data.functionDecl->type = functionType;
 
     // Set the generic parameters if they exist
@@ -1468,6 +1470,12 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
             functionNode->data.functionDecl->isVariadic = true;
         }
     }
+
+    DTM->symbolTable->addEntry(
+        DTM->symbolTable,
+        functionDefNode->data.functionDecl->parentScopeID,
+        functionDefNode->data.functionDecl->name,
+        functionType);
 
     CompleteFunctionDeclaration(globalTable, functionNode, functionName, namespaceScopeID); // Global Symbol Table
     context->inGenericContext = false;                                                      // Reset generic context flag in ParsingContext

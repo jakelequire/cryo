@@ -48,6 +48,7 @@ void DTFunctionTy_setParams(DTFunctionTy *function, DataType **paramTypes, int p
         for (int i = 0; i < paramCount; i++)
         {
             function->paramTypes[i] = paramTypes[i];
+            function->paramCount++;
         }
     }
 }

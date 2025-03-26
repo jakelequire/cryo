@@ -25,6 +25,7 @@
 
 #include "IRdefs.hpp"
 #include "tools/macros/consoleColors.h"
+#include "codegen_rewrite/codegenDebug.hpp"
 
 namespace Cryo
 {
@@ -72,6 +73,7 @@ namespace Cryo
         }
 
         friend class IRSymbolManager;
+        friend class CodeGenDebug;
 
         IRSymbolManager *getSymbolManager() { return new IRSymbolManager(); }
         void setCurrentFunction(llvm::Function *function) { currentFunction = function; }
@@ -103,14 +105,9 @@ namespace Cryo
     private:
         llvm::Function *currentFunction;
 
-        llvm::Type *getLLVMType(DataType *dataType);
         llvm::StructType *getLLVMObjectType(DataType *dataType);
-
-        template <typename T>
-        llvm::Type *getLLVMType();
-
-        template <typename T>
-        llvm::Value *createLLVMValue(const T &value);
+        llvm::StructType *getLLVMStructType(DataType *dataType);
+        llvm::StructType *getLLVMClassType(DataType *dataType);
 
     protected:
         bool typesInitialized = false;
@@ -118,15 +115,7 @@ namespace Cryo
 
     public:
         LLVMTypes llvmTypes;
-
-    public:
-        template <typename T>
-        IRVariableSymbol *createLocalVar(const std::string &name, T value)
-        {
-            auto *type = getLLVMType<T>();
-            auto *llvmValue = createLLVMValue<T>(value);
-            return createVariable(name, type, llvmValue);
-        }
+        llvm::Type *getLLVMType(DataType *dataType);
     };
 
 } // namespace Cryo

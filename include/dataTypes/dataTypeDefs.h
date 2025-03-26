@@ -42,6 +42,7 @@ typedef enum PrimitiveDataType
     PRIM_NULL,      // `null`
     PRIM_ANY,       // `any`
     PRIM_OBJECT,    // Object type
+    PRIM_FUNCTION,  // Function type
     PRIM_AUTO,      // `auto`
     PRIM_UNDEFINED, // `undefined`
     PRIM_UNKNOWN    // `<UNKNOWN>`
@@ -64,8 +65,6 @@ typedef enum TypeofObjectType
     STRUCT_OBJ, // `struct { ... }`
     CLASS_OBJ,  // `class { ... }`
     INTERFACE_OBJ,
-    TRAIT_OBJ,
-    MODULE_OBJ,
     OBJECT_OBJ,
     NON_OBJECT,
     UNKNOWN_OBJECT

@@ -18,36 +18,6 @@
 
 namespace Cryo
 {
-    template <typename T>
-    llvm::Type *IRSymbolTable::getLLVMType()
-    {
-        if constexpr (std::is_integral_v<T>)
-        {
-            return llvm::Type::getInt32Ty(currentModule->getContext());
-        }
-        else if constexpr (std::is_floating_point_v<T>)
-        {
-            return llvm::Type::getDoubleTy(currentModule->getContext());
-        }
-        // Add more type mappings as needed
-        return nullptr;
-    }
-
-    template <typename T>
-    llvm::Value *IRSymbolTable::createLLVMValue(const T &value)
-    {
-        llvm::IRBuilder<> builder(currentModule->getContext());
-        if constexpr (std::is_integral_v<T>)
-        {
-            return llvm::ConstantInt::get(getLLVMType<T>(), value);
-        }
-        else if constexpr (std::is_floating_point_v<T>)
-        {
-            return llvm::ConstantFP::get(getLLVMType<T>(), value);
-        }
-        return nullptr;
-    }
-
     // ======================================================================== //
     //                       Scope Management Functions                         //
     // ======================================================================== //
@@ -141,10 +111,9 @@ namespace Cryo
     // Helper function to convert TypeID to string
     std::string typeIDToString(llvm::Type *type)
     {
-        std::string typeStr;
-        llvm::raw_string_ostream rso(typeStr);
-        type->print(rso, true);
-        return rso.str();
+        if (!type)
+            return "Unknown";
+        return CodeGenDebug::LLVMTypeIDToString(type);
     }
 
     void IRSymbolTable::debugPrint() const

@@ -19,11 +19,11 @@
 namespace Cryo
 {
 
-    llvm::Value *Initilizer::getInitilizerValue(ASTNode *node)
+    llvm::Value *Initializer::getInitializerValue(ASTNode *node)
     {
         ASSERT_NODE_NULLPTR_RET(node);
         std::string nodeTypeStr = CryoNodeTypeToString(node->metaData->type);
-        logMessage(LMI, "INFO", "Initilizer", "Getting initializer value for node: %s", nodeTypeStr.c_str());
+        logMessage(LMI, "INFO", "Initializer", "Getting initializer value for node: %s", nodeTypeStr.c_str());
 
         switch (node->metaData->type)
         {
@@ -40,22 +40,40 @@ namespace Cryo
         case NODE_UNARY_EXPR:
             return generateUnaryExpr(node);
         default:
-            logMessage(LMI, "ERROR", "Initilizer", "Unhandled node type: %s", nodeTypeStr.c_str());
+            logMessage(LMI, "ERROR", "Initializer", "Unhandled node type: %s", nodeTypeStr.c_str());
             return nullptr;
         }
     }
 
-    llvm::Value *Initilizer::generateLiteralExpr(ASTNode *node)
+    llvm::Value *Initializer::generateLiteralExpr(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "Initilizer", "Generating literal expression...");
+        logMessage(LMI, "INFO", "Initializer", "Generating literal expression...");
         ASSERT_NODE_NULLPTR_RET(node);
 
+        if (node->metaData->type != NODE_LITERAL_EXPR)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a literal expression");
+
+            return nullptr;
+        }
+
         DataType *literalDataType = node->data.literal->type;
+        logMessage(LMI, "INFO", "Initializer", "Literal data type: %s", DTM->debug->dataTypeToString(literalDataType));
+
         TypeofDataType typeofDataType = literalDataType->container->typeOf;
+        logMessage(LMI, "INFO", "Initializer", "Type of data: %s", DTM->debug->typeofDataTypeToString(typeofDataType));
+
+        node->print(node);
+
         switch (typeofDataType)
         {
         case PRIM_INT:
-            return llvm::ConstantInt::get(context.context, llvm::APInt(32, node->data.literal->value.intValue, true));
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating integer literal...");
+            int intValue = node->data.literal->value.intValue;
+            logMessage(LMI, "INFO", "Initializer", "Integer value: %i", intValue);
+            llvm::Value *value = llvm::ConstantInt::get(context.context, llvm::APInt(32, intValue, true));
+        }
         case PRIM_I8:
             return llvm::ConstantInt::get(context.context, llvm::APInt(8, node->data.literal->value.intValue, true));
         case PRIM_I16:
@@ -73,18 +91,21 @@ namespace Cryo
         case PRIM_STRING:
             return context.builder.CreateGlobalStringPtr(node->data.literal->value.stringValue);
         default:
-            logMessage(LMI, "ERROR", "Initilizer", "Unhandled literal type: %s",DTM->debug->dataTypeToString(literalDataType));
+            logMessage(LMI, "ERROR", "Initializer", "Unhandled literal type: %s", DTM->debug->dataTypeToString(literalDataType));
             return nullptr;
         }
+
+        std::cerr << "Unhandled literal type: " << DTM->debug->dataTypeToString(literalDataType) << std::endl;
+        return nullptr;
     }
 
-    llvm::Value *Initilizer::generateVarName(ASTNode *node)
+    llvm::Value *Initializer::generateVarName(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "Initilizer", "Generating variable name...");
+        logMessage(LMI, "INFO", "Initializer", "Generating variable name...");
         ASSERT_NODE_NULLPTR_RET(node);
         if (node->metaData->type != NODE_VAR_NAME)
         {
-            logMessage(LMI, "ERROR", "Initilizer", "Node is not a variable name");
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a variable name");
             return nullptr;
         }
 
@@ -92,30 +113,30 @@ namespace Cryo
         // TODO: Lookup variable in symbol table
     }
 
-    llvm::Value *Initilizer::generateBinaryExpr(ASTNode *node)
+    llvm::Value *Initializer::generateBinaryExpr(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "Initilizer", "Generating binary expression...");
+        logMessage(LMI, "INFO", "Initializer", "Generating binary expression...");
         ASSERT_NODE_NULLPTR_RET(node);
         // TODO: Generate binary expression
     }
 
-    llvm::Value *Initilizer::generateFunctionCall(ASTNode *node)
+    llvm::Value *Initializer::generateFunctionCall(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "Initilizer", "Generating function call...");
+        logMessage(LMI, "INFO", "Initializer", "Generating function call...");
         ASSERT_NODE_NULLPTR_RET(node);
         // TODO: Generate function call
     }
 
-    llvm::Value *Initilizer::generateReturnStatement(ASTNode *node)
+    llvm::Value *Initializer::generateReturnStatement(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "Initilizer", "Generating return statement...");
+        logMessage(LMI, "INFO", "Initializer", "Generating return statement...");
         ASSERT_NODE_NULLPTR_RET(node);
         // TODO: Generate return statement
     }
 
-    llvm::Value *Initilizer::generateUnaryExpr(ASTNode *node)
+    llvm::Value *Initializer::generateUnaryExpr(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "Initilizer", "Generating unary expression...");
+        logMessage(LMI, "INFO", "Initializer", "Generating unary expression...");
         ASSERT_NODE_NULLPTR_RET(node);
         // TODO: Generate unary expression
     }

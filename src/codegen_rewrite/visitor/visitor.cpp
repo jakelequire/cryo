@@ -19,7 +19,9 @@
 namespace Cryo
 {
     CodeGenVisitor::CodeGenVisitor(CodegenContext &ctx)
-        : context(ctx), builder(ctx.builder), symbolTable(ctx.symbolTable), lastValue(nullptr) {}
+        : context(ctx), builder(ctx.builder), symbolTable(ctx.symbolTable), lastValue(nullptr), initializer(ctx.initializer)
+    {
+    }
 
     void Visitor::visit(ASTNode *node)
     {
@@ -145,15 +147,13 @@ namespace Cryo
 
     llvm::Value *CodeGenVisitor::getLLVMValue(ASTNode *node)
     {
-        // Helper to get LLVM value from a node
-        // Implementation depends on your storage strategy
-        return nullptr;
-    }
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return nullptr;
+        }
 
-    void CodeGenVisitor::storeValueInNode(ASTNode *node, llvm::Value *value)
-    {
-        // Helper to store LLVM value in a node for parent nodes to use
-        // Implementation depends on your storage strategy
+        return initializer->getInitializerValue(node);
     }
 
 } // namespace Cryo

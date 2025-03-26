@@ -1834,7 +1834,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 logMessage(LMI, "ERROR", "AST", "Failed to convert int to string");
                 return;
             }
-            ASTDebugNode *intLiteralNode = createASTDebugNode("UniqueIntLiteral", literalValue, dataType, line, column, indentLevel, node);
+            ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *intLiteralNode;
             output->nodeCount++;
             free(literalValue);
@@ -1873,12 +1873,14 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         }
 
         default:
+        {
             char *literalValue = strdup("Unknown");
             ASTDebugNode *unknownLiteralNode = createASTDebugNode("UnknownLiteral", literalValue, dataType, line, column, indentLevel, node);
             output->nodes[output->nodeCount] = *unknownLiteralNode;
             output->nodeCount++;
             free(literalValue);
             break;
+        }
         }
         break;
     }
@@ -1904,7 +1906,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         char *funcName = strdup(node->data.functionCall->name);
-        ASTDebugNode *functionCallNode = createASTDebugNode("FunctionCall", funcName, DTM->primitives->createVoid(), line, column, indentLevel, node);
+        DataType *returnType = node->data.functionCall->returnType;
+        ASTDebugNode *functionCallNode = createASTDebugNode("FunctionCall", funcName, returnType, line, column, indentLevel, node);
         functionCallNode->args = node->data.functionCall->args;
         functionCallNode->argCount = node->data.functionCall->argCount;
         output->nodes[output->nodeCount] = *functionCallNode;

@@ -70,24 +70,38 @@ namespace Cryo
     void Cryo::IRGeneration::completeGeneration(void)
     {
         // Verify the module
-        if (llvm::verifyModule(*context.module))
-        {
-            logMessage(LMI, "ERROR", "IRGeneration", "Module verification failed");
-            return;
-        }
+        // if (llvm::verifyModule(*context.module))
+        // {
+        //     logMessage(LMI, "ERROR", "IRGeneration", "Module verification failed");
+        //     return;
+        // }
 
         // Optimize the module
         llvm::legacy::PassManager passManager;
         passManager.add(llvm::createInstructionCombiningPass());
 
         // Run the optimization passes
-        passManager.run(*context.module);
+        // passManager.run(*context.module);
+
+        // Print Symbol Table
+        context.symbolTable->debugPrint();
 
         // Print the module
         context.printModule();
 
         // Write the module to a file
-        std::string outputPath = "output.ll";
+        std::string fileName = "_new.ll";
+        std::string outputPath = "";
+        if (this->buildDir.empty())
+        {
+            outputPath = fileName;
+        }
+        else
+        {
+            outputPath = this->buildDir + fileName;
+        }
+
+        GetCXXLinker()->generateIRFromCodegen(context.module.get(), outputPath.c_str());
     }
 
 } // namespace Cryo

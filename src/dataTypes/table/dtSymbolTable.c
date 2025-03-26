@@ -87,11 +87,11 @@ void DTMSymbolTable_resizeTable(DTMSymbolTable *table)
 void DTMSymbolTable_printTable(DTMSymbolTable *table)
 {
     printf("\n");
-    printf("=====================================================================================================================\n");
-    printf("|                                           DTM Symbol Table Entries                                                |\n");
-    printf("=====================================================================================================================\n");
-    printf("| %-20s | %-22s | %-15s | %-15s | %-8s | %-8s | %-8s|\n", "Name", "Type", "Scope", "TypeOf", "Const", "Ref", "Pointer");
-    printf("=====================================================================================================================\n");
+    printf("========================================================================================================================\n");
+    printf("|                                              DTM Symbol Table Entries                                                |\n");
+    printf("========================================================================================================================\n");
+    printf("| %-20s | %-33s | %-18s | %-15s | %-8s | %-8s|\n", "Name", "Type", "Scope", "TypeOf", "Const", "Pointer");
+    printf("========================================================================================================================\n");
 
     for (int i = 0; i < table->entryCount; i++)
     {
@@ -117,17 +117,17 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
             continue;
         }
 
-        printf("| %-20s | %-22s | %-15s | %-15s | %-8s | %-8s | %-8s|\n",
+        printf("| %-20s | %-33s | %-18s | %-15s | %-8s | %-8s|\n",
                name,
                typeStr,
                scopeName,
                typeOfStr,
                isConst ? "true" : "false",
-               isReference ? "true" : "false",
                isPointer ? "true" : "false");
     }
 
-    printf("=====================================================================================================================\n");
+    printf("========================================================================================================================\n");
+    printf("\n");
 }
 
 void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)

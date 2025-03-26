@@ -70,6 +70,47 @@ namespace Cryo
 
     llvm::StructType *IRSymbolTable::getLLVMObjectType(DataType *dataType)
     {
+        if (!dataType)
+        {
+            std::cerr << "Data type is null" << std::endl;
+            return nullptr;
+        }
+
+        if (dataType->container->typeOf != PRIM_OBJECT)
+        {
+            std::cerr << "Data type is not an object" << std::endl;
+            return nullptr;
+        }
+
+        TypeofObjectType typeOfObject = dataType->container->objectType;
+        switch (typeOfObject)
+        {
+        case STRUCT_OBJ:
+            return getLLVMStructType(dataType);
+        case CLASS_OBJ:
+            return getLLVMClassType(dataType);
+        case INTERFACE_OBJ:
+            return nullptr;
+        case OBJECT_OBJ:
+            return nullptr;
+        case NON_OBJECT:
+            return nullptr;
+        case UNKNOWN_OBJECT:
+            return nullptr;
+        default:
+        {
+            std::cerr << "Unknown object type" << std::endl;
+            return nullptr;
+        }
+        }
+    }
+
+    llvm::StructType *IRSymbolTable::getLLVMStructType(DataType *dataType)
+    {
+    }
+
+    llvm::StructType *IRSymbolTable::getLLVMClassType(DataType *dataType)
+    {
     }
 
     void IRSymbolTable::initLLVMTypes()

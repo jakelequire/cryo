@@ -89,7 +89,7 @@ namespace Cryo
     class IRSymbolTable;
     class CodeGenVisitor;
     class IRGeneration;
-    class Initilizer;
+    class Initializer;
 
     // ======================================================================== //
     //                            Codegen Context                               //
@@ -113,6 +113,7 @@ namespace Cryo
         std::unique_ptr<llvm::Module> module;
         std::unique_ptr<CodeGenVisitor> visitor;
         std::unique_ptr<IRSymbolTable> symbolTable;
+        std::unique_ptr<Initializer> initializer;
 
         Linker *getLinker() { return GetCXXLinker(); }
 
@@ -140,7 +141,7 @@ namespace Cryo
 
     class IRGeneration
     {
-        friend class Initilizer;
+        friend class Initializer;
 
     public:
         IRGeneration(CodegenContext &context) : context(context) {}
@@ -166,17 +167,15 @@ namespace Cryo
     //                            Initializers                                  //
     // ======================================================================== //
 
-    class Initilizer
+    class Initializer : public CodegenContext
     {
     public:
-        Initilizer(CodegenContext &context) : context(context) {}
-        ~Initilizer() {}
+        Initializer(CodegenContext &context) : context(context) {}
+        ~Initializer() {}
 
-        llvm::Value *getInitilizerValue(ASTNode *node);
+        llvm::Value *getInitializerValue(ASTNode *node);
 
     private:
-        CodegenContext &context;
-
         llvm::Value *generateLiteralExpr(ASTNode *node);
         llvm::Value *generateVarName(ASTNode *node);
         llvm::Value *generateBinaryExpr(ASTNode *node);
