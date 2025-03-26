@@ -96,6 +96,20 @@ namespace Cryo
             logMessage(LMI, "INFO", "Visitor", "Variable has an initialization expression");
             initVal = getLLVMValue(node->data.varDecl->initializer);
         }
+        else
+        {
+            logMessage(LMI, "INFO", "Visitor", "Variable has no initialization expression");
+        }
+
+        llvm::AllocaInst *alloca = context.builder.CreateAlloca(llvmType, nullptr, varName);
+        AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
+        IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(alloca, llvmType, varName, allocaType, Allocation());
+        symbolTable->addVariable(varSymbol);
+
+        if (initVal)
+        {
+            context.builder.CreateStore(initVal, alloca);
+        }
 
         return;
     }

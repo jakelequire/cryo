@@ -57,7 +57,7 @@ namespace Cryo
             break;
         // String literals
         case PRIM_STRING:
-            value = builder.CreateGlobalStringPtr(literal->value.stringValue);
+            value = context.getInstance().initializer->getInitializerValue(node);
             break;
         // Null & Void literals
         case PRIM_NULL:
@@ -66,11 +66,13 @@ namespace Cryo
         case PRIM_VOID:
             value = llvm::UndefValue::get(builder.getVoidTy());
             break;
+        default:
+        {
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Unhandled literal type: %s",
+                       DTM->debug->dataTypeToString(literal->type));
+            return;
         }
-
-        // Store the generated value in the current node's context
-        // This will be used by parent nodes
-        // node->data.literal->value.intValue = reinterpret_cast<intptr_t>(value);
+        }
     }
 
     void CodeGenVisitor::visitVarName(ASTNode *node)

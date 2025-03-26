@@ -167,7 +167,7 @@ namespace Cryo
     //                            Initializers                                  //
     // ======================================================================== //
 
-    class Initializer : public CodegenContext
+    class Initializer
     {
     public:
         Initializer(CodegenContext &context) : context(context) {}
@@ -175,13 +175,20 @@ namespace Cryo
 
         llvm::Value *getInitializerValue(ASTNode *node);
 
+    protected:
+        IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }
+
     private:
+        CodegenContext &context;
+
         llvm::Value *generateLiteralExpr(ASTNode *node);
         llvm::Value *generateVarName(ASTNode *node);
         llvm::Value *generateBinaryExpr(ASTNode *node);
         llvm::Value *generateFunctionCall(ASTNode *node);
         llvm::Value *generateReturnStatement(ASTNode *node);
         llvm::Value *generateUnaryExpr(ASTNode *node);
+
+        llvm::Value *generateStringLiteral(ASTNode *node);
     };
 
 } // namespace Cryo

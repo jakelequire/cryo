@@ -65,31 +65,40 @@ namespace Cryo
 
         node->print(node);
 
-        switch (typeofDataType)
+        switch (literalDataType->container->primitive)
         {
         case PRIM_INT:
-        {
-            logMessage(LMI, "INFO", "Initializer", "Generating integer literal...");
-            int intValue = node->data.literal->value.intValue;
-            logMessage(LMI, "INFO", "Initializer", "Integer value: %i", intValue);
-            llvm::Value *value = llvm::ConstantInt::get(context.context, llvm::APInt(32, intValue, true));
-        }
+            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, node->data.literal->value.intValue, true));
         case PRIM_I8:
-            return llvm::ConstantInt::get(context.context, llvm::APInt(8, node->data.literal->value.intValue, true));
+            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(8, node->data.literal->value.intValue, true));
         case PRIM_I16:
-            return llvm::ConstantInt::get(context.context, llvm::APInt(16, node->data.literal->value.intValue, true));
+            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(16, node->data.literal->value.intValue, true));
         case PRIM_I32:
-            return llvm::ConstantInt::get(context.context, llvm::APInt(32, node->data.literal->value.intValue, true));
+            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, node->data.literal->value.intValue, true));
         case PRIM_I64:
-            return llvm::ConstantInt::get(context.context, llvm::APInt(64, node->data.literal->value.intValue, true));
+            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(64, node->data.literal->value.intValue, true));
         case PRIM_I128:
-            return llvm::ConstantInt::get(context.context, llvm::APInt(128, node->data.literal->value.intValue, true));
+            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(128, node->data.literal->value.intValue, true));
         case PRIM_FLOAT:
-            return llvm::ConstantFP::get(context.context, llvm::APFloat(node->data.literal->value.floatValue));
+            return llvm::ConstantFP::get(context.getInstance().context, llvm::APFloat(node->data.literal->value.floatValue));
         case PRIM_BOOLEAN:
-            return llvm::ConstantInt::get(context.context, llvm::APInt(1, node->data.literal->value.booleanValue, true));
+            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(1, node->data.literal->value.booleanValue, true));
         case PRIM_STRING:
-            return context.builder.CreateGlobalStringPtr(node->data.literal->value.stringValue);
+            return generateStringLiteral(node);
+        case PRIM_NULL:
+            return llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(context.getInstance().context), 0));
+        case PRIM_VOID:
+            return llvm::UndefValue::get(llvm::Type::getVoidTy(context.getInstance().context));
+        case PRIM_ANY:
+            return llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(context.getInstance().context), 0));
+        case PRIM_OBJECT:
+            return nullptr;
+        case PRIM_AUTO:
+            return nullptr;
+        case PRIM_UNDEFINED:
+            return nullptr;
+        case PRIM_UNKNOWN:
+            return nullptr;
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled literal type: %s", DTM->debug->dataTypeToString(literalDataType));
             return nullptr;
@@ -124,14 +133,46 @@ namespace Cryo
     {
         logMessage(LMI, "INFO", "Initializer", "Generating function call...");
         ASSERT_NODE_NULLPTR_RET(node);
-        // TODO: Generate function call
+
+        if (node->metaData->type != NODE_FUNCTION_CALL)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a function call");
+            return nullptr;
+        }
+
+        // Find the function in the symbol table
+        IRFunctionSymbol *funcSymbol = getSymbolTable()->findFunction(node->data.functionCall->name);
+        if (!funcSymbol)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Function %s not found", node->data.functionCall->name);
+            return nullptr;
+        }
+
+        // Process arguments
+        std::vector<llvm::Value *> args;
+        int argCount = node->data.functionCall->argCount;
+        for (int i = 0; i < argCount; i++)
+        {
+            args.push_back(getInitializerValue(node->data.functionCall->args[i]));
+        }
+        std::string funcName = node->data.functionCall->name;
+        logMessage(LMI, "INFO", "Initializer", "Function call: %s", funcName.c_str());
+
+        return context.getInstance().builder.CreateCall(funcSymbol->function, args, funcName);
     }
 
     llvm::Value *Initializer::generateReturnStatement(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Initializer", "Generating return statement...");
         ASSERT_NODE_NULLPTR_RET(node);
-        // TODO: Generate return statement
+
+        if (node->metaData->type != NODE_RETURN_STATEMENT)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a return statement");
+            return nullptr;
+        }
+
+        return getInitializerValue(node->data.returnStatement->expression);
     }
 
     llvm::Value *Initializer::generateUnaryExpr(ASTNode *node)
