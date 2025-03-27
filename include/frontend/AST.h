@@ -65,7 +65,15 @@ typedef struct Position
 
 typedef struct CryoModule
 {
-    ASTNode **astTable;
+    const char *moduleName;
+    ASTNode **statements;
+    size_t statementCount;
+    size_t statementCapacity;
+
+    void (*addStatement)(ASTNode *self, ASTNode *statement);
+    void (*resize)(ASTNode *self);
+    void (*setModuleName)(ASTNode *self, const char *name);
+    void (*importProgramNode)(ASTNode *self, ASTNode *programNode);
 } CryoModule;
 
 typedef struct CryoNamespace
@@ -612,6 +620,8 @@ typedef struct ASTNode
         CryoNamespace *cryoNamespace;
         // For the main program
         CryoProgram *program;
+        // For Modules
+        CryoModule *module;
         // For Import Statements
         CryoImportNode *import;
         // For Blocks
@@ -702,6 +712,7 @@ typedef struct ASTNode
         TypeDecl *typeDecl;
         // For Type Casts
         TypeCast *typeCast;
+        // Discard
         void *discard;
     } data;
 
@@ -1124,6 +1135,11 @@ extern "C"
     ASTNode *createAnnotationNode(const char *annotationName, const char *annotationValue,
                                   Arena *arena, CompilerState *state, Lexer *lexer);
     /**
+     * Discard Node
+     */
+    ASTNode *createDiscardNode(Arena *arena, CompilerState *state, Lexer *lexer);
+
+    /**
      * String Utility Functions
      */
 
@@ -1188,6 +1204,7 @@ ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state);
 AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state);
 TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state);
 TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state);
+void *createDiscardNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
@@ -1278,6 +1295,7 @@ char *formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatModuleNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1313,5 +1331,6 @@ char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatModuleNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

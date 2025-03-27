@@ -124,9 +124,17 @@ ASTNode *handleRelativeImport(const char *modulePath,
     }
 
     DTM->symbolTable->printTable(DTM->symbolTable);
-
     moduleNode->print(moduleNode);
 
-    DEBUG_BREAKPOINT;
-    return NULL; // Placeholder for AST handling
+    ASTNode *programNodePtr = context->programNodePtr;
+    if (!programNodePtr)
+    {
+        logMessage(LMI, "ERROR", "Import", "Program node is NULL");
+        CONDITION_FAILED;
+    }
+
+    programNodePtr->data.program->importAST(programNodePtr, moduleNode);
+    programNodePtr->print(programNodePtr);
+
+    return createDiscardNode(arena, state, lexer);
 }

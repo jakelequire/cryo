@@ -162,17 +162,70 @@ CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState 
 /// } CryoModule;
 ///```
 ///
+
+void CryoModule_resize(ASTNode *self)
+{
+    __STACK_FRAME__
+    if (self->data.module->statementCount >= self->data.module->statementCapacity)
+    {
+        logMessage(LMI, "INFO", "AST", "Resizing module statement array...");
+        self->data.module->statementCapacity *= 2;
+        self->data.module->statements = (ASTNode **)realloc(self->data.module->statements, sizeof(ASTNode *) * self->data.module->statementCapacity);
+        if (!self->data.module->statements)
+        {
+            fprintf(stderr, "[AST] Error: Failed to reallocate memory for module statements.");
+            return;
+        }
+    }
+}
+
+void CryoModule_addStatement(ASTNode *self, ASTNode *statement)
+{
+    __STACK_FRAME__
+    CryoModule_resize(self);
+    logMessage(LMI, "INFO", "AST", "Adding statement to module...");
+    self->data.module->statements[self->data.module->statementCount++] = statement;
+}
+
+void CryoModule_setModuleName(ASTNode *self, const char *name)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "AST", "Setting module name...");
+    self->data.module->moduleName = name;
+}
+
+void CryoModule_importProgramNode(ASTNode *self, ASTNode *program)
+{
+    logMessage(LMI, "INFO", "AST", "Importing program node...");
+    DEBUG_BREAKPOINT;
+}
+
 CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    CryoModule *node = (CryoModule *)ARENA_ALLOC(arena, sizeof(CryoModule));
+    CryoModule *node = (CryoModule *)malloc(sizeof(CryoModule));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate createCryoModuleContainer node.");
         return NULL;
     }
 
-    node->astTable = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->statements = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    if (!node->statements)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
+        free(node);
+        return NULL;
+    }
+
+    node->moduleName = "defaulted";
+    node->statementCount = 0;
+    node->statementCapacity = 16;
+
+    node->addStatement = CryoModule_addStatement;
+    node->resize = CryoModule_resize;
+    node->setModuleName = CryoModule_setModuleName;
+    node->importProgramNode = CryoModule_importProgramNode;
 
     return node;
 }
@@ -194,7 +247,7 @@ CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    CryoMetaData *node = (CryoMetaData *)ARENA_ALLOC(arena, sizeof(CryoMetaData));
+    CryoMetaData *node = (CryoMetaData *)malloc(sizeof(CryoMetaData));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate CryoMetaData node.");
@@ -1606,6 +1659,19 @@ TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state)
 
     node->type = DTM->primitives->createUndefined();
     node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
+
+    return node;
+}
+
+void *createDiscardNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    void *node = (void *)malloc(sizeof(void *));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate DiscardNode node.");
+        return NULL;
+    }
 
     return node;
 }

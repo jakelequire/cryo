@@ -191,7 +191,7 @@ int exe_project_build(CompilerSettings *settings)
         fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
         return 1;
     }
-    const char *fileName = trimFilePath(filePath);
+    const char *fileName = trimFilePath(strdup(filePath));
 
     const char *fileDirectory = settings->inputFilePath;
     const char *rootDirectory = settings->compilerRootPath;
@@ -208,7 +208,7 @@ int exe_project_build(CompilerSettings *settings)
     Lexer lexer;
     CompilerState *state;
     INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
-    state->setFilePath(state, filePath);
+    state->setFilePath(state, strdup(filePath));
 
     // Initialize the Type Definitions before parsing
     DTM->initDefinitions(settings->compilerRootPath, state, globalSymbolTable);
@@ -216,7 +216,7 @@ int exe_project_build(CompilerSettings *settings)
     // Initialize runtime definitions
     boostrapRuntimeDefinitions(globalSymbolTable, linker);
 
-    state->setFilePath(state, filePath);
+    state->setFilePath(state, strdup(filePath));
     // Initialize the parser
     ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
     if (programNode == NULL)

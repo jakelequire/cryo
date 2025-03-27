@@ -200,6 +200,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "ANNOTATION";
     case NODE_TYPE_CAST:
         return "TYPE_CAST";
+    case NODE_DISCARD:
+        return "DISCARD";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:

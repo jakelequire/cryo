@@ -98,6 +98,75 @@ ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, Lex
     return node;
 }
 
+void ProgramNode_importAST(ASTNode *self, ASTNode *imported)
+{
+    __STACK_FRAME__
+    if (!self || !imported)
+    {
+        logMessage(LMI, "ERROR", "AST", "ProgramNode_importAST: Self or imported node is NULL");
+        return;
+    }
+
+    // This imported node needs to be added to the statements array of the program node.
+    // It should be added to the front of the array. The imported node needs to remove its
+    // program node, create a module node to be put in the beginning of the primary program node.
+    // The module node will contain the imported node.
+    ASTNode *moduleNode = (ASTNode *)malloc(sizeof(ASTNode));
+    if (!moduleNode)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for module node");
+        return;
+    }
+    logMessage(LMI, "INFO", "AST", "Creating module node from imported node");
+    moduleNode->data.module = createCryoModuleContainer(NULL, NULL);
+    moduleNode->metaData = createMetaDataContainer(NULL, NULL);
+    moduleNode->metaData->type = NODE_MODULE;
+    moduleNode->metaData->line = 0;
+    moduleNode->metaData->column = 0;
+    moduleNode->print = logASTNode;
+
+    logMessage(LMI, "INFO", "AST", "Module node created");
+    if (imported->metaData->type == NODE_PROGRAM)
+    {
+        logMessage(LMI, "INFO", "AST", "Imported node is a program node");
+        int statementCount = imported->data.program->statementCount;
+        for (int i = 0; i < statementCount; i++)
+        {
+            moduleNode->data.module->addStatement(moduleNode, imported->data.program->statements[i]);
+        }
+    }
+    else
+    {
+        moduleNode->data.module->addStatement(moduleNode, imported);
+    }
+
+    logMessage(LMI, "INFO", "AST", "Module node created from imported node");
+
+    // Now we add the module node to the first position of the program node.
+    int statementCount = self->data.program->statementCount;
+    if (statementCount == 0)
+    {
+        self->data.program->statements[0] = moduleNode;
+    }
+    else
+    {
+        ASTNode **newStatements = (ASTNode **)realloc(self->data.program->statements, sizeof(ASTNode *) * (statementCount + 1));
+        if (!newStatements)
+        {
+            logMessage(LMI, "ERROR", "AST", "Failed to reallocate memory for program statements");
+            return;
+        }
+        self->data.program->statements = newStatements;
+        for (int i = statementCount; i > 0; i--)
+        {
+            self->data.program->statements[i] = self->data.program->statements[i - 1];
+        }
+        self->data.program->statements[0] = moduleNode;
+    }
+
+    logMessage(LMI, "INFO", "AST", "Imported AST node added to program node");
+}
+
 // Create a program node
 ASTNode *createProgramNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
@@ -105,6 +174,8 @@ ASTNode *createProgramNode(Arena *arena, CompilerState *state, Lexer *lexer)
     ASTNode *node = createASTNode(NODE_PROGRAM, arena, state, lexer);
     if (!node)
         return NULL;
+
+    node->data.program->importAST = ProgramNode_importAST;
 
     return node;
 }
@@ -1240,6 +1311,19 @@ ASTNode *createTypeCastNode(DataType *type, ASTNode *expression, Arena *arena, C
 
     node->data.typeCast->type = type;
     node->data.typeCast->expression = expression;
+
+    return node;
+}
+
+ASTNode *createDiscardNode(Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_DISCARD, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create discard node");
+        return NULL;
+    }
 
     return node;
 }

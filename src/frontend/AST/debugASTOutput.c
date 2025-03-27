@@ -664,6 +664,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatTypeNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "Module") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatModuleNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatModuleNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1550,6 +1561,29 @@ char *CONSOLE_formatTypeNode(ASTDebugNode *node, DebugASTOutput *output)
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
+// </Type>
+// ============================================================
+// ============================================================
+// <Module>
+char *formatModuleNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<Module> [%s] <0:0>",
+            node->nodeName);
+    return buffer;
+}
+char *CONSOLE_formatModuleNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Module>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </Module>
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -1581,6 +1615,21 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         {
             createASTDebugView(node->data.program->statements[i], output, indentLevel);
         }
+        break;
+    }
+
+    case NODE_MODULE:
+    {
+        __LINE_AND_COLUMN__
+        ASTDebugNode *moduleNode = createASTDebugNode("Module", "Module", DTM->primitives->createVoid(), line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *moduleNode;
+        output->nodeCount++;
+        indentLevel++;
+        for (int i = 0; i < node->data.module->statementCount; i++)
+        {
+            createASTDebugView(node->data.module->statements[i], output, indentLevel);
+        }
+        indentLevel--;
         break;
     }
 

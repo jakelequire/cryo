@@ -355,7 +355,7 @@ const char *DTMDebug_dataTypeToString(DataType *type)
                 fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
                 CONDITION_FAILED;
             }
-            strcpy(structName, "(struct) ");
+            strcpy(structName, "{struct} ");
             strcat(structName, type->container->type.structType->name);
             return structName;
         }
@@ -367,7 +367,7 @@ const char *DTMDebug_dataTypeToString(DataType *type)
                 fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for class name\n");
                 CONDITION_FAILED;
             }
-            strcpy(className, "(class) ");
+            strcpy(className, "{class} ");
             strcat(className, type->container->type.classType->name);
             return className;
         }

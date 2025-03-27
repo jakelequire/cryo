@@ -56,17 +56,23 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
         logMessage(LMI, "ERROR", "Parser", "Failed to create program node");
         return NULL;
     }
-
+    context->programNodePtr = program;
     getNextToken(lexer, arena, state);
-    logMessage(LMI, "INFO", "Parser", "Next token after program: %s", CryoTokenToString(lexer->currentToken.type));
 
     while (lexer->currentToken.type != TOKEN_EOF)
     {
         ASTNode *statement = parseStatement(lexer, context, arena, state, globalTable);
         if (statement)
         {
-            addStatementToProgram(program, statement, arena, state, globalTable);
-            logMessage(LMI, "INFO", "Parser", "Statement parsed successfully");
+            if (statement->metaData->type == NODE_DISCARD)
+            {
+                logMessage(LMI, "INFO", "Parser", "Discarding statement");
+            }
+            else
+            {
+                addStatementToProgram(program, statement, arena, state, globalTable);
+                logMessage(LMI, "INFO", "Parser", "Statement parsed successfully");
+            }
 
             if (statement->metaData->type == NODE_NAMESPACE)
             {

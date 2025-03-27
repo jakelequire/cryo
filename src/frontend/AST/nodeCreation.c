@@ -57,6 +57,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     case NODE_PROGRAM:
         node->data.program = createCryoProgramContainer(arena, state);
         break;
+    case NODE_MODULE:
+        node->data.module = createCryoModuleContainer(arena, state);
+        break;
     case NODE_IMPORT_STATEMENT:
         node->data.import = createCryoImportNodeContainer(arena, state);
         break;
@@ -174,9 +177,6 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     case NODE_USING:
         node->data.usingNode = createUsingNodeContainer(arena, state);
         break;
-    case NODE_MODULE:
-        node->data.moduleNode = createModuleNodeContainer(arena, state);
-        break;
     case NODE_ANNOTATION:
         node->data.annotation = createAnnotationNodeContainer(arena, state);
         break;
@@ -185,6 +185,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
         break;
     case NODE_TYPE_CAST:
         node->data.typeCast = createTypeCastContainer(arena, state);
+        break;
+    case NODE_DISCARD:
+        node->data.discard = createDiscardNodeContainer(arena, state);
         break;
     default:
         logMessage(LMI, "ERROR", "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
