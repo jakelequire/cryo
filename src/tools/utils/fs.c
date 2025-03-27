@@ -61,6 +61,7 @@ jFS *initFS(void)
     fs->getFileExt = getFileExt;
     fs->getRealPath = getRealPath;
     fs->trimStringQuotes = trimStringQuotes;
+    fs->getDirectoryPath = getDirectoryPath;
     return fs;
 }
 
@@ -987,4 +988,25 @@ const char *trimStringQuotes(const char *str)
     }
 
     return str;
+}
+
+const char *getDirectoryPath(const char *path)
+{
+    const char *lastSlash = strrchr(path, '/');
+    if (!lastSlash)
+    {
+        return NULL;
+    }
+
+    size_t length = (size_t)(lastSlash - path);
+    char *dirPath = (char *)malloc(length + 1);
+    if (!dirPath)
+    {
+        return NULL;
+    }
+
+    strncpy(dirPath, path, length);
+    dirPath[length] = '\0';
+
+    return dirPath;
 }

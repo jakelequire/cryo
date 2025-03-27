@@ -546,20 +546,76 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
 
 DataType **DTMastInterface_createTypeArrayFromAST(ASTNode *node)
 {
-    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
+    fprintf(stderr, "[Data Type Manager] Error: Invalid AST Node (createTypeArrayFromAST)\n");
     return NULL;
 }
 
 DataType **DTMastInterface_createTypeArrayFromASTArray(ASTNode **nodes, int count)
 {
-    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
-    return NULL;
+    if (!nodes)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Invalid AST Node Array (createTypeArrayFromAST)\n");
+        CONDITION_FAILED;
+    }
+    if (count == 0)
+    {
+        return NULL;
+    }
+
+    DataType **types = (DataType **)malloc(sizeof(DataType *) * count);
+    if (!types)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for type array (createTypeArrayFromAST)\n");
+        CONDITION_FAILED;
+    }
+
+    for (int i = 0; i < count; i++)
+    {
+        ASTNode *node = nodes[i];
+        DataType *type = DTM->astInterface->getTypeofASTNode(node);
+        if (!type)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to get type of AST Node (createTypeArrayFromASTArray)\n");
+            CONDITION_FAILED;
+        }
+        types[i] = type;
+    }
+
+    return types;
 }
 
 DTPropertyTy **DTMastInterface_createPropertyArrayFromAST(ASTNode **nodes, int count)
 {
-    fprintf(stderr, "[Data Type Manager] Error: AST Interface not implemented\n");
-    return NULL;
+    if (!nodes || count == 0)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Invalid AST Node Array (createPropertyArrayFromAST)\n");
+        CONDITION_FAILED;
+    }
+
+    DTPropertyTy **properties = (DTPropertyTy **)malloc(sizeof(DTPropertyTy *) * count);
+    if (!properties)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for property array (createPropertyArrayFromAST)\n");
+        CONDITION_FAILED;
+    }
+
+    for (int i = 0; i < count; i++)
+    {
+        ASTNode *node = nodes[i];
+        DataType *type = DTM->astInterface->getTypeofASTNode(node);
+        if (!type)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to get type of AST Node (createPropertyArrayFromAST)\n");
+            CONDITION_FAILED;
+        }
+
+        DTPropertyTy *property = DTM->propertyTypes->createPropertyTemplate();
+        property->setName(property, node->data.property->name);
+        property->setType(property, type);
+        properties[i] = property;
+    }
+
+    return properties;
 }
 
 DTMastInterface *createDTMAstInterface(void)

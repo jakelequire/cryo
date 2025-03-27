@@ -87,7 +87,7 @@ typedef struct CompilerState
     CryoGlobalSymbolTable *globalTable;
 
     const char *fileName;
-    const char *filePath;
+    char *filePath;
     int lineNumber;
     int columnNumber;
     bool isActiveBuild;

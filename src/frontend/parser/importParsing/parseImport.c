@@ -19,6 +19,9 @@
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 #include <dirent.h>
+#include <libgen.h> // For dirname
+#include <limits.h> // For PATH_MAX
+#include <unistd.h> // For realpath
 
 /*
 The import keyword can have the following syntax:
@@ -54,15 +57,76 @@ ASTNode *handleImportParsing(Lexer *lexer, ParsingContext *context, Arena *arena
     DEBUG_BREAKPOINT;
 }
 
+const char *resolveRelativePath(const char *currentDir, const char *relativePath)
+{
+    // Sanitize the relative path by removing surrounding quotes if present
+    char sanitizedPath[PATH_MAX];
+    size_t len = strlen(relativePath);
+
+    if (relativePath[0] == '"' && relativePath[len - 1] == '"')
+    {
+        snprintf(sanitizedPath, sizeof(sanitizedPath), "%.*s", (int)(len - 2), relativePath + 1);
+    }
+    else
+    {
+        snprintf(sanitizedPath, sizeof(sanitizedPath), "%s", relativePath);
+    }
+
+    // Buffer to hold the combined path
+    char combinedPath[PATH_MAX];
+
+    // Combine the current directory with the sanitized relative path
+    snprintf(combinedPath, sizeof(combinedPath), "%s/%s", currentDir, sanitizedPath);
+
+    // Buffer to hold the normalized absolute path
+    char *absolutePath = realpath(combinedPath, NULL);
+    if (!absolutePath)
+    {
+        logMessage(LMI, "ERROR", "Import", "Failed to resolve path: %s", combinedPath);
+        return NULL;
+    }
+
+    return absolutePath; // Caller must free this memory
+}
+
 ASTNode *handleRelativeImport(const char *modulePath,
                               Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     logMessage(LMI, "INFO", "Import", "Handling relative import");
     printf("Module Path: %s\n", modulePath);
 
-    // This is the current file being parsed and the relative path to the imported module file
-    const char *currentFile = state->getFilePath(state); 
-    logMessage(LMI, "INFO", "Import", "Current File: %s", currentFile); 
+    const char *currentFile = state->getFilePath(state);
+    logMessage(LMI, "INFO", "Import", "Current File: %s", currentFile);
+
+    const char *currentFileDir = fs->getDirectoryPath(currentFile);
+    logMessage(LMI, "INFO", "Import", "Current File Directory: %s", currentFileDir);
+
+    // Resolve the relative path
+    const char *resolvedPath = resolveRelativePath(currentFileDir, modulePath);
+    if (resolvedPath)
+    {
+        logMessage(LMI, "INFO", "Import", "Resolved Path: %s", resolvedPath);
+    }
+    else
+    {
+        logMessage(LMI, "ERROR", "Import", "Failed to resolve module path: %s", modulePath);
+        CONDITION_FAILED;
+    }
+
+    // Now that we have the resolved path, we can parse the module
+    // and get the AST tree for the module.
+
+    ASTNode *moduleNode = compileForASTNode(resolvedPath, state, globalTable);
+    if (!moduleNode)
+    {
+        logMessage(LMI, "ERROR", "Import", "Failed to compile module: %s", resolvedPath);
+        CONDITION_FAILED;
+    }
+
+    DTM->symbolTable->printTable(DTM->symbolTable);
+
+    moduleNode->print(moduleNode);
 
     DEBUG_BREAKPOINT;
+    return NULL; // Placeholder for AST handling
 }

@@ -216,6 +216,7 @@ int exe_project_build(CompilerSettings *settings)
     // Initialize runtime definitions
     boostrapRuntimeDefinitions(globalSymbolTable, linker);
 
+    state->setFilePath(state, filePath);
     // Initialize the parser
     ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
     if (programNode == NULL)
@@ -299,6 +300,8 @@ ASTNode *compileForASTNode(const char *filePath, CompilerState *state, CryoGloba
         return NULL;
     }
     const char *fileName = trimFilePath(filePath);
+
+    state->setFilePath(state, filePath);
 
     Lexer lexer;
     initLexer(&lexer, source, fileName, state);

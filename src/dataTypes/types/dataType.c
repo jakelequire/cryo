@@ -198,6 +198,30 @@ DataType *DTMTypeContainerWrappers_wrapGenericType(struct DTGenericTy_t *generic
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
 
+DataType *DTMTypeContainerWrappers_createProtoType(const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->primitive = primitive;
+    container->typeOf = typeOf;
+    container->objectType = objectType;
+
+    if (objectType == STRUCT_OBJ)
+    {
+        container->type.structType = DTM->structTypes->createStructTemplate()->container->type.structType;
+        container->type.structType->name = name;
+    }
+    else if (objectType == CLASS_OBJ)
+    {
+        container->type.classType = DTM->classTypes->createClassTemplate()->container->type.classType;
+        container->type.classType->name = name;
+    }
+
+    DataType *protoType = DTMTypeContainerWrappers_wrapTypeContainer(container);
+    protoType->setTypeName(protoType, name);
+
+    return protoType;
+}
+
 DTMDataTypes *createDTMDataTypes(void)
 {
     DTMDataTypes *dataTypes = (DTMDataTypes *)malloc(sizeof(DTMDataTypes));
@@ -220,6 +244,8 @@ DTMDataTypes *createDTMDataTypes(void)
     dataTypes->wrapClassType = DTMTypeContainerWrappers_wrapClassType;
     dataTypes->wrapObjectType = DTMTypeContainerWrappers_wrapObjectType;
     dataTypes->wrapGenericType = DTMTypeContainerWrappers_wrapGenericType;
+
+    dataTypes->createProtoType = DTMTypeContainerWrappers_createProtoType;
 
     return dataTypes;
 }

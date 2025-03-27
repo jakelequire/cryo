@@ -20,6 +20,16 @@
 // ------------------------------------- Symbol Table Implementation --------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
+void DTMSymbolTable_addPrototype(
+    DTMSymbolTable *table, const char *scopeName, const char *name,
+    PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType)
+{
+    DataType *protoType = DTM->dataTypes->createProtoType(name, primitive, typeOf, objectType);
+    DTM->symbolTable->addEntry(DTM->symbolTable, scopeName, name, protoType);
+
+    logMessage(LMI, "INFO", "DTM", "Added prototype to symbol table: %s", name);
+}
+
 DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *scopeName, const char *name)
 {
     for (int i = 0; i < table->entryCount; i++)
@@ -31,6 +41,8 @@ DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *scopeName, 
         }
     }
 
+    logMessage(LMI, "INFO", "DTM", "Failed to find entry in symbol table: %s", name);
+    DTM->symbolTable->printTable(DTM->symbolTable);
     return NULL;
 }
 
@@ -43,7 +55,22 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
     }
 
     DTMSymbolTableEntry *entry = createDTMSymbolTableEntry(scopeName, name, type);
-    table->entries[table->entryCount++] = entry;
+    // Check to see if the entry already exists, if so, update the entry
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        if (strcmp(table->entries[i]->name, name) == 0)
+        {
+            table->entries[i] = entry;
+            return;
+        }
+    }
+
+    table->entries[table->entryCount] = entry;
+    table->entryCount++;
+
+    logMessage(LMI, "INFO", "DTM", "Added entry to symbol table: %s", name);
+
+    DTM->symbolTable->printTable(DTM->symbolTable);
 }
 
 void DTMSymbolTable_removeEntry(DTMSymbolTable *table, const char *scopeName, const char *name)
@@ -58,6 +85,7 @@ void DTMSymbolTable_removeEntry(DTMSymbolTable *table, const char *scopeName, co
             break;
         }
     }
+    logMessage(LMI, "INFO", "DTM", "Removed entry from symbol table: %s", name);
 }
 
 void DTMSymbolTable_updateEntry(DTMSymbolTable *table, const char *scopeName, const char *name, DataType *type)
@@ -356,6 +384,7 @@ DTMSymbolTable *createDTMSymbolTable(void)
 
     symbolTable->getEntry = DTMSymbolTable_getEntry;
     symbolTable->addEntry = DTMSymbolTable_addEntry;
+    symbolTable->addProtoType = DTMSymbolTable_addPrototype;
     symbolTable->removeEntry = DTMSymbolTable_removeEntry;
     symbolTable->updateEntry = DTMSymbolTable_updateEntry;
     symbolTable->resizeTable = DTMSymbolTable_resizeTable;

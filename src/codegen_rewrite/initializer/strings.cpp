@@ -41,7 +41,7 @@ namespace Cryo
         std::string strValue = node->data.literal->value.stringValue;
 
         logMessage(LMI, "INFO", "Initializer", "String value: %s", strValue.c_str());
-        // We are not using global strings. All strings will be allocated on the stack.
+        // We are not using global strings. All strings will be the String struct.
 
         return nullptr;
     }

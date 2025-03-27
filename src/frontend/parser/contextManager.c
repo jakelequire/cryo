@@ -31,6 +31,8 @@ ParsingContext *createParsingContext(void)
     context->scopeLevel = 0;
     context->lastTokenCount = 0;
 
+    context->programNodePtr = NULL;
+
     context->isParsingIfCondition = false;
     context->isParsingModuleFile = false;
     context->inGenericContext = false;

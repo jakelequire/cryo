@@ -236,6 +236,7 @@ typedef struct DTMSymbolTable_t
 
     DataType *(*getEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*addEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
+    void (*addProtoType)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
     void (*removeEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*updateEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
     void (*resizeTable)(struct DTMSymbolTable_t *table);
@@ -259,6 +260,8 @@ typedef struct DTMDataTypes_t
     DataType *(*wrapGenericType)(struct DTGenericTy_t *genericType);
     DataType *(*wrapStructType)(struct DTStructTy_t *structType);
     DataType *(*wrapClassType)(struct DTClassTy_t *classType);
+
+    DataType *(*createProtoType)(const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
 } DTMDataTypes;
 
 typedef struct DTMTypeValidation_t

@@ -99,6 +99,8 @@ typedef struct ParsingContext
     const char *namespaceScopeID;
     const char *functionName;
 
+    ASTNode *programNodePtr;
+
     ThisContext *thisContext;
 
     // An array of the last 16 tokens

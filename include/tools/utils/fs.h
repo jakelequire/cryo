@@ -91,6 +91,8 @@ const char *getFileExt(const char *filePath);
 const char *getRealPath(const char *path);
 const char *trimStringQuotes(const char *str);
 
+const char *getDirectoryPath(const char *filePath);
+
 typedef struct jFS
 {
     // `readFile` reads the contents of a file into a buffer.
@@ -151,6 +153,8 @@ typedef struct jFS
     _NEW_METHOD(const char *, getRealPath, const char *path);
     // `trimStringQuotes` trims the string quotes.
     _NEW_METHOD(const char *, trimStringQuotes, const char *str);
+    // `getDirectoryPath` gets the directory path.
+    _NEW_METHOD(const char *, getDirectoryPath, const char *filePath);
 } jFS;
 
 jFS *initFS(void);

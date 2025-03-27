@@ -1,6 +1,8 @@
 namespace Internal;
 @pragma "internal"
 
+import "../Types/String.cryo"
+
 type Function = () -> void;
 type Function_One = () -> void;
 type Function_Two = () -> void;

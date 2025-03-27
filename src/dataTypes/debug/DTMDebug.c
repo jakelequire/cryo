@@ -67,6 +67,71 @@ void DTMDebug_printDataType(DataType *type)
                 CONDITION_FAILED;
             }
         }
+        else if (type->container->typeOf == OBJECT_TYPE)
+        {
+            switch (type->container->objectType)
+            {
+            case STRUCT_OBJ:
+            {
+                char *structName = (char *)malloc(sizeof(char) * 1024);
+                if (!structName)
+                {
+                    fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
+                    CONDITION_FAILED;
+                }
+                strcpy(structName, "struct ");
+                strcat(structName, type->container->type.structType->name);
+                typeName = structName;
+            }
+            case CLASS_OBJ:
+            {
+                char *className = (char *)malloc(sizeof(char) * 1024);
+                if (!className)
+                {
+                    fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for class name\n");
+                    CONDITION_FAILED;
+                }
+                strcpy(className, "class ");
+                strcat(className, type->container->type.classType->name);
+                typeName = className;
+            }
+            case INTERFACE_OBJ:
+                typeName = "interface";
+                break;
+            case OBJECT_OBJ:
+                typeName = "object";
+                break;
+            case NON_OBJECT:
+                typeName = "non-object";
+                break;
+            case UNKNOWN_OBJECT:
+                typeName = "unknown";
+                break;
+            default:
+                fprintf(stderr, "[Data Type Manager] Error: Unknown object type\n");
+                CONDITION_FAILED;
+            }
+        }
+        else if (type->container->typeOf == ARRAY_TYPE)
+        {
+            typeName = "Array";
+        }
+        else if (type->container->typeOf == ENUM_TYPE)
+        {
+            typeName = "Enum";
+        }
+        else if (type->container->typeOf == FUNCTION_TYPE)
+        {
+            typeName = "Function";
+        }
+        else if (type->container->typeOf == GENERIC_TYPE)
+        {
+            typeName = "Generic";
+        }
+        else if (type->container->typeOf == TYPE_DEF)
+        {
+            typeName = "Type Definition";
+        }
         else
         {
             fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
@@ -280,7 +345,44 @@ const char *DTMDebug_dataTypeToString(DataType *type)
     }
     else if (type->container->typeOf == OBJECT_TYPE)
     {
-        return "Object";
+        switch (type->container->objectType)
+        {
+        case STRUCT_OBJ:
+        {
+            char *structName = (char *)malloc(sizeof(char) * 1024);
+            if (!structName)
+            {
+                fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
+                CONDITION_FAILED;
+            }
+            strcpy(structName, "(struct) ");
+            strcat(structName, type->container->type.structType->name);
+            return structName;
+        }
+        case CLASS_OBJ:
+        {
+            char *className = (char *)malloc(sizeof(char) * 1024);
+            if (!className)
+            {
+                fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for class name\n");
+                CONDITION_FAILED;
+            }
+            strcpy(className, "(class) ");
+            strcat(className, type->container->type.classType->name);
+            return className;
+        }
+        case INTERFACE_OBJ:
+            return "interface";
+        case OBJECT_OBJ:
+            return "object";
+        case NON_OBJECT:
+            return "non-object";
+        case UNKNOWN_OBJECT:
+            return "unknown";
+        default:
+            fprintf(stderr, "[Data Type Manager] Error: Unknown object type\n");
+            CONDITION_FAILED;
+        }
     }
     else if (type->container->typeOf == TYPE_DEF)
     {
