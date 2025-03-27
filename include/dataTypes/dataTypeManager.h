@@ -322,7 +322,8 @@ typedef struct DataTypeManager_t
     // Function Prototypes
 
     // Initialize the type definitions for the Data Type Manager.
-    void (*initDefinitions)(const char *compilerRootPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+    void (*initDefinitions)(const char *compilerRootPath, const char *buildDir,
+                            CryoLinker *linker, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
     DataType *(*getTypeofASTNode)(ASTNode *node);
     DataType *(*parseType)(const char *typeStr);

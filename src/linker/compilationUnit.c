@@ -121,7 +121,7 @@ char *compilationUnitTypeToString(CompilationUnitType type)
 // ================================================================ //
 
 /// @brief Creates a CompilationUnitDir struct with the given input file and build directory
-/// @param inputFile The input file path
+/// @param inputFile The input file path (e.g. `path/to/file.cryo`)
 /// @param buildDir The build directory
 /// @param type The type of the compilation unit
 /// @return CompilationUnitDir

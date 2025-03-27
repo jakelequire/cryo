@@ -211,7 +211,7 @@ int exe_project_build(CompilerSettings *settings)
     state->setFilePath(state, strdup(filePath));
 
     // Initialize the Type Definitions before parsing
-    DTM->initDefinitions(settings->compilerRootPath, state, globalSymbolTable);
+    DTM->initDefinitions(settings->compilerRootPath, buildDir, linker, state, globalSymbolTable);
 
     // Initialize runtime definitions
     boostrapRuntimeDefinitions(globalSymbolTable, linker);

@@ -458,6 +458,13 @@ namespace Cryo
         // Constructor to initialize the type symbol
         IRTypeSymbol(llvm::Type *typ, const std::string &nm)
             : type(typ), name(nm), astNode(nullptr), dataType(nullptr), elementType(nullptr), size(0) {}
+
+        // Constructor for aggregate types
+        IRTypeSymbol(llvm::StructType *typ, const std::string &nm,
+                     const std::vector<IRPropertySymbol> &mems,
+                     const std::vector<IRMethodSymbol> &meths)
+            : type(typ), name(nm), astNode(nullptr), dataType(nullptr),
+              members(mems), methods(meths), elementType(nullptr), size(0) {}
     };
 
     class AllocaTypeInference
@@ -700,6 +707,10 @@ namespace Cryo
 
         // Create a new type symbol
         static IRTypeSymbol createTypeSymbol(llvm::Type *type, const std::string &name);
+
+        static IRTypeSymbol createTypeSymbol(llvm::StructType *type, const std::string &name,
+                                             const std::vector<IRPropertySymbol> &members,
+                                             const std::vector<IRMethodSymbol> &methods);
 
         // Create a new property symbol
         static IRPropertySymbol createPropertySymbol(llvm::Type *type, const std::string &name,

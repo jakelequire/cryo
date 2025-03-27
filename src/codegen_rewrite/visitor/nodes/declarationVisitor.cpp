@@ -117,6 +117,60 @@ namespace Cryo
     void CodeGenVisitor::visitStructDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting struct declaration...");
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+
+        std::string structName = node->data.structNode->name;
+        logMessage(LMI, "INFO", "Visitor", "Struct Name: %s", structName.c_str());
+
+        int propertyCount = node->data.structNode->propertyCount;
+        logMessage(LMI, "INFO", "Visitor", "Struct has %d properties", propertyCount);
+
+        int methodCount = node->data.structNode->methodCount;
+
+        std::vector<llvm::Type *> propertyTypes;
+        std::vector<IRPropertySymbol> propertySymbols;
+        std::vector<IRMethodSymbol> methodSymbols;
+
+        logMessage(LMI, "INFO", "Visitor", "Processing property symbols...");
+        for (int i = 0; i < propertyCount; i++)
+        {
+            ASTNode *property = node->data.structNode->properties[i];
+            DataType *propertyType = property->data.property->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
+            std::string propertyName = property->data.property->name;
+
+            propertyTypes.push_back(llvmType);
+            IRPropertySymbol propertySymbol = IRSymbolManager::createPropertySymbol(llvmType, propertyName, i, true);
+            propertySymbols.push_back(propertySymbol);
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Processing method symbols...");
+        for (int i = 0; i < methodCount; i++)
+        {
+            ASTNode *method = node->data.structNode->methods[i];
+            DataType *methodType = method->data.method->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
+            std::string methodName = method->data.method->name;
+
+            IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
+                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
+            IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
+                functionSymbol, false, false, false, false, 0, nullptr);
+            methodSymbols.push_back(methodSymbol);
+        }
+
+        llvm::StructType *structType = llvm::StructType::create(context.getInstance().context, structName);
+        structType->setBody(propertyTypes);
+
+        IRTypeSymbol typeSymbol = IRSymbolManager::createTypeSymbol(
+            structType, structName, propertySymbols, methodSymbols);
+        symbolTable->addType(typeSymbol);
+
+        logMessage(LMI, "INFO", "Visitor", "Struct declaration complete");
         return;
     }
 

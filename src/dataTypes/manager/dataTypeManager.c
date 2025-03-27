@@ -647,7 +647,9 @@ void initGlobalDataTypeManagerInstance(void)
     globalDataTypeManager->initialized = true;
 }
 
-void DataTypeManager_initDefinitions(const char *compilerRootPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+void DataTypeManager_initDefinitions(
+    const char *compilerRootPath, const char *buildDir, CryoLinker *linker,
+    CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     if (DTM->defsInitialized)
     {
@@ -663,7 +665,7 @@ void DataTypeManager_initDefinitions(const char *compilerRootPath, CompilerState
         CONDITION_FAILED;
     }
 
-    ASTNode *defsNode = compileForASTNode(defsPath, state, globalTable);
+    ASTNode *defsNode = compileForASTNode(strdup(defsPath), state, globalTable);
     if (!defsNode)
     {
         fprintf(stderr, "[Data Type Manager] Error: Failed to compile definitions\n");
@@ -677,6 +679,30 @@ void DataTypeManager_initDefinitions(const char *compilerRootPath, CompilerState
 
     // Generate the IR for the definitions
     // TODO: Implement IR generation for definitions
+    logMessage(LMI, "INFO", "DTM", "Definitions Path: %s", defsPath);
+    CompilationUnitDir dir = createCompilationUnitDir(defsPath, buildDir, CRYO_DEPENDENCY);
+    dir.print(dir);
+
+    CompilationUnit *unit = createNewCompilationUnit(defsNode, dir);
+    if (!unit)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to create CompilationUnit");
+        CONDITION_FAILED;
+        return;
+    }
+    if (unit->verify(unit) != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to verify CompilationUnit");
+        CONDITION_FAILED;
+        return;
+    }
+
+    if (generateIRFromAST(unit, state, linker, globalTable) != 0)
+    {
+        logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
+        CONDITION_FAILED;
+        return;
+    }
 
     logMessage(LMI, "INFO", "DTM", "Definitions initialized successfully");
     DTM->defsInitialized = true;
