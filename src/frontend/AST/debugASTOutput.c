@@ -1606,6 +1606,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PROGRAM:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Program");
         ASTDebugNode *programNode = createASTDebugNode("Program", "Program", DTM->primitives->createVoid(), line, column, indentLevel, node);
         char *namespaceName = seekNamespaceName(node);
         programNode->namespaceName = (const char *)namespaceName;
@@ -1621,6 +1622,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_MODULE:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Module");
         ASTDebugNode *moduleNode = createASTDebugNode("Module", "Module", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *moduleNode;
         output->nodeCount++;
@@ -1636,8 +1638,9 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_FUNCTION_DECLARATION:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "FunctionDecl");
         const char *funcName = strdup(node->data.functionDecl->name);
-        DataType *returnType = node->data.functionDecl->functionType->container->type.functionType->returnType;
+        DataType *returnType = node->data.functionDecl->type->container->type.functionType->returnType;
         ASTDebugNode *functionNode = createASTDebugNode("FunctionDecl", funcName, returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *functionNode;
         output->nodeCount++;
@@ -1658,6 +1661,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_EXTERN_FUNCTION:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ExternFunction");
         char *funcName = strdup(node->data.externFunction->name);
         DataType *returnType = node->data.externFunction->type;
 
@@ -1678,6 +1682,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_BLOCK:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Block");
         int statementCount = node->data.block->statementCount;
         char *blockName = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
         if (statementCount == 0)
@@ -1703,6 +1708,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_FUNCTION_BLOCK:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Function Block");
         ASTDebugNode *functionBlockNode = createASTDebugNode("FunctionBlock", "FunctionBlock", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *functionBlockNode;
         output->nodeCount++;
@@ -1718,6 +1724,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_STRUCT_DECLARATION:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Struct Declaration");
         char *structName = strdup(node->data.structNode->name);
         ASTDebugNode *structNode = createASTDebugNode("StructDecl", structName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *structNode;
@@ -1746,6 +1753,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PARAM_LIST:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ParamList");
         ASTDebugNode *paramListNode = createASTDebugNode("ParamList", "ParamList", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *paramListNode;
         output->nodeCount++;
@@ -1761,6 +1769,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_STRUCT_CONSTRUCTOR:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "StructConstructor");
         ASTDebugNode *structConstructorNode = createASTDebugNode("StructConstructor", "StructConstructor", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *structConstructorNode;
         output->nodeCount++;
@@ -1779,6 +1788,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_METHOD:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Method");
         char *methodName = strdup(node->data.method->name);
         DataType *returnType = node->data.method->functionType;
 
@@ -1799,6 +1809,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_NAMESPACE:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Namespace");
         char *namespaceName = strdup(node->data.cryoNamespace->name);
         ASTDebugNode *namespaceNode = createASTDebugNode("Namespace", namespaceName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *namespaceNode;
@@ -1810,6 +1821,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_VAR_DECLARATION:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "VarDecl");
         char *varName = strdup(node->data.varDecl->name);
         DataType *dataType = node->data.varDecl->type;
         ASTDebugNode *varDeclNode = createASTDebugNode("VarDecl", varName, dataType, line, column, indentLevel, node);
@@ -1822,6 +1834,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_EXPRESSION:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Expression");
         ASTDebugNode *expressionNode = createASTDebugNode("Expression", "Expression", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *expressionNode;
         output->nodeCount++;
@@ -1831,14 +1844,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_LITERAL_EXPR:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "LiteralExpr");
         DataType *dataType = node->data.literal->type;
         switch (dataType->container->primitive)
         {
         case PRIM_INT:
         {
             int intValue = node->data.literal->value.intValue;
-            printf("int value: %i\n", intValue);
-
             // Allocate memory for the safe copy of int
             int *safeIntCpy = (int *)malloc(sizeof(int));
             if (safeIntCpy == NULL)
@@ -1847,12 +1859,10 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 return;
             }
             *safeIntCpy = intValue;
-            printf("safe int value: %i\n", *safeIntCpy);
 
             // Allocate memory for the literal value string
             char literalValue[BUFFER_CHAR_SIZE];
             snprintf(literalValue, BUFFER_CHAR_SIZE, "%i", intValue);
-            printf("literal value: %s\n", literalValue);
 
             ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
             if (intLiteralNode == NULL)
@@ -1937,6 +1947,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_RETURN_STATEMENT:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ReturnStatement");
         DataType *returnType = node->data.returnStatement->type;
         ASTDebugNode *returnNode = createASTDebugNode("ReturnStatement", "ReturnStatement", returnType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *returnNode;
@@ -1954,6 +1965,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_FUNCTION_CALL:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "FunctionCall");
         char *funcName = strdup(node->data.functionCall->name);
         DataType *returnType = node->data.functionCall->returnType;
         ASTDebugNode *functionCallNode = createASTDebugNode("FunctionCall", funcName, returnType, line, column, indentLevel, node);
@@ -1967,6 +1979,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PARAM:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Param");
         char *paramName = strdup(node->data.param->name);
         DataType *paramType = node->data.param->type;
 
@@ -1980,6 +1993,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PROPERTY:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Property");
         char *propertyName = strdup(node->data.property->name);
         DataType *propertyType = node->data.property->type;
 
@@ -1992,6 +2006,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_VAR_NAME:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "VarName");
         char *varName = strdup(node->data.varName->varName);
         ASTDebugNode *varNameNode = createASTDebugNode("VarName", varName, DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *varNameNode;
@@ -2002,6 +2017,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_ARG_LIST:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ArgList");
         ASTDebugNode *argListNode = createASTDebugNode("ArgList", "ArgList", DTM->primitives->createVoid(), line, column, indentLevel, node);
         ASTNode **args = node->data.argList->args;
         argListNode->args = args;
@@ -2015,6 +2031,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_THIS:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "This");
         ASTDebugNode *thisNode = createASTDebugNode("This", "This", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *thisNode;
         output->nodeCount++;
@@ -2024,6 +2041,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_THIS_ASSIGNMENT:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ThisAssign");
         ASTDebugNode *thisReassignNode = createASTDebugNode("ThisAssign", "ThisAssign", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *thisReassignNode;
         output->nodeCount++;
@@ -2033,6 +2051,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_PROPERTY_REASSIGN:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "PropertyReassign");
         ASTDebugNode *propertyReassignNode = createASTDebugNode("PropertyReassign", "PropertyReassign", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *propertyReassignNode;
         output->nodeCount++;
@@ -2042,6 +2061,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_METHOD_CALL:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "MethodCall");
         char *methodName = strdup(node->data.methodCall->name);
         DataType *returnType = node->data.methodCall->returnType;
         ASTDebugNode *methodCallNode = createASTDebugNode("MethodCall", methodName, returnType, line, column, indentLevel, node);
@@ -2055,6 +2075,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_BINARY_EXPR:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "BinaryExpr");
         ASTDebugNode *binaryExprNode = createASTDebugNode("BinOp", "BinOp", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *binaryExprNode;
         output->nodeCount++;
@@ -2066,6 +2087,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_CLASS:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Class");
         char *className = strdup(node->data.classNode->name);
         DataType *classType = node->data.classNode->type;
         ASTDebugNode *classNode = createASTDebugNode("Class", className, classType, line, column, indentLevel, node);
@@ -2178,6 +2200,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_OBJECT_INST:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ObjectInst");
         char *objectName = strdup(node->data.objectNode->name);
         DataType *objectType = node->data.objectNode->objType;
         ASTDebugNode *objectNode = createASTDebugNode("ObjectInst", objectName, objectType, line, column, indentLevel, node);
@@ -2189,6 +2212,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_UNARY_EXPR:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "UnaryExpr");
         ASTDebugNode *unaryExprNode = createASTDebugNode("UnaryOp", "UnaryOp", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *unaryExprNode;
         output->nodeCount++;
@@ -2199,6 +2223,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_TYPE:
     {
         __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Type");
         char *typeName = strdup(node->data.typeDecl->name);
         DataType *type = node->data.typeDecl->type;
         ASTDebugNode *typeNode = createASTDebugNode("Type", typeName, type, line, column, indentLevel, node);
@@ -2210,6 +2235,14 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     case NODE_ANNOTATION:
     {
         // We don't need to log annotations
+        logMessage(LMI, "DEBUG", "ASTDBG", "Skipping Annotation...");
+        break;
+    }
+
+    case NODE_DISCARD:
+    {
+        // We don't need to log discard nodes
+        logMessage(LMI, "DEBUG", "ASTDBG", "Skipping Discard...");
         break;
     }
 

@@ -672,8 +672,6 @@ void DataTypeManager_initDefinitions(
         CONDITION_FAILED;
     }
 
-    defsNode->print(defsNode);
-
     DTM->symbolTable->importASTnode(DTM->symbolTable, defsNode);
     DTM->symbolTable->printTable(DTM->symbolTable);
 
@@ -697,7 +695,7 @@ void DataTypeManager_initDefinitions(
         return;
     }
 
-    if (generateIRFromAST(unit, state, linker, globalTable) != 0)
+    if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
         CONDITION_FAILED;
@@ -707,6 +705,7 @@ void DataTypeManager_initDefinitions(
     logMessage(LMI, "INFO", "DTM", "Definitions initialized successfully");
     DTM->defsInitialized = true;
 
+    defsNode->print(defsNode);
     printf("\n");
     printf(BOLD GREEN "================================================================================\n" COLOR_RESET);
     printf(BOLD GREEN "                            [ Definitions Initialized ]                         \n" COLOR_RESET);

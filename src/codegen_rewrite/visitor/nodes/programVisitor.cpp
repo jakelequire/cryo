@@ -37,12 +37,49 @@ namespace Cryo
         return;
     }
 
+    void CodeGenVisitor::visitModule(ASTNode *node)
+    {
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Root node is null");
+            return;
+        }
+        if (node->metaData->type != NODE_MODULE)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is not a module");
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Visiting module...");
+        for (size_t i = 0; i < node->data.module->statementCount; i++)
+        {
+            std::string nodeTypeStr = CryoNodeTypeToString(node->data.module->statements[i]->metaData->type);
+            logMessage(LMI, "INFO", "Visitor", "Visiting node: %s", nodeTypeStr.c_str());
+            if (node->metaData->type == NODE_NAMESPACE)
+            {
+                // Skip namespace nodes
+            }
+            else
+            {
+                visit(node->data.module->statements[i]);
+            }
+        }
+        logMessage(LMI, "INFO", "Visitor", "Visiting module complete!");
+        return;
+    }
+
     void CodeGenVisitor::visitFunctionBlock(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting function block...");
         if (!node)
         {
             logMessage(LMI, "ERROR", "Visitor", "Root node is null");
+            return;
+        }
+
+        if (node->metaData->type != NODE_FUNCTION_BLOCK)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is not a function block");
             return;
         }
 
@@ -61,6 +98,12 @@ namespace Cryo
         if (!node)
         {
             logMessage(LMI, "ERROR", "Visitor", "Root node is null");
+            return;
+        }
+
+        if (node->metaData->type != NODE_BLOCK)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is not a block");
             return;
         }
 
@@ -91,13 +134,6 @@ namespace Cryo
     void CodeGenVisitor::visitUsing(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Skipping using node...");
-        return;
-    }
-
-    // Skip module nodes.
-    void CodeGenVisitor::visitModule(ASTNode *node)
-    {
-        logMessage(LMI, "INFO", "Visitor", "Skipping module node...");
         return;
     }
 

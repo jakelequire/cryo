@@ -49,12 +49,12 @@ namespace Cryo
 
         // Program structure
         virtual void visitProgram(ASTNode *node) = 0;
+        virtual void visitModule(ASTNode *node) = 0;
         virtual void visitFunctionBlock(ASTNode *node) = 0;
         virtual void visitBlock(ASTNode *node) = 0;
         virtual void visitNamespace(ASTNode *node) = 0;
         virtual void visitImport(ASTNode *node) = 0;
         virtual void visitUsing(ASTNode *node) = 0;
-        virtual void visitModule(ASTNode *node) = 0;
 
         // Declarations
         virtual void visitFunctionDecl(ASTNode *node) = 0;
@@ -117,12 +117,12 @@ namespace Cryo
 
         // Program structure
         void visitProgram(ASTNode *node) override;
+        void visitModule(ASTNode *node) override;
         void visitFunctionBlock(ASTNode *node) override;
         void visitBlock(ASTNode *node) override;
         void visitNamespace(ASTNode *node) override;
         void visitImport(ASTNode *node) override;
         void visitUsing(ASTNode *node) override;
-        void visitModule(ASTNode *node) override;
 
         // Declarations
         void visitFunctionDecl(ASTNode *node) override;

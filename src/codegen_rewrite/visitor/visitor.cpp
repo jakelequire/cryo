@@ -39,6 +39,9 @@ namespace Cryo
         case NODE_PROGRAM:
             visitProgram(node);
             break;
+        case NODE_MODULE:
+            visitModule(node);
+            break;
         case NODE_NAMESPACE:
             visitNamespace(node);
             break;
@@ -47,9 +50,6 @@ namespace Cryo
             break;
         case NODE_USING:
             visitUsing(node);
-            break;
-        case NODE_MODULE:
-            visitModule(node);
             break;
         case NODE_FUNCTION_DECLARATION:
             visitFunctionDecl(node);
