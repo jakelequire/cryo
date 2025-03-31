@@ -262,14 +262,5 @@ void logMessage(
         vprintf(message, args);
         printf("\n");
         va_end(args);
-
-        // va_start(args, message);
-        // outputNewLogBuffer(line, file, func, type, module, message, args);
-        // va_end(args);
-
-        free(shortFile);
-        free(shortModule);
-        free(shortFunc);
-        free(numberFormatBuffer);
     });
 }

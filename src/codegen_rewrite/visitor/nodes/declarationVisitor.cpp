@@ -49,22 +49,26 @@ namespace Cryo
             funcType,
             llvm::Function::ExternalLinkage,
             funcName,
-            context.module.get());
+            context.getInstance().module.get());
 
         symbolTable->setCurrentFunction(function);
 
         logMessage(LMI, "INFO", "Visitor", "Function prototype created");
         // Create the entry block
-        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.context, "entry", function);
-        context.builder.SetInsertPoint(entryBlock);
+        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.getInstance().context, "entry", function);
+        context.getInstance().builder.SetInsertPoint(entryBlock);
 
         // Add the function to the symbol table
         IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(
             function, funcName, returnTy, funcType, entryBlock, false, false);
         symbolTable->addFunction(funcSymbol);
 
-        // Visit the function body
+        // Visit the function body (This will also visit the return statement)
+        logMessage(LMI, "INFO", "Visitor", "Visiting function body...");
         visit(node->data.functionDecl->body);
+
+        // Remove the basic block
+        context.getInstance().builder.ClearInsertionPoint();
 
         return;
     }
@@ -101,7 +105,7 @@ namespace Cryo
             logMessage(LMI, "INFO", "Visitor", "Variable has no initialization expression");
         }
 
-        llvm::AllocaInst *alloca = context.builder.CreateAlloca(llvmType, nullptr, varName);
+        llvm::AllocaInst *alloca = context.getInstance().builder.CreateAlloca(llvmType, nullptr, varName);
         AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
         IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(alloca, llvmType, varName, allocaType, Allocation());
         symbolTable->addVariable(varSymbol);
@@ -170,6 +174,16 @@ namespace Cryo
             structType, structName, propertySymbols, methodSymbols);
         symbolTable->addType(typeSymbol);
 
+        context.getInstance().module->getOrInsertGlobal(structName, structType);
+        logMessage(LMI, "INFO", "Visitor", "Struct type created");
+
+        // Create the constructor if it exists
+        if (node->data.structNode->constructor)
+        {
+            logMessage(LMI, "INFO", "Visitor", "Struct has a constructor");
+            // Handle constructor creation here
+        }
+
         logMessage(LMI, "INFO", "Visitor", "Struct declaration complete");
         return;
     }
@@ -189,6 +203,63 @@ namespace Cryo
     void CodeGenVisitor::visitGenericDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting generic declaration...");
+        return;
+    }
+
+    void CodeGenVisitor::visitTypeDecl(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting type declaration...");
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+        if (node->metaData->type != NODE_TYPE)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is not a type declaration");
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Processing type declaration...");
+
+        std::string typeName = node->data.typeDecl->name;
+        logMessage(LMI, "INFO", "Visitor", "Type Name: %s", typeName.c_str());
+
+        DataType *type = node->data.typeDecl->type;
+        TypeofDataType typeOf = type->container->typeOf;
+        switch (typeOf)
+        {
+        case PRIM_TYPE:
+            logMessage(LMI, "INFO", "Visitor", "Type is a primitive type");
+            break;
+        case ARRAY_TYPE:
+            logMessage(LMI, "INFO", "Visitor", "Type is an array type");
+            break;
+        case ENUM_TYPE:
+            logMessage(LMI, "INFO", "Visitor", "Type is an enum type");
+            break;
+        case FUNCTION_TYPE:
+            logMessage(LMI, "INFO", "Visitor", "Type is a function type");
+            break;
+        case GENERIC_TYPE:
+            logMessage(LMI, "INFO", "Visitor", "Type is a generic type");
+            break;
+        case OBJECT_TYPE:
+            logMessage(LMI, "INFO", "Visitor", "Type is an object type");
+            break;
+        case TYPE_DEF:
+            logMessage(LMI, "INFO", "Visitor", "Type is a type definition");
+            break;
+        case UNKNOWN_TYPE:
+            logMessage(LMI, "INFO", "Visitor", "Type is an unknown type");
+            break;
+        default:
+            logMessage(LMI, "ERROR", "Visitor", "Unknown type of data type");
+            break;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Type declaration complete");
+
         return;
     }
 

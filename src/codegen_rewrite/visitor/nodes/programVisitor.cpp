@@ -83,6 +83,13 @@ namespace Cryo
             return;
         }
 
+        // Make sure that the entry point has been set from the function declaration.
+        if (!context.getInstance().builder.GetInsertBlock())
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Entry point is not set");
+            CONDITION_FAILED;
+        }
+
         for (size_t i = 0; i < node->data.functionBlock->statementCount; i++)
         {
             visit(node->data.functionBlock->statements[i]);

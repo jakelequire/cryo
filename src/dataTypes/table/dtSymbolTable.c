@@ -335,7 +335,8 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
         break;
     default:
     {
-        fprintf(stderr, "[Data Type Manager] Error: Unknown node type: %d\n", nodeType);
+        const char *nodeTypeStr = CryoNodeTypeToString(nodeType);
+        fprintf(stderr, "[Data Type Manager] Error: Unknown node type: %s\n", nodeTypeStr);
         CONDITION_FAILED;
     }
     }

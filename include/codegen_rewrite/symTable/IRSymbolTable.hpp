@@ -101,6 +101,7 @@ namespace Cryo
         IRTypeSymbol *findType(const std::string &name);
 
         void debugPrint() const;
+        std::string IRTypeKindToString(IRTypeKind kind) const;
 
     private:
         llvm::Function *currentFunction;
@@ -108,6 +109,7 @@ namespace Cryo
         llvm::StructType *getLLVMObjectType(DataType *dataType);
         llvm::StructType *getLLVMStructType(DataType *dataType);
         llvm::StructType *getLLVMClassType(DataType *dataType);
+        llvm::FunctionType *getLLVMFunctionType(DataType *dataType);
 
     protected:
         bool typesInitialized = false;
@@ -116,6 +118,7 @@ namespace Cryo
     public:
         LLVMTypes llvmTypes;
         llvm::Type *getLLVMType(DataType *dataType);
+        std::vector<llvm::Type *> getLLVMTypes(DataType **dataTypes);
     };
 
 } // namespace Cryo

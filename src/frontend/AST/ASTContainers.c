@@ -170,7 +170,8 @@ void CryoModule_resize(ASTNode *self)
     {
         logMessage(LMI, "INFO", "AST", "Resizing module statement array...");
         self->data.module->statementCapacity *= 2;
-        self->data.module->statements = (ASTNode **)realloc(self->data.module->statements, sizeof(ASTNode *) * self->data.module->statementCapacity);
+        size_t newSize = sizeof(ASTNode *) * self->data.module->statementCapacity;
+        self->data.module->statements = (ASTNode **)realloc(self->data.module->statements, newSize);
         if (!self->data.module->statements)
         {
             fprintf(stderr, "[AST] Error: Failed to reallocate memory for module statements.");
@@ -210,7 +211,7 @@ CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->statements = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->statements = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
     if (!node->statements)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
@@ -220,7 +221,7 @@ CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 
     node->moduleName = "defaulted";
     node->statementCount = 0;
-    node->statementCapacity = 16;
+    node->statementCapacity = 64;
 
     node->addStatement = CryoModule_addStatement;
     node->resize = CryoModule_resize;

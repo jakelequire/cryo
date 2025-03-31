@@ -2,6 +2,7 @@ namespace Internal;
 @pragma "internal"
 
 import "../Types/String.cryo"
+import "runtime.cryo"
 
 type Function = () -> void;
 type Function_One = () -> void;

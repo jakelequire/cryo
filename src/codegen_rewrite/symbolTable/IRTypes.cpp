@@ -54,6 +54,8 @@ namespace Cryo
             return llvmTypes.ptrTy;
         case PRIM_OBJECT:
             return getLLVMObjectType(dataType);
+        case PRIM_FUNCTION:
+            return getLLVMFunctionType(dataType);
         case PRIM_AUTO:
             return nullptr;
         case PRIM_UNDEFINED:
@@ -66,6 +68,10 @@ namespace Cryo
             return nullptr;
         }
         }
+    }
+
+    std::vector<llvm::Type *> IRSymbolTable::getLLVMTypes(DataType **dataTypes)
+    {
     }
 
     llvm::StructType *IRSymbolTable::getLLVMObjectType(DataType *dataType)
@@ -105,12 +111,104 @@ namespace Cryo
         }
     }
 
+    // Struct Types
     llvm::StructType *IRSymbolTable::getLLVMStructType(DataType *dataType)
+    {
+        if (!dataType)
+        {
+            std::cerr << "Data type is null" << std::endl;
+            return nullptr;
+        }
+        if (dataType->container->typeOf != PRIM_OBJECT)
+        {
+            std::cerr << "Data type is not an object" << std::endl;
+            return nullptr;
+        }
+
+        // Check if the struct already exists in the current module via the symbol table
+        std::string structName = dataType->container->type.structType->name;
+        IRTypeSymbol *typeSymbol = this->findType(structName);
+        if (typeSymbol)
+        {
+            return typeSymbol->type.structTy;
+        }
+        // Create a new struct type
+        llvm::StructType *llvmStructType = llvm::StructType::create(currentModule->getContext(), structName);
+        if (!llvmStructType)
+        {
+            std::cerr << "Failed to create LLVM struct type" << std::endl;
+            return nullptr;
+        }
+
+        // Set the struct body
+        std::vector<llvm::Type *> memberTypes;
+        for (size_t i = 0; i < dataType->container->type.structType->propertyCount; ++i)
+        {
+            DataType *memberType = dataType->container->type.structType->properties[i]->type;
+            llvm::Type *llvmMemberType = getLLVMType(memberType);
+            if (!llvmMemberType)
+            {
+                std::cerr << "Failed to get LLVM type for member" << std::endl;
+                return nullptr;
+            }
+            memberTypes.push_back(llvmMemberType);
+        }
+
+        llvmStructType->setBody(memberTypes);
+        if (!llvmStructType->isLayoutIdentical(llvmStructType))
+        {
+            std::cerr << "Failed to set LLVM struct type body" << std::endl;
+            return nullptr;
+        }
+        logMessage(LMI, "INFO", "IRSymbolTable", "LLVM struct type created successfully");
+        // Add the struct type to the symbol table
+        IRTypeSymbol tySymbol(llvmStructType, structName, std::vector<IRPropertySymbol>(),
+                                std::vector<IRMethodSymbol>());
+        if (!addType(tySymbol))
+        {
+            std::cerr << "Failed to add struct type to symbol table" << std::endl;
+            return nullptr;
+        }
+        logMessage(LMI, "INFO", "IRSymbolTable", "Struct type added to symbol table successfully");
+        // Return the LLVM struct type
+        return llvmStructType;
+    }
+
+    // Class Types
+    llvm::StructType *IRSymbolTable::getLLVMClassType(DataType *dataType)
     {
     }
 
-    llvm::StructType *IRSymbolTable::getLLVMClassType(DataType *dataType)
+    // Function Types
+    llvm::FunctionType *IRSymbolTable::getLLVMFunctionType(DataType *dataType)
     {
+        if (!dataType)
+        {
+            std::cerr << "Data type is null" << std::endl;
+            return nullptr;
+        }
+        if (dataType->container->typeOf != PRIM_FUNCTION)
+        {
+            std::cerr << "Data type is not a function" << std::endl;
+            return nullptr;
+        }
+
+        logMessage(LMI, "INFO", "IRSymbolTable", "Creating LLVM function type for data type: %s",
+                   DTM->debug->dataTypeToString(dataType));
+
+        llvm::FunctionType *llvmFuncType = llvm::FunctionType::get(
+            getLLVMType(dataType->container->type.functionType->returnType),
+            getLLVMTypes(dataType->container->type.functionType->paramTypes),
+            false);
+
+        if (!llvmFuncType)
+        {
+            std::cerr << "Failed to create LLVM function type" << std::endl;
+            return nullptr;
+        }
+
+        logMessage(LMI, "INFO", "IRSymbolTable", "LLVM function type created successfully");
+        return llvmFuncType;
     }
 
     void IRSymbolTable::initLLVMTypes()

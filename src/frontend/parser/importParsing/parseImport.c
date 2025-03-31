@@ -97,6 +97,12 @@ ASTNode *handleRelativeImport(const char *modulePath,
 
     const char *currentFile = state->getFilePath(state);
     logMessage(LMI, "INFO", "Import", "Current File: %s", currentFile);
+    char *currentFileCpy = strdup(currentFile);
+    if (!currentFileCpy)
+    {
+        logMessage(LMI, "ERROR", "Import", "Failed to copy current file path");
+        CONDITION_FAILED;
+    }
 
     const char *currentFileDir = fs->getDirectoryPath(currentFile);
     logMessage(LMI, "INFO", "Import", "Current File Directory: %s", currentFileDir);
@@ -135,6 +141,10 @@ ASTNode *handleRelativeImport(const char *modulePath,
 
     programNodePtr->data.program->importAST(programNodePtr, moduleNode);
     programNodePtr->print(programNodePtr);
+
+    // Set the context back to the original file
+    state->setFilePath(state, strdup(currentFileCpy));
+    logMessage(LMI, "INFO", "Import", "Set file path back to: %s", currentFileCpy);
 
     return createDiscardNode(arena, state, lexer);
 }

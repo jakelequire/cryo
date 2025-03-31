@@ -429,9 +429,34 @@ namespace Cryo
 
     } IRVariableSymbol;
 
+    enum class IRTypeKind
+    {
+        Primitive,
+        Aggregate,
+        Array,
+        Vector,
+        Function,
+        Pointer,
+        Object,
+        Class,
+        Struct,
+        Enum,
+    };
+
     struct IRTypeSymbol
     {
-        llvm::Type *type;
+        union type
+        {
+            llvm::Type *typeTy;             // LLVM type
+            llvm::StructType *structTy;     // Struct type
+            llvm::FunctionType *functionTy; // Function type
+            llvm::PointerType *pointerTy;   // Pointer type
+
+            // Default constructor for the union
+            type() : typeTy(nullptr) {}
+        } type;
+
+        IRTypeKind kind;
         std::string name;
 
         ASTNode *astNode;
@@ -457,14 +482,29 @@ namespace Cryo
 
         // Constructor to initialize the type symbol
         IRTypeSymbol(llvm::Type *typ, const std::string &nm)
-            : type(typ), name(nm), astNode(nullptr), dataType(nullptr), elementType(nullptr), size(0) {}
+            : kind(IRTypeKind::Primitive), name(nm), astNode(nullptr), dataType(nullptr),
+              elementType(nullptr), size(0)
+        {
+            type.typeTy = typ; // Explicitly initialize the union member
+        }
 
         // Constructor for aggregate types
         IRTypeSymbol(llvm::StructType *typ, const std::string &nm,
                      const std::vector<IRPropertySymbol> &mems,
                      const std::vector<IRMethodSymbol> &meths)
-            : type(typ), name(nm), astNode(nullptr), dataType(nullptr),
-              members(mems), methods(meths), elementType(nullptr), size(0) {}
+            : kind(IRTypeKind::Aggregate), name(nm), astNode(nullptr), dataType(nullptr),
+              members(mems), methods(meths), elementType(nullptr), size(0)
+        {
+            type.structTy = typ; // Explicitly initialize the union member
+        }
+
+        // Constructor for function types
+        IRTypeSymbol(llvm::FunctionType *typ, const std::string &nm)
+            : kind(IRTypeKind::Function), name(nm), astNode(nullptr), dataType(nullptr),
+              elementType(nullptr), size(0)
+        {
+            type.functionTy = typ; // Explicitly initialize the union member
+        }
     };
 
     class AllocaTypeInference

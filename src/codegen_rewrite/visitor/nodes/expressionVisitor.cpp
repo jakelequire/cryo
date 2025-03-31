@@ -154,7 +154,21 @@ namespace Cryo
         }
 
         // Create the function call
-        llvm::Value *result = builder.CreateCall(funcSymbol->function, args);
+        std::string funcName = call->name;
+        llvm::Value *result = builder.CreateCall(funcSymbol->function, args, funcName);
+
+        // Add the function call to the current block
+        if (funcSymbol->returnType->getTypeID() != llvm::Type::VoidTyID)
+        {
+            // Store the result if the function returns a value
+            llvm::AllocaInst *alloca = builder.CreateAlloca(funcSymbol->returnType, nullptr, "calltmp");
+            builder.CreateStore(result, alloca);
+            lastValue = alloca;
+        }
+        else
+        {
+            lastValue = nullptr;
+        }
     }
 
     void CodeGenVisitor::visitMethodCall(ASTNode *node) {}

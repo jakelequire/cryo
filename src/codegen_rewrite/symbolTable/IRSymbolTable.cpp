@@ -160,12 +160,36 @@ namespace Cryo
         {
             const auto &type = typePair.second;
             std::cout << "  Name: " << CYAN << type.name << COLOR_RESET << std::endl;
-            std::cout << "  Type ID: " << typeIDToString(type.type) << std::endl;
+            IRTypeKind typeKind = type.kind;
+            std::cout << "  Type Kind: " << IRTypeKindToString(typeKind) << std::endl;
             std::cout << "  ----------------------------------------" << std::endl;
         }
 
         std::cout << "===========================================================================" << std::endl;
         std::cout << "\n\n";
+    }
+
+    std::string IRSymbolTable::IRTypeKindToString(IRTypeKind kind) const
+    {
+        switch (kind)
+        {
+        case IRTypeKind::Aggregate:
+            return "AGGREGATE";
+        case IRTypeKind::Class:
+            return "CLASS";
+        case IRTypeKind::Enum:
+            return "ENUM";
+        case IRTypeKind::Function:
+            return "FUNCTION";
+        case IRTypeKind::Pointer:
+            return "POINTER";
+        case IRTypeKind::Primitive:
+            return "PRIMITIVE";
+        case IRTypeKind::Struct:
+            return "STRUCT";
+        default:
+            return "UNKNOWN";
+        }
     }
 
 } // namespace Cryo

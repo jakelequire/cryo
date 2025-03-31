@@ -136,6 +136,12 @@ namespace Cryo
         case NODE_THIS:
             visitThis(node);
             break;
+        case NODE_TYPE:
+            visitTypeDecl(node);
+            break;
+        case NODE_VAR_REASSIGN:
+            DEBUG_BREAKPOINT;
+            break;
         default:
             logMessage(LMI, "ERROR", "Visitor", "Unhandled node type: %s", nodeTypeStr.c_str());
             break;

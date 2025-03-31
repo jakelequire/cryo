@@ -91,6 +91,7 @@ typedef struct CryoProgram
     size_t statementCapacity;
 
     void (*importAST)(ASTNode *programNode, ASTNode *importedNode);
+    void (*addStatement)(ASTNode *self, ASTNode *statement);
 } CryoProgram;
 
 typedef struct CryoMetaData

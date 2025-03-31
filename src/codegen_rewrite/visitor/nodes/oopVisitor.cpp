@@ -25,4 +25,5 @@ namespace Cryo
     void CodeGenVisitor::visitPropertyAccess(ASTNode *node) {}
     void CodeGenVisitor::visitPropertyReassignment(ASTNode *node) {}
     void CodeGenVisitor::visitThis(ASTNode *node) {}
+    
 } // namespace Cryo
