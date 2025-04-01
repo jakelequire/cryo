@@ -604,24 +604,12 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     return node;
 }
 
-ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *returnType, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createExternFuncNode(char *function_name, ASTNode **params, int paramCount, DataType *functionType, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION, arena, state, lexer);
     if (!node)
         return NULL;
-
-    int paramCount = 0;
-    for (int i = 0; params[i] != NULL; i++)
-    {
-        paramCount++;
-    }
-
-    node->data.externFunction = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
-    if (!node->data.externFunction)
-    {
-        return NULL;
-    }
 
     node->data.externFunction->name = strdup(function_name);
     if (!node->data.externFunction->name)
@@ -634,15 +622,19 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *r
 
     if (paramCount > 0 && params)
     {
-        node->data.externFunction->params = (ASTNode **)ARENA_ALLOC(arena, paramCount * sizeof(ASTNode *));
+        node->data.externFunction->params = (ASTNode **)malloc(paramCount * sizeof(ASTNode *));
         if (!node->data.externFunction->params)
         {
             return NULL;
         }
-        memcpy(node->data.externFunction->params, params, paramCount * sizeof(ASTNode *));
+        for (int i = 0; i < paramCount; i++)
+        {
+            node->data.externFunction->params[i] = params[i];
+        }
+        node->data.externFunction->paramCount = paramCount;
     }
 
-    node->data.externFunction->type = returnType;
+    node->data.externFunction->type = functionType;
 
     return node;
 }

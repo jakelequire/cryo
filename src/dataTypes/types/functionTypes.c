@@ -101,7 +101,7 @@ DTFunctionTy *createDTFunctionTy(void)
 
     // ==================== [ Property Assignments ] ==================== //
 
-    function->returnType = NULL;
+    function->returnType = DTM->primitives->createUndefined();
     function->paramCount = 0;
     function->paramCapacity = MAX_PARAM_CAPACITY;
 

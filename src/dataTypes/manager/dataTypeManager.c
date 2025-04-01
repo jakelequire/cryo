@@ -158,9 +158,17 @@ DataType *DTMFunctionTypes_createFunctionTemplate(void)
 DataType *DTMFunctionTypes_createFunctionType(DataType **paramTypes, int paramCount, DataType *returnType)
 {
     DTFunctionTy *function = createDTFunctionTy();
+    if (!function)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Function Type\n");
+        CONDITION_FAILED;
+    }
+    function->paramCount = paramCount;
     function->setParams(function, paramTypes, paramCount);
     function->setReturnType(function, returnType);
-    return DTM->dataTypes->wrapFunctionType(function);
+    DataType *functionType = DTM->dataTypes->wrapFunctionType(function);
+    functionType->debug->printType(functionType);
+    return functionType;
 }
 
 DataType *DTMFunctionTypes_createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount)

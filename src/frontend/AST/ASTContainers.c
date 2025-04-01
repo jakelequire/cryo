@@ -344,7 +344,7 @@ ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerS
     {
     case NODE_EXTERN_FUNCTION:
     {
-        node->externNode = NULL;
+        node->externNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
         break;
     }
     default:
@@ -373,15 +373,15 @@ ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerS
 ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    ExternFunctionNode *node = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
+    ExternFunctionNode *node = (ExternFunctionNode *)malloc(sizeof(ExternFunctionNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ExternFunctionNode node.");
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
-    node->params = NULL;
+    node->name = (char *)malloc(sizeof(char) * 1024);
+    node->params = (ASTNode **)malloc(sizeof(ASTNode *) * PARAM_CAPACITY);
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
     node->type = DTM->functionTypes->createFunctionTemplate();

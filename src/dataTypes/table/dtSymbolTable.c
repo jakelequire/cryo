@@ -20,6 +20,19 @@
 // ------------------------------------- Symbol Table Implementation --------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
+void DTMSymbolTable_printEntry(DTMSymbolTableEntry *entry)
+{
+    if (!entry)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Symbol table entry is NULL\n");
+        return;
+    }
+
+    printf("| %-20s | %-33s | %-18s | %-15s | %-8s | %-8s|\n", entry->name, entry->type->typeName, entry->scopeName,
+           DTM->debug->typeofDataTypeToString(entry->type->container->typeOf),
+           entry->type->isConst ? "true" : "false", entry->type->isPointer ? "true" : "false");
+}
+
 void DTMSymbolTable_addPrototype(
     DTMSymbolTable *table, const char *scopeName, const char *name,
     PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType)

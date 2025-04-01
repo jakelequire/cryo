@@ -881,6 +881,7 @@ extern "C"
     ASTNode *createExternFuncNode(
         char *function_name,
         ASTNode **params,
+        int paramCount, 
         DataType *returnType,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
@@ -1205,6 +1206,7 @@ ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state);
 AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state);
 TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state);
 TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state);
+ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state);
 void *createDiscardNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #

@@ -76,6 +76,51 @@ namespace Cryo
     void CodeGenVisitor::visitExternFuncDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting extern function declaration...");
+        // For extern functions, we will just declare a prototype, but not define it.
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+
+        std::string funcName = node->data.externFunction->name;
+        logMessage(LMI, "INFO", "Visitor", "Extern Function Name: %s", funcName.c_str());
+
+        // Create the function prototype
+        std::vector<llvm::Type *> argTypes;
+        for (size_t i = 0; i < node->data.externFunction->paramCount; i++)
+        {
+            ASTNode *param = node->data.externFunction->params[i];
+            llvm::Type *paramType = symbolTable->getLLVMType(param->data.param->type);
+            argTypes.push_back(paramType);
+        }
+        logMessage(LMI, "INFO", "Visitor", "Extern function has %d arguments", argTypes.size());
+
+        DataType *functionType = node->data.externFunction->type;
+        functionType->debug->printType(functionType);
+        DataType *returnType = functionType->container->type.functionType->returnType;
+
+        llvm::Type *returnTy = symbolTable->getLLVMType(returnType);
+        llvm::FunctionType *funcType = llvm::FunctionType::get(returnTy, argTypes, false);
+
+        logMessage(LMI, "INFO", "Visitor", "Creating extern function prototype...");
+
+        // The function signature
+        llvm::Function *function = llvm::Function::Create(
+            funcType,
+            llvm::Function::ExternalLinkage,
+            funcName,
+            context.getInstance().module.get());
+        function->setCallingConv(llvm::CallingConv::C);
+        function->setDoesNotThrow();
+        function->setDoesNotAccessMemory();
+
+        // Add the function to the symbol table
+        IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(
+            function, funcName, returnTy, funcType, nullptr, false, false);
+        symbolTable->addFunction(funcSymbol);
+        logMessage(LMI, "INFO", "Visitor", "Extern function prototype created");
+
         return;
     }
 

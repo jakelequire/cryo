@@ -27,119 +27,131 @@ void DTMDebug_printDataType(DataType *type)
         fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTMDebug_printDataType)\n");
     }
 
-    const char *typeName = type->typeName;
-    if (!typeName || typeName == NULL)
+    // Check to see if the DataType is a primitive type
+    if (type->container->typeOf == PRIM_TYPE)
     {
-        // Check to see if the DataType is a primitive type
-        if (type->container->typeOf == PRIM_TYPE)
+        switch (type->container->primitive)
         {
-            switch (type->container->primitive)
-            {
-            case PRIM_INT:
-                typeName = "int";
-                break;
-            case PRIM_FLOAT:
-                typeName = "float";
-                break;
-            case PRIM_STRING:
-                typeName = "string";
-                break;
-            case PRIM_BOOLEAN:
-                typeName = "boolean";
-                break;
-            case PRIM_VOID:
-                typeName = "void";
-                break;
-            case PRIM_NULL:
-                typeName = "null";
-                break;
-            case PRIM_ANY:
-                typeName = "any";
-                break;
-            case PRIM_UNDEFINED:
-                typeName = "undefined";
-                break;
-            case PRIM_AUTO:
-                typeName = "auto";
-                break;
-            default:
-                fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type\n");
-                CONDITION_FAILED;
-            }
-        }
-        else if (type->container->typeOf == OBJECT_TYPE)
-        {
-            switch (type->container->objectType)
-            {
-            case STRUCT_OBJ:
-            {
-                char *structName = (char *)malloc(sizeof(char) * 1024);
-                if (!structName)
-                {
-                    fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
-                    CONDITION_FAILED;
-                }
-                strcpy(structName, "struct ");
-                strcat(structName, type->container->type.structType->name);
-                typeName = structName;
-            }
-            case CLASS_OBJ:
-            {
-                char *className = (char *)malloc(sizeof(char) * 1024);
-                if (!className)
-                {
-                    fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for class name\n");
-                    CONDITION_FAILED;
-                }
-                strcpy(className, "class ");
-                strcat(className, type->container->type.classType->name);
-                typeName = className;
-            }
-            case INTERFACE_OBJ:
-                typeName = "interface";
-                break;
-            case OBJECT_OBJ:
-                typeName = "object";
-                break;
-            case NON_OBJECT:
-                typeName = "non-object";
-                break;
-            case UNKNOWN_OBJECT:
-                typeName = "unknown";
-                break;
-            default:
-                fprintf(stderr, "[Data Type Manager] Error: Unknown object type\n");
-                CONDITION_FAILED;
-            }
-        }
-        else if (type->container->typeOf == ARRAY_TYPE)
-        {
-            typeName = "Array";
-        }
-        else if (type->container->typeOf == ENUM_TYPE)
-        {
-            typeName = "Enum";
-        }
-        else if (type->container->typeOf == FUNCTION_TYPE)
-        {
-            typeName = "Function";
-        }
-        else if (type->container->typeOf == GENERIC_TYPE)
-        {
-            typeName = "Generic";
-        }
-        else if (type->container->typeOf == TYPE_DEF)
-        {
-            typeName = "Type Definition";
-        }
-        else
-        {
-            fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
+        case PRIM_INT:
+            printf("int\n");
+            break;
+        case PRIM_FLOAT:
+            printf("float\n");
+            break;
+        case PRIM_STRING:
+            printf("string\n");
+            break;
+        case PRIM_BOOLEAN:
+            printf("boolean\n");
+            break;
+        case PRIM_VOID:
+            printf("void\n");
+            break;
+        case PRIM_NULL:
+            printf("null\n");
+            break;
+        case PRIM_ANY:
+            printf("any\n");
+            break;
+        case PRIM_UNDEFINED:
+            printf("undefined\n");
+            break;
+        case PRIM_AUTO:
+            printf("auto\n");
+            break;
+        default:
+            fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type\n");
             CONDITION_FAILED;
         }
     }
+    else if (type->container->typeOf == OBJECT_TYPE)
+    {
+        switch (type->container->objectType)
+        {
+        case STRUCT_OBJ:
+        {
+            char *structName = (char *)malloc(sizeof(char) * 1024);
+            if (!structName)
+            {
+                fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
+                CONDITION_FAILED;
+            }
+            strcpy(structName, "struct ");
+            strcat(structName, type->container->type.structType->name);
 
-    printf("%s\n", typeName);
+            printf("%s\n", structName);
+            free(structName);
+            break;
+        }
+        case CLASS_OBJ:
+        {
+            char *className = (char *)malloc(sizeof(char) * 1024);
+            if (!className)
+            {
+                fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for class name\n");
+                CONDITION_FAILED;
+            }
+            strcpy(className, "class ");
+            strcat(className, type->container->type.classType->name);
+            printf("%s\n", className);
+            free(className);
+            break;
+        }
+        case INTERFACE_OBJ:
+            printf("Interface\n");
+            break;
+        case OBJECT_OBJ:
+            printf("Object\n");
+            break;
+        case NON_OBJECT:
+            printf("Non-Object\n");
+            break;
+        case UNKNOWN_OBJECT:
+            printf("Unknown Object\n");
+            break;
+        default:
+            fprintf(stderr, "[Data Type Manager] Error: Unknown object type\n");
+            CONDITION_FAILED;
+        }
+    }
+    else if (type->container->typeOf == ARRAY_TYPE)
+    {
+        printf("Array\n");
+    }
+    else if (type->container->typeOf == ENUM_TYPE)
+    {
+        printf("Enum\n");
+    }
+    else if (type->container->typeOf == FUNCTION_TYPE)
+    {
+        DTFunctionTy *functionType = type->container->type.functionType;
+        if (!functionType)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL function type\n");
+        }
+        const char *functionSig = functionType->signatureToString(functionType);
+        if (!functionSig)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to get function signature\n");
+            CONDITION_FAILED;
+        }
+
+        printf("Function: %s\n", functionSig);
+        free((char *)functionSig);
+    }
+    else if (type->container->typeOf == GENERIC_TYPE)
+    {
+        printf("Generic\n");
+    }
+    else if (type->container->typeOf == TYPE_DEF)
+    {
+        printf("Type Definition\n");
+    }
+    else
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
+        CONDITION_FAILED;
+    }
 }
 
 const char *DTMDebug_typeofDataTypeToString(TypeofDataType type)

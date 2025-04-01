@@ -88,7 +88,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
         node->data.functionDecl = createFunctionNodeContainer(arena, state);
         break;
     case NODE_EXTERN_FUNCTION:
-        node->data.externNode = createExternNodeContainer(NODE_EXTERN_FUNCTION, arena, state);
+        node->data.externFunction = createExternFunctionNodeContainer(arena, state);
         break;
     case NODE_FUNCTION_CALL:
         node->data.functionCall = createFunctionCallNodeContainer(arena, state);
