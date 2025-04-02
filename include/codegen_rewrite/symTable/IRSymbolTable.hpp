@@ -57,9 +57,10 @@ namespace Cryo
     {
     private:
         llvm::Module *currentModule;
-        std::vector<std::map<std::string, IRVariableSymbol>> scopeStack;
-        std::map<std::string, IRFunctionSymbol> functions;
-        std::map<std::string, IRTypeSymbol> types;
+        std::vector<std::unordered_map<std::string, IRVariableSymbol>> scopeStack;
+        std::unordered_map<std::string, IRFunctionSymbol> functions;
+        std::unordered_map<std::string, IRTypeSymbol> types;
+        IRFunctionSymbol *currentFunction = nullptr; // Track current function scope
 
     public:
         explicit IRSymbolTable(llvm::Module *module)
@@ -76,7 +77,7 @@ namespace Cryo
         friend class CodeGenDebug;
 
         IRSymbolManager *getSymbolManager() { return new IRSymbolManager(); }
-        void setCurrentFunction(llvm::Function *function) { currentFunction = function; }
+        void setCurrentFunction(IRFunctionSymbol *function) { currentFunction = function; }
         void clearCurrentFunction() { currentFunction = nullptr; }
 
         // Module access
@@ -85,6 +86,9 @@ namespace Cryo
         // Core scope operations
         void pushScope();
         void popScope();
+
+        void enterFunctionScope(const std::string &funcName);
+        void exitFunctionScope();
 
         // Symbol management
         bool addVariable(const IRVariableSymbol &symbol);
@@ -104,8 +108,6 @@ namespace Cryo
         std::string IRTypeKindToString(IRTypeKind kind) const;
 
     private:
-        llvm::Function *currentFunction;
-
         llvm::StructType *getLLVMObjectType(DataType *dataType);
         llvm::StructType *getLLVMStructType(DataType *dataType);
         llvm::StructType *getLLVMClassType(DataType *dataType);

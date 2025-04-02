@@ -82,8 +82,6 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
     table->entryCount++;
 
     logMessage(LMI, "INFO", "DTM", "Added entry to symbol table: %s", name);
-
-    DTM->symbolTable->printTable(DTM->symbolTable);
 }
 
 void DTMSymbolTable_removeEntry(DTMSymbolTable *table, const char *scopeName, const char *name)

@@ -163,11 +163,13 @@ DataType *DTMFunctionTypes_createFunctionType(DataType **paramTypes, int paramCo
         fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Function Type\n");
         CONDITION_FAILED;
     }
-    function->paramCount = paramCount;
+
     function->setParams(function, paramTypes, paramCount);
     function->setReturnType(function, returnType);
+
     DataType *functionType = DTM->dataTypes->wrapFunctionType(function);
     functionType->debug->printType(functionType);
+
     return functionType;
 }
 

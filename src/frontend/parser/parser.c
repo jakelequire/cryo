@@ -1512,10 +1512,10 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
     ASTNode **params = parseParameterList(lexer, context, arena, strdup(functionName), state, globalTable);
     // get length of params
     int paramCount = 0;
-    DataType **paramTypes = (DataType **)malloc(sizeof(DataType *) * paramCount);
+    DataType **paramTypes = (DataType **)malloc(sizeof(DataType *) * 64);
     for (int i = 0; params[i] != NULL; i++)
     {
-        DataType *paramType = params[i]->data.varDecl->type;
+        DataType *paramType = params[i]->data.param->type;
         logMessage(LMI, "INFO", "Parser", "Parameter type: %s", paramType->debug->toString(paramType));
         paramTypes[i] = params[i]->data.param->type;
         paramCount++;
@@ -1537,6 +1537,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
     logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", returnType->debug->toString(returnType));
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", arena, state, context);
 
+    // ================= [ DEBUG ] ================= //
     printf("<!> EXTERN FUNCTION DEBUG <!> \n");
     printf("Function Name: %s\n", functionName);
     printf("Parameter Count: %d\n", paramCount);
@@ -1547,6 +1548,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
     }
     printf("Return Type: %s\n", returnType->debug->toString(returnType));
     printf("<!> EXTERN FUNCTION DEBUG <!> \n");
+    // ================= [ DEBUG ] ================= //
 
     DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
     if (!functionType)
@@ -1555,7 +1557,6 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
         return NULL;
     }
     printf("Printing Extern Function Type...\n");
-    functionType->debug->printType(functionType);
     ASTNode *externFunc = createExternFuncNode(strdup(functionName), params, paramCount, functionType, arena, state, lexer);
 
     AddExternFunctionToTable(globalTable, externFunc, namespaceScopeID);

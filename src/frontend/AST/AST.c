@@ -617,23 +617,8 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, int paramCo
         return NULL;
     }
 
-    node->data.externFunction->params = NULL;
+    node->data.externFunction->params = params;
     node->data.externFunction->paramCount = paramCount;
-
-    if (paramCount > 0 && params)
-    {
-        node->data.externFunction->params = (ASTNode **)malloc(paramCount * sizeof(ASTNode *));
-        if (!node->data.externFunction->params)
-        {
-            return NULL;
-        }
-        for (int i = 0; i < paramCount; i++)
-        {
-            node->data.externFunction->params[i] = params[i];
-        }
-        node->data.externFunction->paramCount = paramCount;
-    }
-
     node->data.externFunction->type = functionType;
 
     return node;

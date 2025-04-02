@@ -119,7 +119,21 @@ namespace Cryo
         }
 
         std::string varName = node->data.varName->varName;
-        // TODO: Lookup variable in symbol table
+        logMessage(LMI, "INFO", "Initializer", "Variable name: %s", varName.c_str());
+        IRVariableSymbol *varSymbol = getSymbolTable()->findVariable(varName);
+        if (!varSymbol)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Variable %s not found", varName.c_str());
+            return nullptr;
+        }
+
+        // Load the variable if needed
+        if (varSymbol->allocaType == AllocaType::AllocaAndLoad ||
+            varSymbol->allocaType == AllocaType::AllocaLoadStore)
+        {
+            // varSymbol->allocation.load(context.getInstance().builder, varName + "_load");
+        }
+        return varSymbol->allocation.getValue();
     }
 
     llvm::Value *Initializer::generateBinaryExpr(ASTNode *node)

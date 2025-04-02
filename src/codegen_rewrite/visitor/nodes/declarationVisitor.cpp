@@ -51,17 +51,43 @@ namespace Cryo
             funcName,
             context.getInstance().module.get());
 
-        symbolTable->setCurrentFunction(function);
+        function->setCallingConv(llvm::CallingConv::C);
 
-        logMessage(LMI, "INFO", "Visitor", "Function prototype created");
         // Create the entry block
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.getInstance().context, "entry", function);
         context.getInstance().builder.SetInsertPoint(entryBlock);
+
+        for (size_t i = 0; i < node->data.functionDecl->paramCount; i++)
+        {
+            ASTNode *param = node->data.functionDecl->params[i];
+            llvm::Type *paramType = symbolTable->getLLVMType(param->data.param->type);
+
+            // Create a symbol for each parameter for the symbol table
+            std::string paramName = param->data.param->name;
+            logMessage(LMI, "INFO", "Visitor", "Parameter Name: %s", paramName.c_str());
+            AllocaType allocaType = AllocaTypeInference::inferFromNode(param, false);
+            IRVariableSymbol paramSymbol = IRSymbolManager::createVariableSymbol(
+                function, nullptr, paramType, paramName, allocaType);
+
+            // Create the parameter in the function
+            llvm::Function::arg_iterator argIt = function->arg_begin();
+            llvm::Value *arg = argIt++;
+            arg->setName(paramName);
+
+            // Allocate space for the parameter in the function's entry block
+            paramSymbol.allocation = Allocation::createLocal(context.getInstance().builder, paramType, paramName, arg);
+
+            // Add the parameter to the symbol table
+            symbolTable->addVariable(paramSymbol);
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Function prototype created");
 
         // Add the function to the symbol table
         IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(
             function, funcName, returnTy, funcType, entryBlock, false, false);
         symbolTable->addFunction(funcSymbol);
+        symbolTable->setCurrentFunction(&funcSymbol);
 
         // Visit the function body (This will also visit the return statement)
         logMessage(LMI, "INFO", "Visitor", "Visiting function body...");
@@ -113,7 +139,6 @@ namespace Cryo
             context.getInstance().module.get());
         function->setCallingConv(llvm::CallingConv::C);
         function->setDoesNotThrow();
-        function->setDoesNotAccessMemory();
 
         // Add the function to the symbol table
         IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(

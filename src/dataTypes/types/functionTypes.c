@@ -55,6 +55,16 @@ void DTFunctionTy_setParams(DTFunctionTy *function, DataType **paramTypes, int p
 
 void DTFunctionTy_setReturnType(DTFunctionTy *function, DataType *returnType)
 {
+    if (!returnType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Invalid return type for DTFunctionTy\n");
+        CONDITION_FAILED;
+    }
+    if (function->returnType)
+    {
+        free(function->returnType);
+        function->returnType = NULL;
+    }
     function->returnType = returnType;
 }
 
@@ -101,7 +111,7 @@ DTFunctionTy *createDTFunctionTy(void)
 
     // ==================== [ Property Assignments ] ==================== //
 
-    function->returnType = DTM->primitives->createUndefined();
+    function->returnType = NULL;
     function->paramCount = 0;
     function->paramCapacity = MAX_PARAM_CAPACITY;
 

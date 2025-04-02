@@ -35,6 +35,18 @@ namespace Cryo
         }
     }
 
+    void IRSymbolTable::enterFunctionScope(const std::string &funcName)
+    {
+        currentFunction = findFunction(funcName);
+        pushScope(); // Create new scope for function body
+    }
+
+    void IRSymbolTable::exitFunctionScope()
+    {
+        popScope();
+        currentFunction = nullptr;
+    }
+
     // ======================================================================== //
     //                       Symbol Management Functions                        //
     // ======================================================================== //
@@ -43,14 +55,29 @@ namespace Cryo
     {
         if (scopeStack.empty())
             return false;
+
         auto &currentScope = scopeStack.back();
-        currentScope.insert({symbol.name, symbol});
+
+        // If we're in a function scope, associate the variable with the function
+        if (currentFunction)
+        {
+            auto modifiedSymbol = symbol;
+            modifiedSymbol.parentFunction = currentFunction->function;
+            currentScope.insert({symbol.name, modifiedSymbol});
+        }
+        else
+        {
+            currentScope.insert({symbol.name, symbol});
+        }
+
         return true;
     }
 
+    // Modify addFunction to automatically enter function scope
     bool IRSymbolTable::addFunction(const IRFunctionSymbol &symbol)
     {
         functions.insert({symbol.name, symbol});
+        enterFunctionScope(symbol.name);
         return true;
     }
 
@@ -66,13 +93,25 @@ namespace Cryo
 
     IRVariableSymbol *IRSymbolTable::findVariable(const std::string &name)
     {
-        // Search from current scope up to global
+        // Search from current scope up to global, respecting function boundaries
         for (auto it = scopeStack.rbegin(); it != scopeStack.rend(); ++it)
         {
             auto found = it->find(name);
             if (found != it->end())
             {
-                return &found->second;
+                // If we're in a function scope, only return variables visible in this function
+                if (currentFunction)
+                {
+                    if (found->second.parentFunction == currentFunction->function ||
+                        found->second.parentFunction == nullptr)
+                    { // nullptr indicates global
+                        return &found->second;
+                    }
+                }
+                else
+                {
+                    return &found->second;
+                }
             }
         }
         return nullptr;

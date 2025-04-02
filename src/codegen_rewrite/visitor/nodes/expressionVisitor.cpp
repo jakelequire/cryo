@@ -78,7 +78,13 @@ namespace Cryo
     void CodeGenVisitor::visitVarName(ASTNode *node)
     {
         if (!node || !node->data.varName)
+        {
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Variable name node is NULL");
             return;
+        }
+        logMessage(LMI, "DEBUG", "CodeGenVisitor", "Visiting variable name node: %s",
+                   node->data.varName->varName);
+        // Find the variable in the symbol table
 
         VariableNameNode *varName = node->data.varName;
         IRVariableSymbol *symbol = symbolTable->findVariable(varName->varName);

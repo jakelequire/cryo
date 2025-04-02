@@ -5,5 +5,3 @@ import "../Types/String.cryo"
 import "runtime.cryo"
 
 type Function = () -> void;
-type Function_One = () -> void;
-type Function_Two = () -> void;

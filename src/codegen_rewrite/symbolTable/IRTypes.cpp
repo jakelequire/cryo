@@ -26,7 +26,7 @@ namespace Cryo
             return nullptr;
         }
 
-        switch (dataType->container->typeOf)
+        switch (dataType->container->primitive)
         {
         case PRIM_INT:
             return llvmTypes.i32Ty;
@@ -163,7 +163,7 @@ namespace Cryo
         logMessage(LMI, "INFO", "IRSymbolTable", "LLVM struct type created successfully");
         // Add the struct type to the symbol table
         IRTypeSymbol tySymbol(llvmStructType, structName, std::vector<IRPropertySymbol>(),
-                                std::vector<IRMethodSymbol>());
+                              std::vector<IRMethodSymbol>());
         if (!addType(tySymbol))
         {
             std::cerr << "Failed to add struct type to symbol table" << std::endl;
@@ -227,7 +227,7 @@ namespace Cryo
         llvmTypes.x86_fp80 = llvm::Type::getX86_FP80Ty(currentModule->getContext());
 
         llvmTypes.voidTy = llvm::Type::getVoidTy(currentModule->getContext());
-        llvmTypes.ptrTy = llvm::Type::getInt64Ty(currentModule->getContext());
+        llvmTypes.ptrTy = llvm::Type::getInt8Ty(currentModule->getContext())->getPointerTo();
 
         this->typesInitialized = true;
     }

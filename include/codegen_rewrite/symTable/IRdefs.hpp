@@ -652,6 +652,9 @@ namespace Cryo
             case NODE_PROPERTY_ACCESS:
                 return AllocaType::AllocaLoadStore;
 
+            case NODE_PARAM:
+                return AllocaType::Parameter;
+
             default:
                 return AllocaType::AllocaOnly;
             }
@@ -738,12 +741,17 @@ namespace Cryo
                                                      llvm::BasicBlock *entryBlock, bool isVariadic = false,
                                                      bool isExternal = false);
 
-        // Create a new variable symbol
+        // Create a new variable symbol (Stack or global)
         static IRVariableSymbol createVariableSymbol(llvm::Value *value, llvm::Type *type, const std::string &name,
                                                      AllocaType allocaType, const Allocation &allocation);
 
+        // Create a new variable symbol (Stack or global) with parent function
         static IRVariableSymbol createVariableSymbol(llvm::Function *func, llvm::Value *value, llvm::Type *type,
                                                      const std::string &name, AllocaType allocaType);
+
+        // Create a new variable symbol from function parameter(s)
+        static IRVariableSymbol createParameterSymbol(llvm::Function *func, llvm::Value *value, llvm::Type *type,
+                                                      const std::string &name, AllocaType allocaType);
 
         // Create a new type symbol
         static IRTypeSymbol createTypeSymbol(llvm::Type *type, const std::string &name);
