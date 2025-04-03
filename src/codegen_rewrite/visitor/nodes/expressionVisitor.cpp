@@ -138,6 +138,9 @@ namespace Cryo
         if (!node || !node->data.functionCall)
             return;
 
+        logMessage(LMI, "INFO", "CodeGenVisitor", "Visiting function call node: %s",
+                   node->data.functionCall->name);
+
         FunctionCallNode *call = node->data.functionCall;
 
         // Find the function in the symbol table
@@ -161,18 +164,18 @@ namespace Cryo
 
         // Create the function call
         std::string funcName = call->name;
-        llvm::Value *result = builder.CreateCall(funcSymbol->function, args, funcName);
-
-        // Add the function call to the current block
+        logMessage(LMI, "INFO", "CodeGenVisitor", "Function call: %s", funcName.c_str());
+        llvm::Value *result = nullptr;
         if (funcSymbol->returnType->getTypeID() != llvm::Type::VoidTyID)
         {
-            // Store the result if the function returns a value
+            result = builder.CreateCall(funcSymbol->function, args, funcName);
             llvm::AllocaInst *alloca = builder.CreateAlloca(funcSymbol->returnType, nullptr, "calltmp");
             builder.CreateStore(result, alloca);
             lastValue = alloca;
         }
         else
         {
+            result = builder.CreateCall(funcSymbol->function, args);
             lastValue = nullptr;
         }
     }

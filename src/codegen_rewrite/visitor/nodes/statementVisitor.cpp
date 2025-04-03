@@ -27,19 +27,19 @@ namespace Cryo
     {
         if (!node || !node->data.returnStatement)
             return;
-
-        // Visit the return value expression
-        visit(node->data.returnStatement->returnValue);
+        logMessage(LMI, "INFO", "CodeGenVisitor", "Visiting return statement node");
 
         // Get the generated value
-        llvm::Value *retVal = getLLVMValue(node->data.returnStatement->returnValue);
+        llvm::Value *retVal = getLLVMValue(node->data.returnStatement->expression);
         if (retVal)
         {
-            builder.CreateRet(retVal);
+            logMessage(LMI, "INFO", "CodeGenVisitor", "Return value: %s", retVal->getName().str().c_str());
+            context.getInstance().builder.CreateRet(retVal);
         }
         else
         {
-            builder.CreateRetVoid();
+            logMessage(LMI, "INFO", "CodeGenVisitor", "No return value, returning void");
+            context.getInstance().builder.CreateRetVoid();
         }
     }
 } // namespace Cryo

@@ -81,6 +81,12 @@ namespace Cryo
         return true;
     }
 
+    bool IRSymbolTable::addExternFunction(const IRFunctionSymbol &symbol)
+    {
+        functions.insert({symbol.name, symbol});
+        return true;
+    }
+
     bool IRSymbolTable::addType(const IRTypeSymbol &symbol)
     {
         types.insert({symbol.name, symbol});
@@ -168,13 +174,14 @@ namespace Cryo
         for (size_t i = 0; i < scopeStack.size(); ++i)
         {
             std::string scopeName = scopeStack.size() == 1 ? "Global" : "Local";
-            std::cout << "  Scope " << "[" << i << "]" << ":" << scopeName << std::endl;
             for (const auto &varPair : scopeStack[i])
             {
                 const auto &var = varPair.second;
                 std::cout << "    Name: " << BLUE << var.name << COLOR_RESET << std::endl;
                 std::cout << "    Type: " << typeIDToString(var.type) << std::endl;
                 std::cout << "    AllocaType: " << Allocation::allocaTypeToString(var.allocaType) << std::endl;
+                std::cout << "    Parent Function: " << (var.parentFunction ? var.parentFunction->getName().str() : "None") << std::endl;
+                std::cout << "    Scope " << "[" << i << "]" << ":" << scopeName << std::endl;
                 std::cout << "    ----------------------------------------" << std::endl;
             }
         }

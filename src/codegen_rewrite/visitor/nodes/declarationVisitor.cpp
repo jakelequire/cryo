@@ -142,8 +142,8 @@ namespace Cryo
 
         // Add the function to the symbol table
         IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(
-            function, funcName, returnTy, funcType, nullptr, false, false);
-        symbolTable->addFunction(funcSymbol);
+            function, funcName, returnTy, funcType, nullptr, false, true);
+        symbolTable->addExternFunction(funcSymbol);
         logMessage(LMI, "INFO", "Visitor", "Extern function prototype created");
 
         return;
