@@ -20,7 +20,7 @@
 namespace Cryo
 {
     CryoLinker *globalLinker = nullptr;
-
+ 
     /// @brief This function will initialize the creation of the Cryo Runtime Module.
     /// This module is compiled along with a C runtime module to create the final
     /// runtime module that will be used in the Cryo Compiler before the main Cryo module.
@@ -163,7 +163,7 @@ namespace Cryo
         logMessage(LMI, "INFO", "Linker", "Merging modules");
         logMessage(LMI, "INFO", "Linker", "Destination Module: %s", destModule->getName().str().c_str());
 
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
+        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::LinkOnlyNeeded;
         bool result = llvm::Linker::linkModules(
             *destModule,
             llvm::CloneModule(*srcModule),

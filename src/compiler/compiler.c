@@ -274,13 +274,6 @@ int exe_project_build(CompilerSettings *settings)
         return 1;
     }
 
-    // if (generateIRFromAST(unit, state, linker, globalSymbolTable) != 0)
-    // {
-    //     logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
-    //     CONDITION_FAILED;
-    //     return 1;
-    // }
-
     LINK_ALL_MODULES(linker);
 
     DEBUG_PRINT_FILTER({

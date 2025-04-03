@@ -1,0 +1,12 @@
+namespace Std.Core;
+@pragma "core"
+
+// This is the core library of Cryo.
+// It contains the most basic types and functions.
+// It is automatically imported into every module.
+// Do not import it manually.
+
+// =================================================
+//                    Core Types
+// =================================================
+

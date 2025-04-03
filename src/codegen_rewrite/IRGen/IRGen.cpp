@@ -90,7 +90,7 @@ namespace Cryo
         context.printModule();
 
         // Write the module to a file
-        std::string fileName = "_new.ll";
+        std::string fileName = ".ll";
         std::string outputPath = "";
         if (this->buildDir.empty())
         {
