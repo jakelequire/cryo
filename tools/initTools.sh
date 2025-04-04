@@ -48,8 +48,8 @@ function cleanupLib {
 # Cleanup function to be called on script exit
 function cleanup {
     for lib in "$@"; do
-        if [ -d "./libs/$lib" ]; then
-            cleanupLib "./libs/$lib"
+        if [ -d "./tools/$lib" ]; then
+            cleanupLib "./tools/$lib"
         fi
     done
 }
@@ -96,12 +96,12 @@ function buildAndMoveLib {
 
 # Build and move binaries for each specified library    
 for lib in "$@"; do
-    if [ -d "./libs/$lib" ]; then
+    if [ -d "./tools/$lib" ]; then
         echo -e "$INIT_LIBS_SIG Processing the $lib library"
-        buildAndMoveLib "./libs/$lib"
+        buildAndMoveLib "./tools/$lib"
     else
         echo -e "$INIT_LIBS_SIG Library $lib does not exist"
-        echo -e "$INIT_LIBS_SIG Attempted path: ./libs/$lib"
+        echo -e "$INIT_LIBS_SIG Attempted path: ./tools/$lib"
     fi
 done
 

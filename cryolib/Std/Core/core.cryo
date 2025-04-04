@@ -10,3 +10,40 @@ namespace Std.Core;
 //                    Core Types
 // =================================================
 
+struct StdString {
+    // The core string properties.
+    val: str;
+    length: int;
+    capacity: int;
+
+    // The core string flags.
+    isEmpty: boolean;
+    isNull: boolean;
+
+    // The core string methods.
+}
+
+struct StdInt {
+    // The core int properties.
+    val: i32;
+
+    // The core int flags.
+    isZero: boolean;
+    isNegative: boolean;
+
+    // The core int methods.
+}
+
+type string extends StdString;
+type int extends StdInt;
+
+// =================================================
+//                    Core Functions
+// =================================================
+
+function sys_exit(code: int) -> void;
+function printStr(_str_: string) -> void;
+function printInt(num: int) -> void;
+function printFloat(num: float) -> void;
+function printBool(val: boolean) -> void;
+function printAny(val: any) -> void;

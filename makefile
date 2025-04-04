@@ -117,8 +117,8 @@ DEBUG_BIN_DIR = $(BIN_DIR)debug/
 # ---------------------------------------------
 # Source directory
 SRC_DIR =   ./src/
-LIB_DIR =   ./libs/
-LIB_INIT = $(LIB_DIR)initLibs.sh
+TOOLS_DIR =   ./tools/
+TOOLS_INIT = $(TOOLS_DIR)initTools.sh
 MAIN_FILE = $(SRC_DIR)main.c
 
 # >>=======--------------------------------------------------=======<< #
@@ -174,13 +174,13 @@ $(MAIN_BIN): build-cryo-path build-cli build-lsp-monitor build-dev-server $(ALL_
 
 # Build the CLI library
 build-cryo-path:
-	@$(LIB_INIT) cryo_path
+	@$(TOOLS_INIT) cryo_path
 build-cli:
-	@$(LIB_INIT) cli
+	@$(TOOLS_INIT) cli
 build-lsp-monitor:
-	@$(LIB_INIT) lsp-monitor
+	@$(TOOLS_INIT) lsp-monitor
 build-dev-server:
-	@$(LIB_INIT) dev-server
+	@$(TOOLS_INIT) dev-server
 
 
 # >>=======--------------------------------------------------=======<< #
@@ -200,7 +200,7 @@ all:
 build: $(MAIN_BIN)
 
 libs:
-	$(LIB_INIT) 
+	$(TOOLS_INIT) 
 
 # Define the valid clean targets
 CLEAN_TARGETS := codegen common compiler diagnostics frontend linker runtime settings symbolTable tools main

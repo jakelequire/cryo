@@ -175,8 +175,11 @@ namespace Cryo
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
         llvm::Module *preprocessedModule;
+        llvm::Module *coreModule;
+
         void setPreprocessedModule(llvm::Module *mod) { preprocessedModule = mod; }
         std::vector<llvm::Module *> dependencies;
+
         DirectoryInfo *dirInfo;
         bool c_runtime_initialized = false;
         bool auto_run_binary = false;
@@ -229,6 +232,13 @@ namespace Cryo
         void logDirectoryInfo(DirectoryInfo *dirInfo);
 
         int covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
+
+    public:
+        void initCryoCore(
+            const char *compilerRootPath, const char *buildDir,
+            CompilerState *state, CryoGlobalSymbolTable *globalTable
+        );
+        llvm::Module *_initCRuntime_(void);
     };
 
     // ================================================================ //
