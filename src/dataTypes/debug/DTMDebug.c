@@ -35,11 +35,32 @@ void DTMDebug_printDataType(DataType *type)
         case PRIM_INT:
             printf("int\n");
             break;
+        case PRIM_I8:
+            printf("i8\n");
+            break;
+        case PRIM_I16:
+            printf("i16\n");
+            break;
+        case PRIM_I32:
+            printf("i32\n");
+            break;
+        case PRIM_I64:
+            printf("i64\n");
+            break;
+        case PRIM_I128:
+            printf("i128\n");
+            break;
         case PRIM_FLOAT:
             printf("float\n");
             break;
         case PRIM_STRING:
             printf("string\n");
+            break;
+        case PRIM_CHAR:
+            printf("char\n");
+            break;
+        case PRIM_STR:
+            printf("str\n");
             break;
         case PRIM_BOOLEAN:
             printf("boolean\n");
@@ -53,8 +74,17 @@ void DTMDebug_printDataType(DataType *type)
         case PRIM_ANY:
             printf("any\n");
             break;
+        case PRIM_OBJECT:
+            printf("object\n");
+            break;
+        case PRIM_FUNCTION:
+            printf("function\n");
+            break;
         case PRIM_UNDEFINED:
             printf("undefined\n");
+            break;
+        case PRIM_UNKNOWN:
+            printf("unknown\n");
             break;
         case PRIM_AUTO:
             printf("auto\n");
@@ -184,13 +214,13 @@ const char *DTMDebug_typeofObjectTypeToString(TypeofObjectType type)
     switch (type)
     {
     case STRUCT_OBJ:
-        return "Struct Object";
+        return "Struct";
     case CLASS_OBJ:
-        return "Class Object";
+        return "Class";
     case INTERFACE_OBJ:
-        return "Interface Object";
+        return "Interface";
     case OBJECT_OBJ:
-        return "Object Object";
+        return "Object";
     case NON_OBJECT:
         return "Non-Object";
     case UNKNOWN_OBJECT:
@@ -221,6 +251,10 @@ const char *DTMDebug_primitiveDataTypeToString(PrimitiveDataType type)
         return "float";
     case PRIM_STRING:
         return "string";
+    case PRIM_CHAR:
+        return "char";
+    case PRIM_STR:
+        return "str";
     case PRIM_BOOLEAN:
         return "boolean";
     case PRIM_VOID:
@@ -279,49 +313,38 @@ const char *DTMDebug_dataTypeToString(DataType *type)
         {
         case PRIM_INT:
             return "int";
-            break;
         case PRIM_I8:
             return "i8";
-            break;
         case PRIM_I16:
             return "i16";
-            break;
         case PRIM_I32:
             return "i32";
-            break;
         case PRIM_I64:
             return "i64";
-            break;
         case PRIM_I128:
             return "i128";
-            break;
         case PRIM_FLOAT:
             return "float";
-            break;
         case PRIM_STRING:
             return "string";
-            break;
+        case PRIM_CHAR:
+            return "char";
+        case PRIM_STR:
+            return "str";
         case PRIM_BOOLEAN:
             return "boolean";
-            break;
         case PRIM_VOID:
             return "void";
-            break;
         case PRIM_NULL:
             return "null";
-            break;
         case PRIM_ANY:
             return "any";
-            break;
         case PRIM_UNDEFINED:
             return "undefined";
-            break;
         case PRIM_AUTO:
             return "auto";
-            break;
         case PRIM_OBJECT:
             return "object";
-            break;
         default:
             const char *typeOfPrim = DTM->debug->primitiveDataTypeToString(type->container->primitive);
             fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type: %s\n", typeOfPrim);
@@ -361,27 +384,11 @@ const char *DTMDebug_dataTypeToString(DataType *type)
         {
         case STRUCT_OBJ:
         {
-            char *structName = (char *)malloc(sizeof(char) * 1024);
-            if (!structName)
-            {
-                fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
-                CONDITION_FAILED;
-            }
-            strcpy(structName, "{struct} ");
-            strcat(structName, type->container->type.structType->name);
-            return structName;
+            return type->container->type.structType->name;
         }
         case CLASS_OBJ:
         {
-            char *className = (char *)malloc(sizeof(char) * 1024);
-            if (!className)
-            {
-                fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for class name\n");
-                CONDITION_FAILED;
-            }
-            strcpy(className, "{class} ");
-            strcat(className, type->container->type.classType->name);
-            return className;
+            return type->container->type.classType->name;
         }
         case INTERFACE_OBJ:
             return "interface";

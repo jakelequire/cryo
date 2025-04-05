@@ -608,6 +608,24 @@ typedef struct TypeCast
     ASTNode *expression;
 } TypeCast;
 
+typedef struct Implementation
+{
+    const char *parentName;
+    DataType *parentType;
+
+    ASTNode **methods;
+    int methodCount;
+    int methodCapacity;
+
+    ASTNode **properties;
+    int propertyCount;
+    int propertyCapacity;
+
+    ASTNode **constructors;
+    int constructorCount;
+    int constructorCapacity;
+} Implementation;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -713,6 +731,8 @@ typedef struct ASTNode
         TypeDecl *typeDecl;
         // For Type Casts
         TypeCast *typeCast;
+        // For Implementations
+        Implementation *implementation;
         // Discard
         void *discard;
     } data;
@@ -881,7 +901,7 @@ extern "C"
     ASTNode *createExternFuncNode(
         char *function_name,
         ASTNode **params,
-        int paramCount, 
+        int paramCount,
         DataType *returnType,
         Arena *arena, CompilerState *state, Lexer *lexer);
 

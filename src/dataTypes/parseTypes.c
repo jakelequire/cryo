@@ -36,10 +36,15 @@ DataType *DTMParseType(const char *typeStr)
         DataType *float_ty = DTM->primitives->createFloat();
         return float_ty;
     }
-    else if (strcmp(typeStr, "string") == 0)
+    else if (strcmp(typeStr, "char") == 0)
     {
-        DataType *string_ty = DTM->primitives->createString();
-        return string_ty;
+        DataType *char_ty = DTM->primitives->createChar();
+        return char_ty;
+    }
+    else if (strcmp(typeStr, "str") == 0)
+    {
+        DataType *str_ty = DTM->primitives->createStr();
+        return str_ty;
     }
     else if (strcmp(typeStr, "boolean") == 0)
     {
@@ -108,6 +113,29 @@ DataType *DTMParseType(const char *typeStr)
 
 DataType *DTMResolveType(DataTypeManager *self, const char *typeStr)
 {
-    fprintf(stderr, "UNIMPLEMENTED FUNCTION: DTMResolveType\n");
+    logMessage(LMI, "INFO", "DTM", "Resolving type string '%s'", typeStr);
+    if (!typeStr)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to resolve NULL type string\n");
+        CONDITION_FAILED;
+    }
+
+    // We will look up the string directly in the symbol table
+    DataType *type = self->symbolTable->lookup(self->symbolTable, typeStr);
+    if (type)
+    {
+        return type;
+    }
+
+    DataType *primitive = DTMParseType(typeStr);
+    if (primitive)
+    {
+        return primitive;
+    }
+
+    // If we reach here, the type is not a primitive or a symbol table entry
+    logMessage(LMI, "ERROR", "DTM", "Failed to resolve type string '%s'", typeStr);
     CONDITION_FAILED;
+
+    return NULL;
 }

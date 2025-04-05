@@ -37,6 +37,8 @@ typedef enum PrimitiveDataType
 
     PRIM_FLOAT,     // `float`
     PRIM_STRING,    // `string`
+    PRIM_CHAR,      // `char`
+    PRIM_STR,       // `str`
     PRIM_BOOLEAN,   // `boolean`
     PRIM_VOID,      // `void`
     PRIM_NULL,      // `null`

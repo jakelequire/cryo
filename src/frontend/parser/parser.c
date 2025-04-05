@@ -494,6 +494,9 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     case TOKEN_KW_STRUCT:
         return parseStructDeclaration(lexer, context, arena, state, globalTable);
 
+    case TOKEN_KW_IMPLEMENT:
+        return parseImplementation(lexer, context, arena, state, globalTable);
+
     case TOKEN_KW_DEBUGGER:
         parseDebugger(lexer, context, arena, state);
         return NULL;
@@ -757,26 +760,71 @@ ASTNode *parseNamespace(Lexer *lexer, ParsingContext *context, Arena *arena, Com
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing namespace...");
-    // Equivalent to `package <name>` like in Go.
     consume(__LINE__, lexer, TOKEN_KW_NAMESPACE, "Expected 'namespace' keyword.", "parseNamespace", arena, state, context);
 
     ASTNode *node = NULL;
 
-    char *namespaceName = NULL;
+    // Use a fixed buffer for the namespace name
+    char namespaceBuffer[1024] = {0}; // Adjust size as needed
+    int bufferPos = 0;
+
+    // Parse first part of namespace
     if (lexer->currentToken.type == TOKEN_IDENTIFIER)
     {
-        namespaceName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        node = createNamespaceNode(namespaceName, arena, state, lexer);
+        // Copy the first identifier to our buffer
+        int len = lexer->currentToken.length;
+        if (bufferPos + len < sizeof(namespaceBuffer))
+        {
+            memcpy(namespaceBuffer + bufferPos, lexer->currentToken.start, len);
+            bufferPos += len;
+        }
         getNextToken(lexer, arena, state);
+
+        // Parse subsequent parts (if any)
+        while (lexer->currentToken.type == TOKEN_DOT)
+        {
+            // Append the dot
+            if (bufferPos + 1 < sizeof(namespaceBuffer))
+            {
+                namespaceBuffer[bufferPos++] = '.';
+            }
+            getNextToken(lexer, arena, state);
+
+            // After a dot, we must have another identifier
+            if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+            {
+                len = lexer->currentToken.length;
+                if (bufferPos + len < sizeof(namespaceBuffer))
+                {
+                    memcpy(namespaceBuffer + bufferPos, lexer->currentToken.start, len);
+                    bufferPos += len;
+                }
+                getNextToken(lexer, arena, state);
+            }
+            else
+            {
+                parsingError("Expected an identifier after '.'", "parseNamespace", arena, state, lexer, lexer->source, globalTable);
+                break;
+            }
+        }
+
+        // Null-terminate the string
+        namespaceBuffer[bufferPos] = '\0';
     }
     else
     {
         parsingError("Expected a namespace name", "parseNamespace", arena, state, lexer, lexer->source, globalTable);
     }
 
-    InitNamespace(globalTable, namespaceName);
-
-    createNamespaceScope(context, namespaceName);
+    // Use your arena allocator to create a copy of the namespace string
+    char *namespaceName = NULL;
+    if (bufferPos > 0)
+    {
+        namespaceName = strdup(namespaceBuffer);
+        node = createNamespaceNode(namespaceName, arena, state, lexer);
+        InitNamespace(globalTable, namespaceName);
+        createNamespaceScope(context, namespaceName);
+    }
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseNamespace", arena, state, context);
 

@@ -202,6 +202,8 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "TYPE_CAST";
     case NODE_DISCARD:
         return "DISCARD";
+    case NODE_IMPLEMENTATION:
+        return "IMPLEMENTATION";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -403,6 +405,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_PRIVATE";
     case TOKEN_KW_STRUCT:
         return "TOKEN_KW_STRUCT";
+    case TOKEN_KW_IMPLEMENT:
+        return "TOKEN_KW_IMPLEMENT";
     case TOKEN_KW_DECLARE:
         return "TOKEN_KW_DECLARE";
     case TOKEN_KW_ENUM:

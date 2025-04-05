@@ -74,6 +74,7 @@ KeywordToken keywords[] = {
     {"undefined", TOKEN_KW_UNDEFINED},
     {"pragma", TOKEN_KW_PRAGMA},
     {"type", TOKEN_KW_TYPE},
+    {"implement", TOKEN_KW_IMPLEMENT},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 

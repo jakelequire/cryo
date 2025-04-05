@@ -116,6 +116,30 @@ DataType *DTMPrimitives_createString(void)
     return string_ty;
 }
 
+DataType *DTMPrimitives_createChar(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->typeOf = PRIM_TYPE;
+    container->primitive = PRIM_CHAR;
+    container->objectType = NON_OBJECT;
+
+    DataType *char_ty = DTM->dataTypes->wrapTypeContainer(container);
+    char_ty->setTypeName(char_ty, "char");
+    return char_ty;
+}
+
+DataType *DTMPrimitives_createStr(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->typeOf = PRIM_TYPE;
+    container->primitive = PRIM_STR;
+    container->objectType = NON_OBJECT;
+
+    DataType *str_ty = DTM->dataTypes->wrapTypeContainer(container);
+    str_ty->setTypeName(str_ty, "str");
+    return str_ty;
+}
+
 DataType *DTMPrimitives_createBoolean(void)
 {
     TypeContainer *container = createTypeContainer();
@@ -291,13 +315,16 @@ DTMPrimitives *createDTMPrimitives(void)
     primitives->createI128 = DTMPrimitives_createI128;
     primitives->createInt = DTMPrimitives_createInt;
     primitives->createFloat = DTMPrimitives_createFloat;
-    primitives->createString = DTMPrimitives_createString;
     primitives->createBoolean = DTMPrimitives_createBoolean;
     primitives->createVoid = DTMPrimitives_createVoid;
     primitives->createNull = DTMPrimitives_createNull;
     primitives->createAny = DTMPrimitives_createAny;
     primitives->createUndefined = DTMPrimitives_createUndefined;
     primitives->createAutoTy = DTMPrimitives_createAutoTy;
+
+    primitives->createString = DTMPrimitives_createString;
+    primitives->createChar = DTMPrimitives_createChar;
+    primitives->createStr = DTMPrimitives_createStr;
 
     primitives->createPrimString = DTMPrimitives_createPrimString;
     primitives->createPrimBoolean = DTMPrimitives_createPrimBoolean;

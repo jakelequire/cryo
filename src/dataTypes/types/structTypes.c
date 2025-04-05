@@ -45,6 +45,9 @@ void DTStructTy_addMethod(DTStructTy *structType, DataType *method)
         if (!structType->methods)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTStructTy methods\n");
+            fprintf(stderr, "Method Count: %d, Method Capacity: %d\n", structType->methodCount, structType->methodCapacity);
+            fprintf(stderr, "Struct Name: %s\n", structType->name);
+            DTM->symbolTable->printTable(DTM->symbolTable);
             CONDITION_FAILED;
         }
     }
@@ -163,11 +166,21 @@ DTStructTy *createDTStructTy(void)
         CONDITION_FAILED;
     }
 
+    structType->methods = (DataType **)malloc(sizeof(DataType *) * MAX_FIELD_CAPACITY);
+    if (!structType->methods)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTStructTy methods\n");
+        CONDITION_FAILED;
+    }
+
     // ==================== [ Property Assignments ] ==================== //
 
     structType->name = NULL;
     structType->propertyCount = 0;
     structType->propertyCapacity = MAX_FIELD_CAPACITY;
+
+    structType->methodCount = 0;
+    structType->methodCapacity = MAX_FIELD_CAPACITY;
 
     // ==================== [ Function Assignments ] ==================== //
 

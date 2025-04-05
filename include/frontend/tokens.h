@@ -117,6 +117,7 @@ extern "C"
         TOKEN_KW_PUBLIC,       // `public`
         TOKEN_KW_PRIVATE,      // `private`
         TOKEN_KW_STRUCT,       // `struct`
+        TOKEN_KW_IMPLEMENT,    // `implementation`
         TOKEN_KW_ENUM,         // `enum`
         TOKEN_KW_TRAIT,        // `trait`
         TOKEN_KW_AS,           // `as`
@@ -324,7 +325,8 @@ extern "C"
         NODE_ANNOTATION,           // 55
         NODE_TYPE_CAST,            // 56
         NODE_DISCARD,              // 57
-        NODE_UNKNOWN,              // 58
+        NODE_IMPLEMENTATION,       // 58
+        NODE_UNKNOWN,              // 59
     } CryoNodeType;
 
     typedef enum CryoVisibilityType

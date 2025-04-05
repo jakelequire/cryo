@@ -134,6 +134,8 @@ typedef struct DTMPrimitives_t
     DataType *(*createInt)(void);       // type `int` is a 32-bit integer
     DataType *(*createFloat)(void);     // type `float` is a 32-bit floating-point number
     DataType *(*createString)(void);    // type `string` is a string
+    DataType *(*createChar)(void);      // type `char` is a character
+    DataType *(*createStr)(void);       // type `str` is a string
     DataType *(*createBoolean)(void);   // type `boolean` is a boolean
     DataType *(*createVoid)(void);      // type `void` is a void type
     DataType *(*createNull)(void);      // type `null` is a null type
@@ -244,6 +246,7 @@ typedef struct DTMSymbolTable_t
 
     DTMSymbolTableEntry *(*createEntry)(const char *scopeName, const char *name, DataType *type);
     void (*importASTnode)(struct DTMSymbolTable_t *table, ASTNode *rootNode);
+    DataType *(*lookup)(struct DTMSymbolTable_t *table, const char *name);
 } DTMSymbolTable;
 
 // -------------------------- Data Types Interface -------------------------- //

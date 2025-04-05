@@ -76,10 +76,23 @@ namespace Cryo
             CONDITION_FAILED;
             return;
         }
+
+        DEBUG_BREAKPOINT;
     }
 
     llvm::Module *Linker::_initCRuntime_(void)
     {
+        // TODO:
+        // This method is to create the C runtime module.
+        // It will be linked together with the Cryo Core.
+    }
+
+    void Linker::createStdSharedLib(const char *compilerRootPath)
+    {
+        __STACK_FRAME__
+        // TODO:
+        // This method is to create the shared object files for the Cryo Standard Library.
+        // They will be placed in the `bin` directory at `{COMPILER_DIR}/cryo/bin`
     }
 
 } // namespace Cryo

@@ -17,6 +17,9 @@
 #ifndef CRYO_LINKER_H
 #define CRYO_LINKER_H
 
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
+typedef struct CompilerState CompilerState;
+
 // ================================================================ //
 // C Interface
 #ifdef __cplusplus
@@ -34,6 +37,8 @@ extern "C"
     // Linker Functions
     void CryoLinker_InitCRuntime(CryoLinker *linker);
     void CryoLinker_LinkAll(CryoLinker *linker);
+    void CryoLinker_InitCryoCore(CryoLinker *linker, const char *compilerRootPath, const char *buildDir,
+                                 CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Macros
@@ -183,6 +188,7 @@ namespace Cryo
         DirectoryInfo *dirInfo;
         bool c_runtime_initialized = false;
         bool auto_run_binary = false;
+        bool shared_lib_initialized = false;
 
         llvm::LLVMContext &getLinkerContext() { return context; }
 
@@ -236,9 +242,9 @@ namespace Cryo
     public:
         void initCryoCore(
             const char *compilerRootPath, const char *buildDir,
-            CompilerState *state, CryoGlobalSymbolTable *globalTable
-        );
+            CompilerState *state, CryoGlobalSymbolTable *globalTable);
         llvm::Module *_initCRuntime_(void);
+        void createStdSharedLib(const char *compilerRootPath);
     };
 
     // ================================================================ //
@@ -263,6 +269,20 @@ namespace Cryo
         auto _linker = reinterpret_cast<Linker *>(linker);
         _linker->initCRuntime();
     }
+
+    inline void CryoLinker_LinkAll(CryoLinker *linker)
+    {
+        auto _linker = reinterpret_cast<Linker *>(linker);
+        _linker->linkAll();
+    }
+
+    inline void CryoLinker_InitCryoCore(CryoLinker *linker, const char *compilerRootPath, const char *buildDir,
+                                        CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    {
+        auto _linker = reinterpret_cast<Linker *>(linker);
+        _linker->initCryoCore(compilerRootPath, buildDir, state, globalTable);
+    }
+
 } // namespace Cryo
 
 #endif // __cplusplus

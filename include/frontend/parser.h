@@ -355,6 +355,12 @@ ASTNode *parseNullExpression(Lexer *lexer, ParsingContext *context, Arena *arena
 ASTNode *parseTypeofIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 // # =========================================================================== #
+// # `implement` Keyword Parsing
+// # =========================================================================== #
+
+ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+// # =========================================================================== #
 // # `Using` Keyword Parsing
 // # =========================================================================== #
 

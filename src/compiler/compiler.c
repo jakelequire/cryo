@@ -210,6 +210,8 @@ int exe_project_build(CompilerSettings *settings)
     INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
     state->setFilePath(state, strdup(filePath));
 
+    CryoLinker_InitCryoCore(linker, settings->compilerRootPath, buildDir, state, globalSymbolTable);
+
     // Initialize the Type Definitions before parsing
     DTM->initDefinitions(settings->compilerRootPath, buildDir, linker, state, globalSymbolTable);
 
