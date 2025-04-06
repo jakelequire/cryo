@@ -318,33 +318,31 @@ void logCompilerSettings(CompilerSettings *settings)
     __STACK_FRAME__
     const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
     const char *falseFlag = BOLD RED "false" COLOR_RESET;
-    DEBUG_PRINT_FILTER({
-        printf("Printing compiler settings...\n");
-        printf("\n");
-        printf("# ============ Compiler Settings ============ #\n");
-        printf("  Root Directory: %s\n", settings->rootDir);
-        printf("  Project Directory: %s\n", settings->projectDir);
-        printf("  Build Directory: %s\n", settings->buildDir);
-        printf("  Runtime Path: %s\n", settings->runtimePath);
-        printf("  Compiler Root Path: %s\n", settings->compilerRootPath);
-        printf("  Input File: %s\n", settings->inputFile);
-        printf("  File Path: %s\n", settings->inputFilePath);
-        printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
-        printf("  Custom Output Path: %s\n", settings->customOutputPath);
-        printf(" ----------------------\n");
-        printf(" Flags:\n");
-        printf("  AST Dump: %s\n", settings->astDump ? trueFlag : falseFlag);
-        printf("  IR Dump: %s\n", settings->irDump ? trueFlag : falseFlag);
-        printf("  LSP Symbols: %s\n", settings->isLSP ? trueFlag : falseFlag);
-        printf("  Enable Logs: %s\n", settings->enableLogs ? trueFlag : falseFlag);
-        printf("  Disable Logs: %s\n", !settings->enableLogs ? trueFlag : falseFlag);
-        printf("  Is Single File: %s\n", settings->isSingleFile ? trueFlag : falseFlag);
-        printf("  Is Project: %s\n", settings->isProject ? trueFlag : falseFlag);
-        printf("  Source Text: %s\n", settings->isSource ? trueFlag : falseFlag);
-        printf("  Active Build: %s\n", settings->activeBuild ? trueFlag : falseFlag);
-        printf("# =========================================== #\n");
-        printf("\n");
-    });
+    printf("Printing compiler settings...\n");
+    printf("\n");
+    printf("# ============ Compiler Settings ============ #\n");
+    printf("  Root Directory: %s\n", settings->rootDir);
+    printf("  Project Directory: %s\n", settings->projectDir);
+    printf("  Build Directory: %s\n", settings->buildDir);
+    printf("  Runtime Path: %s\n", settings->runtimePath);
+    printf("  Compiler Root Path: %s\n", settings->compilerRootPath);
+    printf("  Input File: %s\n", settings->inputFile);
+    printf("  File Path: %s\n", settings->inputFilePath);
+    printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
+    printf("  Custom Output Path: %s\n", settings->customOutputPath);
+    printf(" ----------------------\n");
+    printf(" Flags:\n");
+    printf("  AST Dump: %s\n", settings->astDump ? trueFlag : falseFlag);
+    printf("  IR Dump: %s\n", settings->irDump ? trueFlag : falseFlag);
+    printf("  LSP Symbols: %s\n", settings->isLSP ? trueFlag : falseFlag);
+    printf("  Enable Logs: %s\n", settings->enableLogs ? trueFlag : falseFlag);
+    printf("  Disable Logs: %s\n", !settings->enableLogs ? trueFlag : falseFlag);
+    printf("  Is Single File: %s\n", settings->isSingleFile ? trueFlag : falseFlag);
+    printf("  Is Project: %s\n", settings->isProject ? trueFlag : falseFlag);
+    printf("  Source Text: %s\n", settings->isSource ? trueFlag : falseFlag);
+    printf("  Active Build: %s\n", settings->activeBuild ? trueFlag : falseFlag);
+    printf("# =========================================== #\n");
+    printf("\n");
 }
 
 const char *DebugLevelToString(DebugLevel level)

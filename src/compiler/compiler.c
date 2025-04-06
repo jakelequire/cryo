@@ -116,7 +116,7 @@ int exe_single_file_build(CompilerSettings *settings)
     Arena *arena;
     Lexer lexer;
     CompilerState *state;
-    INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
+    INIT_SUBSYSTEMS(buildDir, rootDirectory, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
 
     // Initialize the parser
     ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
@@ -207,16 +207,18 @@ int exe_project_build(CompilerSettings *settings)
     Arena *arena;
     Lexer lexer;
     CompilerState *state;
-    INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
+    INIT_SUBSYSTEMS(buildDir, settings->compilerRootPath, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
     state->setFilePath(state, strdup(filePath));
+
+    logCompilerSettings(settings);
 
     CryoLinker_InitCryoCore(linker, settings->compilerRootPath, buildDir, state, globalSymbolTable);
 
     // Initialize the Type Definitions before parsing
-    DTM->initDefinitions(settings->compilerRootPath, buildDir, linker, state, globalSymbolTable);
+    // DTM->initDefinitions(settings->compilerRootPath, buildDir, linker, state, globalSymbolTable);
 
     // Initialize runtime definitions
-    boostrapRuntimeDefinitions(globalSymbolTable, linker);
+    // boostrapRuntimeDefinitions(globalSymbolTable, linker);
 
     state->setFilePath(state, strdup(filePath));
     // Initialize the parser

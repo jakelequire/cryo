@@ -317,7 +317,10 @@
     "cwrappers.h": "c",
     "datatypemanager.h": "c",
     "parsetypes.h": "c",
-    "datatypedefs.h": "c"
+    "datatypedefs.h": "c",
+    "netfwd": "c",
+    "rope": "c",
+    "slist": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

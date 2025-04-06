@@ -20,4 +20,13 @@
 #include "frontend/AST.h"
 #include "compiler/compiler.h"
 
+#include "clang/Frontend/ASTConsumers.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendAction.h"
+#include "clang/Tooling/Tooling.h"
+#include "clang/Tooling/CommonOptionsParser.h"
+#include "clang/Tooling/CompilationDatabase.h"
+#include "clang/Tooling/Tooling.h"
+#include "clang/CodeGen/CodeGenAction.h"
+
 #endif // INIT_LINKER_H

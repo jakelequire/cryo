@@ -83,6 +83,26 @@ void DataTypes_free(DataType *type)
     free(type);
 }
 
+DataType *DataTypes_clone(DataType *type)
+{
+    logMessage(LMI, "INFO", "DTM", "Cloning data type...");
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to clone NULL data type\n");
+        CONDITION_FAILED;
+    }
+
+    DataType *clonedType = (DataType *)malloc(sizeof(DataType));
+    if (!clonedType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to clone data type\n");
+        CONDITION_FAILED;
+    }
+
+    memcpy(clonedType, type, sizeof(DataType));
+    return clonedType;
+}
+
 TypeContainer *DTMTypeContainerWrappers_createTypeContainer(void)
 {
     logMessage(LMI, "INFO", "DTM", "Creating Type Container...");
@@ -112,6 +132,7 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
     type->setPointer = DataTypes_isPointer;
     type->setReference = DataTypes_isReference;
     type->cast = DataTypes_cast;
+    type->clone = DataTypes_clone;
     type->setTypeName = DataTypes_setTypeName;
     type->free = DataTypes_free;
 
@@ -222,6 +243,19 @@ DataType *DTMTypeContainerWrappers_createProtoType(const char *name, PrimitiveDa
     return protoType;
 }
 
+DataType *DTMTypeContainerWrappers_createTypeAlias(const char *name, DataType *type)
+{
+    DataType *clonedType = type->clone(type);
+    if (!clonedType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to clone data type for alias\n");
+        CONDITION_FAILED;
+    }
+    clonedType->setTypeName(clonedType, name);
+
+    return clonedType;
+}
+
 DTMDataTypes *createDTMDataTypes(void)
 {
     DTMDataTypes *dataTypes = (DTMDataTypes *)malloc(sizeof(DTMDataTypes));
@@ -246,6 +280,7 @@ DTMDataTypes *createDTMDataTypes(void)
     dataTypes->wrapGenericType = DTMTypeContainerWrappers_wrapGenericType;
 
     dataTypes->createProtoType = DTMTypeContainerWrappers_createProtoType;
+    dataTypes->createTypeAlias = DTMTypeContainerWrappers_createTypeAlias;
 
     return dataTypes;
 }

@@ -265,6 +265,7 @@ typedef struct DTMDataTypes_t
     DataType *(*wrapClassType)(struct DTClassTy_t *classType);
 
     DataType *(*createProtoType)(const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
+    DataType *(*createTypeAlias)(const char *name, DataType *type);
 } DTMDataTypes;
 
 typedef struct DTMTypeValidation_t

@@ -105,6 +105,7 @@ DataType *DTMParseType(const char *typeStr)
     else
     {
         // Attempt to lookup the type in the symbol table
+        logMessage(LMI, "INFO", "DTM", "Looking up type string '%s' in symbol table", typeStr);
         DataType *type = DTM->symbolTable->lookup(DTM->symbolTable, typeStr);
         if (type)
         {

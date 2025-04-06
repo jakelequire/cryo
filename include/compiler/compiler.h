@@ -88,25 +88,25 @@ extern int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *st
 // -------------------------------------------------------------
 // NEW Compiler Functions
 
-#define INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state) \
-    do                                                                                                        \
-    {                                                                                                         \
-        globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);                                           \
-        if (!globalSymbolTable)                                                                               \
-        {                                                                                                     \
-            fprintf(stderr, "Error: Failed to create global symbol table\n");                                 \
-            return 1;                                                                                         \
-        }                                                                                                     \
-        printGlobalSymbolTable(globalSymbolTable);                                                            \
-        linker = CreateCryoLinker(buildDir);                                                                  \
-        arena = createArena(ARENA_SIZE, ALIGNMENT);                                                           \
-        printGlobalSymbolTable(globalSymbolTable);                                                            \
-        setPrimaryTableStatus(globalSymbolTable, true);                                                       \
-        lexer = (Lexer){};                                                                                    \
-        state = initCompilerState(arena, &lexer, fileName);                                                   \
-        setGlobalSymbolTable(state, globalSymbolTable);                                                       \
-        initLexer(&lexer, source, fileName, state);                                                           \
-        state->settings = settings;                                                                           \
+#define INIT_SUBSYSTEMS(buildDir, compilerRootPath, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state) \
+    do                                                                                                                          \
+    {                                                                                                                           \
+        globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);                                                             \
+        if (!globalSymbolTable)                                                                                                 \
+        {                                                                                                                       \
+            fprintf(stderr, "Error: Failed to create global symbol table\n");                                                   \
+            return 1;                                                                                                           \
+        }                                                                                                                       \
+        printGlobalSymbolTable(globalSymbolTable);                                                                              \
+        linker = CreateCryoLinker(buildDir, compilerRootPath);                                                                  \
+        arena = createArena(ARENA_SIZE, ALIGNMENT);                                                                             \
+        printGlobalSymbolTable(globalSymbolTable);                                                                              \
+        setPrimaryTableStatus(globalSymbolTable, true);                                                                         \
+        lexer = (Lexer){};                                                                                                      \
+        state = initCompilerState(arena, &lexer, fileName);                                                                     \
+        setGlobalSymbolTable(state, globalSymbolTable);                                                                         \
+        initLexer(&lexer, source, fileName, state);                                                                             \
+        state->settings = settings;                                                                                             \
     } while (0)
 
 int cryoCompile(CompilerSettings *settings);

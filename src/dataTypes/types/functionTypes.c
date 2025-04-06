@@ -66,6 +66,7 @@ void DTFunctionTy_setReturnType(DTFunctionTy *function, DataType *returnType)
         function->returnType = NULL;
     }
     function->returnType = returnType;
+    function->returnType->typeName = returnType->debug->toString(returnType);
 }
 
 const char *DTFunctionTy_signatureToString(DTFunctionTy *function)

@@ -186,6 +186,11 @@ namespace Cryo
         case NODE_ASSIGN:
         case NODE_MODULE:
         case NODE_USING:
+        case NODE_TYPE_CAST:
+        case NODE_TYPEOF:
+        case NODE_DISCARD:
+        case NODE_NULL_LITERAL:
+        case NODE_IMPLEMENTATION:
         case NODE_ANNOTATION:
         {
             // Skip Node.
@@ -200,6 +205,8 @@ namespace Cryo
         default:
         {
             std::cout << "ASTNodeToSymbol: Unknown Node Type" << std::endl;
+            const char *nodeString = CryoNodeTypeToString(nodeType);
+            std::cout << "Node Type: " << nodeString << std::endl;
             CONDITION_FAILED;
         }
         }

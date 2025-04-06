@@ -300,10 +300,15 @@ void logASTNode(ASTNode *node)
 char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel, bool console)
 {
     const char *nodeType = node->nodeType;
-    char *formattedNode = NULL;
+    char *formattedNode = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
+    if (!formattedNode)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for formatted node");
+        return NULL;
+    }
 
     // Create indentation string
-    char indent[128];
+    char indent[1024];
     memset(indent, 0, sizeof(indent));
     for (int i = 0; i < indentLevel; i++)
     {
@@ -1214,14 +1219,19 @@ char *formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
 }
 char *CONSOLE_formatMethodNode(ASTDebugNode *node, DebugASTOutput *output)
 {
-    // <Method> [NAME] → { FUNCTION_SIGNATURE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<Method>%s %s[%s]:%s%s%s %s %s%s<%i:%i>%s",
+
+    // Safe defaults
+    const char *nodeName = node->nodeName ? node->nodeName : "NULL";
+    const char *dataTypeStr = node->dataType ? DTM->debug->dataTypeToString(node->dataType) : "NULL";
+
+    sprintf(buffer, "%s%s<Method>%s %s[%s]:%s %s%s%s%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
-            YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
+            YELLOW, nodeName, COLOR_RESET,
+            BOLD, LIGHT_CYAN, dataTypeStr, COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+
     return buffer;
 }
 // </Method>
@@ -1312,10 +1322,13 @@ char *CONSOLE_formatMethodCallNode(ASTDebugNode *node, DebugASTOutput *output)
     // <MethodCall> [NAME] { RETURN_TYPE } <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
+    const char *nodeName = node->nodeName;
+    const char *dataTypeStr = DTM->debug->dataTypeToString(node->dataType);
+
     sprintf(buffer, "%s%s<MethodCall>%s %s[%s]:%s%s%s %s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
-            YELLOW, node->nodeName, COLOR_RESET,
-            BOLD, CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
+            YELLOW, nodeName, COLOR_RESET,
+            BOLD, CYAN, dataTypeStr, COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -2279,6 +2292,11 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         for (int i = 0; i < node->data.implementation->propertyCount; i++)
         {
             const char *propertyName = node->data.implementation->properties[i]->data.property->name;
+            if (propertyName == NULL)
+            {
+                logMessage(LMI, "ERROR", "AST", "Property name is NULL");
+                return;
+            }
             DataType *propertyType = node->data.implementation->properties[i]->data.property->type;
             ASTDebugNode *propertyNode = createASTDebugNode("Property", propertyName, propertyType, 0, 0, indentLevel + 1, node->data.implementation->properties[i]);
             output->nodes[output->nodeCount] = *propertyNode;
@@ -2293,11 +2311,16 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 logMessage(LMI, "ERROR", "AST", "Method name is NULL");
                 return;
             }
-            printf("Method name: %s\n", methodName);
             DataType *methodType = node->data.implementation->methods[i]->data.method->type;
             ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, methodType, 0, 0, indentLevel + 1, node->data.implementation->methods[i]);
             output->nodes[output->nodeCount] = *methodNode;
             output->nodeCount++;
+
+            // Check if the method has a body
+            if (node->data.implementation->methods[i]->data.method->body != NULL)
+            {
+                createASTDebugView(node->data.implementation->methods[i]->data.method->body, output, indentLevel + 2);
+            }
         }
 
         break;

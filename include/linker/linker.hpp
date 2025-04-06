@@ -32,7 +32,7 @@ extern "C"
     typedef struct CryoLinker_t *CryoLinker;
 
     // Constructors & Destructors
-    CryoLinker *CryoLinker_Create(const char *buildDir);
+    CryoLinker *CryoLinker_Create(const char *buildDir, const char *compilerRootPath);
 
     // Linker Functions
     void CryoLinker_InitCRuntime(CryoLinker *linker);
@@ -47,7 +47,7 @@ extern "C"
 #define INIT_LINKER_C_RUNTIME(linker) CryoLinker_InitCRuntime(linker)
 #define LINK_ALL_MODULES(linker) CryoLinker_LinkAll(linker)
 
-#define CreateCryoLinker(buildDir) CryoLinker_Create(buildDir)
+#define CreateCryoLinker(buildDir, compilerRootPath) CryoLinker_Create(buildDir, compilerRootPath)
 
 #ifdef __cplusplus
 }
@@ -67,7 +67,9 @@ extern "C"
 #include <sstream>
 #include <functional>
 #include <filesystem>
-
+#include <algorithm>
+#include <unistd.h>
+#include <optional>
 #include <wait.h>
 
 // -----------------------------------------------
@@ -141,6 +143,7 @@ struct DirectoryInfo
     std::string outDir;
     std::string depDir;
     std::string runtimeDir;
+    std::string compilerDir;
 };
 
 namespace Cryo
@@ -157,11 +160,15 @@ namespace Cryo
     class Linker
     {
     public:
-        Linker(const char *buildDir)
+        Linker(const char *buildDir, const char *compilerRootPath)
         {
             std::cout << "Linker Constructor Called..." << std::endl;
+            std::cout << "Linker Build Directory: " << buildDir << std::endl;
+            std::cout << "Linker Compiler Root Path: " << compilerRootPath << std::endl;
+
             std::string rootDir = std::string(buildDir).substr(0, std::string(buildDir).find_last_of("/"));
             dirInfo = createDirectoryInfo(rootDir);
+            dirInfo->compilerDir.assign(compilerRootPath);
 
             // Print the directory info
             logDirectoryInfo(dirInfo);
@@ -180,7 +187,11 @@ namespace Cryo
         llvm::LLVMContext context;
         std::unique_ptr<llvm::Module> finalModule;
         llvm::Module *preprocessedModule;
-        llvm::Module *coreModule;
+
+        llvm::Module *coreModule;              // [NEW]
+        bool coreModuleInitialized = false;    // [NEW]
+        llvm::Module *runtimeModule;           // [NEW]
+        bool runtimeModuleInitialized = false; // [NEW]
 
         void setPreprocessedModule(llvm::Module *mod) { preprocessedModule = mod; }
         std::vector<llvm::Module *> dependencies;
@@ -243,7 +254,7 @@ namespace Cryo
         void initCryoCore(
             const char *compilerRootPath, const char *buildDir,
             CompilerState *state, CryoGlobalSymbolTable *globalTable);
-        llvm::Module *_initCRuntime_(void);
+        void _initCRuntime_(void);
         void createStdSharedLib(const char *compilerRootPath);
     };
 
@@ -251,11 +262,11 @@ namespace Cryo
     //                     C API Implementation                         //
     // ================================================================ //
 
-    inline CryoLinker *CryoLinker_Create(const char *buildDir)
+    inline CryoLinker *CryoLinker_Create(const char *buildDir, const char *compilerRootPath)
     {
         try
         {
-            auto linker = new Linker(buildDir);
+            auto linker = new Linker(buildDir, compilerRootPath);
             return reinterpret_cast<CryoLinker *>(linker);
         }
         catch (...)

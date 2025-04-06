@@ -9,6 +9,13 @@ namespace Std.Core;
 // *Do not import it manually.*
 
 // ======================================================== //
+//                    C ABI Functions                       //
+// ======================================================== //
+
+extern function printf_export (format: str, ...) -> int;
+extern function scanf_export (format: str, ...) -> int;
+
+// ======================================================== //
 //                       Core Types                         //
 // ======================================================== //
 
@@ -48,6 +55,7 @@ implement struct String {
     // The core string methods.
     append(__str__: str) -> String {
         // Implementation of append method
+        printf_export("Appending string: %s\n", __str__);
     }
 
     prepend(__str__: str) -> String {
@@ -128,18 +136,18 @@ type pointer extends Pointer;   // Type alias for Pointer
 //                    C ABI Functions                       //
 // ======================================================== //
 
-extern function mmap    (size: int, flags: int, fd: int, offset: int) -> pointer;
-extern function munmap  (_ptr_: pointer, size: int) -> int;
-extern function malloc  (size: int) -> pointer;
-extern function free    (_ptr_: pointer) -> int;
-extern function memcpy  (dest: pointer, src: pointer, size: int) -> pointer;
-extern function memmove (dest: pointer, src: pointer, size: int) -> pointer;
-extern function memset  (dest: pointer, value: int, size: int) -> pointer;
-extern function memcmp  (ptr1: pointer, ptr2: pointer, size: int) -> int;
-extern function strlen  (_str_: pointer) -> int;
-extern function strnlen (_str_: pointer, maxlen: int) -> int;
-extern function strncmp (str1: pointer, str2: pointer, maxlen: int) -> int;
-extern function strndup (_str_: pointer, maxlen: int) -> pointer;
+extern function mmap_export (addr: pointer, length: int, prot: int, flags: int, fd: int, offset: int) -> pointer;
+extern function munmap_export (addr: pointer, length: int) -> int;
+extern function malloc_export (size: int) -> pointer;
+extern function free_export (ptr: pointer) -> int;
+extern function memcpy_export (dest: pointer, src: pointer, n: int) -> pointer;
+extern function memmove_export (dest: pointer, src: pointer, n: int) -> pointer;
+extern function memcmp_export (ptr1: pointer, ptr2: pointer, n: int) -> int;
+extern function memset_export (ptr: pointer, value: int, num: int) -> pointer;
+extern function strlen_export (str: str) -> int;
+extern function strncat_export (dest: str, src: str, n: int) -> str;
+extern function strnlen_export (str: str, n: int) -> int;
+extern function strncmp_export (str1: str, str2: str, n: int) -> int;
 
 // ======================================================== //
 //                    Core Functions                        //

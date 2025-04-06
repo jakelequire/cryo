@@ -21,12 +21,12 @@
 
 extern "C"
 {
-    CryoLinker *CryoLinker_Create(const char *buildDir)
+    CryoLinker *CryoLinker_Create(const char *buildDir, const char *compilerRootPath)
     {
         __STACK_FRAME__
         try
         {
-            auto linker = new Cryo::Linker(buildDir);
+            auto linker = new Cryo::Linker(buildDir, compilerRootPath);
             return reinterpret_cast<CryoLinker *>(linker);
         }
         catch (...)

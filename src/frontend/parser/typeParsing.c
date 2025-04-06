@@ -401,7 +401,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end method declaration.", "parseMethodDeclaration", arena, state, context);
         ASTNode *methodNode = createMethodNode(returnType, NULL, strdup(methodName), params, paramCount, parentName, isStatic,
                                                arena, state, lexer);
-        DataType **paramTypes = (DataType **)malloc(paramCount * sizeof(DataType *));
+        DataType **paramTypes = (DataType **)malloc(paramCount * sizeof(DataType *) + 1);
         for (int i = 0; i < paramCount; i++)
         {
             paramTypes[i] = params[i]->data.param->type;
@@ -735,11 +735,46 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
     // The name of the type definition
     char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Type name: %s", typeName);
-
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected type name.", "parseTypeDeclaration", arena, state, context);
 
-    consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` after type name.", "parseTypeDeclaration", arena, state, context);
+    // Check for the `extends` keyword
+    if (lexer->currentToken.type == TOKEN_KW_EXTENDS)
+    {
+        consume(__LINE__, lexer, TOKEN_KW_EXTENDS, "Expected `extends` keyword.", "parseTypeDeclaration", arena, state, context);
+        char *parentName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "INFO", "Parser", "Parent name: %s", parentName);
+        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected parent name.", "parseTypeDeclaration", arena, state, context);
+        DataType *parentType = DTM->symbolTable->getEntry(DTM->symbolTable, getNamespaceScopeID(context), parentName);
+        if (!parentType)
+        {
+            parsingError("Failed to resolve parent type.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+            return NULL;
+        }
 
+        // If the statement is followed by a `;`, it is a forward declaration / type alias
+        if (lexer->currentToken.type == TOKEN_SEMICOLON)
+        {
+            consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after type name.", "parseTypeDeclaration", arena, state, context);
+            DataType *typeAlias = DTM->dataTypes->createTypeAlias(typeName, parentType);
+            if (!typeAlias)
+            {
+                parsingError("Failed to create type alias.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+                return NULL;
+            }
+
+            // Add the type alias to the symbol table
+            DTM->symbolTable->addEntry(DTM->symbolTable, getNamespaceScopeID(context), typeName, typeAlias);
+            ASTNode *aliasTypeNode = createTypeDeclNode(typeName, typeAlias, arena, state, lexer);
+            if (!aliasTypeNode)
+            {
+                parsingError("Failed to create type alias node.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+                return NULL;
+            }
+            return aliasTypeNode;
+        }
+    }
+
+    consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` after type name.", "parseTypeDeclaration", arena, state, context);
     DataType *typeDefinition = parseTypeDefinition(typeName, lexer, context, arena, state, globalTable);
     if (!typeDefinition)
     {
@@ -1820,9 +1855,9 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     }
 
     implementationNode->print(implementationNode);
+    logMessage(LMI, "INFO", "Parser", "Implementation node created.");
 
-    DEBUG_BREAKPOINT;
-    return NULL;
+    return implementationNode;
 }
 
 ASTNode *parseImplementationBody(DataType *interfaceType,

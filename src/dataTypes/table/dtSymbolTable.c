@@ -388,9 +388,17 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
         const char *typeofStr = "<unknown>";
         if (DTM && DTM->debug && DTM->debug->typeofDataTypeToString)
         {
-            const char *tmp = DTM->debug->typeofObjectTypeToString(type->container->objectType);
-            if (tmp)
-                typeofStr = tmp;
+            if (type->container->objectType == NON_OBJECT)
+            {
+                typeofStr = DTM->debug->typeofDataTypeToString(type->container->typeOf);
+            }
+            else
+            {
+
+                const char *tmp = DTM->debug->typeofObjectTypeToString(type->container->objectType);
+                if (tmp)
+                    typeofStr = tmp;
+            }
         }
 
         // Build flags string
@@ -421,8 +429,8 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
         case OBJECT_TYPE:
             if (type->container->objectType == STRUCT_OBJ)
             {
-                nameColor = LIGHT_YELLOW;
-                typeColor = YELLOW;
+                nameColor = LIGHT_CYAN;
+                typeColor = CYAN;
             }
             else
             {

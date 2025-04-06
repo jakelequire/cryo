@@ -1677,15 +1677,15 @@ ImplementNode *createImplementationNodeContainer(Arena *arena, CompilerState *st
     node->interfaceName = NULL;
     node->interfaceType = DTM->primitives->createUndefined();
 
-    node->properties = (ASTNode **)malloc(sizeof(ASTNode *));
+    node->properties = (ASTNode **)malloc(sizeof(ASTNode *) * PROPERTY_CAPACITY);
     node->propertyCount = 0;
     node->propertyCapacity = PROPERTY_CAPACITY;
 
-    node->methods = (ASTNode **)malloc(sizeof(ASTNode *));
+    node->methods = (ASTNode **)malloc(sizeof(ASTNode *) * METHOD_CAPACITY);
     node->methodCount = 0;
     node->methodCapacity = METHOD_CAPACITY;
 
-    node->constructors = (ASTNode **)malloc(sizeof(ASTNode *));
+    node->constructors = (ASTNode **)malloc(sizeof(ASTNode *) * METHOD_CAPACITY);
     node->constructorCount = 0;
     node->constructorCapacity = METHOD_CAPACITY;
 
