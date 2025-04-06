@@ -21,7 +21,7 @@
 ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST node");

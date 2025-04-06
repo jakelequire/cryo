@@ -377,12 +377,12 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     char *methodName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Method name: %s", methodName);
 
-    const char *methodID = Generate64BitHashID(methodName);
-    setCurrentMethod(context, methodName, parentName); // ParsingContext
+    const char *methodID = Generate64BitHashID(strdup(methodName));
+    setCurrentMethod(context, strdup(methodName), parentName); // ParsingContext
 
     getNextToken(lexer, arena, state);
 
-    ASTNode **params = parseParameterList(lexer, context, arena, methodName, state, globalTable);
+    ASTNode **params = parseParameterList(lexer, context, arena, strdup(methodName), state, globalTable);
     int paramCount = 0;
     while (params[paramCount] != NULL)
     {
@@ -399,14 +399,14 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     if (lexer->currentToken.type == TOKEN_SEMICOLON)
     {
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end method declaration.", "parseMethodDeclaration", arena, state, context);
-        ASTNode *methodNode = createMethodNode(returnType, NULL, methodName, params, paramCount, parentName, isStatic,
+        ASTNode *methodNode = createMethodNode(returnType, NULL, strdup(methodName), params, paramCount, parentName, isStatic,
                                                arena, state, lexer);
-        DataType **paramTypes = (DataType **)ARENA_ALLOC(arena, paramCount * sizeof(DataType *));
+        DataType **paramTypes = (DataType **)malloc(paramCount * sizeof(DataType *));
         for (int i = 0; i < paramCount; i++)
         {
             paramTypes[i] = params[i]->data.param->type;
         }
-        DataType *methodType = DTM->functionTypes->createMethodType(methodName, returnType, paramTypes, paramCount);
+        DataType *methodType = DTM->functionTypes->createMethodType(strdup(methodName), returnType, paramTypes, paramCount);
         methodNode->data.method->type = methodType;
         methodNode->data.method->paramTypes = paramTypes;
 
@@ -423,17 +423,17 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     // Create the method body
     ASTNode *methodBody = parseBlock(lexer, context, arena, state, globalTable);
     // Create the method node
-    ASTNode *methodNode = createMethodNode(returnType, methodBody, methodName, params, paramCount, parentName, isStatic,
+    ASTNode *methodNode = createMethodNode(returnType, methodBody, strdup(methodName), params, paramCount, parentName, isStatic,
                                            arena, state, lexer);
 
-    DataType **paramTypes = (DataType **)ARENA_ALLOC(arena, paramCount * sizeof(DataType *));
+    DataType **paramTypes = (DataType **)malloc(paramCount * sizeof(DataType *));
     for (int i = 0; i < paramCount; i++)
     {
         paramTypes[i] = params[i]->data.param->type;
     }
 
     // Create the method type
-    DataType *methodType = DTM->functionTypes->createMethodType(methodName, returnType, paramTypes, paramCount);
+    DataType *methodType = DTM->functionTypes->createMethodType(strdup(methodName), returnType, paramTypes, paramCount);
     methodNode->data.method->type = methodType;
     methodNode->data.method->paramTypes = paramTypes;
 
@@ -1819,6 +1819,8 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
         CONDITION_FAILED;
     }
 
+    implementationNode->print(implementationNode);
+
     DEBUG_BREAKPOINT;
     return NULL;
 }
@@ -1858,8 +1860,8 @@ ASTNode *parseImplementationBody(DataType *interfaceType,
 
         // Consume the semicolon
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImplementationBody", arena, state, context);
-        const char *parentName = interfaceType->typeName;
-        const char *parentNodeType = interfaceType->typeName;
+        const char *parentName = interfaceType->debug->toString(interfaceType);
+        CryoNodeType parentNodeType = interfaceType->container->objectType == OBJECT_TYPE ? NODE_CLASS : NODE_STRUCT_DECLARATION;
 
         return createFieldNode(fieldName, fieldType, parentName, parentNodeType, initializer, arena, state, lexer);
     }
@@ -1872,8 +1874,10 @@ ASTNode *parseImplementationBody(DataType *interfaceType,
         logMessage(LMI, "INFO", "Parser", "Implementation method: %s", methodName);
 
         // Since we're in an implementation, we need to determine the parent type
-        const char *parentName = context->thisContext->nodeName;
+        const char *parentName = interfaceType->debug->toString(interfaceType);
         bool isStatic = false; // Implementation methods are instance methods by default
+
+        logMessage(LMI, "INFO", "Parser", "Method parent name: %s", parentName);
 
         // Parse the method declaration
         return parseMethodDeclaration(isStatic, parentName, lexer, context, arena, state, globalTable);

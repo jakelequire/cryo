@@ -536,7 +536,7 @@ void processNode(ASTNode *node)
     case NODE_METHOD:
     {
         symbol->kind = "method";
-        symbol->name = node->data.method->name;
+        symbol->name = (char *)node->data.method->name;
         DataType *methodType = node->data.method->functionType;
         symbol->signature = (char *)methodType->debug->toString(methodType);
         processNode(node->data.method->body);

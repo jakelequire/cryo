@@ -675,6 +675,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatModuleNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "Implementation") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatImplementationNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatImplementationNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1584,6 +1595,27 @@ char *CONSOLE_formatModuleNode(ASTDebugNode *node, DebugASTOutput *output)
     return buffer;
 }
 // </Module>
+// ============================================================
+// ============================================================
+// <Implementation>
+char *formatImplementationNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<Implementation> [%s] <0:0>",
+            node->nodeName);
+    return buffer;
+}
+char *CONSOLE_formatImplementationNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<Implementation>%s %s[%s]%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -2229,6 +2261,45 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         ASTDebugNode *typeNode = createASTDebugNode("Type", typeName, type, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *typeNode;
         output->nodeCount++;
+        break;
+    }
+
+    case NODE_IMPLEMENTATION:
+    {
+        __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "Implementation");
+        const char *implName = node->data.implementation->interfaceName;
+
+        DataType *implType = node->data.implementation->interfaceType;
+        ASTDebugNode *implNode = createASTDebugNode("Implementation", (char *)implName, implType, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *implNode;
+        output->nodeCount++;
+
+        // Handle implemented properties
+        for (int i = 0; i < node->data.implementation->propertyCount; i++)
+        {
+            const char *propertyName = node->data.implementation->properties[i]->data.property->name;
+            DataType *propertyType = node->data.implementation->properties[i]->data.property->type;
+            ASTDebugNode *propertyNode = createASTDebugNode("Property", propertyName, propertyType, 0, 0, indentLevel + 1, node->data.implementation->properties[i]);
+            output->nodes[output->nodeCount] = *propertyNode;
+            output->nodeCount++;
+        }
+        // Handle implemented methods
+        for (int i = 0; i < node->data.implementation->methodCount; i++)
+        {
+            const char *methodName = node->data.implementation->methods[i]->data.method->name;
+            if (methodName == NULL)
+            {
+                logMessage(LMI, "ERROR", "AST", "Method name is NULL");
+                return;
+            }
+            printf("Method name: %s\n", methodName);
+            DataType *methodType = node->data.implementation->methods[i]->data.method->type;
+            ASTDebugNode *methodNode = createASTDebugNode("Method", methodName, methodType, 0, 0, indentLevel + 1, node->data.implementation->methods[i]);
+            output->nodes[output->nodeCount] = *methodNode;
+            output->nodeCount++;
+        }
+
         break;
     }
 

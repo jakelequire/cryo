@@ -364,7 +364,7 @@ typedef struct MethodNode
 {
     DataType *functionType;
     DataType *type;
-    char *name;
+    const char *name;
     ASTNode **params;
     int paramCount;
     int paramCapacity;
@@ -1328,6 +1328,7 @@ char *formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatModuleNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatImplementationNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1364,5 +1365,6 @@ char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatModuleNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatImplementationNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

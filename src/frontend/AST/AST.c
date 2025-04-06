@@ -1030,7 +1030,7 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
         return NULL;
     }
 
-    node->data.method->name = strdup(methodName);
+    node->data.method->name = methodName;
     node->data.method->body = body;
     node->data.method->params = args;
     node->data.method->paramCount = argCount;
@@ -1326,7 +1326,7 @@ ASTNode *createImplementationNode(const char *interfaceName, ASTNode **propertie
         return NULL;
     }
 
-    node->data.implementation->interfaceName = strdup(interfaceName);
+    node->data.implementation->interfaceName = interfaceName;
     node->data.implementation->properties = properties;
     node->data.implementation->propertyCount = propertyCount;
     node->data.implementation->methods = methods;

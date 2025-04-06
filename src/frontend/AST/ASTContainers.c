@@ -1269,7 +1269,7 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
+    node->name = NULL;
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
@@ -1674,18 +1674,18 @@ ImplementNode *createImplementationNodeContainer(Arena *arena, CompilerState *st
         return NULL;
     }
 
-    node->interfaceName = (char *)malloc(sizeof(char) * MAX_IDENTIFIER_LENGTH);
+    node->interfaceName = NULL;
     node->interfaceType = DTM->primitives->createUndefined();
 
-    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->properties = (ASTNode **)malloc(sizeof(ASTNode *));
     node->propertyCount = 0;
     node->propertyCapacity = PROPERTY_CAPACITY;
 
-    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->methods = (ASTNode **)malloc(sizeof(ASTNode *));
     node->methodCount = 0;
     node->methodCapacity = METHOD_CAPACITY;
 
-    node->constructors = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->constructors = (ASTNode **)malloc(sizeof(ASTNode *));
     node->constructorCount = 0;
     node->constructorCapacity = METHOD_CAPACITY;
 
