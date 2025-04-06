@@ -359,7 +359,7 @@ ASTNode *parseTypeofIdentifier(Lexer *lexer, ParsingContext *context, Arena *are
 // # =========================================================================== #
 
 ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
-
+ASTNode *parseImplementationBody(DataType *interfaceType, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 // # =========================================================================== #
 // # `Using` Keyword Parsing
 // # =========================================================================== #

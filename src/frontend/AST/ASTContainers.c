@@ -1388,10 +1388,10 @@ GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *sta
     return node;
 }
 
-PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
+struct PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    PublicMembers *node = (PublicMembers *)ARENA_ALLOC(arena, sizeof(PublicMembers));
+    struct PublicMembers *node = (struct PublicMembers *)malloc(sizeof(struct PublicMembers));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
@@ -1409,10 +1409,10 @@ PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
     return node;
 }
 
-PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state)
+struct PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    PrivateMembers *node = (PrivateMembers *)ARENA_ALLOC(arena, sizeof(PrivateMembers));
+    struct PrivateMembers *node = (struct PrivateMembers *)malloc(sizeof(struct PrivateMembers));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
@@ -1430,10 +1430,10 @@ PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state
     return node;
 }
 
-ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *state)
+struct ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    ProtectedMembers *node = (ProtectedMembers *)ARENA_ALLOC(arena, sizeof(ProtectedMembers));
+    struct ProtectedMembers *node = (struct ProtectedMembers *)malloc(sizeof(struct ProtectedMembers));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
@@ -1660,6 +1660,34 @@ TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state)
 
     node->type = DTM->primitives->createUndefined();
     node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
+
+    return node;
+}
+
+ImplementNode *createImplementationNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    ImplementNode *node = (ImplementNode *)malloc(sizeof(ImplementNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate Implementation node.");
+        return NULL;
+    }
+
+    node->interfaceName = (char *)malloc(sizeof(char) * MAX_IDENTIFIER_LENGTH);
+    node->interfaceType = DTM->primitives->createUndefined();
+
+    node->properties = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    node->methods = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->constructors = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->constructorCount = 0;
+    node->constructorCapacity = METHOD_CAPACITY;
 
     return node;
 }

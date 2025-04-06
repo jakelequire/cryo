@@ -55,6 +55,7 @@ typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 #define ARRAY_CAPACITY 128
 #define PROPERTY_CAPACITY 32
 #define METHOD_CAPACITY 64
+#define MAX_IDENTIFIER_LENGTH 128
 
 /// ### The position struct represents the line and column number of a token in the source code.
 typedef struct Position
@@ -608,10 +609,10 @@ typedef struct TypeCast
     ASTNode *expression;
 } TypeCast;
 
-typedef struct Implementation
+typedef struct ImplementNode
 {
-    const char *parentName;
-    DataType *parentType;
+    const char *interfaceName;
+    DataType *interfaceType;
 
     ASTNode **methods;
     int methodCount;
@@ -624,7 +625,7 @@ typedef struct Implementation
     ASTNode **constructors;
     int constructorCount;
     int constructorCapacity;
-} Implementation;
+} ImplementNode;
 
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
@@ -732,7 +733,7 @@ typedef struct ASTNode
         // For Type Casts
         TypeCast *typeCast;
         // For Implementations
-        Implementation *implementation;
+        ImplementNode *implementation;
         // Discard
         void *discard;
     } data;
@@ -1162,6 +1163,13 @@ extern "C"
     ASTNode *createDiscardNode(Arena *arena, CompilerState *state, Lexer *lexer);
 
     /**
+     * Type Declaration Nodes
+     */
+    ASTNode *createImplementationNode(const char *interfaceName, ASTNode **properties, int propertyCount,
+                                      ASTNode **methods, int methodCount,
+                                      Arena *arena, CompilerState *state, Lexer *lexer);
+
+    /**
      * String Utility Functions
      */
 
@@ -1227,6 +1235,7 @@ AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state
 TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state);
 TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state);
 ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state);
+ImplementNode *createImplementationNodeContainer(Arena *arena, CompilerState *state);
 void *createDiscardNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #

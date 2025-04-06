@@ -1752,15 +1752,137 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     logMessage(LMI, "INFO", "Parser", "Implementation of <%s> %s", isClass ? "class" : "struct", typeName);
 
     DTM->symbolTable->printTable(DTM->symbolTable);
-
-    DEBUG_BREAKPOINT;
+    DataType *interfaceType = DTM->symbolTable->lookup(DTM->symbolTable, typeName);
+    if (!interfaceType)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to find interface type.");
+        parsingError("Failed to find interface type.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        CONDITION_FAILED;
+    }
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for implementation name.", "parseImplementation", arena, state, context);
-
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start implementation body.", "parseImplementation", arena, state, context);
 
+    ASTNode **methods = (ASTNode **)malloc(sizeof(ASTNode *) * MAX_METHOD_CAPACITY);
+    if (!methods)
+    {
+        logMessage(LMI, "ERROR", "Memory", "Failed to allocate memory for methods.");
+        parsingError("Failed to allocate memory for methods.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        CONDITION_FAILED;
+    }
+    ASTNode **properties = (ASTNode **)malloc(sizeof(ASTNode *) * MAX_FIELD_CAPACITY);
+    if (!properties)
+    {
+        logMessage(LMI, "ERROR", "Memory", "Failed to allocate memory for properties.");
+        parsingError("Failed to allocate memory for properties.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        CONDITION_FAILED;
+    }
+
+    int methodCount = 0;
+    int propertyCount = 0;
+
+    while (lexer->currentToken.type != TOKEN_RBRACE)
+    {
+        ASTNode *fieldNode = parseImplementationBody(interfaceType, lexer, context, arena, state, globalTable);
+        if (!fieldNode)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to parse field declaration.");
+            parsingError("Failed to parse field declaration.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+            CONDITION_FAILED;
+        }
+
+        if (fieldNode->metaData->type == NODE_METHOD)
+        {
+            methods[methodCount++] = fieldNode;
+        }
+        else if (fieldNode->metaData->type == NODE_PROPERTY)
+        {
+            properties[propertyCount++] = fieldNode;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Unknown node type.");
+            parsingError("Unknown node type.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+            CONDITION_FAILED;
+        }
+    }
     consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` to end implementation body.", "parseImplementation", arena, state, context);
+    logMessage(LMI, "INFO", "Parser", "Finished parsing implementation body.");
+
+    ASTNode *implementationNode = createImplementationNode(typeName, properties, propertyCount,
+                                                           methods, methodCount,
+                                                           arena, state, lexer);
+    if (!implementationNode)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to create implementation node.");
+        parsingError("Failed to create implementation node.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        CONDITION_FAILED;
+    }
 
     DEBUG_BREAKPOINT;
+    return NULL;
+}
+
+ASTNode *parseImplementationBody(DataType *interfaceType,
+                                 Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing implementation body...");
+
+    // Handle property declarations (identifier followed by colon)
+    if (lexer->currentToken.type == TOKEN_IDENTIFIER &&
+        peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_COLON)
+    {
+
+        const char *fieldName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "INFO", "Parser", "Implementation property: %s", fieldName);
+
+        // Consume the field name
+        getNextToken(lexer, arena, state);
+        // Consume the colon
+        consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after field name.", "parseImplementationBody", arena, state, context);
+
+        // Parse the type
+        DataType *fieldType = parseType(lexer, context, arena, state, globalTable);
+        getNextToken(lexer, arena, state);
+
+        fieldType->debug->printType(fieldType);
+
+        // Check for initializer
+        ASTNode *initializer = NULL;
+        if (lexer->currentToken.type == TOKEN_EQUAL)
+        {
+            consume(__LINE__, lexer, TOKEN_EQUAL, "Expected '=' for property initializer.", "parseImplementationBody", arena, state, context);
+            initializer = parseExpression(lexer, context, arena, state, globalTable);
+        }
+
+        // Consume the semicolon
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseImplementationBody", arena, state, context);
+        const char *parentName = interfaceType->typeName;
+        const char *parentNodeType = interfaceType->typeName;
+
+        return createFieldNode(fieldName, fieldType, parentName, parentNodeType, initializer, arena, state, lexer);
+    }
+
+    // Handle method declarations (identifier followed by parentheses)
+    if (lexer->currentToken.type == TOKEN_IDENTIFIER &&
+        peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LPAREN)
+    {
+        const char *methodName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "INFO", "Parser", "Implementation method: %s", methodName);
+
+        // Since we're in an implementation, we need to determine the parent type
+        const char *parentName = context->thisContext->nodeName;
+        bool isStatic = false; // Implementation methods are instance methods by default
+
+        // Parse the method declaration
+        return parseMethodDeclaration(isStatic, parentName, lexer, context, arena, state, globalTable);
+    }
+
+    // If we reach here, we couldn't parse a valid implementation member
+    char *tokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage(LMI, "ERROR", "Parser", "Unexpected token in implementation body: %s", tokenStr);
+    parsingError("Unexpected token in implementation body.", "parseImplementationBody", arena, state, lexer, lexer->source, globalTable);
+
     return NULL;
 }

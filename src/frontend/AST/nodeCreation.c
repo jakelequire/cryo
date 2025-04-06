@@ -186,6 +186,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     case NODE_TYPE_CAST:
         node->data.typeCast = createTypeCastContainer(arena, state);
         break;
+    case NODE_IMPLEMENTATION:
+        node->data.implementation = createImplementationNodeContainer(arena, state);
+        break;
     case NODE_DISCARD:
         node->data.discard = createDiscardNodeContainer(arena, state);
         break;

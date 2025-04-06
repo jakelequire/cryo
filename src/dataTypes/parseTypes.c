@@ -104,8 +104,17 @@ DataType *DTMParseType(const char *typeStr)
     }
     else
     {
-        fprintf(stderr, "[Data Type Manager] Error: Unknown type string '%s'\n", typeStr);
+        // Attempt to lookup the type in the symbol table
+        DataType *type = DTM->symbolTable->lookup(DTM->symbolTable, typeStr);
+        if (type)
+        {
+            return type;
+        }
+        // If the type is not found in the symbol table, return NULL
+        logMessage(LMI, "ERROR", "DTM", "Failed to parse type string '%s'", typeStr);
+        fprintf(stderr, "[Data Type Manager] Error: Failed to parse type string '%s'\n", typeStr);
         CONDITION_FAILED;
+        return NULL;
     }
 
     return NULL;

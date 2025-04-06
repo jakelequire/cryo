@@ -1313,3 +1313,24 @@ ASTNode *createDiscardNode(Arena *arena, CompilerState *state, Lexer *lexer)
 
     return node;
 }
+
+ASTNode *createImplementationNode(const char *interfaceName, ASTNode **properties, int propertyCount,
+                                  ASTNode **methods, int methodCount,
+                                  Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_IMPLEMENTATION, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create implementation node");
+        return NULL;
+    }
+
+    node->data.implementation->interfaceName = strdup(interfaceName);
+    node->data.implementation->properties = properties;
+    node->data.implementation->propertyCount = propertyCount;
+    node->data.implementation->methods = methods;
+    node->data.implementation->methodCount = methodCount;
+
+    return node;
+}
