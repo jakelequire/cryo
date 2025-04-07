@@ -265,8 +265,8 @@ namespace Cryo
 
     private:
         void _initCRuntime_(void);
-        void completeCryoCryoLib(const char *compilerRootPath);
-        void createStdSharedLib(const char *compilerRootPath);
+        int completeCryoCryoLib(const char *compilerRootPath);
+        int buildStandardLib(void);
     };
 
     // ================================================================ //

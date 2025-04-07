@@ -62,6 +62,7 @@ jFS *initFS(void)
     fs->getRealPath = getRealPath;
     fs->trimStringQuotes = trimStringQuotes;
     fs->getDirectoryPath = getDirectoryPath;
+    fs->listDir = listDir;
     return fs;
 }
 
@@ -1010,3 +1011,34 @@ const char *getDirectoryPath(const char *path)
 
     return dirPath;
 }
+
+// <listDir>
+char **listDir(const char *path)
+{
+    __STACK_FRAME__
+    DIR *dir;
+    struct dirent *entry;
+    char **fileList = NULL;
+    size_t count = 0;
+
+    dir = opendir(path);
+    if (!dir)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to open directory: %s", path);
+        return NULL;
+    }
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == DT_REG) // Regular file
+        {
+            fileList = (char **)realloc(fileList, sizeof(char *) * (count + 1));
+            fileList[count] = strdup(entry->d_name);
+            count++;
+        }
+    }
+
+    closedir(dir);
+    return fileList;
+}
+// </listDir>

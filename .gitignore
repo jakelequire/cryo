@@ -57,6 +57,11 @@ output.o
 *.userosscache
 *.sln.docstates
 *.cache
+*.so
+*.o
+*.exe
+*.dll
+*.pdb
 
 # Test Files
 
@@ -79,3 +84,7 @@ note.txt
 /tools/dev-server/bin/
 /tools/dev-server/target/*
 /tools/dev-server/target/
+
+*/bin/**
+*/bin/*.*
+

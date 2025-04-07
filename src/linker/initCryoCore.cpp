@@ -93,7 +93,17 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        completeCryoCryoLib(compilerRootPath);
+        if (completeCryoCryoLib(compilerRootPath) != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to complete Cryo CryoLib\n");
+            CONDITION_FAILED;
+        }
+
+        if (buildStandardLib() != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to build standard library\n");
+            CONDITION_FAILED;
+        }
 
         DEBUG_BREAKPOINT;
     }
@@ -169,7 +179,7 @@ namespace Cryo
 
     // This function is called when `c_runtime.ll` & `core.ll` file are generated in `dirInfo->runtimeDir`
     // It will merge the runtime module into the core module
-    void Linker::completeCryoCryoLib(const char *compilerRootPath)
+    int Linker::completeCryoCryoLib(const char *compilerRootPath)
     {
         __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Merging runtime module into core module...");
@@ -201,7 +211,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        std::string compileCommand = "llc -filetype=obj -o " + outputPath + " " + tempPath;
+        std::string compileCommand = "llc -filetype=obj -relocation-model=pic -o " + outputPath + " " + tempPath;
         int compileResult = system(compileCommand.c_str());
         if (compileResult != 0)
         {
@@ -210,16 +220,72 @@ namespace Cryo
         }
         logMessage(LMI, "INFO", "Linker", "Successfully compiled core file to object code");
 
-        DEBUG_BREAKPOINT;
+        // Now that we have the object code, we can create a shared library for the compiler standard library
+        std::string sharedLibPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/libcryo_core.so";
+        if (fs->fileExists(sharedLibPath.c_str()))
+        {
+            fs->removeFile(sharedLibPath.c_str());
+        }
+        else
+        {
+            fs->createNewEmptyFileWpath(sharedLibPath.c_str());
+        }
+        std::string sharedLibCommand = "clang++ -shared -fPIC -o " + sharedLibPath + " " + outputPath;
+        int sharedLibResult = system(sharedLibCommand.c_str());
+        if (sharedLibResult != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to create shared library\n");
+            CONDITION_FAILED;
+        }
+        logMessage(LMI, "INFO", "Linker", "Successfully created shared library: %s", sharedLibPath.c_str());
+
+        // Mark the shared library as initialized
+        this->shared_lib_initialized = true;
+        logMessage(LMI, "INFO", "Linker", "Successfully initialized shared library");
+        return 0;
     }
 
-    void Linker::createStdSharedLib(const char *compilerRootPath)
+    int Linker::buildStandardLib(void)
     {
-        __STACK_FRAME__
+        // This function will compile the whole `/cryo/Std` directory and create individual shared libraries
+        // for each module.
+        // Each of these modules are independent and can be used in any Cryo program.
+        // All modules will be compiled ontop of the `libcryo_core.so` shared library.
 
-        logMessage(LMI, "INFO", "Linker", "Creating standard library shared objects...");
+        std::string stdDir = std::string(this->dirInfo->compilerDir) + "/cryo/Std";
+        std::string stdBinDir = stdDir + "/bin";
 
-        DEBUG_BREAKPOINT;
+        // Create bin directory if it doesn't exist
+        if (!std::filesystem::exists(stdBinDir))
+        {
+            std::filesystem::create_directory(stdBinDir);
+        }
+
+        // Vector to store all .cryo files
+        std::vector<std::string> cryoFiles;
+
+        // Recursively iterate through the standard library directory
+        for (const auto &entry : std::filesystem::recursive_directory_iterator(stdDir))
+        {
+            if (entry.is_regular_file() && entry.path().extension() == ".cryo")
+            {
+                // Skip files in the Core directory
+                if (entry.path().string().find("/Std/Core/") == std::string::npos)
+                {
+                    cryoFiles.push_back(entry.path().string());
+                }
+            }
+        }
+
+        // Print out the files
+        std::cout << "\n=============== {Files } ===============\n";
+        for (const std::string &file : cryoFiles)
+        {
+            std::cout << "File: " << file << std::endl;
+        }
+        std::cout << "========================================\n\n";
+
+        return 0;
     }
 
 } // namespace Cryo

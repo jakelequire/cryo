@@ -31,6 +31,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdarg.h>
+#include <ctype.h>
+#include <dirent.h>
 
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/c_logger.h"
@@ -92,6 +94,7 @@ const char *getRealPath(const char *path);
 const char *trimStringQuotes(const char *str);
 
 const char *getDirectoryPath(const char *filePath);
+char **listDir(const char *dirPath);
 
 typedef struct jFS
 {
@@ -155,6 +158,8 @@ typedef struct jFS
     _NEW_METHOD(const char *, trimStringQuotes, const char *str);
     // `getDirectoryPath` gets the directory path.
     _NEW_METHOD(const char *, getDirectoryPath, const char *filePath);
+    // `listDir` lists the files in a directory.
+    _NEW_METHOD(char **, listDir, const char *dirPath);
 } jFS;
 
 jFS *initFS(void);
