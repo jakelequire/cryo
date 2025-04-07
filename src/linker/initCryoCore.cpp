@@ -191,11 +191,21 @@ namespace Cryo
 
         // Use llc to compile the IR to object code
         std::string outputPath = std::string(this->dirInfo->runtimeDir) + "/core.o";
-        std::string command = "llc -filetype=obj -o " + outputPath + " " + corePath;
-        int result = system(command.c_str());
-        if (result != 0)
+        // With this:
+        std::string tempPath = std::string(this->dirInfo->runtimeDir) + "/merged.ll";
+        std::string linkCommand = "llvm-link -S -o " + tempPath + " " + corePath + " " + c_runtimePath;
+        int linkResult = system(linkCommand.c_str());
+        if (linkResult != 0)
         {
-            fprintf(stderr, "[Linker] Error: Failed to compile core file to object code\n");
+            fprintf(stderr, "[Linker] Error: Failed to link LLVM IR files\n");
+            CONDITION_FAILED;
+        }
+
+        std::string compileCommand = "llc -filetype=obj -o " + outputPath + " " + tempPath;
+        int compileResult = system(compileCommand.c_str());
+        if (compileResult != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to compile linked IR to object code\n");
             CONDITION_FAILED;
         }
         logMessage(LMI, "INFO", "Linker", "Successfully compiled core file to object code");
