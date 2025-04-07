@@ -9,13 +9,6 @@ namespace Std.Core;
 // *Do not import it manually.*
 
 // ======================================================== //
-//                    C ABI Functions                       //
-// ======================================================== //
-
-extern function printf_export (format: str, ...) -> int;
-extern function scanf_export (format: str, ...) -> int;
-
-// ======================================================== //
 //                       Core Types                         //
 // ======================================================== //
 
@@ -135,20 +128,47 @@ type pointer extends Pointer;   // Type alias for Pointer
 // ======================================================== //
 //                    C ABI Functions                       //
 // ======================================================== //
+// ======================================================== //
+//                    C ABI Functions                       //
+// ======================================================== //
 
-extern function mmap_export (addr: pointer, length: int, prot: int, flags: int, fd: int, offset: int) -> pointer;
-extern function munmap_export (addr: pointer, length: int) -> int;
-extern function malloc_export (size: int) -> pointer;
-extern function free_export (ptr: pointer) -> int;
-extern function memcpy_export (dest: pointer, src: pointer, n: int) -> pointer;
-extern function memmove_export (dest: pointer, src: pointer, n: int) -> pointer;
-extern function memcmp_export (ptr1: pointer, ptr2: pointer, n: int) -> int;
-extern function memset_export (ptr: pointer, value: int, num: int) -> pointer;
-extern function strlen_export (str: str) -> int;
-extern function strncat_export (dest: str, src: str, n: int) -> str;
-extern function strnlen_export (str: str, n: int) -> int;
-extern function strncmp_export (str1: str, str2: str, n: int) -> int;
+extern function printf_export (format: str, ...) -> int;
+extern function scanf_export (format: str, ...) -> int;
+
+extern function sys_exit    (status: int) -> void;
+extern function sys_read    (fd: int, buf: pointer, count: int) -> int;
+extern function sys_write   (fd: int, buf: pointer, count: int) -> int;
+
+extern function mmap_export     (addr: pointer, length: int, prot: int, flags: int, fd: int, offset: int) -> pointer;
+extern function munmap_export   (addr: pointer, length: int) -> int;
+extern function malloc_export   (size: int) -> pointer;
+extern function free_export     (ptr: pointer) -> int;
+extern function memcpy_export   (dest: pointer, src: pointer, n: int) -> pointer;
+extern function memmove_export  (dest: pointer, src: pointer, n: int) -> pointer;
+extern function memcmp_export   (ptr1: pointer, ptr2: pointer, n: int) -> int;
+extern function memset_export   (ptr: pointer, value: int, num: int) -> pointer;
+
+extern function strlen_export   (str: str) -> int;
+extern function strncat_export  (dest: str, src: str, n: int) -> str;
+extern function strnlen_export  (str: str, n: int) -> int;
+extern function strncmp_export  (str1: str, str2: str, n: int) -> int;
 
 // ======================================================== //
 //                    Core Functions                        //
 // ======================================================== //
+
+
+function printInt (value: int) -> void {
+    printf_export("%d\n", value);
+    return;
+}
+
+function printStr (value: String) -> void {
+    printf_export("%s\n", value.val);
+    return;
+}
+
+function printChar (value: char) -> void {
+    printf_export("%c\n", value);
+    return;
+}

@@ -34,7 +34,7 @@ void parsingError(
 
     const char *curModule = GetNamespace(globalTable);
 
-    printGlobalSymbolTable(globalTable);
+    DTM->symbolTable->printTable(DTM->symbolTable);
 
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);

@@ -266,6 +266,41 @@ int32_t cryo_memcmp(cryo_pointer_t ptr1, cryo_pointer_t ptr2, int32_t size)
     return memcmp((void *)ptr1.val, (void *)ptr2.val, size);
 }
 
+void sys_exit(int32_t status)
+{
+    exit(status);
+}
+
+int32_t sys_read(int32_t fd, cryo_pointer_t buf, int32_t count)
+{
+    if (fd < 0 || buf.val == 0 || count <= 0)
+    {
+        return -1;
+    }
+#ifdef _WIN32
+    DWORD bytesRead;
+    BOOL result = ReadFile((HANDLE)fd, (void *)buf.val, count, &bytesRead, NULL);
+    return result ? bytesRead : -1;
+#else
+    return read(fd, (void *)buf.val, count);
+#endif
+}
+
+int32_t sys_write(int32_t fd, cryo_pointer_t buf, int32_t count)
+{
+    if (fd < 0 || buf.val == 0 || count <= 0)
+    {
+        return -1;
+    }
+#ifdef _WIN32
+    DWORD bytesWritten;
+    BOOL result = WriteFile((HANDLE)fd, (void *)buf.val, count, &bytesWritten, NULL);
+    return result ? bytesWritten : -1;
+#else
+    return write(fd, (void *)buf.val, count);
+#endif
+}
+
 // ======================================================== //
 //              Cryo String Implementation                  //
 // ======================================================== //
@@ -374,6 +409,43 @@ cryo_pointer_t memset_export(cryo_pointer_t dest, int32_t value, int32_t size)
 int32_t memcmp_export(cryo_pointer_t ptr1, cryo_pointer_t ptr2, int32_t size)
 {
     return cryo_memcmp(ptr1, ptr2, size);
+}
+
+int32_t strlen_export(cryo_string_t str)
+{
+    if (str.val == NULL)
+    {
+        return -1;
+    }
+    return strlen(str.val);
+}
+
+int32_t strcmp_export(cryo_string_t str1, cryo_string_t str2)
+{
+    if (str1.val == NULL || str2.val == NULL)
+    {
+        return -1;
+    }
+    return strcmp(str1.val, str2.val);
+}
+
+int32_t strncmp_export(cryo_string_t str1, cryo_string_t str2, int32_t n)
+{
+    if (str1.val == NULL || str2.val == NULL)
+    {
+        return -1;
+    }
+    return strncmp(str1.val, str2.val, n);
+}
+
+cryo_string_t strcpy_export(cryo_string_t dest, cryo_string_t src)
+{
+    if (dest.val == NULL || src.val == NULL)
+    {
+        return dest;
+    }
+    strcpy(dest.val, src.val);
+    return dest;
 }
 
 int32_t printf_export(cryo_string_t format, ...)

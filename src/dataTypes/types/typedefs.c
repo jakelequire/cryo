@@ -263,7 +263,8 @@ DTPropertyTy *createDTProperty(void)
     }
 
     property->name = NULL;
-    property->type = NULL;
+    property->type = DTM->primitives->createUndefined();
+    property->node = (ASTNode *)malloc(sizeof(ASTNode));
     property->isStatic = false;
     property->isConst = false;
     property->isPublic = false;
@@ -282,7 +283,6 @@ DTPropertyTy *createDTProperty(void)
 
     return property;
 }
-
 
 // --------------------------------------------------------------------------------------------------- //
 // ------------------------------------ Type Container ----------------------------------------------- //

@@ -1272,6 +1272,7 @@ ASTNode *createAnnotationNode(const char *annotationName, const char *annotation
 ASTNode *createTypeDeclNode(const char *typeName, DataType *type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
+    logMessage(LMI, "INFO", "AST", "Creating type declaration node for %s", typeName);
     ASTNode *node = createASTNode(NODE_TYPE, arena, state, lexer);
     if (!node)
     {

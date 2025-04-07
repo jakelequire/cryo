@@ -42,7 +42,6 @@ namespace Cryo
         }
 
         logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
-        this->context.printModule();
 
         // Complete the generation
         completeGeneration();
@@ -85,9 +84,6 @@ namespace Cryo
 
         // Print Symbol Table
         context.symbolTable->debugPrint();
-
-        // Print the module
-        context.printModule();
 
         // Write the module to a file
         std::string fileName = ".ll";

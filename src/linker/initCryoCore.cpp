@@ -137,7 +137,7 @@ namespace Cryo
         std::vector<const char *> args;
 
         // Basic compilation arguments
-        args.push_back("clang");
+        args.push_back("clang-18");
         args.push_back("-c");
         args.push_back("-emit-llvm");
         args.push_back("-O2");       // Optimization level
@@ -203,7 +203,8 @@ namespace Cryo
         std::string outputPath = std::string(this->dirInfo->runtimeDir) + "/core.o";
         // With this:
         std::string tempPath = std::string(this->dirInfo->runtimeDir) + "/merged.ll";
-        std::string linkCommand = "llvm-link -S -o " + tempPath + " " + corePath + " " + c_runtimePath;
+        std::string linkCommand = "llvm-link-18 -S -o " + tempPath + " " + corePath + " " + c_runtimePath;
+        logMessage(LMI, "INFO", "Linker", "Linking LLVM IR files: %s", linkCommand.c_str());
         int linkResult = system(linkCommand.c_str());
         if (linkResult != 0)
         {
@@ -211,7 +212,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        std::string compileCommand = "llc -filetype=obj -relocation-model=pic -o " + outputPath + " " + tempPath;
+        std::string compileCommand = "llc-18 -filetype=obj -relocation-model=pic -o " + outputPath + " " + tempPath;
         int compileResult = system(compileCommand.c_str());
         if (compileResult != 0)
         {

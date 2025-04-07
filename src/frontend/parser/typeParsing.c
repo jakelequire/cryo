@@ -762,6 +762,7 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
                 return NULL;
             }
 
+            logMessage(LMI, "INFO", "Parser", "Type alias: %s", typeAlias->typeName);
             // Add the type alias to the symbol table
             DTM->symbolTable->addEntry(DTM->symbolTable, getNamespaceScopeID(context), typeName, typeAlias);
             ASTNode *aliasTypeNode = createTypeDeclNode(typeName, typeAlias, arena, state, lexer);

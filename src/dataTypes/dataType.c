@@ -245,6 +245,10 @@ DataType *DTMTypeContainerWrappers_createProtoType(const char *name, PrimitiveDa
 
 DataType *DTMTypeContainerWrappers_createTypeAlias(const char *name, DataType *type)
 {
+    PrimitiveDataType primitive = type->container->primitive;
+    TypeofDataType typeOf = type->container->typeOf;
+    TypeofObjectType objectType = type->container->objectType;
+
     DataType *clonedType = type->clone(type);
     if (!clonedType)
     {
@@ -252,6 +256,9 @@ DataType *DTMTypeContainerWrappers_createTypeAlias(const char *name, DataType *t
         CONDITION_FAILED;
     }
     clonedType->setTypeName(clonedType, name);
+    clonedType->container->primitive = primitive;
+    clonedType->container->typeOf = typeOf;
+    clonedType->container->objectType = objectType;
 
     return clonedType;
 }

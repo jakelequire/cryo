@@ -308,7 +308,6 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     switch (lexer->currentToken.type)
     {
     case TOKEN_KW_VOID:
-    case TOKEN_KW_INT:
     case TOKEN_TYPE_I8:
     case TOKEN_TYPE_I16:
     case TOKEN_TYPE_I32:
@@ -3240,7 +3239,6 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         }
         else
         {
-
             logMessage(LMI, "ERROR", "Parser", "Property Attempted: %s", propName);
             parsingError("Property not found in struct.", "parseDotNotationWithType", arena, state, lexer, lexer->source, globalTable);
             return NULL;

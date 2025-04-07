@@ -26,12 +26,12 @@ DataType *DTMParseType(const char *typeStr)
     }
 
     // Check if the type string is a primitive type
-    if (strcmp(typeStr, "int") == 0)
-    {
-        DataType *int_ty = DTM->primitives->createInt();
-        return int_ty;
-    }
-    else if (strcmp(typeStr, "float") == 0)
+    // if (strcmp(typeStr, "int") == 0)
+    // {
+    //     DataType *int_ty = DTM->primitives->createInt();
+    //     return int_ty;
+    // }
+    if (strcmp(typeStr, "float") == 0)
     {
         DataType *float_ty = DTM->primitives->createFloat();
         return float_ty;
@@ -114,6 +114,7 @@ DataType *DTMParseType(const char *typeStr)
         // If the type is not found in the symbol table, return NULL
         logMessage(LMI, "ERROR", "DTM", "Failed to parse type string '%s'", typeStr);
         fprintf(stderr, "[Data Type Manager] Error: Failed to parse type string '%s'\n", typeStr);
+        DTM->symbolTable->printTable(DTM->symbolTable);
         CONDITION_FAILED;
         return NULL;
     }

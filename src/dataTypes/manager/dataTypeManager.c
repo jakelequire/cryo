@@ -27,12 +27,22 @@ DataTypeManager *globalDataTypeManager = NULL;
 DTPropertyTy *DTMPropertyTypes_createPropertyTemplate(void)
 {
     DTPropertyTy *property = createDTProperty();
+    if (!property)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Property Template\n");
+        CONDITION_FAILED;
+    }
     return property;
 }
 
 DTPropertyTy *DTMPropertyTypes_createPropertyType(const char *name, DataType *type, ASTNode *node, bool isStatic, bool isConst, bool isPublic, bool isPrivate, bool isProtected)
 {
     DTPropertyTy *property = createDTProperty();
+    if (!property)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Property Type\n");
+        CONDITION_FAILED;
+    }
     property->node = node;
     property->setName(property, name);
     property->setType(property, type);
@@ -48,11 +58,14 @@ ASTNode *DTMPropertyTypes_findStructPropertyNode(DTStructTy *structNode, const c
 {
     for (int i = 0; i < structNode->propertyCount; i++)
     {
+        logMessage(LMI, "INFO", "DTM", "Checking Property: %s == %s", structNode->properties[i]->name, propertyName);
         if (strcmp(structNode->properties[i]->name, propertyName) == 0)
         {
+            logMessage(LMI, "INFO", "DTM", "Found Property: %s == %s", structNode->properties[i]->name, propertyName);
             return structNode->properties[i]->node;
         }
     }
+    logMessage(LMI, "INFO", "DTM", "Property not found: %s", propertyName);
     return NULL;
 }
 

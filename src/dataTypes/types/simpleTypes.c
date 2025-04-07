@@ -234,17 +234,9 @@ PrimitiveDataType DTMPrimitives_getPrimitiveType(const char *typeStr)
     {
         return PRIM_I128;
     }
-    else if (cStringCompare(typeStr, "int"))
-    {
-        return PRIM_INT;
-    }
     else if (cStringCompare(typeStr, "float"))
     {
         return PRIM_FLOAT;
-    }
-    else if (cStringCompare(typeStr, "string"))
-    {
-        return PRIM_STRING;
     }
     else if (cStringCompare(typeStr, "boolean"))
     {

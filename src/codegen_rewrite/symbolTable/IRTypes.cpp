@@ -28,8 +28,6 @@ namespace Cryo
 
         switch (dataType->container->primitive)
         {
-        case PRIM_INT:
-            return llvmTypes.i32Ty;
         case PRIM_I8:
             return llvmTypes.i8Ty;
         case PRIM_I16:
@@ -42,8 +40,6 @@ namespace Cryo
             return llvmTypes.i128Ty;
         case PRIM_FLOAT:
             return llvmTypes.floatTy;
-        case PRIM_STRING:
-            return llvmTypes.ptrTy;
         case PRIM_CHAR:
             return llvmTypes.i8Ty;
         case PRIM_STR:
@@ -69,6 +65,9 @@ namespace Cryo
         default:
         {
             std::cerr << "Unknown data type" << std::endl;
+            std::string typeName = dataType->typeName;
+            std::string primitiveStr = DTM->debug->primitiveDataTypeToString(dataType->container->primitive);
+            std::cerr << "Data type: " << typeName << ", Primitive: " << primitiveStr << std::endl;
             return nullptr;
         }
         }
