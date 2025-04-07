@@ -111,6 +111,7 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
                                    name,
                                    DTM->debug->typeofObjectTypeToString(existingType->container->objectType),
                                    DTM->debug->typeofObjectTypeToString(type->container->objectType));
+                        DTM->symbolTable->printTable(DTM->symbolTable);
                         CONDITION_FAILED;
                     }
                 }
@@ -121,6 +122,8 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
                                name,
                                DTM->debug->typeofDataTypeToString(existingType->container->typeOf),
                                DTM->debug->typeofDataTypeToString(type->container->typeOf));
+                    DTM->symbolTable->printTable(DTM->symbolTable);
+
                     CONDITION_FAILED;
                 }
             }
@@ -511,9 +514,9 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
         CONDITION_FAILED;
     }
 
-    void (*self)(DTMSymbolTable *, ASTNode *) = DTMSymbolTable_importASTNode;
-
     CryoNodeType nodeType = rootNode->metaData->type;
+    char *nodeTypeStr = CryoNodeTypeToString(nodeType);
+    printf("%s%s[Data Type Manager]%s Importing AST node: %s\n", BOLD, CYAN, COLOR_RESET, nodeTypeStr);
     switch (nodeType)
     {
     case NODE_PROGRAM:
@@ -522,7 +525,7 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
         for (int i = 0; i < program->statementCount; i++)
         {
             ASTNode *statement = program->statements[i];
-            self(table, statement);
+            DTMSymbolTable_importASTNode(table, statement);
         }
         break;
     }
@@ -530,9 +533,9 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
     {
         FunctionDeclNode *function = rootNode->data.functionDecl;
         DataType *returnType = DTM->getTypeofASTNode(rootNode);
-        table->addEntry(table, rootNode->metaData->moduleName, function->name, returnType);
+        DTM->symbolTable->addEntry(table, rootNode->metaData->moduleName, function->name, returnType);
 
-        self(table, function->body);
+        DTMSymbolTable_importASTNode(table, function->body);
         break;
     }
     case NODE_BLOCK:
@@ -541,7 +544,7 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
         for (int i = 0; i < block->statementCount; i++)
         {
             ASTNode *statement = block->statements[i];
-            self(table, statement);
+            DTMSymbolTable_importASTNode(table, statement);
         }
         break;
     }
@@ -550,8 +553,12 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
         CryoFunctionBlock *functionBlock = rootNode->data.functionBlock;
         for (int i = 0; i < functionBlock->statementCount; i++)
         {
+            if (functionBlock->statementCount == 0)
+            {
+                return;
+            }
             ASTNode *statement = functionBlock->statements[i];
-            self(table, statement);
+            DTMSymbolTable_importASTNode(table, statement);
         }
         break;
     }
@@ -559,21 +566,21 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
     {
         TypeDecl *typeDecl = rootNode->data.typeDecl;
         DataType *typeOfDecl = rootNode->data.typeDecl->type;
-        table->addEntry(table, rootNode->metaData->moduleName, typeDecl->name, typeOfDecl);
+        DTM->symbolTable->addEntry(table, rootNode->metaData->moduleName, typeDecl->name, typeOfDecl);
         break;
     }
     case NODE_STRUCT_DECLARATION:
     {
         StructNode *structDecl = rootNode->data.structNode;
         DataType *structType = DTM->getTypeofASTNode(rootNode);
-        table->addEntry(table, rootNode->metaData->moduleName, structDecl->name, structType);
+        DTM->symbolTable->addEntry(table, rootNode->metaData->moduleName, structDecl->name, structType);
         break;
     }
     case NODE_CLASS:
     {
         ClassNode *classDecl = rootNode->data.classNode;
         DataType *classType = DTM->getTypeofASTNode(rootNode);
-        table->addEntry(table, rootNode->metaData->moduleName, classDecl->name, classType);
+        DTM->symbolTable->addEntry(table, rootNode->metaData->moduleName, classDecl->name, classType);
         break;
     }
     case NODE_VAR_DECLARATION:
@@ -685,6 +692,8 @@ void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
         CONDITION_FAILED;
     }
     }
+
+    return;
 }
 
 DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *scopeName, const char *name, DataType *type)

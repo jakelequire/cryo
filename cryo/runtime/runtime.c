@@ -376,28 +376,13 @@ int32_t memcmp_export(cryo_pointer_t ptr1, cryo_pointer_t ptr2, int32_t size)
     return cryo_memcmp(ptr1, ptr2, size);
 }
 
-int32_t strlen_export(cryo_pointer_t str_ptr)
-{
-    return cryo_strlen(str_ptr);
-}
-
-int32_t strnlen_export(cryo_pointer_t str_ptr, int32_t maxlen)
-{
-    return cryo_strnlen(str_ptr, maxlen);
-}
-
-int32_t strncmp_export(cryo_pointer_t str1_ptr, cryo_pointer_t str2_ptr, int32_t maxlen)
-{
-    return cryo_strncmp(str1_ptr, str2_ptr, maxlen);
-}
-
 int32_t printf_export(cryo_string_t format, ...)
 {
     va_list args;
     int32_t result;
 
     va_start(args, format);
-    result = cryo_printf(format, args);
+    result = vprintf(format.val, args);
     va_end(args);
 
     return result;
@@ -409,7 +394,7 @@ int32_t scanf_export(cryo_string_t format, ...)
     int32_t result;
 
     va_start(args, format);
-    result = cryo_scanf(format, args);
+    result = scanf(format.val, args);
     va_end(args);
 
     return result;

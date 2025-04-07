@@ -64,11 +64,11 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        DTM->symbolTable->importASTnode(DTM->symbolTable, defsNode);
+        // DTM->symbolTable->importASTnode(DTM->symbolTable, defsNode);
         DTM->symbolTable->printTable(DTM->symbolTable);
 
         logMessage(LMI, "INFO", "DTM", "Definitions Path: %s", corePath);
-        CompilationUnitDir dir = createCompilationUnitDir(corePath, buildDir, CRYO_DEPENDENCY);
+        CompilationUnitDir dir = createCompilationUnitDir(corePath, buildDir, CRYO_RUNTIME);
         dir.print(dir);
 
         CompilationUnit *unit = createNewCompilationUnit(defsNode, dir);
@@ -84,6 +84,16 @@ namespace Cryo
             CONDITION_FAILED;
             return;
         }
+
+        // Create the IR from the ASTNode
+        CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
+        if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
+        {
+            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
+            CONDITION_FAILED;
+        }
+
+        completeCryoCryoLib(compilerRootPath);
 
         DEBUG_BREAKPOINT;
     }
@@ -131,81 +141,64 @@ namespace Cryo
         args.push_back(fs->appendStrings(compilerRootPath.c_str(), "/include"));
 
         // Create temporary output file for IR
-        std::string tempIRPath = std::string(this->dirInfo->buildDir) + "/runtime_temp.ll";
+        std::string userBuildDir = std::string(this->dirInfo->runtimeDir) + "/c_runtime.ll";
         args.push_back("-o");
-        args.push_back(tempIRPath.c_str());
+        args.push_back(userBuildDir.c_str());
 
-        // Create diagnostics engine for Clang
-        llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diagOpts = new clang::DiagnosticOptions();
-        llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> diagID(new clang::DiagnosticIDs());
-        clang::DiagnosticsEngine diags(diagID, &*diagOpts);
-
-        // Create file system for compiler instance
-        llvm::IntrusiveRefCntPtr<clang::FileManager> files(new clang::FileManager(clang::FileSystemOptions()));
-
-        // Create compiler instance
-        clang::CompilerInstance CI;
-        CI.createDiagnostics();
-
-        // Create compiler invocation
-        std::shared_ptr<clang::CompilerInvocation> invocation(new clang::CompilerInvocation);
-        clang::CompilerInvocation::CreateFromArgs(*invocation, args, diags);
-        CI.setInvocation(invocation);
-
-        // Create and execute the frontend action to emit LLVM IR
-        clang::EmitLLVMOnlyAction action(runtimeContext);
-
-        // Execute the action
-        bool success = CI.ExecuteAction(action);
-        if (!success)
+        // Execute the clang command
+        std::string command = "clang-" + CLANG_VERSION_MAJOR;
+        for (const char *arg : args)
         {
-            fprintf(stderr, "[Linker] Error: Failed to compile runtime.c to LLVM IR\n");
+            command += " " + std::string(arg);
+        }
+        int result = system(command.c_str());
+        if (result != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to compile runtime file to LLVM IR\n");
             CONDITION_FAILED;
         }
-
-        // Take ownership of the module
-        std::unique_ptr<llvm::Module> module = action.takeModule();
-        if (!module)
-        {
-            fprintf(stderr, "[Linker] Error: Failed to generate LLVM module from runtime.c\n");
-            CONDITION_FAILED;
-        }
-
-        // Move the generated module to our class member
-        this->runtimeModule = module.release();
-
-        // Set up appropriate target triple and data layout
-        auto targetTriple = llvm::Triple();
-        this->runtimeModule->setTargetTriple(targetTriple.getTriple());
-
-        // Initialize the target registry
-        llvm::InitializeAllTargetInfos();
-        llvm::InitializeAllTargets();
-        llvm::InitializeAllTargetMCs();
-        llvm::InitializeAllAsmParsers();
-        llvm::InitializeAllAsmPrinters();
-
-        std::string error;
-        const llvm::Target *target = llvm::TargetRegistry::lookupTarget(targetTriple.getTriple(), error);
-        if (!target)
-        {
-            fprintf(stderr, "[Linker] Error: Failed to lookup target: %s\n", error.c_str());
-            CONDITION_FAILED;
-        }
-
-        // Create target machine
-        llvm::TargetOptions opt;
-        auto RM = llvm::Optional<llvm::Reloc::Model>(llvm::Reloc::PIC_);
-        llvm::TargetMachine *targetMachine = target->createTargetMachine(
-            targetTriple.getTriple(), "generic", "", opt, RM);
-
-        // Set data layout
-        this->runtimeModule->setDataLayout(targetMachine->createDataLayout());
+        logMessage(LMI, "INFO", "Linker", "Successfully compiled runtime file to LLVM IR");
 
         // Mark runtime as initialized
         this->runtimeModuleInitialized = true;
 
         logMessage(LMI, "INFO", "Linker", "Successfully initialized C runtime module");
+
+        return;
+    }
+
+    // This function is called when `c_runtime.ll` & `core.ll` file are generated in `dirInfo->runtimeDir`
+    // It will merge the runtime module into the core module
+    void Linker::completeCryoCryoLib(const char *compilerRootPath)
+    {
+        __STACK_FRAME__
+        logMessage(LMI, "INFO", "Linker", "Merging runtime module into core module...");
+
+        std::string c_runtimePath = std::string(this->dirInfo->runtimeDir) + "/c_runtime.ll";
+        std::string corePath = std::string(this->dirInfo->runtimeDir) + "/core.ll";
+        if (!fs->fileExists(c_runtimePath.c_str()))
+        {
+            fprintf(stderr, "[Linker] Error: Runtime file does not exist: %s\n", c_runtimePath.c_str());
+            CONDITION_FAILED;
+        }
+        if (!fs->fileExists(corePath.c_str()))
+        {
+            fprintf(stderr, "[Linker] Error: Core file does not exist: %s\n", corePath.c_str());
+            CONDITION_FAILED;
+        }
+        logMessage(LMI, "INFO", "Linker", "Runtime Path: %s", c_runtimePath.c_str());
+        logMessage(LMI, "INFO", "Linker", "Core Path: %s", corePath.c_str());
+
+        // Use llc to compile the IR to object code
+        std::string outputPath = std::string(this->dirInfo->runtimeDir) + "/core.o";
+        std::string command = "llc -filetype=obj -o " + outputPath + " " + corePath;
+        int result = system(command.c_str());
+        if (result != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to compile core file to object code\n");
+            CONDITION_FAILED;
+        }
+        logMessage(LMI, "INFO", "Linker", "Successfully compiled core file to object code");
 
         DEBUG_BREAKPOINT;
     }
@@ -215,121 +208,6 @@ namespace Cryo
         __STACK_FRAME__
 
         logMessage(LMI, "INFO", "Linker", "Creating standard library shared objects...");
-
-        // Ensure the runtime module is initialized
-        if (!this->runtimeModuleInitialized)
-        {
-            fprintf(stderr, "[Linker] Error: Runtime module not initialized\n");
-            CONDITION_FAILED;
-            return;
-        }
-
-        // Create the bin directory if it doesn't exist
-        std::string binDir = std::string(compilerRootPath) + "/cryo/bin";
-        if (!fs->dirExists(binDir.c_str()))
-        {
-            if (!fs->createDirectory(binDir.c_str()))
-            {
-                fprintf(stderr, "[Linker] Error: Failed to create bin directory: %s\n", binDir.c_str());
-                CONDITION_FAILED;
-                return;
-            }
-        }
-
-        // Output library path
-        std::string libPath = binDir + "/libcryoruntime";
-#ifdef _WIN32
-        libPath += ".dll";
-#else
-        libPath += ".so";
-#endif
-
-        // Initialize LLVM target
-        llvm::InitializeAllTargetInfos();
-        llvm::InitializeAllTargets();
-        llvm::InitializeAllTargetMCs();
-        llvm::InitializeAllAsmParsers();
-        llvm::InitializeAllAsmPrinters();
-
-        // Get the target triple
-        auto targetTriple = llvm::Triple();
-        this->runtimeModule->setTargetTriple(targetTriple.getTriple());
-
-        // Look up the target
-        std::string error;
-        const llvm::Target *target = llvm::TargetRegistry::lookupTarget(targetTriple.getTriple(), error);
-        if (!target)
-        {
-            fprintf(stderr, "[Linker] Error: Failed to lookup target: %s\n", error.c_str());
-            CONDITION_FAILED;
-            return;
-        }
-
-        // Create target machine
-        llvm::TargetOptions opt;
-        auto RM = llvm::Optional<llvm::Reloc::Model>(llvm::Reloc::PIC_);
-        llvm::TargetMachine *targetMachine = target->createTargetMachine(
-            targetTriple.getTriple(), "generic", "", opt, RM);
-
-        // Set data layout
-        this->runtimeModule->setDataLayout(targetMachine->createDataLayout());
-
-        // Create output file
-        std::error_code EC;
-        llvm::raw_fd_ostream dest(libPath, EC, llvm::sys::fs::OF_None);
-        if (EC)
-        {
-            fprintf(stderr, "[Linker] Error: Failed to open output file: %s\n", EC.message().c_str());
-            CONDITION_FAILED;
-            return;
-        }
-
-        // Create the pass manager for optimization
-        llvm::legacy::PassManager pass;
-
-        // Set file type for shared library
-        auto fileType = llvm::CodeGenFileType::ObjectFile;
-
-        // Add target-specific passes
-        if (targetMachine->addPassesToEmitFile(pass, dest, nullptr, fileType))
-        {
-            fprintf(stderr, "[Linker] Error: Target machine can't emit a file of this type\n");
-            CONDITION_FAILED;
-            return;
-        }
-
-        // Run passes to generate object file
-        pass.run(*this->runtimeModule);
-        dest.close();
-
-// Now, we need to link the object file into a shared library
-#ifdef _WIN32
-        std::string linkCmd = "link.exe /DLL /OUT:" + libPath + " " + binDir + "/runtime.obj";
-#else
-        std::string objFile = binDir + "/runtime.o";
-        // First, we need to make sure the LLVM-generated object file is saved
-        std::string mvCmd = "mv " + libPath + " " + objFile;
-        int mvResult = system(mvCmd.c_str());
-        if (mvResult != 0)
-        {
-            fprintf(stderr, "[Linker] Error: Failed to move object file\n");
-            CONDITION_FAILED;
-            return;
-        }
-
-        std::string linkCmd = "gcc -shared -o " + libPath + " " + objFile + " -fPIC";
-#endif
-
-        // Execute the link command
-        int linkResult = system(linkCmd.c_str());
-        if (linkResult != 0)
-        {
-            fprintf(stderr, "[Linker] Error: Failed to link shared library\n");
-            CONDITION_FAILED;
-            return;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Successfully created standard library shared object: %s", libPath.c_str());
 
         DEBUG_BREAKPOINT;
     }

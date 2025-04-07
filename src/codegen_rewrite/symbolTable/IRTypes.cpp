@@ -44,6 +44,10 @@ namespace Cryo
             return llvmTypes.floatTy;
         case PRIM_STRING:
             return llvmTypes.ptrTy;
+        case PRIM_CHAR:
+            return llvmTypes.i8Ty;
+        case PRIM_STR:
+            return llvmTypes.ptrTy;
         case PRIM_BOOLEAN:
             return llvmTypes.i1Ty;
         case PRIM_VOID:

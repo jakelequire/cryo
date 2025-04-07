@@ -131,10 +131,18 @@ extern "C"
 // -----------------------------------------------
 // C Includes
 
-#include "codegen/devDebugger/devDebugger.hpp"
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/env.h"
 #include "linker/compilationUnit.h"
+
+// Check clang version for the system command "clang-{version}"
+#if defined(__clang_major__) && defined(__clang_minor__)
+#define CLANG_VERSION_MAJOR __clang_major__
+#define CLANG_VERSION_MINOR __clang_minor__
+#else
+#define CLANG_VERSION_MAJOR 0
+#define CLANG_VERSION_MINOR 0
+#endif
 
 struct DirectoryInfo
 {
@@ -254,7 +262,10 @@ namespace Cryo
         void initCryoCore(
             const char *compilerRootPath, const char *buildDir,
             CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+    private:
         void _initCRuntime_(void);
+        void completeCryoCryoLib(const char *compilerRootPath);
         void createStdSharedLib(const char *compilerRootPath);
     };
 

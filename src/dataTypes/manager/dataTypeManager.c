@@ -170,7 +170,7 @@ DataType *DTMFunctionTypes_createFunctionType(DataType **paramTypes, int paramCo
     DataType *functionType = DTM->dataTypes->wrapFunctionType(function);
     functionType->debug->printType(functionType);
 
-        return functionType;
+    return functionType;
 }
 
 DataType *DTMFunctionTypes_createMethodType(const char *methodName, DataType *returnType, DataType **paramTypes, int paramCount)
@@ -760,6 +760,7 @@ DataTypeManager *createDataTypeManager(void)
     manager->initDefinitions = DataTypeManager_initDefinitions;
     manager->parseType = DTMParseType;
     manager->resolveType = DTMResolveType;
+    manager->getTypeofASTNode = DTMastInterface_getTypeofASTNode;
 
     return manager;
 }
