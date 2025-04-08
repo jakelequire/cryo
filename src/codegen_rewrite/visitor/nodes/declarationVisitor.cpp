@@ -261,6 +261,115 @@ namespace Cryo
     void CodeGenVisitor::visitClassDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting class declaration...");
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+
+        std::string className = node->data.classNode->name;
+        logMessage(LMI, "INFO", "Visitor", "Class Name: %s", className.c_str());
+
+        llvm::StructType *classType = llvm::StructType::create(context.getInstance().context, className);
+
+        int propertyCount = node->data.classNode->propertyCount;
+        logMessage(LMI, "INFO", "Visitor", "Class has %d properties", propertyCount);
+        int methodCount = node->data.classNode->methodCount;
+        logMessage(LMI, "INFO", "Visitor", "Class has %d methods", methodCount);
+
+        // Create the class type
+        std::vector<llvm::Type *> propertyTypes;
+        std::vector<IRPropertySymbol> propertySymbols;
+        std::vector<IRMethodSymbol> methodSymbols;
+
+        // Loop through the public properties
+        for (int i = 0; i < node->data.classNode->publicMembers->propertyCount; i++)
+        {
+            ASTNode *publicProperties = node->data.classNode->publicMembers->properties[i];
+            DataType *propertyType = publicProperties->data.property->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
+            std::string propertyName = publicProperties->data.property->name;
+            propertyTypes.push_back(llvmType);
+            IRPropertySymbol propertySymbol = IRSymbolManager::createPropertySymbol(llvmType, propertyName, i, true);
+            propertySymbols.push_back(propertySymbol);
+        }
+
+        // Loop through the private properties
+        for (int i = 0; i < node->data.classNode->privateMembers->propertyCount; i++)
+        {
+            ASTNode *privateProperties = node->data.classNode->privateMembers->properties[i];
+            DataType *propertyType = privateProperties->data.property->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
+            std::string propertyName = privateProperties->data.property->name;
+            propertyTypes.push_back(llvmType);
+            IRPropertySymbol propertySymbol = IRSymbolManager::createPropertySymbol(llvmType, propertyName, i, false);
+            propertySymbols.push_back(propertySymbol);
+        }
+
+        // Loop through the protected properties
+        for (int i = 0; i < node->data.classNode->protectedMembers->propertyCount; i++)
+        {
+            ASTNode *protectedProperties = node->data.classNode->protectedMembers->properties[i];
+            DataType *propertyType = protectedProperties->data.property->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
+            std::string propertyName = protectedProperties->data.property->name;
+            propertyTypes.push_back(llvmType);
+            IRPropertySymbol propertySymbol = IRSymbolManager::createPropertySymbol(llvmType, propertyName, i, false);
+            propertySymbols.push_back(propertySymbol);
+        }
+
+        // Loop through the public methods
+        for (int i = 0; i < node->data.classNode->publicMembers->methodCount; i++)
+        {
+            ASTNode *publicMethods = node->data.classNode->publicMembers->methods[i];
+            DataType *methodType = publicMethods->data.method->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
+            std::string methodName = publicMethods->data.method->name;
+            IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
+                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
+            IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
+                functionSymbol, false, false, false, false, 0, nullptr);
+            methodSymbols.push_back(methodSymbol);
+        }
+
+        // Loop through the private methods
+        for (int i = 0; i < node->data.classNode->privateMembers->methodCount; i++)
+        {
+            ASTNode *privateMethods = node->data.classNode->privateMembers->methods[i];
+            DataType *methodType = privateMethods->data.method->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
+            std::string methodName = privateMethods->data.method->name;
+            IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
+                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
+            IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
+                functionSymbol, false, false, false, false, 0, nullptr);
+            methodSymbols.push_back(methodSymbol);
+        }
+
+        // Loop through the protected methods
+        for (int i = 0; i < node->data.classNode->protectedMembers->methodCount; i++)
+        {
+            ASTNode *protectedMethods = node->data.classNode->protectedMembers->methods[i];
+            DataType *methodType = protectedMethods->data.method->type;
+            llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
+            std::string methodName = protectedMethods->data.method->name;
+            IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
+                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
+            IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
+                functionSymbol, false, false, false, false, 0, nullptr);
+            methodSymbols.push_back(methodSymbol);
+        }
+
+        // Create the class type
+        classType->setBody(propertyTypes);
+
+        IRTypeSymbol typeSymbol = IRSymbolManager::createTypeSymbol(
+            classType, className, propertySymbols, methodSymbols);
+        symbolTable->addType(typeSymbol);
+        context.getInstance().module->getOrInsertGlobal(className, classType);
+
+        logMessage(LMI, "INFO", "Visitor", "Class type created");
+
         return;
     }
 

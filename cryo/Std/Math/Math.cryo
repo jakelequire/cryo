@@ -6,6 +6,9 @@ class Math {
     // for mathematical operations, such as trigonometric functions, logarithms,
     // and other mathematical computations.
 
+    // Example properties to demonstrate the structure
+    public PI: Int = 12345678; // Placeholder for PI value
+
     // Example method to demonstrate the structure
     public static sqrt(value: Int) -> Int {
         // Placeholder for square root calculation

@@ -35,7 +35,6 @@
 
 namespace Cryo
 {
-
     void Linker::initCryoCore(const char *compilerRootPath, const char *buildDir,
                               CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {

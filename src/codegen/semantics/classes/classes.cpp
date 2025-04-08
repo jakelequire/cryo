@@ -56,13 +56,11 @@ namespace Cryo
         compiler.getContext().addClassToInstance(className, classType);
 
         // Add to the `NamedGlobal` map
-        compiler.getContext().module->getOrInsertGlobal(classTypeName, classType);
+        compiler.getContext().module->getOrInsertGlobal("class." + classTypeName, classType);
 
         // Handle constructor
-        if (classNode->constructor)
+        if (classNode->constructors)
         {
-            ClassConstructorNode *ctorNode = classNode->constructor->data.classConstructor;
-            handleClassConstructor(ctorNode, classType);
         }
 
         // Handle methods
