@@ -45,6 +45,7 @@ typedef enum PrimitiveDataType
     PRIM_ANY,       // `any`
     PRIM_OBJECT,    // Object type
     PRIM_FUNCTION,  // Function type
+    PRIM_ENUM,      // Enum type
     PRIM_AUTO,      // `auto`
     PRIM_UNDEFINED, // `undefined`
     PRIM_UNKNOWN    // `<UNKNOWN>`

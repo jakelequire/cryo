@@ -220,7 +220,9 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     DTPropertyTy **propertyTypes = DTM->astInterface->createPropertyArrayFromAST(properties, propertyCount);
     DataType **methodTypes = DTM->astInterface->createTypeArrayFromASTArray(methods, methodCount);
     DataType *structDataType = DTM->structTypes->createCompleteStructType(structName, propertyTypes, propertyCount, methodTypes, methodCount, hasConstructor, ctorArgs, &ctorArgCount);
-
+    structDataType->container->objectType = STRUCT_OBJ;
+    structDataType->container->primitive = PRIM_OBJECT;
+    structDataType->container->typeOf = OBJECT_TYPE;
     logMessage(LMI, "INFO", "Parser::TypeParsing", "Created struct data type:");
 
     const char *scopeName = getNamespaceScopeID(context);
@@ -842,58 +844,61 @@ DataType *parseForPrimitive(const char *typeName, Lexer *lexer, ParsingContext *
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Parsing for primitive type...");
     logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Type name: %s", typeName);
+    logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Current token: %s", CryoTokenToString(lexer->currentToken.type));
 
-    if (cStringCompare("int", typeName))
+    char *currentTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+
+    if (cStringCompare("int", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_KW_INT, "Expected `int` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createInt();
     }
-    else if (cStringCompare("i8", typeName))
+    else if (cStringCompare("i8", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_TYPE_I8, "Expected `i8` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createI8();
     }
-    else if (cStringCompare("i16", typeName))
+    else if (cStringCompare("i16", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_TYPE_I16, "Expected `i16` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createI16();
     }
-    else if (cStringCompare("i32", typeName))
+    else if (cStringCompare("i32", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_TYPE_I32, "Expected `i32` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createI32();
     }
-    else if (cStringCompare("i64", typeName))
+    else if (cStringCompare("i64", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_TYPE_I64, "Expected `i64` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createI64();
     }
-    else if (cStringCompare("i128", typeName))
+    else if (cStringCompare("i128", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_TYPE_I128, "Expected `i128` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createI128();
     }
-    else if (cStringCompare("float", typeName))
+    else if (cStringCompare("float", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_KW_FLOAT, "Expected `float` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createFloat();
     }
-    else if (cStringCompare("boolean", typeName))
+    else if (cStringCompare("boolean", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_KW_BOOLEAN, "Expected `boolean` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createBoolean();
     }
-    else if (cStringCompare("string", typeName))
+    else if (cStringCompare("string", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_KW_STRING, "Expected `string` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createString();
     }
-    else if (cStringCompare("void", typeName))
+    else if (cStringCompare("void", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_KW_VOID, "Expected `void` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createVoid();
     }
-    else if (cStringCompare("null", typeName))
+    else if (cStringCompare("null", currentTokenStr))
     {
         consume(__LINE__, lexer, TOKEN_KW_NULL, "Expected `null` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createNull();

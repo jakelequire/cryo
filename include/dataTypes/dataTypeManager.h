@@ -27,6 +27,7 @@
 #include "frontend/tokens.h"
 #include "frontend/AST.h"
 #include "dataTypes/dataTypeDefs.h"
+#include "dataTypes/compilerDefs.h"
 
 #define SYMBOL_TABLE_INITIAL_CAPACITY 32
 #define DYN_GROWTH_FACTOR 2
@@ -63,6 +64,8 @@ typedef struct DataTypeManager_t DataTypeManager;
 typedef struct DataType_t DataType;
 typedef struct CompilerState CompilerState;
 typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
+
+typedef struct DTMCompilerDefs_t DTMCompilerDefs;
 
 typedef struct DTGenericTy_t DTGenericTy;
 typedef struct DTArrayTy_t DTArrayTy;
@@ -142,6 +145,7 @@ typedef struct DTMPrimitives_t
     DataType *(*createAny)(void);       // type `any` is equivalent to `void *`
     DataType *(*createUndefined)(void); // type `undefined` is an undefined type
     DataType *(*createAutoTy)(void);    // type `auto` is an auto type
+    DataType *(*createPointer)(void);   // type `pointer` is a pointer type
 
     DataType *(*createPrimString)(const char *str);
     DataType *(*createPrimBoolean)(bool value);
@@ -316,6 +320,9 @@ typedef struct DataTypeManager_t
     // Handles Enum data types in the compiler.
     DTMEnums *enums;
 
+    // Compiler defined data types.
+    DTMCompilerDefs *compilerDefs;
+
     // Data Type Helpers
     DTMHelpers *helpers;
 
@@ -326,8 +333,7 @@ typedef struct DataTypeManager_t
     // Function Prototypes
 
     // Initialize the type definitions for the Data Type Manager.
-    void (*initDefinitions)(const char *compilerRootPath, const char *buildDir,
-                            CryoLinker *linker, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+    void (*initDefinitions)(void);
 
     DataType *(*getTypeofASTNode)(ASTNode *node);
     DataType *(*parseType)(const char *typeStr);

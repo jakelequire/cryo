@@ -117,7 +117,7 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
 void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, const char *functionName, Arena *arena, CompilerState *state, ParsingContext *context)
 {
     __STACK_FRAME__
-    logMessage(LMI, "INFO", "Parser", "Consuming token...");
+    logMessage(LMI, "INFO", "Parser", "Consuming token... [%s]", CryoTokenToString(type));
     // pushCallStack(&callStack, functionName, lexer->currentToken.line);
 
     addTokenToContext(context, lexer->currentToken);
@@ -2092,7 +2092,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
         {
             // This is an unnamed variadic parameter (e.g., just ...)
             logMessage(LMI, "INFO", "Parser", "Unnamed variadic parameter");
-            ASTNode *node = createParamNode("...", functionName, DTM->primitives->createAny(), arena, state, lexer);
+            ASTNode *node = createParamNode("...", functionName, DTM->compilerDefs->create_VA_ARGS(), arena, state, lexer);
             node->data.param->isVariadic = true;
             node->print(node);
             return node;

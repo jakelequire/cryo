@@ -12,10 +12,11 @@ namespace Std.Core;
 //                       Core Types                         //
 // ======================================================== //
 
+
 struct String {
     val: str;
-    length: int;
-    capacity: int;
+    length: i32;
+    capacity: i32;
 
     isEmpty: boolean;
     isNull: boolean;
@@ -24,58 +25,57 @@ struct String {
 
     prepend(__str__: str) -> String;
 
-    insert(__str__: str, __index__: int) -> String;
+    insert(__str__: str, __index__: i32) -> String;
 
-    remove(__index__: int, __length__: int) -> String;
+    remove(__index__: i32, __length__: i32) -> String;
     
-    replace(__str__: str, __index__: int, __length__: int) -> String;
+    replace(__str__: str, __index__: i32, __length__: i32) -> String;
 
-    find(__str__: str) -> int;
+    find(__str__: str) -> i32;
 
-    findLast(__str__: str) -> int;
+    findLast(__str__: str) -> i32;
     
-    findFirst(__str__: str) -> int;
+    findFirst(__str__: str) -> i32;
 }
 
 implement struct String {
     // The core string properties.
     val: str = "";
-    length: int = 0;
-    capacity: int = 0;
+    length: i32 = 0;
+    capacity: i32 = 0;
     isEmpty: boolean = true;
     isNull: boolean = false;
     
     // The core string methods.
     append(__str__: str) -> String {
         // Implementation of append method
-        printf_export("Appending string: %s\n", __str__);
     }
 
     prepend(__str__: str) -> String {
         // Implementation of prepend method
     }
 
-    insert(__str__: str, __index__: int) -> String {
+    insert(__str__: str, __index__: i32) -> String {
         // Implementation of insert method
     }
 
-    remove(__index__: int, __length__: int) -> String {
+    remove(__index__: i32, __length__: i32) -> String {
         // Implementation of remove method
     }
 
-    replace(__str__: str, __index__: int, __length__: int) -> String {
+    replace(__str__: str, __index__: i32, __length__: i32) -> String {
         // Implementation of replace method
     }
 
-    find(__str__: str) -> int {
+    find(__str__: str) -> i32 {
         // Implementation of find method
     }
 
-    findLast(__str__: str) -> int {
+    findLast(__str__: str) -> i32 {
         // Implementation of findLast method
     }
 
-    findFirst(__str__: str) -> int {
+    findFirst(__str__: str) -> i32 {
         // Implementation of findFirst method
     }
 }
@@ -125,9 +125,6 @@ type pointer extends Pointer;   // Type alias for Pointer
 /// type any        = any;      #[Compiler Defined Type]
 
 
-// ======================================================== //
-//                    C ABI Functions                       //
-// ======================================================== //
 // ======================================================== //
 //                    C ABI Functions                       //
 // ======================================================== //
