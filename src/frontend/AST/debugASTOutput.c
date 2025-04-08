@@ -98,8 +98,8 @@ ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, Dat
     node->nodeType = nodeType;
     node->nodeName = nodeName;
     node->dataType = dataType;
-    node->line = sourceNode->metaData->line;
-    node->column = sourceNode->metaData->column;
+    node->line = line;
+    node->column = column;
     node->children = (ASTDebugNode *)malloc(sizeof(ASTDebugNode) * AST_DEBUG_VIEW_NODE_COUNT);
     node->childCount = 0;
     node->indent = indent;
@@ -2133,27 +2133,39 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         logMessage(LMI, "DEBUG", "ASTDBG", "Class");
-        char *className = strdup(node->data.classNode->name);
+        const char *className = node->data.classNode->name;
+        logMessage(LMI, "DEBUG", "ASTDBG", "ClassName: %s", className);
+
         DataType *classType = node->data.classNode->type;
+        classType->debug->printType(classType);
+        classType->debug->printVerbosType(classType);
+
         ASTDebugNode *classNode = createASTDebugNode("Class", className, classType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *classNode;
         output->nodeCount++;
 
         // Handle constructor if present
-        if (node->data.classNode->constructor)
+        if (node->data.classNode->constructorCount < 0)
         {
             indentLevel++;
-            createASTDebugView(node->data.classNode->constructor, output, indentLevel);
+            logMessage(LMI, "DEBUG", "ASTDBG", "Creating Debug View for Constructor");
+            for (int i = 0; i < node->data.classNode->constructorCount; i++)
+            {
+                createASTDebugView(node->data.classNode->constructors[i], output, indentLevel);
+            }
             indentLevel--;
         }
 
         // Handle public members
         if (node->data.classNode->publicMembers)
         {
-            ASTDebugNode *publicNode = createASTDebugNode("AccessControl", "Public", DTM->primitives->createVoid(), 0, 0, indentLevel + 1, NULL);
+            logMessage(LMI, "DEBUG", "ASTDBG", "Creating Debug View for Public Members");
+            ASTDebugNode *publicNode = createASTDebugNode("AccessControl", "Public", NULL, 0, 0, indentLevel + 1, NULL);
+            printf("Created Debug Node for Public Members\n");
             output->nodes[output->nodeCount] = *publicNode;
             output->nodeCount++;
 
+            logMessage(LMI, "DEBUG", "ASTDBG", "Public Members Count: %d", node->data.classNode->publicMembers->propertyCount);
             // Log public properties
             for (int i = 0; i < node->data.classNode->publicMembers->propertyCount; i++)
             {
@@ -2164,6 +2176,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 output->nodeCount++;
             }
 
+            logMessage(LMI, "DEBUG", "ASTDBG", "Public Methods Count: %d", node->data.classNode->publicMembers->methodCount);
             // Log public methods
             for (int i = 0; i < node->data.classNode->publicMembers->methodCount; i++)
             {
@@ -2174,11 +2187,13 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 output->nodeCount++;
 
                 // Log method body
+                logMessage(LMI, "DEBUG", "ASTDBG", "Creating Debug View for Method Body");
                 createASTDebugView(node->data.classNode->publicMembers->methods[i]->data.method->body, output, indentLevel + 3);
             }
         }
 
         // Handle private members
+        logMessage(LMI, "DEBUG", "ASTDBG", "Creating Debug View for Private Members");
         if (node->data.classNode->privateMembers)
         {
             ASTDebugNode *privateNode = createASTDebugNode("AccessControl", "Private", DTM->primitives->createVoid(), 0, 0, indentLevel + 1, NULL);

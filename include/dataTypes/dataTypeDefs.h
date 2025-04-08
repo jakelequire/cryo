@@ -291,9 +291,9 @@ typedef struct DTClassTy_t
     int methodCapacity;
 
     bool hasConstructor;
-    struct DataType_t **ctorParams;
-    int ctorParamCount;
-    int ctorParamCapacity;
+    struct DataType_t **constructors;
+    int ctorCount;
+    int ctorCapacity;
 
     struct DTPublicMembersTypes_t *publicMembers;
     struct DTPrivateMembersTypes_t *privateMembers;

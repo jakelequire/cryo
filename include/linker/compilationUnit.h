@@ -28,7 +28,8 @@ typedef enum CompilationUnitType_t
     CRYO_MODULE,
     CRYO_MAIN,
     CRYO_RUNTIME,
-    CRYO_DEPENDENCY
+    CRYO_DEPENDENCY,
+    CRYO_STDLIB,
 } CompilationUnitType;
 
 char *compilationUnitTypeToString(CompilationUnitType type);
@@ -76,7 +77,8 @@ int CompilationUnit_Verify(CompilationUnit *self);
 
 CompilationUnitDir createCompilationUnitDir(const char *inputFile, const char *buildDir, CompilationUnitType type);
 CompilationUnit *createNewCompilationUnit(ASTNode *root, CompilationUnitDir dir);
-
+CompilationUnitDir createCompilerCompilationUnitDir(
+    const char *inputFile, const char *buildDir, const char *compilerDir, CompilationUnitType type);
 // ------------------------
 // Macros
 

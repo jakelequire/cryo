@@ -144,6 +144,65 @@ DTMStructTypes *createDTMStructTypes(void)
 // ------------------------------------- Class Data Types -------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //
 
+DataType *DTMClassTypes_createClassTemplate(void)
+{
+    DTClassTy *classType = createDTClassTy();
+    return DTM->dataTypes->wrapClassType(classType);
+}
+
+DataType *DTMClassTypes_createClassType(const char *className, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount)
+{
+    DTClassTy *classType = createDTClassTy();
+    classType->name = className;
+    classType->properties = properties;
+    classType->propertyCount = propertyCount;
+    classType->methods = methods;
+    classType->methodCount = methodCount;
+    return DTM->dataTypes->wrapClassType(classType);
+}
+
+DataType *DTMClassTypes_createClassTypeWithMembers(
+    const char *className,
+    ASTNode **publicProperties, int publicPropertyCount,
+    ASTNode **privateProperties, int privatePropertyCount,
+    ASTNode **protectedProperties, int protectedPropertyCount,
+    ASTNode **publicMethods, int publicMethodCount,
+    ASTNode **privateMethods, int privateMethodCount,
+    ASTNode **protectedMethods, int protectedMethodCount,
+    bool hasConstructor,
+    ASTNode **constructors, int ctorCount)
+{
+    DTClassTy *classType = createDTClassTy();
+    classType->name = className;
+
+    DTPropertyTy **publicProps = DTM->astInterface->createPropertyArrayFromAST(publicProperties, publicPropertyCount);
+    DTPropertyTy **privateProps = DTM->astInterface->createPropertyArrayFromAST(privateProperties, privatePropertyCount);
+    DTPropertyTy **protectedProps = DTM->astInterface->createPropertyArrayFromAST(protectedProperties, protectedPropertyCount);
+
+    classType->publicMembers->properties = publicProps;
+    classType->publicMembers->propertyCount = publicPropertyCount;
+    classType->privateMembers->properties = privateProps;
+    classType->privateMembers->propertyCount = privatePropertyCount;
+    classType->protectedMembers->properties = protectedProps;
+    classType->protectedMembers->propertyCount = protectedPropertyCount;
+
+    classType->publicMembers->methods = DTM->astInterface->createTypeArrayFromASTArray(publicMethods, publicMethodCount);
+    classType->publicMembers->methodCount = publicMethodCount;
+    classType->privateMembers->methods = DTM->astInterface->createTypeArrayFromASTArray(privateMethods, privateMethodCount);
+    classType->privateMembers->methodCount = privateMethodCount;
+    classType->protectedMembers->methods = DTM->astInterface->createTypeArrayFromASTArray(protectedMethods, protectedMethodCount);
+    classType->protectedMembers->methodCount = protectedMethodCount;
+
+    classType->hasConstructor = hasConstructor;
+    classType->constructors = DTM->astInterface->createTypeArrayFromASTArray(constructors, ctorCount);
+    classType->ctorCount = ctorCount;
+
+    DataType * classDataType = DTM->dataTypes->wrapClassType(classType);
+    classDataType->setTypeName(classDataType, className);
+
+    return classDataType;
+}
+
 DTMClassTypes *createDTMClassTypes(void)
 {
     DTMClassTypes *classTypes = (DTMClassTypes *)malloc(sizeof(DTMClassTypes));
@@ -154,6 +213,9 @@ DTMClassTypes *createDTMClassTypes(void)
     }
 
     // ==================== [ Function Assignments ] ==================== //
+    classTypes->createClassTemplate = DTMClassTypes_createClassTemplate;
+    classTypes->createClassType = DTMClassTypes_createClassType;
+    classTypes->createClassTypeWithMembers = DTMClassTypes_createClassTypeWithMembers;
 
     return classTypes;
 }
@@ -609,10 +671,15 @@ DataType **DTMastInterface_createTypeArrayFromASTArray(ASTNode **nodes, int coun
 
 DTPropertyTy **DTMastInterface_createPropertyArrayFromAST(ASTNode **nodes, int count)
 {
-    if (!nodes || count == 0)
+    if (!nodes)
     {
         fprintf(stderr, "[Data Type Manager] Error: Invalid AST Node Array (createPropertyArrayFromAST)\n");
         CONDITION_FAILED;
+    }
+
+    if (count == 0)
+    {
+        return NULL;
     }
 
     DTPropertyTy **properties = (DTPropertyTy **)malloc(sizeof(DTPropertyTy *) * count);

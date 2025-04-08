@@ -164,6 +164,7 @@ DataType *DTMTypeContainerWrappers_wrapEnumType(struct DTEnumTy_t *enumTy)
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = ENUM_TYPE;
     container->objectType = NON_OBJECT;
+    container->primitive = PRIM_ENUM;
     container->type.enumType = enumTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -185,6 +186,7 @@ DataType *DTMTypeContainerWrappers_wrapStructType(struct DTStructTy_t *structTy)
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
     container->objectType = STRUCT_OBJ;
+    container->primitive = PRIM_OBJECT;
     container->type.structType = structTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -195,6 +197,7 @@ DataType *DTMTypeContainerWrappers_wrapClassType(struct DTClassTy_t *classTy)
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
     container->objectType = CLASS_OBJ;
+    container->primitive = PRIM_OBJECT;
     container->type.classType = classTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
@@ -205,6 +208,7 @@ DataType *DTMTypeContainerWrappers_wrapObjectType(struct DTObjectTy_t *objectTy)
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = OBJECT_TYPE;
     container->objectType = OBJECT_OBJ;
+    container->primitive = PRIM_OBJECT;
     container->type.objectType = objectTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);

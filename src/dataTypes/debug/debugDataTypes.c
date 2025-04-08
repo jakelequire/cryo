@@ -37,6 +37,10 @@ void DTDebug_printVerbosType(struct DataType_t *type)
     printf("Const: %s\n", type->isConst ? "true" : "false");
     printf("Pointer: %s\n", type->isPointer ? "true" : "false");
     printf("Reference: %s\n", type->isReference ? "true" : "false");
+    printf("TypeOf: %s | Primitive: %s | ObjectType: %s\n",
+           DTM->debug->typeofDataTypeToString(type->container->typeOf),
+           DTM->debug->primitiveDataTypeToString(type->container->primitive),
+           DTM->debug->typeofObjectTypeToString(type->container->objectType));
     printf(">-------------------------------------------------------------------------<\n");
 }
 

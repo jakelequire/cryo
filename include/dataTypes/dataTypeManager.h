@@ -178,6 +178,20 @@ typedef struct DTMStructTypes_t
 typedef struct DTMClassTypes_t
 {
     DataType *(*createClassTemplate)(void);
+    DataType *(*createClassType)(
+        const char *className,
+        DTPropertyTy **properties, int propertyCount,
+        DataType **methods, int methodCount);
+    DataType *(*createClassTypeWithMembers)(
+        const char *className,
+        ASTNode **publicProperties, int publicPropertyCount,
+        ASTNode **privateProperties, int privatePropertyCount,
+        ASTNode **protectedProperties, int protectedPropertyCount,
+        ASTNode **publicMethods, int publicMethodCount,
+        ASTNode **privateMethods, int privateMethodCount,
+        ASTNode **protectedMethods, int protectedMethodCount,
+        bool hasConstructor,
+        ASTNode **constructors, int ctorCount);
 } DTMClassTypes;
 
 // ---------------------- Function Data Type Interface ---------------------- //

@@ -161,6 +161,7 @@ DataType *DTMPrimitives_createVoid(void)
 
     DataType *void_ty = DTM->dataTypes->wrapTypeContainer(container);
     void_ty->setTypeName(void_ty, "void");
+
     return void_ty;
 }
 
@@ -185,6 +186,7 @@ DataType *DTMPrimitives_createAny(void)
 
     DataType *any_ty = DTM->dataTypes->wrapTypeContainer(container);
     any_ty->setTypeName(any_ty, "any");
+
     return any_ty;
 }
 

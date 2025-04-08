@@ -1080,37 +1080,47 @@ ASTNode *parseClassDeclaration(bool isStatic,
         parsingError("Failed to parse class body.", "parseclassNodearation", arena, state, lexer, lexer->source, globalTable);
         CONDITION_FAILED;
     }
+    logMessage(LMI, "INFO", "Parser", "Class body parsed.");
 
-    DataType *classType = DTM->classTypes->createClassTemplate();
-    if (!classType)
-    {
-        logMessage(LMI, "ERROR", "Parser", "Failed to create class data type.");
-        parsingError("Failed to create class data type.", "parseclassNodearation", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
-    }
-    classType->setTypeName(classType, className);
-
-    DTClassTy *classTy = classType->container->type.classType;
     ClassNode *classBodyNode = classBody->data.classNode;
-    DataType **publicMethods = DTM->astInterface->createTypeArrayFromASTArray(
-        classBodyNode->publicMembers->methods, classBodyNode->publicMembers->methodCount);
-    DataType **privateMethods = DTM->astInterface->createTypeArrayFromASTArray(
-        classBodyNode->privateMembers->methods, classBodyNode->privateMembers->methodCount);
-    DataType **protectedMethods = DTM->astInterface->createTypeArrayFromASTArray(
-        classBodyNode->protectedMembers->methods, classBodyNode->protectedMembers->methodCount);
+    DataType *classDataType = DTM->classTypes->createClassTypeWithMembers(
+        className,
+        classBodyNode->publicMembers->properties,
+        classBodyNode->publicMembers->propertyCount,
 
-    classTy->addPublicMethods(classTy, publicMethods, classBody->data.classNode->publicMembers->methodCount);
-    classTy->addPrivateMethods(classTy, privateMethods, classBody->data.classNode->privateMembers->methodCount);
-    classTy->addProtectedMethods(classTy, protectedMethods, classBody->data.classNode->protectedMembers->methodCount);
+        classBodyNode->privateMembers->properties,
+        classBodyNode->privateMembers->propertyCount,
 
-    classNode->data.classNode->type = classType;
+        classBodyNode->protectedMembers->properties,
+        classBodyNode->protectedMembers->propertyCount,
+
+        classBodyNode->publicMembers->methods,
+        classBodyNode->publicMembers->methodCount,
+
+        classBodyNode->privateMembers->methods,
+        classBodyNode->privateMembers->methodCount,
+
+        classBodyNode->protectedMembers->methods,
+        classBodyNode->protectedMembers->methodCount,
+
+        classBodyNode->hasConstructor,
+        classBodyNode->constructors,
+        classBodyNode->constructorCount);
+
+    printf("Class data type: %s\n", classDataType->debug->toString(classDataType));
+
+    logMessage(LMI, "INFO", "Parser", "Class methods added to class type.");
+    classNode->data.classNode->type = classDataType;
 
     CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
+    classNode->data.classNode->type = classDataType;
 
     // Clear the context
     clearThisContext(context);
     // Clear Scope
     clearScopeContext(context);
+
+    logMessage(LMI, "INFO", "Parser", "Class declaration completed.");
 
     return classNode;
 }
@@ -1382,8 +1392,6 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
     classNode->data.classNode->propertyCount = propertyCount;
     classNode->data.classNode->methodCount = methodCount;
 
-    logASTNode(classNode);
-
     consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` to end class body.", "parseClassBody", arena, state, context);
     logMessage(LMI, "INFO", "Parser", "Finished parsing class body.");
     return classNode;
@@ -1417,18 +1425,22 @@ void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *
     }
 
     ClassNode *classData = classNode->data.classNode;
-    if (!classData->constructor)
+    if (!classData->constructors)
     {
-        classData->constructor = (ASTNode *)calloc(1, sizeof(ASTNode));
-        if (!classData->constructor)
+        classData->constructors = (ASTNode **)malloc(sizeof(ASTNode *) * 12);
+        if (!classData->constructors)
         {
-            logMessage(LMI, "ERROR", "Memory", "Failed to allocate constructors");
+            logMessage(LMI, "ERROR", "Memory", "Failed to allocate constructor members");
             return;
         }
     }
-    classData->constructor = constructorNode;
 
+    ensureCapacity(classData->constructors, &classData->constructorCapacity, classData->constructorCount, 1);
+
+    classData->constructors[classData->constructorCount++] = constructorNode;
+    classData->hasConstructor = true;
     logMessage(LMI, "INFO", "Parser", "Constructor added to class.");
+    return;
 }
 
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,

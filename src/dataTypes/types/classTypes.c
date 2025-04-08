@@ -235,8 +235,9 @@ DTClassTy *createDTClassTy(void)
     classType->methodCount = 0;
     classType->methodCapacity = MAX_METHOD_CAPACITY;
     classType->hasConstructor = false;
-    classType->ctorParamCount = 0;
-    classType->ctorParamCapacity = MAX_PARAM_CAPACITY;
+    classType->constructors = (DataType **)malloc(sizeof(DataType *) * MAX_PARAM_CAPACITY);
+    classType->ctorCount = 0;
+    classType->ctorCapacity = MAX_PARAM_CAPACITY;
 
     // ==================== [ Function Assignments ] ==================== //
 

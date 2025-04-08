@@ -527,7 +527,11 @@ typedef struct ClassNode
 {
     DataType *type;
     const char *name;
-    ASTNode *constructor;
+
+    ASTNode **constructors;
+    int constructorCount;
+    int constructorCapacity;
+
     int propertyCount;
     int propertyCapacity;
     int methodCount;

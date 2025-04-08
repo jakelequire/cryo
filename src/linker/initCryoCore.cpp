@@ -99,7 +99,7 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        if (buildStandardLib() != 0)
+        if (buildStandardLib(state, globalTable) != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to build standard library\n");
             CONDITION_FAILED;
@@ -246,7 +246,7 @@ namespace Cryo
         return 0;
     }
 
-    int Linker::buildStandardLib(void)
+    int Linker::buildStandardLib(CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
         // This function will compile the whole `/cryo/Std` directory and create individual shared libraries
         // for each module.
@@ -285,6 +285,100 @@ namespace Cryo
             std::cout << "File: " << file << std::endl;
         }
         std::cout << "========================================\n\n";
+
+        // Iterate through the files and compile them with the core library
+
+        for (const std::string &file : cryoFiles)
+        {
+            // Get the file name without the extension
+            std::string fileName = file.substr(file.find_last_of("/\\") + 1);
+            std::string fileNameWithoutExt = fileName.substr(0, fileName.find_last_of('.'));
+
+            // Create the output path for the shared library
+            std::string outputPath = stdBinDir + "/lib" + fileNameWithoutExt + ".so";
+
+            // Compile the file and create the shared library
+            int result = compileLibItem(file, state, globalTable);
+            if (result != 0)
+            {
+                fprintf(stderr, "[Linker] Error: Failed to compile %s\n", file.c_str());
+                return result;
+            }
+        }
+
+        // Create a `verified` file to indicate that the standard library has been built
+        // This is just a temporary implementation below, in the future, this should be a more
+        // robust solution that verifies the standard library and creates a checksum for it.
+        // This will be used to verify that the standard library has been built and is up to date.
+        std::string verifiedFilePath = stdBinDir + "/verified";
+        if (fs->fileExists(verifiedFilePath.c_str()))
+        {
+            fs->removeFile(verifiedFilePath.c_str());
+        }
+        fs->createNewEmptyFileWpath(verifiedFilePath.c_str());
+        logMessage(LMI, "INFO", "Linker", "Successfully built standard library: %s", verifiedFilePath.c_str());
+
+        return 0;
+    }
+
+    int Linker::compileLibItem(std::string filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    {
+        // This function will compile a single file and create a shared library for it.
+        // It will also link the shared library with the core library.
+
+        std::string compilerRootPath = this->dirInfo->compilerDir;
+        std::cout << "Compiler Root Path @compileLibItem: " << compilerRootPath << std::endl;
+        std::string buildDir = compilerRootPath + "/cryo/Std/bin/.ll/";
+
+        ASTNode *programNode = compileForASTNode(filePath.c_str(), state, globalTable);
+        if (programNode == NULL)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to compile file: %s\n", filePath.c_str());
+            return 1;
+        }
+
+        programNode->print(programNode);
+
+        CompilationUnitDir dir = createCompilerCompilationUnitDir(filePath.c_str(), buildDir.c_str(), compilerRootPath.c_str(), CRYO_STDLIB);
+        dir.print(dir);
+
+        CompilationUnit *unit = createNewCompilationUnit(programNode, dir);
+        if (!unit)
+        {
+            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to create CompilationUnit");
+            CONDITION_FAILED;
+            return 1;
+        }
+
+        if (unit->verify(unit) != 0)
+        {
+            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to verify CompilationUnit");
+            CONDITION_FAILED;
+            return 1;
+        }
+
+        // Create the IR from the ASTNode
+        CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
+        if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
+        {
+            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
+            CONDITION_FAILED;
+            return 1;
+        }
+
+        // Link the newly compiled module with the core library
+        std::string coreLibPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/libcryo_core.so";
+        std::string outputPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/" + dir.out_fileName + ".so";
+        std::string linkCommand = "clang++ -shared -fPIC -o " + outputPath + " " + coreLibPath + " " + dir.out_filePath + ".ll";
+        int linkResult = system(linkCommand.c_str());
+        if (linkResult != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to link module with core library\n");
+            CONDITION_FAILED;
+            return 1;
+        }
+        logMessage(LMI, "INFO", "Linker", "Successfully linked module with core library");
+        logMessage(LMI, "INFO", "Linker", "Successfully created shared library: %s", outputPath.c_str());
 
         return 0;
     }

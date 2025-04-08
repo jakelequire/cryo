@@ -1487,14 +1487,21 @@ ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
 
     node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
-    node->constructor = NULL;
+
+    node->hasConstructor = false;
+    node->constructors = (ASTNode **)malloc(sizeof(ASTNode *) * ARG_CAPACITY);
+    node->constructorCount = 0;
+    node->constructorCapacity = ARG_CAPACITY;
+
     node->propertyCount = 0;
     node->propertyCapacity = PROPERTY_CAPACITY;
+
     node->methodCount = 0;
     node->methodCapacity = METHOD_CAPACITY;
-    node->hasConstructor = false;
+
     node->hasDefaultValue = false;
     node->isStatic = false;
+
     node->privateMembers = createPrivateMembersContainer(arena, state);
     node->publicMembers = createPublicMembersContainer(arena, state);
     node->protectedMembers = createProtectedMembersContainer(arena, state);

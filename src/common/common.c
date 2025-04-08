@@ -21,7 +21,7 @@ void CompilerState_setFilePath(CompilerState *state, const char *filePath)
     // Check if there is an existing file path, if so, overwrite it
     if (state->filePath != NULL)
     {
-        free(state->filePath);
+        state->filePath = NULL;
     }
     state->filePath = (char *)filePath;
 }
