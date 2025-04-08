@@ -212,6 +212,18 @@ DataType *DTMPrimitives_createAutoTy(void)
     return auto_ty;
 }
 
+DataType *DTMPrimitives_createPointer(void)
+{
+    TypeContainer *container = createTypeContainer();
+    container->typeOf = PRIM_TYPE;
+    container->primitive = PRIM_ANY;
+    container->objectType = NON_OBJECT;
+
+    DataType *pointer_ty = DTM->dataTypes->wrapTypeContainer(container);
+    pointer_ty->setTypeName(pointer_ty, "pointer");
+    return pointer_ty;
+}
+
 PrimitiveDataType DTMPrimitives_getPrimitiveType(const char *typeStr)
 {
     if (cStringCompare(typeStr, "i8"))
@@ -313,6 +325,7 @@ DTMPrimitives *createDTMPrimitives(void)
     primitives->createAny = DTMPrimitives_createAny;
     primitives->createUndefined = DTMPrimitives_createUndefined;
     primitives->createAutoTy = DTMPrimitives_createAutoTy;
+    primitives->createPointer = DTMPrimitives_createPointer;
 
     primitives->createString = DTMPrimitives_createString;
     primitives->createChar = DTMPrimitives_createChar;

@@ -212,10 +212,10 @@ int exe_project_build(CompilerSettings *settings)
 
     logCompilerSettings(settings);
 
-    CryoLinker_InitCryoCore(linker, settings->compilerRootPath, buildDir, state, globalSymbolTable);
-
     // Initialize the Type Definitions before parsing
     DTM->initDefinitions();
+
+    CryoLinker_InitCryoCore(linker, settings->compilerRootPath, buildDir, state, globalSymbolTable);
 
     // Initialize runtime definitions
     // boostrapRuntimeDefinitions(globalSymbolTable, linker);

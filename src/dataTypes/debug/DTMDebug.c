@@ -133,6 +133,9 @@ void DTMDebug_printDataType(DataType *type)
         case OBJECT_OBJ:
             printf("Object\n");
             break;
+        case VA_ARGS_OBJ:
+            printf("VA_ARGS\n");
+            break;
         case NON_OBJECT:
             printf("Non-Object\n");
             break;
@@ -221,6 +224,8 @@ const char *DTMDebug_typeofObjectTypeToString(TypeofObjectType type)
         return "Interface";
     case OBJECT_OBJ:
         return "Object";
+    case VA_ARGS_OBJ:
+        return "VA_ARGS";
     case NON_OBJECT:
         return "Non-Object";
     case UNKNOWN_OBJECT:
@@ -345,6 +350,12 @@ const char *DTMDebug_dataTypeToString(DataType *type)
             return "auto";
         case PRIM_OBJECT:
             return "object";
+        case PRIM_FUNCTION:
+            return "function";
+        case PRIM_UNKNOWN:
+            return "unknown";
+        case PRIM_ENUM:
+            return "enum";
         default:
             const char *typeOfPrim = DTM->debug->primitiveDataTypeToString(type->container->primitive);
             fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type: %s\n", typeOfPrim);
@@ -394,6 +405,8 @@ const char *DTMDebug_dataTypeToString(DataType *type)
             return "interface";
         case OBJECT_OBJ:
             return "object";
+        case VA_ARGS_OBJ:
+            return "VA_ARGS";
         case NON_OBJECT:
             return "non-object";
         case UNKNOWN_OBJECT:

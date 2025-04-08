@@ -25,6 +25,7 @@ DataType *create_VA_ARGS(void)
 
     // Create the properties
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `count` property");
     // 1. Create count property (i32)
     DTPropertyTy *count_prop = DTM->propertyTypes->createPropertyType(
         "count",
@@ -37,6 +38,7 @@ DataType *create_VA_ARGS(void)
         false  // Not protected
     );
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `types` property");
     // 2. Create types property (pointer to array of type descriptors)
     DataType *types_type = DTM->primitives->createPointer();
     types_type->setTypeName(types_type, "types");
@@ -51,6 +53,7 @@ DataType *create_VA_ARGS(void)
         false  // Not protected
     );
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `values` property");
     // 3. Create values property (pointer to actual argument values)
     DataType *values_type = DTM->primitives->createPointer();
     values_type->setTypeName(values_type, "values");
@@ -72,6 +75,7 @@ DataType *create_VA_ARGS(void)
 
     // Create methods for the VA_ARGS type
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `getInt` method");
     // 1. getInt method - retrieves an int argument by index
     DataType *getInt_return = DTM->primitives->createI32();
     DataType *getInt_param = DTM->primitives->createI32(); // index parameter
@@ -85,6 +89,7 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, getInt_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `getFloat` method");
     // 2. getFloat method
     DataType *getFloat_return = DTM->primitives->createFloat();
     DataType *getFloat_param = DTM->primitives->createI32(); // index parameter
@@ -98,6 +103,7 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, getFloat_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `getString` method");
     // 3. getString method
     DataType *getString_return = DTM->primitives->createString();
     DataType *getString_param = DTM->primitives->createI32(); // index parameter
@@ -111,6 +117,7 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, getString_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `getPointer` method");
     // 4. getPointer method
     DataType *getPointer_return = DTM->primitives->createPointer();
     DataType *getPointer_param = DTM->primitives->createI32(); // index parameter
@@ -124,6 +131,7 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, getPointer_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `getAny` method");
     // 5. getAny method
     DataType *getAny_return = DTM->primitives->createAny();
     DataType *getAny_param = DTM->primitives->createI32(); // index parameter
@@ -139,6 +147,7 @@ DataType *create_VA_ARGS(void)
 
     // Type checking methods
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `isInt` method");
     // 6. isInt method
     DataType *isInt_return = DTM->primitives->createBoolean();
     DataType *isInt_param = DTM->primitives->createI32(); // index parameter
@@ -152,6 +161,7 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, isInt_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `isFloat` method");
     // 7. isFloat method
     DataType *isFloat_return = DTM->primitives->createBoolean();
     DataType *isFloat_param = DTM->primitives->createI32(); // index parameter
@@ -165,6 +175,7 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, isFloat_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `isString` method");
     // 8. isString method
     DataType *isString_return = DTM->primitives->createBoolean();
     DataType *isString_param = DTM->primitives->createI32(); // index parameter
@@ -178,6 +189,7 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, isString_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Creating VA_ARGS `isPointer` method");
     // 9. isPointer method
     DataType *isPointer_return = DTM->primitives->createBoolean();
     DataType *isPointer_param = DTM->primitives->createI32(); // index parameter
@@ -191,8 +203,12 @@ DataType *create_VA_ARGS(void)
     );
     va_args_struct->addMethod(va_args_struct, isPointer_method);
 
+    logMessage(LMI, "INFO", "CompilerDefs", "Wrapping VA_ARGS struct type");
     // Create the final DataType wrapper
     DataType *va_args = DTM->dataTypes->wrapStructType(va_args_struct);
+    va_args->container->typeOf = OBJECT_TYPE;
+    va_args->container->objectType = VA_ARGS_OBJ;
+    va_args->container->primitive = PRIM_OBJECT;
     va_args->setTypeName(va_args, "VA_ARGS");
 
     return va_args;

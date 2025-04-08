@@ -69,6 +69,7 @@ typedef enum TypeofObjectType
     CLASS_OBJ,  // `class { ... }`
     INTERFACE_OBJ,
     OBJECT_OBJ,
+    VA_ARGS_OBJ,
     NON_OBJECT,
     UNKNOWN_OBJECT
 } TypeofObjectType;
