@@ -253,7 +253,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing struct field...");
-
+    DTM->symbolTable->printTable(DTM->symbolTable);
     // Get the DataType from the `parentName`
     const char *scopeName = getNamespaceScopeID(context);
     DataType *parentDataType = DTM->symbolTable->getEntry(DTM->symbolTable, scopeName, parentName);

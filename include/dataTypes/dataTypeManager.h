@@ -248,11 +248,19 @@ typedef struct DTMSymbolTableEntry_t
     DataType *type;
 } DTMSymbolTableEntry;
 
+typedef struct EntrySnapshot_t
+{
+    DTMSymbolTableEntry **entries;
+    int entryCount;
+    int entryCapacity;
+} EntrySnapshot;
+
 typedef struct DTMSymbolTable_t
 {
     DTMSymbolTableEntry **entries;
     int entryCount;
     int entryCapacity;
+    EntrySnapshot *snapshot;
 
     DataType *(*getEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*addEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
@@ -265,6 +273,10 @@ typedef struct DTMSymbolTable_t
     DTMSymbolTableEntry *(*createEntry)(const char *scopeName, const char *name, DataType *type);
     void (*importASTnode)(struct DTMSymbolTable_t *table, ASTNode *rootNode);
     DataType *(*lookup)(struct DTMSymbolTable_t *table, const char *name);
+
+    void (*startSnapshot)(struct DTMSymbolTable_t *table);
+    void (*endSnapshot)(struct DTMSymbolTable_t *table);
+
 } DTMSymbolTable;
 
 // -------------------------- Data Types Interface -------------------------- //
@@ -387,5 +399,63 @@ DTMHelpers *createDTMHelpers(void);
 DTMDataTypes *createDTMDataTypes(void);
 DTMastInterface *createDTMAstInterface(void);
 DTMTypeValidation *createDTMTypeValidation(void);
+
+/**
+ * @brief Create a snapshot of the current symbol table state
+ *
+ * @param symbolTable The symbol table to snapshot
+ * @return EntrySnapshot* Pointer to the snapshot structure
+ */
+EntrySnapshot *createEntrySnapshot(struct DTMSymbolTable_t *symbolTable);
+
+/**
+ * @brief Free memory used by a symbol table snapshot
+ *
+ * @param snapshot The snapshot to free
+ */
+void freeEntrySnapshot(EntrySnapshot *snapshot);
+
+/**
+ * @brief Start a snapshot of the symbol table
+ *
+ * @param table The symbol table to snapshot
+ */
+void DTMSymbolTable_startSnapshot(struct DTMSymbolTable_t *table);
+
+/**
+ * @brief End the snapshot and process new entries
+ *
+ * @param table The symbol table
+ */
+void DTMSymbolTable_endSnapshot(struct DTMSymbolTable_t *table);
+
+/**
+ * @brief Find new entries that were added since the snapshot was taken
+ *
+ * @param table The current symbol table
+ * @param newEntries Array to store pointers to new entries
+ * @param maxEntries Maximum number of entries to store
+ * @return int Number of new entries found
+ */
+int findNewEntries(struct DTMSymbolTable_t *table,
+                   struct DTMSymbolTableEntry_t **newEntries,
+                   int maxEntries);
+
+/**
+ * @brief Process a newly added symbol table entry
+ *
+ * @param table The symbol table
+ * @param entry The new entry to process
+ */
+void processNewEntry(struct DTMSymbolTable_t *table,
+                     struct DTMSymbolTableEntry_t *entry);
+
+/**
+ * @brief Add an imported symbol to the imports registry
+ *
+ * @param name Symbol name
+ * @param scope Symbol scope
+ */
+void addToImportsRegistry(const char *name, const char *scope);
 
 #endif // DATA_TYPE_MANAGER_H

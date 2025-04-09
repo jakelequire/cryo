@@ -14,94 +14,287 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+
+/**
+ * @file parseUsingKw.c
+ * @brief Implementation of the 'using' keyword for importing modules and specific exports
+ *
+ * The `using` keyword is used to import standard library modules and specific exports from modules.
+ * - Full module: `using Std;`
+ * - Module path: `using Std::IO;`
+ * - Specific exports: `using Std::IO::{FS, Console};`
+ */
+
 #include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <stdbool.h>
 
-// The `using` keyword is used to import a STD Library module only.
-// Syntax: `using <module>::<?scope/fn>::<?scope/fn>;`
-// Eventually, you will be able to import specific functions or scopes from a module.
-// Like this: `using Std::Types::{Int, Float};`
+// Forward declarations for helper functions
+static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain, size_t *chainLength,
+                             ParsingContext *context, Arena *arena, CompilerState *state);
+static void parseTypeList(Lexer *lexer, const char *modulePath, const char **moduleChain, size_t chainLength,
+                          ParsingContext *context, Arena *arena, CompilerState *state,
+                          CryoGlobalSymbolTable *globalTable);
+static void cleanupModuleChain(char **names, size_t length);
+static bool importModule(const char *primaryModule, const char **moduleChain, size_t chainLength,
+                         CompilerState *state, CryoGlobalSymbolTable *globalTable);
+static bool importSpecificExports(const char *modulePath, const char **exports, size_t exportCount,
+                                  CompilerState *state, CryoGlobalSymbolTable *globalTable);
+static char *buildModulePath(const char *compilerRoot, const char *primaryModule, const char **moduleChain,
+                             size_t chainLength);
+static bool isValidModulePath(const char *path);
+static char **findCryoFiles(const char *dirPath, size_t *fileCount);
+static char *findModuleFile(const char *dirPath, const char *moduleName);
+
+/**
+ * @brief Parse a using keyword statement
+ *
+ * Handles all forms of the using statement:
+ * - using Std;
+ * - using Std::IO;
+ * - using Std::IO::{FS, Console};
+ *
+ * @param lexer Current lexer state
+ * @param context Parsing context
+ * @param arena Memory arena
+ * @param state Compiler state
+ * @param globalTable Global symbol table
+ * @return ASTNode* Node representing the using statement
+ */
 ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
                            Arena *arena, CompilerState *state,
                            CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing using keyword...");
+
+    // Consume 'using' keyword
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
             "parseUsingKeyword", arena, state, context);
 
+    // Temporarily disable primary table to prepare for imports
     setPrimaryTableStatus(globalTable, false);
 
-    // Get primary module name
+    // Get primary module name (e.g., 'Std')
     Token primaryModuleToken = lexer->currentToken;
     char *primaryModule = strndup(primaryModuleToken.start, primaryModuleToken.length);
     logMessage(LMI, "INFO", "Parser", "Primary module: %s", primaryModule);
 
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
-            "parseUsingKeyword", arena, state, context);
-    consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected `::` after primary module.",
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected module identifier.",
             "parseUsingKeyword", arena, state, context);
 
-    // Parse module chain
+    // Check if this is a simple "using Std;" statement
+    if (lexer->currentToken.type == TOKEN_SEMICOLON)
+    {
+        // Import the entire standard library
+        if (!importFullStandardLibrary(primaryModule, state, globalTable))
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to import full standard library: %s", primaryModule);
+        }
+
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
+                "parseUsingKeyword", arena, state, context);
+
+        setPrimaryTableStatus(globalTable, true);
+
+        // Create AST node for the using statement
+        const char *moduleChain[] = {primaryModule};
+        ASTNode *usingNode = createUsingNode(primaryModule, moduleChain, 1, arena, state, lexer);
+
+        return usingNode;
+    }
+
+    // For module paths like "using Std::IO;"
+    consume(__LINE__, lexer, TOKEN_DOUBLE_COLON, "Expected `::` or `;` after module identifier.",
+            "parseUsingKeyword", arena, state, context);
+
+    // Parse module chain (e.g., "IO::Console")
     struct ModuleChainEntry moduleChain[MAX_MODULE_CHAIN];
     size_t chainLength = 0;
     parseModuleChain(lexer, moduleChain, &chainLength, context, arena, state);
-    logMessage(LMI, "INFO", "Parser", "Module chain parsed successfully.");
 
-    // Handle type list if present
-    if (lexer->currentToken.type == TOKEN_LBRACE)
-    {
-        const char *lastModule = moduleChain[chainLength - 1].name;
-        parseTypeList(lexer, lastModule, context, arena,
-                      state, globalTable);
-    }
-
-    // Import the module chain
+    // Convert module chain to string array for easier handling
     const char *moduleChainStr[MAX_MODULE_CHAIN];
     for (size_t i = 0; i < chainLength; i++)
     {
         moduleChainStr[i] = moduleChain[i].name;
     }
 
-    if (!context->isParsingModuleFile)
+    // Handle specific exports if present (e.g., "{FS, Console}")
+    if (lexer->currentToken.type == TOKEN_LBRACE)
     {
-        importUsingModule(primaryModule, moduleChainStr, chainLength, state, globalTable);
+        // Get full module path for specific exports
+        char *modulePath = buildModulePath(state->settings->compilerRootPath, primaryModule, moduleChainStr, chainLength);
+
+        if (modulePath)
+        {
+            parseTypeList(lexer, modulePath, moduleChainStr, chainLength, context, arena, state, globalTable);
+            free(modulePath);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to build module path for exports");
+        }
+    }
+    else
+    {
+        // Import the entire module path
+        if (!context->isParsingModuleFile)
+        {
+            if (!importModule(primaryModule, moduleChainStr, chainLength, state, globalTable))
+            {
+                logMessage(LMI, "ERROR", "Parser", "Failed to import module: %s", primaryModule);
+            }
+        }
     }
 
+    // Re-enable primary table after imports
     setPrimaryTableStatus(globalTable, true);
+
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
             "parseUsingKeyword", arena, state, context);
 
-    logMessage(LMI, "INFO", "Parser", "Finished parsing using keyword.");
-
+    // Create AST node for the using statement
     ASTNode *usingNode = createUsingNode(primaryModule, moduleChainStr, chainLength, arena, state, lexer);
 
     return usingNode;
 }
 
-// Helper function implementations
-static void cleanupModuleChain(char **names, size_t length)
+/**
+ * @brief Import the entire standard library
+ *
+ * @param primaryModule The primary module name (e.g., "Std")
+ * @param state Compiler state
+ * @param globalTable Global symbol table
+ * @return true if successful, false otherwise
+ */
+bool importFullStandardLibrary(const char *primaryModule, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
-    for (size_t i = 0; i < length; i++)
+    logMessage(LMI, "INFO", "Parser", "Importing full standard library: %s", primaryModule);
+
+    // Currently only support Std as primary module
+    if (strcmp(primaryModule, "Std") != 0)
     {
-        free(names[i]);
+        logMessage(LMI, "ERROR", "Parser", "Only the 'Std' module is currently supported");
+        return false;
     }
+
+    // Build path to standard library directory
+    const char *compilerRoot = state->settings->compilerRootPath;
+    char *stdLibPath = (char *)malloc(strlen(compilerRoot) + strlen("/cryo/Std/") + 1);
+    if (!stdLibPath)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Memory allocation failed for standard library path");
+        return false;
+    }
+
+    strcpy(stdLibPath, compilerRoot);
+    strcat(stdLibPath, "/cryo/Std/");
+
+    if (!isValidModulePath(stdLibPath))
+    {
+        logMessage(LMI, "ERROR", "Parser", "Invalid standard library path: %s", stdLibPath);
+        free(stdLibPath);
+        return false;
+    }
+
+    // Find all .cryo files in the standard library directory and subdirectories
+    importStandardLibraryRecursive(stdLibPath, state, globalTable);
+
+    free(stdLibPath);
+    return true;
 }
 
-static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain, size_t *chainLength,
-                             ParsingContext *context, Arena *arena,
-                             CompilerState *state)
+/**
+ * @brief Recursively import all .cryo files in a directory and its subdirectories
+ *
+ * @param dirPath Directory path to start from
+ * @param state Compiler state
+ * @param globalTable Global symbol table
+ */
+void importStandardLibraryRecursive(const char *dirPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
-    const char *namespaces[] = {0};
+    DIR *dir = opendir(dirPath);
+    if (!dir)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to open directory: %s", dirPath);
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        // Skip . and .. directories
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        {
+            continue;
+        }
+
+        // Build full path
+        char *fullPath = (char *)malloc(strlen(dirPath) + strlen(entry->d_name) + 2);
+        if (!fullPath)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Memory allocation failed for path");
+            continue;
+        }
+
+        strcpy(fullPath, dirPath);
+        strcat(fullPath, "/");
+        strcat(fullPath, entry->d_name);
+
+        // Check if it's a directory
+        DIR *checkDir = opendir(fullPath);
+        if (checkDir)
+        {
+            // It's a directory, recursively import
+            closedir(checkDir);
+            importStandardLibraryRecursive(fullPath, state, globalTable);
+        }
+        else if (strstr(entry->d_name, ".cryo") && !strstr(entry->d_name, ".mod.cryo"))
+        {
+            // It's a .cryo file (but not a module file), import it
+            logMessage(LMI, "INFO", "Parser", "Importing file: %s", fullPath);
+            ASTNode *node = compileForASTNode(fullPath, state, globalTable);
+            if (!node)
+            {
+                logMessage(LMI, "ERROR", "Parser", "Failed to compile file: %s", fullPath);
+            }
+        }
+
+        free(fullPath);
+    }
+
+    closedir(dir);
+}
+
+/**
+ * @brief Parse a module chain (e.g., "IO::Console")
+ *
+ * @param lexer Current lexer state
+ * @param moduleChain Array to store module chain entries
+ * @param chainLength Pointer to store the length of the chain
+ * @param context Parsing context
+ * @param arena Memory arena
+ * @param state Compiler state
+ */
+static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain, size_t *chainLength,
+                             ParsingContext *context, Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+
     while (true)
     {
         Token current = lexer->currentToken;
 
-        // Check for special cases before adding to chain
+        // Check for end of chain
         if (lexer->currentToken.type == TOKEN_LBRACE ||
             lexer->currentToken.type == TOKEN_SEMICOLON)
         {
@@ -113,9 +306,6 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
         moduleChain[*chainLength].length = current.length;
         (*chainLength)++;
 
-        // Add to the namespace list
-        namespaces[*chainLength] = moduleChain[*chainLength].name;
-
         if (*chainLength >= MAX_MODULE_CHAIN)
         {
             logMessage(LMI, "ERROR", "Parser", "Module chain exceeds maximum length");
@@ -123,11 +313,11 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
             return;
         }
 
-        // Must be an identifier followed by either :: or ; or {
-        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
+        // Consume identifier
+        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected module identifier.",
                 "parseModuleChain", arena, state, context);
 
-        // After an identifier, we should either see :: or end of chain
+        // Check for end of chain or continue with next module
         if (lexer->currentToken.type == TOKEN_LBRACE ||
             lexer->currentToken.type == TOKEN_SEMICOLON)
         {
@@ -148,7 +338,10 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
                 "parseModuleChain", arena, state, context);
     }
 
-    // DEBUG -------------------------------------
+    // Log the parsed module chain
+    logMessage(LMI, "INFO", "Parser", "Module chain parsed with %zu components", *chainLength);
+
+    // Debug info
     DEBUG_PRINT_FILTER({
         printf("DEBUG: Module Chain Length: %zu\n", *chainLength);
         printf("DEBUG: Module Chain: \n");
@@ -157,42 +350,54 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
             printf("%s", moduleChain[i].name);
             if (i < *chainLength - 1)
             {
-                printf(",");
+                printf("::");
             }
             printf("\n");
         }
     });
 }
 
-static void parseTypeList(Lexer *lexer, const char *lastModule,
+/**
+ * @brief Parse a list of specific exports (e.g., "{FS, Console}")
+ *
+ * @param lexer Current lexer state
+ * @param modulePath Path to the module directory
+ * @param moduleChain Module chain leading to the exports
+ * @param chainLength Length of the module chain
+ * @param context Parsing context
+ * @param arena Memory arena
+ * @param state Compiler state
+ * @param globalTable Global symbol table
+ */
+static void parseTypeList(Lexer *lexer, const char *modulePath, const char **moduleChain, size_t chainLength,
                           ParsingContext *context, Arena *arena, CompilerState *state,
                           CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
-    logMessage(LMI, "INFO", "Parser", "Parsing specific types within braces...");
-    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` after `::`.",
+    logMessage(LMI, "INFO", "Parser", "Parsing specific exports within braces...");
+
+    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` for export list.",
             "parseTypeList", arena, state, context);
 
-    struct TypeEntry typeNames[MAX_MODULE_CHAIN];
-    size_t typeCount = 0;
-
-    printf("DEBUG: Parsing specific types within braces...\n");
+    // Array to store export names
+    struct TypeEntry exportNames[MAX_MODULE_CHAIN];
+    size_t exportCount = 0;
 
     do
     {
-        Token typeToken = lexer->currentToken;
-        typeNames[typeCount].name = strndup(typeToken.start, typeToken.length);
-        typeNames[typeCount].length = typeToken.length;
-        typeCount++;
+        Token exportToken = lexer->currentToken;
+        exportNames[exportCount].name = strndup(exportToken.start, exportToken.length);
+        exportNames[exportCount].length = exportToken.length;
+        exportCount++;
 
-        if (typeCount >= MAX_MODULE_CHAIN)
+        if (exportCount >= MAX_MODULE_CHAIN)
         {
-            logMessage(LMI, "ERROR", "Parser", "Type list exceeds maximum length");
-            cleanupModuleChain((char **)typeNames, typeCount);
+            logMessage(LMI, "ERROR", "Parser", "Export list exceeds maximum length");
+            cleanupModuleChain((char **)exportNames, exportCount);
             break;
         }
 
-        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected type identifier.",
+        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected export identifier.",
                 "parseTypeList", arena, state, context);
 
         if (lexer->currentToken.type == TOKEN_RBRACE)
@@ -200,421 +405,436 @@ static void parseTypeList(Lexer *lexer, const char *lastModule,
             break;
         }
 
-        consume(__LINE__, lexer, TOKEN_COMMA, "Expected `,` after type identifier.",
+        consume(__LINE__, lexer, TOKEN_COMMA, "Expected `,` after export identifier.",
                 "parseTypeList", arena, state, context);
     } while (true);
 
-    consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` after type list.",
+    consume(__LINE__, lexer, TOKEN_RBRACE, "Expected `}` after export list.",
             "parseTypeList", arena, state, context);
 
     // Convert to array for import
-    const char *typeArray[MAX_MODULE_CHAIN];
-    for (size_t i = 0; i < typeCount; i++)
+    const char *exportArray[MAX_MODULE_CHAIN];
+    for (size_t i = 0; i < exportCount; i++)
     {
-        printf("DEBUG: Type Name: %s\n", typeNames[i].name);
-        typeArray[i] = typeNames[i].name;
+        exportArray[i] = exportNames[i].name;
+        logMessage(LMI, "INFO", "Parser", "Export to import: %s", exportNames[i].name);
     }
 
-    importSpecificNamespaces(lastModule, typeArray, typeCount, state, globalTable);
-    cleanupModuleChain((char **)typeNames, typeCount);
+    // Import specific exports from module
+    if (!context->isParsingModuleFile)
+    {
+        importSpecificExports(modulePath, exportArray, exportCount, state, globalTable);
+    }
+
+    // Cleanup
+    cleanupModuleChain((char **)exportNames, exportCount);
 }
 
-// Now that we have the module chain, we can import the module into the current scope.
-// This function will import into the Global Symbol Table.
-void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount,
-                       CompilerState *state, CryoGlobalSymbolTable *globalTable)
+/**
+ * @brief Free memory allocated for a module chain
+ *
+ * @param names Array of strings to free
+ * @param length Number of strings
+ */
+static void cleanupModuleChain(char **names, size_t length)
 {
     __STACK_FRAME__
-    // Import the module and scope or function
-    // This will allow the module to be used in the current scope.
+    for (size_t i = 0; i < length; i++)
+    {
+        free(names[i]);
+    }
+}
 
+/**
+ * @brief Import a module given a module path
+ *
+ * @param primaryModule Primary module name (e.g., "Std")
+ * @param moduleChain Module chain to import
+ * @param chainLength Length of module chain
+ * @param state Compiler state
+ * @param globalTable Global symbol table
+ * @return true if successful, false otherwise
+ */
+static bool importModule(const char *primaryModule, const char **moduleChain, size_t chainLength,
+                         CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    // Currently only support Std as primary module
     if (strcmp(primaryModule, "Std") != 0)
     {
-        // Safeguard for now until we have more modules.
-        logMessage(LMI, "ERROR", "Parser", "Primary module must be `Std`.");
-        return;
+        logMessage(LMI, "ERROR", "Parser", "Only the 'Std' module is currently supported");
+        return false;
     }
 
-    int lastModuleIndex = moduleCount - 1;
-
-    // The primary module should be the first module in the chain regardless of the chain length.
-    const char *rootLevelModule = moduleChain[0];
-    // This should be giving the path: {CRYO_ROOT}/Std/{rootLevelModule} | {CRYO_ROOT}/Std/Types
-    const char *primaryModulePath = getSTDLibraryModulePath(rootLevelModule, state);
-    if (primaryModulePath == NULL)
+    // Build full module path
+    char *modulePath = buildModulePath(state->settings->compilerRootPath, primaryModule, moduleChain, chainLength);
+    if (!modulePath)
     {
-        logMessage(LMI, "ERROR", "Parser", "Invalid primary module path.");
-        return;
+        logMessage(LMI, "ERROR", "Parser", "Failed to build module path");
+        return false;
     }
 
-    // Check if the module file exists
-    const char **moduleFiles = getFilesInModuleDir(primaryModulePath);
-    if (moduleFiles == NULL)
+    logMessage(LMI, "INFO", "Parser", "Importing module from path: %s", modulePath);
+
+    // Check if path exists
+    if (!isValidModulePath(modulePath))
     {
-        logMessage(LMI, "ERROR", "Parser", "getSTDLibPath: No module files found in directory: %s", primaryModulePath);
-    }
-
-    int modCount = 0;
-    while (moduleFiles[modCount] != NULL)
-    {
-        modCount++;
-    }
-
-    const char *moduleFile = findModuleFile(moduleFiles, modCount, rootLevelModule);
-    if (moduleFile == NULL)
-    {
-        logMessage(LMI, "ERROR", "Parser", "getSTDLibPath: Module file not found in directory: %s", primaryModulePath);
-    }
-
-    // DEBUG -------------------------------------
-    DEBUG_PRINT_FILTER({
-        printf("DEBUG: Module Count: %zu\n", moduleCount);
-        printf("DEBUG: Primary Module: %s\n", primaryModule);
-        printf("DEBUG: Module Chain: ");
-        for (size_t i = 0; i < moduleCount; i++)
-        {
-            printf("%s", moduleChain[i]);
-            if (i < moduleCount - 1)
-            {
-                printf(",");
-            }
-        }
-    });
-    // DEBUG -------------------------------------
-
-    // Compile the module file definitions
-    int result = compileAndImportModuleToCurrentScope(moduleFile, state, globalTable);
-    if (result != 0)
-    {
-        logMessage(LMI, "ERROR", "Parser", "Failed to compile and import module file definitions.");
-        return;
-    }
-
-    logMessage(LMI, "INFO", "Parser", "Module imported successfully.");
-    return;
-}
-
-const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state)
-{
-    __STACK_FRAME__
-    // Get the path to the STD Library module
-    // This will be used to import the module into the current scope.
-    // Root Directory: {CRYO_ROOT}/std/
-    const char *rootDir = state->settings->compilerRootPath;
-    DEBUG_PRINT_FILTER({
-        printf("getSTDLibPath: Root Directory: %s\n", rootDir);
-        printf("getSTDLibPath: Module Name: %s\n", moduleName);
-    });
-    char *modulePath = (char *)malloc(strlen(rootDir) + strlen(moduleName) + 7);
-    strcpy(modulePath, rootDir);
-    strcat(modulePath, "/Std/");
-    strcat(modulePath, moduleName);
-    strcat(modulePath, "/");
-
-    const char *modulePathStr = (const char *)modulePath;
-    logMessage(LMI, "INFO", "Parser", "getSTDLibPath: Module path: %s", modulePathStr);
-
-    bool isValidDir = dirExists(modulePathStr);
-    if (!isValidDir)
-    {
-
-        logMessage(LMI, "ERROR", "Parser", "getSTDLibPath: Invalid module path: %s", modulePathStr);
+        logMessage(LMI, "ERROR", "Parser", "Invalid module path: %s", modulePath);
         free(modulePath);
-        return NULL;
+        return false;
     }
 
-    logMessage(LMI, "INFO", "Parser", "getSTDLibPath: Module path is valid.");
-    return modulePathStr;
-}
-
-// If the `using` keyword is used to import a whole module, this function will return all files in the module directory.
-const char **getFilesInModuleDir(const char *modulePath)
-{
-    __STACK_FRAME__
-    // Get all files in the module directory
-    // This will be used to import the module into the current scope.
-    DIR *dir;
-    struct dirent *ent;
-    if ((dir = opendir(modulePath)) != NULL)
+    // Find module file (.mod.cryo) if it exists
+    char *moduleFile = findModuleFile(modulePath, moduleChain[chainLength - 1]);
+    if (moduleFile)
     {
-        // Count the number of files in the directory
+        // Import the module file
+        logMessage(LMI, "INFO", "Parser", "Importing module file: %s", moduleFile);
+        ASTNode *node = compileForASTNode(moduleFile, state, globalTable);
+        free(moduleFile);
+
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to compile module file");
+            free(modulePath);
+            return false;
+        }
+    }
+    else
+    {
+        // If no module file, import all .cryo files in the directory
         size_t fileCount = 0;
-        while ((ent = readdir(dir)) != NULL)
+        char **cryoFiles = findCryoFiles(modulePath, &fileCount);
+
+        if (!cryoFiles || fileCount == 0)
         {
-            if (!nonCryoFileCheck(ent->d_name))
-            {
-                continue;
-            }
-            DEBUG_PRINT_FILTER({
-                printf("getFilesInModuleDir: Found File: %s\n", ent->d_name);
-            });
-            fileCount++;
+            logMessage(LMI, "ERROR", "Parser", "No .cryo files found in module directory");
+            free(modulePath);
+            return false;
         }
 
-        // Allocate memory for the file paths
-        const char **moduleFiles = (const char **)malloc(fileCount * sizeof(const char *));
-        rewinddir(dir);
-
-        // Store the file paths
-        size_t i = 0;
-        while ((ent = readdir(dir)) != NULL)
+        // Import each .cryo file
+        for (size_t i = 0; i < fileCount; i++)
         {
-            // Check for only valid Cryo files
-            if (!nonCryoFileCheck(ent->d_name))
+            logMessage(LMI, "INFO", "Parser", "Importing file: %s", cryoFiles[i]);
+            DTM->symbolTable->startSnapshot(DTM->symbolTable);
+            ASTNode *node = compileForASTNode(cryoFiles[i], state, globalTable);
+
+            if (!node)
             {
-                continue;
+                logMessage(LMI, "ERROR", "Parser", "Failed to compile file: %s", cryoFiles[i]);
             }
-            char *filePath = (char *)malloc(strlen(modulePath) + strlen(ent->d_name) + 1);
-            strcpy(filePath, modulePath);
-            strcat(filePath, ent->d_name);
-            moduleFiles[i] = (const char *)filePath;
-            logMessage(LMI, "INFO", "Parser", "File Path: %s", moduleFiles[i]);
-            i++;
+            DTM->symbolTable->endSnapshot(DTM->symbolTable);
+
+            free(cryoFiles[i]);
         }
 
-        closedir(dir);
-        return moduleFiles;
+        free(cryoFiles);
     }
 
-    return NULL;
+    free(modulePath);
+    return true;
 }
 
-bool nonCryoFileCheck(const char *fullPath)
+/**
+ * @brief Import specific exports from a module
+ *
+ * @param modulePath Path to the module directory
+ * @param exports Array of export names to import
+ * @param exportCount Number of exports
+ * @param state Compiler state
+ * @param globalTable Global symbol table
+ * @return true if successful, false otherwise
+ */
+static bool importSpecificExports(const char *modulePath, const char **exports, size_t exportCount,
+                                  CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
-    // Check if the file is a Cryo file
-    // This will be used to import the module into the current scope.
-    const char *needle = ".cryo";
-    if (strstr(fullPath, needle) != NULL)
+    logMessage(LMI, "INFO", "Parser", "Importing specific exports from module: %s", modulePath);
+
+    // Check if path exists
+    if (!isValidModulePath(modulePath))
     {
-        return true;
+        logMessage(LMI, "ERROR", "Parser", "Invalid module path: %s", modulePath);
+        return false;
     }
 
-    return false;
-}
-
-// A module file is a file that encapsulates a module's scope or functions accessible to the current scope.
-// The module files naming convention is: `{module_name}.mod.cryo`. This function will return the file path to the module file.
-// If the module file is not found, this function will return NULL.
-const char *findModuleFile(const char **moduleFiles, size_t moduleCount, const char *moduleName)
-{
-    __STACK_FRAME__
-    char *needle = (char *)malloc(strlen(moduleName) + 6);
-    strcpy(needle, moduleName);
-    strcat(needle, ".mod.cryo");
-    const char *needleStr = (const char *)needle;
-
-    logMessage(LMI, "INFO", "Parser", "findModuleFile: Searching for module file: %s", needleStr);
-    logMessage(LMI, "INFO", "Parser", "findModuleFile: Module Count: %zu", moduleCount);
-
-    for (size_t i = 0; i < moduleCount; i++)
-    {
-        const char *currentFilePath = moduleFiles[i];
-        const char *currentFile = trimFilePath(currentFilePath);
-
-        logMessage(LMI, "INFO", "Parser", "findModuleFile: Current File: %s", currentFile);
-        if (strstr(currentFile, needleStr) != NULL)
-        {
-            if (!fileExists(currentFilePath))
-            {
-                logMessage(LMI, "ERROR", "Parser", "findModuleFile: Invalid module file path: %s", currentFile);
-                continue;
-            }
-            logMessage(LMI, "INFO", "Parser", "findModuleFile: Module file found: %s", currentFile);
-            return currentFilePath;
-        }
-    }
-
-    return NULL;
-}
-
-const char *findRegularFile(const char **moduleFiles, size_t moduleCount, const char *fileName)
-{
-    __STACK_FRAME__
-    for (size_t i = 0; i < moduleCount; i++)
-    {
-        const char *currentFilePath = moduleFiles[i];
-        const char *currentFile = trimFilePath(currentFilePath);
-        if (strstr(currentFile, fileName) != NULL)
-        {
-            if (!fileExists(currentFilePath))
-            {
-                logMessage(LMI, "ERROR", "Parser", "findRegularFile: Invalid file path: %s", currentFile);
-                continue;
-            }
-            return currentFilePath;
-        }
-    }
-
-    return NULL;
-}
-
-// =================================================================================================
-// `using` Keyword Parsing While Importing Modules Is Active.
-
-// This function views the `using` keyword slightly differently while in a `.mod.cryo` file.
-// It will take the modules within the current module file and combine them into a singular compilation unit.
-
-// =================================================================================================
-// Compile and Import Module File Definitions
-
-int compileAndImportModuleToCurrentScope(const char *modulePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
-{
-    __STACK_FRAME__
-    // Compile the module file definitions
-    // This will be used to import the module into the current scope.
-    logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");
-
-    const char *dependencyDir = GetDependencyDirStr(globalTable);
-    logMessage(LMI, "INFO", "Parser", "Dependency Directory: %s", dependencyDir);
-    ASTNode *programNode = compileModuleFileToProgramNode(modulePath, dependencyDir, state, globalTable);
-    if (programNode == NULL)
-    {
-        logMessage(LMI, "ERROR", "Parser", "Failed to compile module file definitions.");
-        return 1;
-    }
-
-    printf("\n<!> DEBUG: PROGRAM NODE COMPLETE! \n\n");
-
-    logASTNode(programNode);
-
-    logMessage(LMI, "INFO", "Parser", "Parsing Complete, importing module file definitions...");
-
-    // HandleRootNodeImport(globalTable, programNode);
-
-    return 0;
-}
-
-void importSpecificNamespaces(const char *primaryModule, const char *namespaces[], size_t namespaceCount,
-                              CompilerState *state, CryoGlobalSymbolTable *globalTable)
-{
-    __STACK_FRAME__
-    printf("DEBUG: Importing Specific Namespaces... Primary Module: %s\n", primaryModule);
-    const char *rootTypeDir = getSTDLibraryModulePath(primaryModule, state);
-    if (rootTypeDir == NULL)
-    {
-        logMessage(LMI, "ERROR", "Parser", "Invalid primary module path.");
-        return;
-    }
-    printf("DEBUG: Root Type Dir: %s\n", rootTypeDir);
-    printf("DEBUG: Primary Module: %s\n", primaryModule);
-
-    const char **moduleFiles = getFilesInModuleDir(rootTypeDir);
-    if (moduleFiles == NULL)
-    {
-        logMessage(LMI, "ERROR", "Parser", "No module files found in directory: %s", rootTypeDir);
-        return;
-    }
-
-    // Count total module files
+    // Find all .cryo files in the directory
     size_t fileCount = 0;
-    while (moduleFiles[fileCount] != NULL)
+    char **cryoFiles = findCryoFiles(modulePath, &fileCount);
+
+    if (!cryoFiles || fileCount == 0)
     {
-        fileCount++;
+        logMessage(LMI, "ERROR", "Parser", "No .cryo files found in module directory");
+        return false;
     }
 
-    // Allocate array for modules to compile
-    const char **modulesToCompile = (const char **)malloc(sizeof(char *) * namespaceCount);
-    memset(modulesToCompile, 0, sizeof(char *) * namespaceCount);
-
-    logMessage(LMI, "INFO", "Parser", "Importing specific namespaces...");
-
-    // Match each namespace to its corresponding .cryo file
-    for (size_t i = 0; i < namespaceCount; i++)
+    // For each export, find corresponding file and import it
+    bool allExportsFound = true;
+    for (size_t i = 0; i < exportCount; i++)
     {
-        const char *currentNamespace = namespaces[i];
-        // Create the expected filename pattern (e.g., "String.cryo")
-        char *expectedFile = (char *)malloc(strlen(currentNamespace) + 6); // +6 for ".cryo\0"
-        sprintf(expectedFile, "%s.cryo", currentNamespace);
+        const char *exportName = exports[i];
+        bool exportFound = false;
 
-        // Search through module files for a match
-        bool found = false;
+        // Look for a file named <ExportName>.cryo
+        char *expectedFileName = (char *)malloc(strlen(exportName) + 7); // +7 for ".cryo\0"
+        if (!expectedFileName)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Memory allocation failed");
+            continue;
+        }
+
+        sprintf(expectedFileName, "%s.cryo", exportName);
+
         for (size_t j = 0; j < fileCount; j++)
         {
-            const char *currentFile = moduleFiles[j];
-            // Get just the filename without the path
-            const char *lastSlash = strrchr(currentFile, '/');
-            const char *filename = lastSlash ? lastSlash + 1 : currentFile;
-
-            if (strcmp(filename, expectedFile) == 0)
+            // Get just the filename without path
+            const char *fileName = strrchr(cryoFiles[j], '/');
+            if (fileName)
             {
-                modulesToCompile[i] = strdup(moduleFiles[j]); // Store the full path
-                found = true;
-                printf("DEBUG: Found Module File: %s\n", filename);
-                break;
+                fileName++; // Skip the slash
             }
             else
             {
-                printf("DEBUG: No Match: %s\n", filename);
-                printf("DEBUG: Expected: %s\n", expectedFile);
+                fileName = cryoFiles[j]; // No slash in path
             }
-        }
 
-        if (!found)
-        {
-            logMessage(LMI, "ERROR", "Parser",
-                       "Module file not found in directory for namespace %s: %s",
-                       currentNamespace, rootTypeDir);
-        }
-    }
-
-    // DEBUG: print the modules to compile
-    for (size_t i = 0; i < namespaceCount; i++)
-    {
-        printf("DEBUG: Module To Compile: %s\n",
-               modulesToCompile[i] ? modulesToCompile[i] : "(null)");
-    }
-
-    // Now compile each found module
-    for (size_t i = 0; i < namespaceCount; i++)
-    {
-        if (modulesToCompile[i])
-        {
-            logMessage(LMI, "INFO", "Parser", "Compiling module: %s", modulesToCompile[i]);
-            int result = compileAndImportModuleToCurrentScope(modulesToCompile[i], state, globalTable);
-            if (result != 0)
+            if (strcmp(fileName, expectedFileName) == 0)
             {
-                logMessage(LMI, "ERROR", "Parser",
-                           "Failed to compile module: %s", modulesToCompile[i]);
+                // Found the file for this export
+                logMessage(LMI, "INFO", "Parser", "Importing export %s from file: %s",
+                           exportName, cryoFiles[j]);
+
+                ASTNode *node = compileForASTNode(cryoFiles[j], state, globalTable);
+                if (!node)
+                {
+                    logMessage(LMI, "ERROR", "Parser", "Failed to compile file: %s", cryoFiles[j]);
+                    allExportsFound = false;
+                }
+
+                exportFound = true;
+                break;
             }
+        }
+
+        free(expectedFileName);
+
+        if (!exportFound)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Export not found: %s", exportName);
+            allExportsFound = false;
         }
     }
 
-    logMessage(LMI, "INFO", "Parser", "Finished importing specific namespaces.");
-
-    printf("\n<!> DEBUG: All Symbol Tables: \n\n");
-    printGlobalSymbolTable(globalTable);
-    printf("\n\n");
-
-    // DEBUG: print the modules to compile
-    for (size_t i = 0; i < namespaceCount; i++)
+    // Cleanup
+    for (size_t i = 0; i < fileCount; i++)
     {
-        printf("DEBUG: Module To Compile: %s\n",
-               modulesToCompile[i] ? modulesToCompile[i] : "(null)");
+        free(cryoFiles[i]);
     }
+    free(cryoFiles);
 
-    DEBUG_BREAKPOINT;
-    return;
+    return allExportsFound;
 }
 
-// =================================================================================================
-
-ASTNode *compileModuleFileDefinitions(const char *modulePath, CryoGlobalSymbolTable *globalTable, CompilerState *state)
+/**
+ * @brief Build a full module path from components
+ *
+ * @param compilerRoot Compiler root directory
+ * @param primaryModule Primary module name (e.g., "Std")
+ * @param moduleChain Module chain
+ * @param chainLength Length of module chain
+ * @return char* Dynamically allocated path string (caller must free)
+ */
+static char *buildModulePath(const char *compilerRoot, const char *primaryModule, const char **moduleChain,
+                             size_t chainLength)
 {
     __STACK_FRAME__
-    // Compile the module file definitions
-    // This will be used to import the module into the current scope.
-    logMessage(LMI, "INFO", "Parser", "Compiling module file definitions...");
+    // Calculate required size
+    size_t pathLen = strlen(compilerRoot) + strlen("/cryo/") + strlen(primaryModule) + 2; // +2 for slash and null
 
-    const char *dependencyDir = GetDependencyDirStr(globalTable);
-
-    ASTNode *programNode = compileModuleFileToProgramNode(modulePath, dependencyDir, state, globalTable);
-    if (programNode == NULL)
+    for (size_t i = 0; i < chainLength; i++)
     {
-        logMessage(LMI, "ERROR", "Parser", "Failed to compile module file definitions.");
+        pathLen += strlen(moduleChain[i]) + 1; // +1 for slash
+    }
+
+    // Allocate memory for path
+    char *path = (char *)malloc(pathLen);
+    if (!path)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Memory allocation failed for module path");
         return NULL;
     }
 
-    DEBUG_BREAKPOINT;
-    return NULL;
+    // Build path
+    strcpy(path, compilerRoot);
+    strcat(path, "/cryo/");
+    strcat(path, primaryModule);
+    strcat(path, "/");
+
+    for (size_t i = 0; i < chainLength; i++)
+    {
+        strcat(path, moduleChain[i]);
+        strcat(path, "/");
+    }
+
+    return path;
+}
+
+/**
+ * @brief Check if a module path is valid (exists and is a directory)
+ *
+ * @param path Path to check
+ * @return true if valid, false otherwise
+ */
+static bool isValidModulePath(const char *path)
+{
+    __STACK_FRAME__
+    DIR *dir = opendir(path);
+    if (!dir)
+    {
+        return false;
+    }
+
+    closedir(dir);
+    return true;
+}
+
+/**
+ * @brief Find all .cryo files in a directory
+ *
+ * @param dirPath Directory path
+ * @param fileCount Pointer to store number of files found
+ * @return char** Array of file paths (caller must free each string and the array)
+ */
+static char **findCryoFiles(const char *dirPath, size_t *fileCount)
+{
+    __STACK_FRAME__
+    DIR *dir = opendir(dirPath);
+    if (!dir)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to open directory: %s", dirPath);
+        return NULL;
+    }
+
+    // Count .cryo files first
+    struct dirent *entry;
+    *fileCount = 0;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strstr(entry->d_name, ".cryo") && !strstr(entry->d_name, ".mod.cryo"))
+        {
+            (*fileCount)++;
+        }
+    }
+
+    if (*fileCount == 0)
+    {
+        closedir(dir);
+        return NULL;
+    }
+
+    // Allocate array for file paths
+    char **files = (char **)malloc(sizeof(char *) * (*fileCount));
+    if (!files)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Memory allocation failed for file array");
+        closedir(dir);
+        return NULL;
+    }
+
+    // Fill array with file paths
+    rewinddir(dir);
+    size_t index = 0;
+
+    while ((entry = readdir(dir)) != NULL && index < *fileCount)
+    {
+        if (strstr(entry->d_name, ".cryo") && !strstr(entry->d_name, ".mod.cryo"))
+        {
+            // Build full path
+            files[index] = (char *)malloc(strlen(dirPath) + strlen(entry->d_name) + 2); // +2 for slash and null
+            if (!files[index])
+            {
+                logMessage(LMI, "ERROR", "Parser", "Memory allocation failed for file path");
+
+                // Cleanup already allocated paths
+                for (size_t i = 0; i < index; i++)
+                {
+                    free(files[i]);
+                }
+
+                free(files);
+                closedir(dir);
+                return NULL;
+            }
+
+            strcpy(files[index], dirPath);
+            strcat(files[index], "/");
+            strcat(files[index], entry->d_name);
+
+            index++;
+        }
+    }
+
+    closedir(dir);
+    return files;
+}
+
+/**
+ * @brief Find a module file (.mod.cryo) in a directory
+ *
+ * @param dirPath Directory path
+ * @param moduleName Name of the module to find
+ * @return char* Path to module file if found (caller must free), NULL otherwise
+ */
+static char *findModuleFile(const char *dirPath, const char *moduleName)
+{
+    __STACK_FRAME__
+    DIR *dir = opendir(dirPath);
+    if (!dir)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to open directory: %s", dirPath);
+        return NULL;
+    }
+
+    // Create expected filename
+    char *expectedName = (char *)malloc(strlen(moduleName) + 10); // +10 for ".mod.cryo\0"
+    if (!expectedName)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Memory allocation failed for module filename");
+        closedir(dir);
+        return NULL;
+    }
+
+    sprintf(expectedName, "%s.mod.cryo", moduleName);
+
+    // Look for the module file
+    struct dirent *entry;
+    char *moduleFile = NULL;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(entry->d_name, expectedName) == 0)
+        {
+            // Found the module file
+            moduleFile = (char *)malloc(strlen(dirPath) + strlen(expectedName) + 2); // +2 for slash and null
+            if (!moduleFile)
+            {
+                logMessage(LMI, "ERROR", "Parser", "Memory allocation failed for module file path");
+                free(expectedName);
+                closedir(dir);
+                return NULL;
+            }
+
+            strcpy(moduleFile, dirPath);
+            strcat(moduleFile, "/");
+            strcat(moduleFile, expectedName);
+            break;
+        }
+    }
+
+    free(expectedName);
+    closedir(dir);
+
+    return moduleFile;
 }

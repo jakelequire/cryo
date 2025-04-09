@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "diagnostics/diagnostics.h"
 #include "dataTypes/dataTypeManager.h"
 
 // --------------------------------------------------------------------------------------------------- //
@@ -727,6 +728,276 @@ DataType *DTMSymbolTable_lookup(DTMSymbolTable *table, const char *name)
     return NULL;
 }
 
+/**
+ * @brief Create a snapshot of the current symbol table state
+ *
+ * Creates a deep copy of all entries in the symbol table for later comparison.
+ *
+ * @param symbolTable The symbol table to snapshot
+ * @return EntrySnapshot* Pointer to the snapshot structure
+ */
+EntrySnapshot *createEntrySnapshot(DTMSymbolTable *symbolTable)
+{
+    __STACK_FRAME__
+
+    // Allocate the snapshot structure
+    EntrySnapshot *snapshot = (EntrySnapshot *)malloc(sizeof(EntrySnapshot));
+    if (!snapshot)
+    {
+        logMessage(LMI, "ERROR", "DTM", "Failed to allocate memory for symbol table snapshot");
+        CONDITION_FAILED;
+        return NULL;
+    }
+
+    // Set basic properties
+    snapshot->entryCount = symbolTable->entryCount;
+    snapshot->entryCapacity = symbolTable->entryCount; // Only allocate what we need
+
+    // No entries to copy
+    if (symbolTable->entryCount == 0)
+    {
+        snapshot->entries = NULL;
+        return snapshot;
+    }
+
+    // Allocate memory for entry pointers
+    snapshot->entries = (DTMSymbolTableEntry **)malloc(
+        sizeof(DTMSymbolTableEntry *) * snapshot->entryCapacity);
+
+    if (!snapshot->entries)
+    {
+        logMessage(LMI, "ERROR", "DTM", "Failed to allocate memory for snapshot entries");
+        free(snapshot);
+        CONDITION_FAILED;
+        return NULL;
+    }
+
+    // Copy each entry
+    for (int i = 0; i < symbolTable->entryCount; i++)
+    {
+        // Allocate a new entry
+        snapshot->entries[i] = (DTMSymbolTableEntry *)malloc(sizeof(DTMSymbolTableEntry));
+        if (!snapshot->entries[i])
+        {
+            // Clean up previously allocated entries
+            for (int j = 0; j < i; j++)
+            {
+                free(snapshot->entries[j]);
+            }
+            free(snapshot->entries);
+            free(snapshot);
+
+            logMessage(LMI, "ERROR", "DTM", "Failed to allocate memory for snapshot entry %d", i);
+            CONDITION_FAILED;
+            return NULL;
+        }
+
+        // Copy the entry properties
+        snapshot->entries[i]->name = strdup(symbolTable->entries[i]->name);
+        snapshot->entries[i]->scopeName = strdup(symbolTable->entries[i]->scopeName);
+        snapshot->entries[i]->type = symbolTable->entries[i]->type;
+
+        // Copy additional properties if needed
+        // ... (add any other fields that need to be copied)
+    }
+
+    return snapshot;
+}
+
+/**
+ * @brief Free memory used by a symbol table snapshot
+ *
+ * @param snapshot The snapshot to free
+ */
+void freeEntrySnapshot(EntrySnapshot *snapshot)
+{
+    __STACK_FRAME__
+
+    if (!snapshot)
+        return;
+
+    if (snapshot->entries)
+    {
+        // Free each entry
+        for (int i = 0; i < snapshot->entryCount; i++)
+        {
+            if (snapshot->entries[i])
+            {
+                // Free any other dynamically allocated fields
+                free(snapshot->entries[i]);
+            }
+        }
+        free(snapshot->entries);
+    }
+
+    free(snapshot);
+}
+
+/**
+ * @brief Start a snapshot of the symbol table
+ *
+ * Captures the current state of the symbol table before changes are made.
+ *
+ * @param table The symbol table to snapshot
+ */
+void DTMSymbolTable_startSnapshot(DTMSymbolTable *table)
+{
+    __STACK_FRAME__
+
+    // Clean up any existing snapshot first
+    if (table->snapshot)
+    {
+        logMessage(LMI, "WARNING", "DTM", "Overwriting existing symbol table snapshot");
+        freeEntrySnapshot(table->snapshot);
+        table->snapshot = NULL;
+    }
+
+    // Create the new snapshot
+    table->snapshot = createEntrySnapshot(table);
+    if (table->snapshot)
+    {
+        logMessage(LMI, "INFO", "DTM", "Created symbol table snapshot with %d entries",
+                   table->snapshot->entryCount);
+    }
+}
+
+/**
+ * @brief Find new entries that were added since the snapshot was taken
+ *
+ * @param table The current symbol table
+ * @param newEntries Array to store pointers to new entries
+ * @param maxEntries Maximum number of entries to store
+ * @return int Number of new entries found
+ */
+int findNewEntries(DTMSymbolTable *table, DTMSymbolTableEntry **newEntries, int maxEntries)
+{
+    __STACK_FRAME__
+
+    int newCount = 0;
+
+    // No snapshot means we can't determine what's new
+    if (!table->snapshot)
+        return 0;
+
+    // For each current entry, check if it exists in the snapshot
+    for (int i = 0; i < table->entryCount && newCount < maxEntries; i++)
+    {
+        DTMSymbolTableEntry *currentEntry = table->entries[i];
+        bool entryFound = false;
+
+        // Check if this entry exists in the snapshot
+        for (int j = 0; j < table->snapshot->entryCount; j++)
+        {
+            DTMSymbolTableEntry *snapshotEntry = table->snapshot->entries[j];
+
+            // Compare name and scope to determine if it's the same entry
+            if (strcmp(currentEntry->name, snapshotEntry->name) == 0 &&
+                strcmp(currentEntry->scopeName, snapshotEntry->scopeName) == 0)
+            {
+                entryFound = true;
+                break;
+            }
+        }
+
+        // If not found in snapshot, it's a new entry
+        if (!entryFound)
+        {
+            newEntries[newCount++] = currentEntry;
+        }
+    }
+
+    return newCount;
+}
+
+/**
+ * @brief End the snapshot and process new entries
+ *
+ * Identifies entries that were added since the snapshot was taken,
+ * processes them as needed, and cleans up the snapshot.
+ *
+ * @param table The symbol table
+ */
+void DTMSymbolTable_endSnapshot(DTMSymbolTable *table)
+{
+    __STACK_FRAME__
+
+    if (!table->snapshot)
+    {
+        logMessage(LMI, "WARNING", "DTM", "No snapshot to end");
+        return;
+    }
+
+    // Find new entries since the snapshot
+    DTMSymbolTableEntry *newEntries[SYMBOL_TABLE_INITIAL_CAPACITY];
+    int newEntryCount = findNewEntries(table, newEntries, SYMBOL_TABLE_INITIAL_CAPACITY);
+
+    logMessage(LMI, "INFO", "DTM", "Found %d new entries since snapshot", newEntryCount);
+
+    // Process the new entries
+    for (int i = 0; i < newEntryCount; i++)
+    {
+        DTMSymbolTableEntry *entry = newEntries[i];
+        logMessage(LMI, "INFO", "DTM", "New entry: %s in scope %s",
+                   entry->name, entry->scopeName);
+
+        // Process the new entry as needed
+        // This could involve adding it to another table, marking it as exported, etc.
+        processNewEntry(table, entry);
+    }
+
+    // Clean up the snapshot
+    freeEntrySnapshot(table->snapshot);
+    table->snapshot = NULL;
+
+    logMessage(LMI, "INFO", "DTM", "Symbol table snapshot processing complete");
+}
+
+/**
+ * @brief Process a newly added symbol table entry
+ *
+ * Performs any necessary operations on a new entry identified after import.
+ *
+ * @param table The symbol table
+ * @param entry The new entry to process
+ */
+void processNewEntry(DTMSymbolTable *table, DTMSymbolTableEntry *entry)
+{
+    __STACK_FRAME__
+
+    // Depending on your needs, you might:
+    // 1. Add the entry to an export list
+    // 2. Mark it as available for external use
+    // 3. Create references in parent scopes
+    // 4. Add it to additional lookup tables
+    // 5. Register it with a package manager
+
+    // For now, just add it to the main imports table if it's a type or class
+    if (entry->type->container->typeOf == OBJECT_TYPE)
+    {
+        // Example: Add to an imports registry
+        addToImportsRegistry(entry->name, entry->scopeName);
+
+        logMessage(LMI, "INFO", "DTM", "Registered import: %s", entry->name);
+    }
+}
+
+/**
+ * @brief Add an imported symbol to the imports registry
+ *
+ * @param name Symbol name
+ * @param scope Symbol scope
+ */
+void addToImportsRegistry(const char *name, const char *scope)
+{
+    __STACK_FRAME__
+
+    // This function would implement your registry logic
+    // For example, it could add the import to a global imports table
+
+    // Note: This is a placeholder - implement based on your needs
+    logMessage(LMI, "INFO", "DTM", "Added %s from %s to imports registry", name, scope);
+}
+
 DTMSymbolTable *createDTMSymbolTable(void)
 {
     DTMSymbolTable *symbolTable = (DTMSymbolTable *)malloc(sizeof(DTMSymbolTable));
@@ -761,6 +1032,9 @@ DTMSymbolTable *createDTMSymbolTable(void)
     symbolTable->createEntry = createDTMSymbolTableEntry;
     symbolTable->importASTnode = DTMSymbolTable_importASTNode;
     symbolTable->lookup = DTMSymbolTable_lookup;
+
+    symbolTable->startSnapshot = DTMSymbolTable_startSnapshot;
+    symbolTable->endSnapshot = DTMSymbolTable_endSnapshot;
 
     return symbolTable;
 }

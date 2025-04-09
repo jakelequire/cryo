@@ -208,6 +208,7 @@ namespace Cryo
         bool c_runtime_initialized = false;
         bool auto_run_binary = false;
         bool shared_lib_initialized = false;
+        bool autoRunEnabled = true;
 
         llvm::LLVMContext &getLinkerContext() { return context; }
 
@@ -238,15 +239,6 @@ namespace Cryo
         void createCRuntimeFile(void);
 
         // ================================================================ //
-        // End of Compilation (EOC)
-
-        void linkAll(void);
-        void completeCodeGeneration(void);
-        void runCompletedBinary();
-        void createMainObject(void);
-        void combineAllObjectsToMainExe(void);
-
-        // ================================================================ //
         // Supporting Functions
 
         std::vector<std::string> listDir(const char *dirPath);
@@ -257,6 +249,63 @@ namespace Cryo
         void logDirectoryInfo(DirectoryInfo *dirInfo);
 
         int covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
+
+    public:
+        /**
+         * @brief Main entry point for the final linking process
+         *
+         * Called at the end of compilation to link all components together.
+         */
+        void linkAll(void);
+
+        /**
+         * @brief Creates the main object file
+         *
+         * Converts main.ll to main.o for linking.
+         */
+        void createMainObject(void);
+
+        /**
+         * @brief Combines all object files to create the main executable
+         *
+         * Links all object files and standard libraries.
+         */
+        void combineAllObjectsToMainExe(void);
+
+        /**
+         * @brief Signals completion of code generation
+         *
+         * Called when IR generation is complete to start the linking process.
+         */
+        void completeCodeGeneration(void);
+
+        /**
+         * @brief Runs the completed binary
+         *
+         * Executes the program after successful linking.
+         */
+        void runCompletedBinary(void);
+
+        /**
+         * @brief Set automatic running of the binary after compilation
+         *
+         * @param enabled Whether to automatically run the binary
+         */
+        void setAutoRun(bool enabled) { autoRunEnabled = enabled; }
+
+    private:
+        // End of Compilation (EOC) functions
+        bool convertIRToObjects();
+        bool ensureDirectoryExists(const std::string &dirPath);
+        bool convertMainIRToObject(const std::string &irDir, const std::string &objDir);
+        bool convertModuleIRsToObjects(const std::string &irDir, const std::string &objDir);
+        bool linkFinalExecutable();
+        std::vector<std::string> collectObjectFiles(const std::string &objDir);
+        std::vector<std::string> collectStandardLibraries(const std::string &compilerDir);
+        std::string buildLinkCommand(const std::string &outputPath,
+                                     const std::vector<std::string> &objectFiles,
+                                     const std::vector<std::string> &stdLibFiles);
+        bool executeLinkCommand(const std::string &linkCommand, const std::string &outputPath);
 
     public:
         /**

@@ -79,7 +79,7 @@ namespace Cryo
             return;
         }
 
-        DEBUG_BREAKPOINT;
+        return;
     }
 
     /**

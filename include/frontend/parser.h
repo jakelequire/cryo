@@ -367,6 +367,11 @@ ASTNode *parseImplementationBody(DataType *interfaceType, Lexer *lexer, ParsingC
 #define MAX_MODULE_CHAIN 16
 
 ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+bool importFullStandardLibrary(const char *primaryModule, CompilerState *state,
+                               CryoGlobalSymbolTable *globalTable);
+void importStandardLibraryRecursive(const char *dirPath, CompilerState *state,
+                                    CryoGlobalSymbolTable *globalTable);
+
 void importUsingModule(const char *primaryModule, const char *moduleChain[], size_t moduleCount, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 const char *getSTDLibraryModulePath(const char *moduleName, CompilerState *state);
 const char **getFilesInModuleDir(const char *modulePath);
