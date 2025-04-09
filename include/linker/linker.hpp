@@ -259,15 +259,68 @@ namespace Cryo
         int covertCRuntimeToLLVMIR(std::string cRuntimePath, std::string outDir);
 
     public:
-        void initCryoCore(
-            const char *compilerRootPath, const char *buildDir,
-            CompilerState *state, CryoGlobalSymbolTable *globalTable);
+        /**
+         * @brief Initializes the core Cryo environment
+         *
+         * @param compilerRootPath Path to the compiler root directory
+         * @param buildDir Directory for build outputs
+         * @param state Current compiler state
+         * @param globalTable Global symbol table
+         */
+        void initCryoCore(const char *compilerRootPath, const char *buildDir,
+                          CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+        /**
+         * @brief Builds the standard library
+         *
+         * @param state Current compiler state
+         * @param globalTable Global symbol table
+         * @return 0 if successful, non-zero otherwise
+         */
+        int buildStandardLib(CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+        /**
+         * @brief Compiles a single standard library item
+         *
+         * @param filePath Path to .cryo file
+         * @param state Current compiler state
+         * @param globalTable Global symbol table
+         * @return 0 if successful, non-zero otherwise
+         */
+        int compileLibItem(std::string filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
     private:
-        void _initCRuntime_(void);
-        int completeCryoCryoLib(const char *compilerRootPath);
-        int buildStandardLib(CompilerState *state, CryoGlobalSymbolTable *globalTable);
-        int compileLibItem(std::string filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+        // Runtime initialization
+        void initializeRuntimeModule();
+        void _initCRuntime_() { initializeRuntimeModule(); } // Legacy method
+        bool compileRuntimeToIR(const std::string &compilerRootPath, const char *runtimePath);
+
+        // Core file processing
+        bool processCoreFile(const char *compilerRootPath, const char *buildDir,
+                             CompilerState *state, CryoGlobalSymbolTable *globalTable);
+        bool generateCoreIR(ASTNode *defsNode, const char *corePath, const char *buildDir,
+                            CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+        // Core library creation
+        int linkCryoCoreLibrary(const char *compilerRootPath);
+        int completeCryoCryoLib(const char *compilerRootPath) { return linkCryoCoreLibrary(compilerRootPath); } // Legacy method
+        bool verifyInputFiles(const std::string &c_runtimePath, const std::string &corePath);
+        bool linkLLVMFiles(const std::string &c_runtimePath, const std::string &corePath, const std::string &tempPath);
+        bool compileIRToObject(const std::string &tempPath, const std::string &outputPath);
+        bool createCoreSharedLibrary(const char *compilerRootPath, const std::string &objectPath);
+
+        // Standard library building
+        std::vector<std::string> findStandardLibraryFiles(const std::string &stdDir);
+        void printFoundFiles(const std::vector<std::string> &cryoFiles);
+        bool compileAllStandardLibraryFiles(const std::vector<std::string> &cryoFiles,
+                                            CompilerState *state, CryoGlobalSymbolTable *globalTable);
+        bool createVerificationFile(const std::string &stdBinDir);
+
+        // Library item compilation
+        int createAndLinkLibraryItem(ASTNode *programNode, const std::string &filePath,
+                                     const std::string &buildDir, const std::string &compilerRootPath,
+                                     CompilerState *state, CryoGlobalSymbolTable *globalTable);
+        bool linkWithCoreLibrary(const CompilationUnitDir &dir, const std::string &compilerRootPath);
     };
 
     // ================================================================ //

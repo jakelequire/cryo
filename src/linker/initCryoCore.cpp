@@ -14,214 +14,383 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+
+/**
+ * @file linker_init.cpp
+ * @brief Implementation of Cryo Core and Runtime initialization
+ *
+ * This file initializes the Cryo Core and Runtime environments.
+ * The Cryo Standard Library is built in multiple phases:
+ * 1. C/C++ Implementation creates Core Runtime and Basic Standard Library
+ * 2. These are used to build a Cryo Implementation
+ * 3. The Cryo Implementation enables a Full Standard Library in Cryo
+ */
+
 #include "linker/linker.hpp"
 #include "linker/init.h"
 #include "diagnostics/diagnostics.h"
 
-/// This files purpose is to initialize the Cryo Core and the Cryo Runtime.
-/// In the root directory of the Cryo Compiler, there is a `cryolib` directory.
-/// Inside this directory is `{COMPILER_DIR}/cryo/Std/Core/core.cryo` and
-/// `{COMPILER_DIR}/cryo/runtime/runtime.c`.
-///
-/// The `core.cryo` file is the baseline for the Cryo Standard Library, equivalent
-/// to C's CRT0. The `runtime.c` file is to be compiled along with the Cryo Core.
-/// ```
-///     A[Phase 1: C/C++ Implementation] --> B[Core Runtime]
-///     A --> C[Basic Standard Library]
-///     B --> D[Phase 2: Cryo Implementation]
-///     C --> D
-///     D --> E[Full Standard Library in Cryo]
-/// ```
-
 namespace Cryo
 {
+
+    /**
+     * @brief Initializes the core Cryo environment
+     *
+     * Creates and initializes the runtime module, compiles core.cryo, and
+     * builds the standard library components.
+     *
+     * @param compilerRootPath Path to the compiler root directory
+     * @param buildDir Directory for build outputs
+     * @param state Current compiler state
+     * @param globalTable Global symbol table
+     */
     void Linker::initCryoCore(const char *compilerRootPath, const char *buildDir,
                               CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
         __STACK_FRAME__
-        // Create the llvm::Module for the `runtime.c` file.
-        _initCRuntime_();
 
+        // Initialize C runtime
+        initializeRuntimeModule();
         if (!this->runtimeModuleInitialized)
         {
             fprintf(stderr, "[Linker] Error: Failed to initialize the runtime module\n");
             CONDITION_FAILED;
-        }
-
-        // Process the core.cryo
-        const char *corePath = fs->appendStrings(compilerRootPath, "/cryo/Std/Core/core.cryo");
-        if (!corePath)
-        {
-            fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for definitions path\n");
-            CONDITION_FAILED;
-        }
-
-        ASTNode *defsNode = compileForASTNode(strdup(corePath), state, globalTable);
-        if (!defsNode)
-        {
-            fprintf(stderr, "[Data Type Manager] Error: Failed to compile definitions\n");
-            CONDITION_FAILED;
-        }
-
-        // DTM->symbolTable->importASTnode(DTM->symbolTable, defsNode);
-        DTM->symbolTable->printTable(DTM->symbolTable);
-
-        logMessage(LMI, "INFO", "DTM", "Definitions Path: %s", corePath);
-        CompilationUnitDir dir = createCompilationUnitDir(corePath, buildDir, CRYO_RUNTIME);
-        dir.print(dir);
-
-        CompilationUnit *unit = createNewCompilationUnit(defsNode, dir);
-        if (!unit)
-        {
-            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to create CompilationUnit");
-            CONDITION_FAILED;
-            return;
-        }
-        if (unit->verify(unit) != 0)
-        {
-            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to verify CompilationUnit");
-            CONDITION_FAILED;
             return;
         }
 
-        // Create the IR from the ASTNode
-        CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
-        if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
+        // Process core.cryo file
+        if (!processCoreFile(compilerRootPath, buildDir, state, globalTable))
         {
-            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
-            CONDITION_FAILED;
+            return;
         }
 
-        if (completeCryoCryoLib(compilerRootPath) != 0)
+        // Complete core library creation and build standard library
+        if (linkCryoCoreLibrary(compilerRootPath) != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to complete Cryo CryoLib\n");
             CONDITION_FAILED;
+            return;
         }
 
         if (buildStandardLib(state, globalTable) != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to build standard library\n");
             CONDITION_FAILED;
+            return;
         }
 
         DEBUG_BREAKPOINT;
     }
 
-    void Linker::_initCRuntime_(void)
+    /**
+     * @brief Processes the core.cryo file and generates IR
+     *
+     * @param compilerRootPath Path to the compiler root directory
+     * @param buildDir Directory for build outputs
+     * @param state Current compiler state
+     * @param globalTable Global symbol table
+     * @return true if successful, false otherwise
+     */
+    bool Linker::processCoreFile(const char *compilerRootPath, const char *buildDir,
+                                 CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    {
+        // Create path to core.cryo
+        const char *corePath = fs->appendStrings(compilerRootPath, "/cryo/Std/Core/core.cryo");
+        if (!corePath)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for definitions path\n");
+            CONDITION_FAILED;
+            return false;
+        }
+
+        // Compile the core file to AST
+        ASTNode *defsNode = compileForASTNode(strdup(corePath), state, globalTable);
+        if (!defsNode)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to compile definitions\n");
+            CONDITION_FAILED;
+            return false;
+        }
+
+        // Process symbol table
+        DTM->symbolTable->printTable(DTM->symbolTable);
+        logMessage(LMI, "INFO", "DTM", "Definitions Path: %s", corePath);
+
+        // Create compilation unit and generate IR
+        return generateCoreIR(defsNode, corePath, buildDir, state, globalTable);
+    }
+
+    /**
+     * @brief Creates compilation unit and generates IR for core file
+     *
+     * @param defsNode AST node for core definitions
+     * @param corePath Path to core.cryo file
+     * @param buildDir Build directory
+     * @param state Current compiler state
+     * @param globalTable Global symbol table
+     * @return true if successful, false otherwise
+     */
+    bool Linker::generateCoreIR(ASTNode *defsNode, const char *corePath, const char *buildDir,
+                                CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    {
+        // Create compilation unit directory
+        CompilationUnitDir dir = createCompilationUnitDir(corePath, buildDir, CRYO_RUNTIME);
+        dir.print(dir);
+
+        // Create compilation unit
+        CompilationUnit *unit = createNewCompilationUnit(defsNode, dir);
+        if (!unit)
+        {
+            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to create CompilationUnit");
+            CONDITION_FAILED;
+            return false;
+        }
+
+        // Verify compilation unit
+        if (unit->verify(unit) != 0)
+        {
+            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to verify CompilationUnit");
+            CONDITION_FAILED;
+            return false;
+        }
+
+        // Generate IR from AST
+        CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
+        if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
+        {
+            logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
+            CONDITION_FAILED;
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @brief Initializes the C runtime module
+     *
+     * Compiles the runtime.c file to LLVM IR and initializes the runtime module.
+     */
+    void Linker::initializeRuntimeModule()
     {
         logMessage(LMI, "INFO", "Linker", "Initializing C runtime module...");
+
+        // Create path to runtime.c
         std::string compilerRootPath = this->dirInfo->compilerDir;
         const char *runtimePath = fs->appendStrings(compilerRootPath.c_str(), "/cryo/runtime/runtime.c");
+
+        // Validate runtime path
         if (!runtimePath)
         {
             fprintf(stderr, "[Linker] Error: Failed to allocate memory for runtime path\n");
             CONDITION_FAILED;
+            return;
         }
 
-        // Check to see if the file exists
+        // Check if file exists
         if (!fs->fileExists(runtimePath))
         {
             fprintf(stderr, "[Linker] Error: Runtime file does not exist: %s\n", runtimePath);
             CONDITION_FAILED;
+            return;
         }
         logMessage(LMI, "INFO", "Linker", "Runtime Path: %s", runtimePath);
 
-        // We have verified that the file exists, now we need to convert it to LLVM IR
-
-        // Create an LLVM context and module for the runtime
+        // Create LLVM context and module
         llvm::LLVMContext *runtimeContext = new llvm::LLVMContext();
         this->runtimeModule = new llvm::Module("cryo_runtime", *runtimeContext);
 
-        // Set up Clang to compile the C file to LLVM IR
-        std::vector<const char *> args;
+        // Compile runtime.c to LLVM IR
+        if (compileRuntimeToIR(compilerRootPath, runtimePath))
+        {
+            this->runtimeModuleInitialized = true;
+            logMessage(LMI, "INFO", "Linker", "Successfully initialized C runtime module");
+        }
+    }
 
-        // Basic compilation arguments
+    /**
+     * @brief Compiles runtime.c to LLVM IR
+     *
+     * @param compilerRootPath Root path of the compiler
+     * @param runtimePath Path to runtime.c
+     * @return true if successful, false otherwise
+     */
+    bool Linker::compileRuntimeToIR(const std::string &compilerRootPath, const char *runtimePath)
+    {
+        // Set up Clang compilation arguments
+        std::vector<const char *> args;
         args.push_back("clang-18");
         args.push_back("-c");
         args.push_back("-emit-llvm");
         args.push_back("-O2");       // Optimization level
-        args.push_back("-fPIC");     // Position-Independent Code for shared library
+        args.push_back("-fPIC");     // Position-Independent Code
         args.push_back("-x");        // Specify input language
         args.push_back("c");         // C language
         args.push_back(runtimePath); // Input file
 
-        // Standard includes
+        // Add standard includes
         args.push_back("-I");
         args.push_back(fs->appendStrings(compilerRootPath.c_str(), "/include"));
 
-        // Create temporary output file for IR
+        // Set output file
         std::string userBuildDir = std::string(this->dirInfo->runtimeDir) + "/c_runtime.ll";
         args.push_back("-o");
         args.push_back(userBuildDir.c_str());
 
-        // Execute the clang command
+        // Build and execute command
         std::string command = "clang-" + CLANG_VERSION_MAJOR;
         for (const char *arg : args)
         {
             command += " " + std::string(arg);
         }
+
         int result = system(command.c_str());
         if (result != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to compile runtime file to LLVM IR\n");
-            CONDITION_FAILED;
+            return false;
         }
+
         logMessage(LMI, "INFO", "Linker", "Successfully compiled runtime file to LLVM IR");
-
-        // Mark runtime as initialized
-        this->runtimeModuleInitialized = true;
-
-        logMessage(LMI, "INFO", "Linker", "Successfully initialized C runtime module");
-
-        return;
+        return true;
     }
 
-    // This function is called when `c_runtime.ll` & `core.ll` file are generated in `dirInfo->runtimeDir`
-    // It will merge the runtime module into the core module
-    int Linker::completeCryoCryoLib(const char *compilerRootPath)
+    /**
+     * @brief Links the C runtime and core modules
+     *
+     * Merges the runtime module into the core module and creates a shared library.
+     *
+     * @param compilerRootPath Path to the compiler root directory
+     * @return 0 if successful, non-zero otherwise
+     */
+    int Linker::linkCryoCoreLibrary(const char *compilerRootPath)
     {
         __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Merging runtime module into core module...");
 
+        // Get paths to input files
         std::string c_runtimePath = std::string(this->dirInfo->runtimeDir) + "/c_runtime.ll";
         std::string corePath = std::string(this->dirInfo->runtimeDir) + "/core.ll";
+
+        // Verify files exist
+        if (!verifyInputFiles(c_runtimePath, corePath))
+        {
+            return 1;
+        }
+
+        // Link LLVM IR files
+        std::string tempPath = std::string(this->dirInfo->runtimeDir) + "/merged.ll";
+        std::string outputPath = std::string(this->dirInfo->runtimeDir) + "/core.o";
+
+        if (!linkLLVMFiles(c_runtimePath, corePath, tempPath))
+        {
+            return 1;
+        }
+
+        // Compile linked IR to object code
+        if (!compileIRToObject(tempPath, outputPath))
+        {
+            return 1;
+        }
+
+        // Create shared library
+        if (!createCoreSharedLibrary(compilerRootPath, outputPath))
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    /**
+     * @brief Verifies that the input files exist
+     *
+     * @param c_runtimePath Path to C runtime LLVM IR
+     * @param corePath Path to core LLVM IR
+     * @return true if files exist, false otherwise
+     */
+    bool Linker::verifyInputFiles(const std::string &c_runtimePath, const std::string &corePath)
+    {
         if (!fs->fileExists(c_runtimePath.c_str()))
         {
             fprintf(stderr, "[Linker] Error: Runtime file does not exist: %s\n", c_runtimePath.c_str());
             CONDITION_FAILED;
+            return false;
         }
+
         if (!fs->fileExists(corePath.c_str()))
         {
             fprintf(stderr, "[Linker] Error: Core file does not exist: %s\n", corePath.c_str());
             CONDITION_FAILED;
+            return false;
         }
+
         logMessage(LMI, "INFO", "Linker", "Runtime Path: %s", c_runtimePath.c_str());
         logMessage(LMI, "INFO", "Linker", "Core Path: %s", corePath.c_str());
 
-        // Use llc to compile the IR to object code
-        std::string outputPath = std::string(this->dirInfo->runtimeDir) + "/core.o";
-        // With this:
-        std::string tempPath = std::string(this->dirInfo->runtimeDir) + "/merged.ll";
+        return true;
+    }
+
+    /**
+     * @brief Links LLVM IR files
+     *
+     * @param c_runtimePath Path to C runtime LLVM IR
+     * @param corePath Path to core LLVM IR
+     * @param tempPath Output path for linked IR
+     * @return true if successful, false otherwise
+     */
+    bool Linker::linkLLVMFiles(const std::string &c_runtimePath, const std::string &corePath,
+                               const std::string &tempPath)
+    {
         std::string linkCommand = "llvm-link-18 -S -o " + tempPath + " " + corePath + " " + c_runtimePath;
         logMessage(LMI, "INFO", "Linker", "Linking LLVM IR files: %s", linkCommand.c_str());
+
         int linkResult = system(linkCommand.c_str());
         if (linkResult != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to link LLVM IR files\n");
             CONDITION_FAILED;
+            return false;
         }
 
+        return true;
+    }
+
+    /**
+     * @brief Compiles LLVM IR to object code
+     *
+     * @param tempPath Path to LLVM IR
+     * @param outputPath Output path for object code
+     * @return true if successful, false otherwise
+     */
+    bool Linker::compileIRToObject(const std::string &tempPath, const std::string &outputPath)
+    {
         std::string compileCommand = "llc-18 -filetype=obj -relocation-model=pic -o " + outputPath + " " + tempPath;
         int compileResult = system(compileCommand.c_str());
+
         if (compileResult != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to compile linked IR to object code\n");
             CONDITION_FAILED;
+            return false;
         }
-        logMessage(LMI, "INFO", "Linker", "Successfully compiled core file to object code");
 
-        // Now that we have the object code, we can create a shared library for the compiler standard library
-        std::string sharedLibPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/libcryo_core.so";
+        logMessage(LMI, "INFO", "Linker", "Successfully compiled core file to object code");
+        return true;
+    }
+
+    /**
+     * @brief Creates the core shared library
+     *
+     * @param compilerRootPath Path to compiler root
+     * @param objectPath Path to object file
+     * @return true if successful, false otherwise
+     */
+    bool Linker::createCoreSharedLibrary(const char *compilerRootPath, const std::string &objectPath)
+    {
+        std::string sharedLibPath = std::string(compilerRootPath) + "/cryo/Std/bin/libcryo_core.so";
+
+        // Create or clear the output file
         if (fs->fileExists(sharedLibPath.c_str()))
         {
             fs->removeFile(sharedLibPath.c_str());
@@ -230,28 +399,36 @@ namespace Cryo
         {
             fs->createNewEmptyFileWpath(sharedLibPath.c_str());
         }
-        std::string sharedLibCommand = "clang++ -shared -fPIC -o " + sharedLibPath + " " + outputPath;
+
+        // Create the shared library
+        std::string sharedLibCommand = "clang++ -shared -fPIC -o " + sharedLibPath + " " + objectPath;
         int sharedLibResult = system(sharedLibCommand.c_str());
+
         if (sharedLibResult != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to create shared library\n");
             CONDITION_FAILED;
+            return false;
         }
-        logMessage(LMI, "INFO", "Linker", "Successfully created shared library: %s", sharedLibPath.c_str());
 
-        // Mark the shared library as initialized
+        logMessage(LMI, "INFO", "Linker", "Successfully created shared library: %s", sharedLibPath.c_str());
         this->shared_lib_initialized = true;
-        logMessage(LMI, "INFO", "Linker", "Successfully initialized shared library");
-        return 0;
+        return true;
     }
 
+    /**
+     * @brief Builds the standard library
+     *
+     * Compiles all .cryo files in the Std directory (except Core) and creates
+     * individual shared libraries for each module.
+     *
+     * @param state Current compiler state
+     * @param globalTable Global symbol table
+     * @return 0 if successful, non-zero otherwise
+     */
     int Linker::buildStandardLib(CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
-        // This function will compile the whole `/cryo/Std` directory and create individual shared libraries
-        // for each module.
-        // Each of these modules are independent and can be used in any Cryo program.
-        // All modules will be compiled ontop of the `libcryo_core.so` shared library.
-
+        // Get paths to standard library directories
         std::string stdDir = std::string(this->dirInfo->compilerDir) + "/cryo/Std";
         std::string stdBinDir = stdDir + "/bin";
 
@@ -261,7 +438,35 @@ namespace Cryo
             std::filesystem::create_directory(stdBinDir);
         }
 
-        // Vector to store all .cryo files
+        // Find all .cryo files in the standard library
+        std::vector<std::string> cryoFiles = findStandardLibraryFiles(stdDir);
+
+        // Print out the files
+        printFoundFiles(cryoFiles);
+
+        // Compile each file
+        if (!compileAllStandardLibraryFiles(cryoFiles, state, globalTable))
+        {
+            return 1;
+        }
+
+        // Create verification file
+        if (!createVerificationFile(stdBinDir))
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    /**
+     * @brief Finds all .cryo files in the standard library directory
+     *
+     * @param stdDir Path to standard library directory
+     * @return Vector of file paths
+     */
+    std::vector<std::string> Linker::findStandardLibraryFiles(const std::string &stdDir)
+    {
         std::vector<std::string> cryoFiles;
 
         // Recursively iterate through the standard library directory
@@ -277,58 +482,90 @@ namespace Cryo
             }
         }
 
-        // Print out the files
+        return cryoFiles;
+    }
+
+    /**
+     * @brief Prints the list of found files
+     *
+     * @param cryoFiles Vector of file paths
+     */
+    void Linker::printFoundFiles(const std::vector<std::string> &cryoFiles)
+    {
         std::cout << "\n=============== {Files } ===============\n";
         for (const std::string &file : cryoFiles)
         {
             std::cout << "File: " << file << std::endl;
         }
         std::cout << "========================================\n\n";
+    }
 
-        // Iterate through the files and compile them with the core library
-
+    /**
+     * @brief Compiles all standard library files
+     *
+     * @param cryoFiles Vector of file paths
+     * @param state Current compiler state
+     * @param globalTable Global symbol table
+     * @return true if successful, false otherwise
+     */
+    bool Linker::compileAllStandardLibraryFiles(const std::vector<std::string> &cryoFiles,
+                                                CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    {
         for (const std::string &file : cryoFiles)
         {
-            // Get the file name without the extension
-            std::string fileName = file.substr(file.find_last_of("/\\") + 1);
-            std::string fileNameWithoutExt = fileName.substr(0, fileName.find_last_of('.'));
-
-            // Create the output path for the shared library
-            std::string outputPath = stdBinDir + "/lib" + fileNameWithoutExt + ".so";
-
             // Compile the file and create the shared library
             int result = compileLibItem(file, state, globalTable);
             if (result != 0)
             {
                 fprintf(stderr, "[Linker] Error: Failed to compile %s\n", file.c_str());
-                return result;
+                return false;
             }
         }
 
-        // Create a `verified` file to indicate that the standard library has been built
-        // This is just a temporary implementation below, in the future, this should be a more
-        // robust solution that verifies the standard library and creates a checksum for it.
-        // This will be used to verify that the standard library has been built and is up to date.
+        return true;
+    }
+
+    /**
+     * @brief Creates a verification file
+     *
+     * This is a temporary implementation. In the future, this should be a more
+     * robust solution that verifies the standard library and creates a checksum.
+     *
+     * @param stdBinDir Path to standard library binary directory
+     * @return true if successful, false otherwise
+     */
+    bool Linker::createVerificationFile(const std::string &stdBinDir)
+    {
         std::string verifiedFilePath = stdBinDir + "/verified";
+
         if (fs->fileExists(verifiedFilePath.c_str()))
         {
             fs->removeFile(verifiedFilePath.c_str());
         }
+
         fs->createNewEmptyFileWpath(verifiedFilePath.c_str());
         logMessage(LMI, "INFO", "Linker", "Successfully built standard library: %s", verifiedFilePath.c_str());
 
-        return 0;
+        return true;
     }
 
+    /**
+     * @brief Compiles a single standard library item
+     *
+     * Compiles a single .cryo file and creates a shared library linked with the core library.
+     *
+     * @param filePath Path to .cryo file
+     * @param state Current compiler state
+     * @param globalTable Global symbol table
+     * @return 0 if successful, non-zero otherwise
+     */
     int Linker::compileLibItem(std::string filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
-        // This function will compile a single file and create a shared library for it.
-        // It will also link the shared library with the core library.
-
         std::string compilerRootPath = this->dirInfo->compilerDir;
         std::cout << "Compiler Root Path @compileLibItem: " << compilerRootPath << std::endl;
         std::string buildDir = compilerRootPath + "/cryo/Std/bin/.ll/";
 
+        // Compile to AST
         ASTNode *programNode = compileForASTNode(filePath.c_str(), state, globalTable);
         if (programNode == NULL)
         {
@@ -338,9 +575,33 @@ namespace Cryo
 
         programNode->print(programNode);
 
-        CompilationUnitDir dir = createCompilerCompilationUnitDir(filePath.c_str(), buildDir.c_str(), compilerRootPath.c_str(), CRYO_STDLIB);
+        // Create compilation unit
+        return createAndLinkLibraryItem(programNode, filePath, buildDir, compilerRootPath, state, globalTable);
+    }
+
+    /**
+     * @brief Creates and links a library item
+     *
+     * Creates a compilation unit and links it with the core library.
+     *
+     * @param programNode AST node for the library item
+     * @param filePath Path to .cryo file
+     * @param buildDir Build directory
+     * @param compilerRootPath Compiler root path
+     * @param state Current compiler state
+     * @param globalTable Global symbol table
+     * @return 0 if successful, non-zero otherwise
+     */
+    int Linker::createAndLinkLibraryItem(ASTNode *programNode, const std::string &filePath,
+                                         const std::string &buildDir, const std::string &compilerRootPath,
+                                         CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    {
+        // Create compilation unit directory
+        CompilationUnitDir dir = createCompilerCompilationUnitDir(
+            filePath.c_str(), buildDir.c_str(), compilerRootPath.c_str(), CRYO_STDLIB);
         dir.print(dir);
 
+        // Create compilation unit
         CompilationUnit *unit = createNewCompilationUnit(programNode, dir);
         if (!unit)
         {
@@ -349,6 +610,7 @@ namespace Cryo
             return 1;
         }
 
+        // Verify compilation unit
         if (unit->verify(unit) != 0)
         {
             logMessage(LMI, "ERROR", "CryoCompiler", "Failed to verify CompilationUnit");
@@ -356,7 +618,7 @@ namespace Cryo
             return 1;
         }
 
-        // Create the IR from the ASTNode
+        // Generate IR from AST
         CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
         if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
         {
@@ -365,21 +627,42 @@ namespace Cryo
             return 1;
         }
 
-        // Link the newly compiled module with the core library
-        std::string coreLibPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/libcryo_core.so";
-        std::string outputPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/" + dir.out_fileName + ".so";
-        std::string linkCommand = "clang++ -shared -fPIC -o " + outputPath + " " + coreLibPath + " " + dir.out_filePath + ".ll";
+        // Link with core library
+        if (!linkWithCoreLibrary(dir, compilerRootPath))
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    /**
+     * @brief Links a library item with the core library
+     *
+     * @param dir Compilation unit directory
+     * @param compilerRootPath Compiler root path
+     * @return true if successful, false otherwise
+     */
+    bool Linker::linkWithCoreLibrary(const CompilationUnitDir &dir, const std::string &compilerRootPath)
+    {
+        std::string coreLibPath = compilerRootPath + "/cryo/Std/bin/libcryo_core.so";
+        std::string outputPath = compilerRootPath + "/cryo/Std/bin/" + dir.out_fileName + ".so";
+
+        std::string linkCommand = "clang++ -shared -fPIC -o " + outputPath + " " +
+                                  coreLibPath + " " + dir.out_filePath + ".ll";
+
         int linkResult = system(linkCommand.c_str());
         if (linkResult != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to link module with core library\n");
             CONDITION_FAILED;
-            return 1;
+            return false;
         }
+
         logMessage(LMI, "INFO", "Linker", "Successfully linked module with core library");
         logMessage(LMI, "INFO", "Linker", "Successfully created shared library: %s", outputPath.c_str());
 
-        return 0;
+        return true;
     }
 
 } // namespace Cryo
