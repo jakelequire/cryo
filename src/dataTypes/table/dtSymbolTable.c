@@ -46,12 +46,24 @@ void DTMSymbolTable_addPrototype(
 
 DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *scopeName, const char *name)
 {
+    logMessage(LMI, "INFO", "DTM", "Looking up entry in symbol table: %s", name);
+    table->printTable(table);
     for (int i = 0; i < table->entryCount; i++)
     {
         if (strcmp(table->entries[i]->name, name) == 0)
         {
             logMessage(LMI, "INFO", "DTM", "Found entry in symbol table: %s", name);
             return table->entries[i]->type;
+        }
+    }
+
+    // Check if the entry is in the snapshot cache
+    for (int i = 0; i < table->snapshot->entryCount; i++)
+    {
+        if (strcmp(table->snapshot->entries[i]->name, name) == 0)
+        {
+            logMessage(LMI, "INFO", "DTM", "Found entry in symbol table snapshot: %s", name);
+            return table->snapshot->entries[i]->type;
         }
     }
 
@@ -101,13 +113,12 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
                         DTMSymbolTableEntry *entry = createDTMSymbolTableEntry(scopeName, name, type);
 
                         // Free the old entry to prevent memory leaks
-                        free(table->entries[i]);
                         table->entries[i] = entry;
                         return;
                     }
                     else
                     {
-                        logMessage(LMI, "WARNING", "DTM",
+                        logMessage(LMI, "WARN", "DTM",
                                    "Cannot update entry '%s': Object types differ (%s vs %s)",
                                    name,
                                    DTM->debug->typeofObjectTypeToString(existingType->container->objectType),
@@ -118,7 +129,7 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
                 }
                 else
                 {
-                    logMessage(LMI, "WARNING", "DTM",
+                    logMessage(LMI, "WARN", "DTM",
                                "Cannot update entry '%s': Type categories differ (%s vs %s)",
                                name,
                                DTM->debug->typeofDataTypeToString(existingType->container->typeOf),
@@ -130,7 +141,7 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
             }
 
             // If we reach here, types are incompatible, so we don't update
-            logMessage(LMI, "WARNING", "DTM", "Skipping add for '%s': An entry with this name exists but has incompatible type", name);
+            logMessage(LMI, "WARN", "DTM", "Skipping add for '%s': An entry with this name exists but has incompatible type", name);
             CONDITION_FAILED;
             return;
         }
@@ -142,6 +153,26 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
     table->entryCount++;
 
     logMessage(LMI, "INFO", "DTM", "Added new entry to symbol table: %s", name);
+}
+
+void DTMSymbolTable_resetEntries(DTMSymbolTable *table)
+{
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        free(table->entries[i]);
+        table->entries[i] = NULL;
+    }
+    free(table->entries);
+    table->entries = NULL;
+    table->entryCount = 0;
+    table->entries = (DTMSymbolTableEntry **)malloc(sizeof(DTMSymbolTableEntry *) * table->entryCapacity);
+    if (!table->entries)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to reset DTM Symbol Table\n");
+        CONDITION_FAILED;
+    }
+
+    logMessage(LMI, "INFO", "DTM", "Reset symbol table entries");
 }
 
 void DTMSymbolTable_removeEntry(DTMSymbolTable *table, const char *scopeName, const char *name)
@@ -174,337 +205,21 @@ void DTMSymbolTable_updateEntry(DTMSymbolTable *table, const char *scopeName, co
 void DTMSymbolTable_resizeTable(DTMSymbolTable *table)
 {
     logMessage(LMI, "INFO", "DTM", "Resizing symbol table...");
-    table->entryCapacity *= 2;
-    table->entries = (DTMSymbolTableEntry **)realloc(table->entries, sizeof(DTMSymbolTableEntry *) * table->entryCapacity);
-    if (!table->entries)
+    if (table->entryCount >= table->entryCapacity)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTM Symbol Table\n");
-        CONDITION_FAILED;
+        table->entryCapacity *= 2;
+        table->entries = (DTMSymbolTableEntry **)realloc(table->entries, sizeof(DTMSymbolTableEntry *) * table->entryCapacity);
+        if (!table->entries)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTM Symbol Table\n");
+            CONDITION_FAILED;
+        }
     }
-}
-
-void DTMSymbolTable_printTable(DTMSymbolTable *table)
-{
-    // ===== Safety checks =====
-    if (!table)
+    else
     {
-        fprintf(stderr, "%s%s[Data Type Manager]%s Error: NULL symbol table pointer\n", BOLD, RED, COLOR_RESET);
+        logMessage(LMI, "INFO", "DTM", "No need to resize symbol table. Current capacity: %d, current count: %d", table->entryCapacity, table->entryCount);
         return;
     }
-
-    // ===== Prepare data with extreme caution =====
-    int entryCount = 0;
-    // Count valid entries first
-    for (int i = 0; i < table->entryCount; i++)
-    {
-        if (table->entries[i] && table->entries[i]->type && table->entries[i]->type->container)
-        {
-            entryCount++;
-        }
-    }
-
-    if (entryCount == 0)
-    {
-        printf("\n%s%s[Data Type Manager]%s Symbol table contains no valid entries\n\n", BOLD, YELLOW, COLOR_RESET);
-        return;
-    }
-
-    // ===== FIXED COLUMN WIDTHS - CRITICAL FOR ALIGNMENT =====
-    const int tableWidth = 95;
-
-    // Stats section
-    const int statsColWidth = 22; // Each stats column width
-
-    // Data section - must add up to tableWidth - 2 (borders) - 4 (separators)
-    const int nameWidth = 16;   // Name column
-    const int typeWidth = 28;   // Type column
-    const int typeofWidth = 12; // TypeOf column
-    const int scopeWidth = 16;  // Scope column
-    const int flagsWidth = 7;   // Flags column
-
-    // ===== Pre-compute statistics safely =====
-    int primCount = 0;
-    int structCount = 0;
-    int funcCount = 0;
-    int constCount = 0;
-    int ptrCount = 0;
-    int refCount = 0;
-
-    for (int i = 0; i < table->entryCount; i++)
-    {
-        if (!table->entries[i] || !table->entries[i]->type || !table->entries[i]->type->container)
-        {
-            continue;
-        }
-
-        DataType *type = table->entries[i]->type;
-
-        if (type->container->typeOf == PRIM_TYPE)
-            primCount++;
-        else if (type->container->typeOf == OBJECT_TYPE)
-            structCount++;
-        else if (type->container->typeOf == FUNCTION_TYPE)
-            funcCount++;
-
-        if (type->isConst)
-            constCount++;
-        if (type->isPointer)
-            ptrCount++;
-        if (type->isReference)
-            refCount++;
-    }
-
-    // ===== Begin printing - TOP BORDER =====
-    printf("\n");
-    printf("%s%s╔", BOLD, CYAN);
-    for (int i = 0; i < tableWidth - 2; i++)
-        printf("═");
-    printf("╗%s\n", COLOR_RESET);
-
-    // ===== TITLE ROW - Fixed width title =====
-    char titleStr[80];
-    snprintf(titleStr, sizeof(titleStr), "DTM SYMBOL TABLE - %d %s",
-             entryCount, (entryCount == 1 ? "entry" : "entries"));
-
-    int tablePrintWidth = entryCount > 10 ? tableWidth - 4 : tableWidth - 3;
-
-    printf("%s%s║ %s%s%-*s%s%s║%s\n",
-           BOLD, CYAN, YELLOW, BOLD,
-           tablePrintWidth, titleStr,
-           COLOR_RESET, CYAN, COLOR_RESET);
-
-    // ===== STATS SECTION DIVIDER =====
-    printf("%s%s╠", BOLD, CYAN);
-    for (int i = 0; i < statsColWidth; i++)
-        printf("═");
-    printf("╦");
-    for (int i = 0; i < statsColWidth; i++)
-        printf("═");
-    printf("╦");
-    for (int i = 0; i < statsColWidth; i++)
-        printf("═");
-    printf("╦");
-    for (int i = 0; i < statsColWidth + 2; i++)
-        printf("═");
-    printf("╣%s\n", COLOR_RESET);
-
-    // ===== STATS HEADERS - FIXED WIDTH =====
-    printf("%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s\n",
-           BOLD, CYAN, LIGHT_YELLOW,
-           statsColWidth - 1, "Types:", BOLD, CYAN, LIGHT_CYAN,
-           statsColWidth - 1, "Modifiers:", BOLD, CYAN, LIGHT_GREEN,
-           statsColWidth - 1, "Scopes:", BOLD, CYAN, LIGHT_MAGENTA,
-           statsColWidth + 1, "Stats:", BOLD, CYAN, COLOR_RESET);
-
-    // ===== STATS ROWS - FIXED WIDTH =====
-    char primStr[16], constStr[16], moduleStr[16], totalStr[16];
-    snprintf(primStr, sizeof(primStr), "Primitive: %d", primCount);
-    snprintf(constStr, sizeof(constStr), "Const: %d", constCount);
-    snprintf(moduleStr, sizeof(moduleStr), "Module: %d", 0);
-    snprintf(totalStr, sizeof(totalStr), "Total: %d", entryCount);
-
-    printf("%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s\n",
-           BOLD, CYAN, GREEN,
-           statsColWidth - 1, primStr, BOLD, CYAN, LIGHT_YELLOW,
-           statsColWidth - 1, constStr, BOLD, CYAN, LIGHT_GREEN,
-           statsColWidth - 1, moduleStr, BOLD, CYAN, LIGHT_MAGENTA,
-           statsColWidth + 1, totalStr, BOLD, CYAN, COLOR_RESET);
-
-    char structStr[16], ptrStr[16], funcStr[16];
-    snprintf(structStr, sizeof(structStr), "Struct: %d", structCount);
-    snprintf(ptrStr, sizeof(ptrStr), "Pointer: %d", ptrCount);
-    snprintf(funcStr, sizeof(funcStr), "Function: %d", 0);
-
-    printf("%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s\n",
-           BOLD, CYAN, YELLOW,
-           statsColWidth - 1, structStr, BOLD, CYAN, LIGHT_YELLOW,
-           statsColWidth - 1, ptrStr, BOLD, CYAN, LIGHT_GREEN,
-           statsColWidth - 1, funcStr, BOLD, CYAN, WHITE,
-           statsColWidth + 1, "", BOLD, CYAN, COLOR_RESET);
-
-    char funcCountStr[16], refStr[16], globalStr[16];
-    snprintf(funcCountStr, sizeof(funcCountStr), "Function: %d", funcCount);
-    snprintf(refStr, sizeof(refStr), "Reference: %d", refCount);
-    snprintf(globalStr, sizeof(globalStr), "Global: %d", 0);
-
-    printf("%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s %-*s%s%s║%s\n",
-           BOLD, CYAN, BLUE,
-           statsColWidth - 1, funcCountStr, BOLD, CYAN, LIGHT_YELLOW,
-           statsColWidth - 1, refStr, BOLD, CYAN, LIGHT_GREEN,
-           statsColWidth - 1, globalStr, BOLD, CYAN, WHITE,
-           statsColWidth + 1, "", BOLD, CYAN, COLOR_RESET);
-
-    // ===== DATA SECTION DIVIDER =====
-    printf("%s%s╠", BOLD, CYAN);
-    for (int i = 0; i < tableWidth - 2; i++)
-        printf("═");
-    printf("╣%s\n", COLOR_RESET);
-
-    // ===== COLUMN HEADERS - FIXED WIDTH =====
-    // Calculate vertical separators positions precisely
-    int pos1 = nameWidth + 1;
-    int pos2 = pos1 + typeWidth + 2;
-    int pos3 = pos2 + typeofWidth + 2;
-    int pos4 = pos3 + scopeWidth + 2;
-
-    printf("%s%s║ %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s║%s\n",
-           BOLD, CYAN, LIGHT_GREEN,
-           nameWidth, "Name", CYAN, YELLOW,
-           typeWidth, "Type", CYAN, LIGHT_MAGENTA,
-           typeofWidth, "TypeOf", CYAN, BLUE,
-           scopeWidth, "Scope", CYAN, LIGHT_CYAN,
-           flagsWidth, "Flags", CYAN, COLOR_RESET);
-
-    // ===== DATA SECTION DIVIDER =====
-    printf("%s%s╠", BOLD, CYAN);
-    for (int i = 0; i < tableWidth - 2; i++)
-        printf("═");
-    printf("╣%s\n", COLOR_RESET);
-
-    // ===== DATA ROWS =====
-    int validEntries = 0;
-
-    for (int i = 0; i < table->entryCount && validEntries < entryCount; i++)
-    {
-        // Skip invalid entries entirely
-        if (!table->entries[i] || !table->entries[i]->type || !table->entries[i]->type->container)
-        {
-            continue;
-        }
-
-        validEntries++;
-
-        // Safe extraction of entry data with defaults
-        DataType *type = table->entries[i]->type;
-        const char *name = table->entries[i]->name ? table->entries[i]->name : "<unnamed>";
-        const char *scope = table->entries[i]->scopeName ? table->entries[i]->scopeName : "global";
-
-        // Get type information safely
-        const char *typeStr = "<unknown>";
-        if (DTM && DTM->debug && DTM->debug->dataTypeToString)
-        {
-            const char *tmp = DTM->debug->dataTypeToString(type);
-            if (tmp)
-                typeStr = tmp;
-        }
-
-        // Get typeof information safely
-        const char *typeofStr = "<unknown>";
-        if (DTM && DTM->debug && DTM->debug->typeofDataTypeToString)
-        {
-            if (type->container->objectType == NON_OBJECT)
-            {
-                typeofStr = DTM->debug->typeofDataTypeToString(type->container->typeOf);
-            }
-            else
-            {
-
-                const char *tmp = DTM->debug->typeofObjectTypeToString(type->container->objectType);
-                if (tmp)
-                    typeofStr = tmp;
-            }
-        }
-
-        // Build flags string
-        char flags[16] = "";
-        if (type->isConst)
-            strcat(flags, "C");
-        if (type->isPointer)
-            strcat(flags, "P");
-        if (type->isReference)
-            strcat(flags, "R");
-        if (flags[0] == '\0')
-            strcpy(flags, "-");
-
-        // Select colors based on type
-        const char *nameColor = WHITE;
-        const char *typeColor = WHITE;
-
-        switch (type->container->typeOf)
-        {
-        case PRIM_TYPE:
-            nameColor = LIGHT_GREEN;
-            typeColor = GREEN;
-            break;
-        case FUNCTION_TYPE:
-            nameColor = LIGHT_BLUE;
-            typeColor = BLUE;
-            break;
-        case OBJECT_TYPE:
-            if (type->container->objectType == STRUCT_OBJ)
-            {
-                nameColor = LIGHT_CYAN;
-                typeColor = CYAN;
-            }
-            else
-            {
-                nameColor = LIGHT_MAGENTA;
-                typeColor = MAGENTA;
-            }
-            break;
-        default:
-            nameColor = WHITE;
-            typeColor = WHITE;
-        }
-
-        // Truncate each field to ensure alignment
-        char nameField[nameWidth + 1];
-        char typeField[typeWidth + 1];
-        char typeofField[typeofWidth + 1];
-        char scopeField[scopeWidth + 1];
-
-        snprintf(nameField, sizeof(nameField), "%-*.*s", nameWidth, nameWidth, name);
-        snprintf(typeField, sizeof(typeField), "%-*.*s", typeWidth, typeWidth, typeStr);
-        snprintf(typeofField, sizeof(typeofField), "%-*.*s", typeofWidth, typeofWidth, typeofStr);
-        snprintf(scopeField, sizeof(scopeField), "%-*.*s", scopeWidth, scopeWidth, scope);
-
-        // Print a single row with fixed width fields and explicit column positions
-        printf("%s%s║ %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s║%s\n",
-               BOLD, CYAN,
-               nameColor, nameWidth, nameField, CYAN,
-               typeColor, typeWidth, typeField, CYAN,
-               LIGHT_MAGENTA, typeofWidth, typeofField, CYAN,
-               BLUE, scopeWidth, scopeField, CYAN,
-               LIGHT_CYAN, flagsWidth, flags, CYAN, COLOR_RESET);
-
-        // For struct/class types, add an informational second row
-        if (type->container->typeOf == OBJECT_TYPE && type->container->objectType == STRUCT_OBJ)
-        {
-            int propCount = 0;
-            int methodCount = 0;
-
-            // Safe property extraction
-            if (type->container->type.structType)
-            {
-                propCount = type->container->type.structType->propertyCount;
-                methodCount = type->container->type.structType->methodCount;
-            }
-
-            if (propCount > 0 || methodCount > 0)
-            {
-                char infoStr[typeWidth + 1];
-                snprintf(infoStr, sizeof(infoStr), "↳ Props: %d, Methods: %d",
-                         propCount, methodCount);
-                // Truncate infoStr to fit within typeWidth
-                infoStr[typeWidth] = '\0';
-
-                // Create a properly aligned info row with empty columns for others
-                printf("%s%s║ %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s║%s\n",
-                       BOLD, CYAN,
-                       DARK_GRAY, nameWidth, "", CYAN,
-                       DARK_GRAY, typeWidth + (sizeof(infoStr) - typeWidth) + 1, infoStr, CYAN,
-                       DARK_GRAY, typeofWidth, "", CYAN,
-                       DARK_GRAY, scopeWidth, "", CYAN,
-                       DARK_GRAY, flagsWidth, "", CYAN, COLOR_RESET);
-            }
-        }
-    }
-
-    // ===== BOTTOM BORDER =====
-    printf("%s%s╚", BOLD, CYAN);
-    for (int i = 0; i < tableWidth - 2; i++)
-        printf("═");
-    printf("╝%s\n\n", COLOR_RESET);
 }
 
 void DTMSymbolTable_importASTNode(DTMSymbolTable *table, ASTNode *rootNode)
@@ -717,6 +432,15 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *scopeName, const char
 
 DataType *DTMSymbolTable_lookup(DTMSymbolTable *table, const char *name)
 {
+    // check if the name is a primitive type
+
+    // Check if the name is a primitive type
+    DataType *primitive = DTMParsePrimitive(name);
+    if (primitive)
+    {
+        return primitive;
+    }
+
     for (int i = 0; i < table->entryCount; i++)
     {
         if (strcmp(table->entries[i]->name, name) == 0)
@@ -724,6 +448,17 @@ DataType *DTMSymbolTable_lookup(DTMSymbolTable *table, const char *name)
             return table->entries[i]->type;
         }
     }
+
+    // Check if the name is in the snapshot
+    for (int i = 0; i < table->snapshot->entryCount; i++)
+    {
+        if (strcmp(table->snapshot->entries[i]->name, name) == 0)
+        {
+            return table->snapshot->entries[i]->type;
+        }
+    }
+
+    // If we reach here, the name is not found
     logMessage(LMI, "ERROR", "DTM", "Failed to find entry in symbol table: %s", name);
     return NULL;
 }
@@ -739,6 +474,11 @@ DataType *DTMSymbolTable_lookup(DTMSymbolTable *table, const char *name)
 EntrySnapshot *createEntrySnapshot(DTMSymbolTable *symbolTable)
 {
     __STACK_FRAME__
+
+    if (symbolTable->snapshotInitialized)
+    {
+        return symbolTable->snapshot;
+    }
 
     // Allocate the snapshot structure
     EntrySnapshot *snapshot = (EntrySnapshot *)malloc(sizeof(EntrySnapshot));
@@ -776,30 +516,23 @@ EntrySnapshot *createEntrySnapshot(DTMSymbolTable *symbolTable)
     for (int i = 0; i < symbolTable->entryCount; i++)
     {
         // Allocate a new entry
-        snapshot->entries[i] = (DTMSymbolTableEntry *)malloc(sizeof(DTMSymbolTableEntry));
-        if (!snapshot->entries[i])
+        DTMSymbolTableEntry *newEntry = createDTMSymbolTableEntry(
+            symbolTable->entries[i]->scopeName,
+            symbolTable->entries[i]->name,
+            symbolTable->entries[i]->type);
+        if (!newEntry)
         {
-            // Clean up previously allocated entries
-            for (int j = 0; j < i; j++)
-            {
-                free(snapshot->entries[j]);
-            }
-            free(snapshot->entries);
-            free(snapshot);
-
-            logMessage(LMI, "ERROR", "DTM", "Failed to allocate memory for snapshot entry %d", i);
+            logMessage(LMI, "ERROR", "DTM", "Failed to allocate memory for snapshot entry");
+            freeEntrySnapshot(snapshot);
             CONDITION_FAILED;
             return NULL;
         }
 
-        // Copy the entry properties
-        snapshot->entries[i]->name = strdup(symbolTable->entries[i]->name);
-        snapshot->entries[i]->scopeName = strdup(symbolTable->entries[i]->scopeName);
-        snapshot->entries[i]->type = symbolTable->entries[i]->type;
-
-        // Copy additional properties if needed
-        // ... (add any other fields that need to be copied)
+        // Assign the new entry to the snapshot
+        snapshot->entries[i] = newEntry;
     }
+
+    symbolTable->snapshotInitialized = true;
 
     return snapshot;
 }
@@ -843,70 +576,165 @@ void freeEntrySnapshot(EntrySnapshot *snapshot)
 void DTMSymbolTable_startSnapshot(DTMSymbolTable *table)
 {
     __STACK_FRAME__
-
+    logMessage(LMI, "WARN", "DTM", "%s%s<!> Starting symbol table snapshot <!>%s", BOLD, YELLOW, COLOR_RESET);
     // Clean up any existing snapshot first
     if (table->snapshot)
     {
-        logMessage(LMI, "WARNING", "DTM", "Overwriting existing symbol table snapshot");
+        logMessage(LMI, "WARN", "DTM", "Overwriting existing symbol table snapshot");
         freeEntrySnapshot(table->snapshot);
         table->snapshot = NULL;
     }
 
     // Create the new snapshot
+
     table->snapshot = createEntrySnapshot(table);
     if (table->snapshot)
     {
         logMessage(LMI, "INFO", "DTM", "Created symbol table snapshot with %d entries",
                    table->snapshot->entryCount);
     }
+
+    // Clear the `DTM->symbolTable->entries` array
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        if (table->entries[i])
+        {
+            free(table->entries[i]);
+            table->entries[i] = NULL;
+        }
+    }
+    table->entryCount = 0;
+    table->entryCapacity = SYMBOL_TABLE_INITIAL_CAPACITY;
+    table->entries = (DTMSymbolTableEntry **)malloc(sizeof(DTMSymbolTableEntry *) * SYMBOL_TABLE_INITIAL_CAPACITY);
+    if (!table->entries)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Symbol Table\n");
+        CONDITION_FAILED;
+    }
+
+    logMessage(LMI, "INFO", "DTM", "Cleared symbol table entries after snapshot");
+    // Reset the entry count
 }
 
 /**
  * @brief Find new entries that were added since the snapshot was taken
  *
  * @param table The current symbol table
- * @param newEntries Array to store pointers to new entries
- * @param maxEntries Maximum number of entries to store
  * @return int Number of new entries found
  */
-int findNewEntries(DTMSymbolTable *table, DTMSymbolTableEntry **newEntries, int maxEntries)
+int findNewEntries(DTMSymbolTable *table)
 {
     __STACK_FRAME__
 
-    int newCount = 0;
-
-    // No snapshot means we can't determine what's new
-    if (!table->snapshot)
-        return 0;
-
-    // For each current entry, check if it exists in the snapshot
-    for (int i = 0; i < table->entryCount && newCount < maxEntries; i++)
+    // Safety checks
+    if (!table)
     {
-        DTMSymbolTableEntry *currentEntry = table->entries[i];
-        bool entryFound = false;
+        fprintf(stderr, "%s%s[Data Type Manager]%s Error: NULL symbol table pointer\n", BOLD, RED, COLOR_RESET);
+        return 0;
+    }
+
+    // If there's no snapshot, we can't find new entries
+    if (!table->snapshot)
+    {
+        fprintf(stderr, "%s%s[Data Type Manager]%s Error: No active snapshot\n", BOLD, RED, COLOR_RESET);
+        return 0;
+    }
+
+    int newEntriesCount = 0;
+
+    // Iterate through each entry in the main table
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        // Skip invalid entries
+        if (!table->entries[i] || !table->entries[i]->type || !table->entries[i]->type->container)
+        {
+            continue;
+        }
+
+        const char *name = table->entries[i]->name ? table->entries[i]->name : "<unnamed>";
+        const char *scope = table->entries[i]->scopeName ? table->entries[i]->scopeName : "global";
+
+        // Flag to track if this entry is found in the snapshot
+        bool foundInSnapshot = false;
 
         // Check if this entry exists in the snapshot
         for (int j = 0; j < table->snapshot->entryCount; j++)
         {
-            DTMSymbolTableEntry *snapshotEntry = table->snapshot->entries[j];
-
-            // Compare name and scope to determine if it's the same entry
-            if (strcmp(currentEntry->name, snapshotEntry->name) == 0 &&
-                strcmp(currentEntry->scopeName, snapshotEntry->scopeName) == 0)
+            // Skip invalid snapshot entries
+            if (!table->snapshot->entries[j] || !table->snapshot->entries[j]->name || !table->snapshot->entries[j]->scopeName)
             {
-                entryFound = true;
+                continue;
+            }
+
+            const char *snapshotName = table->snapshot->entries[j]->name;
+            const char *snapshotScope = table->snapshot->entries[j]->scopeName;
+
+            // Compare by name and scope
+            if (strcmp(name, snapshotName) == 0 && strcmp(scope, snapshotScope) == 0)
+            {
+                foundInSnapshot = true;
+                logMessage(LMI, "INFO", "DTM", "Found entry in snapshot: %s", name);
                 break;
+            }
+            else
+            {
+                logMessage(LMI, "INFO", "DTM", "Entry not found in snapshot: %s", name);
+                // Create a new entry in the snapshot
+                DTMSymbolTableEntry *newEntry = table->createEntry(scope, name, table->entries[i]->type);
+                if (newEntry)
+                {
+                    logMessage(LMI, "INFO", "DTM", "Adding new entry to snapshot: %s", name);
+                    table->snapshot->entries[table->snapshot->entryCount++] = newEntry;
+                    newEntriesCount++;
+                }
             }
         }
 
-        // If not found in snapshot, it's a new entry
-        if (!entryFound)
+        // If not found in snapshot, add it
+        if (!foundInSnapshot)
         {
-            newEntries[newCount++] = currentEntry;
+            // Check if we need to resize the snapshot
+            if (table->snapshot->entryCount >= table->snapshot->entryCapacity)
+            {
+                // Calculate new capacity (e.g., double the current capacity)
+                int newCapacity = table->snapshot->entryCapacity * 2;
+                if (newCapacity == 0)
+                {
+                    newCapacity = 8; // Start with at least 8 entries
+                }
+
+                logMessage(LMI, "INFO", "DTM", "Resizing snapshot entries array from %d to %d", table->snapshot->entryCapacity, newCapacity);
+                // Allocate new memory
+                DTMSymbolTableEntry **newEntries = (DTMSymbolTableEntry **)realloc(
+                    table->snapshot->entries,
+                    newCapacity * sizeof(DTMSymbolTableEntry *));
+
+                // Check if reallocation was successful
+                if (!newEntries)
+                {
+                    fprintf(stderr, "%s%s[Data Type Manager]%s Error: Failed to resize snapshot entries array\n",
+                            BOLD, RED, COLOR_RESET);
+                    return newEntriesCount;
+                }
+
+                // Update snapshot with new array and capacity
+                table->snapshot->entries = newEntries;
+                table->snapshot->entryCapacity = newCapacity;
+            }
+
+            DTMSymbolTableEntry *newEntry = table->createEntry(scope, name, table->entries[i]->type);
+
+            // Add the entry to the snapshot if creation was successful
+            if (newEntry)
+            {
+                logMessage(LMI, "INFO", "DTM", "Adding new entry to snapshot: %s", name);
+                table->snapshot->entries[table->snapshot->entryCount++] = newEntry;
+                newEntriesCount++;
+            }
         }
     }
 
-    return newCount;
+    return newEntriesCount;
 }
 
 /**
@@ -920,35 +748,18 @@ int findNewEntries(DTMSymbolTable *table, DTMSymbolTableEntry **newEntries, int 
 void DTMSymbolTable_endSnapshot(DTMSymbolTable *table)
 {
     __STACK_FRAME__
-
+    logMessage(LMI, "WARN", "DTM", "%s%s<!> Ending symbol table snapshot <!>%s", BOLD, YELLOW, COLOR_RESET);
     if (!table->snapshot)
     {
-        logMessage(LMI, "WARNING", "DTM", "No snapshot to end");
+        logMessage(LMI, "WARN", "DTM", "No snapshot to end");
         return;
     }
 
     // Find new entries since the snapshot
-    DTMSymbolTableEntry *newEntries[SYMBOL_TABLE_INITIAL_CAPACITY];
-    int newEntryCount = findNewEntries(table, newEntries, SYMBOL_TABLE_INITIAL_CAPACITY);
+    int newEntryCount = findNewEntries(table);
 
+    // `findNewEntries` will add any new types to the snapshot. We just need to reset the `entries` array.
     logMessage(LMI, "INFO", "DTM", "Found %d new entries since snapshot", newEntryCount);
-
-    // Process the new entries
-    for (int i = 0; i < newEntryCount; i++)
-    {
-        DTMSymbolTableEntry *entry = newEntries[i];
-        logMessage(LMI, "INFO", "DTM", "New entry: %s in scope %s",
-                   entry->name, entry->scopeName);
-
-        // Process the new entry as needed
-        // This could involve adding it to another table, marking it as exported, etc.
-        processNewEntry(table, entry);
-    }
-
-    // Clean up the snapshot
-    freeEntrySnapshot(table->snapshot);
-    table->snapshot = NULL;
-
     logMessage(LMI, "INFO", "DTM", "Symbol table snapshot processing complete");
 }
 
@@ -1019,10 +830,14 @@ DTMSymbolTable *createDTMSymbolTable(void)
     symbolTable->entryCount = 0;
     symbolTable->entryCapacity = SYMBOL_TABLE_INITIAL_CAPACITY;
 
+    symbolTable->snapshot = NULL;
+    symbolTable->snapshotInitialized = false;
+
     // ==================== [ Function Assignments ] ==================== //
 
     symbolTable->getEntry = DTMSymbolTable_getEntry;
     symbolTable->addEntry = DTMSymbolTable_addEntry;
+    symbolTable->resetEntries = DTMSymbolTable_resetEntries;
     symbolTable->addProtoType = DTMSymbolTable_addPrototype;
     symbolTable->removeEntry = DTMSymbolTable_removeEntry;
     symbolTable->updateEntry = DTMSymbolTable_updateEntry;

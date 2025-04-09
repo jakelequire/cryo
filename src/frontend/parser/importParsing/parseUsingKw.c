@@ -262,11 +262,13 @@ void importStandardLibraryRecursive(const char *dirPath, CompilerState *state, C
         {
             // It's a .cryo file (but not a module file), import it
             logMessage(LMI, "INFO", "Parser", "Importing file: %s", fullPath);
+            DTM->symbolTable->startSnapshot(DTM->symbolTable);
             ASTNode *node = compileForASTNode(fullPath, state, globalTable);
             if (!node)
             {
                 logMessage(LMI, "ERROR", "Parser", "Failed to compile file: %s", fullPath);
             }
+            DTM->symbolTable->endSnapshot(DTM->symbolTable);
         }
 
         free(fullPath);
@@ -490,9 +492,10 @@ static bool importModule(const char *primaryModule, const char **moduleChain, si
     {
         // Import the module file
         logMessage(LMI, "INFO", "Parser", "Importing module file: %s", moduleFile);
+        DTM->symbolTable->startSnapshot(DTM->symbolTable);
         ASTNode *node = compileForASTNode(moduleFile, state, globalTable);
         free(moduleFile);
-
+        DTM->symbolTable->endSnapshot(DTM->symbolTable);
         if (!node)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to compile module file");
@@ -604,14 +607,14 @@ static bool importSpecificExports(const char *modulePath, const char **exports, 
                 // Found the file for this export
                 logMessage(LMI, "INFO", "Parser", "Importing export %s from file: %s",
                            exportName, cryoFiles[j]);
-
+                DTM->symbolTable->startSnapshot(DTM->symbolTable);
                 ASTNode *node = compileForASTNode(cryoFiles[j], state, globalTable);
                 if (!node)
                 {
                     logMessage(LMI, "ERROR", "Parser", "Failed to compile file: %s", cryoFiles[j]);
                     allExportsFound = false;
                 }
-
+                DTM->symbolTable->endSnapshot(DTM->symbolTable);
                 exportFound = true;
                 break;
             }

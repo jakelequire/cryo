@@ -16,21 +16,8 @@
  ********************************************************************************/
 #include "dataTypes/dataTypeManager.h"
 
-DataType *DTMParseType(const char *typeStr)
+DataType *DTMParsePrimitive(const char *typeStr)
 {
-    logMessage(LMI, "INFO", "DTM", "Parsing type string '%s'", typeStr);
-    if (!typeStr)
-    {
-        fprintf(stderr, "[Data Type Manager] Error: Attempted to parse NULL type string\n");
-        CONDITION_FAILED;
-    }
-
-    // Check if the type string is a primitive type
-    // if (strcmp(typeStr, "int") == 0)
-    // {
-    //     DataType *int_ty = DTM->primitives->createInt();
-    //     return int_ty;
-    // }
     if (strcmp(typeStr, "float") == 0)
     {
         DataType *float_ty = DTM->primitives->createFloat();
@@ -101,6 +88,30 @@ DataType *DTMParseType(const char *typeStr)
     {
         DataType *i128_ty = DTM->primitives->createI128();
         return i128_ty;
+    }
+    else
+    {
+        // Do not fail, just return NULL
+        logMessage(LMI, "WARN", "DTM", "Type '%s' is not a primitive type", typeStr);
+        return NULL;
+    }
+}
+
+DataType *DTMParseType(const char *typeStr)
+{
+    logMessage(LMI, "INFO", "DTM", "Parsing type string '%s'", typeStr);
+    if (!typeStr)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to parse NULL type string\n");
+        CONDITION_FAILED;
+    }
+
+    DataType *primitive = DTMParsePrimitive(typeStr);
+    if (primitive != NULL)
+    {
+        // If the type is a primitive, return it
+        logMessage(LMI, "INFO", "DTM", "Parsed primitive type '%s'", typeStr);
+        return primitive;
     }
     else
     {

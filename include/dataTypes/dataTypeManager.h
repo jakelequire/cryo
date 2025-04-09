@@ -29,7 +29,7 @@
 #include "dataTypes/dataTypeDefs.h"
 #include "dataTypes/compilerDefs.h"
 
-#define SYMBOL_TABLE_INITIAL_CAPACITY 32
+#define SYMBOL_TABLE_INITIAL_CAPACITY 64
 #define DYN_GROWTH_FACTOR 2
 #define MAX_PARAM_CAPACITY 64
 #define MAX_FIELD_CAPACITY 64
@@ -260,10 +260,13 @@ typedef struct DTMSymbolTable_t
     DTMSymbolTableEntry **entries;
     int entryCount;
     int entryCapacity;
+
     EntrySnapshot *snapshot;
+    bool snapshotInitialized;
 
     DataType *(*getEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*addEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
+    void (*resetEntries)(struct DTMSymbolTable_t *table);
     void (*addProtoType)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
     void (*removeEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*updateEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
@@ -278,6 +281,8 @@ typedef struct DTMSymbolTable_t
     void (*endSnapshot)(struct DTMSymbolTable_t *table);
 
 } DTMSymbolTable;
+
+void DTMSymbolTable_printTable(DTMSymbolTable *table);
 
 // -------------------------- Data Types Interface -------------------------- //
 
@@ -372,8 +377,8 @@ typedef struct DataTypeManager_t
 void initGlobalDataTypeManagerInstance(void);
 
 DataType *DTMParseType(const char *typeStr);
+DataType *DTMParsePrimitive(const char *typeStr);
 DataType *DTMResolveType(DataTypeManager *self, const char *typeStr);
-
 // ----------------------- Constructor Prototypes ----------------------- //
 
 DTMDebug *createDTMDebug(void);

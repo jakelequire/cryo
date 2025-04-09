@@ -1115,6 +1115,8 @@ ASTNode *parseClassDeclaration(bool isStatic,
     CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
     classNode->data.classNode->type = classDataType;
 
+    DTM->symbolTable->addEntry(DTM->symbolTable, getNamespaceScopeID(context), className, classDataType);
+
     // Clear the context
     clearThisContext(context);
     // Clear Scope
