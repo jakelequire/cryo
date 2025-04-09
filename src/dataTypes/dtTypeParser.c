@@ -93,6 +93,7 @@ DataType *DTMParsePrimitive(const char *typeStr)
     {
         // Do not fail, just return NULL
         logMessage(LMI, "WARN", "DTM", "Type '%s' is not a primitive type", typeStr);
+        DTM->symbolTable->printTable(DTM->symbolTable);
         return NULL;
     }
 }

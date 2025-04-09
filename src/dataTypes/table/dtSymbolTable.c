@@ -475,7 +475,7 @@ EntrySnapshot *createEntrySnapshot(DTMSymbolTable *symbolTable)
 {
     __STACK_FRAME__
 
-    if (symbolTable->snapshotInitialized)
+    if (symbolTable->snapshot->entryCount > 0)
     {
         return symbolTable->snapshot;
     }
