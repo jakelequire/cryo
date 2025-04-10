@@ -18,38 +18,31 @@
 
 namespace Cryo
 {
-    void CodegenContext::DONOTUSEYET_mergeModule(llvm::Module *srcModule)
+    llvm::Value *Initializer::generateStringLiteral(ASTNode *node)
     {
-        if (!module)
+        logMessage(LMI, "INFO", "Initializer", "Generating string literal...");
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_LITERAL_EXPR)
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-            CONDITION_FAILED;
-            return;
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a literal expression");
+
+            return nullptr;
         }
 
-        if (!srcModule)
+        DataType *literalDataType = node->data.literal->type;
+        if (literalDataType->container->primitive != PRIM_STRING)
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-            CONDITION_FAILED;
-            return;
+            logMessage(LMI, "ERROR", "Initializer", "Data type is not a string");
+
+            return nullptr;
         }
 
-        logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-        logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
+        std::string strValue = node->data.literal->value.stringValue;
 
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-        bool result = llvm::Linker::linkModules(
-            *module,
-            llvm::CloneModule(*srcModule),
-            linkerFlags);
-        if (result)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-            CONDITION_FAILED;
-            return;
-        }
+        logMessage(LMI, "INFO", "Initializer", "String value: %s", strValue.c_str());
+        // We are not using global strings. All strings will be the String struct.
 
-        std::cout << "@mergeModule Module merged successfully" << std::endl;
+        return nullptr;
     }
-
 } // namespace Cryo

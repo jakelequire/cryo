@@ -144,7 +144,7 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
         return;
     }
     // Generate the IR from the AST
-    if (UNFINISHED_generateIRFromAST(runtimeUnit, bootstrap->state, cLinker, globalTable) != 0)
+    if (generateIRFromAST(runtimeUnit, bootstrap->state, cLinker, globalTable) != 0)
     {
         fprintf(stderr, "Error: Failed to compile runtime unit\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);
@@ -174,7 +174,7 @@ void boostrapRuntimeDefinitions(CryoGlobalSymbolTable *globalTable, CryoLinker *
     }
 
     // Generate the IR from the AST
-    if (UNFINISHED_generateIRFromAST(runtimeMemoryUnit, bootstrap->state, cLinker, globalTable) != 0)
+    if (generateIRFromAST(runtimeMemoryUnit, bootstrap->state, cLinker, globalTable) != 0)
     {
         fprintf(stderr, "Error: Failed to compile runtime memory unit\n");
         updateBootstrapStatus(bootstrap, BOOTSTRAP_FAILED);

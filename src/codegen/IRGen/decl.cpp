@@ -18,38 +18,44 @@
 
 namespace Cryo
 {
-    void CodegenContext::DONOTUSEYET_mergeModule(llvm::Module *srcModule)
+    // [3]: Step 3. Process declarations
+    void IRGeneration::processDeclarations(ASTNode *node)
     {
-        if (!module)
+        if (!node)
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-            CONDITION_FAILED;
+            logMessage(LMI, "ERROR", "IRGeneration", "Root node is null");
             return;
         }
 
-        if (!srcModule)
+        // Handle function declarations
+        if (node->metaData->type == NODE_FUNCTION_DECLARATION)
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-            CONDITION_FAILED;
-            return;
+            processFunctionDeclaration(node);
         }
 
-        logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-        logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
-
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-        bool result = llvm::Linker::linkModules(
-            *module,
-            llvm::CloneModule(*srcModule),
-            linkerFlags);
-        if (result)
+        // Handle type declarations (structs, classes)
+        if (node->metaData->type == NODE_STRUCT_DECLARATION ||
+            node->metaData->type == NODE_CLASS)
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-            CONDITION_FAILED;
-            return;
+            processTypeDeclaration(node);
         }
 
-        std::cout << "@mergeModule Module merged successfully" << std::endl;
+        // Recurse through the tree
+        // if (node->firstChild)
+        // {
+        //     processDeclarations(node->firstChild);
+        // }
+    }
+
+    void IRGeneration::processFunctionDeclaration(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "IRGeneration", "Processing function declaration...");
+        return;
+    }
+    void IRGeneration::processTypeDeclaration(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "IRGeneration", "Processing type declaration...");
+        return;
     }
 
 } // namespace Cryo

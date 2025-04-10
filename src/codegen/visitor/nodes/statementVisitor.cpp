@@ -18,38 +18,28 @@
 
 namespace Cryo
 {
-    void CodegenContext::DONOTUSEYET_mergeModule(llvm::Module *srcModule)
+    // Statements
+    void CodeGenVisitor::visitIfStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitForStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitWhileStatement(ASTNode *node) {}
+
+    void CodeGenVisitor::visitReturnStatement(ASTNode *node)
     {
-        if (!module)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-            CONDITION_FAILED;
+        if (!node || !node->data.returnStatement)
             return;
-        }
+        logMessage(LMI, "INFO", "CodeGenVisitor", "Visiting return statement node");
 
-        if (!srcModule)
+        // Get the generated value
+        llvm::Value *retVal = getLLVMValue(node->data.returnStatement->expression);
+        if (retVal)
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-            CONDITION_FAILED;
-            return;
+            logMessage(LMI, "INFO", "CodeGenVisitor", "Return value: %s", retVal->getName().str().c_str());
+            context.getInstance().builder.CreateRet(retVal);
         }
-
-        logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-        logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
-
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-        bool result = llvm::Linker::linkModules(
-            *module,
-            llvm::CloneModule(*srcModule),
-            linkerFlags);
-        if (result)
+        else
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-            CONDITION_FAILED;
-            return;
+            logMessage(LMI, "INFO", "CodeGenVisitor", "No return value, returning void");
+            context.getInstance().builder.CreateRetVoid();
         }
-
-        std::cout << "@mergeModule Module merged successfully" << std::endl;
     }
-
 } // namespace Cryo

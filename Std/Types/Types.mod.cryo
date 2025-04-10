@@ -1,3 +1,0 @@
-namespace Types;
-
-public module Int;

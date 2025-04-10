@@ -270,8 +270,8 @@ int exe_project_build(CompilerSettings *settings)
         CONDITION_FAILED;
         return 1;
     }
-    
-    if (UNFINISHED_generateIRFromAST(unit, state, linker, globalSymbolTable) != 0)
+
+    if (generateIRFromAST(unit, state, linker, globalSymbolTable) != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
         CONDITION_FAILED;

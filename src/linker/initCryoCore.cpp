@@ -156,7 +156,7 @@ namespace Cryo
 
         // Generate IR from AST
         CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
-        if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
+        if (generateIRFromAST(unit, state, linker, globalTable) != 0)
         {
             logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
             CONDITION_FAILED;
@@ -620,7 +620,7 @@ namespace Cryo
 
         // Generate IR from AST
         CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
-        if (UNFINISHED_generateIRFromAST(unit, state, linker, globalTable) != 0)
+        if (generateIRFromAST(unit, state, linker, globalTable) != 0)
         {
             logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
             CONDITION_FAILED;
