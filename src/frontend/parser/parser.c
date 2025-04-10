@@ -345,7 +345,8 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     {
         logMessage(LMI, "INFO", "Parser", "Parsing pointer type: %s", typeTokenStr);
         getNextToken(lexer, arena, state);
-        dataType->isPointer = true;
+        DataType *baseType = dataType->clone(dataType);
+        dataType = DTM->dataTypes->createPointerType(typeTokenStr, baseType, false);
     }
 
     // Check to see if the next token is a `&`

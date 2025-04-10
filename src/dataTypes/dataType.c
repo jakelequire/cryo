@@ -188,6 +188,7 @@ DataType *DTMTypeContainerWrappers_wrapStructType(struct DTStructTy_t *structTy)
     container->objectType = STRUCT_OBJ;
     container->primitive = PRIM_OBJECT;
     container->type.structType = structTy;
+    container->type.structType->generic.isGeneric = false;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
@@ -219,6 +220,14 @@ DataType *DTMTypeContainerWrappers_wrapGenericType(struct DTGenericTy_t *generic
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = GENERIC_TYPE;
     container->type.genericType = genericTy;
+
+    return DTMTypeContainerWrappers_wrapTypeContainer(container);
+}
+
+DataType *DTMTypeContainerWrappers_wrapPointerType(struct DTPointerTy_t *pointerTy)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->type.pointerType = pointerTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }
@@ -267,6 +276,29 @@ DataType *DTMTypeContainerWrappers_createTypeAlias(const char *name, DataType *t
     return clonedType;
 }
 
+DataType *DTMTypeContainerWrappers_createPointerType(const char *typeName, DataType *baseType, bool isConst)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = POINTER_TYPE;
+    container->objectType = baseType->container->objectType;
+    container->primitive = baseType->container->primitive;
+
+    container->type.pointerType = (DTPointerTy *)malloc(sizeof(DTPointerTy));
+    if (!container->type.pointerType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to create pointer type\n");
+        CONDITION_FAILED;
+    }
+
+    container->type.pointerType->baseType = baseType;
+    container->type.pointerType->isConst = isConst;
+
+    DataType *pointerType = DTMTypeContainerWrappers_wrapTypeContainer(container);
+    pointerType->setTypeName(pointerType, typeName);
+
+    return pointerType;
+}
+
 DTMDataTypes *createDTMDataTypes(void)
 {
     DTMDataTypes *dataTypes = (DTMDataTypes *)malloc(sizeof(DTMDataTypes));
@@ -289,9 +321,11 @@ DTMDataTypes *createDTMDataTypes(void)
     dataTypes->wrapClassType = DTMTypeContainerWrappers_wrapClassType;
     dataTypes->wrapObjectType = DTMTypeContainerWrappers_wrapObjectType;
     dataTypes->wrapGenericType = DTMTypeContainerWrappers_wrapGenericType;
+    dataTypes->wrapPointerType = DTMTypeContainerWrappers_wrapPointerType;
 
     dataTypes->createProtoType = DTMTypeContainerWrappers_createProtoType;
     dataTypes->createTypeAlias = DTMTypeContainerWrappers_createTypeAlias;
+    dataTypes->createPointerType = DTMTypeContainerWrappers_createPointerType;
 
     return dataTypes;
 }

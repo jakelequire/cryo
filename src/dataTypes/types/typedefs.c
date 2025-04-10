@@ -284,6 +284,40 @@ DTPropertyTy *createDTProperty(void)
     return property;
 }
 
+// ------------------------------------------------------------------------------------------- //
+// ------------------------------------ Pointer Data Type ------------------------------------ //
+// ------------------------------------------------------------------------------------------- //
+
+void DTPointer_setBaseType(DTPointerTy *pointerType, DataType *baseType)
+{
+    pointerType->baseType = baseType;
+}
+
+void DTPointer_setConst(DTPointerTy *pointerType, bool isConst)
+{
+    pointerType->isConst = isConst;
+}
+
+DTPointerTy *createDTPointerTy(void)
+{
+    DTPointerTy *pointerType = (DTPointerTy *)malloc(sizeof(DTPointerTy));
+    if (!pointerType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTPointerTy\n");
+        CONDITION_FAILED;
+    }
+
+    pointerType->baseType = NULL;
+    pointerType->isConst = false;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    pointerType->setBaseType = DTPointer_setBaseType;
+    pointerType->setConst = DTPointer_setConst;
+
+    return pointerType;
+}
+
 // --------------------------------------------------------------------------------------------------- //
 // ------------------------------------ Type Container ----------------------------------------------- //
 // --------------------------------------------------------------------------------------------------- //

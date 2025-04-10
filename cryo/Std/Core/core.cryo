@@ -17,6 +17,23 @@ extern function strncat_export  (dest: str, src: str, n: i32) -> str;
 extern function strnlen_export  (__str__: str, n: i32) -> i32;
 extern function strncmp_export  (str1: str, str2: str, n: i32) -> i32;
 
+struct Int {
+    // The core Int properties.
+    val: i32;
+
+    // The core Int flags.
+    isZero: boolean;
+    isNegative: boolean;
+
+    constructor(__val__: i32) {
+        this.val = __val__;
+        this.isZero = (this.val == 0);
+        this.isNegative = (this.val < 0);
+    }
+
+    // The core Int methods.
+}
+
 struct String {
     val: str;
     length: i32;
@@ -94,28 +111,6 @@ implement struct String {
     }
 }
 
-struct Int {
-    // The core Int properties.
-    val: i32;
-
-    // The core Int flags.
-    isZero: boolean;
-    isNegative: boolean;
-
-    // The core Int methods.
-}
-
-struct Pointer {
-    // The core Pointer properties.
-    addr: i64;
-    __ptr__: void *;
-
-    // The core Pointer flags.
-    addr_string: String;
-
-    // The core Pointer methods.
-}
-
 // ---------------------------------------------------------------------------- 
 // These are the core types of Cryo.
 // The types below are commented out because they are defined in the compiler.
@@ -144,17 +139,17 @@ extern function printf_export (format: str, ...) -> Int;
 extern function scanf_export (format: str, ...) -> Int;
 
 extern function sys_exit    (status: Int) -> void;
-extern function sys_read    (fd: Int, buf: Pointer, count: Int) -> Int;
-extern function sys_write   (fd: Int, buf: Pointer, count: Int) -> Int;
+extern function sys_read    (fd: Int, buf: void *, count: Int) -> Int;
+extern function sys_write   (fd: Int, buf: void *, count: Int) -> Int;
 
-extern function mmap_export     (addr: Pointer, length: Int, prot: Int, flags: Int, fd: Int, offset: Int) -> Pointer;
-extern function munmap_export   (addr: Pointer, length: Int) -> Int;
-extern function malloc_export   (size: Int) -> Pointer;
-extern function free_export     (ptr: Pointer) -> Int;
-extern function memcpy_export   (dest: Pointer, src: Pointer, n: Int) -> Pointer;
-extern function memmove_export  (dest: Pointer, src: Pointer, n: Int) -> Pointer;
-extern function memcmp_export   (ptr1: Pointer, ptr2: Pointer, n: Int) -> Int;
-extern function memset_export   (ptr: Pointer, value: Int, num: Int) -> Pointer;
+extern function mmap_export     (addr: void *, length: Int, prot: Int, flags: Int, fd: Int, offset: Int) -> void *;
+extern function munmap_export   (addr: void *, length: Int) -> Int;
+extern function malloc_export   (size: Int) -> void *;
+extern function free_export     (ptr: void *) -> Int;
+extern function memcpy_export   (dest: void *, src: void *, n: Int) -> void *;
+extern function memmove_export  (dest: void *, src: void *, n: Int) -> void *;
+extern function memcmp_export   (ptr1: void *, ptr2: void *, n: Int) -> Int;
+extern function memset_export   (ptr: void *, value: Int, num: Int) -> void *;
 
 
 

@@ -35,17 +35,19 @@ typedef enum PrimitiveDataType
     PRIM_I64,  // `i64`
     PRIM_I128, // `i128`
 
-    PRIM_FLOAT,     // `float`
-    PRIM_STRING,    // `string`
-    PRIM_CHAR,      // `char`
-    PRIM_STR,       // `str`
-    PRIM_BOOLEAN,   // `boolean`
-    PRIM_VOID,      // `void`
-    PRIM_NULL,      // `null`
-    PRIM_ANY,       // `any`
-    PRIM_OBJECT,    // Object type
-    PRIM_FUNCTION,  // Function type
-    PRIM_ENUM,      // Enum type
+    PRIM_FLOAT,   // `float`
+    PRIM_STRING,  // `string`
+    PRIM_CHAR,    // `char`
+    PRIM_STR,     // `str`
+    PRIM_BOOLEAN, // `boolean`
+    PRIM_VOID,    // `void`
+    PRIM_NULL,    // `null`
+    PRIM_ANY,     // `any`
+
+    PRIM_OBJECT,   // Object type
+    PRIM_FUNCTION, // Function type
+    PRIM_ENUM,     // Enum type
+
     PRIM_AUTO,      // `auto`
     PRIM_UNDEFINED, // `undefined`
     PRIM_UNKNOWN    // `<UNKNOWN>`
@@ -60,6 +62,7 @@ typedef enum TypeofDataType
     GENERIC_TYPE,  // `T`, `U`, `V`, etc.
     OBJECT_TYPE,   // `struct | class { ... }`
     TYPE_DEF,      // `type ... = ...`
+    POINTER_TYPE,  // `int*`, `float*`, `string*`, `boolean*`
     UNKNOWN_TYPE   // `<UNKNOWN>`
 } TypeofDataType;
 
@@ -357,6 +360,19 @@ typedef struct DTGenericTy_t
     struct GenericType_t *next;
 } DTGenericTy;
 
+typedef struct DTPointerTy_t
+{
+    // ==================== [ Property Assignments ] ==================== //
+
+    struct DataType_t *baseType;
+    bool isConst;
+
+    // ==================== [ Function Assignments ] ==================== //
+
+    void (*setBaseType)(struct DTPointerTy_t *self, struct DataType_t *baseType);
+    void (*setConst)(struct DTPointerTy_t *self, bool isConst);
+} DTPointerTy;
+
 // ------------------------------------------------------------------------------------------- //
 // ------------------------------------- Type Container -------------------------------------- //
 // ------------------------------------------------------------------------------------------- //
@@ -377,6 +393,7 @@ typedef struct TypeContainer_t
         struct DTObjectTy_t *objectType;
         struct DTGenericTy_t *genericType;
         struct DTPropertyTy_t *propertyType;
+        struct DTPointerTy_t *pointerType;
     } type;
 } TypeContainer;
 
@@ -418,6 +435,8 @@ DTStructTy *createDTStructTy(void);
 DTClassTy *createDTClassTy(void);
 DTObjectTy *createDTObjectType(void);
 DTPropertyTy *createDTProperty(void);
+DTGenericTy *createDTGenericTy(void);
+DTPointerTy *createDTPointerTy(void);
 
 TypeContainer *createTypeContainer(void);
 

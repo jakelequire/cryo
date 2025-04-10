@@ -298,9 +298,11 @@ typedef struct DTMDataTypes_t
     DataType *(*wrapGenericType)(struct DTGenericTy_t *genericType);
     DataType *(*wrapStructType)(struct DTStructTy_t *structType);
     DataType *(*wrapClassType)(struct DTClassTy_t *classType);
+    DataType *(*wrapPointerType)(struct DTPointerTy_t *pointerType);
 
     DataType *(*createProtoType)(const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
     DataType *(*createTypeAlias)(const char *name, DataType *type);
+    DataType *(*createPointerType)(const char *name, DataType *baseType, bool isConst);
 } DTMDataTypes;
 
 typedef struct DTMTypeValidation_t

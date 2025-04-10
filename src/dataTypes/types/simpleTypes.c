@@ -82,14 +82,16 @@ DataType *DTMPrimitives_createI128(void)
 
 DataType *DTMPrimitives_createInt(void)
 {
-    TypeContainer *container = createTypeContainer();
-    container->typeOf = PRIM_TYPE;
-    container->primitive = PRIM_INT;
-    container->objectType = NON_OBJECT;
-
-    DataType *int_ty = DTM->dataTypes->wrapTypeContainer(container);
-    int_ty->setTypeName(int_ty, "int");
-    return int_ty;
+    DataType *intType = DTM->symbolTable->lookup(DTM->symbolTable, "Int");
+    if (intType)
+    {
+        return intType;
+    }
+    else
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to create Int type\n");
+        CONDITION_FAILED;
+    }
 }
 
 DataType *DTMPrimitives_createFloat(void)

@@ -58,13 +58,6 @@ typedef struct
     bool isNegative;
 } cryo_int_t;
 
-// Cryo Pointer structure - matches the one defined in core.cryo
-typedef struct
-{
-    int64_t val;
-    cryo_string_t addr_string;
-} cryo_pointer_t;
-
 // ======================================================== //
 //               Memory Management Functions                //
 // ======================================================== //
@@ -72,10 +65,9 @@ typedef struct
 /**
  * Cross-platform memory mapping function
  */
-cryo_pointer_t cryo_mmap(int32_t size, int32_t flags, int32_t fd, int32_t offset)
+void *cryo_mmap(int32_t size, int32_t flags, int32_t fd, int32_t offset)
 {
-    cryo_pointer_t ptr;
-    void *mem_ptr;
+    void *ptr;
 
 #ifdef _WIN32
     HANDLE file_handle = INVALID_HANDLE_VALUE;
@@ -94,11 +86,11 @@ cryo_pointer_t cryo_mmap(int32_t size, int32_t flags, int32_t fd, int32_t offset
 
     if (mapping == NULL)
     {
-        ptr.val = 0;
+        ptr = 0;
         return ptr;
     }
 
-    mem_ptr = MapViewOfFile(
+    ptr = MapViewOfFile(
         mapping,
         FILE_MAP_ALL_ACCESS,
         0,
@@ -107,7 +99,7 @@ cryo_pointer_t cryo_mmap(int32_t size, int32_t flags, int32_t fd, int32_t offset
 
     CloseHandle(mapping);
 #else
-    mem_ptr = mmap(
+    ptr = mmap(
         NULL,
         size,
         PROT_READ | PROT_WRITE,
@@ -115,24 +107,12 @@ cryo_pointer_t cryo_mmap(int32_t size, int32_t flags, int32_t fd, int32_t offset
         fd,
         offset);
 
-    if (mem_ptr == MAP_FAILED)
+    if (ptr == MAP_FAILED)
     {
-        ptr.val = 0;
+        ptr = 0;
         return ptr;
     }
 #endif
-
-    ptr.val = (int64_t)mem_ptr;
-
-    // Create address string
-    char addr_buf[32];
-    snprintf(addr_buf, sizeof(addr_buf), "0x%llx", (unsigned long long)ptr.val);
-
-    ptr.addr_string.val = strdup(addr_buf);
-    ptr.addr_string.length = strlen(addr_buf);
-    ptr.addr_string.capacity = ptr.addr_string.length + 1;
-    ptr.addr_string.isEmpty = (ptr.addr_string.length == 0);
-    ptr.addr_string.isNull = (ptr.addr_string.val == NULL);
 
     return ptr;
 }
@@ -140,70 +120,39 @@ cryo_pointer_t cryo_mmap(int32_t size, int32_t flags, int32_t fd, int32_t offset
 /**
  * Cross-platform memory unmapping function
  */
-int32_t cryo_munmap(cryo_pointer_t ptr, int32_t size)
+int32_t cryo_munmap(void *ptr, int32_t size)
 {
     int32_t result;
-
-    if (ptr.val == 0)
-    {
-        return -1;
-    }
 
 #ifdef _WIN32
     result = UnmapViewOfFile((void *)ptr.val) ? 0 : -1;
 #else
-    result = munmap((void *)ptr.val, size);
+    result = munmap((void *)ptr, size);
 #endif
-
-    // Free the address string
-    if (ptr.addr_string.val != NULL)
-    {
-        free(ptr.addr_string.val);
-    }
-
     return result;
 }
 
 /**
  * Memory allocation wrapper
  */
-cryo_pointer_t cryo_malloc(int32_t size)
+void *cryo_malloc(int32_t size)
 {
-    cryo_pointer_t ptr;
     void *mem_ptr = malloc(size);
+    if (mem_ptr == NULL)
+    {
+        void *null_ptr = {0};
+        return null_ptr;
+    }
 
-    ptr.val = (int64_t)mem_ptr;
-
-    // Create address string
-    char addr_buf[32];
-    snprintf(addr_buf, sizeof(addr_buf), "0x%llx", (unsigned long long)ptr.val);
-
-    ptr.addr_string.val = strdup(addr_buf);
-    ptr.addr_string.length = strlen(addr_buf);
-    ptr.addr_string.capacity = ptr.addr_string.length + 1;
-    ptr.addr_string.isEmpty = (ptr.addr_string.length == 0);
-    ptr.addr_string.isNull = (ptr.addr_string.val == NULL);
-
-    return ptr;
+    return mem_ptr;
 }
 
 /**
  * Memory deallocation wrapper
  */
-int32_t cryo_free(cryo_pointer_t ptr)
+int32_t cryo_free(void *ptr)
 {
-    if (ptr.val == 0)
-    {
-        return -1;
-    }
-
-    free((void *)ptr.val);
-
-    // Free the address string
-    if (ptr.addr_string.val != NULL)
-    {
-        free(ptr.addr_string.val);
-    }
+    free((void *)ptr);
 
     return 0;
 }
@@ -211,59 +160,36 @@ int32_t cryo_free(cryo_pointer_t ptr)
 /**
  * Memory copy wrapper
  */
-cryo_pointer_t cryo_memcpy(cryo_pointer_t dest, cryo_pointer_t src, int32_t size)
+void *cryo_memcpy(void *dest, void *src, int32_t size)
 {
-    if (dest.val == 0 || src.val == 0)
-    {
-        cryo_pointer_t null_ptr = {0};
-        return null_ptr;
-    }
-
-    memcpy((void *)dest.val, (void *)src.val, size);
+    memcpy((void *)dest, (void *)src, size);
     return dest;
 }
 
 /**
  * Memory move wrapper
  */
-cryo_pointer_t cryo_memmove(cryo_pointer_t dest, cryo_pointer_t src, int32_t size)
+void *cryo_memmove(void *dest, void *src, int32_t size)
 {
-    if (dest.val == 0 || src.val == 0)
-    {
-        cryo_pointer_t null_ptr = {0};
-        return null_ptr;
-    }
-
-    memmove((void *)dest.val, (void *)src.val, size);
+    memmove((void *)dest, (void *)src, size);
     return dest;
 }
 
 /**
  * Memory set wrapper
  */
-cryo_pointer_t cryo_memset(cryo_pointer_t dest, int32_t value, int32_t size)
+void *cryo_memset(void *dest, int32_t value, int32_t size)
 {
-    if (dest.val == 0)
-    {
-        cryo_pointer_t null_ptr = {0};
-        return null_ptr;
-    }
-
-    memset((void *)dest.val, value, size);
+    memset((void *)dest, value, size);
     return dest;
 }
 
 /**
  * Memory compare wrapper
  */
-int32_t cryo_memcmp(cryo_pointer_t ptr1, cryo_pointer_t ptr2, int32_t size)
+int32_t cryo_memcmp(void *ptr1, void *ptr2, int32_t size)
 {
-    if (ptr1.val == 0 || ptr2.val == 0)
-    {
-        return -1;
-    }
-
-    return memcmp((void *)ptr1.val, (void *)ptr2.val, size);
+    return memcmp((void *)ptr1, (void *)ptr2, size);
 }
 
 void sys_exit(int32_t status)
@@ -271,33 +197,33 @@ void sys_exit(int32_t status)
     exit(status);
 }
 
-int32_t sys_read(int32_t fd, cryo_pointer_t buf, int32_t count)
+int32_t sys_read(int32_t fd, void *buf, int32_t count)
 {
-    if (fd < 0 || buf.val == 0 || count <= 0)
+    if (fd < 0 || buf == 0 || count <= 0)
     {
         return -1;
     }
 #ifdef _WIN32
     DWORD bytesRead;
-    BOOL result = ReadFile((HANDLE)fd, (void *)buf.val, count, &bytesRead, NULL);
+    BOOL result = ReadFile((HANDLE)fd, (void *)buf, count, &bytesRead, NULL);
     return result ? bytesRead : -1;
 #else
-    return read(fd, (void *)buf.val, count);
+    return read(fd, (void *)buf, count);
 #endif
 }
 
-int32_t sys_write(int32_t fd, cryo_pointer_t buf, int32_t count)
+int32_t sys_write(int32_t fd, void *buf, int32_t count)
 {
-    if (fd < 0 || buf.val == 0 || count <= 0)
+    if (fd < 0 || buf == 0 || count <= 0)
     {
         return -1;
     }
 #ifdef _WIN32
     DWORD bytesWritten;
-    BOOL result = WriteFile((HANDLE)fd, (void *)buf.val, count, &bytesWritten, NULL);
+    BOOL result = WriteFile((HANDLE)fd, (void *)buf, count, &bytesWritten, NULL);
     return result ? bytesWritten : -1;
 #else
-    return write(fd, (void *)buf.val, count);
+    return write(fd, (void *)buf, count);
 #endif
 }
 
@@ -371,42 +297,42 @@ void cryo_runtime_cleanup()
 // ======================================================== //
 
 // Memory Management Functions
-cryo_pointer_t mmap_export(int32_t size, int32_t flags, int32_t fd, int32_t offset)
+void *mmap_export(int32_t size, int32_t flags, int32_t fd, int32_t offset)
 {
     return cryo_mmap(size, flags, fd, offset);
 }
 
-int32_t munmap_export(cryo_pointer_t ptr, int32_t size)
+int32_t munmap_export(void *ptr, int32_t size)
 {
     return cryo_munmap(ptr, size);
 }
 
-cryo_pointer_t malloc_export(int32_t size)
+void *malloc_export(int32_t size)
 {
     return cryo_malloc(size);
 }
 
-int32_t free_export(cryo_pointer_t ptr)
+int32_t free_export(void *ptr)
 {
     return cryo_free(ptr);
 }
 
-cryo_pointer_t memcpy_export(cryo_pointer_t dest, cryo_pointer_t src, int32_t size)
+void *memcpy_export(void *dest, void *src, int32_t size)
 {
     return cryo_memcpy(dest, src, size);
 }
 
-cryo_pointer_t memmove_export(cryo_pointer_t dest, cryo_pointer_t src, int32_t size)
+void *memmove_export(void *dest, void *src, int32_t size)
 {
     return cryo_memmove(dest, src, size);
 }
 
-cryo_pointer_t memset_export(cryo_pointer_t dest, int32_t value, int32_t size)
+void *memset_export(void *dest, int32_t value, int32_t size)
 {
     return cryo_memset(dest, value, size);
 }
 
-int32_t memcmp_export(cryo_pointer_t ptr1, cryo_pointer_t ptr2, int32_t size)
+int32_t memcmp_export(void *ptr1, void *ptr2, int32_t size)
 {
     return cryo_memcmp(ptr1, ptr2, size);
 }

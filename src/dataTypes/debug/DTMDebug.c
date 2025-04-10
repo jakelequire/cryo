@@ -180,9 +180,13 @@ void DTMDebug_printDataType(DataType *type)
     {
         printf("Type Definition\n");
     }
+    else if (type->container->typeOf == POINTER_TYPE)
+    {
+        printf("Pointer\n");
+    }
     else
     {
-        fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
+        fprintf(stderr, "[Data Type Manager] Error: Unknown data type @DTMDebug_printDataType\n");
         CONDITION_FAILED;
     }
 }
@@ -205,6 +209,8 @@ const char *DTMDebug_typeofDataTypeToString(TypeofDataType type)
         return "Object";
     case TYPE_DEF:
         return "Type Def";
+    case POINTER_TYPE:
+        return "Pointer";
     case UNKNOWN_TYPE:
         return "<UNKNOWN>";
     default:
@@ -420,9 +426,40 @@ const char *DTMDebug_dataTypeToString(DataType *type)
     {
         return "Type Definition";
     }
+    else if (type->container->typeOf == POINTER_TYPE)
+    {
+        DataType *baseType = type->container->type.pointerType->baseType;
+        if (!baseType)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL base type\n");
+            CONDITION_FAILED;
+        }
+
+        const char *baseTypeStr = DTM->debug->dataTypeToString(baseType);
+        if (!baseTypeStr)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to get base type string\n");
+            CONDITION_FAILED;
+        }
+
+        char *pointerTypeStr = (char *)malloc(sizeof(char) * 1024);
+        if (!pointerTypeStr)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for pointer type string\n");
+            CONDITION_FAILED;
+        }
+
+        snprintf(pointerTypeStr, 1024, "%s *", baseTypeStr);
+
+        return pointerTypeStr;
+    }
+    else if (type->container->typeOf == UNKNOWN_TYPE)
+    {
+        return "<UNKNOWN>";
+    }
     else
     {
-        fprintf(stderr, "[Data Type Manager] Error: Unknown data type\n");
+        fprintf(stderr, "[Data Type Manager] Error: Unknown data type @DTMDebug_dataTypeToString\n");
         CONDITION_FAILED;
     }
 

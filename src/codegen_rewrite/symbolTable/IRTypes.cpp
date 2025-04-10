@@ -30,8 +30,16 @@ namespace Cryo
         bool isReference = dataType->isReference;
         bool isConst = dataType->isConst;
 
-        // TODO:
-        // Handle const, pointer, and reference types.
+        if (dataType->container->typeOf == POINTER_TYPE)
+        {
+            llvm::Type *baseType = getLLVMType(dataType->container->type.pointerType->baseType);
+            if (!baseType)
+            {
+                std::cerr << "Failed to get base type for pointer" << std::endl;
+                return nullptr;
+            }
+            return llvm::PointerType::get(baseType, 0);
+        }
 
         switch (dataType->container->primitive)
         {
