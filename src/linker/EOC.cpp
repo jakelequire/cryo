@@ -82,6 +82,12 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Build directory is empty");
             return false;
         }
+        std::string compilerDir = GetCXXLinker()->getDirInfo()->compilerDir;
+        if (compilerDir.empty())
+        {
+            logMessage(LMI, "ERROR", "Linker", "Compiler directory is empty");
+            return false;
+        }
 
         std::string objDir = buildDir + "/out/obj";
         std::string irDir = buildDir + "/out";

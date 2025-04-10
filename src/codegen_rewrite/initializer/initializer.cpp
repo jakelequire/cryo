@@ -161,7 +161,16 @@ namespace Cryo
         if (!funcSymbol)
         {
             logMessage(LMI, "ERROR", "Initializer", "Function %s not found", node->data.functionCall->name);
-            return nullptr;
+            // Check the DTM to see if the function exists
+            DataType *functionDataType = DTM->symbolTable->lookup(DTM->symbolTable, node->data.functionCall->name);
+            if (functionDataType)
+            {
+                logMessage(LMI, "INFO", "Initializer", "Function %s found in DTM", node->data.functionCall->name);
+            }
+            else
+            {
+                return nullptr;
+            }
         }
 
         // Process arguments

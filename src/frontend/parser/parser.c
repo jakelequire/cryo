@@ -1646,40 +1646,26 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
 
     // Look up function in global symbol table (NEW)
     const char *currentScopeID = getCurrentScopeID(context);
-    Symbol *funcSymbol = GetFrontendSymbol(globalTable, functionName, currentScopeID, FUNCTION_SYMBOL);
-    if (!funcSymbol)
-    {
-        logMessage(LMI, "ERROR", "Parser",
-                   "Function not found: %s", functionName);
-        parsingError("Function not found.", "parseFunctionCall", arena, state,
-                     lexer, lexer->source, globalTable);
-        return NULL;
-    }
-    // Check if the function is a function or extern symbol
+    DataType *functionTypeSymbol = DTM->symbolTable->getEntry(
+        DTM->symbolTable,
+        currentScopeID,
+        functionName);
 
-    TypeOfSymbol typeofSymbol = funcSymbol->symbolType;
-    ASTNode *functionNode = NULL;
-
-    int _paramCount = 0;
-    if (typeofSymbol == FUNCTION_SYMBOL)
+    if (functionTypeSymbol)
     {
-        logMessage(LMI, "INFO", "Parser", "Function Symbol");
-        functionNode = funcSymbol->function->node;
-        _paramCount = funcSymbol->function->paramCount;
-    }
-    else if (typeofSymbol == EXTERN_SYMBOL)
-    {
-        logMessage(LMI, "INFO", "Parser", "Extern Symbol");
-        functionNode = funcSymbol->externSymbol->node;
-        _paramCount = funcSymbol->externSymbol->paramCount;
+        logMessage(LMI, "INFO", "Parser", "Function type symbol found.");
+        functionTypeSymbol->debug->printType(functionTypeSymbol);
+        DataType **paramTypes = functionTypeSymbol->container->type.functionType->paramTypes;
+        int paramCount = functionTypeSymbol->container->type.functionType->paramCount;
+        logMessage(LMI, "INFO", "Parser", "Function type symbol param count: %d", paramCount);
+        for (int i = 0; i < paramCount; i++)
+        {
+            logMessage(LMI, "INFO", "Parser", "Function type symbol param type: %s", paramTypes[i]->debug->toString(paramTypes[i]));
+        }
     }
     else
     {
-        logMessage(LMI, "ERROR", "Parser",
-                   "Invalid symbol type: %s", typeofSymbol);
-        parsingError("Invalid symbol type.", "parseFunctionCall", arena, state,
-                     lexer, lexer->source, globalTable);
-        return NULL;
+        logMessage(LMI, "INFO", "Parser", "Function type symbol not found.");
     }
 
     char *functionNameToken = strndup(lexer->currentToken.start, lexer->currentToken.length);
@@ -1688,51 +1674,6 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     // Consume function name
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
             "parseFunctionCall", arena, state, context);
-
-    ASTNode **expectedArgs = (ASTNode **)ARENA_ALLOC(arena, 8 * sizeof(ASTNode *));
-    DataType **expectedTypes = (DataType **)ARENA_ALLOC(arena, 8 * sizeof(DataType *));
-
-    // Parse arguments
-    switch (typeofSymbol)
-    {
-    case EXTERN_SYMBOL:
-    {
-        logMessage(LMI, "INFO", "Parser", "Arguments for extern function...");
-        ASTNode *externFuncNode = functionNode;
-        logASTNode(externFuncNode);
-        ASTNode **params = externFuncNode->data.externFunction->params;
-        int paramCount = externFuncNode->data.externFunction->paramCount;
-        for (int i = 0; i < paramCount; ++i)
-        {
-            DataType *expectedType = params[i]->data.param->type;
-        }
-
-        break;
-    }
-
-    case FUNCTION_SYMBOL:
-    {
-        logMessage(LMI, "INFO", "Parser", "Arguments for function...");
-        ASTNode *funcDeclNode = functionNode;
-        ASTNode **params = funcDeclNode->data.functionDecl->params;
-        int paramCount = funcDeclNode->data.functionDecl->paramCount;
-        for (int i = 0; i < paramCount; ++i)
-        {
-            logMessage(LMI, "INFO", "Parser", "Parameter: %s", params[i]->data.param->name);
-            DataType *expectedType = params[i]->data.param->type;
-        }
-
-        break;
-    }
-    default:
-    {
-        logMessage(LMI, "ERROR", "Parser",
-                   "Invalid function type: ");
-        parsingError("Invalid function type.", "parseFunctionCall",
-                     arena, state, lexer, lexer->source, globalTable);
-        return NULL;
-    }
-    }
 
     if (lexer->currentToken.type != TOKEN_LPAREN)
     {
@@ -1925,17 +1866,6 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     {
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after function call.",
                 "parseFunctionCall", arena, state, context);
-    }
-
-    // Validate argument count
-    if (functionCallNode->data.functionCall->argCount != _paramCount)
-    {
-        logMessage(LMI, "ERROR", "Parser",
-                   "Argument count mismatch. Expected: %d, Got: %d",
-                   _paramCount, functionCallNode->data.functionCall->argCount);
-        parsingError("Argument count mismatch.", "parseFunctionCall",
-                     arena, state, lexer, lexer->source, globalTable);
-        return NULL;
     }
 
     return functionCallNode;

@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "linker/linker.hpp"
 #include "codegen_rewrite/codegen.hpp"
 
 int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
@@ -33,11 +34,6 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     context.setModuleIdentifier(unit->dir.src_fileName);
 
     bool isCompilingMain = unit->type == CRYO_MAIN;
-    if (isCompilingMain)
-    {
-        logMessage(LMI, "INFO", "Compiler", "Compiling main file...");
-        context.preInitMain();
-    }
 
     logMessage(LMI, "INFO", "Compiler", "Generating IR from AST...");
     // Create IR Generator and Visitor
@@ -56,5 +52,14 @@ int UNFINISHED_generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     {
         logMessage(LMI, "ERROR", "Compiler", e.what());
         return 1;
+    }
+
+    if (isCompilingMain)
+    {
+        // [2]: Step 2. Compile the IR to object code
+        logMessage(LMI, "INFO", "Compiler", "Compiling IR to object code...");
+
+        Cryo::Linker *_linker = reinterpret_cast<Cryo::Linker *>(cLinker);
+        _linker->compileModule(unit, context.getInstance().module.get());
     }
 }

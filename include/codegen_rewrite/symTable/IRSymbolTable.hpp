@@ -103,6 +103,7 @@ namespace Cryo
                                                llvm::Value *initialValue = nullptr);
 
         IRFunctionSymbol *findFunction(const std::string &name);
+        IRFunctionSymbol *findOrCreateFunction(const std::string &name);
         IRTypeSymbol *findType(const std::string &name);
 
         void debugPrint() const;

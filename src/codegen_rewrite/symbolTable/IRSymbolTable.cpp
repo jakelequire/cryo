@@ -143,6 +143,48 @@ namespace Cryo
         return (it != functions.end()) ? &it->second : nullptr;
     }
 
+    IRFunctionSymbol *IRSymbolTable::findOrCreateFunction(const std::string &name)
+    {
+        auto it = functions.find(name);
+        if (it != functions.end())
+        {
+            return &it->second;
+        }
+        logMessage(LMI, "INFO", "CodeGen", "Creating function: %s", name.c_str());
+        DTM->symbolTable->lookup(DTM->symbolTable, name.c_str());
+        auto functionType = DTM->symbolTable->lookup(DTM->symbolTable, name.c_str());
+        if (!functionType)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Function %s not found in DTM", name.c_str());
+            return nullptr;
+        }
+        if (functionType->container->typeOf != FUNCTION_TYPE)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Function %s is not a function type", name.c_str());
+            return nullptr;
+        }
+        // If no function found, create a new one. But it will only be a declaration / prototype.
+        std::vector<llvm::Type *> paramTypes;
+        for (int i = 0; i < functionType->container->type.functionType->paramCount; ++i)
+        {
+            paramTypes.push_back(getLLVMType(functionType->container->type.functionType->paramTypes[i]));
+        }
+        llvm::FunctionType *llvmFuncType = llvm::FunctionType::get(
+            getLLVMType(functionType->container->type.functionType->returnType),
+            paramTypes,
+            false);
+        llvm::Function *llvmFunc = llvm::Function::Create(
+            llvmFuncType, llvm::Function::ExternalLinkage, name, currentModule);
+
+        IRFunctionSymbol funcSymbol = IRFunctionSymbol(
+            llvmFunc, name, getLLVMType(functionType->container->type.functionType->returnType),
+            llvmFuncType, nullptr, false, true);
+
+        // Add the function to the symbol table
+        addFunction(funcSymbol);
+        return findFunction(name);
+    }
+
     IRTypeSymbol *IRSymbolTable::findType(const std::string &name)
     {
         auto it = types.find(name);
