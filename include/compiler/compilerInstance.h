@@ -14,33 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/codegen.hpp"
+#ifndef CRYO_COMPILER_INSTANCE_H
+#define CRYO_COMPILER_INSTANCE_H
 
-namespace Cryo
-{
-    // Object-oriented features
-    void CodeGenVisitor::visitProperty(ASTNode *node)
-    {
-    }
-
-    void CodeGenVisitor::visitMethod(ASTNode *node)
-    {
-    }
-
-    void CodeGenVisitor::visitConstructor(ASTNode *node)
-    {
-    }
-
-    void CodeGenVisitor::visitPropertyAccess(ASTNode *node)
-    {
-    }
-
-    void CodeGenVisitor::visitPropertyReassignment(ASTNode *node)
-    {
-    }
-
-    void CodeGenVisitor::visitThis(ASTNode *node)
-    {
-    }
-
-} // namespace Cryo
+#endif // CRYO_COMPILER_INSTANCE_H

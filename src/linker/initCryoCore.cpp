@@ -16,7 +16,7 @@
  ********************************************************************************/
 
 /**
- * @file linker_init.cpp
+ * @file initCryoCore.cpp
  * @brief Implementation of Cryo Core and Runtime initialization
  *
  * This file initializes the Cryo Core and Runtime environments.
