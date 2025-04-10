@@ -296,7 +296,6 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing type...");
-    DataType *type = NULL;
     const char *typeTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
 
     if (context->inGenericContext)
@@ -304,6 +303,10 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
         logMessage(LMI, "INFO", "Parser", "Parsing generic type: %s", typeTokenStr);
         return getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
     }
+
+    logMessage(LMI, "INFO", "Parser", "Data Type String: `%s`", typeTokenStr);
+
+    DataType *dataType = NULL;
 
     switch (lexer->currentToken.type)
     {
@@ -317,13 +320,13 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
     case TOKEN_KW_BOOL:
     case TOKEN_KW_ANY:
         logMessage(LMI, "INFO", "Parser", "Parsing primitive type: %s", typeTokenStr);
-        return getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
+        dataType = getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
         break;
 
     case TOKEN_IDENTIFIER:
         logMessage(LMI, "INFO", "Parser", "Parsing custom type: %s", typeTokenStr);
         // type = getCryoDataType(typeTokenStr, arena, state, lexer, globalTable);
-        return DTM->resolveType(DTM, typeTokenStr);
+        dataType = DTM->resolveType(DTM, typeTokenStr);
         break;
 
     default:
@@ -331,8 +334,30 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
         break;
     }
 
+    if (dataType == NULL)
+    {
+        parsingError("Failed to parse type", "parseType", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    // Check to see if the next token is a `*`
+    if (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_STAR)
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing pointer type: %s", typeTokenStr);
+        getNextToken(lexer, arena, state);
+        dataType->isPointer = true;
+    }
+
+    // Check to see if the next token is a `&`
+    if (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_AMPERSAND)
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing reference type: %s", typeTokenStr);
+        getNextToken(lexer, arena, state);
+        dataType->isReference = true;
+    }
+
     logMessage(LMI, "INFO", "Parser", "Type parsed successfully");
-    return type;
+    return dataType;
 }
 // </parseType>
 
@@ -898,6 +923,16 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
     {
         logMessage(LMI, "INFO", "Parser", "Parsing typeof expression");
         return parseTypeofIdentifier(lexer, context, arena, state, globalTable);
+    }
+    case TOKEN_KW_THIS:
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing this expression");
+        return parseThisExpression(lexer, context, arena, state, globalTable);
+    }
+    case TOKEN_LPAREN:
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing parenthesized expression");
+        return parseParenthesizedExpression(lexer, context, arena, state, globalTable);
     }
     case TOKEN_INCREMENT:
     case TOKEN_DECREMENT:
@@ -2995,7 +3030,8 @@ ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
         ASTNode *newValue = parseExpression(lexer, context, arena, state, globalTable);
 
-        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseThisContext", arena, state, context);
+        if (lexer->currentToken.type == TOKEN_SEMICOLON)
+            consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon...", "parseThisContext", arena, state, context);
 
         ASTNode *propReasignment = createPropertyReassignmentNode(thisNode, propName, newValue, arena, state, lexer);
         return propReasignment;
@@ -3272,6 +3308,28 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
     return propAccessNode;
 }
 
+ASTNode *parseThisExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing this expression...");
+    consume(__LINE__, lexer, TOKEN_KW_THIS, "Expected `this` keyword.", "parseThisExpression", arena, state, context);
+
+    if (context->thisContext == NULL)
+    {
+        parsingError("This context not in scope.", "parseThisExpression", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+
+    if (lexer->currentToken.type == TOKEN_DOT)
+    {
+        consume(__LINE__, lexer, TOKEN_DOT, "Expected `.` for property access.", "parseThisExpression", arena, state, context);
+        ASTNode *thisNode = parseDotNotation(lexer, context, arena, state, globalTable);
+        return thisNode;
+    }
+
+    return createThisNode(arena, state, lexer);
+}
+
 ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
@@ -3369,4 +3427,16 @@ ASTNode *parseTypeofIdentifier(Lexer *lexer, ParsingContext *context, Arena *are
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end typeof expression.", "parseTypeofIdentifier", arena, state, context);
 
     return createTypeofNode(identifier, arena, state, lexer);
+}
+
+ASTNode *parseParenthesizedExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing parentheses expression...");
+    consume(__LINE__, lexer, TOKEN_LPAREN, "Expected `(` to start expression.", "parseParenthesesExpression", arena, state, context);
+
+    ASTNode *expression = parseExpression(lexer, context, arena, state, globalTable);
+    consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end expression.", "parseParenthesesExpression", arena, state, context);
+
+    return expression;
 }

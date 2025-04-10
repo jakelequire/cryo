@@ -26,6 +26,13 @@ namespace Cryo
             return nullptr;
         }
 
+        bool isPointer = dataType->isPointer;
+        bool isReference = dataType->isReference;
+        bool isConst = dataType->isConst;
+
+        // TODO:
+        // Handle const, pointer, and reference types.
+
         switch (dataType->container->primitive)
         {
         case PRIM_I8:

@@ -12,6 +12,10 @@ namespace Std.Core;
 //                       Core Types                         //
 // ======================================================== //
 
+extern function strlen_export   (__str__: str) -> i32;
+extern function strncat_export  (dest: str, src: str, n: i32) -> str;
+extern function strnlen_export  (__str__: str, n: i32) -> i32;
+extern function strncmp_export  (str1: str, str2: str, n: i32) -> i32;
 
 struct String {
     val: str;
@@ -20,6 +24,15 @@ struct String {
 
     isEmpty: boolean;
     isNull: boolean;
+
+
+    constructor(__str__: str) {
+        this.val = __str__;
+        this.length = strlen_export(__str__);
+        this.capacity = this.length + 1; // +1 for null terminator
+        this.isEmpty = (this.length == 0);
+        this.isNull = (this.val == null);
+    }
 
     append(__str__: str) -> String;
 
@@ -45,6 +58,7 @@ implement struct String {
     capacity: i32 = 0;
     isEmpty: boolean = true;
     isNull: boolean = false;
+
     
     // The core string methods.
     append(__str__: str) -> String {
@@ -93,7 +107,8 @@ struct Int {
 
 struct Pointer {
     // The core Pointer properties.
-    val: i64;
+    addr: i64;
+    __ptr__: void *;
 
     // The core Pointer flags.
     addr_string: String;
@@ -141,10 +156,7 @@ extern function memmove_export  (dest: Pointer, src: Pointer, n: Int) -> Pointer
 extern function memcmp_export   (ptr1: Pointer, ptr2: Pointer, n: Int) -> Int;
 extern function memset_export   (ptr: Pointer, value: Int, num: Int) -> Pointer;
 
-extern function strlen_export   (str: str) -> Int;
-extern function strncat_export  (dest: str, src: str, n: Int) -> str;
-extern function strnlen_export  (str: str, n: Int) -> Int;
-extern function strncmp_export  (str1: str, str2: str, n: Int) -> Int;
+
 
 // ======================================================== //
 //                    Core Functions                        //
