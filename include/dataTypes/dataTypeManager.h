@@ -83,6 +83,15 @@ extern DataTypeManager *globalDataTypeManager;
 #define DTM globalDataTypeManager
 #define INIT_DTM() initGlobalDataTypeManagerInstance();
 
+typedef enum LiteralType
+{
+    LITERAL_INT,
+    LITERAL_FLOAT,
+    LITERAL_STRING,
+    LITERAL_BOOLEAN,
+    LITERAL_NULL,
+} LiteralType;
+
 // ----------------------------- Data Type Helpers ----------------------------- //
 
 typedef struct DTMDynamicTypeArray_t
@@ -237,6 +246,7 @@ typedef struct DTMDebug_t
     const char *(*typeofObjectTypeToString)(TypeofObjectType type);
     const char *(*primitiveDataTypeToString)(PrimitiveDataType type);
     const char *(*primitiveDataTypeToCType)(PrimitiveDataType type);
+    const char *(*literalTypeToString)(LiteralType type);
 } DTMDebug;
 
 // ------------------------ Symbol Table Interfaces ------------------------ //

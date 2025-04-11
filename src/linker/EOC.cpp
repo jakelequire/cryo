@@ -337,38 +337,21 @@ namespace Cryo
     {
         std::string command = "clang++-18 -pie -o " + outputPath;
 
-        // Add object files
-        for (const auto &objFile : objectFiles)
+        // Add the `.so` file paths to the command. Use the raw paths instead of
+        // using `-l` to avoid issues with the linker.
+
+        for (const auto &lib : stdLibFiles)
         {
-            command += " " + objFile;
+            command += " " + lib;
         }
 
-        // Add standard libraries with -L and -l options
-        if (!stdLibFiles.empty())
+        // Add the object files to the command
+        for (const auto &obj : objectFiles)
         {
-            // Add the standard library directory to the library search path
-            std::filesystem::path firstLib(stdLibFiles[0]);
-            std::string stdLibDir = firstLib.parent_path().string();
-            command += " -L" + stdLibDir;
-
-            // Add each library
-            for (const auto &libFile : stdLibFiles)
-            {
-                std::filesystem::path libPath(libFile);
-                std::string libName = libPath.stem().string();
-
-                // Remove "lib" prefix from library name
-                if (libName.substr(0, 3) == "lib")
-                {
-                    libName = libName.substr(3);
-                }
-
-                command += " -l" + libName;
-            }
-
-            // Add runtime path to ensure libraries are found at runtime
-            command += " -Wl,-rpath," + stdLibDir;
+            command += " " + obj;
         }
+
+        logMessage(LMI, "INFO", "Linker", "<!> Linking command: %s", command.c_str());
 
         return command;
     }

@@ -186,6 +186,7 @@ typedef struct LiteralNode
 {
     DataType *type;
     int length;
+    LiteralType literalType;
     union
     {
         int intValue;

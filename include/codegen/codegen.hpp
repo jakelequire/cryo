@@ -122,7 +122,7 @@ namespace Cryo
         // Context Interface
         llvm::Function *currentFunction;
 
-        void DONOTUSEYET_mergeModule(llvm::Module *srcModule);
+        void mergeModule(llvm::Module *srcModule);
 
         void initializeCodegenContext(void);
         void setModuleIdentifier(std::string name);
@@ -173,7 +173,8 @@ namespace Cryo
         ~Initializer() {}
 
         llvm::Value *getInitializerValue(ASTNode *node);
-
+        llvm::Value *generateLiteralObject(ASTNode *node);
+        
     protected:
         IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }
 

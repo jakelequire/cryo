@@ -32,8 +32,12 @@ int generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     Cryo::CodegenContext &context = Cryo::CodegenContext::getInstance();
     context.initializeCodegenContext();
     context.setModuleIdentifier(unit->dir.src_fileName);
-
     bool isCompilingMain = unit->type == CRYO_MAIN;
+
+    if (isCompilingMain)
+    {
+        // context.preInitMain();
+    }
 
     logMessage(LMI, "INFO", "Compiler", "Generating IR from AST...");
     // Create IR Generator and Visitor

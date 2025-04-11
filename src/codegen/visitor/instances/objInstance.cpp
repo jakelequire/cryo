@@ -14,42 +14,37 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/codegen.hpp"
+#include "codegen/instances.hpp"
 
 namespace Cryo
 {
-    void CodegenContext::mergeModule(llvm::Module *srcModule)
+    // Create an instance of a class or struct
+    llvm::Value *Instance::createInstance(ASTNode *node)
     {
-        if (!module)
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        // Check if the node is a struct or class
+        if (node->metaData->type == NODE_STRUCT_DECLARATION)
         {
-            logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-            CONDITION_FAILED;
-            return;
+            return createStructInstance(node);
         }
 
-        if (!srcModule)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-            CONDITION_FAILED;
-            return;
-        }
+        // If the node is not a struct or class, return nullptr
+        return nullptr;
+    }
 
-        logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-        logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
+    // Create an instance of a struct
+    llvm::Value *Instance::createStructInstance(ASTNode *node)
+    {
+        ASSERT_NODE_NULLPTR_RET(node);
 
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-        bool result = llvm::Linker::linkModules(
-            *module,
-            llvm::CloneModule(*srcModule),
-            linkerFlags);
-        if (result)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-            CONDITION_FAILED;
-            return;
-        }
+        // Get the struct type
+        llvm::StructType *structType = llvm::StructType::create(context.context, node->data.structNode->name);
 
-        std::cout << "@mergeModule Module merged successfully" << std::endl;
+        // Create an instance of the struct
+        llvm::Value *instance = new llvm::AllocaInst(structType, 0, node->data.structNode->name, context.builder.GetInsertBlock());
+
+        return instance;
     }
 
 } // namespace Cryo

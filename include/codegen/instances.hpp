@@ -14,42 +14,51 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#ifndef CODEGEN_INSTANCES_HPP
+#define CODEGEN_INSTANCES_HPP
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <unordered_map>
+
+#include "codegen/symTable/IRSymbolTable.hpp"
 #include "codegen/codegen.hpp"
+#include "codegen/codegenDebug.hpp"
+
+typedef struct ASTNode ASTNode;
 
 namespace Cryo
 {
-    void CodegenContext::mergeModule(llvm::Module *srcModule)
+
+    class IRSymbolTable;
+    class Visitor;
+    class DefaultVisitor;
+    class CodeGenVisitor;
+    class CodegenContext;
+    class Initializer;
+
+    // This class is to create / manage instances of objects
+    // It will be used to create instances of classes, structs, and enums
+    // It will also be used to manage the lifetime of these instances
+    class Instance
     {
-        if (!module)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-            CONDITION_FAILED;
-            return;
-        }
+    public:
+        Instance(CodegenContext &context) : context(context) {}
+        ~Instance() {}
 
-        if (!srcModule)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-            CONDITION_FAILED;
-            return;
-        }
+        // Create an instance of a class or struct
+        llvm::Value *createInstance(ASTNode *node);
 
-        logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-        logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
+    private:
+        // Create an instance of a struct
+        llvm::Value *createStructInstance(ASTNode *node);
 
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-        bool result = llvm::Linker::linkModules(
-            *module,
-            llvm::CloneModule(*srcModule),
-            linkerFlags);
-        if (result)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-            CONDITION_FAILED;
-            return;
-        }
-
-        std::cout << "@mergeModule Module merged successfully" << std::endl;
-    }
+    private:
+        CodegenContext &context;
+    };
 
 } // namespace Cryo
+
+#endif // CODEGEN_INSTANCES_HPP

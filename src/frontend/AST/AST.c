@@ -305,7 +305,10 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Lex
     logMessage(LMI, "INFO", "AST", "Created integer literal node with value: %d", value);
 
     node->data.literal->value.intValue = value;
+    node->data.literal->value.booleanValue = NULL;
+    node->data.literal->value.stringValue = NULL;
     node->data.literal->type = DTM->primitives->createInt();
+    node->data.literal->literalType = LITERAL_INT;
 
     return node;
 }
@@ -321,6 +324,8 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
 
     node->data.literal->type = DTM->primitives->createFloat();
     node->data.literal->value.floatValue = value;
+    node->data.literal->literalType = LITERAL_FLOAT;
+
     return node;
 }
 
@@ -348,6 +353,7 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
     node->data.literal->type = DTM->primitives->createString();
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
+    node->data.literal->literalType = LITERAL_STRING;
 
     return node;
 }
@@ -415,6 +421,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
 
     node->data.literal->type = DTM->primitives->createPrimBoolean(value);
     node->data.literal->value.booleanValue = value;
+    node->data.literal->literalType = LITERAL_BOOLEAN;
 
     return node;
 }

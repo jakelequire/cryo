@@ -466,6 +466,25 @@ const char *DTMDebug_dataTypeToString(DataType *type)
     return "<UNKNOWN>";
 }
 
+const char *DTMDebug_literalTypeToString(LiteralType type)
+{
+    switch (type)
+    {
+    case LITERAL_INT:
+        return "int";
+    case LITERAL_FLOAT:
+        return "float";
+    case LITERAL_STRING:
+        return "string";
+    case LITERAL_BOOLEAN:
+        return "boolean";
+    case LITERAL_NULL:
+        return "null";
+    default:
+        return "<UNKNOWN>";
+    }
+}
+
 DTMDebug *createDTMDebug(void)
 {
     DTMDebug *debug = (DTMDebug *)malloc(sizeof(DTMDebug));
@@ -484,6 +503,7 @@ DTMDebug *createDTMDebug(void)
     debug->primitiveDataTypeToString = DTMDebug_primitiveDataTypeToString;
     debug->primitiveDataTypeToCType = DTMDebug_primitiveDataTypeToCType;
     debug->dataTypeToString = DTMDebug_dataTypeToString;
+    debug->literalTypeToString = DTMDebug_literalTypeToString;
 
     return debug;
 }

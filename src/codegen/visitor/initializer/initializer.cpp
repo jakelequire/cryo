@@ -63,6 +63,15 @@ namespace Cryo
         TypeofDataType typeofDataType = literalDataType->container->typeOf;
         logMessage(LMI, "INFO", "Initializer", "Type of data: %s", DTM->debug->typeofDataTypeToString(typeofDataType));
 
+        PrimitiveDataType primitiveType = literalDataType->container->primitive;
+        logMessage(LMI, "INFO", "Initializer", "Primitive type: %s", DTM->debug->primitiveDataTypeToString(primitiveType));
+
+        if (typeofDataType == OBJECT_TYPE)
+        {
+            logMessage(LMI, "INFO", "Initializer", "Creating object from literal");
+            return generateLiteralObject(node);
+        }
+
         node->print(node);
 
         switch (literalDataType->container->primitive)
@@ -92,7 +101,15 @@ namespace Cryo
         case PRIM_ANY:
             return llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(context.getInstance().context), 0));
         case PRIM_OBJECT:
-            return nullptr;
+        {
+            // Create a new instance of the object using the literal value
+            llvm::Type *objectType = context.getInstance().symbolTable->getLLVMType(literalDataType);
+            llvm::Value *objectInstance = context.getInstance().builder.CreateAlloca(objectType, nullptr, "object_instance");
+            // Initialize the object instance with the literal value
+            int intValue = node->data.literal->value.intValue;
+            context.getInstance().builder.CreateStore(llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, intValue, true)), objectInstance);
+            return objectInstance;
+        }
         case PRIM_AUTO:
             return nullptr;
         case PRIM_UNDEFINED:
@@ -106,6 +123,64 @@ namespace Cryo
 
         std::cerr << "Unhandled literal type: " << DTM->debug->dataTypeToString(literalDataType) << std::endl;
         return nullptr;
+    }
+
+    // This function will always return the dereferenced value of the literal object, not a pointer
+    // to the object. This is because the literal object is not a pointer type by default.
+    // The callee is responsible for handling the pointer type if needed.
+    llvm::Value *Initializer::generateLiteralObject(ASTNode *node)
+    {
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_LITERAL_EXPR)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a literal expression");
+
+            return nullptr;
+        }
+
+        DataType *literalDataType = node->data.literal->type;
+        logMessage(LMI, "INFO", "Initializer", "Literal Object data type: %s", DTM->debug->dataTypeToString(literalDataType));
+
+        TypeofDataType typeofDataType = literalDataType->container->typeOf;
+        logMessage(LMI, "INFO", "Initializer", "Type of data: %s", DTM->debug->typeofDataTypeToString(typeofDataType));
+
+        if (typeofDataType == OBJECT_TYPE)
+        {
+            switch (node->data.literal->literalType)
+            {
+            case LITERAL_INT:
+            {
+                logMessage(LMI, "INFO", "Initializer", "Creating object from int literal");
+                // Create a dereferenced value of the literal (INT) object
+                llvm::Value *intValue = llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, node->data.literal->value.intValue, true));
+                llvm::Type *objectType = context.getInstance().symbolTable->getLLVMType(literalDataType);
+                llvm::Value *objectInstance = context.getInstance().builder.CreateAlloca(objectType, nullptr, "object_instance");
+                context.getInstance().builder.CreateStore(intValue, objectInstance);
+                return objectInstance;
+            }
+            case LITERAL_STRING:
+            {
+                logMessage(LMI, "INFO", "Initializer", "Creating object from string literal");
+                break;
+            }
+            case LITERAL_FLOAT:
+            {
+                logMessage(LMI, "INFO", "Initializer", "Creating object from float literal");
+                break;
+            }
+            case LITERAL_BOOLEAN:
+            {
+                logMessage(LMI, "INFO", "Initializer", "Creating object from boolean literal");
+                break;
+            }
+            default:
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Unhandled literal type: %s", DTM->debug->literalTypeToString(node->data.literal->literalType));
+                return nullptr;
+            }
+            }
+        }
     }
 
     llvm::Value *Initializer::generateVarName(ASTNode *node)

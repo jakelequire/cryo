@@ -159,7 +159,7 @@ extern function memset_export   (ptr: void *, value: Int, num: Int) -> void *;
 
 
 function printInt (value: Int) -> void {
-    printf_export("%d\n", value);
+    printf_export("%p\n", value.val);
     return;
 }
 

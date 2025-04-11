@@ -14,42 +14,25 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/codegen.hpp"
+#include "linker/linker.hpp"
+#include "diagnostics/diagnostics.h"
 
 namespace Cryo
 {
-    void CodegenContext::mergeModule(llvm::Module *srcModule)
+
+    /// @brief This function will initialize the creation of the Cryo Runtime Module.
+    /// This module is compiled along with a C runtime module to create the final
+    /// runtime module that will be used in the Cryo Compiler before the main Cryo module.
+    ///
+    /// @return The Cryo Runtime Module
+    ///
+    /// @note this function is called from the C++ CodeGen API before code generation.
+    llvm::Module *Linker::initMainModule(void)
     {
-        if (!module)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Main module is null");
-            CONDITION_FAILED;
-            return;
-        }
+        __STACK_FRAME__
+        std::cout << "Initializing Main Module before CodeGen..." << std::endl;
 
-        if (!srcModule)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Source module is null");
-            CONDITION_FAILED;
-            return;
-        }
-
-        logMessage(LMI, "INFO", "CryoContext", "Merging modules");
-        logMessage(LMI, "INFO", "CryoContext", "Main Module: %s", module->getName().str().c_str());
-
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
-        bool result = llvm::Linker::linkModules(
-            *module,
-            llvm::CloneModule(*srcModule),
-            linkerFlags);
-        if (result)
-        {
-            logMessage(LMI, "ERROR", "CryoContext", "Failed to merge modules");
-            CONDITION_FAILED;
-            return;
-        }
-
-        std::cout << "@mergeModule Module merged successfully" << std::endl;
+        // This is the new process for initializing the main module.
     }
 
 } // namespace Cryo

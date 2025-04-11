@@ -21,7 +21,7 @@ namespace Cryo
     void CodegenContext::preInitMain(void)
     {
         llvm::Module *depMod = this->getLinker()->initMainModule();
-        this->DONOTUSEYET_mergeModule(depMod);
+        this->mergeModule(depMod);
         return;
     }
 
