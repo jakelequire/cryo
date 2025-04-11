@@ -81,15 +81,12 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Module is null");
             return;
         }
-        if (!unit->isVerified)
-        {
-            logMessage(LMI, "ERROR", "Linker", "CompilationUnit is not verified");
-            return;
-        }
+
         std::string outputPath = std::string(unit->dir.out_filePath) + std::string(unit->dir.out_fileExt);
         logMessage(LMI, "INFO", "Linker", "Output Path: %s", outputPath.c_str());
         generateIRFromCodegen(mod, outputPath.c_str());
         logMessage(LMI, "INFO", "Linker", "Module compiled successfully");
+
         return;
     }
 

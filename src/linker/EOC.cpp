@@ -68,6 +68,21 @@ namespace Cryo
         logMessage(LMI, "INFO", "Linker", "Linking process completed successfully");
     }
 
+    void Linker::linkMain(llvm::Module *mod)
+    {
+        __STACK_FRAME__
+        logMessage(LMI, "INFO", "Linker", "@linkMain Linking main module");
+        if (!mod)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Module is null");
+            return;
+        }
+
+        // Generate IR from the module
+        std::string outputPath = this->dirInfo->buildDir + "/out/main.ll";
+        generateIRFromCodegen(mod, outputPath.c_str());
+    }
+
     /**
      * @brief Converts all LLVM IR files to object files
      *

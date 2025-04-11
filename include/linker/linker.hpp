@@ -259,6 +259,14 @@ namespace Cryo
         void linkAll(void);
 
         /**
+         * @brief Links the main module with the core library
+         *
+         * @param mod The main module to link
+         */
+
+        void linkMain(llvm::Module *mod);
+
+        /**
          * @brief Creates the main object file
          *
          * Converts main.ll to main.o for linking.

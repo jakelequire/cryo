@@ -53,7 +53,7 @@ int generateIRFromAST(CompilationUnit *unit, CompilerState *state,
             logMessage(LMI, "INFO", "Compiler", "Compiling IR to object code...");
 
             Cryo::Linker *_linker = reinterpret_cast<Cryo::Linker *>(cLinker);
-            _linker->compileModule(unit, context.getInstance().module.get());
+            _linker->linkMain(context.getInstance().module.get());
         }
         return 0;
     }

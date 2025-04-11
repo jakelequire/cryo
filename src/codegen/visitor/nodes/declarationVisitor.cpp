@@ -251,59 +251,7 @@ namespace Cryo
         if (node->data.structNode->constructor)
         {
             logMessage(LMI, "INFO", "Visitor", "Struct has a constructor");
-            ASTNode *constructorNode = node->data.structNode->constructor;
-            DataType *selfType = node->data.structNode->type;
-
-            int cTorArgs = node->data.structNode->constructor->data.structConstructor->argCount;
-            ASTNode **ctorArgs = node->data.structNode->constructor->data.structConstructor->args;
-            std::vector<llvm::Type *> ctorArgTypes;
-
-            for (int i = 0; i < cTorArgs; i++)
-            {
-                DataType *argType = ctorArgs[i]->data.param->type;
-                logMessage(LMI, "INFO", "Visitor", "Constructor argument %d type: %s", i, argType->typeName);
-                argType->debug->printType(argType);
-                llvm::Type *llvmArgType = symbolTable->getLLVMType(argType);
-                ctorArgTypes.push_back(llvmArgType);
-            }
-
-            // Self type is the first argument
-            ctorArgTypes.insert(ctorArgTypes.begin(), structType->getPointerTo());
-
-            llvm::FunctionType *ctorFuncType = llvm::FunctionType::get(
-                structType->getPointerTo(), ctorArgTypes, false);
-
-            llvm::Function *ctorFunction = llvm::Function::Create(
-                ctorFuncType, llvm::Function::ExternalLinkage, "struct." + structName + ".ctor", context.getInstance().module.get());
-            ctorFunction->setCallingConv(llvm::CallingConv::C);
-            ctorFunction->setDoesNotThrow();
-
-            logMessage(LMI, "INFO", "Visitor", "Creating constructor function: %s", ctorFunction->getName().str().c_str());
-
-            // Set the first argument of the function to be `self`
-            llvm::Function::arg_iterator argIt = ctorFunction->arg_begin();
-            llvm::Value *selfArg = argIt++;
-            selfArg->setName("self");
-
-            logMessage(LMI, "INFO", "Visitor", "Constructor function has %d arguments", ctorFunction->arg_size());
-
-            llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.getInstance().context, "entry", ctorFunction);
-            context.getInstance().builder.SetInsertPoint(entryBlock);
-
-            logMessage(LMI, "INFO", "Visitor", "Creating constructor function body...");
-
-            llvm::AllocaInst *selfAlloc = context.getInstance().builder.CreateAlloca(structType, nullptr, "self");
-            context.getInstance().builder.CreateStore(selfArg, selfAlloc);
-            AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
-            IRVariableSymbol selfSymbol = IRSymbolManager::createVariableSymbol(
-                selfAlloc, structType->getPointerTo(), "self", allocaType, Allocation());
-            symbolTable->addVariable(selfSymbol);
-
-            logMessage(LMI, "INFO", "Visitor", "Constructor function body created");
-
-            // Insert the constructor function into the module
-            context.getInstance().module->getOrInsertFunction(
-                llvm::StringRef(structName + "_ctor"), ctorFuncType);
+            context.getInstance().initializer->generateStructConstructor(node->data.structNode->constructor, structType);
         }
 
         logMessage(LMI, "INFO", "Visitor", "Struct declaration complete");

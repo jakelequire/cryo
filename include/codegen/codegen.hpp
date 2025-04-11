@@ -188,6 +188,9 @@ namespace Cryo
         llvm::Value *generateUnaryExpr(ASTNode *node);
 
         llvm::Value *generateStringLiteral(ASTNode *node);
+
+    public:
+        void generateStructConstructor(ASTNode *node, llvm::StructType *structType);
     };
 
 } // namespace Cryo
