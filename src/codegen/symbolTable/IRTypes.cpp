@@ -146,52 +146,20 @@ namespace Cryo
         }
 
         // Check if the struct already exists in the current module via the symbol table
-        std::string structName = dataType->container->type.structType->name;
+        std::string structName = "struct." + std::string(dataType->container->type.structType->name);
         IRTypeSymbol *typeSymbol = this->findType(structName);
         if (typeSymbol)
         {
             return typeSymbol->type.structTy;
         }
-        // Create a new struct type
-        llvm::StructType *llvmStructType = llvm::StructType::create(currentModule->getContext(), structName);
-        if (!llvmStructType)
+        else
         {
-            std::cerr << "Failed to create LLVM struct type" << std::endl;
-            return nullptr;
+            // Don't create the new type, just return nullptr
+            logMessage(LMI, "INFO", "IRSymbolTable", "Struct type %s not found in symbol table", structName.c_str());
+            // Print the symbol table
+            debugPrint();
+            CONDITION_FAILED;
         }
-
-        // Set the struct body
-        std::vector<llvm::Type *> memberTypes;
-        for (size_t i = 0; i < dataType->container->type.structType->propertyCount; ++i)
-        {
-            DataType *memberType = dataType->container->type.structType->properties[i]->type;
-            llvm::Type *llvmMemberType = getLLVMType(memberType);
-            if (!llvmMemberType)
-            {
-                std::cerr << "Failed to get LLVM type for member" << std::endl;
-                return nullptr;
-            }
-            memberTypes.push_back(llvmMemberType);
-        }
-
-        llvmStructType->setBody(memberTypes);
-        if (!llvmStructType->isLayoutIdentical(llvmStructType))
-        {
-            std::cerr << "Failed to set LLVM struct type body" << std::endl;
-            return nullptr;
-        }
-        logMessage(LMI, "INFO", "IRSymbolTable", "LLVM struct type created successfully");
-        // Add the struct type to the symbol table
-        IRTypeSymbol tySymbol(llvmStructType, structName, std::vector<IRPropertySymbol>(),
-                              std::vector<IRMethodSymbol>());
-        if (!addType(tySymbol))
-        {
-            std::cerr << "Failed to add struct type to symbol table" << std::endl;
-            return nullptr;
-        }
-        logMessage(LMI, "INFO", "IRSymbolTable", "Struct type added to symbol table successfully");
-        // Return the LLVM struct type
-        return llvmStructType;
     }
 
     // Class Types

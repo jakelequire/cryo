@@ -187,8 +187,61 @@ namespace Cryo
 
     IRTypeSymbol *IRSymbolTable::findType(const std::string &name)
     {
+        // First try exact match
         auto it = types.find(name);
-        return (it != types.end()) ? &it->second : nullptr;
+        if (it != types.end())
+        {
+            return &it->second;
+        }
+
+        // If not found and it's a struct/class name pattern, try prefix matching
+        if (name.find("struct.") == 0 || name.find("class.") == 0)
+        {
+            // Get the base name (e.g., "struct.Int" from "struct.Int")
+            std::string baseName = name;
+
+            // Find the best matching type (with the shortest suffix)
+            IRTypeSymbol *bestMatch = nullptr;
+            size_t shortestSuffix = std::string::npos;
+
+            for (auto &typePair : types)
+            {
+                const std::string &typeName = typePair.first;
+
+                // Check if the type name starts with our base name
+                if (typeName.find(baseName) == 0)
+                {
+                    // It's a match! Now check if it's just the base name or has a suffix
+                    if (typeName.length() == baseName.length())
+                    {
+                        // Exact match
+                        return &typePair.second;
+                    }
+
+                    // It has a suffix (e.g., ".3" in "struct.Int.3")
+                    // Check if the character after the base name is a dot (typical for LLVM versioning)
+                    if (typeName[baseName.length()] == '.')
+                    {
+                        // Check if this suffix is shorter than any we've seen so far
+                        size_t suffixLength = typeName.length() - baseName.length();
+                        if (shortestSuffix == std::string::npos || suffixLength < shortestSuffix)
+                        {
+                            shortestSuffix = suffixLength;
+                            bestMatch = &typePair.second;
+                        }
+                    }
+                }
+            }
+
+            // Return the best match if found
+            if (bestMatch)
+            {
+                return bestMatch;
+            }
+        }
+
+        // No match found
+        return nullptr;
     }
 
     // ======================================================================== //
@@ -278,6 +331,101 @@ namespace Cryo
         default:
             return "UNKNOWN";
         }
+    }
+
+    bool IRSymbolTable::importModuleDefinitions(llvm::Module *sourceModule)
+    {
+        if (!sourceModule)
+        {
+            logMessage(LMI, "ERROR", "IRSymbolTable", "Source module is null");
+            return false;
+        }
+
+        logMessage(LMI, "INFO", "IRSymbolTable", "Importing definitions from module: %s",
+                   sourceModule->getName().str().c_str());
+
+        // Import functions
+        for (auto &func : sourceModule->functions())
+        {
+            std::string funcName = func.getName().str();
+
+            // Skip if function already exists
+            if (findFunction(funcName))
+            {
+                logMessage(LMI, "INFO", "IRSymbolTable", "Function %s already exists, skipping", funcName.c_str());
+                continue;
+            }
+
+            // Create function symbol
+            IRFunctionSymbol funcSymbol(
+                &func,
+                funcName,
+                func.getReturnType(),
+                func.getFunctionType(),
+                func.empty() ? nullptr : &func.getEntryBlock(),
+                func.isVarArg(),
+                func.isDeclaration());
+
+            // Add to symbol table
+            addExternFunction(funcSymbol);
+            logMessage(LMI, "INFO", "IRSymbolTable", "Imported function: %s", funcName.c_str());
+        }
+
+        // Import global variables
+        for (auto &global : sourceModule->globals())
+        {
+            std::string globalName = global.getName().str();
+
+            // Skip if global variable already exists
+            if (findVariable(globalName))
+            {
+                logMessage(LMI, "INFO", "IRSymbolTable", "Global variable %s already exists, skipping",
+                           globalName.c_str());
+                continue;
+            }
+
+            // Create global variable symbol with appropriate allocation
+            IRVariableSymbol varSymbol(
+                &global,
+                global.getValueType(),
+                globalName,
+                AllocaType::Global,
+                Allocation());
+            varSymbol.allocation.global = &global;
+            varSymbol.allocation.type = AllocaType::Global;
+
+            // Add to symbol table
+            addVariable(varSymbol);
+            logMessage(LMI, "INFO", "IRSymbolTable", "Imported global variable: %s", globalName.c_str());
+        }
+
+        // Import struct types
+        for (auto &namedType : sourceModule->getIdentifiedStructTypes())
+        {
+            std::string typeName = namedType->getName().str();
+
+            // Skip if type already exists
+            if (findType(typeName))
+            {
+                logMessage(LMI, "INFO", "IRSymbolTable", "Type %s already exists, skipping", typeName.c_str());
+                continue;
+            }
+
+            // Create property and method vectors (these would be empty for imported types)
+            std::vector<IRPropertySymbol> properties;
+            std::vector<IRMethodSymbol> methods;
+
+            // Create type symbol
+            IRTypeSymbol typeSymbol(namedType, typeName, properties, methods);
+            typeSymbol.kind = IRTypeKind::Struct;
+
+            // Add to symbol table
+            addType(typeSymbol);
+            logMessage(LMI, "INFO", "IRSymbolTable", "Imported struct type: %s", typeName.c_str());
+        }
+
+        logMessage(LMI, "INFO", "IRSymbolTable", "Successfully imported module definitions");
+        return true;
     }
 
 } // namespace Cryo

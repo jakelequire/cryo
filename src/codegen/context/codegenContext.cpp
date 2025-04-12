@@ -21,6 +21,19 @@ namespace Cryo
     void CodegenContext::preInitMain(void)
     {
         llvm::Module *depMod = this->getLinker()->initMainModule();
+        if (!depMod)
+        {
+            logMessage(LMI, "ERROR", "CodegenContext", "Failed to initialize main module");
+            return;
+        }
+
+        // Import the definitions into the symbol table
+        if (!this->symbolTable->importModuleDefinitions(depMod))
+        {
+            logMessage(LMI, "ERROR", "CodegenContext", "Failed to import module definitions");
+            return;
+        }
+
         this->mergeModule(depMod);
         return;
     }

@@ -82,6 +82,7 @@ namespace Cryo
 
         // Module access
         llvm::Module *getModule() { return currentModule; }
+        bool importModuleDefinitions(llvm::Module *sourceModule);
 
         // Core scope operations
         void pushScope();

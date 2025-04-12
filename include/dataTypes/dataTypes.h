@@ -30,6 +30,15 @@
 
 #include "dataTypes/dataTypeDefs.h"
 
+typedef enum LiteralType
+{
+    LITERAL_INT,
+    LITERAL_FLOAT,
+    LITERAL_STRING,
+    LITERAL_BOOLEAN,
+    LITERAL_NULL,
+} LiteralType;
+
 typedef struct DataType_t DataType;
 typedef struct TypeContainer_t TypeContainer;
 

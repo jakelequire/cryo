@@ -102,12 +102,88 @@ namespace Cryo
             return llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(context.getInstance().context), 0));
         case PRIM_OBJECT:
         {
-            // Create a new instance of the object using the literal value
+            // Get the object type name
+            std::string typeName = literalDataType->typeName;
+            logMessage(LMI, "INFO", "Initializer", "Creating object instance of type: %s", typeName.c_str());
+
+            // Get the LLVM type
             llvm::Type *objectType = context.getInstance().symbolTable->getLLVMType(literalDataType);
-            llvm::Value *objectInstance = context.getInstance().builder.CreateAlloca(objectType, nullptr, "object_instance");
-            // Initialize the object instance with the literal value
-            int intValue = node->data.literal->value.intValue;
-            context.getInstance().builder.CreateStore(llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, intValue, true)), objectInstance);
+            if (!objectType)
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Failed to get LLVM type for %s", typeName.c_str());
+                return nullptr;
+            }
+
+            // Allocate memory for the struct
+            llvm::Value *objectInstance = context.getInstance().builder.CreateAlloca(objectType, nullptr, typeName + ".instance");
+
+            // Create constructor argument based on the literal type
+            llvm::Value *ctorArg = nullptr;
+            std::string ctorName;
+
+            // Handle different object types
+            if (typeName == "String")
+            {
+                // For String objects, we pass the string literal
+                if (node->data.literal->literalType == LITERAL_STRING)
+                {
+                    // Generate string literal as argument
+                    ctorArg = generateStringLiteral(node);
+                    ctorName = "struct.String.ctor";
+                }
+                else
+                {
+                    // Convert non-string literal to string
+                    // (You may need to implement this conversion logic)
+                    logMessage(LMI, "WARNING", "Initializer", "Non-string literal used to initialize String");
+                }
+            }
+            else if (typeName == "Int")
+            {
+                // For Int objects, we pass the integer value
+                if (node->data.literal->literalType == LITERAL_INT)
+                {
+                    ctorArg = llvm::ConstantInt::get(context.getInstance().context,
+                                                     llvm::APInt(32, node->data.literal->value.intValue, true));
+                    ctorName = "struct.Int.ctor";
+                }
+                else
+                {
+                    // Convert non-int literal to int
+                    // (You may need to implement this conversion logic)
+                    logMessage(LMI, "WARNING", "Initializer", "Non-integer literal used to initialize Int");
+                }
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Unsupported object type: %s", typeName.c_str());
+                return objectInstance; // Return uninitialized instance as fallback
+            }
+
+            // Call the constructor if we have a valid argument and constructor name
+            if (ctorArg && !ctorName.empty())
+            {
+                // Find the constructor function
+                IRFunctionSymbol *ctorFunc = context.getInstance().symbolTable->findFunction(ctorName);
+                if (ctorFunc)
+                {
+                    // Prepare constructor arguments
+                    std::vector<llvm::Value *> args;
+                    // First arg is always 'this' pointer
+                    args.push_back(objectInstance);
+                    // Add the literal value as second arg
+                    args.push_back(ctorArg);
+
+                    // Call the constructor
+                    context.getInstance().builder.CreateCall(ctorFunc->function, args);
+                    logMessage(LMI, "INFO", "Initializer", "Called constructor %s", ctorName.c_str());
+                }
+                else
+                {
+                    logMessage(LMI, "WARNING", "Initializer", "Constructor %s not found", ctorName.c_str());
+                }
+            }
+
             return objectInstance;
         }
         case PRIM_AUTO:
@@ -151,13 +227,46 @@ namespace Cryo
             {
             case LITERAL_INT:
             {
-                logMessage(LMI, "INFO", "Initializer", "Creating object from int literal");
-                // Create a dereferenced value of the literal (INT) object
-                llvm::Value *intValue = llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, node->data.literal->value.intValue, true));
+                logMessage(LMI, "INFO", "Initializer", "Creating object from integer literal");
+
+                // Get the object type name
+                std::string typeName = literalDataType->typeName;
+                logMessage(LMI, "INFO", "Initializer", "Creating object instance of type: %s", typeName.c_str());
+
+                // Get the LLVM type
                 llvm::Type *objectType = context.getInstance().symbolTable->getLLVMType(literalDataType);
-                llvm::Value *objectInstance = context.getInstance().builder.CreateAlloca(objectType, nullptr, "object_instance");
-                context.getInstance().builder.CreateStore(intValue, objectInstance);
-                return objectInstance;
+                if (!objectType)
+                {
+                    logMessage(LMI, "ERROR", "Initializer", "Failed to get LLVM type for %s", typeName.c_str());
+                    return nullptr;
+                }
+
+                // Allocate memory for the struct
+                llvm::Value *objectInstance = context.getInstance().builder.CreateAlloca(objectType, nullptr, typeName + ".instance");
+                // Create constructor argument based on the literal type
+                llvm::Value *ctorArg = llvm::ConstantInt::get(context.getInstance().context,
+                                                              llvm::APInt(32, node->data.literal->value.intValue, true));
+                std::string ctorName = "struct." + typeName + ".ctor";
+                // Find the constructor function
+                IRFunctionSymbol *ctorFunc = context.getInstance().symbolTable->findFunction(ctorName);
+                if (ctorFunc)
+                {
+                    // Prepare constructor arguments
+                    std::vector<llvm::Value *> args;
+                    // First arg is always 'this' pointer
+                    args.push_back(objectInstance);
+                    // Add the literal value as second arg
+                    args.push_back(ctorArg);
+
+                    // Call the constructor
+                    context.getInstance().builder.CreateCall(ctorFunc->function, args);
+                    logMessage(LMI, "INFO", "Initializer", "Called constructor %s", ctorName.c_str());
+                }
+                else
+                {
+                    logMessage(LMI, "WARNING", "Initializer", "Constructor %s not found", ctorName.c_str());
+                }
+                break;
             }
             case LITERAL_STRING:
             {
@@ -343,6 +452,12 @@ namespace Cryo
         llvm::Value *selfValue = context.getInstance().builder.CreateLoad(selfAlloc->getType(), selfAlloc, "self");
         context.getInstance().builder.CreateRet(selfValue);
         llvm::verifyFunction(*ctorFunction);
+
+        // Add the constructor function to the symbol table
+        IRFunctionSymbol ctorFuncSymbol = IRSymbolManager::createFunctionSymbol(
+            ctorFunction, structName + ".ctor", structType->getPointerTo(), ctorFuncType, nullptr, false, false);
+        context.getInstance().symbolTable->addFunction(ctorFuncSymbol);
+
         logMessage(LMI, "INFO", "Visitor", "Constructor function created: %s", ctorFunction->getName().str().c_str());
     }
 

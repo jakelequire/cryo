@@ -50,6 +50,8 @@ namespace Cryo
 
         // Create an instance of a class or struct
         llvm::Value *createInstance(ASTNode *node);
+        llvm::Value *callConstructor(ASTNode *structNode, llvm::Value *instance, ASTNode *constructorArgs);
+        llvm::Value *convertToType(llvm::Value *value, llvm::Type *targetType);
 
     private:
         // Create an instance of a struct

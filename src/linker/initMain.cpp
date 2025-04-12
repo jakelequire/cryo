@@ -32,7 +32,38 @@ namespace Cryo
         __STACK_FRAME__
         std::cout << "Initializing Main Module before CodeGen..." << std::endl;
 
-        // This is the new process for initializing the main module.
+        // Get the path to the core.ll file
+        std::string coreLLPath = dirInfo->runtimeDir + "/core.ll";
+        std::cout << "Loading core library from: " << coreLLPath << std::endl;
+
+        // Check if the file exists
+        if (!std::filesystem::exists(coreLLPath))
+        {
+            logMessage(LMI, "ERROR", "Linker", "Core library file not found: %s", coreLLPath.c_str());
+            CONDITION_FAILED;
+            return nullptr;
+        }
+        // Parse the core.ll file
+        llvm::SMDiagnostic err;
+        std::unique_ptr<llvm::Module> coreModule = llvm::parseIRFile(coreLLPath, err, this->context);
+
+        if (!coreModule)
+        {
+            logMessage(LMI, "ERROR", "Linker", "Failed to parse core library file");
+            err.print("Linker", llvm::errs());
+            CONDITION_FAILED;
+            return nullptr;
+        }
+
+        // Set the module identifier
+        coreModule->setModuleIdentifier("core.ll");
+
+        logMessage(LMI, "INFO", "Linker", "Core library loaded successfully");
+
+        coreModule->print(llvm::errs(), nullptr);
+
+        // Return the module (it will be cloned in mergeModule)
+        return coreModule.release();
     }
 
 } // namespace Cryo

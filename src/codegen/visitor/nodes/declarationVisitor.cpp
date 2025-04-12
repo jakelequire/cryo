@@ -241,7 +241,7 @@ namespace Cryo
         structType->setBody(propertyTypes);
 
         IRTypeSymbol typeSymbol = IRSymbolManager::createTypeSymbol(
-            structType, structName, propertySymbols, methodSymbols);
+            structType, "struct." + structName, propertySymbols, methodSymbols);
         symbolTable->addType(typeSymbol);
 
         context.getInstance().module->getOrInsertGlobal(structName, structType);
