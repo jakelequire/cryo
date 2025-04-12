@@ -1976,6 +1976,62 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             break;
         }
 
+        case PRIM_OBJECT:
+        {
+            switch (node->data.literal->literalType)
+            {
+            case LITERAL_INT:
+            {
+                int intValue = node->data.literal->value.intValue;
+                char *literalValue = intToSafeString(intValue);
+                ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
+                output->nodes[output->nodeCount] = *intLiteralNode;
+                output->nodeCount++;
+                free(literalValue);
+                break;
+            }
+            case LITERAL_FLOAT:
+            {
+                char *literalValue = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
+                sprintf(literalValue, "%f", node->data.literal->value.floatValue);
+                ASTDebugNode *floatLiteralNode = createASTDebugNode("FloatLiteral", literalValue, dataType, line, column, indentLevel, node);
+                output->nodes[output->nodeCount] = *floatLiteralNode;
+                output->nodeCount++;
+                free(literalValue);
+                break;
+            }
+            case LITERAL_STRING:
+            {
+                char *literalValue = strdup(node->data.literal->value.stringValue);
+                char *strippedStr = stringToUFString(literalValue);
+                ASTDebugNode *stringLiteralNode = createASTDebugNode("StringLiteral", strippedStr, dataType, line, column, indentLevel, node);
+                output->nodes[output->nodeCount] = *stringLiteralNode;
+                output->nodeCount++;
+                free(literalValue);
+                break;
+            }
+            case LITERAL_BOOLEAN:
+            {
+                char *literalValue = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
+                sprintf(literalValue, "%s", node->data.literal->value.booleanValue ? "true" : "false");
+                ASTDebugNode *boolLiteralNode = createASTDebugNode("BoolLiteral", literalValue, dataType, line, column, indentLevel, node);
+                output->nodes[output->nodeCount] = *boolLiteralNode;
+                output->nodeCount++;
+                free(literalValue);
+                break;
+            }
+            default:
+            {
+                char *literalValue = strdup("Unknown");
+                ASTDebugNode *unknownLiteralNode = createASTDebugNode("UnknownLiteral", literalValue, dataType, line, column, indentLevel, node);
+                output->nodes[output->nodeCount] = *unknownLiteralNode;
+                output->nodeCount++;
+                free(literalValue);
+                break;
+            }
+            }
+        }
+
         default:
         {
             char *literalValue = strdup("Unknown");

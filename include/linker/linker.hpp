@@ -71,6 +71,10 @@ extern "C"
 #include <unistd.h>
 #include <optional>
 #include <wait.h>
+#include <memory>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
 
 // -----------------------------------------------
 // LLVM includes
@@ -371,13 +375,21 @@ namespace Cryo
         void printFoundFiles(const std::vector<std::string> &cryoFiles);
         bool compileAllStandardLibraryFiles(const std::vector<std::string> &cryoFiles,
                                             CompilerState *state, CryoGlobalSymbolTable *globalTable);
-        bool createVerificationFile(const std::string &stdBinDir);
 
         // Library item compilation
         int createAndLinkLibraryItem(ASTNode *programNode, const std::string &filePath,
                                      const std::string &buildDir, const std::string &compilerRootPath,
                                      CompilerState *state, CryoGlobalSymbolTable *globalTable);
         bool linkWithCoreLibrary(const CompilationUnitDir &dir, const std::string &compilerRootPath);
+
+        // Build verification
+        bool createVerificationFile(const std::string &stdBinDir);
+        bool isStandardLibraryUpToDate();
+        std::string calculateFileChecksum(const std::string &filePath);
+        std::string getCurrentTimestamp();
+        std::string getFileModificationTime(const std::string &filePath);
+        std::string getSourcePathForModule(const std::string &modulePath);
+        uint32_t crc32(const std::string &data);
     };
 
     // ================================================================ //

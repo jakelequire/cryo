@@ -438,6 +438,15 @@ namespace Cryo
             std::filesystem::create_directory(stdBinDir);
         }
 
+        // Check if rebuild is needed
+        if (isStandardLibraryUpToDate())
+        {
+            logMessage(LMI, "INFO", "Linker", "Standard library is up to date, skipping rebuild");
+            return 0;
+        }
+
+        logMessage(LMI, "INFO", "Linker", "Standard library needs rebuilding");
+
         // Find all .cryo files in the standard library
         std::vector<std::string> cryoFiles = findStandardLibraryFiles(stdDir);
 
@@ -521,30 +530,6 @@ namespace Cryo
                 return false;
             }
         }
-
-        return true;
-    }
-
-    /**
-     * @brief Creates a verification file
-     *
-     * This is a temporary implementation. In the future, this should be a more
-     * robust solution that verifies the standard library and creates a checksum.
-     *
-     * @param stdBinDir Path to standard library binary directory
-     * @return true if successful, false otherwise
-     */
-    bool Linker::createVerificationFile(const std::string &stdBinDir)
-    {
-        std::string verifiedFilePath = stdBinDir + "/verified";
-
-        if (fs->fileExists(verifiedFilePath.c_str()))
-        {
-            fs->removeFile(verifiedFilePath.c_str());
-        }
-
-        fs->createNewEmptyFileWpath(verifiedFilePath.c_str());
-        logMessage(LMI, "INFO", "Linker", "Successfully built standard library: %s", verifiedFilePath.c_str());
 
         return true;
     }
@@ -663,6 +648,357 @@ namespace Cryo
         logMessage(LMI, "INFO", "Linker", "Successfully created shared library: %s", outputPath.c_str());
 
         return true;
+    }
+
+    /**
+     * @brief Creates a verification file
+     *
+     * This is a temporary implementation. In the future, this should be a more
+     * robust solution that verifies the standard library and creates a checksum.
+     *
+     * @param stdBinDir Path to standard library binary directory
+     * @return true if successful, false otherwise
+     */
+    bool Linker::createVerificationFile(const std::string &stdBinDir)
+    {
+        std::string manifestPath = stdBinDir + "/manifest.txt";
+        std::ofstream manifestFile(manifestPath);
+
+        if (!manifestFile.is_open())
+        {
+            fprintf(stderr, "[Linker] Error: Failed to create manifest file\n");
+            CONDITION_FAILED;
+            return false;
+        }
+
+        // Write compiler version and timestamp
+        manifestFile << "COMPILER_VERSION=" << COMPILER_VERSION << "\n";
+        manifestFile << "BUILD_TIMESTAMP=" << getCurrentTimestamp() << "\n";
+        manifestFile << "MODULE_COUNT=";
+
+        // Count the modules first
+        size_t moduleCount = 0;
+        for (const auto &entry : std::filesystem::directory_iterator(stdBinDir))
+        {
+            if (entry.is_regular_file() && entry.path().extension() == ".so")
+            {
+                moduleCount++;
+            }
+        }
+        manifestFile << moduleCount << "\n\n";
+
+        // Write each module's information
+        for (const auto &entry : std::filesystem::directory_iterator(stdBinDir))
+        {
+            if (entry.is_regular_file() && entry.path().extension() == ".so")
+            {
+                std::string modulePath = entry.path().string();
+                std::string moduleName = std::filesystem::path(modulePath).stem().string();
+
+                manifestFile << "[MODULE]\n";
+                manifestFile << "NAME=" << moduleName << "\n";
+                manifestFile << "SO_PATH=" << modulePath << "\n";
+
+                // Special handling for libcryo_core
+                if (moduleName == "libcryo_core")
+                {
+                    // Use the core.cryo file as the source
+                    std::string corePath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/Core/core.cryo";
+                    manifestFile << "SOURCE_PATH=" << corePath << "\n";
+                    manifestFile << "SOURCE_CHECKSUM=" << calculateFileChecksum(corePath) << "\n";
+                }
+                else
+                {
+                    // Regular module handling
+                    std::string sourcePath = getSourcePathForModule(modulePath);
+                    manifestFile << "SOURCE_PATH=" << sourcePath << "\n";
+                    manifestFile << "SOURCE_CHECKSUM=" << calculateFileChecksum(sourcePath) << "\n";
+                }
+
+                manifestFile << "BINARY_CHECKSUM=" << calculateFileChecksum(modulePath) << "\n";
+                manifestFile << "BUILD_TIME=" << getFileModificationTime(modulePath) << "\n";
+                manifestFile << "\n";
+            }
+        }
+
+        manifestFile.close();
+        logMessage(LMI, "INFO", "Linker", "Successfully created build manifest: %s", manifestPath.c_str());
+        return true;
+    }
+
+    bool Linker::isStandardLibraryUpToDate()
+    {
+        std::string stdDir = std::string(this->dirInfo->compilerDir) + "/cryo/Std";
+        std::string stdBinDir = stdDir + "/bin";
+        std::string manifestPath = stdBinDir + "/manifest.txt";
+
+        // If no manifest exists, rebuild is needed
+        if (!fs->fileExists(manifestPath.c_str()))
+        {
+            logMessage(LMI, "INFO", "Linker", "Manifest file does not exist, rebuilding standard library");
+            return false;
+        }
+
+        // Parse the manifest file
+        std::ifstream manifestFile(manifestPath);
+        if (!manifestFile.is_open())
+        {
+            fprintf(stderr, "[Linker] Error: Failed to open manifest file\n");
+            return false;
+        }
+
+        std::string line;
+        std::string currentCompilerVersion;
+        std::unordered_map<std::string, std::unordered_map<std::string, std::string>> modules;
+        std::unordered_map<std::string, std::string> *currentModule = nullptr;
+
+        while (std::getline(manifestFile, line))
+        {
+            // Skip empty lines
+            if (line.empty())
+            {
+                continue;
+            }
+
+            // Start of a new module section
+            if (line == "[MODULE]")
+            {
+                logMessage(LMI, "INFO", "Linker", "Found new module section");
+                currentModule = &modules[std::to_string(modules.size())];
+                continue;
+            }
+
+            // Parse key-value pairs
+            size_t equalPos = line.find('=');
+            if (equalPos != std::string::npos)
+            {
+                std::string key = line.substr(0, equalPos);
+                std::string value = line.substr(equalPos + 1);
+
+                // Store compiler version separately
+                if (key == "COMPILER_VERSION")
+                {
+                    logMessage(LMI, "INFO", "Linker", "Found compiler version: %s", value.c_str());
+                    currentCompilerVersion = value;
+                }
+                // Store module information
+                else if (currentModule != nullptr)
+                {
+                    logMessage(LMI, "INFO", "Linker", "Found module info: %s = %s", key.c_str(), value.c_str());
+                    (*currentModule)[key] = value;
+                }
+            }
+        }
+
+        // Check compiler version
+        if (currentCompilerVersion != COMPILER_VERSION)
+        {
+            logMessage(LMI, "INFO", "Linker", "Compiler version mismatch, rebuilding standard library");
+            return false;
+        }
+
+        // Find all .cryo files
+        std::vector<std::string> cryoFiles = findStandardLibraryFiles(stdDir);
+        std::unordered_set<std::string> processedSourcePaths;
+
+        // Check each source file
+        for (const std::string &file : cryoFiles)
+        {
+            std::string currentChecksum = calculateFileChecksum(file);
+            bool fileFound = false;
+            logMessage(LMI, "INFO", "Linker", "Processing file: %s", file.c_str());
+            logMessage(LMI, "INFO", "Linker", "Current checksum: %s", currentChecksum.c_str());
+
+            // Search for this file in the modules
+            for (const auto &modulePair : modules)
+            {
+                const auto &module = modulePair.second;
+                auto sourcePathIt = module.find("SOURCE_PATH");
+
+                if (sourcePathIt != module.end() && sourcePathIt->second == file)
+                {
+                    fileFound = true;
+                    processedSourcePaths.insert(file);
+
+                    // Check source checksum
+                    auto sourceChecksumIt = module.find("SOURCE_CHECKSUM");
+                    if (sourceChecksumIt == module.end() || sourceChecksumIt->second != currentChecksum)
+                    {
+                        logMessage(LMI, "INFO", "Linker", "Source checksum mismatch, rebuilding needed");
+                        return false;
+                    }
+
+                    // Check if .so file exists
+                    auto soPathIt = module.find("SO_PATH");
+                    if (soPathIt == module.end() || !fs->fileExists(soPathIt->second.c_str()))
+                    {
+                        logMessage(LMI, "INFO", "Linker", "Shared object file not found, rebuilding needed");
+                        return false;
+                    }
+
+                    // Check binary checksum
+                    auto binaryChecksumIt = module.find("BINARY_CHECKSUM");
+                    std::string currentBinaryChecksum = calculateFileChecksum(soPathIt->second);
+                    if (binaryChecksumIt == module.end() || binaryChecksumIt->second != currentBinaryChecksum)
+                    {
+                        logMessage(LMI, "INFO", "Linker", "Binary checksum mismatch, rebuilding needed");
+                        return false;
+                    }
+
+                    break;
+                }
+            }
+
+            // If source file not found in manifest, rebuild needed
+            if (!fileFound)
+            {
+                logMessage(LMI, "INFO", "Linker", "Source file not found in manifest, rebuilding needed");
+                logMessage(LMI, "INFO", "Linker", "Attempted Manifest Path: %s", manifestPath.c_str());
+                return false;
+            }
+        }
+
+        // Check if all modules in the manifest still have corresponding source files
+        // Check if all modules in the manifest still have corresponding source files
+        for (const auto &modulePair : modules)
+        {
+            const auto &module = modulePair.second;
+            auto sourcePathIt = module.find("SOURCE_PATH");
+            auto nameIt = module.find("NAME");
+
+            // Skip this check for libcryo_core since it's a special case
+            if (nameIt != module.end() && nameIt->second == "libcryo_core")
+            {
+                continue;
+            }
+
+            if (sourcePathIt != module.end() && processedSourcePaths.find(sourcePathIt->second) == processedSourcePaths.end())
+            {
+                // Source file no longer exists, rebuild needed
+                logMessage(LMI, "INFO", "Linker", "Source file no longer exists, rebuilding needed");
+                logMessage(LMI, "INFO", "Linker", "Missing source path: %s", sourcePathIt->second.c_str());
+                return false;
+            }
+        }
+
+        // Everything matches, no rebuild needed
+        logMessage(LMI, "INFO", "Linker", "Standard library is up to date");
+        return true;
+    }
+
+    std::string Linker::getCurrentTimestamp()
+    {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
+        return ss.str();
+    }
+
+    std::string Linker::getFileModificationTime(const std::string &filePath)
+    {
+        auto fsTime = std::filesystem::last_write_time(filePath);
+        auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+            fsTime - std::filesystem::file_time_type::clock::now() +
+            std::chrono::system_clock::now());
+        auto time = std::chrono::system_clock::to_time_t(sctp);
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
+        return ss.str();
+    }
+
+    std::string Linker::getSourcePathForModule(const std::string &modulePath)
+    {
+        // Extract module name from path
+        std::filesystem::path path(modulePath);
+        std::string moduleName = path.stem().string();
+
+        // Search for matching .cryo file
+        std::string stdDir = std::string(this->dirInfo->compilerDir) + "/cryo/Std";
+        for (const auto &entry : std::filesystem::recursive_directory_iterator(stdDir))
+        {
+            if (entry.is_regular_file() && entry.path().extension() == ".cryo")
+            {
+                // Skip files in the Core directory if needed
+                if (entry.path().string().find("/Std/Core/") == std::string::npos)
+                {
+                    // Check if this is the source file for our module
+                    std::filesystem::path sourcePath(entry.path());
+                    if (sourcePath.stem().string() == moduleName)
+                    {
+                        return entry.path().string();
+                    }
+                }
+            }
+        }
+
+        return "";
+    }
+
+    uint32_t Linker::crc32(const std::string &data)
+    {
+        static uint32_t crc32_table[256];
+        static bool table_initialized = false;
+
+        // Initialize the CRC table on first use
+        if (!table_initialized)
+        {
+            for (uint32_t i = 0; i < 256; i++)
+            {
+                uint32_t c = i;
+                for (int j = 0; j < 8; j++)
+                {
+                    c = (c & 1) ? (0xEDB88320 ^ (c >> 1)) : (c >> 1);
+                }
+                crc32_table[i] = c;
+            }
+            table_initialized = true;
+        }
+
+        // Calculate CRC
+        uint32_t crc = 0xFFFFFFFF;
+        for (unsigned char byte : data)
+        {
+            crc = crc32_table[(crc ^ byte) & 0xFF] ^ (crc >> 8);
+        }
+
+        return ~crc;
+    }
+
+    std::string Linker::calculateFileChecksum(const std::string &filePath)
+    {
+        std::ifstream file(filePath, std::ios::binary);
+        if (!file)
+        {
+            return "FILE_NOT_FOUND";
+        }
+
+        // Initialize CRC table
+        static uint32_t crc32_table[256];
+        // Read file in chunks to handle large files
+        constexpr size_t BUFFER_SIZE = 8192;
+        char buffer[BUFFER_SIZE];
+        uint32_t crc = 0xFFFFFFFF;
+
+        while (file)
+        {
+            file.read(buffer, BUFFER_SIZE);
+            std::streamsize count = file.gcount();
+            if (count == 0)
+                break;
+
+            for (std::streamsize i = 0; i < count; i++)
+            {
+                crc = (crc >> 8) ^ crc32_table[(crc & 0xFF) ^ static_cast<unsigned char>(buffer[i])];
+            }
+        }
+
+        crc = ~crc;
+
+        // Convert CRC to hex string
+        std::stringstream ss;
+        ss << std::hex << std::setfill('0') << std::setw(8) << crc;
+        return ss.str();
     }
 
 } // namespace Cryo
