@@ -123,6 +123,16 @@ namespace Cryo
         return nullptr;
     }
 
+    IRVariableSymbol *IRSymbolTable::findLocalVariable(const std::string &name)
+    {
+        if (scopeStack.empty())
+            return nullptr;
+
+        auto &currentScope = scopeStack.back();
+        auto found = currentScope.find(name);
+        return (found != currentScope.end()) ? &found->second : nullptr;
+    }
+
     IRVariableSymbol *IRSymbolTable::createGlobalVariable(const std::string &name, llvm::Type *type,
                                                           llvm::Value *initialValue)
     {
@@ -139,8 +149,18 @@ namespace Cryo
 
     IRFunctionSymbol *IRSymbolTable::findFunction(const std::string &name)
     {
+        logMessage(LMI, "INFO", "CodeGen", "Finding function: %s", name.c_str());
+        this->debugPrint();
         auto it = functions.find(name);
-        return (it != functions.end()) ? &it->second : nullptr;
+        if (it != functions.end())
+        {
+            return &it->second;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Function %s not found in symbol table", name.c_str());
+            return nullptr;
+        }
     }
 
     IRFunctionSymbol *IRSymbolTable::findOrCreateFunction(const std::string &name)

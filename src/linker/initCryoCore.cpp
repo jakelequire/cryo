@@ -859,7 +859,6 @@ namespace Cryo
         }
 
         // Check if all modules in the manifest still have corresponding source files
-        // Check if all modules in the manifest still have corresponding source files
         for (const auto &modulePair : modules)
         {
             const auto &module = modulePair.second;

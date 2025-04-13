@@ -53,6 +53,11 @@ enum CLI_ARGS get_CLI_arg(char *arg)
     {
         return CLI_DEVSERVER;
     }
+    // run
+    else if (stringCompare(arg, "run"))
+    {
+        return CLI_RUN;
+    }
     else
     {
         return CLI_HELP;
@@ -112,9 +117,13 @@ void handleArgs(int argc, char *argv[])
         case CLI_DEVSERVER:
             exe_CLI_devserver();
             break;
+        case CLI_RUN:
+            exe_CLI_run(parse_run_options(argc, argv, i + 1));
+            break;
         case CLI_UNKNOWN:
             exe_CLI_help();
             break;
+
         default:
             exe_CLI_help();
             break;

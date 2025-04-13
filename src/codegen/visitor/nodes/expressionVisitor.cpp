@@ -180,9 +180,24 @@ namespace Cryo
         }
     }
 
-    void CodeGenVisitor::visitMethodCall(ASTNode *node) {}
-    void CodeGenVisitor::visitUnaryExpr(ASTNode *node) {}
-    void CodeGenVisitor::visitArrayLiteral(ASTNode *node) {}
-    void CodeGenVisitor::visitIndexExpr(ASTNode *node) {}
-    void CodeGenVisitor::visitTypeofExpr(ASTNode *node) {}
+    void CodeGenVisitor::visitMethodCall(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
+    void CodeGenVisitor::visitUnaryExpr(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
+    void CodeGenVisitor::visitArrayLiteral(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
+    void CodeGenVisitor::visitIndexExpr(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
+    void CodeGenVisitor::visitTypeofExpr(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
 } // namespace Cryo

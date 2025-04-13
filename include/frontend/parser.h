@@ -74,6 +74,7 @@ typedef struct ThisContext
     ASTNode **methods;
     int methodCount;
     bool isStatic;
+    DataType *type;
 } ThisContext;
 
 /**
@@ -254,6 +255,8 @@ const char *getCurrentScopeID(ParsingContext *context);
 const char *getNamespaceScopeID(ParsingContext *context);
 
 void setModuleFileParsingFlag(ParsingContext *context, bool value);
+
+void setTypePtrToContext(ParsingContext *context, DataType *type);
 
 // Scope Parsing Context Functions
 

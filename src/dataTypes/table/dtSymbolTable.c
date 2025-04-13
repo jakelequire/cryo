@@ -44,6 +44,23 @@ void DTMSymbolTable_addPrototype(
     logMessage(LMI, "INFO", "DTM", "Added prototype to symbol table: %s", name);
 }
 
+DataType *DTMSymbolTable_getProtoType(
+    DTMSymbolTable *table, const char *scopeName, const char *name)
+{
+    logMessage(LMI, "INFO", "DTM", "Looking up prototype in symbol table: %s", name);
+    for (int i = 0; i < table->entryCount; i++)
+    {
+        if (strcmp(table->entries[i]->name, name) == 0)
+        {
+            logMessage(LMI, "INFO", "DTM", "Found prototype in symbol table: %s", name);
+            return table->entries[i]->type;
+        }
+    }
+
+    logMessage(LMI, "INFO", "DTM", "Failed to find prototype in symbol table: %s", name);
+    return NULL;
+}
+
 DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *scopeName, const char *name)
 {
     logMessage(LMI, "INFO", "DTM", "Looking up entry in symbol table: %s", name);
@@ -839,6 +856,7 @@ DTMSymbolTable *createDTMSymbolTable(void)
     symbolTable->addEntry = DTMSymbolTable_addEntry;
     symbolTable->resetEntries = DTMSymbolTable_resetEntries;
     symbolTable->addProtoType = DTMSymbolTable_addPrototype;
+    symbolTable->getProtoType = DTMSymbolTable_getProtoType;
     symbolTable->removeEntry = DTMSymbolTable_removeEntry;
     symbolTable->updateEntry = DTMSymbolTable_updateEntry;
     symbolTable->resizeTable = DTMSymbolTable_resizeTable;

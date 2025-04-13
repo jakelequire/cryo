@@ -691,11 +691,23 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatImplementationNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "PropertyAccess") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatPropertyAccessNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatPropertyAccessNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
         return NULL;
     }
+
     else
     {
         logMessage(LMI, "ERROR", "AST", "Unhandled node type: %s", nodeType);
@@ -1629,6 +1641,34 @@ char *CONSOLE_formatImplementationNode(ASTDebugNode *node, DebugASTOutput *outpu
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
+// </Implementation>
+// ============================================================
+// ============================================================
+// <PropertyAccess>
+char *formatPropertyAccessNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<PropertyAccess> [%s] <0:0>",
+            node->nodeName);
+    return buffer;
+}
+char *CONSOLE_formatPropertyAccessNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    const char *propertyName = node->sourceNode->data.propertyAccess->propertyName ? node->sourceNode->data.propertyAccess->propertyName : "NULL";
+    int propertyIndex = node->sourceNode->data.propertyAccess->propertyIndex;
+    sprintf(buffer, "%s%s<PropertyAccess>%s %s[%s]%s %s%s<%i:%i>: %s%s%s%s %s%s[%i]%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            YELLOW, node->nodeName, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column,
+            BOLD, LIGHT_BLUE, propertyName, COLOR_RESET,
+            DARK_GRAY, ITALIC, propertyIndex, COLOR_RESET);
+    return buffer;
+}
+// </PropertyAccess>
+// ============================================================
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -1983,7 +2023,15 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             case LITERAL_INT:
             {
                 int intValue = node->data.literal->value.intValue;
-                char *literalValue = intToSafeString(intValue);
+                // Allocate memory for the literal value string
+                char *literalValue = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
+                if (literalValue == NULL)
+                {
+                    logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for literal value");
+                    return;
+                }
+                snprintf(literalValue, BUFFER_CHAR_SIZE, "%i", intValue);
+
                 ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
                 output->nodes[output->nodeCount] = *intLiteralNode;
                 output->nodeCount++;
@@ -2030,6 +2078,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 break;
             }
             }
+            break;
         }
 
         default:
@@ -2394,6 +2443,18 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             }
         }
 
+        break;
+    }
+
+    case NODE_PROPERTY_ACCESS:
+    {
+        __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "PropertyAccess");
+        char *propertyName = strdup(node->data.propertyAccess->propertyName);
+        DataType *voidType = DTM->primitives->createVoid();
+        ASTDebugNode *propertyAccessNode = createASTDebugNode("PropertyAccess", propertyName, voidType, line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *propertyAccessNode;
+        output->nodeCount++;
         break;
     }
 

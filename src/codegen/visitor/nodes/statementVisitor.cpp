@@ -19,9 +19,18 @@
 namespace Cryo
 {
     // Statements
-    void CodeGenVisitor::visitIfStatement(ASTNode *node) {}
-    void CodeGenVisitor::visitForStatement(ASTNode *node) {}
-    void CodeGenVisitor::visitWhileStatement(ASTNode *node) {}
+    void CodeGenVisitor::visitIfStatement(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
+    void CodeGenVisitor::visitForStatement(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
+    void CodeGenVisitor::visitWhileStatement(ASTNode *node)
+    {
+        DEBUG_BREAKPOINT;
+    }
 
     void CodeGenVisitor::visitReturnStatement(ASTNode *node)
     {

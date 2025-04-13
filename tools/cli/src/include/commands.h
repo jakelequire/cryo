@@ -42,6 +42,7 @@ typedef struct BuildOptions BuildOptions;
 typedef struct InitOptions InitOptions;
 typedef struct HelpOptions HelpOptions;
 typedef struct CleanCompilerOptions CleanCompilerOptions;
+typedef struct RunOptions RunOptions;
 
 // =============================================================================
 // Help Command (./commands/help.c)
@@ -109,6 +110,11 @@ int initProjectSettings(const char *cwd);
 // Dev Server Command (./commands/devserver.c)
 
 void exe_CLI_devserver(void);
+
+// =============================================================================
+// Run Command (./commands/run.c)
+
+void exe_CLI_run(RunOptions *options);
 
 // =============================================================================
 // Version Command (./commands/version.c)

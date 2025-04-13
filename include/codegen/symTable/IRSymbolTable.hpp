@@ -79,14 +79,19 @@ namespace Cryo
         IRSymbolManager *getSymbolManager() { return new IRSymbolManager(); }
         void setCurrentFunction(IRFunctionSymbol *function) { currentFunction = function; }
         void clearCurrentFunction() { currentFunction = nullptr; }
+        bool inConstructorInstance = false;
 
         // Module access
         llvm::Module *getModule() { return currentModule; }
+
         bool importModuleDefinitions(llvm::Module *sourceModule);
 
         // Core scope operations
         void pushScope();
         void popScope();
+
+        void enterConstructorInstance() { inConstructorInstance = true; }
+        void exitConstructorInstance() { inConstructorInstance = false; }
 
         void enterFunctionScope(const std::string &funcName);
         void exitFunctionScope();
@@ -99,6 +104,7 @@ namespace Cryo
 
         // Symbol lookup
         IRVariableSymbol *findVariable(const std::string &name);
+        IRVariableSymbol *findLocalVariable(const std::string &name);
         // Helper method for creating global variables
         IRVariableSymbol *createGlobalVariable(const std::string &name, llvm::Type *type,
                                                llvm::Value *initialValue = nullptr);

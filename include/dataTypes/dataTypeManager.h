@@ -269,6 +269,7 @@ typedef struct DTMSymbolTable_t
     void (*addEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
     void (*resetEntries)(struct DTMSymbolTable_t *table);
     void (*addProtoType)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
+    DataType *(*getProtoType)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*removeEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*updateEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
     void (*resizeTable)(struct DTMSymbolTable_t *table);

@@ -251,7 +251,9 @@ namespace Cryo
         if (node->data.structNode->constructor)
         {
             logMessage(LMI, "INFO", "Visitor", "Struct has a constructor");
+            context.getInstance().symbolTable->enterConstructorInstance();
             context.getInstance().initializer->generateStructConstructor(node->data.structNode->constructor, structType);
+            context.getInstance().symbolTable->exitConstructorInstance();
         }
 
         logMessage(LMI, "INFO", "Visitor", "Struct declaration complete");
@@ -376,12 +378,14 @@ namespace Cryo
     void CodeGenVisitor::visitEnumDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting enum declaration...");
+        DEBUG_BREAKPOINT;
         return;
     }
 
     void CodeGenVisitor::visitGenericDecl(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Visitor", "Visiting generic declaration...");
+        DEBUG_BREAKPOINT;
         return;
     }
 

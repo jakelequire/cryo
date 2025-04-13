@@ -107,7 +107,7 @@ namespace Cryo
             if (!objPtr)
             {
                 logMessage(LMI, "ERROR", "Initializer", "Failed to create object from literal");
-                return nullptr;
+                CONDITION_FAILED;
             }
         }
         case PRIM_AUTO:
@@ -135,7 +135,7 @@ namespace Cryo
         if (node->metaData->type != NODE_LITERAL_EXPR)
         {
             logMessage(LMI, "ERROR", "Initializer", "Node is not a literal expression");
-
+            CONDITION_FAILED;
             return nullptr;
         }
 
@@ -162,6 +162,7 @@ namespace Cryo
                 if (!objectType)
                 {
                     logMessage(LMI, "ERROR", "Initializer", "Failed to get LLVM type for %s", typeName.c_str());
+                    CONDITION_FAILED;
                     return nullptr;
                 }
 
@@ -191,7 +192,11 @@ namespace Cryo
                 {
                     logMessage(LMI, "WARNING", "Initializer", "Constructor %s not found", ctorName.c_str());
                 }
-                break;
+
+                // Load the object instance
+                llvm::Value *objectValue = context.getInstance().builder.CreateLoad(objectType, objectInstance, "load." + typeName);
+                logMessage(LMI, "INFO", "Initializer", "Loaded object instance: %s", objectValue->getName().str().c_str());
+                return objectValue;
             }
             case LITERAL_STRING:
             {
@@ -244,7 +249,8 @@ namespace Cryo
         {
             // varSymbol->allocation.load(context.getInstance().builder, varName + "_load");
         }
-        return varSymbol->allocation.getValue();
+        logMessage(LMI, "INFO", "Initializer", "Variable %s found", varName.c_str());
+        return varSymbol->value;
     }
 
     llvm::Value *Initializer::generateBinaryExpr(ASTNode *node)
@@ -252,6 +258,99 @@ namespace Cryo
         logMessage(LMI, "INFO", "Initializer", "Generating binary expression...");
         ASSERT_NODE_NULLPTR_RET(node);
         // TODO: Generate binary expression
+        context.getInstance().module->print(llvm::errs(), nullptr);
+
+        if (node->metaData->type != NODE_BINARY_EXPR)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a binary expression");
+            return nullptr;
+        }
+
+        llvm::Value *lhs = getInitializerValue(node->data.bin_op->left);
+        llvm::Value *rhs = getInitializerValue(node->data.bin_op->right);
+        if (!lhs || !rhs)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Left or right operand is null");
+            return nullptr;
+        }
+
+        // Get the operator type
+        CryoOperatorType opType = node->data.bin_op->op;
+        logMessage(LMI, "INFO", "Initializer", "Binary operator: %s", CryoOperatorTypeToString(opType));
+        switch (opType)
+        {
+        case OPERATOR_ADD:
+            return context.getInstance().builder.CreateAdd(lhs, rhs, "add");
+        case OPERATOR_SUB:
+            return context.getInstance().builder.CreateSub(lhs, rhs, "sub");
+        case OPERATOR_MUL:
+            return context.getInstance().builder.CreateMul(lhs, rhs, "mul");
+        case OPERATOR_DIV:
+            return context.getInstance().builder.CreateSDiv(lhs, rhs, "div");
+        case OPERATOR_MOD:
+            return context.getInstance().builder.CreateSRem(lhs, rhs, "mod");
+        case OPERATOR_AND:
+            return context.getInstance().builder.CreateAnd(lhs, rhs, "and");
+        case OPERATOR_OR:
+            return context.getInstance().builder.CreateOr(lhs, rhs, "or");
+        case OPERATOR_XOR:
+            return context.getInstance().builder.CreateXor(lhs, rhs, "xor");
+        case OPERATOR_LSHIFT:
+            return context.getInstance().builder.CreateShl(lhs, rhs, "lshift");
+        case OPERATOR_RSHIFT:
+            return context.getInstance().builder.CreateLShr(lhs, rhs, "rshift");
+        case OPERATOR_LT:
+            return context.getInstance().builder.CreateICmpSLT(lhs, rhs, "lt");
+        case OPERATOR_GT:
+            return context.getInstance().builder.CreateICmpSGT(lhs, rhs, "gt");
+        case OPERATOR_LTE:
+            return context.getInstance().builder.CreateICmpSLE(lhs, rhs, "lte");
+        case OPERATOR_GTE:
+            return context.getInstance().builder.CreateICmpSGE(lhs, rhs, "gte");
+        case OPERATOR_EQ:
+            return context.getInstance().builder.CreateICmpEQ(lhs, rhs, "eq");
+        case OPERATOR_NEQ:
+            return context.getInstance().builder.CreateICmpNE(lhs, rhs, "neq");
+        case OPERATOR_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_ADD_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_SUB_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_MUL_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_DIV_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_MOD_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_AND_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_OR_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_XOR_ASSIGN:
+            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_INCREMENT:
+            logMessage(LMI, "ERROR", "Initializer", "Increment operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_DECREMENT:
+            logMessage(LMI, "ERROR", "Initializer", "Decrement operator is not supported in expressions");
+            return nullptr;
+        case OPERATOR_NA:
+            logMessage(LMI, "ERROR", "Initializer", "Operator not applicable");
+            return nullptr;
+        default:
+            logMessage(LMI, "ERROR", "Initializer", "Unhandled operator type: %s", CryoOperatorTypeToString(opType));
+            return nullptr;
+        }
     }
 
     llvm::Value *Initializer::generateFunctionCall(ASTNode *node)
@@ -360,12 +459,44 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Visitor", "Creating constructor function body...");
 
-        llvm::AllocaInst *selfAlloc = context.getInstance().builder.CreateAlloca(structType, nullptr, "self");
+        std::string selfName = "self.alloc";
+        llvm::AllocaInst *selfAlloc = context.getInstance().builder.CreateAlloca(structType, nullptr, selfName);
         context.getInstance().builder.CreateStore(selfArg, selfAlloc);
         AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
         IRVariableSymbol selfSymbol = IRSymbolManager::createVariableSymbol(
-            selfAlloc, structType->getPointerTo(), "self", allocaType, Allocation());
+            selfAlloc, structType->getPointerTo(), selfName, allocaType, Allocation());
         context.getInstance().symbolTable->addVariable(selfSymbol);
+
+        // Now we can process the constructor arguments
+        for (int i = 0; i < cTorArgs; i++)
+        {
+            llvm::Value *arg = argIt++;
+            std::string argName = ctorArgs[i]->data.param->name;
+            logMessage(LMI, "INFO", "Visitor", "Constructor argument %d name: %s", i, argName.c_str());
+
+            // Create a new alloca for the argument
+            llvm::AllocaInst *argAlloc = context.getInstance().builder.CreateAlloca(ctorArgTypes[i], nullptr, argName);
+            context.getInstance().builder.CreateStore(arg, argAlloc);
+
+            AllocaType allocaType = AllocaTypeInference::inferFromNode(ctorArgs[i], false);
+            IRVariableSymbol argSymbol = IRSymbolManager::createVariableSymbol(
+                argAlloc, ctorArgTypes[i], argName, allocaType, Allocation());
+            context.getInstance().symbolTable->addVariable(argSymbol);
+        }
+
+        // Create the constructor body
+        // Visit the constructor body
+        ASTNode *constructorBody = node->data.structConstructor->constructorBody;
+        if (constructorBody)
+        {
+            logMessage(LMI, "INFO", "Visitor", "Visiting constructor body...");
+            context.getInstance().visitor->visit(constructorBody);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Constructor body is null");
+            return;
+        }
 
         logMessage(LMI, "INFO", "Visitor", "Constructor function body created");
 
@@ -374,8 +505,7 @@ namespace Cryo
             llvm::StringRef(structName + "_ctor"), ctorFuncType);
 
         // Always create a return to `self`
-        llvm::Value *selfValue = context.getInstance().builder.CreateLoad(selfAlloc->getType(), selfAlloc, "self");
-        context.getInstance().builder.CreateRet(selfValue);
+        context.getInstance().builder.CreateRet(selfAlloc);
         llvm::verifyFunction(*ctorFunction);
 
         // Add the constructor function to the symbol table

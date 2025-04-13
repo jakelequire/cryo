@@ -874,6 +874,16 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
         logMessage(LMI, "INFO", "Parser", "Parsing integer literal");
         char *intStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
         int intVal = charToInt(intStr);
+        if (intVal == 0 && strcmp(intStr, "0") != 0)
+        {
+            parsingError("Invalid integer literal", "parsePrimaryExpression", arena, state, lexer, lexer->source, globalTable);
+        }
+        free(intStr);
+        // Check for overflow
+        if (intVal < INT_MIN || intVal > INT_MAX)
+        {
+            parsingError("Integer literal out of range", "parsePrimaryExpression", arena, state, lexer, lexer->source, globalTable);
+        }
         printf("Int Value: %d\n", intVal);
         node = createIntLiteralNode(intVal, arena, state, lexer);
         getNextToken(lexer, arena, state);
@@ -3027,7 +3037,21 @@ ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, C
     if (lexer->currentToken.type == TOKEN_EQUAL)
     {
         consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` for property reassignment.", "parseThisContext", arena, state, context);
-        char *propName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        char *propName = (char *)malloc(sizeof(char) * 1024);
+
+        if (thisNode->metaData->type == NODE_PROPERTY_ACCESS)
+        {
+            thisNode->print(thisNode);
+            PropertyAccessNode *propAccessNode = thisNode->data.propertyAccess;
+            strcpy(propName, propAccessNode->propertyName);
+            logMessage(LMI, "INFO", "Parser", "Property name: %s", propName);
+        }
+
+        if (propName == NULL)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to allocate memory for property name.");
+            DEBUG_BREAKPOINT;
+        }
 
         ASTNode *newValue = parseExpression(lexer, context, arena, state, globalTable);
 
@@ -3035,6 +3059,7 @@ ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, C
             consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon...", "parseThisContext", arena, state, context);
 
         ASTNode *propReasignment = createPropertyReassignmentNode(thisNode, propName, newValue, arena, state, lexer);
+        propReasignment->data.propertyReassignment->objectTypeName = context->thisContext->nodeName;
         return propReasignment;
     }
 
@@ -3108,8 +3133,11 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
                 PropertyNode *property = properties[i]->data.property;
                 if (strcmp(property->name, propName) == 0)
                 {
-                    logMessage(LMI, "INFO", "Parser", "Property found in struct.");
-                    return createPropertyAccessNode(properties[i], thisContext->nodeName, arena, state, lexer);
+                    logMessage(LMI, "INFO", "Parser", "Property found in struct. Name: %s", propName);
+                    ASTNode *propertyAcessNode = createPropertyAccessNode(properties[i], propName, arena, state, lexer);
+                    propertyAcessNode->data.propertyAccess->propertyIndex = i;
+
+                    return propertyAcessNode;
                 }
                 else
                 {

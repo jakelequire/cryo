@@ -951,7 +951,8 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
     }
 
     node->data.propertyAccess->object = object;
-    node->data.propertyAccess->propertyName = strdup(property);
+    node->data.propertyAccess->propertyName = property;
+    node->data.propertyAccess->propertyIndex = -1;
 
     return node;
 }
@@ -1015,11 +1016,10 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
         return NULL;
     }
 
-    node->data.propertyAccess->objType = type;
     node->data.propertyAccess->object = object;
     node->data.propertyAccess->property = property;
-    node->data.propertyAccess->propertyName = strdup(propertyName);
-    node->data.propertyAccess->propertyIndex = NULL; // Need to find a replacement for `getPropertyAccessIndex(type, propertyName);`
+    node->data.propertyAccess->propertyName = propertyName;
+    node->data.propertyAccess->propertyIndex = -1; // Need to find a replacement for `getPropertyAccessIndex(type, propertyName);`
 
     return node;
 }

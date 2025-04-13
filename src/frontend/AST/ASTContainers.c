@@ -1182,7 +1182,6 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
         return NULL;
     }
 
-    node->objType = DTM->primitives->createUndefined();
     node->object = NULL;
     node->propertyName = (char *)calloc(1, sizeof(char));
     node->property = NULL;
@@ -1239,6 +1238,8 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
     node->name = (char *)calloc(1, sizeof(char));
     node->object = NULL;
     node->value = NULL;
+    node->objectType = DTM->primitives->createUndefined();
+    node->propertyIndex = 0;
 
     return node;
 }

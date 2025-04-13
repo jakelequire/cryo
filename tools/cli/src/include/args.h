@@ -39,6 +39,7 @@ enum CLI_ARGS
     CLI_CLEAN_COMPILER, // `clean-compiler`
     CLI_INIT,           // `init`
     CLI_DEVSERVER,      // `devserver`
+    CLI_RUN,            // `run`
     CLI_UNKNOWN
 };
 
@@ -72,6 +73,14 @@ typedef struct CleanCompilerOptions
     const char *custom_name;
 } CleanCompilerOptions;
 
+// This command can be ran without any arguments.
+typedef struct RunOptions
+{
+    const char *cwd; // Current working directory
+    bool use_gdb;    // Whether to use gdb
+    bool auto_run;   // Whether to automatically run the program after building
+} RunOptions;
+
 void handleArgs(int argc, char *argv[]);
 
 enum CLI_ARGS get_CLI_arg(char *arg);
@@ -80,5 +89,6 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index);
 InitOptions *parse_init_options(int argc, char *argv[], int start_index, const char *argv0);
 HelpOptions *parse_help_options(int argc, char *argv[], int start_index);
 CleanCompilerOptions *parse_clean_compiler_options(int argc, char *argv[], int start_index);
+RunOptions *parse_run_options(int argc, char *argv[], int start_index);
 
 #endif // CLI_ARGS_H

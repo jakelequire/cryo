@@ -71,6 +71,8 @@ void setDefaultThisContext(const char *currentNamespace, ParsingContext *context
     thisContext->propertyCount = 0;
     thisContext->methods = NULL;
     thisContext->methodCount = 0;
+    thisContext->isStatic = false;
+    thisContext->type = DTM->primitives->createUndefined();
     context->thisContext = thisContext;
 }
 
@@ -85,7 +87,17 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
     thisContext->methods = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
     thisContext->methodCount = 0;
     thisContext->isStatic = false;
+    thisContext->type = DTM->primitives->createUndefined();
     context->thisContext = thisContext;
+}
+
+void setTypePtrToContext(ParsingContext *context, DataType *type)
+{
+    __STACK_FRAME__
+    if (context->thisContext)
+    {
+        context->thisContext->type = type;
+    }
 }
 
 void setCurrentFunction(ParsingContext *context, const char *functionName, const char *namespaceScopeID)

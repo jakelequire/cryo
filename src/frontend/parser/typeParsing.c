@@ -50,6 +50,12 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
         OBJECT_TYPE,
         STRUCT_OBJ);
 
+    DataType *protoType = DTM->symbolTable->getProtoType(
+        DTM->symbolTable,
+        parentNamespaceNameID,
+        structName);
+    setTypePtrToContext(context, protoType);
+
     // Setting the context to the struct name
     setThisContext(context, structName, NODE_STRUCT_DECLARATION);
 
