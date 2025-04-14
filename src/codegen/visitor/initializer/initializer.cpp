@@ -445,6 +445,12 @@ namespace Cryo
         ctorFunction->setCallingConv(llvm::CallingConv::C);
         ctorFunction->setDoesNotThrow();
 
+        // Add the constructor function to the symbol table
+        IRFunctionSymbol ctorFuncSymbol = IRSymbolManager::createFunctionSymbol(
+            ctorFunction, structName + ".ctor", structType->getPointerTo(), ctorFuncType, nullptr, false, false);
+        context.getInstance().symbolTable->addFunction(ctorFuncSymbol);
+        context.getInstance().symbolTable->setCurrentFunction(&ctorFuncSymbol);
+
         logMessage(LMI, "INFO", "Visitor", "Creating constructor function: %s", ctorFunction->getName().str().c_str());
 
         // Set the first argument of the function to be `self`
@@ -484,7 +490,10 @@ namespace Cryo
             context.getInstance().symbolTable->addVariable(argSymbol);
         }
 
-        // Create the constructor body
+        // Insert the constructor function into the module
+        context.getInstance().module->getOrInsertFunction(
+            llvm::StringRef(structName + ".ctor"), ctorFuncType);
+
         // Visit the constructor body
         ASTNode *constructorBody = node->data.structConstructor->constructorBody;
         if (constructorBody)
@@ -500,18 +509,11 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Visitor", "Constructor function body created");
 
-        // Insert the constructor function into the module
-        context.getInstance().module->getOrInsertFunction(
-            llvm::StringRef(structName + "_ctor"), ctorFuncType);
-
         // Always create a return to `self`
         context.getInstance().builder.CreateRet(selfAlloc);
         llvm::verifyFunction(*ctorFunction);
 
-        // Add the constructor function to the symbol table
-        IRFunctionSymbol ctorFuncSymbol = IRSymbolManager::createFunctionSymbol(
-            ctorFunction, structName + ".ctor", structType->getPointerTo(), ctorFuncType, nullptr, false, false);
-        context.getInstance().symbolTable->addFunction(ctorFuncSymbol);
+        context.getInstance().symbolTable->exitFunctionScope();
 
         logMessage(LMI, "INFO", "Visitor", "Constructor function created: %s", ctorFunction->getName().str().c_str());
     }

@@ -57,6 +57,11 @@ namespace Cryo
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.getInstance().context, "entry", function);
         context.getInstance().builder.SetInsertPoint(entryBlock);
 
+        // Add the function to the symbol table
+        IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(
+            function, funcName, returnTy, funcType, entryBlock, false, false);
+        symbolTable->addFunction(funcSymbol);
+
         for (size_t i = 0; i < node->data.functionDecl->paramCount; i++)
         {
             ASTNode *param = node->data.functionDecl->params[i];
@@ -82,12 +87,6 @@ namespace Cryo
         }
 
         logMessage(LMI, "INFO", "Visitor", "Function prototype created");
-
-        // Add the function to the symbol table
-        IRFunctionSymbol funcSymbol = IRSymbolManager::createFunctionSymbol(
-            function, funcName, returnTy, funcType, entryBlock, false, false);
-        symbolTable->addFunction(funcSymbol);
-        symbolTable->setCurrentFunction(&funcSymbol);
 
         // Visit the function body (This will also visit the return statement)
         logMessage(LMI, "INFO", "Visitor", "Visiting function body...");

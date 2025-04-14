@@ -1182,10 +1182,13 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
         return NULL;
     }
 
+    node->propertyIndex = -1;
     node->object = NULL;
-    node->propertyName = (char *)calloc(1, sizeof(char));
+    node->objectType = DTM->primitives->createUndefined();
+    node->objectTypeName = NULL;
+    node->propertyName = NULL;
+    node->objectTypeName = NULL;
     node->property = NULL;
-    node->propertyIndex = 0;
 
     return node;
 }
@@ -1235,10 +1238,9 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
+    node->name = (char *)malloc(sizeof(char) * 1024);
     node->object = NULL;
     node->value = NULL;
-    node->objectType = DTM->primitives->createUndefined();
     node->propertyIndex = 0;
 
     return node;

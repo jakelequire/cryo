@@ -952,7 +952,6 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
 
     node->data.propertyAccess->object = object;
     node->data.propertyAccess->propertyName = property;
-    node->data.propertyAccess->propertyIndex = -1;
 
     return node;
 }

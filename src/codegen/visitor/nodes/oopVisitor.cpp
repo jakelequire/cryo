@@ -36,6 +36,30 @@ namespace Cryo
 
     void CodeGenVisitor::visitPropertyAccess(ASTNode *node)
     {
+        // This function is called when a property is accessed
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+
+        if (node->metaData->type != NODE_PROPERTY_ACCESS)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is not a property access");
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Visiting property access...");
+        // Get the property name
+        std::string propertyName = node->data.propertyAccess->propertyName;
+        logMessage(LMI, "INFO", "Visitor", "Property Name: %s", propertyName.c_str());
+
+        std::string objectTypeName = node->data.propertyAccess->objectTypeName;
+        logMessage(LMI, "INFO", "Visitor", "Object Type Name: %s", objectTypeName.c_str());
+
+        int propertyIndex = node->data.propertyAccess->propertyIndex;
+        logMessage(LMI, "INFO", "Visitor", "Property Index: %d", propertyIndex);
+
         DEBUG_BREAKPOINT;
     }
 
@@ -78,7 +102,7 @@ namespace Cryo
             // If we are in a constructor instance. There will always be a `self.alloc` variable in the current scope
             // that will be the pointer to the object instance.
             logMessage(LMI, "INFO", "Visitor", "In constructor instance");
-            IRVariableSymbol *selfAllocSymbol = this->symbolTable->findLocalVariable("self.alloc");
+            IRVariableSymbol *selfAllocSymbol = this->symbolTable->findVariable("self.alloc");
             if (selfAllocSymbol)
             {
                 logMessage(LMI, "INFO", "Visitor", "Found self allocation symbol");

@@ -448,6 +448,8 @@ typedef struct ThisNode
 typedef struct PropertyAccessNode
 {
     ASTNode *object;
+    DataType *objectType;
+    const char *objectTypeName;
     const char *propertyName;
     ASTNode *property;
     int propertyIndex;

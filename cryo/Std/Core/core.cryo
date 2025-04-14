@@ -28,8 +28,8 @@ struct Int {
 
     constructor(__val__: i32) {
         this.val = __val__;
-        this.isZero = (this.val == 0);
-        this.isNegative = (this.val < 0);
+        // this.isZero = (this.val == 0);
+        // this.isNegative = (this.val < 0);
     }
 
     // The core Int methods.
@@ -44,12 +44,12 @@ struct String {
     isNull: boolean;
 
 
-    constructor(__str__: str) {
-        this.val = __str__;
-        this.length = strlen_export(__str__);
-        this.capacity = this.length + 1; // +1 for null terminator
-        this.isEmpty = (this.length == 0);
-        this.isNull = (this.val == null);
+    constructor(__string__: str) {
+        this.val = __string__;
+        // this.length = strlen_export(__str__);
+        // this.capacity = this.length + 1; // +1 for null terminator
+        // this.isEmpty = (this.length == 0);
+        // this.isNull = (this.val == null);
     }
 
     append(__str__: str) -> String;

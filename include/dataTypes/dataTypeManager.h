@@ -158,6 +158,7 @@ typedef struct DTMPropertyTypes_t
     DTPropertyTy *(*createPropertyTemplate)(void);
     DTPropertyTy *(*createPropertyType)(const char *propertyName, DataType *propertyType, ASTNode *node, bool isStatic, bool isConst, bool isPublic, bool isPrivate, bool isProtected);
     ASTNode *(*findStructPropertyNode)(DTStructTy *structNode, const char *propertyName);
+    int (*getStructPropertyIndex)(DataType *structType, const char *propertyName);
 } DTMPropertyTypes;
 
 // ----------------------- Struct Data Type Interface ------------------------ //

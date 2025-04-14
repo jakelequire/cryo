@@ -38,6 +38,11 @@ namespace Cryo
     void IRSymbolTable::enterFunctionScope(const std::string &funcName)
     {
         currentFunction = findFunction(funcName);
+        if (!currentFunction)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Function %s not found in symbol table", funcName.c_str());
+            return;
+        }
         pushScope(); // Create new scope for function body
     }
 

@@ -2035,7 +2035,6 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 ASTDebugNode *intLiteralNode = createASTDebugNode("IntLiteral", literalValue, dataType, line, column, indentLevel, node);
                 output->nodes[output->nodeCount] = *intLiteralNode;
                 output->nodeCount++;
-                free(literalValue);
                 break;
             }
             case LITERAL_FLOAT:
@@ -2450,7 +2449,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         logMessage(LMI, "DEBUG", "ASTDBG", "PropertyAccess");
-        char *propertyName = strdup(node->data.propertyAccess->propertyName);
+        const char *propertyName = node->data.propertyAccess->propertyName;
         DataType *voidType = DTM->primitives->createVoid();
         ASTDebugNode *propertyAccessNode = createASTDebugNode("PropertyAccess", propertyName, voidType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *propertyAccessNode;

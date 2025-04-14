@@ -69,6 +69,34 @@ ASTNode *DTMPropertyTypes_findStructPropertyNode(DTStructTy *structNode, const c
     return NULL;
 }
 
+int DTMPropertyTypes_getStructPropertyIndex(DataType *structType, const char *propertyName)
+{
+    if (!structType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Invalid Struct Type\n");
+        return -1;
+    }
+    if (structType->container->objectType != STRUCT_OBJ)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Invalid Struct Type\n");
+        return -1;
+    }
+
+    logMessage(LMI, "INFO", "DTM", "Getting Struct Property Index: %s", propertyName);
+    logMessage(LMI, "INFO", "DTM", "Struct Type: %s", structType->typeName);
+    structType->debug->printType(structType);
+
+    DTStructTy *structNode = structType->container->type.structType;
+    for (int i = 0; i < structNode->propertyCount; i++)
+    {
+        if (strcmp(structNode->properties[i]->name, propertyName) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 DTMPropertyTypes *createDTMPropertyTypes(void)
 {
     DTMPropertyTypes *propertyTypes = (DTMPropertyTypes *)malloc(sizeof(DTMPropertyTypes));
@@ -83,6 +111,7 @@ DTMPropertyTypes *createDTMPropertyTypes(void)
     propertyTypes->createPropertyTemplate = DTMPropertyTypes_createPropertyTemplate;
     propertyTypes->createPropertyType = DTMPropertyTypes_createPropertyType;
     propertyTypes->findStructPropertyNode = DTMPropertyTypes_findStructPropertyNode;
+    propertyTypes->getStructPropertyIndex = DTMPropertyTypes_getStructPropertyIndex;
 
     return propertyTypes;
 }
@@ -197,7 +226,7 @@ DataType *DTMClassTypes_createClassTypeWithMembers(
     classType->constructors = DTM->astInterface->createTypeArrayFromASTArray(constructors, ctorCount);
     classType->ctorCount = ctorCount;
 
-    DataType * classDataType = DTM->dataTypes->wrapClassType(classType);
+    DataType *classDataType = DTM->dataTypes->wrapClassType(classType);
     classDataType->setTypeName(classDataType, className);
 
     return classDataType;
