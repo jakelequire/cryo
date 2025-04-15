@@ -160,6 +160,8 @@ namespace Cryo
         void processTypeDeclaration(ASTNode *node);
 
         void generateIRForNode(ASTNode *node);
+
+
     };
 
     // ======================================================================== //
@@ -174,7 +176,7 @@ namespace Cryo
 
         llvm::Value *getInitializerValue(ASTNode *node);
         llvm::Value *generateLiteralObject(ASTNode *node);
-        
+
     protected:
         IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }
 
@@ -187,11 +189,14 @@ namespace Cryo
         llvm::Value *generateFunctionCall(ASTNode *node);
         llvm::Value *generateReturnStatement(ASTNode *node);
         llvm::Value *generateUnaryExpr(ASTNode *node);
+        llvm::Value *generateParam(ASTNode *node);
+        llvm::Value *generatePropertyAccess(ASTNode *node);
 
         llvm::Value *generateStringLiteral(ASTNode *node);
 
     public:
         void generateStructConstructor(ASTNode *node, llvm::StructType *structType);
+        llvm::Value *derefValuePointer(llvm::Value *value);
     };
 
 } // namespace Cryo

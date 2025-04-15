@@ -119,12 +119,14 @@ namespace Cryo
         {
             Allocation alloc;
             alloc.type = initialValue ? AllocaType::AllocaAndStore : AllocaType::AllocaOnly;
-            alloc.allocaInst = builder.CreateAlloca(type, nullptr, name);
+            alloc.allocaInst = builder.CreateAlloca(type, nullptr, name + ".alloca");
 
             if (initialValue)
             {
                 alloc.storeInst = builder.CreateStore(initialValue, alloc.allocaInst);
             }
+
+            alloc.value = alloc.allocaInst;
 
             return alloc;
         }
@@ -445,6 +447,7 @@ namespace Cryo
 
     struct IRTypeSymbol
     {
+        IRTypeKind kind;
         union type
         {
             llvm::Type *typeTy;             // LLVM type
@@ -454,9 +457,21 @@ namespace Cryo
 
             // Default constructor for the union
             type() : typeTy(nullptr) {}
+
+            llvm::Type *getLLVMType()
+            {
+                if (typeTy)
+                    return typeTy;
+                if (structTy)
+                    return llvm::cast<llvm::Type>(structTy);
+                if (functionTy)
+                    return llvm::cast<llvm::Type>(functionTy);
+                if (pointerTy)
+                    return llvm::cast<llvm::Type>(pointerTy);
+                return nullptr;
+            }
         } type;
 
-        IRTypeKind kind;
         std::string name;
 
         ASTNode *astNode;

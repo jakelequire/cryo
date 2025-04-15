@@ -20,8 +20,7 @@ namespace Cryo
 {
     CodeGenVisitor::CodeGenVisitor(CodegenContext &ctx)
         : context(ctx), builder(ctx.builder), symbolTable(ctx.symbolTable), lastValue(nullptr), initializer(ctx.initializer)
-    {
-    }
+    {}
 
     void Visitor::visit(ASTNode *node)
     {

@@ -39,6 +39,10 @@ namespace Cryo
             return generateReturnStatement(node);
         case NODE_UNARY_EXPR:
             return generateUnaryExpr(node);
+        case NODE_PARAM:
+            return generateParam(node);
+        case NODE_PROPERTY_ACCESS:
+            return generatePropertyAccess(node);
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled node type: %s", nodeTypeStr.c_str());
             return nullptr;
@@ -415,6 +419,123 @@ namespace Cryo
         // TODO: Generate unary expression
     }
 
+    llvm::Value *Initializer::generateParam(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating parameter...");
+        ASSERT_NODE_NULLPTR_RET(node);
+        if (node->metaData->type != NODE_PARAM)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a parameter");
+            return nullptr;
+        }
+
+        // All parameters are locally allocated variables
+        // They are allocated when the function is created and should already be existing in the current scope
+
+        std::string paramName = node->data.param->name;
+        logMessage(LMI, "INFO", "Initializer", "Parameter name: %s", paramName.c_str());
+
+        IRVariableSymbol *paramSymbol = context.getInstance().symbolTable->findVariable(paramName);
+        if (!paramSymbol)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Parameter %s not found", paramName.c_str());
+            // Print the symbol table for debugging
+            context.getInstance().symbolTable->debugPrint();
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
+        logMessage(LMI, "INFO", "Initializer", "Parameter %s found", paramName.c_str());
+
+        // Load the parameter if needed
+        if (paramSymbol->allocaType == AllocaType::AllocaAndLoad ||
+            paramSymbol->allocaType == AllocaType::AllocaLoadStore)
+        {
+            // paramSymbol->allocation.load(context.getInstance().builder, paramName + ".load");
+        }
+
+        return paramSymbol->value;
+    }
+
+    llvm::Value *Initializer::generatePropertyAccess(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating property access...");
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_PROPERTY_ACCESS)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a property access");
+            return nullptr;
+        }
+
+        // Get the object type name
+        std::string objectTypeName = node->data.propertyAccess->object->data.varName->varName;
+        logMessage(LMI, "INFO", "Initializer", "Object type name: %s", objectTypeName.c_str());
+
+        // Get the property name
+        std::string propertyName = node->data.propertyAccess->propertyName;
+        logMessage(LMI, "INFO", "Initializer", "Property name: %s", propertyName.c_str());
+
+        // Get the property index
+        int propertyIndex = node->data.propertyAccess->propertyIndex;
+        logMessage(LMI, "INFO", "Initializer", "Property index: %d", propertyIndex);
+
+        // Get the object type
+        DataType *objectType = node->data.propertyAccess->objectType;
+        if (!objectType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Object type is null");
+            return nullptr;
+        }
+
+        // Get the LLVM type
+        llvm::Type *llvmType = context.getInstance().symbolTable->getLLVMType(objectType);
+        if (!llvmType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "LLVM type is null");
+            return nullptr;
+        }
+        logMessage(LMI, "INFO", "Visitor", "LLVM Type: %s", llvmType->getStructName().str().c_str());
+
+        IRTypeSymbol *typeSymbol = context.getInstance().symbolTable->findType(objectTypeName);
+        if (!typeSymbol)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Type symbol is null");
+            return nullptr;
+        }
+
+        // Get the object instance
+        llvm::Value *objectInstance = getInitializerValue(node->data.propertyAccess->object);
+        if (!objectInstance)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Object instance is null");
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Object Instance: %s", objectInstance->getName().str().c_str());
+
+        llvm::Value *propertyPtr = context.getInstance().builder.CreateStructGEP(
+            llvmType, objectInstance, propertyIndex, propertyName);
+        if (!propertyPtr)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Property pointer is null");
+            return nullptr;
+        }
+        context.getInstance().module->print(llvm::errs(), nullptr);
+
+        logMessage(LMI, "INFO", "Visitor", "Property Pointer: %s", propertyPtr->getName().str().c_str());
+        // Load the property value
+        llvm::Value *propertyValue = context.getInstance().builder.CreateLoad(llvmType, propertyPtr, propertyName + ".load");
+        if (!propertyValue)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Property value is null");
+            return nullptr;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Property Value: %s", propertyValue->getName().str().c_str());
+        return propertyValue;
+    }
+
     void Initializer::generateStructConstructor(ASTNode *node, llvm::StructType *structType)
     {
         logMessage(LMI, "INFO", "Visitor", "Generating struct constructor...");
@@ -516,6 +637,33 @@ namespace Cryo
         context.getInstance().symbolTable->exitFunctionScope();
 
         logMessage(LMI, "INFO", "Visitor", "Constructor function created: %s", ctorFunction->getName().str().c_str());
+    }
+
+    llvm::Value *Initializer::derefValuePointer(llvm::Value *value)
+    {
+        if (!value)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Value is null");
+            return nullptr;
+        }
+
+        llvm::Type *type = value->getType();
+        if (type->isPointerTy())
+        {
+            logMessage(LMI, "INFO", "CodeGen", "Dereferencing pointer: %s", value->getName().str().c_str());
+            std::string typeName = type->getStructName().str();
+            llvm::Type *lookedUpType = context.getInstance().symbolTable->findType(typeName)->type.getLLVMType();
+            if (!lookedUpType)
+            {
+                logMessage(LMI, "ERROR", "CodeGen", "Failed to get LLVM type for %s", typeName.c_str());
+                return nullptr;
+            }
+            logMessage(LMI, "INFO", "CodeGen", "Dereferencing type: %s", lookedUpType->getStructName().str().c_str());
+            llvm::Value *derefValue = context.getInstance().builder.CreateLoad(lookedUpType, value, "deref");
+            logMessage(LMI, "INFO", "CodeGen", "Dereferenced value: %s", derefValue->getName().str().c_str());
+            return derefValue;
+        }
+        return value;
     }
 
 } // namespace Cryo

@@ -32,6 +32,8 @@ namespace Cryo
 
         if (dataType->container->typeOf == POINTER_TYPE)
         {
+            logMessage(LMI, "INFO", "IRSymbolTable", "Data type is a pointer");
+            logMessage(LMI, "INFO", "IRSymbolTable", "Pointer type: %s", DTM->debug->dataTypeToString(dataType));
             llvm::Type *baseType = getLLVMType(dataType->container->type.pointerType->baseType);
             if (!baseType)
             {

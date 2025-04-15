@@ -81,7 +81,7 @@ namespace Cryo
 
             // Allocate space for the parameter in the function's entry block
             paramSymbol.allocation = Allocation::createLocal(context.getInstance().builder, paramType, paramName, arg);
-
+            paramSymbol.value = paramSymbol.allocation.getValue();
             // Add the parameter to the symbol table
             symbolTable->addVariable(paramSymbol);
         }

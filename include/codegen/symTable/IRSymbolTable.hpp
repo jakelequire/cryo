@@ -130,6 +130,7 @@ namespace Cryo
         LLVMTypes llvmTypes;
         llvm::Type *getLLVMType(DataType *dataType);
         std::vector<llvm::Type *> getLLVMTypes(DataType **dataTypes);
+        llvm::Type *derefencePointer(llvm::Type *type);
 
         llvm::StructType *getVA_ARGSType(DataType *dataType);
 

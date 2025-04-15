@@ -60,6 +60,72 @@ namespace Cryo
         int propertyIndex = node->data.propertyAccess->propertyIndex;
         logMessage(LMI, "INFO", "Visitor", "Property Index: %d", propertyIndex);
 
+        // Get the object type
+        DataType *objectType = node->data.propertyAccess->objectType;
+        if (!objectType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Object type is null");
+            return;
+        }
+
+        // Get the LLVM type
+        llvm::Type *llvmType = context.getInstance().symbolTable->getLLVMType(objectType);
+        if (!llvmType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "LLVM type is null");
+            return;
+        }
+        logMessage(LMI, "INFO", "Visitor", "LLVM Type: %s", llvmType->getStructName().str().c_str());
+
+        // Get the object instance
+        llvm::Value *objectInstance = getLLVMValue(node->data.propertyAccess->object);
+        if (!objectInstance)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Object instance is null");
+            DEBUG_BREAKPOINT;
+            return;
+        }
+
+        IRTypeSymbol *typeSymbol = context.getInstance().symbolTable->findType(objectTypeName);
+        if (!typeSymbol)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Type symbol is null");
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Object Instance: %s", objectInstance->getName().str().c_str());
+
+        // Check if the object instance is a pointer type
+        logMessage(LMI, "INFO", "Visitor", "Object instance is a pointer type");
+
+        // Create a load instruction to get the property value
+        llvm::Value *propertyPtr = context.builder.CreateStructGEP(llvmType, objectInstance, propertyIndex, propertyName);
+        if (!propertyPtr)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Property pointer is null");
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Property Pointer: %s", propertyPtr->getName().str().c_str());
+        // Load the property value
+        llvm::Value *propertyValue = context.builder.CreateLoad(llvmType, propertyPtr, propertyName + ".load");
+        if (!propertyValue)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Property value is null");
+            return;
+        }
+        logMessage(LMI, "INFO", "Visitor", "Property Value: %s", propertyValue->getName().str().c_str());
+
+        // Store the property value in the symbol table
+        IRVariableSymbol propertySymbol = IRSymbolManager::createVariableSymbol(
+            propertyValue, llvmType, propertyName, AllocaType::AllocaAndLoad, Allocation());
+        context.getInstance().symbolTable->addVariable(propertySymbol);
+
+        context.getInstance().module->print(llvm::errs(), nullptr);
+        logMessage(LMI, "INFO", "Visitor", "Property value stored in symbol table: %s", propertySymbol.name.c_str());
+        // Print the symbol table for debugging
+        context.getInstance().symbolTable->debugPrint();
+
         DEBUG_BREAKPOINT;
     }
 
@@ -121,7 +187,11 @@ namespace Cryo
                 }
 
                 // Create a store instruction to assign the new value to the property
-                llvm::Value *propertyPtr = context.builder.CreateStructGEP(llvmType, selfAlloc, 0, propertyName);
+                llvm::Value *propertyPtr = context.builder.CreateStructGEP(
+                    llvmType,
+                    context.getInstance().initializer->derefValuePointer(selfAlloc),
+                    0,
+                    propertyName);
                 context.builder.CreateStore(newValue, propertyPtr);
             }
             else

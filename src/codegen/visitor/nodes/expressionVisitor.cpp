@@ -156,10 +156,13 @@ namespace Cryo
         std::vector<llvm::Value *> args;
         for (int i = 0; i < call->argCount; i++)
         {
-            visit(call->args[i]);
             llvm::Value *argValue = getLLVMValue(call->args[i]);
             if (argValue)
+            {
+                std::string argName = argValue->getName().str();
+                argValue->setName("fc_idx_" + std::to_string(i) + "." + argName);
                 args.push_back(argValue);
+            }
         }
 
         // Create the function call

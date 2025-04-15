@@ -43,6 +43,8 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
 
+        this->context.getInstance().module->print(llvm::errs(), nullptr);
+
         // Complete the generation
         completeGeneration();
     }

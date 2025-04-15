@@ -266,7 +266,12 @@ namespace Cryo
         }
 
         // No match found
+        logMessage(LMI, "ERROR", "CodeGen", "Type %s not found in symbol table", name.c_str());
         return nullptr;
+    }
+
+    llvm::Type *IRSymbolTable::derefencePointer(llvm::Type *type)
+    {
     }
 
     // ======================================================================== //
