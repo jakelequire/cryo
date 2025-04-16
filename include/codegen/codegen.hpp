@@ -160,8 +160,6 @@ namespace Cryo
         void processTypeDeclaration(ASTNode *node);
 
         void generateIRForNode(ASTNode *node);
-
-
     };
 
     // ======================================================================== //
@@ -197,6 +195,7 @@ namespace Cryo
     public:
         void generateStructConstructor(ASTNode *node, llvm::StructType *structType);
         llvm::Value *derefValuePointer(llvm::Value *value);
+        llvm::Type *derefValueForType(llvm::Value *value);
     };
 
 } // namespace Cryo

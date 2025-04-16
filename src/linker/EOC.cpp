@@ -244,6 +244,7 @@ namespace Cryo
         std::string buildDir = GetCXXLinker()->getDirInfo()->buildDir;
         std::string compilerDir = GetCXXLinker()->getDirInfo()->compilerDir;
         std::string objDir = buildDir + "/out/obj";
+        std::string irDir = buildDir + "/out/.ll";
         std::string outputPath = buildDir + "/main";
 
         if (!std::filesystem::exists(objDir))
@@ -301,7 +302,7 @@ namespace Cryo
     std::vector<std::string> Linker::collectStandardLibraries(const std::string &compilerDir)
     {
         std::vector<std::string> stdLibFiles;
-        std::string stdLibDir = compilerDir + "/cryo/Std/bin";
+        std::string stdLibDir = compilerDir + "/cryo/Std/bin/.ll";
 
         if (!std::filesystem::exists(stdLibDir))
         {
@@ -310,12 +311,37 @@ namespace Cryo
             return stdLibFiles;
         }
 
-        // Find all .so files in the standard library directory
+        // Find all .ll files in the standard library directory
         for (const auto &entry : std::filesystem::directory_iterator(stdLibDir))
         {
-            if (entry.path().extension() == ".so")
+            // Debug print the file path
+            std::cout << "Found standard library file: " << entry.path().string() << std::endl;
+            std::cout << "File extension: " << entry.path().extension() << std::endl;
+            if (entry.path().extension() == ".ll")
             {
-                stdLibFiles.push_back(entry.path().string());
+                // Convert to a .o file
+                std::string libFile = entry.path().string();
+                std::string libName = entry.path().stem().string();
+                std::string libPath = stdLibDir + "/" + libName + ".o";
+                std::string llcCommand = "llc-18 -filetype=obj -relocation-model=pic " +
+                                         libFile + " -o " + libPath;
+                int result = system(llcCommand.c_str());
+                if (result != 0)
+                {
+                    logMessage(LMI, "ERROR", "Linker", "Failed to convert standard library file: %s",
+                               std::strerror(errno));
+                    CONDITION_FAILED;
+                    continue;
+                }
+
+                stdLibFiles.push_back(libPath);
+                logMessage(LMI, "INFO", "Linker", "Converted standard library file to object: %s",
+                           libPath.c_str());
+            }
+            else
+            {
+                std::cout << "Skipping non-LLVM IR file: " << entry.path().string() << std::endl;
+                std::cout << "File extension: " << entry.path().extension() << std::endl;
             }
         }
 
@@ -336,9 +362,6 @@ namespace Cryo
                                          const std::vector<std::string> &stdLibFiles)
     {
         std::string command = "clang++-18 -pie -o " + outputPath;
-
-        // Add the `.so` file paths to the command. Use the raw paths instead of
-        // using `-l` to avoid issues with the linker.
 
         for (const auto &lib : stdLibFiles)
         {
@@ -366,7 +389,7 @@ namespace Cryo
     bool Linker::executeLinkCommand(const std::string &linkCommand, const std::string &outputPath)
     {
         logMessage(LMI, "INFO", "Linker", "Executing linking command: %s", linkCommand.c_str());
-        std::cout << "\nLinking command: " << linkCommand << "\n"
+        std::cout << "\n@executeLinkCommand Linking command: " << linkCommand << "\n"
                   << std::endl;
 
         int result = system(linkCommand.c_str());
@@ -382,12 +405,6 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Linking appeared to succeed, but output file not found");
             return false;
         }
-
-        // Make the executable file executable
-        std::filesystem::permissions(
-            outputPath,
-            std::filesystem::perms::owner_exec | std::filesystem::perms::group_exec,
-            std::filesystem::perm_options::add);
 
         logMessage(LMI, "INFO", "Linker", "Successfully linked executable at %s", outputPath.c_str());
         return true;

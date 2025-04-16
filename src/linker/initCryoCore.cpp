@@ -48,12 +48,12 @@ namespace Cryo
                               CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
         __STACK_FRAME__
-
+        logMessage(LMI, "INFO", "Linker", "Initializing Cryo Core...");
         // Initialize C runtime
         initializeRuntimeModule();
         if (!this->runtimeModuleInitialized)
         {
-            fprintf(stderr, "[Linker] Error: Failed to initialize the runtime module\n");
+            fprintf(stderr, "[Linker] Error: Failed to initialize the runtime module @initCryoCore\n");
             CONDITION_FAILED;
             return;
         }
@@ -94,6 +94,8 @@ namespace Cryo
     bool Linker::processCoreFile(const char *compilerRootPath, const char *buildDir,
                                  CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
+        __STACK_FRAME__
+        logMessage(LMI, "INFO", "Linker", "Processing core file...");
         // Create path to core.cryo
         const char *corePath = fs->appendStrings(compilerRootPath, "/cryo/Std/Core/core.cryo");
         if (!corePath)
@@ -133,6 +135,7 @@ namespace Cryo
     bool Linker::generateCoreIR(ASTNode *defsNode, const char *corePath, const char *buildDir,
                                 CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
+        logMessage(LMI, "INFO", "Linker", "Generating IR for core file...");
         // Create compilation unit directory
         CompilationUnitDir dir = createCompilationUnitDir(corePath, buildDir, CRYO_RUNTIME);
         dir.print(dir);
@@ -162,6 +165,29 @@ namespace Cryo
             CONDITION_FAILED;
             return false;
         }
+
+        // Check for the existence of the core.ll file
+        std::string coreFilePath = std::string(this->dirInfo->runtimeDir) + "/core.ll";
+        if (!fs->fileExists(coreFilePath.c_str()))
+        {
+            fprintf(stderr, "[Linker] Error: Core file does not exist: %s\n", coreFilePath.c_str());
+            CONDITION_FAILED;
+            return false;
+        }
+        logMessage(LMI, "INFO", "Linker", "Core file exists: %s", coreFilePath.c_str());
+
+        // Copy the core.ll file to {compilerDir}/cryo/Std/bin/.ll/core.ll
+        std::string destPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/core.ll";
+        std::string copyCommand = "cp " + coreFilePath + " " + destPath;
+        int result = system(copyCommand.c_str());
+        if (result != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to copy core.ll file\n");
+            CONDITION_FAILED;
+            return false;
+        }
+
+        logMessage(LMI, "INFO", "Linker", "Successfully copied core.ll to %s", destPath.c_str());
 
         return true;
     }
@@ -217,9 +243,10 @@ namespace Cryo
      */
     bool Linker::compileRuntimeToIR(const std::string &compilerRootPath, const char *runtimePath)
     {
+        logMessage(LMI, "INFO", "Linker", "Compiling runtime.c to LLVM IR...");
         // Set up Clang compilation arguments
         std::vector<const char *> args;
-        args.push_back("clang-18");
+        args.push_back("clang++-18");
         args.push_back("-c");
         args.push_back("-emit-llvm");
         args.push_back("-O2");       // Optimization level
@@ -311,6 +338,7 @@ namespace Cryo
      */
     bool Linker::verifyInputFiles(const std::string &c_runtimePath, const std::string &corePath)
     {
+        logMessage(LMI, "INFO", "Linker", "Verifying input files...");
         if (!fs->fileExists(c_runtimePath.c_str()))
         {
             fprintf(stderr, "[Linker] Error: Runtime file does not exist: %s\n", c_runtimePath.c_str());
@@ -342,6 +370,7 @@ namespace Cryo
     bool Linker::linkLLVMFiles(const std::string &c_runtimePath, const std::string &corePath,
                                const std::string &tempPath)
     {
+        logMessage(LMI, "INFO", "Linker", "Linking LLVM IR files: %s and %s", c_runtimePath.c_str(), corePath.c_str());
         std::string linkCommand = "llvm-link-18 -S -o " + tempPath + " " + corePath + " " + c_runtimePath;
         logMessage(LMI, "INFO", "Linker", "Linking LLVM IR files: %s", linkCommand.c_str());
 
@@ -365,6 +394,7 @@ namespace Cryo
      */
     bool Linker::compileIRToObject(const std::string &tempPath, const std::string &outputPath)
     {
+        logMessage(LMI, "INFO", "Linker", "Compiling linked IR to object code: %s", tempPath.c_str());
         std::string compileCommand = "llc-18 -filetype=obj -relocation-model=pic -o " + outputPath + " " + tempPath;
         int compileResult = system(compileCommand.c_str());
 
@@ -388,6 +418,7 @@ namespace Cryo
      */
     bool Linker::createCoreSharedLibrary(const char *compilerRootPath, const std::string &objectPath)
     {
+        logMessage(LMI, "INFO", "Linker", "Creating core shared library...");
         std::string sharedLibPath = std::string(compilerRootPath) + "/cryo/Std/bin/libcryo_core.so";
 
         // Create or clear the output file
@@ -428,6 +459,7 @@ namespace Cryo
      */
     int Linker::buildStandardLib(CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
+        logMessage(LMI, "INFO", "Linker", "Building standard library...");
         // Get paths to standard library directories
         std::string stdDir = std::string(this->dirInfo->compilerDir) + "/cryo/Std";
         std::string stdBinDir = stdDir + "/bin";
@@ -476,6 +508,7 @@ namespace Cryo
      */
     std::vector<std::string> Linker::findStandardLibraryFiles(const std::string &stdDir)
     {
+        logMessage(LMI, "INFO", "Linker", "Finding standard library files in %s", stdDir.c_str());
         std::vector<std::string> cryoFiles;
 
         // Recursively iterate through the standard library directory
@@ -520,6 +553,7 @@ namespace Cryo
     bool Linker::compileAllStandardLibraryFiles(const std::vector<std::string> &cryoFiles,
                                                 CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
+        logMessage(LMI, "INFO", "Linker", "Compiling standard library files...");
         for (const std::string &file : cryoFiles)
         {
             // Compile the file and create the shared library
@@ -546,6 +580,8 @@ namespace Cryo
      */
     int Linker::compileLibItem(std::string filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
+        logMessage(LMI, "INFO", "Linker", "Compiling library item: %s", filePath.c_str());
+
         std::string compilerRootPath = this->dirInfo->compilerDir;
         std::cout << "Compiler Root Path @compileLibItem: " << compilerRootPath << std::endl;
         std::string buildDir = compilerRootPath + "/cryo/Std/bin/.ll/";
@@ -581,6 +617,8 @@ namespace Cryo
                                          const std::string &buildDir, const std::string &compilerRootPath,
                                          CompilerState *state, CryoGlobalSymbolTable *globalTable)
     {
+        logMessage(LMI, "INFO", "Linker", "Creating and linking library item...");
+
         // Create compilation unit directory
         CompilationUnitDir dir = createCompilerCompilationUnitDir(
             filePath.c_str(), buildDir.c_str(), compilerRootPath.c_str(), CRYO_STDLIB);
@@ -630,16 +668,20 @@ namespace Cryo
      */
     bool Linker::linkWithCoreLibrary(const CompilationUnitDir &dir, const std::string &compilerRootPath)
     {
-        std::string coreLibPath = compilerRootPath + "/cryo/Std/bin/libcryo_core.so";
-        std::string outputPath = compilerRootPath + "/cryo/Std/bin/" + dir.out_fileName + ".so";
+        logMessage(LMI, "INFO", "Linker", "Linking with core library...");
 
-        std::string linkCommand = "clang++ -shared -fPIC -o " + outputPath + " " +
+        std::string coreLibPath = compilerRootPath + "/cryo/Std/bin/.ll/core.ll";
+        std::string outputPath = compilerRootPath + "/cryo/Std/bin/" + dir.out_fileName + ".so";
+        std::string tempLinkedIRPath = compilerRootPath + "/cryo/Std/bin/" + dir.out_fileName + "_linked.ll";
+
+        std::string linkCommand = "llvm-link-18 -v --only-needed --internalize -o " + outputPath + " " +
                                   coreLibPath + " " + dir.out_filePath + ".ll";
 
+        logMessage(LMI, "INFO", "Linker", "Linking with core library: %s", linkCommand.c_str());
         int linkResult = system(linkCommand.c_str());
         if (linkResult != 0)
         {
-            fprintf(stderr, "[Linker] Error: Failed to link module with core library\n");
+            fprintf(stderr, "[Linker] Error: Failed to create shared library using clang++\n");
             CONDITION_FAILED;
             return false;
         }

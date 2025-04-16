@@ -212,7 +212,7 @@ namespace Cryo
         bool c_runtime_initialized = false;
         bool auto_run_binary = false;
         bool shared_lib_initialized = false;
-        bool autoRunEnabled = true;
+        bool autoRunEnabled = false;
 
         llvm::LLVMContext &getLinkerContext() { return context; }
 

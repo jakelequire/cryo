@@ -1,12 +1,24 @@
-; ModuleID = 'Math'
-source_filename = "Math"
+; ModuleID = 'core'
+source_filename = "core"
 
-%Math = type { %struct.Int }
 %struct.Int = type { i32, i1, i1 }
 %struct.String = type { i32, i32, ptr, i1, i1 }
 %VA_ARGS = type { i32, ptr, ptr }
 
-@Math = external global %Math
+@Int = external global %struct.Int
+@String = external global %struct.String
+
+; Function Attrs: nounwind
+declare i32 @strlen_export(ptr) #0
+
+; Function Attrs: nounwind
+declare ptr @strncat_export(ptr, ptr, i32) #0
+
+; Function Attrs: nounwind
+declare i32 @strnlen_export(ptr, i32) #0
+
+; Function Attrs: nounwind
+declare i32 @strncmp_export(ptr, ptr, i32) #0
 
 ; Function Attrs: nounwind
 define ptr @struct.Int.ctor(ptr %self, i32 %0) #0 {
@@ -32,6 +44,45 @@ entry:
   ret ptr %self.alloc
 }
 
+; Function Attrs: nounwind
+declare %struct.Int @printf_export(ptr, %VA_ARGS) #0
+
+; Function Attrs: nounwind
+declare %struct.Int @scanf_export(ptr, %VA_ARGS) #0
+
+; Function Attrs: nounwind
+declare void @sys_exit(%struct.Int) #0
+
+; Function Attrs: nounwind
+declare %struct.Int @sys_read(%struct.Int, ptr, %struct.Int) #0
+
+; Function Attrs: nounwind
+declare %struct.Int @sys_write(%struct.Int, ptr, %struct.Int) #0
+
+; Function Attrs: nounwind
+declare ptr @mmap_export(ptr, %struct.Int, %struct.Int, %struct.Int, %struct.Int, %struct.Int) #0
+
+; Function Attrs: nounwind
+declare %struct.Int @munmap_export(ptr, %struct.Int) #0
+
+; Function Attrs: nounwind
+declare ptr @malloc_export(%struct.Int) #0
+
+; Function Attrs: nounwind
+declare %struct.Int @free_export(ptr) #0
+
+; Function Attrs: nounwind
+declare ptr @memcpy_export(ptr, ptr, %struct.Int) #0
+
+; Function Attrs: nounwind
+declare ptr @memmove_export(ptr, ptr, %struct.Int) #0
+
+; Function Attrs: nounwind
+declare %struct.Int @memcmp_export(ptr, ptr, %struct.Int) #0
+
+; Function Attrs: nounwind
+declare ptr @memset_export(ptr, %struct.Int, %struct.Int) #0
+
 define void @printInt(%struct.Int %value) {
 entry:
   %value.alloca = alloca %struct.Int, align 8
@@ -41,9 +92,6 @@ entry:
   store %struct.Int %printf_export, ptr %calltmp, align 4
   ret void
 }
-
-; Function Attrs: nounwind
-declare %struct.Int @printf_export(ptr, %VA_ARGS) #0
 
 define void @printStr(%struct.String %value) {
 entry:

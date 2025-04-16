@@ -651,19 +651,88 @@ namespace Cryo
         if (type->isPointerTy())
         {
             logMessage(LMI, "INFO", "CodeGen", "Dereferencing pointer: %s", value->getName().str().c_str());
-            std::string typeName = type->getStructName().str();
-            llvm::Type *lookedUpType = context.getInstance().symbolTable->findType(typeName)->type.getLLVMType();
-            if (!lookedUpType)
+            // Dereference the pointer
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
+            if (inst)
             {
-                logMessage(LMI, "ERROR", "CodeGen", "Failed to get LLVM type for %s", typeName.c_str());
-                return nullptr;
+                CodeGenDebug::printLLVMInstruction(inst);
+                /*
+                >>===-----------<LLVM Instruction Node>-----------===<<
+                Inst:   %self.alloc = alloca %struct.Int, align 8
+                Address: 0x555557f2d7b0
+                >>===---------------------------------------------===<<
+                */
+                // If we print out something like the above, then we need to get the type of the alloca used
+                // to create the pointer. This is because the alloca is not a pointer type, but a struct type.
+                // So we need to get the type of the alloca and use that instead of the pointer type.
+                inst->printAsOperand(llvm::errs(), false);
+                llvm::Type *allocaType = nullptr;
+
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(inst))
+                {
+                    allocaType = allocaInst->getAllocatedType();
+                    CodeGenDebug::printLLVMAllocaInst(allocaInst);
+                }
+                else
+                {
+                    logMessage(LMI, "ERROR", "CodeGen", "Value is not an alloca instruction");
+                    return nullptr;
+                }
+
+                CodeGenDebug::printLLVMType(allocaType);
+                logMessage(LMI, "INFO", "CodeGen", "Dereferencing pointer: %s", allocaType->getStructName().str().c_str());
+                return context.getInstance().builder.CreateLoad(allocaType, value, value->getName() + ".deref");
             }
-            logMessage(LMI, "INFO", "CodeGen", "Dereferencing type: %s", lookedUpType->getStructName().str().c_str());
-            llvm::Value *derefValue = context.getInstance().builder.CreateLoad(lookedUpType, value, "deref");
-            logMessage(LMI, "INFO", "CodeGen", "Dereferenced value: %s", derefValue->getName().str().c_str());
-            return derefValue;
         }
         return value;
+    }
+
+    llvm::Type *Initializer::derefValueForType(llvm::Value *value)
+    {
+        if (!value)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Value is null");
+            return nullptr;
+        }
+
+        llvm::Type *type = value->getType();
+        if (type->isPointerTy())
+        {
+            logMessage(LMI, "INFO", "CodeGen", "Dereferencing pointer: %s", value->getName().str().c_str());
+            // Dereference the pointer
+            llvm::Instruction *inst = llvm::dyn_cast<llvm::Instruction>(value);
+            if (inst)
+            {
+                CodeGenDebug::printLLVMInstruction(inst);
+                /*
+                >>===-----------<LLVM Instruction Node>-----------===<<
+                Inst:   %self.alloc = alloca %struct.Int, align 8
+                Address: 0x555557f2d7b0
+                >>===---------------------------------------------===<<
+                */
+                // If we print out something like the above, then we need to get the type of the alloca used
+                // to create the pointer. This is because the alloca is not a pointer type, but a struct type.
+                // So we need to get the type of the alloca and use that instead of the pointer type.
+                inst->printAsOperand(llvm::errs(), false);
+                llvm::Type *allocaType = nullptr;
+
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(inst))
+                {
+                    allocaType = allocaInst->getAllocatedType();
+                    CodeGenDebug::printLLVMAllocaInst(allocaInst);
+                }
+                else
+                {
+                    logMessage(LMI, "ERROR", "CodeGen", "Value is not an alloca instruction");
+                    return nullptr;
+                }
+
+                CodeGenDebug::printLLVMType(allocaType);
+                logMessage(LMI, "INFO", "CodeGen", "Dereferencing pointer: %s", allocaType->getStructName().str().c_str());
+                return allocaType;
+            }
+        }
+        return type;
     }
 
 } // namespace Cryo

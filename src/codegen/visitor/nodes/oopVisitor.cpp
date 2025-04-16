@@ -188,8 +188,8 @@ namespace Cryo
 
                 // Create a store instruction to assign the new value to the property
                 llvm::Value *propertyPtr = context.builder.CreateStructGEP(
-                    llvmType,
-                    context.getInstance().initializer->derefValuePointer(selfAlloc),
+                    context.getInstance().initializer->derefValueForType(selfAlloc),
+                    selfAlloc,
                     0,
                     propertyName);
                 context.builder.CreateStore(newValue, propertyPtr);

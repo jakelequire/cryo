@@ -193,11 +193,11 @@ CompilationUnitDir createCompilationUnitDir(const char *inputFile, const char *b
         dir.out_fullFileName = fullFileName->c_str(fullFileName);
         break;
     }
-    case CRYO_MAIN: // The output for this should be `/build/out/main.ll`
+    case CRYO_MAIN: // The output for this should be `/build/out/.ll/main.ll`
     {               // Set the output file name
         dir.out_fileName = "main";
         // Set the output file directory
-        dir.out_fileDir = fs->appendPathToFileName(buildDir, "out/", true);
+        dir.out_fileDir = fs->appendPathToFileName(buildDir, "out/.ll/", true);
         // Set the output file path
         dir.out_filePath = fs->appendPathToFileName(dir.out_fileDir, "main", false);
         // Set the output file extension

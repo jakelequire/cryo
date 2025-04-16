@@ -27,6 +27,7 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Instructions.h"
 
 namespace Cryo
 {
@@ -38,7 +39,8 @@ namespace Cryo
         static void printLLVMType(llvm::Type *type);
         static void printLLVMFunction(llvm::Function *function);
         static void printLLVMStruct(llvm::StructType *structType);
-
+        static void printLLVMInstruction(llvm::Instruction *inst);
+        static void printLLVMAllocaInst(llvm::AllocaInst *allocaInst);
         static std::string LLVMTypeIDToString(llvm::Type *type);
     };
 

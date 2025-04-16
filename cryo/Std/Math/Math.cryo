@@ -1,8 +1,5 @@
 namespace Std.Math;
 
-type foo = i32;
-
-
 class Math {
     // This is a placeholder for the Math class.
     // In a real implementation, this class would contain methods and properties

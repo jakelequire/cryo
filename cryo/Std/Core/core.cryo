@@ -36,9 +36,9 @@ struct Int {
 }
 
 struct String {
-    val: str;
     length: i32;
     capacity: i32;
+    val: str;
 
     isEmpty: boolean;
     isNull: boolean;

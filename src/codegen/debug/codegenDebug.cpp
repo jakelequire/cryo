@@ -129,6 +129,50 @@ namespace Cryo
         std::cout << ">>===-------------------------------------------===<<" << std::endl;
     }
 
+    void CodeGenDebug::printLLVMInstruction(llvm::Instruction *inst)
+    {
+        if (inst == nullptr)
+        {
+            std::cerr << "LLVM Instruction is null" << std::endl;
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Instruction Node>-----------===<<" << std::endl;
+
+        // Print out the instruction of the instruction
+        std::string instStr;
+        llvm::raw_string_ostream rso(instStr);
+        inst->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the instruction
+        std::cout << "Address: " << inst << std::endl;
+        std::cout << ">>===---------------------------------------------===<<" << std::endl;
+    }
+
+    void CodeGenDebug::printLLVMAllocaInst(llvm::AllocaInst *allocaInst)
+    {
+        if (allocaInst == nullptr)
+        {
+            std::cerr << "LLVM Alloca Instruction is null" << std::endl;
+            return;
+        }
+
+        std::cout << "\n";
+        std::cout << ">>===-----------<LLVM Alloca Instruction Node>-----------===<<" << std::endl;
+
+        // Print out the instruction of the alloca instruction
+        std::string allocaInstStr;
+        llvm::raw_string_ostream rso(allocaInstStr);
+        allocaInst->print(rso);
+        std::cout << "Inst: " << rso.str() << std::endl;
+
+        // Print out the address of the alloca instruction
+        std::cout << "Address: " << allocaInst << std::endl;
+        std::cout << ">>===---------------------------------------------------===<<" << std::endl;
+    }
+
     std::string CodeGenDebug::LLVMTypeIDToString(llvm::Type *type)
     {
         if (!type || type == nullptr)
