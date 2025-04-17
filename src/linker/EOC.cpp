@@ -167,13 +167,16 @@ namespace Cryo
             return false;
         }
 
+        std::string dso_path = this->dirInfo->compilerDir + "/cryo/Std/bin/libcryo_core.so";
+        std::string load_path = "--load=" + dso_path;
+
         // Convert main.ll to main.o
         std::string llcCommand = "llc-18 -filetype=obj -relocation-model=pic " +
+                                 load_path + " " +
                                  mainIRFile + " -o " + mainObjFile;
 
         logMessage(LMI, "INFO", "Linker", "Converting main IR to object: %s", llcCommand.c_str());
         int result = system(llcCommand.c_str());
-
         if (result != 0)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to convert main IR to object: %s",

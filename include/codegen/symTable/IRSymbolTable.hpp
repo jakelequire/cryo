@@ -33,38 +33,18 @@ namespace Cryo
     {
 
         std::unordered_map<std::string, llvm::Module *> modules;
-        std::unordered_map<std::string, const llvm::Function &> functions;
-        std::unordered_map<std::string, llvm::Type *> types;
 
-        void importFunctions(const std::unordered_map<std::string, IRFunctionSymbol> &functions)
-        {
-            for (const auto &func : functions)
-            {
-                this->functions.emplace(func.first, func.second.getFunction()->getFunction());
-            }
-        }
+        // Methods
+        int setModule(const std::string &name, llvm::Module *module);
+        llvm::Module *getModule(const std::string &name);
+        std::vector<llvm::Module *> getModules();
+        int getModuleCount();
 
-        void importTypes(const std::unordered_map<std::string, IRTypeSymbol> &types)
-        {
-            for (const auto &type : types)
-            {
-                this->types[type.first] = type.second.getType();
-            }
-        }
+        llvm::Function *getFunction(const std::string &name);
+        IRFunctionSymbol *wrapLLVMFunction(llvm::Function *func);
 
-        void setModule(const std::string &name, llvm::Module *module)
-        {
-            modules[name] = module;
-        }
-        llvm::Module *getModule(const std::string &name)
-        {
-            auto it = modules.find(name);
-            if (it != modules.end())
-            {
-                return it->second;
-            }
-            return nullptr;
-        }
+        llvm::StructType *getStructType(const std::string &name);
+        IRTypeSymbol *wrapLLVMStructType(llvm::StructType *type);
     };
 
     // Global symbol table instance

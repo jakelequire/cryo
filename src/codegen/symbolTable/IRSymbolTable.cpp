@@ -18,8 +18,6 @@
 
 namespace Cryo
 {
-    // Global symbol table instance
-    GlobalSymbolTableInstance globalSymbolTableInstance;
 
     // ======================================================================== //
     //                       Scope Management Functions                         //
@@ -166,23 +164,21 @@ namespace Cryo
             return &it->second;
         }
 
-        // Then check global functions
-        auto globalIt = globalSymbolTableInstance.functions.find(name);
-        if (globalIt != globalSymbolTableInstance.functions.end())
+        // Check the global symbol table for the function
+        llvm::Function *globalFunc = globalSymbolTableInstance.getFunction(name);
+        if (globalFunc)
         {
-            const llvm::Function &func = globalIt->second.getFunction();
-            llvm::Function *funcCast = const_cast<llvm::Function *>(&func);
-
-            // Create a local copy of the function symbol
-            IRFunctionSymbol funcSymbol(
-                funcCast, name, globalIt->second.getReturnType(),
-                globalIt->second.getFunctionType(), nullptr, false, true);
-
-            // Add to local functions map
-            functions[name] = funcSymbol;
-
-            // Return a pointer to the local copy
-            return &functions[name];
+            IRFunctionSymbol *wrappedFunc = globalSymbolTableInstance.wrapLLVMFunction(globalFunc);
+            if (wrappedFunc)
+            {
+                logMessage(LMI, "INFO", "CodeGen", "Found function %s in global symbol table", name.c_str());
+                return wrappedFunc;
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "CodeGen", "Failed to wrap function %s from global symbol table", name.c_str());
+                return nullptr;
+            }
         }
 
         logMessage(LMI, "ERROR", "CodeGen", "Function %s not found in symbol table", name.c_str());
@@ -286,109 +282,20 @@ namespace Cryo
             }
         }
 
-        // Check global symbol table if not found locally
-        auto globalIt = globalSymbolTableInstance.types.find(name);
-        if (globalIt != globalSymbolTableInstance.types.end())
+        // If not found, check the global symbol table for the type
+        llvm::StructType *globalType = globalSymbolTableInstance.getStructType(name);
+        if (globalType)
         {
-            // Create a local copy of the type symbol
-            llvm::Type *globalType = globalIt->second;
-
-            // Check if it's a struct type
-            if (llvm::StructType *structTy = llvm::dyn_cast<llvm::StructType>(globalType))
+            IRTypeSymbol *wrappedType = globalSymbolTableInstance.wrapLLVMStructType(globalType);
+            if (wrappedType)
             {
-                types[name] = IRTypeSymbol(structTy, name, {}, {});
-                types[name].kind = IRTypeKind::Struct;
+                logMessage(LMI, "INFO", "CodeGen", "Found type %s in global symbol table", name.c_str());
+                return wrappedType;
             }
-            // Check if it's a function type
-            else if (llvm::FunctionType *funcTy = llvm::dyn_cast<llvm::FunctionType>(globalType))
-            {
-                types[name] = IRTypeSymbol(funcTy, name);
-                types[name].kind = IRTypeKind::Function;
-            }
-            // Default case
             else
             {
-                types[name] = IRTypeSymbol(globalType, name);
-            }
-
-            return &types[name];
-        }
-
-        // Try prefix matching in global types
-        if (name.find("struct.") == 0 || name.find("class.") == 0)
-        {
-            std::string baseName = name;
-            llvm::Type *bestMatch = nullptr;
-            std::string bestMatchName;
-            size_t shortestSuffix = std::string::npos;
-
-            for (auto &typePair : globalSymbolTableInstance.types)
-            {
-                const std::string &typeName = typePair.first;
-
-                if (typeName.find(baseName) == 0)
-                {
-                    if (typeName.length() == baseName.length())
-                    {
-                        // Create a local copy
-                        llvm::Type *globalType = typePair.second;
-
-                        // Check if it's a struct type
-                        if (llvm::StructType *structTy = llvm::dyn_cast<llvm::StructType>(globalType))
-                        {
-                            types[typeName] = IRTypeSymbol(structTy, typeName, {}, {});
-                            types[typeName].kind = IRTypeKind::Struct;
-                        }
-                        // Check if it's a function type
-                        else if (llvm::FunctionType *funcTy = llvm::dyn_cast<llvm::FunctionType>(globalType))
-                        {
-                            types[typeName] = IRTypeSymbol(funcTy, typeName);
-                            types[typeName].kind = IRTypeKind::Function;
-                        }
-                        // Default case
-                        else
-                        {
-                            types[typeName] = IRTypeSymbol(globalType, typeName);
-                        }
-
-                        return &types[typeName];
-                    }
-
-                    if (typeName[baseName.length()] == '.')
-                    {
-                        size_t suffixLength = typeName.length() - baseName.length();
-                        if (shortestSuffix == std::string::npos || suffixLength < shortestSuffix)
-                        {
-                            shortestSuffix = suffixLength;
-                            bestMatch = typePair.second;
-                            bestMatchName = typeName;
-                        }
-                    }
-                }
-            }
-
-            if (bestMatch)
-            {
-                // Create a local copy of the best match
-                // Check if it's a struct type
-                if (llvm::StructType *structTy = llvm::dyn_cast<llvm::StructType>(bestMatch))
-                {
-                    types[bestMatchName] = IRTypeSymbol(structTy, bestMatchName, {}, {});
-                    types[bestMatchName].kind = IRTypeKind::Struct;
-                }
-                // Check if it's a function type
-                else if (llvm::FunctionType *funcTy = llvm::dyn_cast<llvm::FunctionType>(bestMatch))
-                {
-                    types[bestMatchName] = IRTypeSymbol(funcTy, bestMatchName);
-                    types[bestMatchName].kind = IRTypeKind::Function;
-                }
-                // Default case
-                else
-                {
-                    types[bestMatchName] = IRTypeSymbol(bestMatch, bestMatchName);
-                }
-
-                return &types[bestMatchName];
+                logMessage(LMI, "ERROR", "CodeGen", "Failed to wrap type %s from global symbol table", name.c_str());
+                return nullptr;
             }
         }
 
@@ -465,30 +372,28 @@ namespace Cryo
 
         std::cout << "===========================================================================" << std::endl;
         std::cout << "Global Symbol Table Instance:" << std::endl;
-        std::cout << "  Global Functions:" << std::endl;
-        for (const auto &funcPair : globalSymbolTableInstance.functions)
+        std::cout << "  Module Count: " << globalSymbolTableInstance.getModuleCount() << std::endl;
+        // Print all the function in each module
+        for (auto modulePair : globalSymbolTableInstance.getModules())
         {
-            // llvm::Function
-            const auto &func = funcPair.second;
-            std::cout << "    Name: " << func.getName().str() << std::endl;
-            std::cout << "    Return Type: " << typeIDToString(func.getReturnType()) << std::endl;
-            std::cout << "    Is Variadic: " << (func.isVarArg() ? "Yes" : "No") << std::endl;
-            std::cout << "    Is External: " << (func.isDeclaration() ? "Yes" : "No") << std::endl;
-            std::cout << "    ----------------------------------------" << std::endl;
+            llvm::Module *module = modulePair;
+            std::cout << "  Module: " << module->getName().str() << std::endl;
+            for (auto &function : module->functions())
+            {
+                std::cout << "    Function: " << function.getName().str() << std::endl;
+            }
+        }
+        // Print all the types in each module
+        for (auto modulePair : globalSymbolTableInstance.getModules())
+        {
+            llvm::Module *module = modulePair;
+            std::cout << "  Module: " << module->getName().str() << std::endl;
+            for (auto &type : module->getIdentifiedStructTypes())
+            {
+                std::cout << "    Type: " << type->getName().str() << std::endl;
+            }
         }
 
-        std::cout << "  Global Types:" << std::endl;
-        for (const auto &typePair : globalSymbolTableInstance.types)
-        {
-            // llvm::Type
-            const auto &type = typePair.second;
-            std::cout << "    Name: " << type->getStructName().str() << std::endl;
-            std::cout << "    Type Kind: " << CodeGenDebug::LLVMTypeIDToString(type) << std::endl;
-            std::cout << "    Is Struct: " << (type->isStructTy() ? "Yes" : "No") << std::endl;
-            std::cout << "    Is Pointer: " << (type->isPointerTy() ? "Yes" : "No") << std::endl;
-            std::cout << "    Is Function: " << (type->isFunctionTy() ? "Yes" : "No") << std::endl;
-            std::cout << "    -----------------------------------------" << std::endl;
-        }
         std::cout << "\n\n";
     }
 

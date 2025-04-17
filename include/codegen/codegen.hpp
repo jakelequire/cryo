@@ -151,7 +151,8 @@ namespace Cryo
 
         void generateIR(ASTNode *root);
         void completeGeneration(void);
-
+        int finalize(void);
+        
     private:
         CodegenContext &context;
 

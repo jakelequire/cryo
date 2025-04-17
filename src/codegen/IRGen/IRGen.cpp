@@ -68,12 +68,19 @@ namespace Cryo
 
     void Cryo::IRGeneration::completeGeneration(void)
     {
-        // Add function declarations to the global symbol table instance
-        context.getInstance().symbolTable->getGlobalSymbolTableInstance()->importFunctions(
-            context.getInstance().symbolTable->getFunctions());
-        // Import the types to the global symbol table instance
-        context.getInstance().symbolTable->getGlobalSymbolTableInstance()->importTypes(
-            context.getInstance().symbolTable->getTypes());
+        logMessage(LMI, "INFO", "IRGeneration", "Completing IR Generation...");
+        if (!context.module)
+        {
+            logMessage(LMI, "ERROR", "IRGeneration", "Module is null, cannot finalize.");
+            CONDITION_FAILED;
+        }
+
+        // Finalize the module
+        if (this->finalize() != 0)
+        {
+            logMessage(LMI, "ERROR", "IRGeneration", "Failed to finalize module.");
+            CONDITION_FAILED;
+        }
 
         // Write the module to a file
         std::string fileName = ".ll";
@@ -88,6 +95,28 @@ namespace Cryo
         }
 
         GetCXXLinker()->generateIRFromCodegen(context.module.get(), outputPath.c_str());
+    }
+
+    int Cryo::IRGeneration::finalize(void)
+    {
+        logMessage(LMI, "INFO", "IRGeneration", "Finalizing IR Generation...");
+
+        const llvm::Module &module = *context.module;
+        // Clone the module to avoid modifying the original
+        std::unique_ptr<llvm::Module> clonedModule = llvm::CloneModule(module);
+
+        // Add the module to the global symbol table instance
+        if (globalSymbolTableInstance.setModule(clonedModule->getName().str(), clonedModule.release()) != 0)
+        {
+            logMessage(LMI, "ERROR", "IRGeneration", "Failed to set module in global symbol table instance");
+            return -1;
+        }
+
+        // Print the module to the console
+        llvm::errs() << "Finalized Module:\n";
+        context.module->print(llvm::errs(), nullptr);
+
+        return 0;
     }
 
 } // namespace Cryo
