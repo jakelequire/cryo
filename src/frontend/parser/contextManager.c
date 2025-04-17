@@ -19,6 +19,28 @@
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
+void ParsingContext_setIntegerContextType(ParsingContext *context, DataType *type)
+{
+    __STACK_FRAME__
+    if (context->integerContextType)
+    {
+        free(context->integerContextType);
+    }
+    context->integerContextType = (DataType *)malloc(sizeof(DataType));
+    context->integerContextType = type;
+}
+
+void ParsingContext_setStringContextType(ParsingContext *context, DataType *type)
+{
+    __STACK_FRAME__
+    if (context->stringContextType)
+    {
+        free(context->stringContextType);
+    }
+    context->stringContextType = (DataType *)malloc(sizeof(DataType));
+    context->stringContextType = type;
+}
+
 ParsingContext *createParsingContext(void)
 {
     __STACK_FRAME__
@@ -36,6 +58,11 @@ ParsingContext *createParsingContext(void)
     context->isParsingIfCondition = false;
     context->isParsingModuleFile = false;
     context->inGenericContext = false;
+
+    context->integerContextType = NULL;
+    context->setIntegerContextType = ParsingContext_setIntegerContextType;
+    context->stringContextType = NULL;
+    context->setStringContextType = ParsingContext_setStringContextType;
 
     context->currentGenericParamCapacity = 16;
     context->currentGenericParamCount = 0;

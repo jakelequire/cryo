@@ -147,7 +147,7 @@ namespace Cryo
 
         auto varSymbol = IRSymbolManager::createVariableSymbol(
             nullptr, initVal, type, name, AllocaType::Global);
-        varSymbol.allocation = Allocation::createGlobal(currentModule, type, name, initVal);
+        varSymbol.allocation = Allocation::createGlobal(context.getInstance().module.get(), type, name, initVal);
 
         addVariable(varSymbol);
         return findVariable(name);
@@ -161,13 +161,34 @@ namespace Cryo
         auto it = functions.find(name);
         if (it != functions.end())
         {
+            logMessage(LMI, "INFO", "CodeGen", "Found function %s in local symbol table", name.c_str());
             return &it->second;
         }
 
+        logMessage(LMI, "INFO", "CodeGen", "Function %s not found in local symbol table", name.c_str());
         // Check the global symbol table for the function
         llvm::Function *globalFunc = globalSymbolTableInstance.getFunction(name);
         if (globalFunc)
         {
+            // Check if there's already a forward declaration in the current module
+            llvm::Function *existingFunc = context.module->getFunction(name);
+            if (existingFunc)
+            {
+                logMessage(LMI, "INFO", "CodeGen", "Found forward declaration for function %s in current module", name.c_str());
+                return findFunction(name); // Return the existing function symbol
+            }
+
+            logMessage(LMI, "INFO", "CodeGen", "Found function %s in global symbol table", name.c_str());
+            // Create an external declaration for the function in the current module
+            llvm::FunctionType *funcType = globalFunc->getFunctionType();
+            llvm::Function *llvmFunc = llvm::Function::Create(
+                funcType, llvm::Function::ExternalLinkage, name, context.getInstance().module.get());
+            llvmFunc->setCallingConv(globalFunc->getCallingConv());
+            llvmFunc->setAttributes(globalFunc->getAttributes());
+            llvmFunc->setName(name);
+            llvmFunc->setLinkage(globalFunc->getLinkage());
+            llvmFunc->setVisibility(globalFunc->getVisibility());
+
             IRFunctionSymbol *wrappedFunc = globalSymbolTableInstance.wrapLLVMFunction(globalFunc);
             if (wrappedFunc)
             {
@@ -183,48 +204,6 @@ namespace Cryo
 
         logMessage(LMI, "ERROR", "CodeGen", "Function %s not found in symbol table", name.c_str());
         return nullptr;
-    }
-
-    IRFunctionSymbol *IRSymbolTable::findOrCreateFunction(const std::string &name)
-    {
-        auto it = functions.find(name);
-        if (it != functions.end())
-        {
-            return &it->second;
-        }
-        logMessage(LMI, "INFO", "CodeGen", "Creating function: %s", name.c_str());
-        DTM->symbolTable->lookup(DTM->symbolTable, name.c_str());
-        auto functionType = DTM->symbolTable->lookup(DTM->symbolTable, name.c_str());
-        if (!functionType)
-        {
-            logMessage(LMI, "ERROR", "CodeGen", "Function %s not found in DTM", name.c_str());
-            return nullptr;
-        }
-        if (functionType->container->typeOf != FUNCTION_TYPE)
-        {
-            logMessage(LMI, "ERROR", "CodeGen", "Function %s is not a function type", name.c_str());
-            return nullptr;
-        }
-        // If no function found, create a new one. But it will only be a declaration / prototype.
-        std::vector<llvm::Type *> paramTypes;
-        for (int i = 0; i < functionType->container->type.functionType->paramCount; ++i)
-        {
-            paramTypes.push_back(getLLVMType(functionType->container->type.functionType->paramTypes[i]));
-        }
-        llvm::FunctionType *llvmFuncType = llvm::FunctionType::get(
-            getLLVMType(functionType->container->type.functionType->returnType),
-            paramTypes,
-            false);
-        llvm::Function *llvmFunc = llvm::Function::Create(
-            llvmFuncType, llvm::Function::ExternalLinkage, name, currentModule);
-
-        IRFunctionSymbol funcSymbol = IRFunctionSymbol(
-            llvmFunc, name, getLLVMType(functionType->container->type.functionType->returnType),
-            llvmFuncType, nullptr, false, true);
-
-        // Add the function to the symbol table
-        addFunction(funcSymbol);
-        return findFunction(name);
     }
 
     IRTypeSymbol *IRSymbolTable::findType(const std::string &name)
@@ -324,7 +303,7 @@ namespace Cryo
     {
         std::cout << "\n\n";
         std::cout << "======================== Symbol Table Debug Print ========================" << std::endl;
-        std::cout << "Module: " << BOLD LIGHT_BLUE << currentModule->getName().str() << COLOR_RESET << std::endl;
+        std::cout << "Module: " << BOLD LIGHT_BLUE << context.getInstance().module->getName().str() << COLOR_RESET << std::endl;
         std::cout << "===========================================================================" << std::endl;
 
         // Print variables in each scope

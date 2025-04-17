@@ -144,7 +144,7 @@ namespace Cryo
         FunctionCallNode *call = node->data.functionCall;
 
         // Find the function in the symbol table
-        IRFunctionSymbol *funcSymbol = symbolTable->findOrCreateFunction(node->data.functionCall->name);
+        IRFunctionSymbol *funcSymbol = symbolTable->findFunction(node->data.functionCall->name);
         if (!funcSymbol)
         {
             logMessage(LMI, "ERROR", "CodeGenVisitor",

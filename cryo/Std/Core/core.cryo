@@ -136,8 +136,9 @@ implement struct String {
 //                    C ABI Functions                       //
 // ======================================================== //
 
-extern function printf_export (format: str, ...) -> Int;
-extern function scanf_export (format: str, ...) -> Int;
+extern function printf_export   (format: str, ...) -> i32;
+extern function scanf_export    (format: str, ...) -> i32;
+extern function printI32_export (value: i32) -> void;
 
 extern function sys_exit    (status: Int) -> void;
 extern function sys_read    (fd: Int, buf: void *, count: Int) -> Int;
@@ -159,7 +160,12 @@ extern function memset_export   (ptr: void *, value: Int, num: Int) -> void *;
 
 
 function printInt (value: Int) -> void {
-    printf_export("%p\n", value.val);
+    printf_export("%d\n", value.val);
+    return;
+}
+
+function printI32 (value: i32) -> void {
+    printf_export("%d\n", value);
     return;
 }
 

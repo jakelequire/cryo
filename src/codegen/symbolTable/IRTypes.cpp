@@ -224,7 +224,7 @@ namespace Cryo
         }
 
         // Create a new VA_ARGS struct type
-        llvm::StructType *llvmVaArgsType = llvm::StructType::create(currentModule->getContext(), vaArgsName);
+        llvm::StructType *llvmVaArgsType = llvm::StructType::create(context.getInstance().context, vaArgsName);
         if (!llvmVaArgsType)
         {
             std::cerr << "Failed to create LLVM VA_ARGS struct type" << std::endl;
@@ -261,21 +261,21 @@ namespace Cryo
 
     void IRSymbolTable::initLLVMTypes()
     {
-        llvmTypes.i1Ty = llvm::Type::getInt1Ty(currentModule->getContext());
-        llvmTypes.i8Ty = llvm::Type::getInt8Ty(currentModule->getContext());
-        llvmTypes.i16Ty = llvm::Type::getInt16Ty(currentModule->getContext());
-        llvmTypes.i32Ty = llvm::Type::getInt32Ty(currentModule->getContext());
-        llvmTypes.i64Ty = llvm::Type::getInt64Ty(currentModule->getContext());
-        llvmTypes.i128Ty = llvm::Type::getInt128Ty(currentModule->getContext());
+        llvmTypes.i1Ty = llvm::Type::getInt1Ty(context.getInstance().context);
+        llvmTypes.i8Ty = llvm::Type::getInt8Ty(context.getInstance().context);
+        llvmTypes.i16Ty = llvm::Type::getInt16Ty(context.getInstance().context);
+        llvmTypes.i32Ty = llvm::Type::getInt32Ty(context.getInstance().context);
+        llvmTypes.i64Ty = llvm::Type::getInt64Ty(context.getInstance().context);
+        llvmTypes.i128Ty = llvm::Type::getInt128Ty(context.getInstance().context);
 
-        llvmTypes.halfTy = llvm::Type::getHalfTy(currentModule->getContext());
-        llvmTypes.floatTy = llvm::Type::getFloatTy(currentModule->getContext());
-        llvmTypes.doubleTy = llvm::Type::getDoubleTy(currentModule->getContext());
-        llvmTypes.fp128Ty = llvm::Type::getFP128Ty(currentModule->getContext());
-        llvmTypes.x86_fp80 = llvm::Type::getX86_FP80Ty(currentModule->getContext());
+        llvmTypes.halfTy = llvm::Type::getHalfTy(context.getInstance().context);
+        llvmTypes.floatTy = llvm::Type::getFloatTy(context.getInstance().context);
+        llvmTypes.doubleTy = llvm::Type::getDoubleTy(context.getInstance().context);
+        llvmTypes.fp128Ty = llvm::Type::getFP128Ty(context.getInstance().context);
+        llvmTypes.x86_fp80 = llvm::Type::getX86_FP80Ty(context.getInstance().context);
 
-        llvmTypes.voidTy = llvm::Type::getVoidTy(currentModule->getContext());
-        llvmTypes.ptrTy = llvm::Type::getInt8Ty(currentModule->getContext())->getPointerTo();
+        llvmTypes.voidTy = llvm::Type::getVoidTy(context.getInstance().context);
+        llvmTypes.ptrTy = llvm::Type::getInt8Ty(context.getInstance().context)->getPointerTo();
 
         this->typesInitialized = true;
     }

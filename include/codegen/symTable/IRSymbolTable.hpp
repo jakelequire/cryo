@@ -25,10 +25,13 @@
 
 #include "IRdefs.hpp"
 #include "tools/macros/consoleColors.h"
+#include "codegen/codegen.hpp"
 #include "codegen/codegenDebug.hpp"
 
 namespace Cryo
 {
+    class CodegenContext;
+
     struct GlobalSymbolTableInstance
     {
 
@@ -77,7 +80,6 @@ namespace Cryo
     class IRSymbolTable
     {
     private:
-        llvm::Module *currentModule;
         std::vector<std::unordered_map<std::string, IRVariableSymbol>> scopeStack;
         std::unordered_map<std::string, IRFunctionSymbol> functions;
         std::unordered_map<std::string, IRTypeSymbol> types;
@@ -94,16 +96,18 @@ namespace Cryo
         }
 
     public:
-        explicit IRSymbolTable(llvm::Module *module)
-            : currentModule(module)
+        explicit IRSymbolTable(CodegenContext &context) : context(context)
         {
-            std::cout << "Creating symbol table for module: " << module->getName().str() << std::endl;
             // Initialize with global scope
             scopeStack.push_back({});
             // Initialize the LLVM types
             initLLVMTypes();
         }
 
+    private:
+        CodegenContext &context;
+
+    public:
         friend class IRSymbolManager;
         friend class CodeGenDebug;
 
@@ -117,9 +121,6 @@ namespace Cryo
         {
             return &globalSymbolTableInstance;
         }
-
-        // Module access
-        llvm::Module *getModule() { return currentModule; }
 
         bool importModuleDefinitions(llvm::Module *sourceModule);
 
@@ -148,7 +149,6 @@ namespace Cryo
                                                llvm::Value *initialValue = nullptr);
 
         IRFunctionSymbol *findFunction(const std::string &name);
-        IRFunctionSymbol *findOrCreateFunction(const std::string &name);
         IRTypeSymbol *findType(const std::string &name);
 
         void debugPrint() const;

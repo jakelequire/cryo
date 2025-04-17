@@ -42,7 +42,7 @@ namespace Cryo
     {
         std::string moduleName = "CryoModuleDefaulted";
         module = std::make_unique<llvm::Module>(moduleName, context);
-        symbolTable = std::make_unique<IRSymbolTable>(module.get());
+        symbolTable = std::make_unique<IRSymbolTable>(*this);
         visitor = std::make_unique<CodeGenVisitor>(*this);
 
         return;

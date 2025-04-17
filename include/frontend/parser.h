@@ -111,6 +111,12 @@ typedef struct ParsingContext
     // The current scope context
     ScopeParsingContext *scopeContext;
 
+    // Type Context, this will change how the parser interprets literals
+    DataType *integerContextType;
+    void (*setIntegerContextType)(ParsingContext *context, DataType *type);
+    DataType *stringContextType;
+    void (*setStringContextType)(ParsingContext *context, DataType *type);
+
     // Context Flags
     bool isParsingModuleFile;
     bool isParsingIfCondition;

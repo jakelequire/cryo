@@ -374,13 +374,15 @@ cryo_string_t strcpy_export(cryo_string_t dest, cryo_string_t src)
     return dest;
 }
 
-int32_t printf_export(cryo_string_t format, ...)
+int32_t printf_export(const char *format, ...)
 {
+    printf("[C::DEBUG] CALLING printf_export\n");
+    printf("[C::DEBUG] format: %s\n", format);
     va_list args;
     int32_t result;
 
     va_start(args, format);
-    result = vprintf(format.val, args);
+    result = vprintf(format, args);
     va_end(args);
 
     return result;
@@ -396,4 +398,9 @@ int32_t scanf_export(cryo_string_t format, ...)
     va_end(args);
 
     return result;
+}
+
+void printI32_export(int32_t value)
+{
+    printf("%d\n", value);
 }

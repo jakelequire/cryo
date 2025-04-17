@@ -291,6 +291,16 @@ namespace Cryo
             return false;
         }
 
+        // Copy the `c_runtime.ll` file to the compilers `bin/.ll/` directory
+        std::string destPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/c_runtime.ll";
+        std::string copyCommand = "cp " + userBuildDir + " " + destPath;
+        result = system(copyCommand.c_str());
+        if (result != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to copy c_runtime.ll file\n");
+            return false;
+        }
+
         logMessage(LMI, "INFO", "Linker", "Successfully compiled runtime file to LLVM IR");
         return true;
     }

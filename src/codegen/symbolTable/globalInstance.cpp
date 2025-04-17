@@ -74,6 +74,7 @@ namespace Cryo
             llvm::Function *function = module->getFunction(name);
             if (function)
             {
+                CodeGenDebug::printLLVMFunction(function);
                 logMessage(LMI, "DEBUG", "GlobalSymbolTableInstance", "Found function: %s in module: %s",
                            name.c_str(), module->getName().str().c_str());
                 return function;

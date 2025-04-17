@@ -26,7 +26,6 @@ namespace Cryo
         if (node->metaData->type != NODE_LITERAL_EXPR)
         {
             logMessage(LMI, "ERROR", "Initializer", "Node is not a literal expression");
-
             return nullptr;
         }
 
@@ -34,15 +33,32 @@ namespace Cryo
         if (literalDataType->container->primitive != PRIM_STRING)
         {
             logMessage(LMI, "ERROR", "Initializer", "Data type is not a string");
-
             return nullptr;
         }
 
         std::string strValue = node->data.literal->value.stringValue;
 
         logMessage(LMI, "INFO", "Initializer", "String value: %s", strValue.c_str());
-        // We are not using global strings. All strings will be the String struct.
 
-        return nullptr;
+        // Create a constant array for the string
+        llvm::ArrayType *strArrayType = llvm::ArrayType::get(
+            llvm::Type::getInt8Ty(context.getInstance().context), strValue.size() + 1); // +1 for null terminator
+        llvm::Constant *strConstant = llvm::ConstantDataArray::getString(
+            context.getInstance().context, strValue, true);
+
+        // Allocate memory for the string on the stack
+        llvm::Value *strAlloc = context.getInstance().builder.CreateAlloca(strArrayType, nullptr, "strAlloc");
+
+        // Store the constant string into the allocated memory
+        context.getInstance().builder.CreateStore(strConstant, strAlloc);
+
+        // Cast the pointer to i8* for compatibility
+        llvm::Value *strPtr = context.getInstance().builder.CreatePointerCast(
+            strAlloc, llvm::Type::getInt8Ty(context.getInstance().context));
+
+        logMessage(LMI, "INFO", "Initializer", "String literal generated successfully.");
+
+        return strPtr;
     }
+    
 } // namespace Cryo

@@ -45,10 +45,13 @@ entry:
 }
 
 ; Function Attrs: nounwind
-declare %struct.Int @printf_export(ptr, %VA_ARGS) #0
+declare i32 @printf_export(ptr, %VA_ARGS) #0
 
 ; Function Attrs: nounwind
-declare %struct.Int @scanf_export(ptr, %VA_ARGS) #0
+declare i32 @scanf_export(ptr, %VA_ARGS) #0
+
+; Function Attrs: nounwind
+declare void @printI32_export(i32) #0
 
 ; Function Attrs: nounwind
 declare void @sys_exit(%struct.Int) #0
@@ -87,9 +90,25 @@ define void @printInt(%struct.Int %value) {
 entry:
   %value.alloca = alloca %struct.Int, align 8
   store %struct.Int %value, ptr %value.alloca, align 4
-  %printf_export = call %struct.Int @printf_export()
-  %calltmp = alloca %struct.Int, align 8
-  store %struct.Int %printf_export, ptr %calltmp, align 4
+  %strAlloc = alloca [4 x i8], align 1
+  store [4 x i8] c"%d\0A\00", ptr %strAlloc, align 1
+  %fc_idx_0. = ptrtoint ptr %strAlloc to i8
+  %printf_export = call i32 @printf_export(i8 %fc_idx_0.)
+  %calltmp = alloca i32, align 4
+  store i32 %printf_export, ptr %calltmp, align 4
+  ret void
+}
+
+define void @printI32(i32 %value) {
+entry:
+  %fc_idx_1.value.alloca = alloca i32, align 4
+  store i32 %value, ptr %fc_idx_1.value.alloca, align 4
+  %strAlloc = alloca [4 x i8], align 1
+  store [4 x i8] c"%d\0A\00", ptr %strAlloc, align 1
+  %fc_idx_0. = ptrtoint ptr %strAlloc to i8
+  %printf_export = call i32 @printf_export(i8 %fc_idx_0., ptr %fc_idx_1.value.alloca)
+  %calltmp = alloca i32, align 4
+  store i32 %printf_export, ptr %calltmp, align 4
   ret void
 }
 
@@ -97,9 +116,12 @@ define void @printStr(%struct.String %value) {
 entry:
   %value.alloca = alloca %struct.String, align 8
   store %struct.String %value, ptr %value.alloca, align 8
-  %printf_export = call %struct.Int @printf_export()
-  %calltmp = alloca %struct.Int, align 8
-  store %struct.Int %printf_export, ptr %calltmp, align 4
+  %strAlloc = alloca [4 x i8], align 1
+  store [4 x i8] c"%s\0A\00", ptr %strAlloc, align 1
+  %fc_idx_0. = ptrtoint ptr %strAlloc to i8
+  %printf_export = call i32 @printf_export(i8 %fc_idx_0.)
+  %calltmp = alloca i32, align 4
+  store i32 %printf_export, ptr %calltmp, align 4
   ret void
 }
 
@@ -107,9 +129,12 @@ define void @printChar(i8 %value) {
 entry:
   %fc_idx_1.value.alloca = alloca i8, align 1
   store i8 %value, ptr %fc_idx_1.value.alloca, align 1
-  %printf_export = call %struct.Int @printf_export(ptr %fc_idx_1.value.alloca)
-  %calltmp = alloca %struct.Int, align 8
-  store %struct.Int %printf_export, ptr %calltmp, align 4
+  %strAlloc = alloca [4 x i8], align 1
+  store [4 x i8] c"%c\0A\00", ptr %strAlloc, align 1
+  %fc_idx_0. = ptrtoint ptr %strAlloc to i8
+  %printf_export = call i32 @printf_export(i8 %fc_idx_0., ptr %fc_idx_1.value.alloca)
+  %calltmp = alloca i32, align 4
+  store i32 %printf_export, ptr %calltmp, align 4
   ret void
 }
 

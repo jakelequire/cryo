@@ -885,6 +885,10 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
         }
         printf("Int Value: %d\n", intVal);
         node = createIntLiteralNode(intVal, arena, state, lexer);
+        if (context->integerContextType)
+        {
+            node->data.literal->type = context->integerContextType;
+        }
         getNextToken(lexer, arena, state);
         return node;
     }
@@ -1388,6 +1392,40 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     else
     {
         parsingError("[Parser] Expected ':' after variable name.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+    }
+
+    // Check if the data type is a primitive type
+    if (dataType->container->typeOf == PRIM_TYPE)
+    {
+        switch (dataType->container->primitive)
+        {
+        case PRIM_INT:
+        case PRIM_I8:
+        case PRIM_I16:
+        case PRIM_I32:
+        case PRIM_I64:
+        case PRIM_I128:
+        {
+            logMessage(LMI, "INFO", "Parser", "Primitive type detected.");
+            context->setIntegerContextType(context, dataType);
+            break;
+        }
+        case PRIM_STR:
+        case PRIM_STRING:
+        {
+            break;
+        }
+        default:
+        {
+            logMessage(LMI, "ERROR", "Parser", "Unknown primitive type.");
+            parsingError("[Parser] Unknown primitive type.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+            break;
+        }
+        }
+    }
+    else
+    {
+        logMessage(LMI, "INFO", "Parser", "Data type is not a primitive type.");
     }
 
     // Parse the variable initializer
