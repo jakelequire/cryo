@@ -35,12 +35,9 @@ int generateIRFromAST(CompilationUnit *unit, CompilerState *state,
     bool isCompilingMain = unit->type == CRYO_MAIN;
     std::string moduleName = unit->dir.src_fileName;
     // If the filename is `core` then we are compiling the core module
-    if (moduleName.find("core") != std::string::npos)
+    if (isCompilingMain)
     {
-    }
-    else
-    {
-        context.preInitMain();
+        // context.preInitMain();
     }
 
     logMessage(LMI, "INFO", "Compiler", "Generating IR from AST...");

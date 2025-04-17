@@ -393,6 +393,17 @@ namespace Cryo
         bool isVariadic; // For variadic functions
         bool isExternal; // For external functions
 
+        llvm::Function *getFunction() const
+        {
+            return function;
+        }
+
+        // Default constructor
+        IRFunctionSymbol()
+            : function(nullptr), returnType(nullptr), functionType(nullptr), name(""),
+              astNode(nullptr), returnDataType(nullptr), functionDataType(nullptr),
+              entryBlock(nullptr), isVariadic(false), isExternal(false) {}
+
         // Constructor to initialize the function symbol
         IRFunctionSymbol(llvm::Function *func, const std::string &nm, llvm::Type *retType,
                          llvm::FunctionType *funcType, llvm::BasicBlock *entry, bool variadic = false,
@@ -400,6 +411,47 @@ namespace Cryo
             : function(func), returnType(retType), functionType(funcType), entryBlock(entry),
               name(nm), astNode(nullptr), returnDataType(nullptr), functionDataType(nullptr),
               isVariadic(variadic), isExternal(external) {}
+
+        // Copy constructor
+        IRFunctionSymbol(const IRFunctionSymbol &other)
+            : function(other.function),
+              returnType(other.returnType),
+              functionType(other.functionType),
+              name(other.name),
+              astNode(other.astNode),
+              returnDataType(other.returnDataType),
+              functionDataType(other.functionDataType),
+              entryBlock(other.entryBlock),
+              localVariables(other.localVariables),
+              allocaVariables(other.allocaVariables),
+              parameters(other.parameters),
+              symbolTable(other.symbolTable),
+              isVariadic(other.isVariadic),
+              isExternal(other.isExternal) {}
+
+        // Copy assignment operator
+        IRFunctionSymbol &operator=(const IRFunctionSymbol &other)
+        {
+            if (this != &other)
+            {
+                function = other.function;
+                returnType = other.returnType;
+                functionType = other.functionType;
+                name = other.name;
+                astNode = other.astNode;
+                returnDataType = other.returnDataType;
+                functionDataType = other.functionDataType;
+                entryBlock = other.entryBlock;
+                localVariables = other.localVariables;
+                allocaVariables = other.allocaVariables;
+                parameters = other.parameters;
+                symbolTable = other.symbolTable;
+                isVariadic = other.isVariadic;
+                isExternal = other.isExternal;
+            }
+            return *this;
+        }
+
     } IRFunctionSymbol;
 
     typedef struct IRVariableSymbol
@@ -427,7 +479,33 @@ namespace Cryo
             : value(val), type(typ), parentFunction(func), name(nm), astNode(nullptr),
               dataType(nullptr), allocaType(allocType) {}
 
-        void createAlloca(llvm::IRBuilder<> &builder);
+        // Copy constructor
+        IRVariableSymbol(const IRVariableSymbol &other)
+            : value(other.value),
+              type(other.type),
+              parentFunction(other.parentFunction),
+              name(other.name),
+              astNode(other.astNode),
+              dataType(other.dataType),
+              allocaType(other.allocaType),
+              allocation(other.allocation) {}
+
+        // Copy assignment operator
+        IRVariableSymbol &operator=(const IRVariableSymbol &other)
+        {
+            if (this != &other)
+            {
+                value = other.value;
+                type = other.type;
+                parentFunction = other.parentFunction;
+                name = other.name;
+                astNode = other.astNode;
+                dataType = other.dataType;
+                allocaType = other.allocaType;
+                allocation = other.allocation;
+            }
+            return *this;
+        }
 
     } IRVariableSymbol;
 
@@ -447,6 +525,7 @@ namespace Cryo
 
     struct IRTypeSymbol
     {
+
         IRTypeKind kind;
         union type
         {
@@ -472,6 +551,19 @@ namespace Cryo
             }
         } type;
 
+        llvm::Type *getType() const
+        {
+            if (type.typeTy)
+                return type.typeTy;
+            if (type.structTy)
+                return llvm::cast<llvm::Type>(type.structTy);
+            if (type.functionTy)
+                return llvm::cast<llvm::Type>(type.functionTy);
+            if (type.pointerTy)
+                return llvm::cast<llvm::Type>(type.pointerTy);
+            return nullptr;
+        }
+
         std::string name;
 
         ASTNode *astNode;
@@ -494,6 +586,14 @@ namespace Cryo
 
         // Get the offset of a member
         size_t getMemberOffset(const std::string &memberName, llvm::DataLayout &layout) const;
+
+        // Default constructor (add this before your other constructors)
+        IRTypeSymbol()
+            : kind(IRTypeKind::Primitive), name(""), astNode(nullptr), dataType(nullptr),
+              elementType(nullptr), size(0)
+        {
+            // The union's default constructor will be called automatically
+        }
 
         // Constructor to initialize the type symbol
         IRTypeSymbol(llvm::Type *typ, const std::string &nm)
@@ -519,6 +619,38 @@ namespace Cryo
               elementType(nullptr), size(0)
         {
             type.functionTy = typ; // Explicitly initialize the union member
+        }
+
+        // Copy constructor
+        IRTypeSymbol(const IRTypeSymbol &other)
+            : kind(other.kind),
+              type(other.type), // Copy the union using its copy constructor
+              name(other.name),
+              astNode(other.astNode),
+              dataType(other.dataType),
+              members(other.members),
+              methods(other.methods),
+              elementType(other.elementType),
+              size(other.size)
+        {
+        }
+
+        // Copy assignment operator
+        IRTypeSymbol &operator=(const IRTypeSymbol &other)
+        {
+            if (this != &other)
+            {
+                kind = other.kind;
+                type = other.type; // Copy the union using its copy assignment
+                name = other.name;
+                astNode = other.astNode;
+                dataType = other.dataType;
+                members = other.members;
+                methods = other.methods;
+                elementType = other.elementType;
+                size = other.size;
+            }
+            return *this;
         }
     };
 
@@ -740,6 +872,31 @@ namespace Cryo
         IRMethodSymbol(IRFunctionSymbol func, bool virt, bool stat, bool ctor, bool dtor, size_t vtableIdx, IRTypeSymbol *parent)
             : function(func), isVirtual(virt), isStatic(stat), isConstructor(ctor), isDestructor(dtor),
               vtableIndex(vtableIdx), parentType(parent), astNode(nullptr), dataType(nullptr) {}
+
+        // Copy constructor
+        IRMethodSymbol(const IRMethodSymbol &other)
+            : function(other.function), isVirtual(other.isVirtual), isStatic(other.isStatic),
+              isConstructor(other.isConstructor), isDestructor(other.isDestructor),
+              vtableIndex(other.vtableIndex), parentType(other.parentType),
+              astNode(other.astNode), dataType(other.dataType) {}
+
+        // Copy assignment operator
+        IRMethodSymbol &operator=(const IRMethodSymbol &other)
+        {
+            if (this != &other)
+            {
+                function = other.function;
+                isVirtual = other.isVirtual;
+                isStatic = other.isStatic;
+                isConstructor = other.isConstructor;
+                isDestructor = other.isDestructor;
+                vtableIndex = other.vtableIndex;
+                parentType = other.parentType;
+                astNode = other.astNode;
+                dataType = other.dataType;
+            }
+            return *this;
+        }
     };
 
     // This class is used to create symbols for the IRSymbolTable.

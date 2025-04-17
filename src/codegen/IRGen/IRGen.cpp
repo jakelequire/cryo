@@ -43,8 +43,6 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
 
-        this->context.getInstance().module->print(llvm::errs(), nullptr);
-
         // Complete the generation
         completeGeneration();
     }
@@ -70,22 +68,12 @@ namespace Cryo
 
     void Cryo::IRGeneration::completeGeneration(void)
     {
-        // Verify the module
-        // if (llvm::verifyModule(*context.module))
-        // {
-        //     logMessage(LMI, "ERROR", "IRGeneration", "Module verification failed");
-        //     return;
-        // }
-
-        // Optimize the module
-        llvm::legacy::PassManager passManager;
-        passManager.add(llvm::createInstructionCombiningPass());
-
-        // Run the optimization passes
-        // passManager.run(*context.module);
-
-        // Print Symbol Table
-        context.symbolTable->debugPrint();
+        // Add function declarations to the global symbol table instance
+        context.getInstance().symbolTable->getGlobalSymbolTableInstance()->importFunctions(
+            context.getInstance().symbolTable->getFunctions());
+        // Import the types to the global symbol table instance
+        context.getInstance().symbolTable->getGlobalSymbolTableInstance()->importTypes(
+            context.getInstance().symbolTable->getTypes());
 
         // Write the module to a file
         std::string fileName = ".ll";

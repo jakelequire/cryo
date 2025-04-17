@@ -29,6 +29,47 @@
 
 namespace Cryo
 {
+    struct GlobalSymbolTableInstance
+    {
+
+        std::unordered_map<std::string, llvm::Module *> modules;
+        std::unordered_map<std::string, const llvm::Function &> functions;
+        std::unordered_map<std::string, llvm::Type *> types;
+
+        void importFunctions(const std::unordered_map<std::string, IRFunctionSymbol> &functions)
+        {
+            for (const auto &func : functions)
+            {
+                this->functions.emplace(func.first, func.second.getFunction()->getFunction());
+            }
+        }
+
+        void importTypes(const std::unordered_map<std::string, IRTypeSymbol> &types)
+        {
+            for (const auto &type : types)
+            {
+                this->types[type.first] = type.second.getType();
+            }
+        }
+
+        void setModule(const std::string &name, llvm::Module *module)
+        {
+            modules[name] = module;
+        }
+        llvm::Module *getModule(const std::string &name)
+        {
+            auto it = modules.find(name);
+            if (it != modules.end())
+            {
+                return it->second;
+            }
+            return nullptr;
+        }
+    };
+
+    // Global symbol table instance
+    extern GlobalSymbolTableInstance globalSymbolTableInstance;
+
     // This struct is to preload all the LLVM types that are used in the IRSymbolTable
     struct LLVMTypes
     {
@@ -63,6 +104,16 @@ namespace Cryo
         IRFunctionSymbol *currentFunction = nullptr; // Track current function scope
 
     public:
+        std::unordered_map<std::string, IRFunctionSymbol> getFunctions() const
+        {
+            return functions;
+        }
+        std::unordered_map<std::string, IRTypeSymbol> getTypes() const
+        {
+            return types;
+        }
+
+    public:
         explicit IRSymbolTable(llvm::Module *module)
             : currentModule(module)
         {
@@ -80,6 +131,12 @@ namespace Cryo
         void setCurrentFunction(IRFunctionSymbol *function) { currentFunction = function; }
         void clearCurrentFunction() { currentFunction = nullptr; }
         bool inConstructorInstance = false;
+
+        // Global symbol table instance
+        GlobalSymbolTableInstance *getGlobalSymbolTableInstance()
+        {
+            return &globalSymbolTableInstance;
+        }
 
         // Module access
         llvm::Module *getModule() { return currentModule; }
@@ -105,6 +162,7 @@ namespace Cryo
         // Symbol lookup
         IRVariableSymbol *findVariable(const std::string &name);
         IRVariableSymbol *findLocalVariable(const std::string &name);
+
         // Helper method for creating global variables
         IRVariableSymbol *createGlobalVariable(const std::string &name, llvm::Type *type,
                                                llvm::Value *initialValue = nullptr);

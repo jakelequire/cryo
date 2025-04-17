@@ -168,13 +168,26 @@ namespace Cryo
 
         // Check for the existence of the core.ll file
         std::string coreFilePath = std::string(this->dirInfo->runtimeDir) + "/core.ll";
-        if (!fs->fileExists(coreFilePath.c_str()))
-        {
-            fprintf(stderr, "[Linker] Error: Core file does not exist: %s\n", coreFilePath.c_str());
-            CONDITION_FAILED;
-            return false;
-        }
         logMessage(LMI, "INFO", "Linker", "Core file exists: %s", coreFilePath.c_str());
+
+        // Check if all directories exist `std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/`
+        std::string cryoStdDir = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/";
+        if (!std::filesystem::exists(cryoStdDir) || !std::filesystem::is_directory(cryoStdDir))
+        {
+            // Create the directory
+            try
+            {
+                std::filesystem::create_directories(cryoStdDir);
+                logMessage(LMI, "INFO", "Linker", "Created directory: %s", cryoStdDir.c_str());
+            }
+            catch (const std::filesystem::filesystem_error &e)
+            {
+                logMessage(LMI, "ERROR", "Linker", "Failed to create directory %s: %s",
+                           cryoStdDir.c_str(), e.what());
+                CONDITION_FAILED;
+                return false;
+            }
+        }
 
         // Copy the core.ll file to {compilerDir}/cryo/Std/bin/.ll/core.ll
         std::string destPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/core.ll";
