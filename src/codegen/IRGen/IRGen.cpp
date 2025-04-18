@@ -100,11 +100,13 @@ namespace Cryo
     int Cryo::IRGeneration::finalize(void)
     {
         logMessage(LMI, "INFO", "IRGeneration", "Finalizing IR Generation...");
-
-        const llvm::Module &module = *context.module;
+        context.getInstance().module->print(llvm::errs(), nullptr);
+        const llvm::Module &module = *context.getInstance().module;
         // Clone the module to avoid modifying the original
+        logMessage(LMI, "INFO", "IRGeneration", "Cloning module...");
         std::unique_ptr<llvm::Module> clonedModule = llvm::CloneModule(module);
 
+        logMessage(LMI, "INFO", "IRGeneration", "Cloned module successfully.");
         // Add the module to the global symbol table instance
         if (globalSymbolTableInstance.setModule(clonedModule->getName().str(), clonedModule.release()) != 0)
         {

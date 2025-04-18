@@ -2,7 +2,7 @@
 source_filename = "core"
 
 %struct.Int = type { i32 }
-%struct.String = type { i32, i32, ptr, i1, i1 }
+%struct.String = type { ptr }
 %VA_ARGS = type { i32, ptr, ptr }
 
 @Int = external global %struct.Int
@@ -54,9 +54,6 @@ declare i32 @scanf_export(ptr, %VA_ARGS) #0
 declare void @printI32_export(i32) #0
 
 ; Function Attrs: nounwind
-declare void @printString_export(%struct.String) #0
-
-; Function Attrs: nounwind
 declare void @sys_exit(%struct.Int) #0
 
 ; Function Attrs: nounwind
@@ -102,15 +99,6 @@ entry:
   ret void
 }
 
-define void @printString(%struct.String %value) {
-entry:
-  %value.alloca = alloca %struct.String, align 8
-  store %struct.String %value, ptr %value.alloca, align 8
-  %fc_idx_0.value.alloca.load = load %struct.String, ptr %value.alloca, align 8
-  call void @printString_export(%struct.String %fc_idx_0.value.alloca.load)
-  ret void
-}
-
 define void @printI32(i32 %value) {
 entry:
   %value.alloca = alloca i32, align 4
@@ -125,14 +113,15 @@ entry:
   ret void
 }
 
-define void @printStr(%struct.String %value) {
+define void @printStr(ptr %value) {
 entry:
-  %value.alloca = alloca %struct.String, align 8
-  store %struct.String %value, ptr %value.alloca, align 8
+  %value.alloca = alloca ptr, align 8
+  store ptr %value, ptr %value.alloca, align 8
   %strAlloc = alloca [4 x i8], align 1
   store [4 x i8] c"%s\0A\00", ptr %strAlloc, align 1
   %fc_idx_0. = ptrtoint ptr %strAlloc to i8
-  %printf_export = call i32 @printf_export(i8 %fc_idx_0.)
+  %fc_idx_1.value.alloca.load = load ptr, ptr %value.alloca, align 8
+  %printf_export = call i32 @printf_export(i8 %fc_idx_0., ptr %fc_idx_1.value.alloca.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
