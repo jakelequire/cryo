@@ -170,15 +170,17 @@ namespace Cryo
         llvm::Function *globalFunc = globalSymbolTableInstance.getFunction(name);
         if (globalFunc)
         {
-            // Check if there's already a forward declaration in the current module
-            llvm::Function *existingFunc = context.module->getFunction(name);
+            logMessage(LMI, "INFO", "CodeGen", "Found function %s in global symbol table", name.c_str());
+
+            // Check if the function is already defined in the current module
+            llvm::Function *existingFunc = context.getInstance().module->getFunction(name);
             if (existingFunc)
             {
-                logMessage(LMI, "INFO", "CodeGen", "Found forward declaration for function %s in current module", name.c_str());
-                return findFunction(name); // Return the existing function symbol
+                logMessage(LMI, "INFO", "CodeGen", "Function %s already defined in current module", name.c_str());
+                return globalSymbolTableInstance.wrapLLVMFunction(existingFunc);
             }
+            // If not, create a new function in the current module
 
-            logMessage(LMI, "INFO", "CodeGen", "Found function %s in global symbol table", name.c_str());
             // Create an external declaration for the function in the current module
             llvm::FunctionType *funcType = globalFunc->getFunctionType();
             llvm::Function *llvmFunc = llvm::Function::Create(

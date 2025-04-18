@@ -81,17 +81,17 @@ namespace Cryo
         switch (literalDataType->container->primitive)
         {
         case PRIM_INT:
-            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, node->data.literal->value.intValue, true));
+            return this->createIntegerLiteral(32, node->data.literal->value.intValue, true);
         case PRIM_I8:
-            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(8, node->data.literal->value.intValue, true));
+            return this->createIntegerLiteral(8, node->data.literal->value.intValue, true);
         case PRIM_I16:
-            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(16, node->data.literal->value.intValue, true));
+            return this->createIntegerLiteral(16, node->data.literal->value.intValue, true);
         case PRIM_I32:
-            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(32, node->data.literal->value.intValue, true));
+            return this->createIntegerLiteral(32, node->data.literal->value.intValue, true);
         case PRIM_I64:
-            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(64, node->data.literal->value.intValue, true));
+            return this->createIntegerLiteral(64, node->data.literal->value.intValue, true);
         case PRIM_I128:
-            return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(128, node->data.literal->value.intValue, true));
+            return this->createIntegerLiteral(128, node->data.literal->value.intValue, true);
         case PRIM_FLOAT:
             return llvm::ConstantFP::get(context.getInstance().context, llvm::APFloat(node->data.literal->value.floatValue));
         case PRIM_BOOLEAN:

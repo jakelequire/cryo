@@ -152,7 +152,7 @@ namespace Cryo
         void generateIR(ASTNode *root);
         void completeGeneration(void);
         int finalize(void);
-        
+
     private:
         CodegenContext &context;
 
@@ -192,6 +192,7 @@ namespace Cryo
         llvm::Value *generatePropertyAccess(ASTNode *node);
 
         llvm::Value *generateStringLiteral(ASTNode *node);
+        llvm::Value *createIntegerLiteral(unsigned int numBits, uint64_t val, bool isSigned = false);
 
     public:
         void generateStructConstructor(ASTNode *node, llvm::StructType *structType);

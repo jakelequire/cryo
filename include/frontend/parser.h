@@ -114,8 +114,10 @@ typedef struct ParsingContext
     // Type Context, this will change how the parser interprets literals
     DataType *integerContextType;
     void (*setIntegerContextType)(ParsingContext *context, DataType *type);
+    void (*clearIntegerContextType)(ParsingContext *context);
     DataType *stringContextType;
     void (*setStringContextType)(ParsingContext *context, DataType *type);
+    void (*clearStringContextType)(ParsingContext *context);
 
     // Context Flags
     bool isParsingModuleFile;

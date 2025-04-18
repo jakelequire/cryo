@@ -1,7 +1,7 @@
 ; ModuleID = 'core'
 source_filename = "core"
 
-%struct.Int = type { i32, i1, i1 }
+%struct.Int = type { i32 }
 %struct.String = type { i32, i32, ptr, i1, i1 }
 %VA_ARGS = type { i32, ptr, ptr }
 
@@ -54,6 +54,9 @@ declare i32 @scanf_export(ptr, %VA_ARGS) #0
 declare void @printI32_export(i32) #0
 
 ; Function Attrs: nounwind
+declare void @printString_export(%struct.String) #0
+
+; Function Attrs: nounwind
 declare void @sys_exit(%struct.Int) #0
 
 ; Function Attrs: nounwind
@@ -99,14 +102,24 @@ entry:
   ret void
 }
 
+define void @printString(%struct.String %value) {
+entry:
+  %value.alloca = alloca %struct.String, align 8
+  store %struct.String %value, ptr %value.alloca, align 8
+  %fc_idx_0.value.alloca.load = load %struct.String, ptr %value.alloca, align 8
+  call void @printString_export(%struct.String %fc_idx_0.value.alloca.load)
+  ret void
+}
+
 define void @printI32(i32 %value) {
 entry:
-  %fc_idx_1.value.alloca = alloca i32, align 4
-  store i32 %value, ptr %fc_idx_1.value.alloca, align 4
+  %value.alloca = alloca i32, align 4
+  store i32 %value, ptr %value.alloca, align 4
   %strAlloc = alloca [4 x i8], align 1
   store [4 x i8] c"%d\0A\00", ptr %strAlloc, align 1
   %fc_idx_0. = ptrtoint ptr %strAlloc to i8
-  %printf_export = call i32 @printf_export(i8 %fc_idx_0., ptr %fc_idx_1.value.alloca)
+  %fc_idx_1.value.alloca.load = load i32, ptr %value.alloca, align 4
+  %printf_export = call i32 @printf_export(i8 %fc_idx_0., i32 %fc_idx_1.value.alloca.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -127,12 +140,13 @@ entry:
 
 define void @printChar(i8 %value) {
 entry:
-  %fc_idx_1.value.alloca = alloca i8, align 1
-  store i8 %value, ptr %fc_idx_1.value.alloca, align 1
+  %value.alloca = alloca i8, align 1
+  store i8 %value, ptr %value.alloca, align 1
   %strAlloc = alloca [4 x i8], align 1
   store [4 x i8] c"%c\0A\00", ptr %strAlloc, align 1
   %fc_idx_0. = ptrtoint ptr %strAlloc to i8
-  %printf_export = call i32 @printf_export(i8 %fc_idx_0., ptr %fc_idx_1.value.alloca)
+  %fc_idx_1.value.alloca.load = load i8, ptr %value.alloca, align 1
+  %printf_export = call i32 @printf_export(i8 %fc_idx_0., i8 %fc_idx_1.value.alloca.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void

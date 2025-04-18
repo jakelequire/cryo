@@ -885,7 +885,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
         }
         printf("Int Value: %d\n", intVal);
         node = createIntLiteralNode(intVal, arena, state, lexer);
-        if (context->integerContextType)
+        if (context->integerContextType != NULL)
         {
             node->data.literal->type = context->integerContextType;
         }
@@ -1458,6 +1458,10 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", arena, state, context);
     }
 
+    // Clear the context for the variable
+    context->clearIntegerContextType(context);
+    context->clearStringContextType(context);
+
     logMessage(LMI, "INFO", "Parser", "Variable declaration parsed.");
 
     ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, false, arena, state, lexer);
@@ -1467,8 +1471,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         varDeclNode->data.varDecl->indexExpr = initializer->data.indexExpr;
         varDeclNode->data.varDecl->hasIndexExpr = true;
     }
-
-    (varDeclNode, arena);
 
     AddVariableToSymbolTable(globalTable, varDeclNode, currentScopeID);
 

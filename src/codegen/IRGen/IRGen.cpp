@@ -114,8 +114,14 @@ namespace Cryo
 
         // Print the module to the console
         llvm::errs() << "Finalized Module:\n";
+        std::cout << "--------------------------------------------------------------------------------------------\n";
         context.module->print(llvm::errs(), nullptr);
-
+        std::cout << "--------------------------------------------------------------------------------------------\n";
+        std::cout << "\n\n";
+        std::cout << "Symbol Table:\n";
+        context.symbolTable->debugPrint();
+        std::cout << "--------------------------------------------------------------------------------------------\n";
+        std::cout << "\n\n";
         return 0;
     }
 

@@ -157,8 +157,36 @@ namespace Cryo
         for (int i = 0; i < call->argCount; i++)
         {
             llvm::Value *argValue = getLLVMValue(call->args[i]);
+            // Add this code in your visitFunctionCall method after getting argValue but before pushing it to args
             if (argValue)
             {
+                // Check if we need to load from a pointer
+                if (i < funcSymbol->function->getFunctionType()->getNumParams())
+                {
+                    llvm::Type *paramType = funcSymbol->function->getFunctionType()->getParamType(i);
+
+                    // Check if argument is a pointer but parameter isn't
+                    if (argValue->getType()->isPointerTy() && !paramType->isPointerTy())
+                    {
+                        // For opaque pointers, we need to determine the type to load in another way
+
+                        // Option 1: If it's an alloca instruction, we can get the allocated type
+                        if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(argValue))
+                        {
+                            llvm::Type *allocatedType = allocaInst->getAllocatedType();
+                            argValue = context.getInstance().builder.CreateLoad(allocatedType, argValue,
+                                                                                argValue->getName() + ".load");
+                        }
+                        // Option 2: Use the expected parameter type
+                        else
+                        {
+                            argValue = context.getInstance().builder.CreateLoad(paramType, argValue,
+                                                                                argValue->getName() + ".load");
+                        }
+                    }
+                }
+
+                // Continue with argument processing...
                 std::string argName = argValue->getName().str();
                 argValue->setName("fc_idx_" + std::to_string(i) + "." + argName);
                 args.push_back(argValue);

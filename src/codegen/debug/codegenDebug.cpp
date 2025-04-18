@@ -222,8 +222,10 @@ namespace Cryo
             return "MetadataTyID";
         case llvm::Type::TypeID::X86_AMXTyID:
             return "X86_AMXTyID";
+        case llvm::Type::TypeID::PointerTyID:
+            return "PointerTyID";
         default:
-            return "Unknown";
+            return "Unknown: " + std::to_string(tyID);
         }
     }
 

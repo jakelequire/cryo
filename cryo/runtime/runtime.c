@@ -404,3 +404,14 @@ void printI32_export(int32_t value)
 {
     printf("%d\n", value);
 }
+void printString_export(cryo_string_t str)
+{
+    if (str.val != NULL)
+    {
+        printf("%s\n", str.val);
+    }
+    else
+    {
+        printf("NULL\n");
+    }
+}

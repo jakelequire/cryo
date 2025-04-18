@@ -41,6 +41,24 @@ void ParsingContext_setStringContextType(ParsingContext *context, DataType *type
     context->stringContextType = type;
 }
 
+void ParsingContext_clearIntegerContextType(ParsingContext *context)
+{
+    __STACK_FRAME__
+    if (context->integerContextType)
+    {
+        context->integerContextType = NULL;
+    }
+}
+
+void ParsingContext_clearStringContextType(ParsingContext *context)
+{
+    __STACK_FRAME__
+    if (context->stringContextType)
+    {
+        context->stringContextType = NULL;
+    }
+}
+
 ParsingContext *createParsingContext(void)
 {
     __STACK_FRAME__
@@ -61,8 +79,10 @@ ParsingContext *createParsingContext(void)
 
     context->integerContextType = NULL;
     context->setIntegerContextType = ParsingContext_setIntegerContextType;
+    context->clearIntegerContextType = ParsingContext_clearIntegerContextType;
     context->stringContextType = NULL;
     context->setStringContextType = ParsingContext_setStringContextType;
+    context->clearStringContextType = ParsingContext_clearStringContextType;
 
     context->currentGenericParamCapacity = 16;
     context->currentGenericParamCount = 0;

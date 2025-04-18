@@ -22,10 +22,6 @@ struct Int {
     // The core Int properties.
     val: i32;
 
-    // The core Int flags.
-    isZero: boolean;
-    isNegative: boolean;
-
     constructor(__val__: i32) {
         this.val = __val__;
         // this.isZero = (this.val == 0);
@@ -37,16 +33,11 @@ struct Int {
 
 struct String {
     length: i32;
-    capacity: i32;
     val: str;
-
-    isEmpty: boolean;
-    isNull: boolean;
-
 
     constructor(__string__: str) {
         this.val = __string__;
-        // this.length = strlen_export(__str__);
+        this.length = strlen_export(__str__);
         // this.capacity = this.length + 1; // +1 for null terminator
         // this.isEmpty = (this.length == 0);
         // this.isNull = (this.val == null);
@@ -73,9 +64,6 @@ implement struct String {
     // The core string properties.
     val: str = "";
     length: i32 = 0;
-    capacity: i32 = 0;
-    isEmpty: boolean = true;
-    isNull: boolean = false;
 
     
     // The core string methods.
@@ -139,6 +127,7 @@ implement struct String {
 extern function printf_export   (format: str, ...) -> i32;
 extern function scanf_export    (format: str, ...) -> i32;
 extern function printI32_export (value: i32) -> void;
+extern function printString_export (value: String) -> void;
 
 extern function sys_exit    (status: Int) -> void;
 extern function sys_read    (fd: Int, buf: void *, count: Int) -> Int;
@@ -147,11 +136,11 @@ extern function sys_write   (fd: Int, buf: void *, count: Int) -> Int;
 extern function mmap_export     (addr: void *, length: Int, prot: Int, flags: Int, fd: Int, offset: Int) -> void *;
 extern function munmap_export   (addr: void *, length: Int) -> Int;
 extern function malloc_export   (size: Int) -> void *;
-extern function free_export     (ptr: void *) -> Int;
+extern function free_export     (__ptr__: void *) -> Int;
 extern function memcpy_export   (dest: void *, src: void *, n: Int) -> void *;
 extern function memmove_export  (dest: void *, src: void *, n: Int) -> void *;
 extern function memcmp_export   (ptr1: void *, ptr2: void *, n: Int) -> Int;
-extern function memset_export   (ptr: void *, value: Int, num: Int) -> void *;
+extern function memset_export   (__ptr__: void *, value: Int, num: Int) -> void *;
 
 
 // ======================================================== //
@@ -164,13 +153,18 @@ function printInt (value: Int) -> void {
     return;
 }
 
+function printString (value: String) -> void {
+    // printString_export(value);
+    return;
+}
+
 function printI32 (value: i32) -> void {
     printf_export("%d\n", value);
     return;
 }
 
-function printStr (value: String) -> void {
-    printf_export("%s\n", value.val);
+function printStr (value: str) -> void {
+    printf_export("%s\n", value);
     return;
 }
 
@@ -178,3 +172,5 @@ function printChar (value: char) -> void {
     printf_export("%c\n", value);
     return;
 }
+
+
