@@ -195,6 +195,9 @@ all:
 	@$(MAKE) cls
 	@echo "Building with $(NUM_JOBS) parallel jobs"
 	$(MAKE) -j$(NUM_JOBS) build
+	@echo "Building test suite with $(NUM_JOBS) parallel jobs"
+	$(MAKE) -j$(NUM_JOBS) tests
+	@echo "[BUILD COMPLETE]"
 
 .PHONY: build
 build: $(MAIN_BIN)
@@ -215,3 +218,62 @@ clean:
 
 .PHONY: debug clean all 
 .NOTPARALLEL: clean clean-% libs
+
+# >>=======--------------------------------------------------=======<< #
+# >>=======                  Test Suite                      =======<< #
+# >>=======--------------------------------------------------=======<< #
+
+# Test Suite Configuration
+TEST_SRC_DIR = ./tests/
+TEST_FRAMEWORK_DIR = $(TEST_SRC_DIR)framework/
+TEST_OBJ_DIR = $(OBJ_DIR)tests/
+TEST_BIN_DIR = $(BIN_DIR)tests/
+
+# Test binary names
+CRYO_TEST_SUITE = $(TEST_BIN_DIR)cryoTestSuite$(BIN_SUFFIX)
+AST_VERIFIER = $(TEST_BIN_DIR)astVerifier$(BIN_SUFFIX)
+
+# Ensure test directories exist
+$(shell mkdir -p $(TEST_OBJ_DIR)/framework $(TEST_BIN_DIR))
+
+# Define test source files - explicitly list them to avoid issues
+TEST_FRAMEWORK_SRCS = $(TEST_FRAMEWORK_DIR)test_runner.c $(TEST_FRAMEWORK_DIR)ast_verifier.c
+TEST_SRCS = $(TEST_SRC_DIR)cryoTestSuite.c
+
+# Define test object files
+TEST_FRAMEWORK_OBJS = $(patsubst $(TEST_FRAMEWORK_DIR)%.c,$(TEST_OBJ_DIR)framework/%.o,$(notdir $(TEST_FRAMEWORK_SRCS)))
+TEST_OBJS = $(patsubst $(TEST_SRC_DIR)%.c,$(TEST_OBJ_DIR)%.o,$(notdir $(TEST_SRCS)))
+
+# Combined test objects
+ALL_TEST_OBJS = $(TEST_FRAMEWORK_OBJS) $(TEST_OBJS)
+
+# Compile test framework C files (explicitly defined)
+$(TEST_OBJ_DIR)framework/test_runner.o: $(TEST_FRAMEWORK_DIR)test_runner.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(TEST_OBJ_DIR)framework/ast_verifier.o: $(TEST_FRAMEWORK_DIR)ast_verifier.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Compile main test file
+$(TEST_OBJ_DIR)cryoTestSuite.o: $(TEST_SRC_DIR)cryoTestSuite.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Link test binaries - only make the main test suite for now
+$(CRYO_TEST_SUITE): $(TEST_OBJ_DIR)cryoTestSuite.o $(TEST_OBJ_DIR)framework/test_runner.o $(TEST_OBJ_DIR)framework/ast_verifier.o
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $^ $(filter-out $(OBJ_DIR)main.o, $(ALL_OBJS)) -o $@ $(LDFLAGS) $(STD_LIBS)
+
+# Let's simplify for now - we'll just build the main test suite
+tests: $(CRYO_TEST_SUITE)
+
+run-tests: tests
+	@echo "Running Cryo Test Suite..."
+	@$(CRYO_TEST_SUITE)
+
+clean-tests:
+	@echo "Cleaning test files..."
+	@$(RMDIR) $(TEST_OBJ_DIR) 2>/dev/null || true
+	@$(RMDIR) $(TEST_BIN_DIR) 2>/dev/null || true

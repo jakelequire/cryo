@@ -377,7 +377,9 @@ cryo_string_t strcpy_export(cryo_string_t dest, cryo_string_t src)
 int32_t printf_export(const char *format, ...)
 {
     printf("[C::DEBUG] CALLING printf_export\n");
+    printf("[C::DEBUG] address: %p\n", format);
     printf("[C::DEBUG] format: %s\n", format);
+
     va_list args;
     int32_t result;
 
@@ -406,9 +408,27 @@ void printI32_export(int32_t value)
 }
 void printString_export(cryo_string_t str)
 {
+    printf("[C::DEBUG] CALLING printString_export\n");
+    printf("[C::DEBUG] address: %p\n", str.val);
+
     if (str.val != NULL)
     {
         printf("%s\n", str.val);
+    }
+    else
+    {
+        printf("NULL\n");
+    }
+}
+
+void printStr_export(char *str)
+{
+    printf("[C::DEBUG] CALLING printStr_export\n");
+    printf("[C::DEBUG] address: %p\n", str);
+
+    if (str != NULL)
+    {
+        printf("%s\n", str);
     }
     else
     {

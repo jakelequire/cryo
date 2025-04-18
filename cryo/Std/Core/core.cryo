@@ -61,8 +61,6 @@ struct String {
 implement struct String {
     // The core string properties.
     val: str = "";
-    length: i32 = 0;
-
     
     // The core string methods.
     append(__str__: str) -> String {
@@ -123,6 +121,7 @@ implement struct String {
 // ======================================================== //
 
 extern function printf_export       (format: str, ...) -> i32;
+extern function printStr_export     (value: str) -> void;
 extern function scanf_export        (format: str, ...) -> i32;
 extern function printI32_export     (value: i32) -> void;
 
@@ -156,7 +155,12 @@ function printI32 (value: i32) -> void {
 }
 
 function printStr (value: str) -> void {
-    printf_export("%s\n", value);
+    printStr_export(value);
+    return;
+}
+
+function printString(value: String) -> void {
+    printf_export("%s\n", value.val);
     return;
 }
 

@@ -37,28 +37,32 @@ namespace Cryo
         }
 
         std::string strValue = node->data.literal->value.stringValue;
-
         logMessage(LMI, "INFO", "Initializer", "String value: %s", strValue.c_str());
 
-        // Create a constant array for the string
-        llvm::ArrayType *strArrayType = llvm::ArrayType::get(
-            llvm::Type::getInt8Ty(context.getInstance().context), strValue.size() + 1); // +1 for null terminator
+        // Create a global string constant instead of stack allocation
+        // This ensures the string has a constant address throughout program execution
         llvm::Constant *strConstant = llvm::ConstantDataArray::getString(
             context.getInstance().context, strValue, true);
 
-        // Allocate memory for the string on the stack
-        llvm::Value *strAlloc = context.getInstance().builder.CreateAlloca(strArrayType, nullptr, "strAlloc");
+        // Create a global variable to hold the string data
+        llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(
+            *context.getInstance().module,
+            strConstant->getType(),
+            true, // isConstant
+            llvm::GlobalValue::PrivateLinkage,
+            strConstant,
+            ".str." + std::to_string(reinterpret_cast<uintptr_t>(node)));
 
-        // Store the constant string into the allocated memory
-        context.getInstance().builder.CreateStore(strConstant, strAlloc);
+        // Get a pointer to the first character of the string
+        llvm::Value *strPtr = context.getInstance().builder.CreateGEP(
+            globalStr->getValueType(),
+            globalStr,
+            {llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0),
+             llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0)},
+            "strPtr");
 
-        // Cast the pointer to i8* for compatibility
-        llvm::Value *strPtr = context.getInstance().builder.CreatePointerCast(
-            strAlloc, llvm::Type::getInt8Ty(context.getInstance().context));
-
-        logMessage(LMI, "INFO", "Initializer", "String literal generated successfully.");
-
+        logMessage(LMI, "INFO", "Initializer", "String literal generated successfully as global.");
         return strPtr;
     }
-    
+
 } // namespace Cryo

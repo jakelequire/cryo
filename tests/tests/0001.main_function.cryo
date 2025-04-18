@@ -1,4 +1,4 @@
-#__compiler_testing__
+@pragma "test_suite"
 namespace Testing;
 
 

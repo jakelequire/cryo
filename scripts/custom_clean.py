@@ -37,7 +37,8 @@ options = {
     "settings": "settings",
     "symbolTable": "symbolTable",
     "tools": "tools",
-    "main": "main"
+    "main": "main",
+    "tests": "tests",
 }
 
 def print_usage():
