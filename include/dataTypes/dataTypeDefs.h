@@ -415,6 +415,7 @@ typedef struct DataType_t
     // ==================== [ Function Assignments ] ==================== //
 
     void (*cast)(DataType *fromType, DataType *toType);
+    void (*unsafeCast)(DataType *fromType, DataType *toType);
     DataType *(*clone)(DataType *type);
     void (*setConst)(DataType *type, bool isConst);
     void (*setPointer)(DataType *type, bool isPointer);

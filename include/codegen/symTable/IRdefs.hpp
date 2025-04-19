@@ -676,6 +676,40 @@ namespace Cryo
                 return AllocaType::Aggregate;
             case NODE_CLASS:
                 return AllocaType::Aggregate;
+            case NODE_LITERAL_EXPR:
+                return inferFromLiteral(node->data.literal, false);
+            case NODE_STRING_LITERAL:
+                return AllocaType::Aggregate;
+            case NODE_VAR_NAME:
+                return AllocaType::AllocaLoadStore;
+            case NODE_FUNCTION_CALL:
+            case NODE_METHOD_CALL:
+                return AllocaType::AllocaAndStore;
+            case NODE_BINARY_EXPR:
+                return AllocaType::AllocaAndStore;
+            case NODE_UNARY_EXPR:
+                return AllocaType::AllocaAndStore;
+            case NODE_INDEX_EXPR:
+                return AllocaType::AllocaLoadStore;
+            case NODE_PROPERTY_ACCESS:
+                return AllocaType::AllocaLoadStore;
+            case NODE_RETURN_STATEMENT:
+                return AllocaType::AllocaAndStore;
+            case NODE_BLOCK:
+                return AllocaType::AllocaOnly;
+            case NODE_IF_STATEMENT:
+                return AllocaType::AllocaOnly;
+            case NODE_FOR_STATEMENT:
+                return AllocaType::AllocaOnly;
+            case NODE_WHILE_STATEMENT:
+                return AllocaType::AllocaOnly;
+            case NODE_PROPERTY:
+                return AllocaType::AllocaOnly;
+            case NODE_METHOD:
+                return AllocaType::AllocaOnly;
+            case NODE_STRUCT_CONSTRUCTOR:
+            case NODE_CLASS_CONSTRUCTOR:
+                return AllocaType::AllocaOnly;
             default:
                 return AllocaType::None;
             }

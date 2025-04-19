@@ -43,12 +43,38 @@ namespace Cryo
         if (retVal)
         {
             logMessage(LMI, "INFO", "CodeGenVisitor", "Return value: %s", retVal->getName().str().c_str());
-            context.getInstance().builder.CreateRet(retVal);
+            llvm::Type *retType = context.getInstance().builder.GetInsertBlock()->getParent()->getReturnType();
+            if (retType->isVoidTy())
+            {
+                logMessage(LMI, "ERROR", "CodeGenVisitor", "Function return type is void");
+                return;
+            }
+            if (!retType->isPointerTy() && retVal->getType()->isPointerTy())
+            {
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(retVal))
+                {
+                    retVal = context.getInstance().builder.CreateLoad(allocaInst->getAllocatedType(), retVal, "load");
+                }
+            }
+            logMessage(LMI, "INFO", "CodeGenVisitor", "Return value name: %s", retVal->getName().str().c_str());
         }
         else
         {
             logMessage(LMI, "INFO", "CodeGenVisitor", "No return value, returning void");
             context.getInstance().builder.CreateRetVoid();
+        }
+
+        logMessage(LMI, "INFO", "CodeGenVisitor", "Creating return statement");
+
+        // Create the return statement
+        if (retVal)
+        {
+            context.getInstance().builder.CreateRet(retVal);
+            logMessage(LMI, "INFO", "CodeGenVisitor", "Return statement created");
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Return value is null");
         }
     }
 } // namespace Cryo

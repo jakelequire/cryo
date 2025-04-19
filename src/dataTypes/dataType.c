@@ -60,6 +60,33 @@ void DataTypes_cast(DataType *fromType, DataType *toType)
     }
 }
 
+void DataTypes_unsafeCast(DataType *fromType, DataType *toType)
+{
+    // This function will cast between different data types without checking
+    // if the cast is valid. This is dangerous and should be used with caution.
+    logMessage(LMI, "INFO", "DTM", "Unsafe casting data type...");
+    if (!fromType || !toType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to unsafe cast NULL data types\n");
+        CONDITION_FAILED;
+    }
+
+    logMessage(LMI, "INFO", "DTM", "Unsafe cast from %s to %s", fromType->typeName, toType->typeName);
+    // Preform the cast without checking
+    // This is dangerous and should be used with caution.
+    fromType->container = toType->container;
+    fromType->typeName = toType->typeName;
+    fromType->isConst = toType->isConst;
+    fromType->isPointer = toType->isPointer;
+    fromType->isReference = toType->isReference;
+    fromType->isArray = toType->isArray;
+
+    logMessage(LMI, "INFO", "DTM", "Unsafe cast complete");
+    logMessage(LMI, "INFO", "DTM", "New type name: %s", fromType->typeName);
+
+    return;
+}
+
 void DataTypes_setTypeName(DataType *type, const char *name)
 {
     if (!type)
@@ -132,6 +159,7 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
     type->setPointer = DataTypes_isPointer;
     type->setReference = DataTypes_isReference;
     type->cast = DataTypes_cast;
+    type->unsafeCast = DataTypes_unsafeCast;
     type->clone = DataTypes_clone;
     type->setTypeName = DataTypes_setTypeName;
     type->free = DataTypes_free;

@@ -7,10 +7,9 @@ source_filename = "core"
 
 @Int = external global %struct.Int
 @String = external global %struct.String
-@fc_idx_0..str.93825020792160 = private constant [4 x i8] c"%d\0A\00"
-@fc_idx_0..str.93825022416560 = private constant [4 x i8] c"%d\0A\00"
-@fc_idx_0..str.93825024969040 = private constant [4 x i8] c"%s\0A\00"
-@fc_idx_0..str.93825026596240 = private constant [4 x i8] c"%c\0A\00"
+@.str.93825036140416 = unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.str.93825037652256 = unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
+@.str.93825038386512 = unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
 
 ; Function Attrs: nounwind
 declare i32 @strlen_export(ptr) #0
@@ -97,7 +96,7 @@ define void @printInt(%struct.Int %value) {
 entry:
   %value.alloca = alloca %struct.Int, align 8
   store %struct.Int %value, ptr %value.alloca, align 4
-  %printf_export = call i32 @printf_export(ptr @fc_idx_0..str.93825020792160)
+  %printf_export = call i32 @printf_export(ptr @.str.93825036140416)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -108,7 +107,7 @@ entry:
   %value.alloca = alloca i32, align 4
   store i32 %value, ptr %value.alloca, align 4
   %fc_idx_1.value.alloca.load = load i32, ptr %value.alloca, align 4
-  %printf_export = call i32 @printf_export(ptr @fc_idx_0..str.93825022416560, i32 %fc_idx_1.value.alloca.load)
+  %printf_export = call i32 @printf_export(ptr @.str.93825036140416, i32 %fc_idx_1.value.alloca.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -116,9 +115,9 @@ entry:
 
 define void @printStr(ptr %value) {
 entry:
-  %fc_idx_0.value.alloca = alloca ptr, align 8
-  store ptr %value, ptr %fc_idx_0.value.alloca, align 8
-  call void @printStr_export(ptr %fc_idx_0.value.alloca)
+  %value.alloca = alloca ptr, align 8
+  store ptr %value, ptr %value.alloca, align 8
+  call void @printStr_export(ptr %value.alloca)
   ret void
 }
 
@@ -126,7 +125,7 @@ define void @printString(%struct.String %value) {
 entry:
   %value.alloca = alloca %struct.String, align 8
   store %struct.String %value, ptr %value.alloca, align 8
-  %printf_export = call i32 @printf_export(ptr @fc_idx_0..str.93825024969040)
+  %printf_export = call i32 @printf_export(ptr @.str.93825037652256)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -137,7 +136,7 @@ entry:
   %value.alloca = alloca i8, align 1
   store i8 %value, ptr %value.alloca, align 1
   %fc_idx_1.value.alloca.load = load i8, ptr %value.alloca, align 1
-  %printf_export = call i32 @printf_export(ptr @fc_idx_0..str.93825026596240, i8 %fc_idx_1.value.alloca.load)
+  %printf_export = call i32 @printf_export(ptr @.str.93825038386512, i8 %fc_idx_1.value.alloca.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void

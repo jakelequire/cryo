@@ -115,6 +115,8 @@ namespace Cryo
         void setCurrentFunction(IRFunctionSymbol *function) { currentFunction = function; }
         void clearCurrentFunction() { currentFunction = nullptr; }
         bool inConstructorInstance = false;
+        // Global String Map
+        std::unordered_map<std::string, llvm::Value *> globalStringMap;
 
         // Global symbol table instance
         GlobalSymbolTableInstance *getGlobalSymbolTableInstance()
@@ -133,6 +135,8 @@ namespace Cryo
 
         void enterFunctionScope(const std::string &funcName);
         void exitFunctionScope();
+
+        llvm::Value *getOrCreateGlobalString(const std::string &str);
 
         // Symbol management
         bool addVariable(const IRVariableSymbol &symbol);

@@ -157,36 +157,66 @@ namespace Cryo
         for (int i = 0; i < call->argCount; i++)
         {
             llvm::Value *argValue = getLLVMValue(call->args[i]);
-            // Add this code in your visitFunctionCall method after getting argValue but before pushing it to args
             if (argValue)
             {
-                // Check if we need to load from a pointer
+                logMessage(LMI, "INFO", "CodeGenVisitor",
+                           "Argument %d value: %s", i, argValue->getName().str().c_str());
+                // Check if the argument is a string literal
+                bool isStringLiteral = false;
+                DataType *argType = DTM->astInterface->getTypeofASTNode(call->args[i]);
+                if (argType && argType->container->primitive == PRIM_STRING || argType->container->primitive == PRIM_STR)
+                {
+                    isStringLiteral = true;
+                }
+
+                logMessage(LMI, "INFO", "CodeGenVisitor",
+                           "Argument %d is a string literal: %s", i, isStringLiteral ? "true" : "false");
+                // For string literals, don't do any additional processing
+                if (isStringLiteral)
+                {
+                    logMessage(LMI, "INFO", "CodeGenVisitor",
+                               "Argument %d is a string literal: %s", i, argValue->getName().str().c_str());
+                    // Just use the pointer as is
+                    args.push_back(argValue);
+                    continue;
+                }
+
+                logMessage(LMI, "INFO", "CodeGenVisitor",
+                           "Argument %d is not a string literal: %s", i, argValue->getName().str().c_str());
+                // For other types, continue with your existing logic
                 if (i < funcSymbol->function->getFunctionType()->getNumParams())
                 {
                     llvm::Type *paramType = funcSymbol->function->getFunctionType()->getParamType(i);
-
+                    logMessage(LMI, "INFO", "CodeGenVisitor",
+                               "Argument %d type: %s", i, paramType->getStructName().str().c_str());
                     // Check if argument is a pointer but parameter isn't
                     if (argValue->getType()->isPointerTy() && !paramType->isPointerTy())
                     {
+                        logMessage(LMI, "INFO", "CodeGenVisitor",
+                                   "Argument %d is a pointer but parameter is not: %s",
+                                   i, argValue->getName().str().c_str());
                         // For opaque pointers, we need to determine the type to load in another way
-
-                        // Option 1: If it's an alloca instruction, we can get the allocated type
                         if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(argValue))
                         {
+                            logMessage(LMI, "INFO", "CodeGenVisitor",
+                                       "Argument %d is a pointer but parameter is not: %s",
+                                       i, argValue->getName().str().c_str());
                             llvm::Type *allocatedType = allocaInst->getAllocatedType();
                             argValue = context.getInstance().builder.CreateLoad(allocatedType, argValue,
                                                                                 argValue->getName() + ".load");
                         }
-                        // Option 2: Use the expected parameter type
                         else
                         {
+                            logMessage(LMI, "ERROR", "CodeGenVisitor",
+                                       "Argument %d is a pointer but parameter is not: %s",
+                                       i, argValue->getName().str().c_str());
                             argValue = context.getInstance().builder.CreateLoad(paramType, argValue,
                                                                                 argValue->getName() + ".load");
                         }
                     }
                 }
-
-                // Continue with argument processing...
+                logMessage(LMI, "INFO", "CodeGenVisitor",
+                           "Argument %d name: %s", i, argValue->getName().str().c_str());
                 std::string argName = argValue->getName().str();
                 argValue->setName("fc_idx_" + std::to_string(i) + "." + argName);
                 args.push_back(argValue);

@@ -98,6 +98,8 @@ namespace Cryo
             return llvm::ConstantInt::get(context.getInstance().context, llvm::APInt(1, node->data.literal->value.booleanValue, true));
         case PRIM_STRING:
             return generateStringLiteral(node);
+        case PRIM_STR:
+            return generateStringLiteral(node);
         case PRIM_NULL:
             return llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(context.getInstance().context), 0));
         case PRIM_VOID:

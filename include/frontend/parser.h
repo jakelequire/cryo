@@ -184,7 +184,7 @@ void parseDebugger(Lexer *lexer, ParsingContext *context, Arena *arena, Compiler
 
 /* @ASTNode_Parsing - Blocks*/
 ASTNode *parseBlock(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
-ASTNode *parseFunctionBlock(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+ASTNode *parseFunctionBlock(DataType *returnType, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 /* @ASTNode_Parsing - Variables*/
 ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);

@@ -1301,7 +1301,7 @@ ASTNode *parseBlock(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
 // </parseBlock>
 
 // <parseFunctionBlock>
-ASTNode *parseFunctionBlock(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseFunctionBlock(DataType *returnType, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing function block...");
@@ -1322,9 +1322,16 @@ ASTNode *parseFunctionBlock(Lexer *lexer, ParsingContext *context, Arena *arena,
         ASTNode *statement = parseStatement(lexer, context, arena, state, globalTable);
         if (statement)
         {
+            if (statement->metaData->type == NODE_RETURN_STATEMENT)
+            {
+                ASTNode *returnStatement = statement->data.returnStatement->expression;
+                if (returnStatement)
+                {
+                    DataType *returnDataType = DTM->astInterface->getTypeofASTNode(returnStatement);
+                    returnType->unsafeCast(returnDataType, returnType);
+                }
+            }
             logMessage(LMI, "INFO", "Parser", "Adding statement to function block...");
-            // DEBUG_ARENA_PRINT(arena);
-            // ( statement, arena);
             addStatementToFunctionBlock(functionBlock, statement, arena, state, lexer);
             if (lexer->currentToken.type == TOKEN_SEMICOLON)
             {
@@ -1578,7 +1585,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     functionDefNode->data.functionDecl->functionScopeID = Generate64BitHashID(functionName);
 
     // Parse the function block
-    ASTNode *functionBlock = parseFunctionBlock(lexer, context, arena, state, globalTable);
+    ASTNode *functionBlock = parseFunctionBlock(returnType, lexer, context, arena, state, globalTable);
     if (!functionBlock)
     {
         parsingError("Failed to parse function block.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
@@ -1999,6 +2006,13 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
             logMessage(LMI, "INFO", "Parser", "Return Expression: Function Call");
             expression->print(expression);
             returnType = expression->data.functionCall->returnType;
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", returnType->debug->toString(returnType));
+        }
+        else if (expression->metaData->type == NODE_VAR_NAME)
+        {
+            logMessage(LMI, "INFO", "Parser", "Return Expression: Variable Name");
+            expression->print(expression);
+            returnType = expression->data.varName->type;
             logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", returnType->debug->toString(returnType));
         }
         else

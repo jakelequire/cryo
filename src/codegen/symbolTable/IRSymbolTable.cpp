@@ -496,4 +496,47 @@ namespace Cryo
         return true;
     }
 
+    llvm::Value *IRSymbolTable::getOrCreateGlobalString(const std::string &str)
+    {
+        // Check if the string already exists
+        auto it = globalStringMap.find(str);
+        if (it != globalStringMap.end())
+        {
+            logMessage(LMI, "INFO", "IRSymbolTable", "Found existing global string: %s", str.c_str());
+            return it->second;
+        }
+
+        // Create a new global string variable
+        llvm::Constant *strConstant = llvm::ConstantDataArray::getString(
+            context.getInstance().context, str, true); // true adds null terminator
+        logMessage(LMI, "INFO", "IRSymbolTable", "Creating global string: %s", str.c_str());
+        // Use a more consistent naming convention for string literals
+        std::string globalName = ".str."; // You might want to use a more generic naming scheme
+        void *address = static_cast<void *>(strConstant);
+        globalName += std::to_string(reinterpret_cast<std::uintptr_t>(address));
+
+        logMessage(LMI, "INFO", "IRSymbolTable", "Global string name: %s", globalName.c_str());
+        llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(
+            *context.getInstance().module,      // Module
+            strConstant->getType(),             // Type
+            true,                               // isConstant
+            llvm::GlobalValue::ExternalLinkage, // Linkage
+            strConstant,                        // Initializer
+            globalName,                         // Name
+            nullptr,                            // InsertBefore
+            llvm::GlobalValue::NotThreadLocal,  // ThreadLocalMode
+            0                                   // AddressSpace
+        );
+
+        // Set to unnamed_addr as in your example
+        globalStr->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
+        globalStr->setAlignment(llvm::MaybeAlign(1));
+
+        // Store the string in the map
+        globalStringMap.insert({str, globalStr});
+
+        logMessage(LMI, "INFO", "IRSymbolTable", "Global string created: %s", str.c_str());
+        return globalStr;
+    }
+
 } // namespace Cryo

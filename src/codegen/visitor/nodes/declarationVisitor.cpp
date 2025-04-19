@@ -174,6 +174,28 @@ namespace Cryo
             logMessage(LMI, "INFO", "Visitor", "Variable has no initialization expression");
         }
 
+        // SPECIAL HANDLING FOR STRING LITERALS
+        // Check if this is a string variable initialized with a string literal
+        bool isStringLiteral = false;
+        if (initVal && varType->container->primitive == PRIM_STRING &&
+            node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
+        {
+            // For string literals, don't create an allocation - just use the global string
+            isStringLiteral = true;
+
+            // Store it in the symbol table as-is
+            IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
+                initVal, // Use the GEP result directly
+                llvmType,
+                varName,
+                AllocaTypeInference::inferFromNode(node, false),
+                Allocation());
+            symbolTable->addVariable(varSymbol);
+
+            return;
+        }
+
+        // Normal case for non-string literals
         llvm::AllocaInst *alloca = context.getInstance().builder.CreateAlloca(llvmType, nullptr, varName);
         AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
         IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(alloca, llvmType, varName, allocaType, Allocation());
