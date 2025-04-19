@@ -154,7 +154,7 @@ function printI32 (value: i32) -> void {
     return;
 }
 
-function printStr (value: str) -> void {
+function printStr (value: str*) -> void {
     printStr_export(value);
     return;
 }

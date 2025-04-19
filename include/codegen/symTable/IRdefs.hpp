@@ -679,7 +679,7 @@ namespace Cryo
             case NODE_LITERAL_EXPR:
                 return inferFromLiteral(node->data.literal, false);
             case NODE_STRING_LITERAL:
-                return AllocaType::Aggregate;
+                return AllocaType::AllocaAndLoad;
             case NODE_VAR_NAME:
                 return AllocaType::AllocaLoadStore;
             case NODE_FUNCTION_CALL:

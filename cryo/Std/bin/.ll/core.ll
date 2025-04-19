@@ -7,9 +7,9 @@ source_filename = "core"
 
 @Int = external global %struct.Int
 @String = external global %struct.String
-@.str.93825036140416 = unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str.93825037652256 = unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
-@.str.93825038386512 = unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
+@.str.93825036157840 = unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.str.93825037671760 = unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
+@.str.93825038405680 = unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
 
 ; Function Attrs: nounwind
 declare i32 @strlen_export(ptr) #0
@@ -94,9 +94,7 @@ declare ptr @memset_export(ptr, %struct.Int, %struct.Int) #0
 
 define void @printInt(%struct.Int %value) {
 entry:
-  %value.alloca = alloca %struct.Int, align 8
-  store %struct.Int %value, ptr %value.alloca, align 4
-  %printf_export = call i32 @printf_export(ptr @.str.93825036140416)
+  %printf_export = call i32 @printf_export(ptr @.str.93825036157840)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -104,10 +102,7 @@ entry:
 
 define void @printI32(i32 %value) {
 entry:
-  %value.alloca = alloca i32, align 4
-  store i32 %value, ptr %value.alloca, align 4
-  %fc_idx_1.value.alloca.load = load i32, ptr %value.alloca, align 4
-  %printf_export = call i32 @printf_export(ptr @.str.93825036140416, i32 %fc_idx_1.value.alloca.load)
+  %printf_export = call i32 @printf_export(ptr @.str.93825036157840, i32 %value)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -115,17 +110,13 @@ entry:
 
 define void @printStr(ptr %value) {
 entry:
-  %value.alloca = alloca ptr, align 8
-  store ptr %value, ptr %value.alloca, align 8
-  call void @printStr_export(ptr %value.alloca)
+  call void @printStr_export(ptr %value)
   ret void
 }
 
 define void @printString(%struct.String %value) {
 entry:
-  %value.alloca = alloca %struct.String, align 8
-  store %struct.String %value, ptr %value.alloca, align 8
-  %printf_export = call i32 @printf_export(ptr @.str.93825037652256)
+  %printf_export = call i32 @printf_export(ptr @.str.93825037671760)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -133,10 +124,7 @@ entry:
 
 define void @printChar(i8 %value) {
 entry:
-  %value.alloca = alloca i8, align 1
-  store i8 %value, ptr %value.alloca, align 1
-  %fc_idx_1.value.alloca.load = load i8, ptr %value.alloca, align 1
-  %printf_export = call i32 @printf_export(ptr @.str.93825038386512, i8 %fc_idx_1.value.alloca.load)
+  %printf_export = call i32 @printf_export(ptr @.str.93825038405680, i8 %value)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void

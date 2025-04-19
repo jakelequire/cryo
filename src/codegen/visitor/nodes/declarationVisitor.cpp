@@ -78,11 +78,7 @@ namespace Cryo
             llvm::Function::arg_iterator argIt = function->arg_begin();
             llvm::Value *arg = argIt++;
             arg->setName(paramName);
-
-            // Allocate space for the parameter in the function's entry block
-            paramSymbol.allocation = Allocation::createLocal(context.getInstance().builder, paramType, paramName, arg);
-            paramSymbol.value = paramSymbol.allocation.getValue();
-            // Add the parameter to the symbol table
+            paramSymbol.value = arg;
             symbolTable->addVariable(paramSymbol);
         }
 
@@ -177,20 +173,24 @@ namespace Cryo
         // SPECIAL HANDLING FOR STRING LITERALS
         // Check if this is a string variable initialized with a string literal
         bool isStringLiteral = false;
-        if (initVal && varType->container->primitive == PRIM_STRING &&
-            node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
+        if (initVal && varType->container->primitive == PRIM_STRING || varType->container->primitive == PRIM_STR &&
+                                                                           node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
         {
             // For string literals, don't create an allocation - just use the global string
             isStringLiteral = true;
+
+            llvm::AllocaInst *alloca = context.getInstance().builder.CreateAlloca(llvmType, nullptr, varName);
+            llvm::StoreInst *store = context.getInstance().builder.CreateStore(initVal, alloca);
 
             // Store it in the symbol table as-is
             IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
                 initVal, // Use the GEP result directly
                 llvmType,
                 varName,
-                AllocaTypeInference::inferFromNode(node, false),
+                AllocaTypeInference::inferFromNode(node, true),
                 Allocation());
             symbolTable->addVariable(varSymbol);
+            DEBUG_BREAKPOINT;
 
             return;
         }

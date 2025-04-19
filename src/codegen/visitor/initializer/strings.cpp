@@ -58,12 +58,15 @@ namespace Cryo
         llvm::ArrayType *arrayType = llvm::ArrayType::get(context.getInstance().symbolTable->llvmTypes.i8Ty, length);
 
         // Create the GEP instruction to get a pointer to the first character
-        return context.getInstance().builder.CreateGEP(
+        llvm::Value *stringGEP = context.getInstance().builder.CreateInBoundsGEP(
             arrayType,
-            globalStrVar,
+            globalStr,
             {llvm::ConstantInt::get(context.getInstance().symbolTable->llvmTypes.i32Ty, 0),
              llvm::ConstantInt::get(context.getInstance().symbolTable->llvmTypes.i32Ty, 0)},
             "");
+
+        // Return the loaded string value
+        return stringGEP;
     }
 
 } // namespace Cryo

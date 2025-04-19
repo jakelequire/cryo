@@ -305,7 +305,7 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Lex
     logMessage(LMI, "INFO", "AST", "Created integer literal node with value: %d", value);
 
     node->data.literal->value.intValue = value;
-    node->data.literal->type = DTM->primitives->createInt();
+    node->data.literal->type = DTM->primitives->createI32();
     node->data.literal->literalType = LITERAL_INT;
 
     return node;

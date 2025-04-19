@@ -425,7 +425,7 @@ void printStr_export(char *str)
 {
     printf("[C::DEBUG] CALLING printStr_export\n");
     printf("[C::DEBUG] address: %p\n", str);
-    printf(str);
+    printf("\n");
 
     if (str != NULL)
     {

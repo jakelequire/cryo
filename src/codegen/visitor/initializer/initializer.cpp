@@ -253,8 +253,9 @@ namespace Cryo
         if (varSymbol->allocaType == AllocaType::AllocaAndLoad ||
             varSymbol->allocaType == AllocaType::AllocaLoadStore)
         {
-            // varSymbol->allocation.load(context.getInstance().builder, varName + "_load");
+            varSymbol->allocation.load(context.getInstance().builder, varName + "_load");
         }
+
         logMessage(LMI, "INFO", "Initializer", "Variable %s found", varName.c_str());
         return varSymbol->value;
     }
