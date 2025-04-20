@@ -3,13 +3,12 @@ source_filename = "core"
 
 %struct.Int = type { i32 }
 %struct.String = type { ptr }
-%VA_ARGS = type { i32, ptr, ptr }
 
 @Int = external global %struct.Int
 @String = external global %struct.String
-@.str.93825036157840 = unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str.93825037671760 = unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
-@.str.93825038405680 = unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
+@.str.93825036179184 = unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.str.93825041078896 = unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
+@.str.93825043172864 = unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
 
 ; Function Attrs: nounwind
 declare i32 @strlen_export(ptr) #0
@@ -48,13 +47,13 @@ entry:
 }
 
 ; Function Attrs: nounwind
-declare i32 @printf_export(ptr, %VA_ARGS) #0
+declare i32 @printf_export(ptr, ...) #0
 
 ; Function Attrs: nounwind
 declare void @printStr_export(ptr) #0
 
 ; Function Attrs: nounwind
-declare i32 @scanf_export(ptr, %VA_ARGS) #0
+declare i32 @scanf_export(ptr, ...) #0
 
 ; Function Attrs: nounwind
 declare void @printI32_export(i32) #0
@@ -94,7 +93,9 @@ declare ptr @memset_export(ptr, %struct.Int, %struct.Int) #0
 
 define void @printInt(%struct.Int %value) {
 entry:
-  %printf_export = call i32 @printf_export(ptr @.str.93825036157840)
+  %val = getelementptr inbounds ptr, %struct.Int %value, i32 0, i32 0
+  %val.load = load i32, %struct.Int %val, align 4
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825036179184, i32 %val.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -102,7 +103,7 @@ entry:
 
 define void @printI32(i32 %value) {
 entry:
-  %printf_export = call i32 @printf_export(ptr @.str.93825036157840, i32 %value)
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825036179184, i32 %value)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -116,7 +117,9 @@ entry:
 
 define void @printString(%struct.String %value) {
 entry:
-  %printf_export = call i32 @printf_export(ptr @.str.93825037671760)
+  %val = getelementptr inbounds ptr, %struct.String %value, i32 0, i32 0
+  %val.load = load ptr, %struct.String %val, align 8
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825041078896, ptr %val.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -124,7 +127,7 @@ entry:
 
 define void @printChar(i8 %value) {
 entry:
-  %printf_export = call i32 @printf_export(ptr @.str.93825038405680, i8 %value)
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825043172864, i8 %value)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void

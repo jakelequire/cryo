@@ -561,7 +561,7 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
         break;
     case NODE_PROPERTY_ACCESS:
     {
-        DataType *propertyType = DTMastInterface_getTypeofASTNode(node->data.propertyAccess->property);
+        DataType *propertyType = node->data.propertyAccess->objectType;
         return propertyType;
         break;
     }
@@ -652,7 +652,8 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
         break;
     default:
     {
-        fprintf(stderr, "[Data Type Manager] Error: Unknown node type: %d\n", nodeType);
+        const char *nodeTypeStr = CryoNodeTypeToString(nodeType);
+        fprintf(stderr, "[Data Type Manager] Error: Unknown node type: %s\n", nodeTypeStr);
         CONDITION_FAILED;
     }
     }

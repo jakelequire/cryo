@@ -163,6 +163,7 @@ namespace Cryo
                            "Argument %d value: %s", i, argValue->getName().str().c_str());
                 // Check if the argument is a string literal
                 bool isStringLiteral = false;
+                call->args[i]->print(call->args[i]);
                 DataType *argType = DTM->astInterface->getTypeofASTNode(call->args[i]);
                 if (argType && argType->container->primitive == PRIM_STRING || argType->container->primitive == PRIM_STR)
                 {

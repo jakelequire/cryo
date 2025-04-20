@@ -2446,6 +2446,37 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
             usingDotNotation = true;
         }
 
+        // Look up the identifier in the symbol table
+
+        char *identifier = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "INFO", "Parser", "Identifier: %s", identifier);
+
+        // Look up the identifier in the symbol table
+        Symbol *symbol = GetFrontendSymbol(globalTable, identifier, getCurrentScopeID(context), VARIABLE_SYMBOL);
+        if (symbol)
+        {
+            logMessage(LMI, "INFO", "Parser", "Symbol found in global table: %s", identifier);
+            expectedType = symbol->variable->type;
+            isLiteral = false;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Symbol not found in global table.");
+            parsingError("Symbol not found in global table.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+            return NULL;
+        }
+
+        DataType *symbolDataType = symbol->type->type;
+        if (!symbolDataType)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to get data type from symbol.");
+            parsingError("Failed to get data type from symbol.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+            return NULL;
+        }
+
+        context->thisContext->type = symbolDataType;
+        context->thisContext->nodeName = strdup(identifier);
+
         if (usingDotNotation)
         {
             logMessage(LMI, "INFO", "Parser", "Dot notation detected.");
@@ -2465,6 +2496,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         {
             logMessage(LMI, "INFO", "Parser", "Argument is not using dot notation.");
         }
+
+        context->thisContext->type = expectedType;
 
         if (prevToken.type == TOKEN_KW_THIS)
         {
@@ -2595,6 +2628,8 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
             parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
             CONDITION_FAILED;
         }
+        propAccessNode->data.propertyAccess->objectTypeName = expectedType->debug->toString(expectedType);
+        propAccessNode->data.propertyAccess->objectType = expectedType;
 
         return propAccessNode;
     }
@@ -3189,7 +3224,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
                     logMessage(LMI, "INFO", "Parser", "Property found in struct. Name: %s", propName);
                     ASTNode *propertyAcessNode = createPropertyAccessNode(properties[i], propName, arena, state, lexer);
                     propertyAcessNode->data.propertyAccess->propertyIndex = i;
-                    propertyAcessNode->data.propertyAccess->objectTypeName = thisContext->nodeName;
+                    propertyAcessNode->data.propertyAccess->objectTypeName = thisContext->type->typeName;
 
                     return propertyAcessNode;
                 }
@@ -3277,7 +3312,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
             return methodCallNode;
         }
 
-        logMessage(LMI, "INFO", "Parser", "Struct name: %s", structName);
+        logMessage(LMI, "INFO", "Parser", "@parseDotNotationWithType Struct name: %s", structName);
         logMessage(LMI, "INFO", "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
 
         ASTNode *property = DTM->propertyTypes->findStructPropertyNode(structType, strdup(propName));
@@ -3285,9 +3320,8 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         {
             logMessage(LMI, "INFO", "Parser", "Property found in struct, name: %s", strdup(propName));
             ASTNode *propertyAccessNode = createStructPropertyAccessNode(object, property, strdup(propName), typeOfNode, arena, state, lexer);
-            propertyAccessNode->data.propertyAccess->objectTypeName = structName;
             propertyAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(typeOfNode, strdup(propName));
-            propertyAccessNode->data.propertyAccess->objectType = typeOfNode;
+            propertyAccessNode->data.propertyAccess->objectTypeName = structName;
             return propertyAccessNode;
         }
         else
@@ -3391,6 +3425,9 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
         parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
         CONDITION_FAILED;
     }
+    propAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(expectedType, propertyName);
+    propAccessNode->data.propertyAccess->objectTypeName = context->thisContext->type->typeName;
+    propAccessNode->data.propertyAccess->objectType = expectedType;
 
     return propAccessNode;
 }

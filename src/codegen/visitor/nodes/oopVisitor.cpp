@@ -93,40 +93,38 @@ namespace Cryo
             return;
         }
 
-        logMessage(LMI, "INFO", "Visitor", "Object Instance: %s", objectInstance->getName().str().c_str());
+        llvm::StructType *objectStructType = llvm::dyn_cast<llvm::StructType>(typeSymbol->getType());
+        if (!objectType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Object type is null");
+            return;
+        }
+        llvm::Type *propertyType = objectStructType->getElementType(propertyIndex);
+        if (!propertyType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Property type is null");
+            return;
+        }
 
-        // Check if the object instance is a pointer type
-        logMessage(LMI, "INFO", "Visitor", "Object instance is a pointer type");
-
-        // Create a load instruction to get the property value
-        llvm::Value *propertyPtr = context.builder.CreateStructGEP(llvmType, objectInstance, propertyIndex, propertyName);
+        logMessage(LMI, "INFO", "Visitor", "Property Type: %s", propertyType->getStructName().str().c_str());
+        // Create a pointer to the property
+        llvm::Value *propertyPtr = context.getInstance().builder.CreateStructGEP(
+            llvmType, objectInstance, propertyIndex, propertyName);
         if (!propertyPtr)
         {
             logMessage(LMI, "ERROR", "Visitor", "Property pointer is null");
+            DEBUG_BREAKPOINT;
             return;
         }
-
         logMessage(LMI, "INFO", "Visitor", "Property Pointer: %s", propertyPtr->getName().str().c_str());
         // Load the property value
-        llvm::Value *propertyValue = context.builder.CreateLoad(llvmType, propertyPtr, propertyName + ".load");
+        llvm::Value *propertyValue = context.getInstance().builder.CreateLoad(propertyType, propertyPtr, propertyName + ".load");
         if (!propertyValue)
         {
             logMessage(LMI, "ERROR", "Visitor", "Property value is null");
+            DEBUG_BREAKPOINT;
             return;
         }
-        logMessage(LMI, "INFO", "Visitor", "Property Value: %s", propertyValue->getName().str().c_str());
-
-        // Store the property value in the symbol table
-        IRVariableSymbol propertySymbol = IRSymbolManager::createVariableSymbol(
-            propertyValue, llvmType, propertyName, AllocaType::AllocaAndLoad, Allocation());
-        context.getInstance().symbolTable->addVariable(propertySymbol);
-
-        context.getInstance().module->print(llvm::errs(), nullptr);
-        logMessage(LMI, "INFO", "Visitor", "Property value stored in symbol table: %s", propertySymbol.name.c_str());
-        // Print the symbol table for debugging
-        context.getInstance().symbolTable->debugPrint();
-
-        DEBUG_BREAKPOINT;
     }
 
     void CodeGenVisitor::visitPropertyReassignment(ASTNode *node)

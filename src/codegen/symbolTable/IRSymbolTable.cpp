@@ -210,6 +210,7 @@ namespace Cryo
 
     IRTypeSymbol *IRSymbolTable::findType(const std::string &name)
     {
+        logMessage(LMI, "INFO", "CodeGen", "Finding type: %s", name.c_str());
         // First try exact match in local types
         auto it = types.find(name);
         if (it != types.end())

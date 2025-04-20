@@ -29,10 +29,17 @@ namespace Cryo
 
         // Create the function prototype
         std::vector<llvm::Type *> argTypes;
+        bool isVarArg = false;
         for (size_t i = 0; i < node->data.functionDecl->paramCount; i++)
         {
             ASTNode *param = node->data.functionDecl->params[i];
-            llvm::Type *paramType = symbolTable->getLLVMType(param->data.param->type);
+            DataType *paramDataType = param->data.param->type;
+            if (paramDataType->container->objectType == VA_ARGS_OBJ)
+            {
+                isVarArg = true;
+                break;
+            }
+            llvm::Type *paramType = symbolTable->getLLVMType(paramDataType);
             argTypes.push_back(paramType);
         }
         logMessage(LMI, "INFO", "Visitor", "Function has %d arguments", argTypes.size());
@@ -42,6 +49,10 @@ namespace Cryo
 
         llvm::Type *returnTy = symbolTable->getLLVMType(returnType);
         llvm::FunctionType *funcType = llvm::FunctionType::get(returnTy, argTypes, false);
+        if (isVarArg)
+        {
+            funcType = llvm::FunctionType::get(returnTy, argTypes, true);
+        }
 
         logMessage(LMI, "INFO", "Visitor", "Creating function prototype...");
         // The function signature
@@ -109,9 +120,16 @@ namespace Cryo
 
         // Create the function prototype
         std::vector<llvm::Type *> argTypes;
+        bool isVarArg = false;
         for (size_t i = 0; i < node->data.externFunction->paramCount; i++)
         {
             ASTNode *param = node->data.externFunction->params[i];
+            if (param->data.param->type->container->objectType == VA_ARGS_OBJ)
+            {
+                logMessage(LMI, "INFO", "Visitor", "Extern function has varargs");
+                isVarArg = true;
+                break;
+            }
             llvm::Type *paramType = symbolTable->getLLVMType(param->data.param->type);
             argTypes.push_back(paramType);
         }
@@ -123,6 +141,10 @@ namespace Cryo
 
         llvm::Type *returnTy = symbolTable->getLLVMType(returnType);
         llvm::FunctionType *funcType = llvm::FunctionType::get(returnTy, argTypes, false);
+        if (isVarArg)
+        {
+            funcType = llvm::FunctionType::get(returnTy, argTypes, true);
+        }
 
         logMessage(LMI, "INFO", "Visitor", "Creating extern function prototype...");
 
@@ -173,8 +195,10 @@ namespace Cryo
         // SPECIAL HANDLING FOR STRING LITERALS
         // Check if this is a string variable initialized with a string literal
         bool isStringLiteral = false;
-        if (initVal && varType->container->primitive == PRIM_STRING || varType->container->primitive == PRIM_STR &&
-                                                                           node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
+        if (initVal &&
+                varType->container->primitive == PRIM_STRING ||
+            varType->container->primitive == PRIM_STR &&
+                node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
         {
             // For string literals, don't create an allocation - just use the global string
             isStringLiteral = true;

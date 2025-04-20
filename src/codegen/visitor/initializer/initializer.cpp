@@ -467,11 +467,12 @@ namespace Cryo
         if (node->metaData->type != NODE_PROPERTY_ACCESS)
         {
             logMessage(LMI, "ERROR", "Initializer", "Node is not a property access");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
 
         // Get the object type name
-        std::string objectTypeName = node->data.propertyAccess->object->data.varName->varName;
+        std::string objectTypeName = node->data.propertyAccess->objectTypeName;
         logMessage(LMI, "INFO", "Initializer", "Object type name: %s", objectTypeName.c_str());
 
         // Get the property name
@@ -487,27 +488,38 @@ namespace Cryo
         if (!objectType)
         {
             logMessage(LMI, "ERROR", "Visitor", "Object type is null");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
 
         // Get the LLVM type
-        llvm::Type *llvmType = context.getInstance().symbolTable->getLLVMType(objectType);
+        IRTypeSymbol *irTypeSymbol = context.getInstance().symbolTable->findType("struct." + objectTypeName);
+        if (!irTypeSymbol)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "IR type symbol is null");
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
+        logMessage(LMI, "INFO", "Visitor", "IR Type Symbol: %s", irTypeSymbol->name.c_str());
+
+        llvm::Type *llvmType = irTypeSymbol->getType();
         if (!llvmType)
         {
             logMessage(LMI, "ERROR", "Visitor", "LLVM type is null");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
-        logMessage(LMI, "INFO", "Visitor", "LLVM Type: %s", llvmType->getStructName().str().c_str());
 
-        IRTypeSymbol *typeSymbol = context.getInstance().symbolTable->findType(objectTypeName);
-        if (!typeSymbol)
+        llvm::StructType *llvmStructType = llvm::dyn_cast<llvm::StructType>(llvmType);
+        if (!llvmStructType)
         {
-            logMessage(LMI, "ERROR", "Visitor", "Type symbol is null");
+            logMessage(LMI, "ERROR", "Visitor", "LLVM struct type is null");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
 
         // Get the object instance
-        llvm::Value *objectInstance = getInitializerValue(node->data.propertyAccess->object);
+        llvm::Value *objectInstance = context.getInstance().visitor->getLLVMValue(node->data.propertyAccess->object);
         if (!objectInstance)
         {
             logMessage(LMI, "ERROR", "Visitor", "Object instance is null");
@@ -515,26 +527,35 @@ namespace Cryo
             return nullptr;
         }
 
-        logMessage(LMI, "INFO", "Visitor", "Object Instance: %s", objectInstance->getName().str().c_str());
+        logMessage(LMI, "INFO", "Visitor", "LLVM Struct Type: %s", llvmStructType->getName().str().c_str());
+        // Get the property type
+        llvm::Type *propertyType = llvmStructType->getContainedType(propertyIndex);
+        if (!propertyType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Property type is null");
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
 
+        // Create a pointer to the property
         llvm::Value *propertyPtr = context.getInstance().builder.CreateStructGEP(
             llvmType, objectInstance, propertyIndex, propertyName);
         if (!propertyPtr)
         {
             logMessage(LMI, "ERROR", "Visitor", "Property pointer is null");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
-        context.getInstance().module->print(llvm::errs(), nullptr);
 
-        logMessage(LMI, "INFO", "Visitor", "Property Pointer: %s", propertyPtr->getName().str().c_str());
+        logMessage(LMI, "INFO", "Visitor", "LLVM Type: %s", llvmType->getStructName().str().c_str());
         // Load the property value
-        llvm::Value *propertyValue = context.getInstance().builder.CreateLoad(llvmType, propertyPtr, propertyName + ".load");
+        llvm::Value *propertyValue = context.getInstance().builder.CreateLoad(propertyType, propertyPtr, propertyName + ".load");
         if (!propertyValue)
         {
             logMessage(LMI, "ERROR", "Visitor", "Property value is null");
+            DEBUG_BREAKPOINT;
             return nullptr;
         }
-
         logMessage(LMI, "INFO", "Visitor", "Property Value: %s", propertyValue->getName().str().c_str());
         return propertyValue;
     }

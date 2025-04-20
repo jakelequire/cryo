@@ -204,59 +204,7 @@ namespace Cryo
     // VA_ARGS Types
     llvm::StructType *IRSymbolTable::getVA_ARGSType(DataType *dataType)
     {
-        if (!dataType)
-        {
-            std::cerr << "Data type is null" << std::endl;
-            return nullptr;
-        }
-        if (dataType->container->typeOf != OBJECT_TYPE)
-        {
-            std::cerr << "Data type is not an object" << std::endl;
-            return nullptr;
-        }
-
-        // Check if the VA_ARGS struct already exists in the current module via the symbol table
-        std::string vaArgsName = dataType->container->type.structType->name;
-        IRTypeSymbol *typeSymbol = this->findType(vaArgsName);
-        if (typeSymbol)
-        {
-            return typeSymbol->type.structTy;
-        }
-
-        // Create a new VA_ARGS struct type
-        llvm::StructType *llvmVaArgsType = llvm::StructType::create(context.getInstance().context, vaArgsName);
-        if (!llvmVaArgsType)
-        {
-            std::cerr << "Failed to create LLVM VA_ARGS struct type" << std::endl;
-            return nullptr;
-        }
-
-        // Set the struct body
-        std::vector<llvm::Type *> memberTypes;
-        memberTypes.push_back(llvmTypes.i32Ty); // count
-        memberTypes.push_back(llvmTypes.ptrTy); // types
-        memberTypes.push_back(llvmTypes.ptrTy); // values
-
-        llvmVaArgsType->setBody(memberTypes);
-        if (!llvmVaArgsType->isLayoutIdentical(llvmVaArgsType))
-        {
-            std::cerr << "Failed to set LLVM VA_ARGS struct type body" << std::endl;
-            return nullptr;
-        }
-        logMessage(LMI, "INFO", "IRSymbolTable", "LLVM VA_ARGS struct type created successfully");
-
-        // Add the VA_ARGS struct type to the symbol table
-        IRTypeSymbol tySymbol(llvmVaArgsType, vaArgsName, std::vector<IRPropertySymbol>(),
-                              std::vector<IRMethodSymbol>());
-        if (!addType(tySymbol))
-        {
-            std::cerr << "Failed to add VA_ARGS struct type to symbol table" << std::endl;
-            return nullptr;
-        }
-        logMessage(LMI, "INFO", "IRSymbolTable", "VA_ARGS struct type added to symbol table successfully");
-
-        // Return the LLVM VA_ARGS struct
-        return llvmVaArgsType;
+        DEBUG_BREAKPOINT;
     }
 
     void IRSymbolTable::initLLVMTypes()
