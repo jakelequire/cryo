@@ -249,7 +249,7 @@ void addMethodToThisContext(ParsingContext *context, ASTNode *methodNode);
 
 ASTNode *getPropertyByName(ParsingContext *context, const char *name);
 ASTNode *getMethodByName(ParsingContext *context, const char *name);
-ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *instanceType,
+ASTNode *parseMethodCall(ASTNode *accessorObj, const char *methodName, DataType *instanceType,
                          Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 void addTokenToContext(ParsingContext *context, Token token);

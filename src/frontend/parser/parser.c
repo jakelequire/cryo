@@ -3291,8 +3291,8 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         return NULL;
     }
 
-    char *propName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    logMessage(LMI, "INFO", "Parser", "Prop name: %s", strdup(propName));
+    const char *propName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage(LMI, "INFO", "Parser", "Prop name: %s", propName);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseDotNotationWithType", arena, state, context);
 
@@ -3308,25 +3308,25 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (currentToken.type == TOKEN_LPAREN)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing method call...");
-            ASTNode *methodCallNode = parseMethodCall(object, strdup(propName), typeOfNode, lexer, context, arena, state, globalTable);
+            ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, context, arena, state, globalTable);
             return methodCallNode;
         }
 
         logMessage(LMI, "INFO", "Parser", "@parseDotNotationWithType Struct name: %s", structName);
         logMessage(LMI, "INFO", "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
 
-        ASTNode *property = DTM->propertyTypes->findStructPropertyNode(structType, strdup(propName));
+        ASTNode *property = DTM->propertyTypes->findStructPropertyNode(structType, propName);
         if (property)
         {
-            logMessage(LMI, "INFO", "Parser", "Property found in struct, name: %s", strdup(propName));
-            ASTNode *propertyAccessNode = createStructPropertyAccessNode(object, property, strdup(propName), typeOfNode, arena, state, lexer);
-            propertyAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(typeOfNode, strdup(propName));
+            logMessage(LMI, "INFO", "Parser", "Property found in struct, name: %s", propName);
+            ASTNode *propertyAccessNode = createStructPropertyAccessNode(object, property, propName, typeOfNode, arena, state, lexer);
+            propertyAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(typeOfNode, propName);
             propertyAccessNode->data.propertyAccess->objectTypeName = structName;
             return propertyAccessNode;
         }
         else
         {
-            logMessage(LMI, "ERROR", "Parser", "Property Attempted: %s", strdup(propName));
+            logMessage(LMI, "ERROR", "Parser", "Property Attempted: %s", propName);
             parsingError("Property not found in struct.", "parseDotNotationWithType", arena, state, lexer, lexer->source, globalTable);
             return NULL;
         }
@@ -3426,7 +3426,7 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
         CONDITION_FAILED;
     }
     propAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(expectedType, propertyName);
-    propAccessNode->data.propertyAccess->objectTypeName = context->thisContext->type->typeName;
+    propAccessNode->data.propertyAccess->objectTypeName = expectedType->typeName;
     propAccessNode->data.propertyAccess->objectType = expectedType;
 
     return propAccessNode;

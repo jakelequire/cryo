@@ -537,9 +537,20 @@ namespace Cryo
             return nullptr;
         }
 
+        if (!objectInstance->getType()->isPointerTy())
+        {
+            // If the object instance is not a pointer, we need to create a pointer to it
+            llvm::AllocaInst *objectAlloc = context.getInstance().builder.CreateAlloca(llvmType, nullptr, objectTypeName + ".alloc");
+            context.getInstance().builder.CreateStore(objectInstance, objectAlloc);
+            objectInstance = objectAlloc; // Use the pointer directly, don't load the value back
+        }
+
         // Create a pointer to the property
         llvm::Value *propertyPtr = context.getInstance().builder.CreateStructGEP(
-            llvmType, objectInstance, propertyIndex, propertyName);
+            llvmType,
+            objectInstance,
+            propertyIndex,
+            objectTypeName + "." + propertyName);
         if (!propertyPtr)
         {
             logMessage(LMI, "ERROR", "Visitor", "Property pointer is null");

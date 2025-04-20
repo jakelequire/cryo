@@ -59,9 +59,7 @@ struct String {
 }
 
 implement struct String {
-    // The core string properties.
-    val: str = "";
-    
+
     // The core string methods.
     append(__str__: str) -> String {
         // Implementation of append method
@@ -96,6 +94,7 @@ implement struct String {
     }
 }
 
+
 // ---------------------------------------------------------------------------- 
 // These are the core types of Cryo.
 // The types below are commented out because they are defined in the compiler.
@@ -123,20 +122,20 @@ implement struct String {
 extern function printf_export       (format: str, ...) -> i32;
 extern function printStr_export     (value: str) -> void;
 extern function scanf_export        (format: str, ...) -> i32;
-extern function printI32_export     (value: i32) -> void;
+extern function printI32_export     (value: i32) -> i32;
 
-extern function sys_exit    (status: Int) -> void;
-extern function sys_read    (fd: Int, buf: void *, count: Int) -> Int;
-extern function sys_write   (fd: Int, buf: void *, count: Int) -> Int;
+extern function sys_exit    (status: i32) -> void;
+extern function sys_read    (fd: i32, buf: void *, count: i32) -> i32;
+extern function sys_write   (fd: i32, buf: void *, count: i32) -> i32;
 
-extern function mmap_export     (addr: void *, length: Int, prot: Int, flags: Int, fd: Int, offset: Int) -> void *;
-extern function munmap_export   (addr: void *, length: Int) -> Int;
-extern function malloc_export   (size: Int) -> void *;
-extern function free_export     (__ptr__: void *) -> Int;
-extern function memcpy_export   (dest: void *, src: void *, n: Int) -> void *;
-extern function memmove_export  (dest: void *, src: void *, n: Int) -> void *;
-extern function memcmp_export   (ptr1: void *, ptr2: void *, n: Int) -> Int;
-extern function memset_export   (__ptr__: void *, value: Int, num: Int) -> void *;
+extern function mmap_export     (addr: void *, length: i32, prot: i32, flags: i32, fd: i32, offset: i32) -> void *;
+extern function munmap_export   (addr: void *, length: i32) -> i32;
+extern function malloc_export   (size: i32) -> void *;
+extern function free_export     (__ptr__: void *) -> i32;
+extern function memcpy_export   (dest: void *, src: void *, n: i32) -> void *;
+extern function memmove_export  (dest: void *, src: void *, n: i32) -> void *;
+extern function memcmp_export   (ptr1: void *, ptr2: void *, n: i32) -> i32;
+extern function memset_export   (__ptr__: void *, value: i32, num: i32) -> void *;
 
 
 // ======================================================== //
@@ -154,7 +153,7 @@ function printI32 (value: i32) -> void {
     return;
 }
 
-function printStr (value: str*) -> void {
+function printStr (value: str) -> void {
     printStr_export(value);
     return;
 }
@@ -168,5 +167,4 @@ function printChar (value: char) -> void {
     printf_export("%c\n", value);
     return;
 }
-
 

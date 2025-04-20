@@ -455,7 +455,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
     return methodNode;
 }
 
-ASTNode *parseMethodCall(ASTNode *accessorObj, char *methodName, DataType *instanceType,
+ASTNode *parseMethodCall(ASTNode *accessorObj, const char *methodName, DataType *instanceType,
                          Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__

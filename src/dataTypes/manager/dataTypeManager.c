@@ -137,7 +137,9 @@ DataType *DTMStructTypes_createCompleteStructType(const char *structName, DTProp
     structType->hasConstructor = hasConstructor;
     structType->ctorParams = ctorArgs;
     structType->ctorParamCount = *ctorArgCount;
-    return DTM->dataTypes->wrapStructType(structType);
+    DataType *structDataType = DTM->dataTypes->wrapStructType(structType);
+    structDataType->setTypeName(structDataType, structName);
+    return structDataType;
 }
 
 DataType *DTMStructTypes_createStructType(const char *structName, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount)
