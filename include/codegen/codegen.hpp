@@ -198,6 +198,8 @@ namespace Cryo
         void generateStructConstructor(ASTNode *node, llvm::StructType *structType);
         llvm::Value *derefValuePointer(llvm::Value *value);
         llvm::Type *derefValueForType(llvm::Value *value);
+
+        IRMethodSymbol *createClassMethod(const std::string &className, ASTNode *method, DataType *methodDataType);
     };
 
 } // namespace Cryo

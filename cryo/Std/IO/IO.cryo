@@ -1,5 +1,9 @@
 namespace Std.IO;
 
+extern "C" {
+    function readFile_export(filePath: str) -> str;
+}
+
 class IO {
     // This is a placeholder for the IO class.
     // In a real implementation, this class would contain methods and properties
@@ -7,10 +11,10 @@ class IO {
     // handling streams, etc.
 
     // Example method to demonstrate the structure
-    public readFile(filePath: String) -> String {
-        // Placeholder for reading a file
-        // In a real implementation, this would contain logic to open the file,
-        // read its contents, and return it as a string.
+    public static readFile(filePath: String) -> String {
+        // Call the external function to read a file
+        const content: str = readFile_export(filePath.val);
+        // Return the content as a String
         return "Placeholder";
     }
 }

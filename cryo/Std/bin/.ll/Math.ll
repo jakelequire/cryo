@@ -1,7 +1,7 @@
 ; ModuleID = 'Math'
 source_filename = "Math"
 
-%Math = type { %struct.Int }
+%class.Math = type { %struct.Int }
 %struct.Int = type { i32 }
 
-@Math = external global %Math
+@Math = external global %class.Math

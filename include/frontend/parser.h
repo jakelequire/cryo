@@ -192,6 +192,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
 /* @ASTNode_Parsing - Functions*/
 ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVisibilityType visibility, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+ASTNode *parseExternModuleDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context, char *functionName, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 

@@ -1,6 +1,11 @@
 ; ModuleID = 'IO'
 source_filename = "IO"
 
-%IO = type {}
+%class.IO = type {}
 
-@IO = external global %IO
+@IO = external global %class.IO
+
+; Function Attrs: nounwind
+declare ptr @readFile_export(ptr) #0
+
+attributes #0 = { nounwind }

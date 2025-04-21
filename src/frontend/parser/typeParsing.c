@@ -415,6 +415,8 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
             paramTypes[i] = params[i]->data.param->type;
         }
         DataType *methodType = DTM->functionTypes->createMethodType(strdup(methodName), returnType, paramTypes, paramCount);
+        methodType->container->primitive = PRIM_FUNCTION;
+        methodType->container->typeOf = FUNCTION_TYPE;
         methodNode->data.method->type = methodType;
         methodNode->data.method->paramTypes = paramTypes;
 

@@ -36,6 +36,12 @@
 #include <unistd.h>
 #endif
 
+#define COLOR_LIGHT_GREEN "\033[1;32m"
+#define COLOR_LIGHT_YELLOW "\033[1;33m"
+
+#define BOLD "\033[1m"
+#define COLOR_RESET "\033[0m"
+
 // ======================================================== //
 //                 Type Definitions                         //
 // ======================================================== //
@@ -376,14 +382,14 @@ cryo_string_t strcpy_export(cryo_string_t dest, cryo_string_t src)
 
 int32_t printf_export(const char *format, ...)
 {
-    printf("[C::DEBUG] address: %p\n", format);
-
     va_list args;
     int32_t result;
 
     va_start(args, format);
     result = vprintf(format, args);
     va_end(args);
+
+    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n", format, COLOR_RESET);
 
     return result;
 }
@@ -403,12 +409,11 @@ int32_t scanf_export(cryo_string_t format, ...)
 int32_t printI32_export(int32_t value)
 {
     int32_t result = printf("%d\n", value);
+
     return result;
 }
 void printString_export(cryo_string_t str)
 {
-    printf("[C::DEBUG] address: %p\n", str.val);
-
     if (str.val != NULL)
     {
         printf("%s\n", str.val);
@@ -417,11 +422,12 @@ void printString_export(cryo_string_t str)
     {
         printf("NULL\n");
     }
+
+    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n", str.val, COLOR_RESET);
 }
 
 void printStr_export(char *str)
 {
-    printf("[C::DEBUG] address: %p\n", str);
     printf("\n");
 
     if (str != NULL)
@@ -432,4 +438,32 @@ void printStr_export(char *str)
     {
         printf("NULL\n");
     }
+
+    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n", str, COLOR_RESET);
+}
+
+char *readFile_export(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buffer = (char *)malloc(length + 1);
+    if (buffer == NULL)
+    {
+        fclose(file);
+        return NULL;
+    }
+
+    fread(buffer, 1, length, file);
+    buffer[length] = '\0';
+
+    fclose(file);
+    return buffer;
 }

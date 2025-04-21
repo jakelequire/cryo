@@ -284,7 +284,10 @@ DataType *DTMFunctionTypes_createMethodType(const char *methodName, DataType *re
     DTFunctionTy *function = createDTFunctionTy();
     function->setParams(function, paramTypes, paramCount);
     function->setReturnType(function, returnType);
-    return DTM->dataTypes->wrapFunctionType(function);
+    DataType *methodType = DTM->dataTypes->wrapFunctionType(function);
+    methodType->setTypeName(methodType, methodName);
+
+    return methodType;
 }
 
 DTMFunctionTypes *createDTMFunctionTypes(void)

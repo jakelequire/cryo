@@ -287,7 +287,7 @@ namespace Cryo
 
         IRTypeSymbol typeSymbol = IRSymbolManager::createTypeSymbol(
             structType, "struct." + structName, propertySymbols, methodSymbols);
-        symbolTable->addType(typeSymbol);
+        context.getInstance().symbolTable->addType(typeSymbol);
 
         context.getInstance().module->getOrInsertGlobal(structName, structType);
         logMessage(LMI, "INFO", "Visitor", "Struct type created");
@@ -317,7 +317,7 @@ namespace Cryo
         std::string className = node->data.classNode->name;
         logMessage(LMI, "INFO", "Visitor", "Class Name: %s", className.c_str());
 
-        llvm::StructType *classType = llvm::StructType::create(context.getInstance().context, className);
+        llvm::StructType *classType = llvm::StructType::create(context.getInstance().context, "class." + className);
 
         int propertyCount = node->data.classNode->propertyCount;
         logMessage(LMI, "INFO", "Visitor", "Class has %d properties", propertyCount);
@@ -368,14 +368,10 @@ namespace Cryo
         // Loop through the public methods
         for (int i = 0; i < node->data.classNode->publicMembers->methodCount; i++)
         {
-            ASTNode *publicMethods = node->data.classNode->publicMembers->methods[i];
-            DataType *methodType = publicMethods->data.method->type;
-            llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
-            std::string methodName = publicMethods->data.method->name;
-            IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
-                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
-            IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
-                functionSymbol, false, false, false, false, 0, nullptr);
+            ASTNode *publicMethod = node->data.classNode->publicMembers->methods[i];
+            DataType *methodType = publicMethod->data.method->type;
+            IRMethodSymbol methodSymbol = *context.getInstance().initializer->createClassMethod(
+                className, publicMethod, methodType);
             methodSymbols.push_back(methodSymbol);
         }
 
@@ -384,12 +380,8 @@ namespace Cryo
         {
             ASTNode *privateMethods = node->data.classNode->privateMembers->methods[i];
             DataType *methodType = privateMethods->data.method->type;
-            llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
-            std::string methodName = privateMethods->data.method->name;
-            IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
-                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
-            IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
-                functionSymbol, false, false, false, false, 0, nullptr);
+            IRMethodSymbol methodSymbol = *context.getInstance().initializer->createClassMethod(
+                className, privateMethods, methodType);
             methodSymbols.push_back(methodSymbol);
         }
 
@@ -404,6 +396,8 @@ namespace Cryo
                 nullptr, methodName, llvmType, nullptr, nullptr, false, false);
             IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
                 functionSymbol, false, false, false, false, 0, nullptr);
+            // Visit the method body
+            visit(protectedMethods->data.method->body);
             methodSymbols.push_back(methodSymbol);
         }
 
@@ -411,7 +405,7 @@ namespace Cryo
         classType->setBody(propertyTypes);
 
         IRTypeSymbol typeSymbol = IRSymbolManager::createTypeSymbol(
-            classType, className, propertySymbols, methodSymbols);
+            classType, "class." + className, propertySymbols, methodSymbols);
         symbolTable->addType(typeSymbol);
         context.getInstance().module->getOrInsertGlobal(className, classType);
 

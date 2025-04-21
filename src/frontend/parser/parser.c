@@ -67,6 +67,8 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
             if (statement->metaData->type == NODE_DISCARD)
             {
                 logMessage(LMI, "INFO", "Parser", "Discarding statement");
+                // Just skip the statement
+                continue;
             }
             else
             {
@@ -1676,19 +1678,6 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
     logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", returnType->debug->toString(returnType));
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseExternFunctionDeclaration", arena, state, context);
 
-    // ================= [ DEBUG ] ================= //
-    printf("<!> EXTERN FUNCTION DEBUG <!> \n");
-    printf("Function Name: %s\n", functionName);
-    printf("Parameter Count: %d\n", paramCount);
-    for (int i = 0; i < paramCount; i++)
-    {
-        printf("Parameter %d: %s\n", i, params[i]->data.param->name);
-        printf("Parameter Type: %s\n", paramTypes[i]->debug->toString(paramTypes[i]));
-    }
-    printf("Return Type: %s\n", returnType->debug->toString(returnType));
-    printf("<!> EXTERN FUNCTION DEBUG <!> \n");
-    // ================= [ DEBUG ] ================= //
-
     DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
     if (!functionType)
     {
@@ -1709,6 +1698,62 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
     return externFunc;
 }
 // </parseExternFunctionDeclaration>
+
+/// If the extern keywords next token is a string literal, it will follow notation simmilar
+/// to how Rusts syntax looks like.
+/// extern "C" { ... }
+/// Function defintions must follow Cryo Syntax.
+ASTNode *parseExternModuleDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing extern module declaration...");
+    char *__moduleName__ = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    __moduleName__[lexer->currentToken.length - 1] = '\0';
+    __moduleName__++;
+
+    const char *moduleName = strdup(__moduleName__);
+    logMessage(LMI, "INFO", "Parser", "Safe module name: %s", moduleName);
+    consume(__LINE__, lexer, TOKEN_STRING_LITERAL, "Expected a string literal for extern declaration.", "parseExternModuleDeclaration", arena, state, context);
+
+    if (lexer->currentToken.type != TOKEN_LBRACE)
+    {
+        parsingError("Expected '{' after extern module declaration.", "parseExternModuleDeclaration", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+    consume(__LINE__, lexer, TOKEN_LBRACE, "Expected '{' after extern module declaration.", "parseExternModuleDeclaration", arena, state, context);
+
+    while (lexer->currentToken.type != TOKEN_RBRACE)
+    {
+        if (lexer->currentToken.type == TOKEN_KW_FN)
+        {
+            logMessage(LMI, "INFO", "Parser", "Parsing extern function declaration...");
+            ASTNode *externFunc = parseExternFunctionDeclaration(lexer, context, arena, state, globalTable);
+            if (!externFunc)
+            {
+                parsingError("Failed to parse extern function declaration.", "parseExternModuleDeclaration", arena, state, lexer, lexer->source, globalTable);
+                return NULL;
+            }
+            AddExternFunctionToTable(globalTable, externFunc, moduleName);
+            DTM->symbolTable->addEntry(
+                DTM->symbolTable,
+                moduleName,
+                externFunc->data.externFunction->name,
+                externFunc->data.externFunction->type);
+            // Add to the program node
+            addStatementToProgram(context->programNodePtr, externFunc, arena, state, globalTable);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Expected 'fn' keyword for extern function declaration.");
+            parsingError("Expected 'fn' keyword for extern function declaration.", "parseExternModuleDeclaration", arena, state, lexer, lexer->source, globalTable);
+        }
+    }
+
+    consume(__LINE__, lexer, TOKEN_RBRACE, "Expected '}' to end extern module declaration.", "parseExternModuleDeclaration", arena, state, context);
+    logMessage(LMI, "INFO", "Parser", "Extern module declaration parsed.");
+
+    return createDiscardNode(arena, state, lexer);
+}
 
 // <parseFunctionCall>
 ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
@@ -2784,7 +2829,8 @@ ASTNode *parseExtern(Lexer *lexer, ParsingContext *context, Arena *arena, Compil
     {
     case TOKEN_KW_FN:
         return parseExternFunctionDeclaration(lexer, context, arena, state, globalTable);
-
+    case TOKEN_STRING_LITERAL:
+        return parseExternModuleDeclaration(lexer, context, arena, state, globalTable);
     default:
         parsingError("Expected an extern declaration.", "parseExtern", arena, state, lexer, lexer->source, globalTable);
         return NULL;

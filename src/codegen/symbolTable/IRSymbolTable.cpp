@@ -359,24 +359,33 @@ namespace Cryo
         for (auto modulePair : globalSymbolTableInstance.getModules())
         {
             llvm::Module *module = modulePair;
+            std::cout << "  ----------------------" << std::endl;
             std::cout << "  Module: " << module->getName().str() << std::endl;
+            std::cout << "  ----------------------" << std::endl;
             for (auto &function : module->functions())
             {
                 std::cout << "    Function: " << function.getName().str() << std::endl;
             }
+            std::cout << "\n";
         }
+        std::cout << "\n";
+        std::cout << "---------------------------------------------------------" << std::endl;
+        std::cout << " Global Types:" << std::endl;
         // Print all the types in each module
         for (auto modulePair : globalSymbolTableInstance.getModules())
         {
             llvm::Module *module = modulePair;
+            std::cout << "  ----------------------" << std::endl;
             std::cout << "  Module: " << module->getName().str() << std::endl;
+            std::cout << "  ----------------------" << std::endl;
             for (auto &type : module->getIdentifiedStructTypes())
             {
                 std::cout << "    Type: " << type->getName().str() << std::endl;
             }
         }
 
-        std::cout << "\n\n";
+        std::cout << "\n";
+        std::cout << "===========================================================================" << std::endl;
     }
 
     std::string IRSymbolTable::IRTypeKindToString(IRTypeKind kind) const

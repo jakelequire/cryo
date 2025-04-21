@@ -177,7 +177,7 @@ namespace Cryo
             std::cerr << "Data type is null" << std::endl;
             return nullptr;
         }
-        if (dataType->container->typeOf != PRIM_FUNCTION)
+        if (dataType->container->primitive != PRIM_FUNCTION)
         {
             std::cerr << "Data type is not a function" << std::endl;
             return nullptr;

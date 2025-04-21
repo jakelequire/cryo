@@ -1,6 +1,6 @@
 ; ModuleID = 'Time'
 source_filename = "Time"
 
-%Time = type {}
+%class.Time = type {}
 
-@Time = external global %Time
+@Time = external global %class.Time

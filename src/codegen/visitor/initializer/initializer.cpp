@@ -770,4 +770,50 @@ namespace Cryo
         return type;
     }
 
+    IRMethodSymbol *Initializer::createClassMethod(const std::string &className, ASTNode *method, DataType *methodDataType)
+    {
+        ASSERT_NODE_NULLPTR_RET(method);
+        if (method->metaData->type != NODE_METHOD)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Node is not a method");
+            CONDITION_FAILED;
+            return nullptr;
+        }
+        llvm::Type *methodType = context.getInstance().symbolTable->getLLVMType(methodDataType);
+        if (!methodType)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Method type is null");
+            return nullptr;
+        }
+
+        llvm::FunctionType *methodFuncType = llvm::dyn_cast<llvm::FunctionType>(methodType);
+        if (!methodFuncType)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Method function type is null");
+            return nullptr;
+        }
+
+        llvm::Function *methodFunction = llvm::Function::Create(
+            methodFuncType, llvm::Function::ExternalLinkage, className + "." + method->data.method->name, context.getInstance().module.get());
+
+        methodFunction->setCallingConv(llvm::CallingConv::C);
+        methodFunction->setDoesNotThrow();
+        methodFunction->setName(className + "." + method->data.method->name);
+
+        // Add the method to the symbol table
+        IRFunctionSymbol methodFnSymbol = IRSymbolManager::createFunctionSymbol(
+            methodFunction, className + "." + method->data.method->name, methodFuncType->getReturnType(), methodFuncType, nullptr, false, false);
+        IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
+            methodFnSymbol, false, false, false, false, 0, nullptr);
+
+        context.getInstance().symbolTable->setCurrentFunction(&methodFnSymbol);
+        context.getInstance().builder.SetInsertPoint(methodFunction->getEntryBlock().getFirstInsertionPt());
+
+        context.getInstance().visitor->visit(method->data.method->body);
+        context.getInstance().symbolTable->addFunction(methodFnSymbol);
+
+        logMessage(LMI, "INFO", "Visitor", "Method function created: %s", methodFunction->getName().str().c_str());
+        return &methodSymbol;
+    }
+
 } // namespace Cryo

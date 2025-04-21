@@ -6,14 +6,14 @@ class Time {
     // for handling time-related operations, such as getting the current time,
     // formatting dates, and performing time calculations.
 
-    public static getCurrentTime() -> String {
+    public static getCurrentTime() -> str {
         // Placeholder for getting the current time
         // In a real implementation, this would contain logic to retrieve the
         // current system time and return it as a formatted string.
         return "Current Time Placeholder";
     }
 
-    public static formatDate(date: String) -> String {
+    public static formatDate(date: str) -> str {
         // Placeholder for formatting a date
         // In a real implementation, this would contain logic to format the
         // given date string into a specific format and return it.

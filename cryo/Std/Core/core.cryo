@@ -9,14 +9,35 @@ namespace Std.Core;
 // *Do not import it manually.*
 
 
+extern "C" {
+    function printf_export   (format: str, ...) -> i32;
+    function printStr_export (value: str) -> void;
+    function scanf_export    (format: str, ...) -> i32;
+    function printI32_export (value: i32) -> i32;
+
+    function sys_exit        (status: i32) -> void;
+    function sys_read        (fd: i32, buf: void *, count: i32) -> i32;
+    function sys_write       (fd: i32, buf: void *, count: i32) -> i32;
+
+    function mmap_export     (addr: void *, length: i32, prot: i32, flags: i32, fd: i32, offset: i32) -> void *;
+    function munmap_export   (addr: void *, length: i32) -> i32;
+    function malloc_export   (size: i32) -> void *;
+    function free_export     (__ptr__: void *) -> i32;
+    function memcpy_export   (dest: void *, src: void *, n: i32) -> void *;
+    function memmove_export  (dest: void *, src: void *, n: i32) -> void *;
+    function memcmp_export   (ptr1: void *, ptr2: void *, n: i32) -> i32;
+    function memset_export   (__ptr__: void *, value: i32, num: i32) -> void *;
+
+    function strlen_export   (__str__: str) -> i32;
+    function strncat_export  (dest: str, src: str, n: i32) -> str;
+    function strnlen_export  (__str__: str, n: i32) -> i32;
+    function strncmp_export  (str1: str, str2: str, n: i32) -> i32;
+}
+
+
 // ======================================================== //
 //                       Core Types                         //
 // ======================================================== //
-
-extern function strlen_export   (__str__: str) -> i32;
-extern function strncat_export  (dest: str, src: str, n: i32) -> str;
-extern function strnlen_export  (__str__: str, n: i32) -> i32;
-extern function strncmp_export  (str1: str, str2: str, n: i32) -> i32;
 
 struct Int {
     // The core Int properties.
@@ -36,9 +57,6 @@ struct String {
 
     constructor(__string__: str) {
         this.val = __string__;
-        // this.capacity = this.length + 1; // +1 for null terminator
-        // this.isEmpty = (this.length == 0);
-        // this.isNull = (this.val == null);
     }
 
     append(__str__: str) -> String;
@@ -113,30 +131,6 @@ implement struct String {
 /// type void       = void;     #[Compiler Defined Type]
 /// type null       = null;     #[Compiler Defined Type]
 /// type any        = any;      #[Compiler Defined Type]
-
-
-// ======================================================== //
-//                    C ABI Functions                       //
-// ======================================================== //
-
-extern function printf_export       (format: str, ...) -> i32;
-extern function printStr_export     (value: str) -> void;
-extern function scanf_export        (format: str, ...) -> i32;
-extern function printI32_export     (value: i32) -> i32;
-
-extern function sys_exit    (status: i32) -> void;
-extern function sys_read    (fd: i32, buf: void *, count: i32) -> i32;
-extern function sys_write   (fd: i32, buf: void *, count: i32) -> i32;
-
-extern function mmap_export     (addr: void *, length: i32, prot: i32, flags: i32, fd: i32, offset: i32) -> void *;
-extern function munmap_export   (addr: void *, length: i32) -> i32;
-extern function malloc_export   (size: i32) -> void *;
-extern function free_export     (__ptr__: void *) -> i32;
-extern function memcpy_export   (dest: void *, src: void *, n: i32) -> void *;
-extern function memmove_export  (dest: void *, src: void *, n: i32) -> void *;
-extern function memcmp_export   (ptr1: void *, ptr2: void *, n: i32) -> i32;
-extern function memset_export   (__ptr__: void *, value: i32, num: i32) -> void *;
-
 
 // ======================================================== //
 //                    Core Functions                        //
