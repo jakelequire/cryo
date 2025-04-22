@@ -15,6 +15,6 @@ class IO {
         // Call the external function to read a file
         const content: str = readFile_export(filePath);
         // Return the content as a String
-        return "Placeholder";
+        return content;
     }
 }

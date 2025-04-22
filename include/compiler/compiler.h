@@ -29,7 +29,6 @@
 #include "tools/utils/fs.h"
 #include "common/common.h"
 #include "settings/compilerSettings.h"
-#include "runtime/bootstrap.h"
 #include "tools/utils/cTypes.h"
 #include "semantics/semantics.h"
 #include "linker/compilationUnit.h"
@@ -41,6 +40,7 @@ typedef struct Bootstrapper Bootstrapper;
 typedef struct SymbolTable SymbolTable;
 typedef struct TypesTable TypesTable;
 typedef struct CompilationUnit_t CompilationUnit;
+typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 typedef struct CCTXPragma_t
 {
