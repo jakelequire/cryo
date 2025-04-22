@@ -106,6 +106,11 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
     lexer->getLPos = getLPos;
     lexer->getCPos = getCPos;
 
+    GDM->initFrontendState(GDM);
+    GDM->frontendState->setLexer(GDM->frontendState, lexer);
+    GDM->frontendState->setSourceCode(GDM->frontendState, source);
+    GDM->frontendState->setCurrentFile(GDM->frontendState, fileName);
+
     DEBUG_PRINT_FILTER({
         printf("{lexer} -------------- <Input Source Code> --------------\n\n");
         printf("\n{lexer} File Name: %s\n", fileName);

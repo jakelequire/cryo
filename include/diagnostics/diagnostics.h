@@ -51,12 +51,6 @@ Error Code Template:
 typedef struct ASTNode ASTNode;
 typedef struct Lexer Lexer;
 
-typedef struct FrontendState
-{
-    Lexer *lexer;
-    bool isLexerSet;
-} FrontendState;
-
 #define STACK_TRACE_CAPACITY 16
 #define ERROR_CAPACITY 100
 
@@ -73,6 +67,36 @@ typedef struct StackTrace StackTrace;
 // The global diagnostics manager
 extern GlobalDiagnosticsManager *g_diagnosticsManager;
 
+// Add to diagnostics.h
+typedef enum DiagnosticSeverity
+{
+    DIAG_NOTE,
+    DIAG_WARNING,
+    DIAG_ERROR,
+    DIAG_FATAL
+} DiagnosticSeverity;
+
+typedef struct FrontendState_t
+{
+    Lexer *lexer;    // The current lexer
+    bool isLexerSet; // Flag to check if the lexer is set
+
+    const char *sourceCode;  // The source code being parsed
+    const char *currentFile; // The current file being parsed
+    void (*setSourceCode)(struct FrontendState_t *self, const char *sourceCode);
+    void (*setCurrentFile)(struct FrontendState_t *self, const char *currentFile);
+
+    // The current position in the source code
+    size_t currentLine;
+    size_t currentColumn;
+    size_t currentOffset;
+
+    void (*setLexer)(struct FrontendState_t *self, Lexer *lexer);
+    void (*clearLexer)(struct FrontendState_t *self);
+
+    struct FrontendState_t *(*takeSnapshot)(struct FrontendState_t *self);
+} FrontendState;
+
 typedef struct GlobalDiagnosticsManager
 {
     // -----------------------------------
@@ -85,26 +109,32 @@ typedef struct GlobalDiagnosticsManager
     StackTrace *stackTrace; // The current stack trace
 
     FrontendState *frontendState; // The current frontend state
+    void (*initFrontendState)(GlobalDiagnosticsManager *self);
+    void (*debugPrintCurrentState)(GlobalDiagnosticsManager *self);
+
+    // Add to GlobalDiagnosticsManager struct
+    void (*reportDiagnostic)(GlobalDiagnosticsManager *self, DiagnosticSeverity severity,
+                             const char *message, const char *function, const char *file, int line);
+    void (*reportInternalError)(GlobalDiagnosticsManager *self, const char *message,
+                                const char *function, const char *file, int line);
+    bool (*hasFatalErrors)(GlobalDiagnosticsManager *self);
+    void (*printDiagnostics)(GlobalDiagnosticsManager *self);
 
     // -----------------------------------
     // Public Methods
 
-    // `void newStackFrame(*self, char *functionName, char *filename, int line, int column)`
-    _NEW_METHOD(void, createStackFrame, GlobalDiagnosticsManager *self, char *functionName, char *filename, int line);
+    void (*createStackFrame)(GlobalDiagnosticsManager *self, char *functionName, char *filename, int line);
 
     // `void printStackTrace(*self)`
-    _NEW_METHOD(void, printStackTrace, GlobalDiagnosticsManager *self);
-
-    // `void addLexer(*self, Lexer *lexer)`
-    _NEW_METHOD(void, addLexer, GlobalDiagnosticsManager *self, Lexer *lexer);
-
+    void (*printStackTrace)(GlobalDiagnosticsManager *self);
 } GlobalDiagnosticsManager;
 
 typedef struct DiagnosticEntry
 {
-    CryoErrorCode *err;
+    CryoErrorCode err;
     CompilerInternalError *internalErr;
     CryoErrorInfo *cryoErrInfo;
+    CryoErrorSeverity severity;
     bool isInternalError;
     bool isCryoError;
 } DiagnosticEntry;
@@ -149,7 +179,7 @@ __C_CONSTRUCTOR__
 void initGlobalDiagnosticsManager(void);
 
 CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code);
-DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo);
+DiagnosticEntry *newDiagnosticEntry(CryoErrorCode err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo);
 CompilerInternalError *newCompilerInternalError(char *function, char *filename, int line, char *message);
 CryoErrorInfo *newCryoErrorInfo(char *filename, int line, int column, char *message);
 FrontendState *newFrontendState(void);

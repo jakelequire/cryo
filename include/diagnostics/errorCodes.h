@@ -77,16 +77,17 @@ extern "C"
         CRYO_SEVERITY_NOTE,
         CRYO_SEVERITY_WARNING,
         CRYO_SEVERITY_ERROR,
-        CRYO_SEVERITY_FATAL
+        CRYO_SEVERITY_FATAL,
+        CRYO_SEVERITY_INTERNAL
     } CryoErrorSeverity;
 
     typedef enum CryoErrorType
     {
-        CRYO_ERROR_TYPE_GENERAL     = 0x45,     // 'E' (General Error)
-        CRYO_ERROR_TYPE_FRONTEND    = 0x46,     // 'F' (Frontend Error)
-        CRYO_ERROR_TYPE_SEMANTIC    = 0x53,     // 'S' (Semantic Error)
-        CRYO_ERROR_TYPE_LINKER      = 0x4C,     // 'L' (Linker Error)
-        CRYO_ERROR_TYPE_INTERNAL    = 0x49      // 'I' (Internal Error)
+        CRYO_ERROR_TYPE_GENERAL = 0x45,  // 'E' (General Error)
+        CRYO_ERROR_TYPE_FRONTEND = 0x46, // 'F' (Frontend Error)
+        CRYO_ERROR_TYPE_SEMANTIC = 0x53, // 'S' (Semantic Error)
+        CRYO_ERROR_TYPE_LINKER = 0x4C,   // 'L' (Linker Error)
+        CRYO_ERROR_TYPE_INTERNAL = 0x49  // 'I' (Internal Error)
     } CryoErrorType;
 
     typedef struct CryoError

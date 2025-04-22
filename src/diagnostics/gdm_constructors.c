@@ -18,14 +18,6 @@
 
 // =============================================================================
 
-FrontendState *newFrontendState(void)
-{
-    FrontendState *state = (FrontendState *)malloc(sizeof(FrontendState));
-    state->lexer = NULL;
-    state->isLexerSet = false;
-    return state;
-}
-
 CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErrorCode code)
 {
     CryoError *error = (CryoError *)malloc(sizeof(CryoError));
@@ -36,7 +28,7 @@ CryoError *newCryoError(CryoErrorType type, CryoErrorSeverity severity, CryoErro
     return error;
 }
 
-DiagnosticEntry *newDiagnosticEntry(CryoErrorCode *err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo)
+DiagnosticEntry *newDiagnosticEntry(CryoErrorCode err, CompilerInternalError *internalErr, CryoErrorInfo *cryoErrInfo)
 {
     DiagnosticEntry *entry = (DiagnosticEntry *)malloc(sizeof(DiagnosticEntry));
     entry->err = err;
