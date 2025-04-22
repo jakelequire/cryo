@@ -11,9 +11,9 @@ class IO {
     // handling streams, etc.
 
     // Example method to demonstrate the structure
-    public static readFile(filePath: String) -> String {
+    public static readFile(filePath: str) -> str {
         // Call the external function to read a file
-        const content: str = readFile_export(filePath.val);
+        const content: str = readFile_export(filePath);
         // Return the content as a String
         return "Placeholder";
     }

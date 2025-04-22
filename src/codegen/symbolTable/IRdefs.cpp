@@ -53,6 +53,11 @@ namespace Cryo
         return IRTypeSymbol(type, name, members, methods);
     }
 
+    IRTypeSymbol IRSymbolManager::createProtoTypeSymbol(llvm::StructType *type, const std::string &name, bool isProto)
+    {
+        return IRTypeSymbol(type, name, isProto);
+    }
+
     // Create a new property symbol
     IRPropertySymbol IRSymbolManager::createPropertySymbol(llvm::Type *type, const std::string &name,
                                                            size_t offset, bool isPublic)

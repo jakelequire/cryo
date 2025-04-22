@@ -60,19 +60,12 @@ struct String {
     }
 
     append(__str__: str) -> String;
-
     prepend(__str__: str) -> String;
-
     insert(__str__: str, __index__: i32) -> String;
-
     remove(__index__: i32, __length__: i32) -> String;
-    
     replace(__str__: str, __index__: i32, __length__: i32) -> String;
-
     find(__str__: str) -> i32;
-
     findLast(__str__: str) -> i32;
-    
     findFirst(__str__: str) -> i32;
 }
 

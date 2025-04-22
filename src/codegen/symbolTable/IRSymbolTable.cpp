@@ -95,7 +95,25 @@ namespace Cryo
 
     bool IRSymbolTable::addType(const IRTypeSymbol &symbol)
     {
+        // Check if the type already exists in the current (not global) symbol table
+        auto it = types.find(symbol.name);
+        if (it != types.end())
+        {
+            if (it->second.isPrototype)
+            {
+                // If the type is a prototype, we can replace it
+                logMessage(LMI, "INFO", "CodeGen", "Replacing prototype type %s in symbol table", symbol.name.c_str());
+                it->second = symbol;
+                return true;
+            }
+            // If the type is not a prototype, we cannot replace it
+            logMessage(LMI, "ERROR", "CodeGen", "Type %s already exists in symbol table", symbol.name.c_str());
+            return false;
+        }
+        logMessage(LMI, "INFO", "CodeGen", "Adding type %s to symbol table", symbol.name.c_str());
+        // Add the type to the current scope
         types.insert({symbol.name, symbol});
+        // Add the type to the global symbol table
         return true;
     }
 
@@ -211,13 +229,16 @@ namespace Cryo
     IRTypeSymbol *IRSymbolTable::findType(const std::string &name)
     {
         logMessage(LMI, "INFO", "CodeGen", "Finding type: %s", name.c_str());
+
         // First try exact match in local types
         auto it = types.find(name);
         if (it != types.end())
         {
-            return &it->second;
+            logMessage(LMI, "INFO", "CodeGen", "Found type %s in local symbol table", name.c_str());
+            return &(it->second); // Return address of element in map
         }
 
+        logMessage(LMI, "INFO", "CodeGen", "Type %s not found in local symbol table", name.c_str());
         // If not found and it's a struct/class name pattern, try prefix matching in local types
         if (name.find("struct.") == 0 || name.find("class.") == 0)
         {
@@ -239,7 +260,7 @@ namespace Cryo
                     if (typeName.length() == baseName.length())
                     {
                         // Exact match
-                        return &typePair.second;
+                        return &(typePair.second);
                     }
 
                     // It has a suffix (e.g., ".3" in "struct.Int.3")
@@ -251,7 +272,7 @@ namespace Cryo
                         if (shortestSuffix == std::string::npos || suffixLength < shortestSuffix)
                         {
                             shortestSuffix = suffixLength;
-                            bestMatch = &typePair.second;
+                            bestMatch = &(typePair.second);
                         }
                     }
                 }
@@ -284,6 +305,11 @@ namespace Cryo
         // No match found
         logMessage(LMI, "ERROR", "CodeGen", "Type %s not found in symbol table", name.c_str());
         return nullptr;
+    }
+
+    void IRSymbolTable::removeType(const std::string &name)
+    {
+        types.erase(name);
     }
 
     llvm::Type *IRSymbolTable::derefencePointer(llvm::Type *type)

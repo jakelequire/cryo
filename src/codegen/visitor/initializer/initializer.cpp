@@ -779,41 +779,118 @@ namespace Cryo
             CONDITION_FAILED;
             return nullptr;
         }
-        llvm::Type *methodType = context.getInstance().symbolTable->getLLVMType(methodDataType);
-        if (!methodType)
+        logMessage(LMI, "INFO", "Visitor", "Creating method: %s", method->data.method->name);
+        // Create the function prototype
+        std::vector<llvm::Type *> argTypes;
+        bool isVarArg = false;
+        for (size_t i = 0; i < method->data.method->paramCount; i++)
         {
-            logMessage(LMI, "ERROR", "CodeGen", "Method type is null");
+            logMessage(LMI, "INFO", "Visitor", "Creating method parameter %d: %s", i, method->data.method->params[i]->data.param->name);
+            ASTNode *param = method->data.method->params[i];
+            DataType *paramDataType = param->data.param->type;
+            if (paramDataType->container->objectType == VA_ARGS_OBJ)
+            {
+                isVarArg = true;
+                break;
+            }
+            llvm::Type *paramType = context.getInstance().symbolTable->getLLVMType(paramDataType);
+            argTypes.push_back(paramType);
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Creating method function prototype...");
+        DataType *functionDataType = method->data.method->type;
+        if (!functionDataType)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Function data type is null");
+            CONDITION_FAILED;
             return nullptr;
         }
 
-        llvm::FunctionType *methodFuncType = llvm::dyn_cast<llvm::FunctionType>(methodType);
-        if (!methodFuncType)
+        logMessage(LMI, "INFO", "Visitor", "Function data type: %s", functionDataType->typeName);
+        DataType *returnType = functionDataType->container->type.functionType->returnType;
+        if (!returnType)
         {
-            logMessage(LMI, "ERROR", "CodeGen", "Method function type is null");
+            logMessage(LMI, "ERROR", "CodeGen", "Return type is null");
+            CONDITION_FAILED;
             return nullptr;
         }
 
+        logMessage(LMI, "INFO", "Visitor", "Method return type: %s", returnType->typeName);
+        llvm::Type *methodReturnType = context.getInstance().symbolTable->getLLVMType(returnType);
+        if (!methodReturnType)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Method return type is null");
+            CONDITION_FAILED;
+            return nullptr;
+        }
+
+        llvm::FunctionType *methodFuncType = llvm::FunctionType::get(
+            methodReturnType, argTypes, isVarArg);
+        if (isVarArg)
+        {
+            methodFuncType = llvm::FunctionType::get(
+                methodReturnType, argTypes, true);
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Creating method function prototype...");
+        // The function signature
         llvm::Function *methodFunction = llvm::Function::Create(
-            methodFuncType, llvm::Function::ExternalLinkage, className + "." + method->data.method->name, context.getInstance().module.get());
+            methodFuncType,
+            llvm::Function::ExternalLinkage,
+            className + "." + method->data.method->name,
+            context.getInstance().module.get());
 
         methodFunction->setCallingConv(llvm::CallingConv::C);
         methodFunction->setDoesNotThrow();
         methodFunction->setName(className + "." + method->data.method->name);
 
+        logMessage(LMI, "INFO", "Visitor", "Method function prototype created: %s", methodFunction->getName().str().c_str());
         // Add the method to the symbol table
         IRFunctionSymbol methodFnSymbol = IRSymbolManager::createFunctionSymbol(
-            methodFunction, className + "." + method->data.method->name, methodFuncType->getReturnType(), methodFuncType, nullptr, false, false);
-        IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
-            methodFnSymbol, false, false, false, false, 0, nullptr);
+            methodFunction,
+            className + "." + method->data.method->name,
+            methodReturnType,
+            methodFuncType,
+            nullptr, false, false);
 
-        context.getInstance().symbolTable->setCurrentFunction(&methodFnSymbol);
-        context.getInstance().builder.SetInsertPoint(methodFunction->getEntryBlock().getFirstInsertionPt());
+        context.getInstance().symbolTable->addFunction(methodFnSymbol);
+        logMessage(LMI, "INFO", "Visitor", "Adding method to symbol table: %s", methodFunction->getName().str().c_str());
+        IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
+            methodFnSymbol,
+            false, false, false, false, 0, nullptr);
+
+        logMessage(LMI, "INFO", "Visitor", "Setting method params...");
+        for (size_t i = 0; i < method->data.method->paramCount; i++)
+        {
+            ASTNode *param = method->data.method->params[i];
+            llvm::Type *paramType = context.getInstance().symbolTable->getLLVMType(param->data.param->type);
+
+            // Create a symbol for each parameter for the symbol table
+            std::string paramName = param->data.param->name;
+            logMessage(LMI, "INFO", "Visitor", "Parameter Name: %s", paramName.c_str());
+            AllocaType allocaType = AllocaTypeInference::inferFromNode(param, false);
+            IRVariableSymbol paramSymbol = IRSymbolManager::createVariableSymbol(
+                methodFunction, nullptr, paramType, paramName, allocaType);
+
+            // Create the parameter in the function
+            llvm::Function::arg_iterator argIt = methodFunction->arg_begin();
+            llvm::Value *arg = argIt++;
+            arg->setName(paramName);
+            paramSymbol.value = arg;
+            context.getInstance().symbolTable->addVariable(paramSymbol);
+        }
+
+        llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.getInstance().context, "entry", methodFunction);
+        context.getInstance().builder.SetInsertPoint(entryBlock);
+        logMessage(LMI, "INFO", "Visitor", "Creating method function: %s", methodFunction->getName().str().c_str());
 
         context.getInstance().visitor->visit(method->data.method->body);
-        context.getInstance().symbolTable->addFunction(methodFnSymbol);
+
+        // Clear the current function
+        context.getInstance().builder.ClearInsertionPoint();
 
         logMessage(LMI, "INFO", "Visitor", "Method function created: %s", methodFunction->getName().str().c_str());
-        return &methodSymbol;
+        return &(methodSymbol);
     }
 
 } // namespace Cryo

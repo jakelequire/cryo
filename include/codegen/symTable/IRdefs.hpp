@@ -577,6 +577,8 @@ namespace Cryo
         llvm::Type *elementType;
         size_t size; // Fixed size if known
 
+        bool isPrototype = false; // For prototype types
+
         bool isAggregate() const;
         bool isArray() const;
         size_t getSizeInBytes(llvm::DataLayout &layout) const;
@@ -593,6 +595,7 @@ namespace Cryo
               elementType(nullptr), size(0)
         {
             // The union's default constructor will be called automatically
+            isPrototype = false;
         }
 
         // Constructor to initialize the type symbol
@@ -601,6 +604,7 @@ namespace Cryo
               elementType(nullptr), size(0)
         {
             type.typeTy = typ; // Explicitly initialize the union member
+            isPrototype = false;
         }
 
         // Constructor for aggregate types
@@ -611,6 +615,7 @@ namespace Cryo
               members(mems), methods(meths), elementType(nullptr), size(0)
         {
             type.structTy = typ; // Explicitly initialize the union member
+            isPrototype = false;
         }
 
         // Constructor for function types
@@ -619,6 +624,16 @@ namespace Cryo
               elementType(nullptr), size(0)
         {
             type.functionTy = typ; // Explicitly initialize the union member
+            isPrototype = false;
+        }
+
+        // Constructor for prototype types
+        IRTypeSymbol(llvm::StructType *typ, const std::string &nm, bool isProto)
+            : kind(IRTypeKind::Aggregate), name(nm), astNode(nullptr), dataType(nullptr),
+              elementType(nullptr), size(0)
+        {
+            type.structTy = typ; // Explicitly initialize the union member
+            isPrototype = isProto;
         }
 
         // Copy constructor
@@ -631,8 +646,10 @@ namespace Cryo
               members(other.members),
               methods(other.methods),
               elementType(other.elementType),
-              size(other.size)
+              size(other.size),
+              isPrototype(other.isPrototype)
         {
+            // The union's copy constructor will be called automatically
         }
 
         // Copy assignment operator
@@ -649,6 +666,7 @@ namespace Cryo
                 methods = other.methods;
                 elementType = other.elementType;
                 size = other.size;
+                isPrototype = other.isPrototype;
             }
             return *this;
         }
@@ -965,6 +983,8 @@ namespace Cryo
         static IRTypeSymbol createTypeSymbol(llvm::StructType *type, const std::string &name,
                                              const std::vector<IRPropertySymbol> &members,
                                              const std::vector<IRMethodSymbol> &methods);
+
+        static IRTypeSymbol createProtoTypeSymbol(llvm::StructType *type, const std::string &name, bool isProto);
 
         // Create a new property symbol
         static IRPropertySymbol createPropertySymbol(llvm::Type *type, const std::string &name,

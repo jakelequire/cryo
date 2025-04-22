@@ -22,7 +22,7 @@ namespace Cryo
     {
         if (!dataType)
         {
-            std::cerr << "Data type is null" << std::endl;
+            std::cerr << "@getLLVMType Data type is null" << std::endl;
             return nullptr;
         }
 
@@ -32,12 +32,12 @@ namespace Cryo
 
         if (dataType->container->typeOf == POINTER_TYPE)
         {
-            logMessage(LMI, "INFO", "IRSymbolTable", "Data type is a pointer");
-            logMessage(LMI, "INFO", "IRSymbolTable", "Pointer type: %s", DTM->debug->dataTypeToString(dataType));
+            logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMType Data type is a pointer");
+            logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMType Pointer type: %s", DTM->debug->dataTypeToString(dataType));
             llvm::Type *baseType = getLLVMType(dataType->container->type.pointerType->baseType);
             if (!baseType)
             {
-                std::cerr << "Failed to get base type for pointer" << std::endl;
+                std::cerr << "@getLLVMType Failed to get base type for pointer" << std::endl;
                 return nullptr;
             }
             return llvm::PointerType::get(baseType, 0);
@@ -81,7 +81,7 @@ namespace Cryo
             return nullptr;
         default:
         {
-            std::cerr << "Unknown data type" << std::endl;
+            std::cerr << "@getLLVMType Unknown data type" << std::endl;
             std::string typeName = dataType->typeName;
             std::string primitiveStr = DTM->debug->primitiveDataTypeToString(dataType->container->primitive);
             std::cerr << "Data type: " << typeName << ", Primitive: " << primitiveStr << std::endl;
@@ -92,6 +92,26 @@ namespace Cryo
 
     std::vector<llvm::Type *> IRSymbolTable::getLLVMTypes(DataType **dataTypes)
     {
+        if (!dataTypes)
+        {
+            std::cerr << "Data types array is null" << std::endl;
+            return {};
+        }
+
+        std::vector<llvm::Type *> llvmTypes;
+        for (int i = 0; dataTypes[i] != nullptr; i++)
+        {
+            llvm::Type *llvmType = getLLVMType(dataTypes[i]);
+            if (llvmType)
+            {
+                llvmTypes.push_back(llvmType);
+            }
+            else
+            {
+                std::cerr << "Failed to get LLVM type for data type: " << DTM->debug->dataTypeToString(dataTypes[i]) << std::endl;
+            }
+        }
+        return llvmTypes;
     }
 
     llvm::StructType *IRSymbolTable::getLLVMObjectType(DataType *dataType)
@@ -147,26 +167,63 @@ namespace Cryo
             return nullptr;
         }
 
-        // Check if the struct already exists in the current module via the symbol table
-        std::string structName = "struct." + std::string(dataType->container->type.structType->name);
-        IRTypeSymbol *typeSymbol = this->findType(structName);
-        if (typeSymbol)
+        std::string structName = "struct." + std::string(dataType->typeName);
+        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMStructType Finding struct type: %s", structName.c_str());
+
+        // First try to find existing type in LLVM context
+        llvm::StructType *existingType = llvm::StructType::getTypeByName(
+            context.getInstance().context,
+            structName);
+
+        if (existingType)
         {
-            return typeSymbol->type.structTy;
+            logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMStructType Found existing LLVM type: %s",
+                       existingType->getName().str().c_str());
+            return existingType;
         }
-        else
+
+        // If not in LLVM, check our symbol table
+        IRTypeSymbol *typeSymbol = findType(structName);
+        if (typeSymbol == nullptr)
         {
-            // Don't create the new type, just return nullptr
-            logMessage(LMI, "INFO", "IRSymbolTable", "Struct type %s not found in symbol table", structName.c_str());
-            // Print the symbol table
-            debugPrint();
+            logMessage(LMI, "ERROR", "IRSymbolTable", "Type symbol is null");
             CONDITION_FAILED;
         }
+
+        if (typeSymbol->getType() == nullptr)
+        {
+            logMessage(LMI, "ERROR", "IRSymbolTable", "Type symbol has null type");
+            CONDITION_FAILED;
+        }
+
+        if (typeSymbol && typeSymbol->getType())
+        {
+            llvm::Type *type = typeSymbol->getType();
+            llvm::StructType *structType = llvm::dyn_cast<llvm::StructType>(type);
+
+            if (structType)
+            {
+                logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMStructType Found type in symbol table: %s",
+                           structType->getName().str().c_str());
+                return structType;
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "IRSymbolTable", "@getLLVMStructType Type is not a struct type");
+                CONDITION_FAILED;
+            }
+        }
+
+        // If we get here, the type wasn't found
+        logMessage(LMI, "ERROR", "IRSymbolTable", "@getLLVMStructType Type not found: %s", structName.c_str());
+        debugPrint();
+        CONDITION_FAILED;
     }
 
     // Class Types
     llvm::StructType *IRSymbolTable::getLLVMClassType(DataType *dataType)
     {
+        DEBUG_BREAKPOINT;
     }
 
     // Function Types
@@ -186,9 +243,17 @@ namespace Cryo
         logMessage(LMI, "INFO", "IRSymbolTable", "Creating LLVM function type for data type: %s",
                    DTM->debug->dataTypeToString(dataType));
 
+        llvm::Type *returnType = getLLVMType(dataType->container->type.functionType->returnType);
+        if (!returnType)
+        {
+            std::cerr << "Failed to get return type" << std::endl;
+            return nullptr;
+        }
+        std::vector<llvm::Type *> paramTypes = getLLVMTypes(dataType->container->type.functionType->paramTypes);
+
         llvm::FunctionType *llvmFuncType = llvm::FunctionType::get(
-            getLLVMType(dataType->container->type.functionType->returnType),
-            getLLVMTypes(dataType->container->type.functionType->paramTypes),
+            returnType,
+            paramTypes,
             false);
 
         if (!llvmFuncType)

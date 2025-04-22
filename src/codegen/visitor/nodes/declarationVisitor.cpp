@@ -214,8 +214,6 @@ namespace Cryo
                 AllocaTypeInference::inferFromNode(node, true),
                 Allocation());
             symbolTable->addVariable(varSymbol);
-            DEBUG_BREAKPOINT;
-
             return;
         }
 
@@ -243,16 +241,29 @@ namespace Cryo
         }
 
         std::string structName = node->data.structNode->name;
+        std::string fullStructName = "struct." + structName;
         logMessage(LMI, "INFO", "Visitor", "Struct Name: %s", structName.c_str());
 
+        // Create initial empty struct type as prototype
+        llvm::StructType *structType = llvm::StructType::create(
+            context.getInstance().context,
+            fullStructName);
+
+        // Add prototype to symbol table to allow recursive references
+        IRTypeSymbol protoType = IRSymbolManager::createProtoTypeSymbol(
+            structType,
+            fullStructName,
+            true);
+        context.getInstance().symbolTable->addType(protoType);
+
         int propertyCount = node->data.structNode->propertyCount;
-        logMessage(LMI, "INFO", "Visitor", "Struct has %d properties", propertyCount);
-
         int methodCount = node->data.structNode->methodCount;
+        logMessage(LMI, "INFO", "Visitor", "Struct has %d properties, %d methods",
+                   propertyCount, methodCount);
 
+        // Process properties
         std::vector<llvm::Type *> propertyTypes;
         std::vector<IRPropertySymbol> propertySymbols;
-        std::vector<IRMethodSymbol> methodSymbols;
 
         logMessage(LMI, "INFO", "Visitor", "Processing property symbols...");
         for (int i = 0; i < propertyCount; i++)
@@ -262,11 +273,27 @@ namespace Cryo
             llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
             std::string propertyName = property->data.property->name;
 
+            if (!llvmType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Failed to get LLVM type for property %s",
+                           propertyName.c_str());
+                return;
+            }
+
             propertyTypes.push_back(llvmType);
-            IRPropertySymbol propertySymbol = IRSymbolManager::createPropertySymbol(llvmType, propertyName, i, true);
+            IRPropertySymbol propertySymbol = IRSymbolManager::createPropertySymbol(
+                llvmType,
+                propertyName,
+                i,
+                true);
             propertySymbols.push_back(propertySymbol);
         }
 
+        // Set the struct body now that we have all property types
+        structType->setBody(propertyTypes);
+
+        // Process methods
+        std::vector<IRMethodSymbol> methodSymbols;
         logMessage(LMI, "INFO", "Visitor", "Processing method symbols...");
         for (int i = 0; i < methodCount; i++)
         {
@@ -275,34 +302,65 @@ namespace Cryo
             llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
             std::string methodName = method->data.method->name;
 
+            if (!llvmType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Failed to get LLVM type for method %s",
+                           methodName.c_str());
+                return;
+            }
+
+            // Create function symbol for the method
             IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
-                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
+                nullptr,
+                methodName,
+                llvmType,
+                nullptr,
+                nullptr,
+                false,
+                false);
+
+            // Create method symbol
             IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
-                functionSymbol, false, false, false, false, 0, nullptr);
+                functionSymbol,
+                false,  // isVirtual
+                false,  // isAbstract
+                false,  // isOverride
+                false,  // isStatic
+                0,      // vtableIndex
+                nullptr // parentClass
+            );
+
             methodSymbols.push_back(methodSymbol);
         }
 
-        llvm::StructType *structType = llvm::StructType::create(context.getInstance().context, "struct." + structName);
-        structType->setBody(propertyTypes);
+        // Remove prototype and add complete type
+        context.getInstance().symbolTable->removeType(fullStructName);
 
+        // Create complete type symbol with properties and methods
         IRTypeSymbol typeSymbol = IRSymbolManager::createTypeSymbol(
-            structType, "struct." + structName, propertySymbols, methodSymbols);
+            structType,
+            fullStructName,
+            propertySymbols,
+            methodSymbols);
         context.getInstance().symbolTable->addType(typeSymbol);
 
+        // Register struct globally
         context.getInstance().module->getOrInsertGlobal(structName, structType);
-        logMessage(LMI, "INFO", "Visitor", "Struct type created");
 
-        // Create the constructor if it exists
+        // Handle constructor if present
         if (node->data.structNode->constructor)
         {
-            logMessage(LMI, "INFO", "Visitor", "Struct has a constructor");
+            logMessage(LMI, "INFO", "Visitor", "Generating constructor for struct %s",
+                       structName.c_str());
             context.getInstance().symbolTable->enterConstructorInstance();
-            context.getInstance().initializer->generateStructConstructor(node->data.structNode->constructor, structType);
+            context.getInstance().initializer->generateStructConstructor(
+                node->data.structNode->constructor,
+                structType);
             context.getInstance().symbolTable->exitConstructorInstance();
         }
 
-        logMessage(LMI, "INFO", "Visitor", "Struct declaration complete");
-        return;
+        logMessage(LMI, "INFO", "Visitor", "Struct declaration complete for %s",
+                   structName.c_str());
     }
 
     void CodeGenVisitor::visitClassDecl(ASTNode *node)
@@ -332,6 +390,8 @@ namespace Cryo
         // Loop through the public properties
         for (int i = 0; i < node->data.classNode->publicMembers->propertyCount; i++)
         {
+            logMessage(LMI, "INFO", "Visitor", "Processing public property %d of %d",
+                       i + 1, node->data.classNode->publicMembers->propertyCount);
             ASTNode *publicProperties = node->data.classNode->publicMembers->properties[i];
             DataType *propertyType = publicProperties->data.property->type;
             llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
@@ -344,6 +404,8 @@ namespace Cryo
         // Loop through the private properties
         for (int i = 0; i < node->data.classNode->privateMembers->propertyCount; i++)
         {
+            logMessage(LMI, "INFO", "Visitor", "Processing private property %d of %d",
+                       i + 1, node->data.classNode->privateMembers->propertyCount);
             ASTNode *privateProperties = node->data.classNode->privateMembers->properties[i];
             DataType *propertyType = privateProperties->data.property->type;
             llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
@@ -356,6 +418,8 @@ namespace Cryo
         // Loop through the protected properties
         for (int i = 0; i < node->data.classNode->protectedMembers->propertyCount; i++)
         {
+            logMessage(LMI, "INFO", "Visitor", "Processing protected property %d of %d",
+                       i + 1, node->data.classNode->protectedMembers->propertyCount);
             ASTNode *protectedProperties = node->data.classNode->protectedMembers->properties[i];
             DataType *propertyType = protectedProperties->data.property->type;
             llvm::Type *llvmType = symbolTable->getLLVMType(propertyType);
@@ -368,16 +432,43 @@ namespace Cryo
         // Loop through the public methods
         for (int i = 0; i < node->data.classNode->publicMembers->methodCount; i++)
         {
+            logMessage(LMI, "INFO", "Visitor", "Processing public method %d of %d",
+                       i + 1, node->data.classNode->publicMembers->methodCount);
+
             ASTNode *publicMethod = node->data.classNode->publicMembers->methods[i];
+            if (publicMethod->metaData->type != NODE_METHOD)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Node is not a method");
+                return;
+            }
+            if (!publicMethod->data.method)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Method data is null");
+                return;
+            }
             DataType *methodType = publicMethod->data.method->type;
-            IRMethodSymbol methodSymbol = *context.getInstance().initializer->createClassMethod(
+            if (!methodType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Method type is null");
+                return;
+            }
+
+            IRMethodSymbol *methodSymbol = context.getInstance().initializer->createClassMethod(
                 className, publicMethod, methodType);
-            methodSymbols.push_back(methodSymbol);
+            if (!methodSymbol)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Failed to create method symbol for %s",
+                           publicMethod->data.method->name);
+                return;
+            }
+            methodSymbols.push_back(*methodSymbol);
         }
 
         // Loop through the private methods
         for (int i = 0; i < node->data.classNode->privateMembers->methodCount; i++)
         {
+            logMessage(LMI, "INFO", "Visitor", "Processing private method %d of %d",
+                       i + 1, node->data.classNode->privateMembers->methodCount);
             ASTNode *privateMethods = node->data.classNode->privateMembers->methods[i];
             DataType *methodType = privateMethods->data.method->type;
             IRMethodSymbol methodSymbol = *context.getInstance().initializer->createClassMethod(
@@ -388,16 +479,12 @@ namespace Cryo
         // Loop through the protected methods
         for (int i = 0; i < node->data.classNode->protectedMembers->methodCount; i++)
         {
+            logMessage(LMI, "INFO", "Visitor", "Processing protected method %d of %d",
+                       i + 1, node->data.classNode->protectedMembers->methodCount);
             ASTNode *protectedMethods = node->data.classNode->protectedMembers->methods[i];
             DataType *methodType = protectedMethods->data.method->type;
-            llvm::Type *llvmType = symbolTable->getLLVMType(methodType);
-            std::string methodName = protectedMethods->data.method->name;
-            IRFunctionSymbol functionSymbol = IRSymbolManager::createFunctionSymbol(
-                nullptr, methodName, llvmType, nullptr, nullptr, false, false);
-            IRMethodSymbol methodSymbol = IRSymbolManager::createMethodSymbol(
-                functionSymbol, false, false, false, false, 0, nullptr);
-            // Visit the method body
-            visit(protectedMethods->data.method->body);
+            IRMethodSymbol methodSymbol = *context.getInstance().initializer->createClassMethod(
+                className, protectedMethods, methodType);
             methodSymbols.push_back(methodSymbol);
         }
 

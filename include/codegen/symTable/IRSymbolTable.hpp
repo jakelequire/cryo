@@ -143,6 +143,7 @@ namespace Cryo
         bool addFunction(const IRFunctionSymbol &symbol);
         bool addExternFunction(const IRFunctionSymbol &symbol);
         bool addType(const IRTypeSymbol &symbol);
+        void removeType(const std::string &name);
 
         // Symbol lookup
         IRVariableSymbol *findVariable(const std::string &name);
