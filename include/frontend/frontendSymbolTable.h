@@ -42,7 +42,7 @@
 ///     const char *name;    // Symbol name
 ///     const char *id;      // Unique symbol ID
 ///     ASTNode *node;       // AST node associated with the symbol
-///     DataType type;       // Data type of the symbol
+///     DataType *type;      // Data type of the symbol
 ///     ScopeType scopeType; // Scope type where the symbol is defined
 ///     size_t lineNumber;   // Line number in source code
 ///     size_t columnNumber; // Column number in source code
@@ -88,7 +88,7 @@ typedef struct FrontendSymbol_t
     const char *name;    // Symbol name
     const char *id;      // Unique symbol ID
     ASTNode *node;       // AST node associated with the symbol
-    DataType type;       // Data type of the symbol
+    DataType *type;      // Data type of the symbol
     ScopeType scopeType; // Scope type where the symbol is defined
     size_t lineNumber;   // Line number in source code
     size_t columnNumber; // Column number in source code
@@ -158,7 +158,10 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node);
 // Scope Management
 FrontendScope *FrontendSymbolTable_createScope(FrontendSymbolTable *self, const char *name, ScopeType type);
 int FrontendSymbolTable_addSymbolToScope(FrontendSymbolTable *self, FrontendSymbol *symbol);
-
+void FrontendSymbolTable_pushScope(FrontendSymbolTable *self, FrontendScope *scope);
+void FrontendSymbolTable_enterScope(FrontendSymbolTable *self, const char *name, ScopeType type);
+void FrontendSymbolTable_exitScope(FrontendSymbolTable *self);
+const char *getScopeTypeString(ScopeType type);
 // Debugging
 void FrontendSymbolTable_printTable(FrontendSymbolTable *self);
 

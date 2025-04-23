@@ -34,7 +34,7 @@ typedef struct FrontendSymbol_t
 FrontendSymbol *p_createSymbol(const char *name,
                                const char *id,
                                ASTNode *node,
-                               DataType type,
+                               DataType *type,
                                ScopeType scopeType,
                                size_t lineNumber,
                                size_t columnNumber,
@@ -66,30 +66,33 @@ FrontendSymbol *p_createFunctionDeclarationSymbol(ASTNode *node)
         logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
         return NULL;
     }
+
+    if (node->metaData->type != NODE_FUNCTION_DECLARATION)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is not a function declaration");
+        return NULL;
+    }
+
+    const char *funcName = node->data.functionDecl->name;
+    const char *funcID = "undef";
+    ASTNode *funcNode = node;
+    DataType *funcType = node->data.functionDecl->type;
+    ScopeType scopeType = SCOPE_GLOBAL; // TODO: Determine the correct scope type
+    size_t lineNumber = node->metaData->line;
+    size_t columnNumber = node->metaData->column;
+    bool isDefined = true; // TODO: Determine if the function is defined
+
+    FrontendSymbol *symbol = p_createSymbol(funcName, funcID, funcNode, funcType, scopeType, lineNumber, columnNumber, isDefined);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create function symbol");
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "SymbolTable", "Created function symbol: %s", funcName);
+    return symbol;
 }
 
-/*
-typedef struct CryoVariableNode
-{
-    DataType *type;
-    struct VariableNameNode *varNameNode;
-    char *name;
-    bool isGlobal;
-    bool isLocal;
-    bool isReference;
-    bool isMutable;
-    bool isIterator;
-    bool isNewInstance;
-    // Unary operators
-    bool hasUnaryOp;
-    ASTNode *unaryOp;
-    // This is the data attached to the variable
-    struct ASTNode *initializer;
-    // Optional index expression for array handling
-    bool hasIndexExpr;
-    struct IndexExprNode *indexExpr;
-} CryoVariableNode;
-*/
 FrontendSymbol *p_createVariableDeclarationSymbol(ASTNode *node)
 {
     if (node == NULL)
@@ -112,7 +115,7 @@ FrontendSymbol *p_createVariableDeclarationSymbol(ASTNode *node)
     size_t columnNumber = node->metaData->column;
     bool isDefined = true; // TODO: Determine if the variable is defined
 
-    FrontendSymbol *symbol = p_createSymbol(varName, varID, varNode, *varType, scopeType, lineNumber, columnNumber, isDefined);
+    FrontendSymbol *symbol = p_createSymbol(varName, varID, varNode, varType, scopeType, lineNumber, columnNumber, isDefined);
     if (!symbol)
     {
         logMessage(LMI, "ERROR", "SymbolTable", "Failed to create variable symbol");
@@ -130,15 +133,33 @@ FrontendSymbol *p_createTypeDeclarationSymbol(ASTNode *node)
         logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
         return NULL;
     }
-}
-FrontendSymbol *p_createNamespaceDeclarationSymbol(ASTNode *node)
-{
-    if (node == NULL)
+
+    if (node->metaData->type != NODE_TYPE)
     {
-        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is not a type declaration");
         return NULL;
     }
+
+    const char *typeName = node->data.typeDecl->name;
+    const char *typeID = "undef";
+    ASTNode *typeNode = node;
+    DataType *typeData = node->data.typeDecl->type;
+    ScopeType scopeType = SCOPE_GLOBAL; // TODO: Determine the correct scope type
+    size_t lineNumber = node->metaData->line;
+    size_t columnNumber = node->metaData->column;
+    bool isDefined = true; // TODO: Determine if the type is defined
+
+    FrontendSymbol *symbol = p_createSymbol(typeName, typeID, typeNode, typeData, scopeType, lineNumber, columnNumber, isDefined);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create type symbol");
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "SymbolTable", "Created type symbol: %s", typeName);
+    return symbol;
 }
+
 FrontendSymbol *p_createClassDeclarationSymbol(ASTNode *node)
 {
     if (node == NULL)
@@ -146,7 +167,33 @@ FrontendSymbol *p_createClassDeclarationSymbol(ASTNode *node)
         logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
         return NULL;
     }
+
+    if (node->metaData->type != NODE_CLASS)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is not a class declaration");
+        return NULL;
+    }
+
+    const char *className = node->data.classNode->name;
+    const char *classID = "undef";
+    ASTNode *classNode = node;
+    DataType *classType = node->data.classNode->type;
+    ScopeType scopeType = SCOPE_GLOBAL; // TODO: Determine the correct scope type
+    size_t lineNumber = node->metaData->line;
+    size_t columnNumber = node->metaData->column;
+    bool isDefined = true; // TODO: Determine if the class is defined
+
+    FrontendSymbol *symbol = p_createSymbol(className, classID, classNode, classType, scopeType, lineNumber, columnNumber, isDefined);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create class symbol");
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "SymbolTable", "Created class symbol: %s", className);
+    return symbol;
 }
+
 FrontendSymbol *p_createStructDeclarationSymbol(ASTNode *node)
 {
     if (node == NULL)
@@ -154,7 +201,33 @@ FrontendSymbol *p_createStructDeclarationSymbol(ASTNode *node)
         logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
         return NULL;
     }
+
+    if (node->metaData->type != NODE_STRUCT_DECLARATION)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is not a struct declaration");
+        return NULL;
+    }
+
+    const char *structName = node->data.structNode->name;
+    const char *structID = "undef";
+    ASTNode *structNode = node;
+    DataType *structType = node->data.structNode->type;
+    ScopeType scopeType = SCOPE_GLOBAL; // TODO: Determine the correct scope type
+    size_t lineNumber = node->metaData->line;
+    size_t columnNumber = node->metaData->column;
+    bool isDefined = true; // TODO: Determine if the struct is defined
+
+    FrontendSymbol *symbol = p_createSymbol(structName, structID, structNode, structType, scopeType, lineNumber, columnNumber, isDefined);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create struct symbol");
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "SymbolTable", "Created struct symbol: %s", structName);
+    return symbol;
 }
+
 FrontendSymbol *p_createEnumDeclarationSymbol(ASTNode *node)
 {
     if (node == NULL)
@@ -212,11 +285,6 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
 
     switch (node->metaData->type)
     {
-    case NODE_PROGRAM:
-    {
-        // Handle program node
-        break;
-    }
     case NODE_FUNCTION_DECLARATION:
         return p_createFunctionDeclarationSymbol(node);
     case NODE_VAR_DECLARATION:
@@ -229,6 +297,9 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
         return p_createEnumDeclarationSymbol(node);
     case NODE_EXTERN_FUNCTION:
         return p_createExternDeclarationSymbol(node);
+    case NODE_STRUCT_DECLARATION:
+        return p_createStructDeclarationSymbol(node);
+    case NODE_PROGRAM:
     case NODE_STATEMENT:
     case NODE_EXPRESSION:
     case NODE_BINARY_EXPR:
@@ -256,7 +327,6 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
     case NODE_NAMESPACE:
     case NODE_INDEX_EXPR:
     case NODE_VAR_REASSIGN:
-    case NODE_STRUCT_DECLARATION:
     case NODE_PROPERTY:
     case NODE_CUSTOM_TYPE:
     case NODE_SCOPED_FUNCTION_CALL:

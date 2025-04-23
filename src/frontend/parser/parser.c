@@ -852,6 +852,7 @@ ASTNode *parseNamespace(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         node = createNamespaceNode(namespaceName, arena, state, lexer);
         InitNamespace(globalTable, namespaceName);
         createNamespaceScope(context, namespaceName);
+        FEST->enterNamespace(FEST, namespaceName);
     }
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseNamespace", arena, state, context);
@@ -1510,6 +1511,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     const char *functionScopeID = Generate64BitHashID(functionName);
     const char *namespaceScopeID = getNamespaceScopeID(context);
     setCurrentFunction(context, functionName, namespaceScopeID); // Context Manager
+
+    FEST->enterScope(FEST, strdup(functionName), SCOPE_FUNCTION);
 
     getNextToken(lexer, arena, state);
 

@@ -30,28 +30,6 @@ void initFrontendSymbolTable(void)
     }
 }
 
-void FrontendSymbolTable_pushScope(FrontendSymbolTable *self, FrontendScope *scope)
-{
-    if (self->scopeStackSize >= SCOPE_STACK_SIZE - 1)
-    {
-        fprintf(stderr, "Error: Scope stack overflow\n");
-        return;
-    }
-    self->scopeStack[++self->scopeStackSize] = scope;
-}
-
-void FrontendSymbolTable_enterScope(FrontendSymbolTable *self, const char *name, ScopeType type)
-{
-    // TODO: Implement scope entering logic
-    DEBUG_BREAKPOINT;
-}
-
-void FrontendSymbolTable_exitScope(FrontendSymbolTable *self)
-{
-    // TODO: Implement scope exiting logic
-    DEBUG_BREAKPOINT;
-}
-
 FrontendScope *FrontendSymbolTable_getCurrentScope(FrontendSymbolTable *self)
 {
     if (self->scopeStackSize < 0)
@@ -113,14 +91,24 @@ FrontendSymbol *FrontendSymbolTable_lookupInNamespaceScope(FrontendSymbolTable *
 
 void FrontendSymbolTable_enterNamespace(FrontendSymbolTable *self, const char *namespaceName)
 {
-    // TODO: Implement namespace entering logic
-    DEBUG_BREAKPOINT;
+    if (self->currentNamespace)
+    {
+        self->currentNamespace = NULL;
+    }
+    self->currentNamespace = strdup(namespaceName);
+    if (!self->currentNamespace)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for namespace\n");
+        return;
+    }
 }
 
 void FrontendSymbolTable_exitNamespace(FrontendSymbolTable *self)
 {
-    // TODO: Implement namespace exiting logic
-    DEBUG_BREAKPOINT;
+    if (self->currentNamespace)
+    {
+        self->currentNamespace = NULL;
+    }
 }
 
 const char *FrontendSymbolTable_getCurrentNamespace(FrontendSymbolTable *self)

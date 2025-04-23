@@ -80,3 +80,101 @@ int FrontendSymbolTable_addSymbolToScope(FrontendSymbolTable *self, FrontendSymb
     currentScope->symbols[currentScope->symbolCount++] = symbol;
     return 0;
 }
+
+void FrontendSymbolTable_pushScope(FrontendSymbolTable *self, FrontendScope *scope)
+{
+    if (self->scopeStackSize >= SCOPE_STACK_SIZE - 1)
+    {
+        fprintf(stderr, "Error: Scope stack overflow\n");
+        return;
+    }
+    self->scopeStack[++self->scopeStackSize] = scope;
+}
+
+void FrontendSymbolTable_enterScope(FrontendSymbolTable *self, const char *name, ScopeType type)
+{
+    // Validate input parameters
+    if (!self)
+    {
+        fprintf(stderr, "Error: Cannot enter scope on NULL symbol table\n");
+        DEBUG_BREAKPOINT;
+        return;
+    }
+
+    // Check if scope stack has room for another scope
+    if (self->scopeStackSize >= SCOPE_STACK_SIZE)
+    {
+        fprintf(stderr, "Error: Scope stack overflow, cannot enter new scope\n");
+        DEBUG_BREAKPOINT;
+        return;
+    }
+
+    // Create a new scope object
+    FrontendScope *newScope = FrontendSymbolTable_createScope(self, name, type);
+    if (!newScope)
+    {
+        fprintf(stderr, "Error: Failed to create new scope for '%s'\n",
+                name ? name : "unnamed");
+        DEBUG_BREAKPOINT;
+        return;
+    }
+
+    // Update current scope pointer to the newly created scope
+    self->currentScope = newScope;
+
+    // Log the scope entry for debugging
+    logMessage(LMI, "INFO", "SymbolTable",
+               "Entered scope '%s' (Type: %s, Depth: %zu)",
+               newScope->name,
+               getScopeTypeString(newScope->type),
+               newScope->depth);
+}
+
+void FrontendSymbolTable_exitScope(FrontendSymbolTable *self)
+{
+    // Validate input parameter
+    if (!self)
+    {
+        fprintf(stderr, "Error: Cannot exit scope on NULL symbol table\n");
+        DEBUG_BREAKPOINT;
+        return;
+    }
+
+    // Check if there's a scope to exit
+    if (self->scopeStackSize <= 1)
+    { // Keep at least global scope
+        fprintf(stderr, "Error: Cannot exit global scope\n");
+        DEBUG_BREAKPOINT;
+        return;
+    }
+
+    // Log before popping for debugging
+    if (self->currentScope)
+    {
+        logMessage(LMI, "INFO", "SymbolTable",
+                   "Exiting scope '%s' (Type: %s, Depth: %zu)",
+                   self->currentScope->name,
+                   getScopeTypeString(self->currentScope->type),
+                   self->currentScope->depth);
+    }
+
+    // Pop the top scope from the stack
+    self->scopeStackSize--;
+
+    // Update current scope to the new top of stack
+    if (self->scopeStackSize > 0)
+    {
+        self->currentScope = self->scopeStack[self->scopeStackSize - 1];
+    }
+    else
+    {
+        // This should never happen if we check for scopeStackSize <= 1 above
+        // But as a safeguard, set to NULL if somehow we ended up with an empty stack
+        self->currentScope = NULL;
+        fprintf(stderr, "Warning: Scope stack is now empty\n");
+    }
+
+    // Note: We don't free the scope memory here since we keep all scopes
+    // in the self->scopes array for the lifetime of the symbol table
+    // This makes lookups easier and allows referring to parent scopes
+}

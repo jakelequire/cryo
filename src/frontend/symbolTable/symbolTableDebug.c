@@ -19,7 +19,7 @@
 #include "diagnostics/diagnostics.h"
 
 // Helper function to convert ScopeType enum to string
-static const char *getScopeTypeString(ScopeType type)
+const char *getScopeTypeString(ScopeType type)
 {
     switch (type)
     {
@@ -63,8 +63,10 @@ static void printSymbol(FrontendSymbol *symbol, size_t depth)
     // Assuming the FrontendSymbol structure has at least these fields
     // Adjust according to your actual structure
     printIndent(depth);
-    printf("|- Symbol: %s (Type info would go here)\n",
-           symbol->name ? symbol->name : "(unnamed)");
+    const char *dataTypeString = symbol->type->debug->toString(symbol->type);
+    printf("|- Symbol: %s | %s\n",
+           symbol->name ? symbol->name : "(unnamed)",
+           dataTypeString ? dataTypeString : "(invalid type)");
 
     // Add more details as needed based on your FrontendSymbol structure
 }
