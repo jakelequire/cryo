@@ -18,6 +18,27 @@
 #include "frontend/AST.h"
 #include "diagnostics/diagnostics.h"
 
+ASTNode *ASTNode_clone(ASTNode *node)
+{
+    __STACK_FRAME__
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to clone AST node: node is NULL");
+        return NULL;
+    }
+
+    ASTNode *clone = (ASTNode *)malloc(sizeof(ASTNode));
+    if (!clone)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST node clone");
+        return NULL;
+    }
+
+    memcpy(clone, node, sizeof(ASTNode));
+
+    return clone;
+}
+
 ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
@@ -45,6 +66,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     node->metaData->line = lexer->currentToken.line;
     node->metaData->column = lexer->currentToken.column;
     node->print = logASTNode;
+    node->clone = ASTNode_clone;
 
     node->firstChild = NULL;
     node->nextSibling = NULL;

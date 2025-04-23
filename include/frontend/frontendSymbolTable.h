@@ -34,11 +34,42 @@
 #define MAX_SCOPES 256
 #define SCOPE_STACK_SIZE 32
 
+// ---------------------------------------------------------------------------------
 // Forward declarations
+
+/// ```
+/// {
+///     const char *name;    // Symbol name
+///     const char *id;      // Unique symbol ID
+///     ASTNode *node;       // AST node associated with the symbol
+///     DataType type;       // Data type of the symbol
+///     ScopeType scopeType; // Scope type where the symbol is defined
+///     size_t lineNumber;   // Line number in source code
+///     size_t columnNumber; // Column number in source code
+///     bool isDefined;      // Whether the symbol is defined or not
+/// } FrontendSymbol;
+/// ```
 typedef struct FrontendSymbol_t FrontendSymbol;
+
+/// ```
+/// {
+///     const char *name;         // Scope name (function name, class name, etc)
+///     const char *id;           // Unique scope ID
+///     ScopeType type;           // Type of scope
+///     size_t depth;             // Nesting depth
+///     struct Scope_t *parent;   // Parent scope
+///     FrontendSymbol **symbols; // Symbols in this scope
+///     size_t symbolCount;       // Number of symbols in scope
+///     size_t symbolCapacity;    // Maximum symbols in scope
+/// } FrontendScope;
+/// ```
 typedef struct FrontendScope_t FrontendScope;
+
+///
 typedef struct FrontendSymbolTable_t FrontendSymbolTable;
 
+/// @brief The global instance of the frontend symbol table
+/// @note This is a singleton instance that is used throughout the frontend
 extern FrontendSymbolTable *g_frontendSymbolTable;
 
 typedef enum
@@ -52,16 +83,28 @@ typedef enum
     SCOPE_UNKNOWN
 } ScopeType;
 
+typedef struct FrontendSymbol_t
+{
+    const char *name;    // Symbol name
+    const char *id;      // Unique symbol ID
+    ASTNode *node;       // AST node associated with the symbol
+    DataType type;       // Data type of the symbol
+    ScopeType scopeType; // Scope type where the symbol is defined
+    size_t lineNumber;   // Line number in source code
+    size_t columnNumber; // Column number in source code
+    bool isDefined;      // Whether the symbol is defined or not
+} FrontendSymbol;
+
 typedef struct FrontendScope_t
 {
-    const char *name;         // Scope name (function name, class name, etc)
-    const char *id;           // Unique scope ID
-    ScopeType type;           // Type of scope
-    size_t depth;             // Nesting depth
-    struct Scope_t *parent;   // Parent scope
-    FrontendSymbol **symbols; // Symbols in this scope
-    size_t symbolCount;       // Number of symbols in scope
-    size_t symbolCapacity;    // Maximum symbols in scope
+    const char *name;               // Scope name (function name, class name, etc)
+    const char *id;                 // Unique scope ID
+    ScopeType type;                 // Type of scope
+    size_t depth;                   // Nesting depth
+    struct FrontendScope_t *parent; // Parent scope
+    FrontendSymbol **symbols;       // Symbols in this scope
+    size_t symbolCount;             // Number of symbols in scope
+    size_t symbolCapacity;          // Maximum symbols in scope
 } FrontendScope;
 
 typedef struct FrontendSymbolTable_t
@@ -93,7 +136,7 @@ typedef struct FrontendSymbolTable_t
     FrontendScope *(*getCurrentScope)(FrontendSymbolTable *self);
 
     // Symbol management
-    void (*addSymbol)(FrontendSymbolTable *self, FrontendSymbol *symbol);
+    void (*addSymbol)(FrontendSymbolTable *self, ASTNode *node);
     FrontendSymbol *(*lookup)(FrontendSymbolTable *self, const char *name);
     FrontendSymbol *(*lookupInGlobalScope)(FrontendSymbolTable *self, const char *name);
     FrontendSymbol *(*lookupInNamespaceScope)(FrontendSymbolTable *self, const char *name, const char *namespaceName);
@@ -102,9 +145,27 @@ typedef struct FrontendSymbolTable_t
     void (*enterNamespace)(FrontendSymbolTable *self, const char *namespaceName);
     void (*exitNamespace)(FrontendSymbolTable *self);
     const char *(*getCurrentNamespace)(FrontendSymbolTable *self);
+
+    // Debugging
+    void (*printTable)(FrontendSymbolTable *self);
 } FrontendSymbolTable;
 
 // Table lifecycle
+void initFrontendSymbolTable(void);
 FrontendSymbolTable *CreateSymbolTable(void);
+FrontendSymbol *astNodeToSymbol(ASTNode *node);
+
+// Scope Management
+FrontendScope *FrontendSymbolTable_createScope(FrontendSymbolTable *self, const char *name, ScopeType type);
+int FrontendSymbolTable_addSymbolToScope(FrontendSymbolTable *self, FrontendSymbol *symbol);
+
+// Debugging
+void FrontendSymbolTable_printTable(FrontendSymbolTable *self);
+
+// ----------------------------------------------
+
+/// FEST - Frontend Symbol Table
+/// @brief Macro to access the global frontend symbol table
+#define FEST g_frontendSymbolTable
 
 #endif // FRONTEND_SYMBOL_TABLE_H

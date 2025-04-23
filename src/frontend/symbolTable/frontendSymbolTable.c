@@ -20,6 +20,26 @@
 
 FrontendSymbolTable *g_frontendSymbolTable = NULL;
 
+void initFrontendSymbolTable(void)
+{
+    g_frontendSymbolTable = CreateSymbolTable();
+    if (!g_frontendSymbolTable)
+    {
+        fprintf(stderr, "Error: Failed to create frontend symbol table\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void FrontendSymbolTable_pushScope(FrontendSymbolTable *self, FrontendScope *scope)
+{
+    if (self->scopeStackSize >= SCOPE_STACK_SIZE - 1)
+    {
+        fprintf(stderr, "Error: Scope stack overflow\n");
+        return;
+    }
+    self->scopeStack[++self->scopeStackSize] = scope;
+}
+
 void FrontendSymbolTable_enterScope(FrontendSymbolTable *self, const char *name, ScopeType type)
 {
     // TODO: Implement scope entering logic
@@ -41,14 +61,36 @@ FrontendScope *FrontendSymbolTable_getCurrentScope(FrontendSymbolTable *self)
     return self->scopeStack[self->scopeStackSize];
 }
 
-void FrontendSymbolTable_addSymbol(FrontendSymbolTable *self, FrontendSymbol *symbol)
+void FrontendSymbolTable_addSymbol(FrontendSymbolTable *self, ASTNode *node)
 {
-    if (self->symbolCount >= MAX_SYMBOLS)
+    if (!self || self == NULL)
     {
-        fprintf(stderr, "Error: Symbol table is full\n");
+        fprintf(stderr, "Error: FrontendSymbolTable is NULL\n");
         return;
     }
-    self->symbols[self->symbolCount++] = symbol;
+
+    if (!node || node == NULL)
+    {
+        fprintf(stderr, "Error: ASTNode is NULL\n");
+        return;
+    }
+
+    FrontendSymbol *symbol = astNodeToSymbol(node);
+    if (!symbol)
+    {
+        fprintf(stderr, "Error: Failed to create symbol from ASTNode\n");
+        return;
+    }
+
+    // Add the symbol to the current scope
+    int result = FrontendSymbolTable_addSymbolToScope(self, symbol);
+    if (result != 0)
+    {
+        fprintf(stderr, "Error: Failed to add symbol to scope\n");
+        return;
+    }
+
+    return;
 }
 
 FrontendSymbol *FrontendSymbolTable_lookup(FrontendSymbolTable *self, const char *name)
@@ -96,25 +138,90 @@ FrontendSymbolTable *CreateSymbolTable(void)
         return NULL;
     }
 
+    // Initialize pointers to NULL first
+    table->symbols = NULL;
+    table->scopes = NULL;
+    table->scopeStack = NULL;
+    table->currentScope = NULL;
+    table->currentNamespace = NULL; // Initialize namespace to NULL
+
+    // Allocate memory for arrays
     table->symbols = (FrontendSymbol **)malloc(sizeof(FrontendSymbol *) * MAX_SYMBOLS);
+    if (!table->symbols)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for symbols array\n");
+        free(table);
+        return NULL;
+    }
+
     table->scopes = (FrontendScope **)malloc(sizeof(FrontendScope *) * MAX_SCOPES);
+    if (!table->scopes)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for scopes array\n");
+        free(table->symbols);
+        free(table);
+        return NULL;
+    }
+
     table->scopeStack = (FrontendScope **)malloc(sizeof(FrontendScope *) * SCOPE_STACK_SIZE);
+    if (!table->scopeStack)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for scope stack\n");
+        free(table->scopes);
+        free(table->symbols);
+        free(table);
+        return NULL;
+    }
+
+    // Initialize arrays with NULL pointers
+    for (size_t i = 0; i < MAX_SYMBOLS; i++)
+    {
+        table->symbols[i] = NULL;
+    }
+
+    for (size_t i = 0; i < MAX_SCOPES; i++)
+    {
+        table->scopes[i] = NULL;
+    }
+
+    for (size_t i = 0; i < SCOPE_STACK_SIZE; i++)
+    {
+        table->scopeStack[i] = NULL;
+    }
+
+    // Initialize other fields
     table->symbolCount = 0;
     table->scopeCount = 0;
-    table->scopeStackSize = -1;
+    table->scopeStackSize = 0; // Initialize to 0, not -1
+    table->symbolCapacity = MAX_SYMBOLS;
+    table->scopeCapacity = MAX_SCOPES;
 
+    // Initialize function pointers
     table->enterScope = FrontendSymbolTable_enterScope;
     table->exitScope = FrontendSymbolTable_exitScope;
     table->getCurrentScope = FrontendSymbolTable_getCurrentScope;
-
     table->addSymbol = FrontendSymbolTable_addSymbol;
     table->lookup = FrontendSymbolTable_lookup;
     table->lookupInGlobalScope = FrontendSymbolTable_lookupInGlobalScope;
     table->lookupInNamespaceScope = FrontendSymbolTable_lookupInNamespaceScope;
-
     table->enterNamespace = FrontendSymbolTable_enterNamespace;
     table->exitNamespace = FrontendSymbolTable_exitNamespace;
     table->getCurrentNamespace = FrontendSymbolTable_getCurrentNamespace;
+    table->printTable = FrontendSymbolTable_printTable;
+
+    // Initialize the scope stack with a global scope
+    FrontendScope *globalScope = FrontendSymbolTable_createScope(table, "global", SCOPE_GLOBAL);
+    if (!globalScope)
+    {
+        fprintf(stderr, "Error: Failed to create global scope\n");
+        free(table->scopeStack);
+        free(table->scopes);
+        free(table->symbols);
+        free(table);
+        return NULL;
+    }
+
+    table->currentScope = globalScope;
 
     return table;
 }

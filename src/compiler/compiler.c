@@ -19,6 +19,7 @@
 #include "compiler/compiler.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
+#include "frontend/frontendSymbolTable.h"
 
 enum CryoBuildType
 {
@@ -209,6 +210,7 @@ int exe_project_build(CompilerSettings *settings)
     CompilerState *state;
     INIT_SUBSYSTEMS(buildDir, settings->compilerRootPath, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
     state->setFilePath(state, strdup(filePath));
+    initFrontendSymbolTable();
 
     logCompilerSettings(settings);
 
@@ -279,6 +281,8 @@ int exe_project_build(CompilerSettings *settings)
     }
 
     LINK_ALL_MODULES(linker);
+
+    FEST->printTable(FEST);
 
     DEBUG_PRINT_FILTER({
         END_COMPILATION_MESSAGE;

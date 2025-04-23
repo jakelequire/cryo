@@ -6,9 +6,9 @@ source_filename = "core"
 
 @Int = external global %struct.Int
 @String = external global %struct.String
-@.str.93825037241920 = unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str.93825042138800 = unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
-@.str.93825044234320 = unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
+@.str.93825037268000 = unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.str.93825042164880 = unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
+@.str.93825044260400 = unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
 
 ; Function Attrs: nounwind
 declare i32 @printf_export(ptr, ...) #0
@@ -97,7 +97,7 @@ entry:
   store %struct.Int %value, ptr %Int.alloc, align 4
   %Int.val = getelementptr inbounds %struct.Int, ptr %Int.alloc, i32 0, i32 0
   %val.load = load i32, ptr %Int.val, align 4
-  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825037241920, i32 %val.load)
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825037268000, i32 %val.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -105,7 +105,7 @@ entry:
 
 define void @printI32(i32 %value) {
 entry:
-  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825037241920, i32 %value)
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825037268000, i32 %value)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -123,7 +123,7 @@ entry:
   store %struct.String %value, ptr %String.alloc, align 8
   %String.val = getelementptr inbounds %struct.String, ptr %String.alloc, i32 0, i32 0
   %val.load = load ptr, ptr %String.val, align 8
-  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825042138800, ptr %val.load)
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825042164880, ptr %val.load)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void
@@ -131,7 +131,7 @@ entry:
 
 define void @printChar(i8 %value) {
 entry:
-  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825044234320, i8 %value)
+  %printf_export = call i32 (ptr, ...) @printf_export(ptr @.str.93825044260400, i8 %value)
   %calltmp = alloca i32, align 4
   store i32 %printf_export, ptr %calltmp, align 4
   ret void

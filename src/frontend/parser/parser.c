@@ -17,6 +17,7 @@
 #include "tools/cxx/IDGen.hpp"
 #include "symbolTable/cInterfaceTable.h"
 #include "diagnostics/diagnostics.h"
+#include "frontend/frontendSymbolTable.h"
 #include "frontend/parser.h"
 
 /* ====================================================================== */
@@ -1458,11 +1459,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         parsingError("[Parser] Expected expression after '='.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
     }
 
-    if (initializer->metaData->type == NODE_FUNCTION_CALL)
-    {
-        logMessage(LMI, "INFO", "Parser", "Function call detected.");
-    }
-    else
+    if (!initializer->metaData->type == NODE_FUNCTION_CALL)
     {
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", arena, state, context);
     }
@@ -1481,6 +1478,10 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         varDeclNode->data.varDecl->hasIndexExpr = true;
     }
 
+    ASTNode *clone = varDeclNode->clone(varDeclNode);
+    clone->print(clone);
+
+    FEST->addSymbol(FEST, varDeclNode);
     AddVariableToSymbolTable(globalTable, varDeclNode, currentScopeID);
 
     return varDeclNode;

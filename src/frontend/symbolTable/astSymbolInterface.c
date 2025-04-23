@@ -1,0 +1,296 @@
+/********************************************************************************
+ *  Copyright 2024 Jacob LeQuire                                                *
+ *  SPDX-License-Identifier: Apache-2.0                                         *
+ *    Licensed under the Apache License, Version 2.0 (the "License");           *
+ *    you may not use this file except in compliance with the License.          *
+ *    You may obtain a copy of the License at                                   *
+ *                                                                              *
+ *    http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                              *
+ *    Unless required by applicable law or agreed to in writing, software       *
+ *    distributed under the License is distributed on an "AS IS" BASIS,         *
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *    See the License for the specific language governing permissions and       *
+ *    limitations under the License.                                            *
+ *                                                                              *
+ ********************************************************************************/
+#include "frontend/frontendSymbolTable.h"
+#include "tools/logger/logger_config.h"
+#include "diagnostics/diagnostics.h"
+
+/*
+typedef struct FrontendSymbol_t
+{
+    const char *name;    // Symbol name
+    const char *id;      // Unique symbol ID
+    ASTNode *node;       // AST node associated with the symbol
+    DataType type;       // Data type of the symbol
+    ScopeType scopeType; // Scope type where the symbol is defined
+    size_t lineNumber;   // Line number in source code
+    size_t columnNumber; // Column number in source code
+    bool isDefined;      // Whether the symbol is defined or not
+} FrontendSymbol;
+*/
+FrontendSymbol *p_createSymbol(const char *name,
+                               const char *id,
+                               ASTNode *node,
+                               DataType type,
+                               ScopeType scopeType,
+                               size_t lineNumber,
+                               size_t columnNumber,
+                               bool isDefined)
+{
+    FrontendSymbol *symbol = (FrontendSymbol *)malloc(sizeof(FrontendSymbol));
+    if (!symbol)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for symbol\n");
+        return NULL;
+    }
+
+    symbol->name = (const char *)strdup(name);
+    symbol->id = (const char *)strdup(id);
+    symbol->node = node;
+    symbol->type = type;
+    symbol->scopeType = scopeType;
+    symbol->lineNumber = lineNumber;
+    symbol->columnNumber = columnNumber;
+    symbol->isDefined = isDefined;
+
+    return symbol;
+}
+
+FrontendSymbol *p_createFunctionDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+
+/*
+typedef struct CryoVariableNode
+{
+    DataType *type;
+    struct VariableNameNode *varNameNode;
+    char *name;
+    bool isGlobal;
+    bool isLocal;
+    bool isReference;
+    bool isMutable;
+    bool isIterator;
+    bool isNewInstance;
+    // Unary operators
+    bool hasUnaryOp;
+    ASTNode *unaryOp;
+    // This is the data attached to the variable
+    struct ASTNode *initializer;
+    // Optional index expression for array handling
+    bool hasIndexExpr;
+    struct IndexExprNode *indexExpr;
+} CryoVariableNode;
+*/
+FrontendSymbol *p_createVariableDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+    if (node->metaData->type != NODE_VAR_DECLARATION)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is not a variable declaration");
+        return NULL;
+    }
+
+    const char *varName = node->data.varDecl->name;
+    const char *varID = "undef";
+    ASTNode *varNode = node;
+    DataType *varType = node->data.varDecl->type;
+    ScopeType scopeType = SCOPE_GLOBAL; // TODO: Determine the correct scope type
+    size_t lineNumber = node->metaData->line;
+    size_t columnNumber = node->metaData->column;
+    bool isDefined = true; // TODO: Determine if the variable is defined
+
+    FrontendSymbol *symbol = p_createSymbol(varName, varID, varNode, *varType, scopeType, lineNumber, columnNumber, isDefined);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create variable symbol");
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "SymbolTable", "Created variable symbol: %s", varName);
+    return symbol;
+}
+
+FrontendSymbol *p_createTypeDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createNamespaceDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createClassDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createStructDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createEnumDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createPropertyDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createMethodDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createImportDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+FrontendSymbol *p_createExternDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+}
+
+// =========================================================================================================== //
+//                                                                                                             //
+//                                          ASTNode to Symbol Conversion                                       //
+//                                                                                                             //
+// =========================================================================================================== //
+
+FrontendSymbol *astNodeToSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+
+    switch (node->metaData->type)
+    {
+    case NODE_PROGRAM:
+    {
+        // Handle program node
+        break;
+    }
+    case NODE_FUNCTION_DECLARATION:
+        return p_createFunctionDeclarationSymbol(node);
+    case NODE_VAR_DECLARATION:
+        return p_createVariableDeclarationSymbol(node);
+    case NODE_CLASS:
+        return p_createClassDeclarationSymbol(node);
+    case NODE_TYPE:
+        return p_createTypeDeclarationSymbol(node);
+    case NODE_ENUM:
+        return p_createEnumDeclarationSymbol(node);
+    case NODE_EXTERN_FUNCTION:
+        return p_createExternDeclarationSymbol(node);
+    case NODE_STATEMENT:
+    case NODE_EXPRESSION:
+    case NODE_BINARY_EXPR:
+    case NODE_UNARY_EXPR:
+    case NODE_LITERAL_EXPR:
+    case NODE_VAR_NAME:
+    case NODE_FUNCTION_CALL:
+    case NODE_IF_STATEMENT:
+    case NODE_WHILE_STATEMENT:
+    case NODE_FOR_STATEMENT:
+    case NODE_RETURN_STATEMENT:
+    case NODE_BLOCK:
+    case NODE_FUNCTION_BLOCK:
+    case NODE_EXPRESSION_STATEMENT:
+    case NODE_ASSIGN:
+    case NODE_PARAM_LIST:
+    case NODE_PARAM:
+    case NODE_STRING_LITERAL:
+    case NODE_STRING_EXPRESSION:
+    case NODE_BOOLEAN_LITERAL:
+    case NODE_ARRAY_LITERAL:
+    case NODE_IMPORT_STATEMENT:
+    case NODE_EXTERN_STATEMENT:
+    case NODE_ARG_LIST:
+    case NODE_NAMESPACE:
+    case NODE_INDEX_EXPR:
+    case NODE_VAR_REASSIGN:
+    case NODE_STRUCT_DECLARATION:
+    case NODE_PROPERTY:
+    case NODE_CUSTOM_TYPE:
+    case NODE_SCOPED_FUNCTION_CALL:
+    case NODE_EXTERNAL_SYMBOL:
+    case NODE_STRUCT_CONSTRUCTOR:
+    case NODE_PROPERTY_ACCESS:
+    case NODE_THIS:
+    case NODE_THIS_ASSIGNMENT:
+    case NODE_PROPERTY_REASSIGN:
+    case NODE_METHOD:
+    case NODE_IDENTIFIER:
+    case NODE_METHOD_CALL:
+    case NODE_GENERIC_DECL:
+    case NODE_GENERIC_INST:
+    case NODE_CLASS_CONSTRUCTOR:
+    case NODE_OBJECT_INST:
+    case NODE_NULL_LITERAL:
+    case NODE_TYPEOF:
+    case NODE_USING:
+    case NODE_MODULE:
+    case NODE_ANNOTATION:
+    case NODE_TYPE_CAST:
+    case NODE_DISCARD:
+    case NODE_IMPLEMENTATION:
+    case NODE_UNKNOWN:
+    {
+        break;
+    }
+    default:
+    {
+        // Handle other node types
+        break;
+    }
+    }
+
+    DEBUG_BREAKPOINT;
+}

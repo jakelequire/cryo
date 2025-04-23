@@ -408,7 +408,7 @@ int32_t scanf_export(cryo_string_t format, ...)
 
 int32_t printI32_export(int32_t value)
 {
-    int32_t result = printf("%d\n", value);
+    int32_t result = (int32_t)printf("%d\n", value);
 
     return result;
 }

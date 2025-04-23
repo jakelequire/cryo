@@ -746,7 +746,8 @@ typedef struct ASTNode
         void *discard;
     } data;
 
-    _NEW_METHOD(void, print, struct ASTNode *self);
+    void (*print)(struct ASTNode *self);
+    ASTNode *(*clone)(struct ASTNode *self);
 } ASTNode;
 
 // # ============================================================ # //

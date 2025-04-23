@@ -145,7 +145,7 @@ function printStr (value: str) -> void {
     return;
 }
 
-function printString(value: String) -> void {
+function printString (value: String) -> void {
     printf_export("%s\n", value.val);
     return;
 }
