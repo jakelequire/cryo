@@ -140,4 +140,37 @@ namespace Cryo
         }
     }
 
+    std::string AllocaTypeToString(AllocaType allocaType)
+    {
+        switch (allocaType)
+        {
+        case AllocaType::None:
+            return "None";
+        case AllocaType::AllocaOnly:
+            return "AllocaOnly";
+        case AllocaType::AllocaAndLoad:
+            return "AllocaAndLoad";
+        case AllocaType::AllocaAndStore:
+            return "AllocaAndStore";
+        case AllocaType::AllocaLoadStore:
+            return "AllocaLoadStore";
+        case AllocaType::Global:
+            return "Global";
+        case AllocaType::Parameter:
+            return "Parameter";
+        case AllocaType::Temporary:
+            return "Temporary";
+        case AllocaType::Aggregate:
+            return "Aggregate";
+        case AllocaType::PhiNode:
+            return "PhiNode";
+        case AllocaType::DynamicArray:
+            return "DynamicArray";
+        case AllocaType::StackSave:
+            return "StackSave";
+        default:
+            return "Unknown";
+        }
+    }
+
 } // namespace Cryo

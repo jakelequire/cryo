@@ -217,6 +217,33 @@ namespace Cryo
         // Create path to runtime.c
         std::string compilerRootPath = this->dirInfo->compilerDir;
         const char *runtimePath = fs->appendStrings(compilerRootPath.c_str(), "/cryo/runtime/runtime.c");
+        if (!runtimePath)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to allocate memory for runtime path\n");
+            CONDITION_FAILED;
+            return;
+        }
+        logMessage(LMI, "INFO", "Linker", "Runtime Path: %s", runtimePath);
+
+        // Check if {compilerRootPath}/cryo/bin/.ll/ exists
+        std::string cryoBinDir = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/";
+        // If it doesn't, recursively create it
+        if (!std::filesystem::exists(cryoBinDir) || !std::filesystem::is_directory(cryoBinDir))
+        {
+            // Create the directory
+            try
+            {
+                std::filesystem::create_directories(cryoBinDir);
+                logMessage(LMI, "INFO", "Linker", "Created directory: %s", cryoBinDir.c_str());
+            }
+            catch (const std::filesystem::filesystem_error &e)
+            {
+                logMessage(LMI, "ERROR", "Linker", "Failed to create directory %s: %s",
+                           cryoBinDir.c_str(), e.what());
+                CONDITION_FAILED;
+                return;
+            }
+        }
 
         // Validate runtime path
         if (!runtimePath)
@@ -274,8 +301,9 @@ namespace Cryo
 
         // Set output file
         std::string userBuildDir = std::string(this->dirInfo->runtimeDir) + "/c_runtime.ll";
+        std::string outputPath = compilerRootPath + "/cryo/Std/bin/.ll/c_runtime.ll";
         args.push_back("-o");
-        args.push_back(userBuildDir.c_str());
+        args.push_back(outputPath.c_str());
 
         // Build and execute command
         std::string command = "clang-" + CLANG_VERSION_MAJOR;
@@ -493,12 +521,12 @@ namespace Cryo
             std::filesystem::create_directory(stdBinDir);
         }
 
-        // Check if rebuild is needed
-        if (isStandardLibraryUpToDate())
-        {
-            logMessage(LMI, "INFO", "Linker", "Standard library is up to date, skipping rebuild");
-            return 0;
-        }
+        // Commented out for now. Right now we always rebuild the standard library.
+        // if (isStandardLibraryUpToDate())
+        // {
+        //     logMessage(LMI, "INFO", "Linker", "Standard library is up to date, skipping rebuild");
+        //     return 0;
+        // }
 
         logMessage(LMI, "INFO", "Linker", "Standard library needs rebuilding");
 

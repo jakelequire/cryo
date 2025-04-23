@@ -660,82 +660,92 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Function Name: %s", functionName);
 
-    TypeOfSymbol symType = GetScopeSymbolTypeFromName(globalTable, scopeName);
-    const char *symTypeStr = TypeOfSymbolToString(globalTable, symType);
-    logMessage(LMI, "INFO", "Parser", "Symbol Type: %s", symTypeStr);
+    FrontendSymbol *resolvedSymbol = FEST->lookupInScope(FEST, scopeName, functionName);
+    if (!resolvedSymbol)
+    {
+        parsingError("Function symbol not found", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+    logMessage(LMI, "INFO", "Parser", "Resolved symbol: %s", resolvedSymbol->name);
+    resolvedSymbol->print(resolvedSymbol);
 
-    TypeofDataType typeOfDataType = GetTypeOfDataTypeFromName(globalTable, scopeName);
-    const char *typeOfDataTypeStr = DTM->debug->typeofDataTypeToString(typeOfDataType);
-    logMessage(LMI, "INFO", "Parser", "Type of Data Type: %s", typeOfDataTypeStr);
-
-    Symbol *sym = NULL;
-    switch (symType)
+    ASTNode *resolvedASTNode = resolvedSymbol->node;
+    if (!resolvedASTNode)
     {
-    case TYPE_SYMBOL:
-    {
-        sym = FindMethodSymbol(globalTable, functionName, scopeName, typeOfDataType);
-        break;
-    }
-    case FUNCTION_SYMBOL:
-    {
-        // sym = FindFunctionSymbol(globalTable, functionName, scopeName);
-        sym = NULL;
-        break;
-    }
-    default:
-    {
-        parsingError("Symbol not found", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
-    }
+        parsingError("Resolved symbol does not have an AST node", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
     }
 
-    if (sym == NULL)
-    {
-        parsingError("Symbol not found", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
-    }
+    // Consume the identifier
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseScopeCall", arena, state, context);
 
-    ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
-
-    CryoNodeType nodeType = symbolNode->metaData->type;
-    logMessage(LMI, "INFO", "Parser", "Node Type: %s", CryoNodeTypeToString(nodeType));
+    CryoNodeType resolvedNodeType = resolvedASTNode->metaData->type;
     ASTNode *node = NULL;
-    switch (nodeType)
+    if (resolvedNodeType == NODE_METHOD)
     {
-    case NODE_FUNCTION_DECLARATION:
+        logMessage(LMI, "INFO", "Parser", "Resolved node is a method");
+        node = parseScopedMethodCall(functionName, scopeName, resolvedASTNode, lexer, context, arena, state, globalTable);
+    }
+    else
     {
-        logMessage(LMI, "INFO", "Parser", "Parsing function call...");
-        node = parseScopedFunctionCall(lexer, context, arena, state, strdup(functionName), scopeName, globalTable);
-        break;
+        parsingError("Resolved symbol is not a function or method", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
     }
-    case NODE_METHOD:
+    if (!node)
     {
-        logMessage(LMI, "INFO", "Parser", "Parsing method call...");
-        node = parseMethodScopeResolution(scopeName, lexer, context, arena, state, globalTable);
-        break;
+        parsingError("Failed to create scope call node", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
     }
-    default:
-        CONDITION_FAILED;
-        break;
-    }
+    node->print(node);
 
-    logMessage(LMI, "INFO", "Parser", "Scope call parsed.");
     return node;
 }
-// </parseScopeCall>
+
+ASTNode *parseScopedMethodCall(const char *methodName, const char *scopeName, ASTNode *methodNode,
+                               Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing scoped function call...");
+
+    ASTNode *node = createScopedFunctionCall(arena, state, methodName, lexer);
+
+    // Get the arguments
+    int argCount = 0;
+    ASTNode **args = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
+    ASTNode *argList = parseArgumentList(lexer, context, arena, state, globalTable);
+    if (!argList)
+    {
+        parsingError("Failed to parse argument list", "parseScopedFunctionCall", arena, state, lexer, lexer->source, globalTable);
+        return NULL;
+    }
+    if (argList->metaData->type == NODE_ARG_LIST)
+    {
+        int i = 0;
+        for (i = 0; i < argList->data.argList->argCount; i++)
+        {
+            args[i] = argList->data.argList->args[i];
+            argCount++;
+        }
+    }
+
+    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseScopedFunctionCall", arena, state, context);
+
+    node->data.scopedFunctionCall->args = args;
+    node->data.scopedFunctionCall->argCount = argCount;
+    node->data.scopedFunctionCall->scopeName = scopeName;
+    node->data.scopedFunctionCall->type = methodNode->data.method->type;
+
+    logMessage(LMI, "INFO", "Parser", "Scoped function call parsed.");
+
+    return node;
+}
 
 ASTNode *parseScopedFunctionCall(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, const char *functionName, const char *scopeName, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing scoped function call...");
 
-    ASTNode *node = createScopedFunctionCall(arena, state, strdup(functionName), lexer);
-
-    const char *scopeNameID = Generate64BitHashID(scopeName);
-    FunctionSymbol *funcSymbol = GetFrontendScopedFunctionSymbol(globalTable, functionName, scopeNameID);
-    if (!funcSymbol)
-    {
-        parsingError("Function symbol not found", "parseScopedFunctionCall", arena, state, lexer, lexer->source, globalTable);
-        return NULL;
-    }
+    ASTNode *node = createScopedFunctionCall(arena, state, functionName, lexer);
 
     // Get the arguments
     int argCount = 0;
@@ -757,13 +767,11 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, ParsingContext *context, Arena *a
             argCount++;
         }
     }
-
-    consume(__LINE__, lexer, TOKEN_RPAREN, "Expected a right parenthesis", "parseScopedFunctionCall", arena, state, context);
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseScopedFunctionCall", arena, state, context);
 
     node->data.scopedFunctionCall->args = args;
     node->data.scopedFunctionCall->argCount = argCount;
-    node->data.scopedFunctionCall->scopeName = strdup(scopeName);
+    node->data.scopedFunctionCall->scopeName = scopeName;
 
     logMessage(LMI, "INFO", "Parser", "Scoped function call parsed.");
 
@@ -1631,6 +1639,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     CompleteFunctionDeclaration(globalTable, functionNode, functionName, namespaceScopeID); // Global Symbol Table
     context->inGenericContext = false;                                                      // Reset generic context flag in ParsingContext
     resetCurrentFunction(context);                                                          // Context Manager
+
+    FEST->exitScope(FEST); // Exit the function scope
 
     return functionNode;
 }

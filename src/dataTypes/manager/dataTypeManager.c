@@ -555,7 +555,11 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
     case NODE_CUSTOM_TYPE:
         break;
     case NODE_SCOPED_FUNCTION_CALL:
+    {
+        DataType *functionType = node->data.scopedFunctionCall->type;
+        return functionType;
         break;
+    }
     case NODE_EXTERNAL_SYMBOL:
         fprintf(stderr, "Invalid Node Type! {External Symbol}\n");
         CONDITION_FAILED;

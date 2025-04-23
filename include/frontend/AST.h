@@ -415,9 +415,10 @@ typedef struct StructNode
 
 typedef struct ScopedFunctionCallNode
 {
-    char *scopeName;       // e.g., "Math"
-    char *functionName;    // e.g., "add"
+    const char *scopeName;       // e.g., "Math"
+    const char *functionName;    // e.g., "add"
     struct ASTNode **args; // Array of argument nodes
+    DataType *type;
     int argCount;
     int argCapacity;
 } ScopedFunctionCallNode;

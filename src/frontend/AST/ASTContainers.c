@@ -1094,6 +1094,7 @@ ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
+    node->type = DTM->primitives->createUndefined();
 
     return node;
 }

@@ -317,8 +317,8 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
             }
             else
             {
-                nameColor = LIGHT_MAGENTA;
-                typeColor = MAGENTA;
+                nameColor = LIGHT_GREEN;
+                typeColor = GREEN;
             }
             break;
         default:
@@ -357,6 +357,37 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
             {
                 propCount = type->container->type.structType->propertyCount;
                 methodCount = type->container->type.structType->methodCount;
+            }
+
+            if (propCount > 0 || methodCount > 0)
+            {
+                char infoStr[typeWidth + 1];
+                snprintf(infoStr, sizeof(infoStr), "↳ Props: %d, Methods: %d",
+                         propCount, methodCount);
+                // Truncate infoStr to fit within typeWidth
+                infoStr[typeWidth] = '\0';
+
+                // Create a properly aligned info row with empty columns for others
+                printf("%s%s║ %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s║%s\n",
+                       BOLD, CYAN,
+                       DARK_GRAY, nameWidth, "", CYAN,
+                       DARK_GRAY, typeWidth + (sizeof(infoStr) - typeWidth) + 1, infoStr, CYAN,
+                       DARK_GRAY, typeofWidth, "", CYAN,
+                       DARK_GRAY, scopeWidth, "", CYAN,
+                       DARK_GRAY, flagsWidth, "", CYAN, COLOR_RESET);
+            }
+        }
+
+        if (type->container->typeOf == OBJECT_TYPE && type->container->objectType == CLASS_OBJ)
+        {
+            int propCount = 0;
+            int methodCount = 0;
+
+            // Safe property extraction
+            if (type->container->type.classType)
+            {
+                propCount = type->container->type.classType->propertyCount;
+                methodCount = type->container->type.classType->methodCount;
             }
 
             if (propCount > 0 || methodCount > 0)
@@ -510,6 +541,37 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
                 {
                     propCount = type->container->type.structType->propertyCount;
                     methodCount = type->container->type.structType->methodCount;
+                }
+
+                if (propCount > 0 || methodCount > 0)
+                {
+                    char infoStr[typeWidth + 1];
+                    snprintf(infoStr, sizeof(infoStr), "↳ Props: %d, Methods: %d",
+                             propCount, methodCount);
+                    // Truncate infoStr to fit within typeWidth
+                    infoStr[typeWidth] = '\0';
+
+                    // Create a properly aligned info row with empty columns for others
+                    printf("%s%s║ %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s| %s%-*s %s║%s\n",
+                           BOLD, CYAN,
+                           DARK_GRAY, nameWidth, "", CYAN,
+                           DARK_GRAY, typeWidth + (sizeof(infoStr) - typeWidth) + 1, infoStr, CYAN,
+                           DARK_GRAY, typeofWidth, "", CYAN,
+                           DARK_GRAY, scopeWidth, "", CYAN,
+                           DARK_GRAY, flagsWidth, "", CYAN, COLOR_RESET);
+                }
+            }
+
+            if (type->container->typeOf == OBJECT_TYPE && type->container->objectType == CLASS_OBJ)
+            {
+                int propCount = 0;
+                int methodCount = 0;
+
+                // Safe property extraction
+                if (type->container->type.classType)
+                {
+                    propCount = type->container->type.classType->propertyCount;
+                    methodCount = type->container->type.classType->methodCount;
                 }
 
                 if (propCount > 0 || methodCount > 0)

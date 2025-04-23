@@ -19,6 +19,7 @@
 #include "frontend/parser.h"
 #include "diagnostics/diagnostics.h"
 #include "dataTypes/dataTypeManager.h"
+#include "frontend/frontendSymbolTable.h"
 
 /* ====================================================================== */
 /* @ASTNode_Parsing - Structures                                          */
@@ -42,6 +43,8 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     logMessage(LMI, "INFO", "Parser", "Struct name: %s", structName);
     const char *parentNamespaceNameID = getNamespaceScopeID(context);
 
+    FEST->enterScope(FEST, structName, SCOPE_STRUCT);
+
     DTM->symbolTable->addProtoType(
         DTM->symbolTable,
         parentNamespaceNameID,
@@ -64,10 +67,14 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     // Check if the next token is a `<` character to determine if it is a generic struct declaration
     if (lexer->currentToken.type == TOKEN_LESS)
     {
-        return parseGenericStructDeclaration(lexer, context, arena, state, globalTable, structName, parentNamespaceNameID);
+        ASTNode *genericStruct = parseGenericStructDeclaration(lexer, context, arena, state, globalTable, structName, parentNamespaceNameID);
+        FEST->exitScope(FEST);
+        return genericStruct;
     }
 
-    return parseNonGenericStructDeclaration(lexer, context, arena, state, globalTable, structName, parentNamespaceNameID);
+    ASTNode *nonGenericStruct = parseNonGenericStructDeclaration(lexer, context, arena, state, globalTable, structName, parentNamespaceNameID);
+    FEST->exitScope(FEST);
+    return nonGenericStruct;
 }
 
 ASTNode *parseGenericStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, const char *parentNamespaceNameID)
@@ -449,10 +456,9 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
 
     // Remove the static identifier from the context
     addStaticIdentifierToContext(context, false);
-
     AddMethodToStruct(globalTable, parentName, methodNode); // GlobalSymbolTable
-
     resetCurrentMethod(context); // ParsingContext
+    FEST->addSymbol(FEST, methodNode);
 
     return methodNode;
 }
@@ -1063,6 +1069,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
     const char *className = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Class name: %s", className);
 
+    FEST->enterScope(FEST, className, SCOPE_CLASS);
     InitClassDeclaration(globalTable, className);
     createClassScope(context, className);
 
@@ -1124,11 +1131,13 @@ ASTNode *parseClassDeclaration(bool isStatic,
     classNode->data.classNode->type = classDataType;
 
     DTM->symbolTable->addEntry(DTM->symbolTable, getNamespaceScopeID(context), className, classDataType);
+    FEST->addSymbol(FEST, classNode);
 
     // Clear the context
     clearThisContext(context);
     // Clear Scope
     clearScopeContext(context);
+    FEST->exitScope(FEST);
 
     logMessage(LMI, "INFO", "Parser", "Class declaration completed.");
 
@@ -1264,7 +1273,6 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                         privateMethodCount++;
                     else
                         protectedMethodCount++;
-
                     break;
                 }
                 // Unknown

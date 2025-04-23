@@ -128,6 +128,8 @@ void FrontendSymbolTable_enterScope(FrontendSymbolTable *self, const char *name,
                newScope->name,
                getScopeTypeString(newScope->type),
                newScope->depth);
+
+               
 }
 
 void FrontendSymbolTable_exitScope(FrontendSymbolTable *self)

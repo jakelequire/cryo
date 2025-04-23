@@ -89,6 +89,38 @@ FrontendSymbol *FrontendSymbolTable_lookupInNamespaceScope(FrontendSymbolTable *
     DEBUG_BREAKPOINT;
 }
 
+FrontendSymbol *FrontendSymbolTable_lookupInScope(FrontendSymbolTable *self, const char *scopeName, const char *symbolName)
+{
+    // The `scopeName` is the key to the scope, and the name will be the key to the symbol
+    logMessage(LMI, "INFO", "SymbolTable", "Resolving symbol '%s' in scope '%s'", symbolName, scopeName);
+
+    size_t i;
+    for (i = 0; i < self->scopeCount; i++)
+    {
+        if (strcmp(self->scopes[i]->name, scopeName) == 0)
+        {
+            logMessage(LMI, "INFO", "SymbolTable", "Found scope '%s'", scopeName);
+            break;
+        }
+    }
+    if (i == self->scopeCount)
+    {
+        fprintf(stderr, "Error: Scope '%s' not found\n", scopeName);
+        return NULL;
+    }
+
+    FrontendScope *scope = self->scopes[i];
+    for (size_t j = 0; j < scope->symbolCount; j++)
+    {
+        if (strcmp(scope->symbols[j]->name, symbolName) == 0)
+        {
+            return scope->symbols[j];
+        }
+    }
+    fprintf(stderr, "Error: Symbol '%s' not found in scope '%s'\n", symbolName, scopeName);
+    return NULL;
+}
+
 void FrontendSymbolTable_enterNamespace(FrontendSymbolTable *self, const char *namespaceName)
 {
     if (self->currentNamespace)
@@ -180,7 +212,7 @@ FrontendSymbolTable *CreateSymbolTable(void)
     // Initialize other fields
     table->symbolCount = 0;
     table->scopeCount = 0;
-    table->scopeStackSize = 0; // Initialize to 0, not -1
+    table->scopeStackSize = 0;
     table->symbolCapacity = MAX_SYMBOLS;
     table->scopeCapacity = MAX_SCOPES;
 
@@ -192,6 +224,7 @@ FrontendSymbolTable *CreateSymbolTable(void)
     table->lookup = FrontendSymbolTable_lookup;
     table->lookupInGlobalScope = FrontendSymbolTable_lookupInGlobalScope;
     table->lookupInNamespaceScope = FrontendSymbolTable_lookupInNamespaceScope;
+    table->lookupInScope = FrontendSymbolTable_lookupInScope;
     table->enterNamespace = FrontendSymbolTable_enterNamespace;
     table->exitNamespace = FrontendSymbolTable_exitNamespace;
     table->getCurrentNamespace = FrontendSymbolTable_getCurrentNamespace;

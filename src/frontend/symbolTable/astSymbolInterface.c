@@ -18,19 +18,27 @@
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
-/*
-typedef struct FrontendSymbol_t
+void FrontendSymbol_printFrontendSymbol(FrontendSymbol *symbol)
 {
-    const char *name;    // Symbol name
-    const char *id;      // Unique symbol ID
-    ASTNode *node;       // AST node associated with the symbol
-    DataType type;       // Data type of the symbol
-    ScopeType scopeType; // Scope type where the symbol is defined
-    size_t lineNumber;   // Line number in source code
-    size_t columnNumber; // Column number in source code
-    bool isDefined;      // Whether the symbol is defined or not
-} FrontendSymbol;
-*/
+    if (!symbol)
+    {
+        printf("(NULL SYMBOL)\n");
+        return;
+    }
+
+    printf("\n");
+    printf("+----------------------------------------- [ Frontend Symbol ] -----------------------------------------+\n");
+    printf("| Name: %-20s | ID: %-15s | Type: %-20s | Scope: %-14s \n",
+           symbol->name, symbol->id, symbol->type->debug->toString(symbol->type), getScopeTypeString(symbol->scopeType));
+    printf("+-------------------------------------------------------------------------------------------------------+\n");
+    printf("| Line: %-8zu | Column: %-8zu | Is Defined: %-8s |\n",
+           symbol->lineNumber, symbol->columnNumber, symbol->isDefined ? "true" : "false");
+    printf("+-------------------------------------------------------------------------------------------------------+\n");
+    symbol->node->print(symbol->node);
+    printf("+-------------------------------------------------------------------------------------------------------+\n");
+    printf("\n");
+}
+
 FrontendSymbol *p_createSymbol(const char *name,
                                const char *id,
                                ASTNode *node,
@@ -55,6 +63,8 @@ FrontendSymbol *p_createSymbol(const char *name,
     symbol->lineNumber = lineNumber;
     symbol->columnNumber = columnNumber;
     symbol->isDefined = isDefined;
+
+    symbol->print = FrontendSymbol_printFrontendSymbol;
 
     return symbol;
 }
@@ -236,6 +246,7 @@ FrontendSymbol *p_createEnumDeclarationSymbol(ASTNode *node)
         return NULL;
     }
 }
+
 FrontendSymbol *p_createPropertyDeclarationSymbol(ASTNode *node)
 {
     if (node == NULL)
@@ -244,6 +255,7 @@ FrontendSymbol *p_createPropertyDeclarationSymbol(ASTNode *node)
         return NULL;
     }
 }
+
 FrontendSymbol *p_createMethodDeclarationSymbol(ASTNode *node)
 {
     if (node == NULL)
@@ -251,7 +263,33 @@ FrontendSymbol *p_createMethodDeclarationSymbol(ASTNode *node)
         logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
         return NULL;
     }
+
+    if (node->metaData->type != NODE_METHOD)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is not a method declaration");
+        return NULL;
+    }
+
+    const char *methodName = node->data.method->name;
+    const char *methodID = "undef";
+    ASTNode *methodNode = node;
+    DataType *methodType = node->data.method->type;
+    ScopeType scopeType = SCOPE_GLOBAL; // TODO: Determine the correct scope type
+    size_t lineNumber = node->metaData->line;
+    size_t columnNumber = node->metaData->column;
+    bool isDefined = true; // TODO: Determine if the method is defined
+
+    FrontendSymbol *symbol = p_createSymbol(methodName, methodID, methodNode, methodType, scopeType, lineNumber, columnNumber, isDefined);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create method symbol");
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "SymbolTable", "Created method symbol: %s", methodName);
+    return symbol;
 }
+
 FrontendSymbol *p_createImportDeclarationSymbol(ASTNode *node)
 {
     if (node == NULL)
@@ -299,6 +337,8 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
         return p_createExternDeclarationSymbol(node);
     case NODE_STRUCT_DECLARATION:
         return p_createStructDeclarationSymbol(node);
+    case NODE_METHOD:
+        return p_createMethodDeclarationSymbol(node);
     case NODE_PROGRAM:
     case NODE_STATEMENT:
     case NODE_EXPRESSION:
@@ -336,7 +376,6 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
     case NODE_THIS:
     case NODE_THIS_ASSIGNMENT:
     case NODE_PROPERTY_REASSIGN:
-    case NODE_METHOD:
     case NODE_IDENTIFIER:
     case NODE_METHOD_CALL:
     case NODE_GENERIC_DECL:

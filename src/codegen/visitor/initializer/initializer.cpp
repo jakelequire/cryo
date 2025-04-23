@@ -43,6 +43,8 @@ namespace Cryo
             return generateParam(node);
         case NODE_PROPERTY_ACCESS:
             return generatePropertyAccess(node);
+        case NODE_SCOPED_FUNCTION_CALL:
+            return generateScopedFunctionCall(node);
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled node type: %s", nodeTypeStr.c_str());
             return nullptr;
@@ -248,14 +250,20 @@ namespace Cryo
             context.getInstance().symbolTable->debugPrint();
             return nullptr;
         }
-
+        logMessage(LMI, "INFO", "Initializer", "Variable %s found in symbol table", varName.c_str());
         // Load the variable if needed
         if (varSymbol->allocaType == AllocaType::AllocaAndLoad ||
             varSymbol->allocaType == AllocaType::AllocaLoadStore)
         {
-            varSymbol->allocation.load(context.getInstance().builder, varName + "_load");
-        }
+            logMessage(LMI, "INFO", "Initializer", "Loading variable %s", varName.c_str());
+            llvm::LoadInst *loadInst = context.getInstance().builder.CreateLoad(
+                varSymbol->type,
+                varSymbol->allocation.getValue(),
+                varName + ".load");
 
+            logMessage(LMI, "INFO", "Initializer", "Loaded variable %s", varName.c_str());
+            return loadInst;
+        }
         logMessage(LMI, "INFO", "Initializer", "Variable %s found", varName.c_str());
         return varSymbol->value;
     }
@@ -883,6 +891,7 @@ namespace Cryo
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(context.getInstance().context, "entry", methodFunction);
         context.getInstance().builder.SetInsertPoint(entryBlock);
         logMessage(LMI, "INFO", "Visitor", "Creating method function: %s", methodFunction->getName().str().c_str());
+        context.getInstance().symbolTable->addFunction(methodFnSymbol);
 
         context.getInstance().visitor->visit(method->data.method->body);
 
@@ -891,6 +900,61 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Visitor", "Method function created: %s", methodFunction->getName().str().c_str());
         return &(methodSymbol);
+    }
+
+    llvm::Value *Initializer::generateScopedFunctionCall(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating scoped function call...");
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_SCOPED_FUNCTION_CALL)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a scoped function call");
+            return nullptr;
+        }
+
+        std::string scopeName = node->data.scopedFunctionCall->scopeName;
+        std::string functionName = node->data.scopedFunctionCall->functionName;
+        std::string fullFunctionName = scopeName + "." + functionName;
+
+        logMessage(LMI, "INFO", "Initializer", "Scoped function call: %s", fullFunctionName.c_str());
+        // Find the function in the symbol table
+        IRFunctionSymbol *funcSymbol = context.getInstance().symbolTable->findFunction(fullFunctionName);
+        if (!funcSymbol)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Function %s not found", fullFunctionName.c_str());
+            CONDITION_FAILED;
+            return nullptr;
+        }
+
+        // Process arguments
+        std::vector<llvm::Value *> args;
+        int argCount = node->data.scopedFunctionCall->argCount;
+        for (int i = 0; i < argCount; i++)
+        {
+            args.push_back(getInitializerValue(node->data.scopedFunctionCall->args[i]));
+        }
+
+        logMessage(LMI, "INFO", "Initializer", "Function call: %s", fullFunctionName.c_str());
+        llvm::Function *function = funcSymbol->function;
+        if (!function)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Function %s not found", fullFunctionName.c_str());
+            CONDITION_FAILED;
+            return nullptr;
+        }
+
+        // Create the function call
+        llvm::Value *call = context.getInstance().builder.CreateCall(function, args, fullFunctionName);
+        if (!call)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Function call failed");
+            CONDITION_FAILED;
+            return nullptr;
+        }
+
+        logMessage(LMI, "INFO", "Initializer", "Function call created: %s", call->getName().str().c_str());
+        return call;
     }
 
 } // namespace Cryo

@@ -89,6 +89,8 @@ namespace Cryo
         StackSave,
     };
 
+    std::string AllocaTypeToString(AllocaType allocaType);
+
     struct Allocation
     {
         AllocaType type = AllocaType::None;
@@ -198,6 +200,7 @@ namespace Cryo
             case AllocaType::DynamicArray:
                 return allocaInst;
             default:
+                std::cout << "@Allocation::getValue: Invalid allocation type" << std::endl;
                 return nullptr;
             }
         }

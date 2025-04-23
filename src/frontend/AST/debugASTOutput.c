@@ -2457,6 +2457,20 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         break;
     }
 
+    case NODE_SCOPED_FUNCTION_CALL:
+    {
+        __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ScopedFunctionCall");
+        char *funcName = strdup(node->data.scopedFunctionCall->functionName);
+        DataType *type = node->data.scopedFunctionCall->type;
+        ASTDebugNode *scopedFunctionCallNode = createASTDebugNode("ScopedFunctionCall", funcName, type, line, column, indentLevel, node);
+        scopedFunctionCallNode->args = node->data.scopedFunctionCall->args;
+        scopedFunctionCallNode->argCount = node->data.scopedFunctionCall->argCount;
+        output->nodes[output->nodeCount] = *scopedFunctionCallNode;
+        output->nodeCount++;
+        break;
+    }
+
     case NODE_ANNOTATION:
     {
         // We don't need to log annotations

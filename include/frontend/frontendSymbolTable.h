@@ -47,6 +47,8 @@
 ///     size_t lineNumber;   // Line number in source code
 ///     size_t columnNumber; // Column number in source code
 ///     bool isDefined;      // Whether the symbol is defined or not
+///
+///     void (*print)(FrontendSymbol *self); // Print function for debugging
 /// } FrontendSymbol;
 /// ```
 typedef struct FrontendSymbol_t FrontendSymbol;
@@ -93,6 +95,8 @@ typedef struct FrontendSymbol_t
     size_t lineNumber;   // Line number in source code
     size_t columnNumber; // Column number in source code
     bool isDefined;      // Whether the symbol is defined or not
+
+    void (*print)(FrontendSymbol *self); // Print function for debugging
 } FrontendSymbol;
 
 typedef struct FrontendScope_t
@@ -140,6 +144,7 @@ typedef struct FrontendSymbolTable_t
     FrontendSymbol *(*lookup)(FrontendSymbolTable *self, const char *name);
     FrontendSymbol *(*lookupInGlobalScope)(FrontendSymbolTable *self, const char *name);
     FrontendSymbol *(*lookupInNamespaceScope)(FrontendSymbolTable *self, const char *name, const char *namespaceName);
+    FrontendSymbol *(*lookupInScope)(FrontendSymbolTable *self, const char *scopeName, const char *symbolName);
 
     // Namespace management
     void (*enterNamespace)(FrontendSymbolTable *self, const char *namespaceName);

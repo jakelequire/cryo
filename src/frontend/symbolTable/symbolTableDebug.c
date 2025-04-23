@@ -156,15 +156,17 @@ void FrontendSymbolTable_printTable(FrontendSymbolTable *self)
     }
     else
     {
-        for (size_t i = 0; i < self->scopeCount; i++)
+        for (size_t i = 0; i < self->scopeStackSize; i++)
         {
+            // Print scope header with safer access
+            printIndent(i);
+            printf("Scope[%zu]: ", i);
             if (self->scopeStack[i] == NULL)
             {
                 printf("(NULL SCOPE)\n");
                 continue;
             }
-            printf("[%zu] ", i);
-            printScope(self->scopeStack[i], 1);
+            printScope(self->scopeStack[i], 0);
         }
     }
 

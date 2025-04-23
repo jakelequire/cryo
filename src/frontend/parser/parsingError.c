@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
+#include "frontend/frontendSymbolTable.h"
 #include "frontend/parser.h"
 #include "tools/misc/syntaxHighlighter.h"
 #include "diagnostics/diagnostics.h"
@@ -35,6 +36,7 @@ void parsingError(
     const char *curModule = GetNamespace(globalTable);
 
     DTM->symbolTable->printTable(DTM->symbolTable);
+    FEST->printTable(FEST);
 
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);
