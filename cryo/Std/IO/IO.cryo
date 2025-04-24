@@ -9,7 +9,10 @@ class IO {
     // Example method to demonstrate the structure
     public static readFile(filePath: String) -> str {
         // Call the external function to read a file
-        const content: str = c_readFile_export(filePath.val);
+        printString(filePath);
+        const __filePath__: str = filePath.val;
+        printStr(__filePath__);
+        const content: str = c_readFile_export(__filePath__);
         // Return the content as a String
         return content;
     }

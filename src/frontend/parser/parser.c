@@ -545,22 +545,31 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         return parseTypeDeclaration(lexer, context, arena, state, globalTable);
 
     case TOKEN_IDENTIFIER:
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing identifier...");
         if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LPAREN)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing function call...");
             char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
             return parseFunctionCall(lexer, context, functionName, arena, state, globalTable);
         }
-        if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DOUBLE_COLON)
+        else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DOUBLE_COLON)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing scope call...");
             return parseScopeCall(lexer, context, arena, state, globalTable);
+        }
+        else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DOT)
+        {
+            logMessage(LMI, "INFO", "Parser", "Parsing property access...");
+            return parsePropertyAccess(lexer, context, arena, state, globalTable);
         }
         else
         {
             logMessage(LMI, "INFO", "Parser", "Parsing variable assignment...");
             return parsePrimaryExpression(lexer, context, arena, state, globalTable);
         }
+        break;
+    }
 
     case TOKEN_KW_NAMESPACE:
         return parseNamespace(lexer, context, arena, state, globalTable);
@@ -578,8 +587,14 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         return NULL;
 
     default:
-        parsingError("Expected a statement", "parseStatement", arena, state, lexer, lexer->source, globalTable);
+    {
+        const char *tokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "ERROR", "Parser", "Unexpected token: %s", tokenStr);
+        char *errorMessage = (char *)malloc(256);
+        snprintf(errorMessage, 256, "Unexpected token: %s", tokenStr);
+        parsingError(errorMessage, "parseStatement", arena, state, lexer, lexer->source, globalTable);
         return NULL;
+    }
     }
 }
 // </parseStatement>
@@ -3382,6 +3397,14 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
             ASTNode *propertyAccessNode = createStructPropertyAccessNode(object, property, propName, typeOfNode, arena, state, lexer);
             propertyAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(typeOfNode, propName);
             propertyAccessNode->data.propertyAccess->objectTypeName = structName;
+            logMessage(LMI, "INFO", "Parser", "Property access node created.");
+            logMessage(LMI, "INFO", "Parser", "Property access node: %s", propertyAccessNode->data.propertyAccess->propertyName);
+
+            if (lexer->currentToken.type == TOKEN_SEMICOLON)
+            {
+                consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseDotNotationWithType", arena, state, context);
+            }
+
             return propertyAccessNode;
         }
         else
@@ -3623,4 +3646,14 @@ ASTNode *parseParenthesizedExpression(Lexer *lexer, ParsingContext *context, Are
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end expression.", "parseParenthesesExpression", arena, state, context);
 
     return expression;
+}
+
+ASTNode *parsePropertyAccess(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing property access...");
+    consume(__LINE__, lexer, TOKEN_DOT, "Expected `.` for property access.", "parsePropertyAccess", arena, state, context);
+
+    ASTNode *propertyAccess = parseDotNotation(lexer, context, arena, state, globalTable);
+    return propertyAccess;
 }

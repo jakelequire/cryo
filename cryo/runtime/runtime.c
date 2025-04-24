@@ -389,7 +389,7 @@ int32_t printf_export(const char *format, ...)
     result = vprintf(format, args);
     va_end(args);
 
-    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n\n", format, COLOR_RESET);
+    printf(BOLD COLOR_LIGHT_YELLOW "%p%s\n\n", format, COLOR_RESET);
 
     return result;
 }
@@ -423,7 +423,7 @@ void printString_export(cryo_string_t str)
         printf("NULL\n");
     }
 
-    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n\n", str.val, COLOR_RESET);
+    printf(BOLD COLOR_LIGHT_YELLOW "%p%s\n\n", str.val, COLOR_RESET);
 }
 
 void printStr_export(char *str)
@@ -437,7 +437,7 @@ void printStr_export(char *str)
         printf("NULL\n");
     }
 
-    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n\n", str, COLOR_RESET);
+    printf(BOLD COLOR_LIGHT_YELLOW "%p%s\n\n", str, COLOR_RESET);
 }
 
 char *c_readFile_export(char *filename)
