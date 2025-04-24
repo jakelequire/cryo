@@ -1052,20 +1052,20 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena 
     }
 
     // Peek to see if the next token is `=` for assignment
-    else if (nextToken == TOKEN_EQUAL)
+    if (nextToken == TOKEN_EQUAL)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing assignment");
         return parseAssignment(lexer, context, NULL, arena, state, globalTable);
     }
     // Peek to see if the next token is `(` to start a function call.
-    else if (nextToken == TOKEN_LPAREN)
+    if (nextToken == TOKEN_LPAREN)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing function call");
         char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
         return parseFunctionCall(lexer, context, functionName, arena, state, globalTable);
     }
     // Peek to see if the next token is `::` for a scope call
-    else if (nextToken == TOKEN_DOUBLE_COLON)
+    if (nextToken == TOKEN_DOUBLE_COLON)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing scope call");
         return parseScopeCall(lexer, context, arena, state, globalTable);
@@ -2360,9 +2360,27 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
             logMessage(LMI, "INFO", "Parser", "Argument is a dot notation");
             return parseDotNotation(lexer, context, arena, state, globalTable);
         }
-        logMessage(LMI, "INFO", "Parser", "Argument is an identifier");
-        nodeType = NODE_VAR_DECLARATION;
-        argType = DTM->primitives->createVoid();
+        else
+        {
+            logMessage(LMI, "INFO", "Parser", "Argument is an identifier");
+            FrontendSymbol *sym = FEST->lookup(FEST, argName);
+            if (sym)
+            {
+                logMessage(LMI, "INFO", "Parser", "Symbol found in symbol table: %s", argName);
+                argType = sym->type;
+                nodeType = NODE_VAR_NAME;
+                logMessage(LMI, "INFO", "Parser", "Argument is a variable name");
+                ASTNode *varNameNode = createVarNameNode(strdup(argName), argType, arena, state, lexer);
+                consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseArguments", arena, state, context);
+                return varNameNode;
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Parser", "Symbol not found in symbol table.");
+                parsingError("Symbol not found in symbol table.", "parseArguments", arena, state, lexer, lexer->source, globalTable);
+                return NULL;
+            }
+        }
     }
     else
     {
@@ -3549,7 +3567,7 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
 
     logMessage(LMI, "INFO", "Parser", "Type name: %s", typeName);
 
-    DataType *type = ResolveDataType(globalTable, typeName);
+    DataType *type = DTM->symbolTable->lookup(DTM->symbolTable, typeName);
     if (!type)
     {
         logMessage(LMI, "ERROR", "Parser", "Type not found.");
@@ -3571,7 +3589,7 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
     logASTNode(args);
 
     // We need to check if the type is a struct or a class
-    if (type->container->typeOf == OBJECT_TYPE)
+    if (type->container->objectType == STRUCT_OBJ)
     {
         logMessage(LMI, "INFO", "Parser", "Type is a struct.");
         DTStructTy *structType = type->container->type.structType;
@@ -3590,12 +3608,17 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
             CONDITION_FAILED;
         }
     }
-
     // TODO: Implement
-    // if (type->container->baseType == CLASS_TYPE)
-    // {
-    //     logMessage(LMI, "INFO", "Parser", "Type is a class.");
-    // }
+    else if (type->container->objectType == CLASS_OBJ)
+    {
+        logMessage(LMI, "INFO", "Parser", "Type is a class.");
+    }
+    else
+    {
+        logMessage(LMI, "ERROR", "Parser", "Type is not a struct or class.");
+        parsingError("Type is not a struct or class.", "parseNewExpression", arena, state, lexer, lexer->source, globalTable);
+        CONDITION_FAILED;
+    }
 
     ASTNode **arguments = args->data.argList->args;
 

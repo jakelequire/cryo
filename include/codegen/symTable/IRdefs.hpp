@@ -482,6 +482,12 @@ namespace Cryo
             : value(val), type(typ), parentFunction(func), name(nm), astNode(nullptr),
               dataType(nullptr), allocaType(allocType) {}
 
+        // Constructor for function parameters
+        IRVariableSymbol(llvm::Argument *arg, llvm::Type *typ, const std::string &nm,
+                         AllocaType allocType)
+            : value(arg), type(typ), parentFunction(nullptr), name(nm), astNode(nullptr),
+              dataType(nullptr), allocaType(allocType) {}
+
         // Copy constructor
         IRVariableSymbol(const IRVariableSymbol &other)
             : value(other.value),

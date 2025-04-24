@@ -84,7 +84,7 @@ namespace Cryo
             AllocaType allocaType = AllocaTypeInference::inferFromNode(param, false);
             IRVariableSymbol paramSymbol = IRSymbolManager::createVariableSymbol(
                 function, nullptr, paramType, paramName, allocaType);
-
+            paramSymbol.dataType = param->data.param->type;
             // Create the parameter in the function
             llvm::Function::arg_iterator argIt = function->arg_begin();
             llvm::Value *arg = argIt++;
@@ -192,41 +192,27 @@ namespace Cryo
             logMessage(LMI, "INFO", "Visitor", "Variable has no initialization expression");
         }
 
-        // SPECIAL HANDLING FOR STRING LITERALS
-        // Check if this is a string variable initialized with a string literal
-        bool isStringLiteral = false;
-        if (initVal &&
-                varType->container->primitive == PRIM_STRING ||
-            varType->container->primitive == PRIM_STR &&
-                node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
-        {
-            // For string literals, don't create an allocation - just use the global string
-            isStringLiteral = true;
-
-            llvm::AllocaInst *alloca = context.getInstance().builder.CreateAlloca(llvmType, nullptr, varName);
-            llvm::StoreInst *store = context.getInstance().builder.CreateStore(initVal, alloca);
-
-            // Store it in the symbol table as-is
-            IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
-                initVal, // Use the GEP result directly
-                llvmType,
-                varName,
-                AllocaTypeInference::inferFromNode(node, true),
-                Allocation());
-            symbolTable->addVariable(varSymbol);
-            return;
-        }
-
-        // Normal case for non-string literals
-        llvm::AllocaInst *alloca = context.getInstance().builder.CreateAlloca(llvmType, nullptr, varName);
+        // Create the variable symbol
         AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
-        IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(alloca, llvmType, varName, allocaType, Allocation());
-        symbolTable->addVariable(varSymbol);
+        IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
+            nullptr, initVal, llvmType, varName, allocaType);
+        varSymbol.dataType = varType;
 
+        // Create the variable in the function
+        llvm::AllocaInst *allocaInst = context.getInstance().builder.CreateAlloca(
+            llvmType, nullptr, varName);
+        allocaInst->setAlignment(llvm::Align(4));
+        varSymbol.value = allocaInst;
+
+        // Add the variable to the symbol table
+        symbolTable->addVariable(varSymbol);
+        logMessage(LMI, "INFO", "Visitor", "Variable declaration complete: %s", varName.c_str());
         if (initVal)
         {
-            context.builder.CreateStore(initVal, alloca);
+            logMessage(LMI, "INFO", "Visitor", "Storing initial value to variable %s", varName.c_str());
+            context.getInstance().builder.CreateStore(initVal, allocaInst);
         }
+        logMessage(LMI, "INFO", "Visitor", "Variable %s initialized", varName.c_str());
 
         return;
     }
@@ -357,6 +343,12 @@ namespace Cryo
                 node->data.structNode->constructor,
                 structType);
             context.getInstance().symbolTable->exitConstructorInstance();
+        }
+        else
+        {
+            logMessage(LMI, "INFO", "Visitor", "No constructor for struct %s",
+                       structName.c_str());
+            DEBUG_BREAKPOINT;
         }
 
         logMessage(LMI, "INFO", "Visitor", "Struct declaration complete for %s",

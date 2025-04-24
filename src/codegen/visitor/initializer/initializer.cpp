@@ -47,6 +47,8 @@ namespace Cryo
             return generateScopedFunctionCall(node);
         case NODE_VAR_DECLARATION:
             return generateVarDeclaration(node);
+        case NODE_OBJECT_INST:
+            return generateObjectInst(node);
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled node type: %s", nodeTypeStr.c_str());
             return nullptr;
@@ -252,6 +254,25 @@ namespace Cryo
             // Print the symbol table for debugging
             context.getInstance().symbolTable->debugPrint();
             return nullptr;
+        }
+        DataType *varDataType = varSymbol->dataType;
+        if (!varDataType)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Variable %s has no data type", varName.c_str());
+            return nullptr;
+        }
+        if (varDataType->container->typeOf == OBJECT_TYPE)
+        {
+            logMessage(LMI, "INFO", "Initializer", "Variable %s is an object type", varName.c_str());
+            if (varSymbol->value && varSymbol->value->getType()->isPointerTy())
+            {
+                return varSymbol->value;
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Variable %s is not a pointer type", varName.c_str());
+                return nullptr;
+            }
         }
 
         logMessage(LMI, "INFO", "Initializer", "Variable %s found", varName.c_str());
@@ -641,6 +662,8 @@ namespace Cryo
             AllocaType allocaType = AllocaTypeInference::inferFromNode(ctorArgs[i], false);
             IRVariableSymbol argSymbol = IRSymbolManager::createVariableSymbol(
                 argAlloc, ctorArgTypes[i], argName, allocaType, Allocation());
+            argSymbol.dataType = ctorArgs[i]->data.param->type;
+
             context.getInstance().symbolTable->addVariable(argSymbol);
         }
 
@@ -950,52 +973,108 @@ namespace Cryo
     llvm::Value *Initializer::generateVarDeclaration(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Initializer", "Generating variable declaration...");
+        DEBUG_BREAKPOINT;
+    }
+
+    llvm::Value *Initializer::generateObjectInst(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating object instance...");
         ASSERT_NODE_NULLPTR_RET(node);
 
-        if (node->metaData->type != NODE_VAR_DECLARATION)
+        if (node->metaData->type != NODE_OBJECT_INST)
         {
-            logMessage(LMI, "ERROR", "Initializer", "Node is not a variable declaration");
+            logMessage(LMI, "ERROR", "Initializer", "Node is not an object instance");
             return nullptr;
         }
 
-        node->print(node);
-
-        std::string varName = node->data.varDecl->name;
-        logMessage(LMI, "INFO", "Initializer", "Variable name: %s", varName.c_str());
-
-        // Check if the variable already exists in the symbol table
-        IRVariableSymbol *varSymbol = context.getInstance().symbolTable->findVariable(varName);
-        if (varSymbol)
+        // Get the object type name
+        std::string objectTypeName = node->data.objectNode->name;
+        logMessage(LMI, "INFO", "Initializer", "Object type name: %s", objectTypeName.c_str());
+        bool isNewObject = node->data.objectNode->isNewInstance;
+        // Get the object type
+        DataType *objectType = node->data.objectNode->objType;
+        if (!objectType)
         {
-            llvm::Type *varType = varSymbol->value->getType();
-            if (varType->isStructTy())
-            {
-                // If the variable exists, and it's a struct type. We need to load the value from the pointer
-                llvm::Value *varValue = context.getInstance().builder.CreateLoad(varType, varSymbol->value, varName + ".load");
-                logMessage(LMI, "INFO", "Initializer", "Variable %s already exists, loading value: %s", varName.c_str(), varValue->getName().str().c_str());
-                return varValue;
-            }
-            else if (varType->isPointerTy())
-            {
-                // If the variable exists, and it's a pointer type. We need to load the value from the pointer
-                llvm::Value *varValue = context.getInstance().builder.CreateLoad(varType, varSymbol->value, varName + ".load");
-                logMessage(LMI, "INFO", "Initializer", "Variable %s already exists, loading value: %s", varName.c_str(), varValue->getName().str().c_str());
-                return varValue;
-            }
-            else
-            {
-                logMessage(LMI, "INFO", "Initializer", "Variable %s already exists, using value: %s", varName.c_str(), varSymbol->value->getName().str().c_str());
-                return varSymbol->value;
-            }
-        }
-        else
-        {
-            logMessage(LMI, "ERROR", "Initializer", "Variable %s not found in symbol table", varName.c_str());
+            logMessage(LMI, "ERROR", "Visitor", "Object type is null");
             DEBUG_BREAKPOINT;
             return nullptr;
         }
 
+        // Get the LLVM type
+        IRTypeSymbol *irTypeSymbol = context.getInstance().symbolTable->findType("struct." + objectTypeName);
+        if (!irTypeSymbol)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "IR type symbol is null");
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
+
+        /*
+        // Usage
+        define void @main() {
+        entry:
+            ; Allocate String instance
+            %str = alloca %String
+            --------------------------------
+            ; The above is created from `visitVarDecl` which allocates a variable
+
+            ; Create string literal
+            %literal = getelementptr [28 x i8], [28 x i8]* @.str.const, i32 0, i32 0
+
+            ; Call constructor
+            %1 = call %String* @String.ctor(%String* %str, i8* %literal)
+
+            ; Use the string
+            %val = getelementptr %String, %String* %str, i32 0, i32 0
+            %contents = call i8* @IO.readFile(i8* %val)
+            call void @printStr(i8* %contents)
+            ret void
+        }
+        */
+        if (isNewObject)
+        {
+            logMessage(LMI, "INFO", "Visitor", "Creating new object instance: %s", objectTypeName.c_str());
+            llvm::StructType *llvmStructType = llvm::dyn_cast<llvm::StructType>(irTypeSymbol->getType());
+            if (!llvmStructType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "LLVM struct type is null");
+                DEBUG_BREAKPOINT;
+                return nullptr;
+            }
+            logMessage(LMI, "INFO", "Visitor", "LLVM Struct Type: %s", llvmStructType->getName().str().c_str());
+
+            IRFunctionSymbol *ctorFuncSymbol = context.getInstance().symbolTable->findFunction("struct." + objectTypeName + ".ctor");
+            if (!ctorFuncSymbol)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Constructor function symbol is null");
+                DEBUG_BREAKPOINT;
+                return nullptr;
+            }
+
+            // Prepare the arguments for the constructor
+            std::vector<llvm::Value *> ctorArgs;
+            int argCount = node->data.objectNode->argCount;
+            for (int i = 0; i < argCount; i++)
+            {
+                ctorArgs.push_back(getInitializerValue(node->data.objectNode->args[i]));
+            }
+
+            // Create the object instance
+            llvm::Value *objectInstance = context.getInstance().builder.CreateCall(
+                ctorFuncSymbol->function, ctorArgs, objectTypeName + ".ctor");
+            if (!objectInstance)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Object instance is null");
+                DEBUG_BREAKPOINT;
+                return nullptr;
+            }
+
+            return objectInstance;
+        }
+
         DEBUG_BREAKPOINT;
+
+        return nullptr;
     }
 
 } // namespace Cryo

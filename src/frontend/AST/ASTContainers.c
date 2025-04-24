@@ -1122,12 +1122,12 @@ StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, Compil
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
+    node->name = (char *)malloc(sizeof(char) * 1024);
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
-    node->metaData = createConstructorMetaDataContainer(arena, state);
     node->constructorBody = NULL;
+    node->metaData = createConstructorMetaDataContainer(arena, state);
 
     return node;
 }

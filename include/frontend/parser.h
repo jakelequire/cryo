@@ -298,21 +298,46 @@ void logScopeInformation(ParsingContext *context);
 // # (typeParsing.c)
 // # =========================================================================== #
 
+typedef struct StructComponents
+{
+    ASTNode **properties;
+    int propertyCount;
+    int propertyCapacity;
+
+    ASTNode **methods;
+    int methodCount;
+    int methodCapacity;
+
+    ASTNode *constructorNode;
+
+    DataType **ctorArgs;
+    int ctorArgCount;
+    int ctorArgCapacity;
+
+    bool hasDefaultProperty;
+    bool hasConstructor;
+} StructComponents;
+
 ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 ASTNode *parseGenericStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, const char *parentNamespaceNameID);
-ASTNode *parseNonGenericStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, const char *parentNamespaceNameID);
-bool parseStructFieldOrMethod(DataType *dataType, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, ASTNode **properties, int *propertyCount, ASTNode **methods, int *methodCount, bool *hasDefaultProperty, int *defaultPropertyCount, bool *hasConstructor, ASTNode **constructorNode, DataType **ctorArgs, int *ctorArgCount);
 ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, ASTNode **properties, int propertyCount, ASTNode **methods, int methodCount, bool hasDefaultProperty, bool hasConstructor, ASTNode *constructorNode, DataType **ctorArgs, int ctorArgCount);
 
-ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state,
+                       CryoGlobalSymbolTable *globalTable, const char *structName,
+                       DataType *structDefinition, struct StructComponents *components);
 
-ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *context,
+                          Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+ASTNode *parseStructBody(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state,
+                         CryoGlobalSymbolTable *globalTable, const char *structName, const char *parentNamespaceNameID);
+
 ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 bool parsePropertyForDefaultFlag(ASTNode *propertyNode);
 
+ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 

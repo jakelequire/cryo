@@ -73,8 +73,35 @@ void FrontendSymbolTable_addSymbol(FrontendSymbolTable *self, ASTNode *node)
 
 FrontendSymbol *FrontendSymbolTable_lookup(FrontendSymbolTable *self, const char *name)
 {
-    // TODO: Implement symbol lookup logic
-    DEBUG_BREAKPOINT;
+    // Only look up in the current scope
+    if (!self || self == NULL)
+    {
+        fprintf(stderr, "Error: FrontendSymbolTable is NULL\n");
+        return NULL;
+    }
+
+    if (!name || name == NULL)
+    {
+        fprintf(stderr, "Error: Symbol name is NULL\n");
+        return NULL;
+    }
+
+    FrontendScope *scope = self->currentScope;
+    if (!scope || scope == NULL)
+    {
+        fprintf(stderr, "Error: Current scope is NULL\n");
+        return NULL;
+    }
+
+    for (size_t i = 0; i < scope->symbolCount; i++)
+    {
+        if (strcmp(scope->symbols[i]->name, name) == 0)
+        {
+            return scope->symbols[i];
+        }
+    }
+    fprintf(stderr, "Error: Symbol '%s' not found in current scope\n", name);
+    return NULL;
 }
 
 FrontendSymbol *FrontendSymbolTable_lookupInGlobalScope(FrontendSymbolTable *self, const char *name)

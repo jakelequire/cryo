@@ -52,6 +52,7 @@ namespace Cryo
         logMessage(LMI, "INFO", "IRGeneration", "Processing function declaration...");
         return;
     }
+
     void IRGeneration::processTypeDeclaration(ASTNode *node)
     {
         logMessage(LMI, "INFO", "IRGeneration", "Processing type declaration...");

@@ -415,9 +415,9 @@ typedef struct StructNode
 
 typedef struct ScopedFunctionCallNode
 {
-    const char *scopeName;       // e.g., "Math"
-    const char *functionName;    // e.g., "add"
-    struct ASTNode **args; // Array of argument nodes
+    const char *scopeName;    // e.g., "Math"
+    const char *functionName; // e.g., "add"
+    struct ASTNode **args;    // Array of argument nodes
     DataType *type;
     int argCount;
     int argCapacity;
@@ -857,6 +857,10 @@ extern "C"
     // Basic expressions
     ASTNode *createExpressionStatement(
         ASTNode *expression,
+        Arena *arena, CompilerState *state, Lexer *lexer);
+
+    ASTNode *createVarNameNode(
+        char *name, DataType *varType,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
     ASTNode *createBinaryExpr(

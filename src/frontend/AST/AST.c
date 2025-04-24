@@ -279,6 +279,21 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Ar
     return node;
 }
 
+ASTNode *createVarNameNode(char *name, DataType *varType, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, lexer);
+    if (!node)
+        return NULL;
+
+    logMessage(LMI, "DEBUG", "AST", "Created variable name node with name: %s", name);
+
+    node->data.varName->varName = strdup(name);
+    node->data.varName->type = varType;
+
+    return node;
+}
+
 // Create a unary expression node
 ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, CompilerState *state, Lexer *lexer)
 {
@@ -902,7 +917,8 @@ ASTNode *createStructNode(const char *structName, ASTNode **properties, int prop
     node->data.structNode->methodCount = methodCount;
     node->data.structNode->methodCapacity = 64;
     node->data.structNode->constructor = constructor;
-    node->data.structNode->ctorArgs = (ASTNode **)calloc(64, sizeof(ASTNode *));
+    node->data.structNode->ctorArgs = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
+    node->data.structNode->ctorArgCount = 0;
 
     return node;
 }
