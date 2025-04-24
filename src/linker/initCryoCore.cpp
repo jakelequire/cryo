@@ -289,7 +289,7 @@ namespace Cryo
         args.push_back("clang++-18");
         args.push_back("-c");
         args.push_back("-emit-llvm");
-        args.push_back("-O2");       // Optimization level
+        args.push_back("-O1");       // Optimization level
         args.push_back("-fPIC");     // Position-Independent Code
         args.push_back("-x");        // Specify input language
         args.push_back("c");         // C language
@@ -297,7 +297,7 @@ namespace Cryo
 
         // Add standard includes
         args.push_back("-I");
-        args.push_back(fs->appendStrings(compilerRootPath.c_str(), "/include"));
+        args.push_back(fs->appendStrings(compilerRootPath.c_str(), "/cryo/runtime/include"));
 
         // Set output file
         std::string userBuildDir = std::string(this->dirInfo->runtimeDir) + "/c_runtime.ll";
@@ -318,14 +318,10 @@ namespace Cryo
             fprintf(stderr, "[Linker] Error: Failed to compile runtime file to LLVM IR\n");
             return false;
         }
-
-        // Copy the `c_runtime.ll` file to the compilers `bin/.ll/` directory
-        std::string destPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/c_runtime.ll";
-        std::string copyCommand = "cp " + userBuildDir + " " + destPath;
-        result = system(copyCommand.c_str());
-        if (result != 0)
+        // Check for an unexpected error
+        if (result == -1)
         {
-            fprintf(stderr, "[Linker] Error: Failed to copy c_runtime.ll file\n");
+            fprintf(stderr, "[Linker] Error: Unexpected error occurred while compiling runtime file\n");
             return false;
         }
 
