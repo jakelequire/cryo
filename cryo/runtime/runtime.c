@@ -389,7 +389,7 @@ int32_t printf_export(const char *format, ...)
     result = vprintf(format, args);
     va_end(args);
 
-    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n", format, COLOR_RESET);
+    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n\n", format, COLOR_RESET);
 
     return result;
 }
@@ -423,7 +423,7 @@ void printString_export(cryo_string_t str)
         printf("NULL\n");
     }
 
-    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n", str.val, COLOR_RESET);
+    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n\n", str.val, COLOR_RESET);
 }
 
 void printStr_export(char *str)
@@ -437,12 +437,17 @@ void printStr_export(char *str)
         printf("NULL\n");
     }
 
-    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n", str, COLOR_RESET);
+    printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n\n", str, COLOR_RESET);
 }
 
 char *c_readFile_export(char *filename)
 {
     printf("[C::DEBUG] Reading File Executed");
+    if (filename == NULL)
+    {
+        printf("[C::DEBUG] Filename is NULL\n");
+        return NULL;
+    }
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
@@ -457,6 +462,7 @@ char *c_readFile_export(char *filename)
     if (buffer == NULL)
     {
         fclose(file);
+        printf("[C::DEBUG] Memory allocation failed\n");
         return NULL;
     }
 

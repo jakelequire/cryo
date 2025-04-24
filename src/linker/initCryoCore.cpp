@@ -452,6 +452,16 @@ namespace Cryo
             return false;
         }
 
+        // Destroy the temp file
+        std::string removeCommand = "rm -f " + tempPath;
+        int removeResult = system(removeCommand.c_str());
+        if (removeResult != 0)
+        {
+            fprintf(stderr, "[Linker] Error: Failed to remove temporary file\n");
+            CONDITION_FAILED;
+            return false;
+        }
+
         logMessage(LMI, "INFO", "Linker", "Successfully compiled core file to object code");
         return true;
     }
