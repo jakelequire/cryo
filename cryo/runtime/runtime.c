@@ -428,8 +428,6 @@ void printString_export(cryo_string_t str)
 
 void printStr_export(char *str)
 {
-    printf("\n");
-
     if (str != NULL)
     {
         printf("%s\n", str);
@@ -442,8 +440,9 @@ void printStr_export(char *str)
     printf(BOLD COLOR_LIGHT_YELLOW "addr: %p%s\n", str, COLOR_RESET);
 }
 
-char *readFile_export(const char *filename)
+char *c_readFile_export(char *filename)
 {
+    printf("[C::DEBUG] Reading File Executed");
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
@@ -465,5 +464,8 @@ char *readFile_export(const char *filename)
     buffer[length] = '\0';
 
     fclose(file);
+
+    printf("[C::DEBUG] File read successfully: %s\n", filename);
+    printf("[C::DEBUG] File Contents: %s\n", buffer);
     return buffer;
 }

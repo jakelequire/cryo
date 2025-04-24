@@ -45,6 +45,8 @@ namespace Cryo
             return generatePropertyAccess(node);
         case NODE_SCOPED_FUNCTION_CALL:
             return generateScopedFunctionCall(node);
+        case NODE_VAR_DECLARATION:
+            return generateVarDeclaration(node);
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled node type: %s", nodeTypeStr.c_str());
             return nullptr;
@@ -242,6 +244,7 @@ namespace Cryo
 
         std::string varName = node->data.varName->varName;
         logMessage(LMI, "INFO", "Initializer", "Variable name: %s", varName.c_str());
+
         IRVariableSymbol *varSymbol = getSymbolTable()->findVariable(varName);
         if (!varSymbol)
         {
@@ -250,20 +253,7 @@ namespace Cryo
             context.getInstance().symbolTable->debugPrint();
             return nullptr;
         }
-        logMessage(LMI, "INFO", "Initializer", "Variable %s found in symbol table", varName.c_str());
-        // Load the variable if needed
-        if (varSymbol->allocaType == AllocaType::AllocaAndLoad ||
-            varSymbol->allocaType == AllocaType::AllocaLoadStore)
-        {
-            logMessage(LMI, "INFO", "Initializer", "Loading variable %s", varName.c_str());
-            llvm::LoadInst *loadInst = context.getInstance().builder.CreateLoad(
-                varSymbol->type,
-                varSymbol->allocation.getValue(),
-                varName + ".load");
 
-            logMessage(LMI, "INFO", "Initializer", "Loaded variable %s", varName.c_str());
-            return loadInst;
-        }
         logMessage(LMI, "INFO", "Initializer", "Variable %s found", varName.c_str());
         return varSymbol->value;
     }
@@ -955,6 +945,57 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Initializer", "Function call created: %s", call->getName().str().c_str());
         return call;
+    }
+
+    llvm::Value *Initializer::generateVarDeclaration(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating variable declaration...");
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_VAR_DECLARATION)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a variable declaration");
+            return nullptr;
+        }
+
+        node->print(node);
+
+        std::string varName = node->data.varDecl->name;
+        logMessage(LMI, "INFO", "Initializer", "Variable name: %s", varName.c_str());
+
+        // Check if the variable already exists in the symbol table
+        IRVariableSymbol *varSymbol = context.getInstance().symbolTable->findVariable(varName);
+        if (varSymbol)
+        {
+            llvm::Type *varType = varSymbol->value->getType();
+            if (varType->isStructTy())
+            {
+                // If the variable exists, and it's a struct type. We need to load the value from the pointer
+                llvm::Value *varValue = context.getInstance().builder.CreateLoad(varType, varSymbol->value, varName + ".load");
+                logMessage(LMI, "INFO", "Initializer", "Variable %s already exists, loading value: %s", varName.c_str(), varValue->getName().str().c_str());
+                return varValue;
+            }
+            else if (varType->isPointerTy())
+            {
+                // If the variable exists, and it's a pointer type. We need to load the value from the pointer
+                llvm::Value *varValue = context.getInstance().builder.CreateLoad(varType, varSymbol->value, varName + ".load");
+                logMessage(LMI, "INFO", "Initializer", "Variable %s already exists, loading value: %s", varName.c_str(), varValue->getName().str().c_str());
+                return varValue;
+            }
+            else
+            {
+                logMessage(LMI, "INFO", "Initializer", "Variable %s already exists, using value: %s", varName.c_str(), varSymbol->value->getName().str().c_str());
+                return varSymbol->value;
+            }
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Variable %s not found in symbol table", varName.c_str());
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
+
+        DEBUG_BREAKPOINT;
     }
 
 } // namespace Cryo

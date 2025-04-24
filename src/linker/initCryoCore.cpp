@@ -347,8 +347,8 @@ namespace Cryo
         logMessage(LMI, "INFO", "Linker", "Merging runtime module into core module...");
 
         // Get paths to input files
-        std::string c_runtimePath = std::string(this->dirInfo->runtimeDir) + "/c_runtime.ll";
-        std::string corePath = std::string(this->dirInfo->runtimeDir) + "/core.ll";
+        std::string c_runtimePath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/c_runtime.ll";
+        std::string corePath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/core.ll";
 
         // Verify files exist
         if (!verifyInputFiles(c_runtimePath, corePath))
@@ -357,8 +357,8 @@ namespace Cryo
         }
 
         // Link LLVM IR files
-        std::string tempPath = std::string(this->dirInfo->runtimeDir) + "/merged.ll";
-        std::string outputPath = std::string(this->dirInfo->runtimeDir) + "/core.o";
+        std::string tempPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/merged.ll";
+        std::string outputPath = std::string(this->dirInfo->compilerDir) + "/cryo/Std/bin/.ll/core.o";
 
         if (!linkLLVMFiles(c_runtimePath, corePath, tempPath))
         {

@@ -191,6 +191,7 @@ namespace Cryo
         llvm::Value *generateParam(ASTNode *node);
         llvm::Value *generatePropertyAccess(ASTNode *node);
         llvm::Value *generateScopedFunctionCall(ASTNode *node);
+        llvm::Value *generateVarDeclaration(ASTNode *node);
 
         llvm::Value *generateStringLiteral(ASTNode *node);
         llvm::Value *createIntegerLiteral(unsigned int numBits, uint64_t val, bool isSigned = false);
